@@ -1,9 +1,8 @@
 import DisjointSet from "./DisjointSet";
 import { Identifier, InstructionId } from "./HIR";
-import { buildAliasSets } from "./InferAlias";
 
 export function inferMutableRangesForAlias(aliases: DisjointSet<Identifier>) {
-  const aliasSets = buildAliasSets(aliases);
+  const aliasSets = aliases.buildSets();
   for (const aliasSet of aliasSets) {
     // Update mutableRange.end only if the identifiers have actually been
     // mutated.

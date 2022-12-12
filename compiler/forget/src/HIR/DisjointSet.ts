@@ -84,6 +84,28 @@ export default class DisjointSet<T> {
     }
   }
 
+  buildSets(): Array<Set<T>> {
+    const ids: Map<T, number> = new Map();
+    const sets: Map<number, Set<T>> = new Map();
+
+    this.forEach((identifier, groupIdentifier) => {
+      let id = ids.get(groupIdentifier);
+      if (id == null) {
+        id = ids.size;
+        ids.set(groupIdentifier, id);
+      }
+
+      let set = sets.get(id);
+      if (set === undefined) {
+        set = new Set();
+        sets.set(id, set);
+      }
+      set.add(identifier);
+    });
+
+    return [...sets.values()];
+  }
+
   get size(): number {
     return this.#entries.size;
   }

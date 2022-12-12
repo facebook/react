@@ -15,30 +15,6 @@ type AbstractPrimitive = {
 
 export type AliasSet = Set<Identifier>;
 
-export function buildAliasSets(
-  aliases: DisjointSet<Identifier>
-): Array<AliasSet> {
-  const aliasIds: Map<Identifier, number> = new Map();
-  const aliasSets: Map<number, Set<Identifier>> = new Map();
-
-  aliases.forEach((identifier, groupIdentifier) => {
-    let aliasId = aliasIds.get(groupIdentifier);
-    if (aliasId == null) {
-      aliasId = aliasIds.size;
-      aliasIds.set(groupIdentifier, aliasId);
-    }
-
-    let aliasSet = aliasSets.get(aliasId);
-    if (aliasSet === undefined) {
-      aliasSet = new Set();
-      aliasSets.set(aliasId, aliasSet);
-    }
-    aliasSet.add(identifier);
-  });
-
-  return [...aliasSets.values()];
-}
-
 class AbstractState {
   aliases = new DisjointSet<Identifier>();
   // NOTE(gsn): Should this be a part of AbstractObject? No, because this has

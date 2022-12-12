@@ -23,7 +23,6 @@ import {
   SourceLocation,
   Terminal,
 } from "./HIR";
-import { buildAliasSets } from "./InferAlias";
 import { eachReactiveScope } from "./visitors";
 
 export type Options = {
@@ -335,7 +334,7 @@ export function printSourceLocation(loc: SourceLocation): string {
 }
 
 export function printAliases(aliases: DisjointSet<Identifier>): string {
-  const aliasSets = buildAliasSets(aliases);
+  const aliasSets = aliases.buildSets();
 
   const items = [];
   for (const aliasSet of aliasSets) {
