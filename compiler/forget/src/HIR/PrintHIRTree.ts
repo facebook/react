@@ -25,7 +25,17 @@ export function printHIRTree(fn: HIRFunction): string {
   return visitTree(fn, new PrintVisitor());
 }
 
-class PrintVisitor implements Visitor<Array<string>, string, string, string> {
+class PrintVisitor
+  implements
+    Visitor<
+      Array<string>,
+      Array<string>,
+      Array<string>,
+      string,
+      string,
+      string
+    >
+{
   depth: number = 0; // for indentation
 
   enterBlock(): string[] {
@@ -37,6 +47,12 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
   }
   leaveValueBlock(block: string[], value: string): string {
     return this.leaveBlock(block);
+  }
+  enterInitBlock(block: string[]): string[] {
+    return this.enterBlock();
+  }
+  leaveInitBlock(block: string[]): string[] {
+    return block;
   }
   visitValue(value: InstructionValue): string {
     return printMixedHIR(value);
@@ -141,6 +157,12 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
     if (label !== undefined) {
       block.push(`${prefix}bb${label}:`);
     }
+  }
+  appendValueBlock(block: string[], item: string): void {
+    this.appendBlock(block, item);
+  }
+  appendInitBlock(block: string[], item: string): void {
+    this.appendBlock(block, item);
   }
   leaveBlock(block: string[]): string {
     this.depth--;

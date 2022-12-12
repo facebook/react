@@ -27,25 +27,35 @@ import {
  *
  * See the {@link Visitor} interface for more about implementing a visitor.
  */
-export function visitTree<TBlock, TValue, TItem, TCase>(
+export function visitTree<
+  TBlock,
+  TInit,
+  TValueBlock,
+  TValue,
+  TStatement,
+  TCase
+>(
   fn: HIRFunction,
-  visitor: Visitor<TBlock, TValue, TItem, TCase>
-): TItem {
+  visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>
+): TStatement {
   const cx = new Context(fn.body);
   const driver = new Driver(cx, visitor);
   return driver.traverseBlock(cx.block(fn.body.entry));
 }
 
-class Driver<TBlock, TValue, TItem, TCase> {
+class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
   cx: Context;
-  visitor: Visitor<TBlock, TValue, TItem, TCase>;
+  visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>;
 
-  constructor(cx: Context, visitor: Visitor<TBlock, TValue, TItem, TCase>) {
+  constructor(
+    cx: Context,
+    visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>
+  ) {
     this.cx = cx;
     this.visitor = visitor;
   }
 
-  traverseBlock(block: BasicBlock): TItem {
+  traverseBlock(block: BasicBlock): TStatement {
     const blockValue = this.visitor.enterBlock();
     this.visitBlock(block, blockValue);
     return this.visitor.leaveBlock(blockValue);
@@ -110,7 +120,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         }
 
         this.visitor.visitTerminalId(terminal.id);
-        let consequent: TItem | null = null;
+        let consequent: TStatement | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
           consequent = this.visitBreak(terminal.consequent);
         } else {
@@ -119,7 +129,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
           );
         }
 
-        let alternate: TItem | null = null;
+        let alternate: TStatement | null = null;
         if (alternateId !== null) {
           if (this.cx.isScheduled(alternateId)) {
             alternate = this.visitBreak(alternateId);
@@ -233,26 +243,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
         break;
       }
       case "while": {
-        const testBlock = this.cx.ir.blocks.get(terminal.test)!;
-        const testTerminal = testBlock.terminal;
-        invariant(
-          testTerminal.kind === "if",
-          "Expected while loop test block to end in an if"
-        );
-        const testValueBlock = this.visitor.enterValueBlock();
-        for (const instr of testBlock.instructions) {
-          const value = this.visitor.visitValue(instr.value, instr.id);
-          const item = this.visitor.visitInstruction(instr, value);
-          this.visitor.appendBlock(testValueBlock, item);
-        }
-        const testValueLast = this.visitor.visitValue(
-          testTerminal.test,
-          testTerminal.id
-        );
-        const testValue = this.visitor.leaveValueBlock(
-          testValueBlock,
-          testValueLast
-        );
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -271,7 +261,17 @@ class Driver<TBlock, TValue, TItem, TCase> {
         scheduleIds.push(scheduleId);
 
         this.visitor.visitTerminalId(terminal.id);
-        let loopBody: TItem;
+        const testBlock = this.cx.ir.blocks.get(terminal.test)!;
+        const testTerminal = testBlock.terminal;
+        invariant(
+          testTerminal.kind === "if",
+          "Expected while loop test block to end in an if"
+        );
+        const testValue = this.visitValueBlock(blockValue, testBlock, {
+          value: testTerminal.test,
+          id: testTerminal.id,
+        });
+        let loopBody: TStatement;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
@@ -331,18 +331,15 @@ class Driver<TBlock, TValue, TItem, TCase> {
         );
         scheduleIds.push(scheduleId);
 
+        this.visitor.visitTerminalId(terminal.id);
+
         const initBlock = this.cx.ir.blocks.get(terminal.init)!;
         const initTerminal = initBlock.terminal;
         invariant(
           initTerminal.kind === "goto",
           "Expected for loop init block to end in a goto"
         );
-
-        let initItem;
-        for (const instr of initBlock.instructions) {
-          const value = this.visitor.visitValue(instr.value, instr.id);
-          initItem = this.visitor.visitInstruction(instr, value);
-        }
+        const initValue = this.visitInitBlock(blockValue, initBlock);
 
         const testBlock = this.cx.ir.blocks.get(terminal.test)!;
         const testTerminal = testBlock.terminal;
@@ -350,20 +347,10 @@ class Driver<TBlock, TValue, TItem, TCase> {
           testTerminal.kind === "if",
           "Expected for loop test block to end in an if"
         );
-        const testValueBlock = this.visitor.enterValueBlock();
-        for (const instr of testBlock.instructions) {
-          const value = this.visitor.visitValue(instr.value, instr.id);
-          const item = this.visitor.visitInstruction(instr, value);
-          this.visitor.appendBlock(testValueBlock, item);
-        }
-        const testValueLast = this.visitor.visitValue(
-          testTerminal.test,
-          testTerminal.id
-        );
-        const testValue = this.visitor.leaveValueBlock(
-          testValueBlock,
-          testValueLast
-        );
+        const testValue = this.visitValueBlock(blockValue, testBlock, {
+          value: testTerminal.test,
+          id: testTerminal.id,
+        });
 
         const updateBlock = this.cx.ir.blocks.get(terminal.update)!;
         const updateTerminal = updateBlock.terminal;
@@ -371,12 +358,9 @@ class Driver<TBlock, TValue, TItem, TCase> {
           updateTerminal.kind === "goto",
           "Expected for loop update block to end in a goto"
         );
-        let updateValue;
-        for (const instr of updateBlock.instructions) {
-          updateValue = this.visitor.visitValue(instr.value, instr.id);
-        }
+        const updateValue = this.visitValueBlock(blockValue, updateBlock);
 
-        let loopBody: TItem;
+        let loopBody: TStatement;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
@@ -396,9 +380,9 @@ class Driver<TBlock, TValue, TItem, TCase> {
             blockValue,
             this.visitor.visitTerminal({
               kind: "for",
-              init: initItem as any,
+              init: initValue,
               test: testValue,
-              update: updateValue as any,
+              update: updateValue,
               loop: loopBody,
             }),
             fallthroughId
@@ -409,9 +393,9 @@ class Driver<TBlock, TValue, TItem, TCase> {
             blockValue,
             this.visitor.visitTerminal({
               kind: "for",
-              init: initItem as any,
+              init: initValue,
               test: testValue,
-              update: updateValue as any,
+              update: updateValue,
               loop: loopBody,
             })
           );
@@ -450,12 +434,50 @@ class Driver<TBlock, TValue, TItem, TCase> {
     }
   }
 
-  emptyBlock(): TItem {
+  visitInitBlock(parent: TBlock, block: BasicBlock): TInit {
+    const initBlock = this.visitor.enterInitBlock(parent);
+    for (const instr of block.instructions) {
+      const value = this.visitor.visitValue(instr.value, instr.id);
+      const item = this.visitor.visitInstruction(instr, value);
+      this.visitor.appendInitBlock(initBlock, item);
+    }
+    return this.visitor.leaveInitBlock(initBlock);
+  }
+
+  visitValueBlock(
+    parent: TBlock,
+    block: BasicBlock,
+    terminalValue?: { value: InstructionValue; id: InstructionId }
+  ): TValue {
+    const valueBlock = this.visitor.enterValueBlock(parent);
+    const instructions = [...block.instructions];
+    let lastValue: { value: InstructionValue; id: InstructionId };
+    if (terminalValue != null) {
+      lastValue = terminalValue;
+    } else {
+      invariant(instructions.length > 0, "Value block may not be empty");
+      const last = instructions.pop()!;
+      invariant(
+        last.lvalue === null,
+        "Expected value block to end in a value, not an assignment"
+      );
+      lastValue = { value: last.value, id: last.id };
+    }
+    for (const instr of instructions) {
+      const value = this.visitor.visitValue(instr.value, instr.id);
+      const item = this.visitor.visitInstruction(instr, value);
+      this.visitor.appendValueBlock(valueBlock, item);
+    }
+    const value = this.visitor.visitValue(lastValue.value, lastValue.id);
+    return this.visitor.leaveValueBlock(valueBlock, value);
+  }
+
+  emptyBlock(): TStatement {
     const block = this.visitor.enterBlock();
     return this.visitor.leaveBlock(block);
   }
 
-  visitBreak(block: BlockId): TItem | null {
+  visitBreak(block: BlockId): TStatement | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
       // TODO: we should always have a target
@@ -477,7 +499,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
     }
   }
 
-  visitContinue(block: BlockId): TItem | null {
+  visitContinue(block: BlockId): TStatement | null {
     const target = this.cx.getContinueTarget(block);
     invariant(
       target !== null,
@@ -746,19 +768,62 @@ type ControlFlowTarget =
  *
  * TBlock = representation of a list of statements
  * TValue = represenation of an InstructionValue
- * TItem = representation of an Instruction
+ * TStatement = representation of an Instruction
  * TCase = representation of a switch case
  */
-export interface Visitor<TBlock, TValue, TItem, TCase> {
+export interface Visitor<
+  TBlock,
+  TInit,
+  TValueBlock,
+  TValue,
+  TStatement,
+  TCase
+> {
   /**
    * Must create an "empty" instance of the visitor's represenation for
    * the contents of a block.
    */
   enterBlock(): TBlock;
 
-  enterValueBlock(): TBlock;
+  /**
+   * Appends an item onto the given block, with an optional label. The label
+   * indicates that a break/continue will proceed to code *after* the given item.
+   */
+  appendBlock(block: TBlock, item: TStatement, label?: BlockId): void;
 
-  leaveValueBlock(block: TBlock, value: TValue): TValue;
+  /**
+   * Converts the visitor's block representation into the representation of a
+   * block item, simultaneously "closing" the given block. The block will no
+   * longer be modified by the visitor driver.
+   */
+  leaveBlock(block: TBlock): TStatement;
+
+  /**
+   * Must create an "empty" instance of the visitor's representation for a value
+   * block, which can generally contain only expressions but not statements. The
+   * currently active parent block is passed as an argument.
+   *
+   * The exception is the for initializer, which may contain declarations but not
+   * other statement types.
+   */
+  enterValueBlock(block: TBlock): TValueBlock;
+
+  /**
+   * Appends an item onto the given value block.
+   */
+  appendValueBlock(block: TValueBlock, item: TStatement): void;
+
+  /**
+   * Converts the visitor's value block (and final value) to the visitor's
+   * value representation.
+   */
+  leaveValueBlock(block: TValueBlock, value: TValue): TValue;
+
+  enterInitBlock(block: TBlock): TValueBlock;
+
+  appendInitBlock(block: TValueBlock, item: TStatement): void;
+
+  leaveInitBlock(block: TValueBlock): TInit;
 
   /**
    * Convert an InstructionValue into the visitor's own representation
@@ -770,7 +835,7 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * Convert an Instruction into the visitor's own representation of
    * a block item.
    */
-  visitInstruction(instruction: Instruction, value: TValue): TItem;
+  visitInstruction(instruction: Instruction, value: TValue): TStatement;
 
   /**
    * Called when a terminal is reached, before processing any of its
@@ -783,7 +848,7 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * have to be emitted — to the visitor's representation. The visitor
    * can choose to return null if this does not need to be represented.
    */
-  visitImplicitTerminal(): TItem | null;
+  visitImplicitTerminal(): TStatement | null;
 
   /**
    * Converts a terminal into the visitor's own representation of a block
@@ -791,50 +856,39 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * values and block ids will have already been converted into the visitor's
    * own representations.
    */
-  visitTerminal(terminal: BlockTerminal<TBlock, TValue, TItem, TCase>): TItem;
+  visitTerminal(
+    terminal: BlockTerminal<TInit, TValue, TStatement, TCase>
+  ): TStatement;
 
   /**
    * Visits a switch case statement, which is collected into a switch terminal
    * variant.
    */
-  visitCase(test: TValue | null, block: TItem): TCase;
-
-  /**
-   * Appends an item onto the given block, with an optional label. The label
-   * indicates that a break/continue will proceed to code *after* the given item.
-   */
-  appendBlock(block: TBlock, item: TItem, label?: BlockId): void;
-
-  /**
-   * Converts the visitor's block representation into the representation of a
-   * block item, simultaneously "closing" the given block. The block will no
-   * longer be modified by the visitor driver.
-   */
-  leaveBlock(block: TBlock): TItem;
+  visitCase(test: TValue | null, block: TStatement): TCase;
 }
 
-export type BlockTerminal<TBlock, TValue, TItem, TCase> =
+export type BlockTerminal<TInit, TValue, TStatement, TCase> =
   | { kind: "return"; loc: SourceLocation; value: TValue | null }
   | { kind: "throw"; value: TValue }
   | {
       kind: "if";
       test: TValue;
-      consequent: TItem;
-      alternate: TItem | null;
+      consequent: TStatement;
+      alternate: TStatement | null;
     }
   | { kind: "switch"; test: TValue; cases: Array<TCase> }
   | {
       kind: "while";
       loc: SourceLocation;
       test: TValue;
-      loop: TItem;
+      loop: TStatement;
     }
   | {
       kind: "for";
-      init: TItem;
+      init: TInit;
       test: TValue;
       update: TValue;
-      loop: TItem;
+      loop: TStatement;
     }
   | { kind: "break"; label: BlockId | null }
   | { kind: "continue"; label: BlockId | null };

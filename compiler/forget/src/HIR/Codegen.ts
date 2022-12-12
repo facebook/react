@@ -91,7 +91,14 @@ type Temporaries = Map<IdentifierId, t.Expression>;
 
 class CodegenVisitor
   implements
-    Visitor<Array<t.Statement>, t.Expression, t.Statement, t.SwitchCase>
+    Visitor<
+      Array<t.Statement>,
+      Array<t.Statement>,
+      Array<t.Statement>,
+      t.Expression,
+      t.Statement,
+      t.SwitchCase
+    >
 {
   depth: number = 0;
   temp: Map<IdentifierId, t.Expression> = new Map();
@@ -100,10 +107,77 @@ class CodegenVisitor
     this.depth++;
     return [];
   }
-  enterValueBlock(): t.Statement[] {
-    this.depth++;
-    return [];
+  appendBlock(
+    block: t.Statement[],
+    item: t.Statement,
+    blockId?: BlockId | undefined
+  ): void {
+    if (item.type === "EmptyStatement") {
+      return;
+    }
+    if (blockId !== undefined) {
+      block.push(
+        createLabelledStatement(
+          item.loc,
+          t.identifier(codegenLabel(blockId)),
+          item
+        )
+      );
+    } else {
+      block.push(item);
+    }
   }
+  leaveBlock(block: t.Statement[]): t.Statement {
+    this.depth--;
+    return t.blockStatement(block);
+  }
+  enterValueBlock(): t.Statement[] {
+    return this.enterBlock();
+  }
+  appendValueBlock(block: t.Statement[], item: t.Statement): void {
+    this.appendBlock(block, item);
+  }
+  leaveValueBlock(block: t.Statement[], place: t.Expression): t.Expression {
+    this.depth--;
+    if (block.length === 0) {
+      return place;
+    }
+    const expressions = block.map((stmt) => {
+      switch (stmt.type) {
+        case "ExpressionStatement":
+          return stmt.expression;
+        default:
+          todoInvariant(
+            false,
+            `Handle conversion of ${stmt.type} to expression`
+          );
+      }
+    });
+    expressions.push(place);
+    return t.sequenceExpression(expressions);
+  }
+
+  enterInitBlock(block: t.Statement[]): t.Statement[] {
+    return this.enterBlock();
+  }
+
+  appendInitBlock(block: t.Statement[], item: t.Statement): void {
+    this.appendBlock(block, item);
+  }
+  leaveInitBlock(block: t.Statement[]): t.Statement[] {
+    switch (block.length) {
+      case 0: {
+        return [t.emptyStatement()];
+      }
+      case 1: {
+        return [block[0]];
+      }
+      default: {
+        return [t.blockStatement(block)];
+      }
+    }
+  }
+
   visitValue(value: InstructionValue): t.Expression {
     return codegenInstructionValue(this.temp, value);
   }
@@ -191,8 +265,25 @@ class CodegenVisitor
         return createWhileStatement(terminal.loc, terminal.test, terminal.loop);
       }
       case "for": {
+        const initBlock = terminal.init;
+        invariant(
+          initBlock.length === 1,
+          "Expected for init to be a single expression or statement"
+        );
+        const initStatement = initBlock[0]!;
+        let init;
+        if (initStatement.type === "VariableDeclaration") {
+          init = initStatement;
+        } else if (initStatement.type === "ExpressionStatement") {
+          init = initStatement.expression;
+        } else {
+          invariant(
+            false,
+            `Expected 'for' init block to contain variable declaration or an expression, got '${initStatement.type}'.`
+          );
+        }
         return t.forStatement(
-          terminal.init as any, // TODO: make sure it's a variable declaration
+          init,
           terminal.test,
           terminal.update,
           terminal.loop
@@ -224,49 +315,6 @@ class CodegenVisitor
   }
   visitCase(test: t.Expression | null, block: t.Statement): t.SwitchCase {
     return t.switchCase(test, [block]);
-  }
-  appendBlock(
-    block: t.Statement[],
-    item: t.Statement,
-    blockId?: BlockId | undefined
-  ): void {
-    if (item.type === "EmptyStatement") {
-      return;
-    }
-    if (blockId !== undefined) {
-      block.push(
-        createLabelledStatement(
-          item.loc,
-          t.identifier(codegenLabel(blockId)),
-          item
-        )
-      );
-    } else {
-      block.push(item);
-    }
-  }
-  leaveBlock(block: t.Statement[]): t.Statement {
-    this.depth--;
-    return t.blockStatement(block);
-  }
-  leaveValueBlock(block: t.Statement[], place: t.Expression): t.Expression {
-    this.depth--;
-    if (block.length === 0) {
-      return place;
-    }
-    const expressions = block.map((stmt) => {
-      switch (stmt.type) {
-        case "ExpressionStatement":
-          return stmt.expression;
-        default:
-          todoInvariant(
-            false,
-            `Handle conversion of ${stmt.type} to expression`
-          );
-      }
-    });
-    expressions.push(place);
-    return t.sequenceExpression(expressions);
   }
 }
 

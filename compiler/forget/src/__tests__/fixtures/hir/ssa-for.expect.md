@@ -20,7 +20,7 @@ bb0:
   [2] For init=bb3 test=bb1 loop=bb5 update=bb4 fallthrough=bb2
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate i$8_@1[3:13] = 0
+  [3] Const mutate i$8_@1[3:5] = 0
   [4] Goto bb1
 bb1:
   predecessor blocks: bb3 bb4
@@ -40,6 +40,7 @@ bb2:
   predecessor blocks: bb1
   [13] Return read x$7_@0
 scope3 [6:8]:
+  - dependency: read i$8_@1
   - dependency: read $9_@2
 ```
 
@@ -56,7 +57,7 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate i$8_@1[3:13] = 0
+      [3] Const mutate i$8_@1[3:5] = 0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

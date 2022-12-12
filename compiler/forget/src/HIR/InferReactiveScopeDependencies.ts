@@ -35,7 +35,7 @@ export function instructionInScope(
 }
 
 class ScopeDependenciesVisitor
-  implements Visitor<void, InstructionValue, void, void>
+  implements Visitor<void, void, void, InstructionValue, void, void>
 {
   #identifiers: Map<Identifier, InstructionId> = new Map();
   // Scopes that are currently active at this point in the traversal
@@ -89,6 +89,9 @@ class ScopeDependenciesVisitor
       case "switch":
       case "for":
       case "while": {
+        if (typeof terminal?.test?.kind !== "string") {
+          console.log(terminal);
+        }
         for (const operand of eachInstructionValueOperand(terminal.test)) {
           this.#addTerminalDependency(operand);
         }
@@ -176,11 +179,15 @@ class ScopeDependenciesVisitor
 
   enterBlock(): void {}
   enterValueBlock(): void {}
+  enterInitBlock(block: void): void {}
   visitImplicitTerminal(): void | null {}
   visitCase(test: InstructionValue, block: void): void {}
   appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
+  appendValueBlock(block: void, item: void): void {}
+  appendInitBlock(block: void, item: void): void {}
   leaveBlock(block: void): void {}
   leaveValueBlock(block: void, value: InstructionValue): InstructionValue {
     return value;
   }
+  leaveInitBlock(block: void): void {}
 }

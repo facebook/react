@@ -15,10 +15,13 @@ import {
   InstructionId,
   InstructionValue,
   makeInstructionId,
+  MutableRange,
   ReactiveScope,
   ScopeId,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
+import { log } from "./logger";
+import { printFunction } from "./PrintHIR";
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
@@ -120,6 +123,10 @@ export function inferReactiveScopes(fn: HIRFunction) {
   mergeScopesWithIdenticalRanges(fn);
 
   visitTree(fn, new AlignReactiveScopesToBlockScopeRangeVisitor());
+  log(
+    () =>
+      `AlignReactiveScopesToBlockScopeRangeVisitor:\n${printFunction(fn)}\n\n`
+  );
   visitTree(fn, new MergeOverlappingReactiveScopesVisitor());
 }
 
@@ -158,10 +165,8 @@ type ShadowableReactiveScope = {
   shadowedBy: ReactiveScope | null;
 };
 
-// maybe we just merge cases of interleaving when at the same block scope - eh fine?
-// then we can look at scopes that start at the same block scope and overlap
 class MergeOverlappingReactiveScopesVisitor
-  implements Visitor<void, void, void, void>
+  implements Visitor<void, void, void, void, void, void>
 {
   scopes: Array<BlockScope> = [];
   seenScopes: Set<ScopeId> = new Set();
@@ -257,6 +262,12 @@ class MergeOverlappingReactiveScopesVisitor
   enterValueBlock(): void {
     this.enterBlock();
   }
+  enterInitBlock(block: void): void {
+    this.enterBlock();
+  }
+  leaveInitBlock(block: void): void {
+    this.leaveBlock();
+  }
   leaveValueBlock(block: void, value: void): void {
     this.leaveBlock();
   }
@@ -290,6 +301,8 @@ class MergeOverlappingReactiveScopesVisitor
   visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {}
   visitCase(test: void | null, block: void): void {}
   appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
+  appendValueBlock(block: void, item: void): void {}
+  appendInitBlock(block: void, item: void): void {}
   leaveBlock(block: void): void {
     this.scopes.pop();
     if (this.scopes.length === 0) {
@@ -313,9 +326,13 @@ type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
 
 /**
  * Aligns scopes to block scope boundaries.
+ *
+ * TODO @josephsavona this algorithm isn't quite right. we need to ensure that
+ * reactive scopes can only be closed (end updated) at the same block scope as they
+ * were opened (start encountered).
  */
 class AlignReactiveScopesToBlockScopeRangeVisitor
-  implements Visitor<void, void, void, void>
+  implements Visitor<void, void, void, void, void, void>
 {
   // For each block scope (outer array) stores a list of ReactiveScopes that start
   // in that block scope.
@@ -348,6 +365,8 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
     this.blockScopes.push([]);
   }
 
+  appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
+
   leaveBlock(block: void): void {
     const lastScope = this.blockScopes.pop();
     invariant(
@@ -364,12 +383,21 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   enterValueBlock(): void {
     this.enterBlock();
   }
-
+  appendValueBlock(block: void, item: void): void {}
   leaveValueBlock(block: void, value: void): void {
-    this.leaveBlock();
+    this.leaveBlock(block);
+  }
+
+  enterInitBlock(block: void): void {
+    this.enterBlock();
+  }
+  appendInitBlock(block: void, item: void): void {}
+  leaveInitBlock(block: void): void {
+    this.leaveBlock(block);
   }
 
   visitInstruction(instruction: Instruction, value: void): void {
+    this.visitId(instruction.id);
     const scope = getInstructionScope(instruction);
     if (scope !== null) {
       if (!this.seenScopes.has(scope.id)) {
@@ -381,8 +409,6 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
         });
       }
     }
-
-    this.visitId(instruction.id);
   }
 
   visitTerminalId(id: InstructionId): void {
@@ -396,18 +422,28 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   // no-ops
   visitValue(value: InstructionValue): void {}
   visitCase(test: void | null, block: void): void {}
-  appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
 }
 
 function getInstructionScope(instr: Instruction): ReactiveScope | null {
-  if (instr.lvalue !== null && instr.lvalue.place.identifier.scope !== null) {
+  if (
+    instr.lvalue !== null &&
+    instr.lvalue.place.identifier.scope !== null &&
+    isActive(instr, instr.lvalue.place.identifier.scope.range)
+  ) {
     return instr.lvalue.place.identifier.scope;
   } else {
     for (const operand of eachInstructionOperand(instr)) {
-      if (operand.identifier.scope !== null) {
+      if (
+        operand.identifier.scope !== null &&
+        isActive(instr, operand.identifier.scope.range)
+      ) {
         return operand.identifier.scope;
       }
     }
   }
   return null;
+}
+
+function isActive(instr: Instruction, range: MutableRange): boolean {
+  return instr.id >= range.start && instr.id < range.end;
 }
