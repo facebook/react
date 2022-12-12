@@ -2420,6 +2420,8 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
     return;
   }
 
+  // TODO: There is an opportunity to optimise this by not entering commit phase
+  // and unmounting effects directly.
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     instance._pendingVisibility |= OffscreenDetached;
