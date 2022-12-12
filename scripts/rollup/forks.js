@@ -70,14 +70,6 @@ const forks = Object.freeze({
     if (entry === 'react-dom' || entry === 'react-dom/server-rendering-stub') {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/shared/forks/ReactDOMSharedInternals.www.js';
-      default:
-        break;
-    }
     if (
       !entry.startsWith('react-dom/') &&
       dependencies.indexOf('react-dom') === -1

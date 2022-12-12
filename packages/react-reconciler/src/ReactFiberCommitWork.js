@@ -17,6 +17,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
+import {NoTimestamp, SyncLane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
@@ -152,7 +153,6 @@ import {
   clearSingleton,
   acquireSingletonInstance,
   releaseSingletonInstance,
-  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -169,7 +169,6 @@ import {
   setIsRunningInsertionEffect,
   getExecutionContext,
   CommitContext,
-  RenderContext,
   NoContext,
 } from './ReactFiberWorkLoop';
 import {
@@ -205,6 +204,8 @@ import {
   TransitionRoot,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
+import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2407,24 +2408,44 @@ function getRetryCache(finishedWork) {
 }
 
 export function detachOffscreenInstance(instance: OffscreenInstance): void {
-  const currentOffscreenFiber = instance._current;
-  if (currentOffscreenFiber === null) {
+  const fiber = instance._current;
+  if (fiber === null) {
     throw new Error(
       'Calling Offscreen.detach before instance handle has been set.',
     );
   }
 
-  const executionContext = getExecutionContext();
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    scheduleMicrotask(() => {
-      instance._visibility |= OffscreenDetached;
-      disappearLayoutEffects(currentOffscreenFiber);
-      disconnectPassiveEffect(currentOffscreenFiber);
-    });
-  } else {
-    instance._visibility |= OffscreenDetached;
-    disappearLayoutEffects(currentOffscreenFiber);
-    disconnectPassiveEffect(currentOffscreenFiber);
+  if ((instance._pendingVisibility & OffscreenDetached) !== NoFlags) {
+    // The instance is already detached, this is a noop.
+    return;
+  }
+
+  // TODO: There is an opportunity to optimise this by not entering commit phase
+  // and unmounting effects directly.
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    instance._pendingVisibility |= OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
+}
+
+export function attachOffscreenInstance(instance: OffscreenInstance): void {
+  const fiber = instance._current;
+  if (fiber === null) {
+    throw new Error(
+      'Calling Offscreen.detach before instance handle has been set.',
+    );
+  }
+
+  if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
+    // The instance is already attached, this is a noop.
+    return;
+  }
+
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    instance._pendingVisibility &= ~OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
   }
 }
 
@@ -2857,12 +2878,19 @@ function commitMutationEffectsOnFiber(
       }
 
       commitReconciliationEffects(finishedWork);
+
+      const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
+
       // TODO: Add explicit effect flag to set _current.
-      finishedWork.stateNode._current = finishedWork;
+      offscreenInstance._current = finishedWork;
+
+      // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
+      // to support batching of `attach` and `detach` calls.
+      offscreenInstance._visibility &= ~OffscreenDetached;
+      offscreenInstance._visibility |=
+        offscreenInstance._pendingVisibility & OffscreenDetached;
 
       if (flags & Visibility) {
-        const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-
         // Track the current state on the Offscreen instance so we can
         // read it during an event
         if (isHidden) {
