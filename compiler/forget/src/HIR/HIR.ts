@@ -402,4 +402,6 @@ export function makeInstructionId(id: number): InstructionId {
 
 export enum Type {
   Any,
+  Primitive,
+  Object,
 }

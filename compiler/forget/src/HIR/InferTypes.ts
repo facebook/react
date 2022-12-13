@@ -1,6 +1,13 @@
 import invariant from "invariant";
 import DisjointSet from "./DisjointSet";
-import { HIRFunction, Identifier, Instruction, LValue, Place } from "./HIR";
+import {
+  HIRFunction,
+  Identifier,
+  Instruction,
+  LValue,
+  Place,
+  Type,
+} from "./HIR";
 import { printInstructionValue } from "./PrintHIR";
 
 type AbstractValue = AbstractObject | AbstractPrimitive;
@@ -12,6 +19,17 @@ type AbstractPrimitive = {
   kind: "Primitive";
   value: number | boolean | string | null | undefined;
 };
+
+function typeOf(value: AbstractValue) {
+  switch (value.kind) {
+    case "Primitive":
+      return Type.Primitive;
+    case "Object":
+      return Type.Object;
+    default:
+      return Type.Any;
+  }
+}
 
 class AbstractState {
   #values = new Map<Identifier, AbstractValue>();
@@ -96,6 +114,7 @@ class AbstractState {
     // Simple lvalue:
     //   lvalue = alias;
     //   lvalue = alias.memberPath;
+    lvalue.place.type = typeOf(value);
     this.#values.set(lvalue.place.identifier, value);
   }
 }
