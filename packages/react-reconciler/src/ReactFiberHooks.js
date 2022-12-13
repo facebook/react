@@ -38,7 +38,7 @@ import {
   enableTransitionTracing,
   enableUseHook,
   enableUseMemoCacheHook,
-  enableUseEventHook,
+  enableUseEffectEventHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
@@ -2780,7 +2780,7 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
-if (enableUseEventHook) {
+if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
 
@@ -2814,7 +2814,7 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
 }
-if (enableUseEventHook) {
+if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -2846,7 +2846,7 @@ if (enableUseMemoCacheHook) {
 if (enableUseHook) {
   (HooksDispatcherOnUpdate: Dispatcher).use = use;
 }
-if (enableUseEventHook) {
+if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
 
@@ -2879,7 +2879,7 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
 }
-if (enableUseEventHook) {
+if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
 
@@ -3059,7 +3059,7 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -3214,7 +3214,7 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -3369,7 +3369,7 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -3525,7 +3525,7 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -3707,7 +3707,7 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -3890,7 +3890,7 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
@@ -4074,7 +4074,7 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
-  if (enableUseEventHook) {
+  if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,

@@ -5460,7 +5460,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   describe('useEffectEvent', () => {
-    // @gate enableUseEventHook
+    // @gate enableUseEffectEventHook
     it('can server render a component with useEffectEvent', async () => {
       const ref = React.createRef();
       function App() {
@@ -5491,7 +5491,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual(<button>1</button>);
     });
 
-    // @gate enableUseEventHook
+    // @gate enableUseEffectEventHook
     it('throws if useEffectEvent is called during a server render', async () => {
       const logs = [];
       function App() {
@@ -5523,7 +5523,7 @@ describe('ReactDOMFizzServer', () => {
       expect(reportedServerErrors).toEqual([caughtError]);
     });
 
-    // @gate enableUseEventHook
+    // @gate enableUseEffectEventHook
     it('does not guarantee useEffectEvent return values during server rendering are distinct', async () => {
       function App() {
         const onClick1 = React.experimental_useEffectEvent(() => {});

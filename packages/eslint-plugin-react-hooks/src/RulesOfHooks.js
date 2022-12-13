@@ -103,7 +103,7 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
-function isUseEventIdentifier(node) {
+function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
@@ -135,7 +135,7 @@ export default {
     // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
     // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
     // can only be declared within a component or hook at its top level.
-    function recordAllUseEventFunctions(scope) {
+    function recordAllUseEffectEventFunctions(scope) {
       for (const reference of scope.references) {
         const parent = reference.identifier.parent;
         if (
@@ -143,7 +143,7 @@ export default {
           parent.init &&
           parent.init.type === 'CallExpression' &&
           parent.init.callee &&
-          isUseEventIdentifier(parent.init.callee)
+          isUseEffectEventIdentifier(parent.init.callee)
         ) {
           for (const ref of reference.resolved.references) {
             if (ref !== reference) {
@@ -576,7 +576,7 @@ export default {
         if (
           node.callee.type === 'Identifier' &&
           (node.callee.name === 'useEffect' ||
-            isUseEventIdentifier(node.callee)) &&
+            isUseEffectEventIdentifier(node.callee)) &&
           node.arguments.length > 0
         ) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
@@ -613,14 +613,14 @@ export default {
       FunctionDeclaration(node) {
         // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       },
 
       ArrowFunctionExpression(node) {
         // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       },
     };

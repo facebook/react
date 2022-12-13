@@ -32,7 +32,7 @@ import {makeId} from './ReactServerFormatConfig';
 import {
   enableCache,
   enableUseHook,
-  enableUseEventHook,
+  enableUseEffectEventHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -507,7 +507,7 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw new Error(
     "A function wrapped in useEffectEvent can't be called during rendering.",
   );
@@ -517,7 +517,7 @@ export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
   // $FlowIgnore[incompatible-return]
-  return throwOnUseEventCall;
+  return throwOnUseEffectEventCall;
 }
 
 // TODO Decide on how to implement this hook for server rendering.
@@ -651,7 +651,7 @@ export const HooksDispatcher: Dispatcher = {
 if (enableCache) {
   HooksDispatcher.useCacheRefresh = useCacheRefresh;
 }
-if (enableUseEventHook) {
+if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
 }
 if (enableUseMemoCacheHook) {

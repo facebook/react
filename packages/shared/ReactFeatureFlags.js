@@ -121,7 +121,7 @@ export const enableUseHook = true;
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
-export const enableUseEventHook = __EXPERIMENTAL__;
+export const enableUseEffectEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes

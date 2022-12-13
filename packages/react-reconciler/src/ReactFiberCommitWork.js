@@ -50,7 +50,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
-  enableUseEventHook,
+  enableUseEffectEventHook,
   enableFloat,
   enableLegacyHidden,
   enableHostSingletons,
@@ -454,9 +454,9 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
 
   switch (finishedWork.tag) {
     case FunctionComponent: {
-      if (enableUseEventHook) {
+      if (enableUseEffectEventHook) {
         if ((flags & Update) !== NoFlags) {
-          commitUseEventMount(finishedWork);
+          commitUseEffectEventMount(finishedWork);
         }
       }
       break;
@@ -706,7 +706,7 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
   }
 }
 
-function commitUseEventMount(finishedWork: Fiber) {
+function commitUseEffectEventMount(finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const eventPayloads = updateQueue !== null ? updateQueue.events : null;
   if (eventPayloads !== null) {

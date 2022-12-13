@@ -226,7 +226,10 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (isUseEventIdentifier(callee) && id.type === 'Identifier') {
+        } else if (
+          isUseEffectEventIdentifier(callee) &&
+          id.type === 'Identifier'
+        ) {
           for (const ref of resolved.references) {
             if (ref !== id) {
               useEffectEventVariables.add(ref.identifier);
@@ -1851,7 +1854,7 @@ function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
 }
 
-function isUseEventIdentifier(node) {
+function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
