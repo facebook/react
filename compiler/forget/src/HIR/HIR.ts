@@ -284,7 +284,6 @@ export type Primitive = {
 
 /*
  * Range in which an identifier is mutable. Start and End refer to Instruction.id.
- * TODO(gsn): Type Instruction.id better and use it here.
  *
  * Start is inclusive, End is exclusive (ie, end is the "first" instruction for which
  * the value is not mutable).
