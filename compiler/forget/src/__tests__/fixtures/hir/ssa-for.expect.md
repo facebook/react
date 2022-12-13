@@ -44,6 +44,33 @@ bb2:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  scope @1 [1:15] deps=[] {
+    [1] Let mutate x$7_@1[1:15] = 1
+    for (
+      [3] Let mutate i$8_@1[1:15] = 0
+    ;
+      [5] Const mutate $9_@1[1:15] = 10
+      [6] Const mutate $11_@1[1:15] = Binary read i$8_@1 < read $9_@1
+      read $11_@1
+    ;
+      [11] Const mutate $15_@1[1:15] = 1
+      [12] Reassign mutate i$8_@1[1:15] = Binary read i$8_@1 + read $15_@1
+      read i$8_@1
+    ) {
+      [8] Const mutate $12_@3 = 1
+      [9] Reassign mutate x$7_@1[1:15] = Binary read x$7_@1 + read $12_@3
+    }
+  }
+  return read x$7_@1
+}
+
+```
+
 ### CFG
 
 ```mermaid

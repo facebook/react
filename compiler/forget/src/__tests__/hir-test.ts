@@ -14,9 +14,11 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
+import { buildReactiveFunction } from "../HIR/BuildReactiveFunction";
 import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
+import { printReactiveFunction } from "../HIR/PrintReactiveFunction";
 import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -49,7 +51,7 @@ describe("React Forget (HIR version)", () => {
         }
       }
 
-      let items: Array<[string, string, string]> | null = null;
+      let items: Array<TestOutput> | null = null;
       let error: Error | null = null;
       if (options.debug) {
         toggleLogging(options.debug);
@@ -101,29 +103,37 @@ ${wrapWithTripleBackticks(error.message)}
           `;
 }
 
-function formatOutput(items: Array<[string, string, string]>): Array<string> {
-  return items.map(([hir, text, visualization]) => {
+function formatOutput(items: Array<TestOutput>): Array<string> {
+  return items.map(({ ir, js, mermaid, scopes }) => {
     return `
 ## HIR
 
-${wrapWithTripleBackticks(hir)}
+${wrapWithTripleBackticks(ir)}
+
+## Reactive Scopes
+
+${wrapWithTripleBackticks(scopes)}
 
 ### CFG
 
-${wrapWithTripleBackticks(visualization, "mermaid")}
+${wrapWithTripleBackticks(mermaid, "mermaid")}
 
 ## Code
 
-${wrapWithTripleBackticks(text, "javascript")}
+${wrapWithTripleBackticks(js, "javascript")}
         `.trim();
   });
 }
 
-function transform(
-  text: string,
-  file: string
-): Array<[string, string, string]> {
-  const items: Array<[string, string, string]> = [];
+type TestOutput = {
+  ir: string;
+  js: string;
+  mermaid: string;
+  scopes: string;
+};
+
+function transform(text: string, file: string): Array<TestOutput> {
+  const items: Array<TestOutput> = [];
   const ast = parser.parse(text, {
     sourceFilename: file,
     plugins: ["typescript", "jsx"],
@@ -142,15 +152,18 @@ function transform(
           codegen: true,
         });
 
+        const reactiveFunction = buildReactiveFunction(ir);
+        const scopes = printReactiveFunction(reactiveFunction);
+
         const textHIR = printFunction(ir);
-        const visualization = visualizeHIRMermaid(ir);
+        const mermaid = visualizeHIRMermaid(ir);
 
         invariant(ast !== null, "ast is null when codegen option is enabled");
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
           semi: true,
           parser: "babel-ts",
         });
-        items.push([textHIR, text, visualization]);
+        items.push({ ir: textHIR, js: text, scopes, mermaid });
       },
     },
   });

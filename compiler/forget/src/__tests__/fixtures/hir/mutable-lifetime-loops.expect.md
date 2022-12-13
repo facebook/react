@@ -47,6 +47,18 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function mutate(
+  x,
+  y,
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -74,6 +86,17 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function cond(
+  x,
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -97,10 +120,10 @@ function cond$0(x$2) {}
 
 ```
 bb0:
-  [1] Let mutate a$18_@0[0:23] = Object {  }
-  [2] Let mutate b$20_@0[0:23] = Object {  }
-  [3] Let mutate c$22_@0[0:23] = Object {  }
-  [4] Let mutate d$24_@0[0:23] = Object {  }
+  [1] Let mutate a$18_@0[1:23] = Object {  }
+  [2] Let mutate b$20_@0[1:23] = Object {  }
+  [3] Let mutate c$22_@0[1:23] = Object {  }
+  [4] Let mutate d$24_@0[1:23] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
@@ -108,13 +131,13 @@ bb1:
   [7] If (read $17_@1) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [8] Const mutate z$19_@0[0:23] = read a$18_@0
-  [9] Reassign mutate a$18_@0[0:23] = read b$20_@0
-  [10] Reassign mutate b$20_@0[0:23] = read c$22_@0
-  [11] Reassign mutate c$22_@0[0:23] = read d$24_@0
-  [12] Reassign mutate d$24_@0[0:23] = read z$19_@0
-  [13] Call mutate mutate$7_@0(mutate a$18_@0, mutate b$20_@0)
-  [14] Const mutate $29_@0[0:23] = Call mutate cond$8_@0(mutate a$18_@0)
+  [8] Const mutate z$19_@0[1:23] = read a$18_@0
+  [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
+  [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+  [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
+  [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
+  [13] Call mutate mutate$7(mutate a$18_@0, mutate b$20_@0)
+  [14] Const mutate $29_@0[1:23] = Call mutate cond$8(mutate a$18_@0)
   [15] If (read $29_@0) then:bb2 else:bb4 fallthrough=bb4
 bb4:
   predecessor blocks: bb3
@@ -134,8 +157,52 @@ bb11:
 bb13:
   predecessor blocks: bb11
   [21] Const mutate $34_@2 = null
-  [22] Call mutate mutate$7_@0(mutate d$24_@0, read $34_@2)
+  [22] Call mutate mutate$7(mutate d$24_@0, read $34_@2)
   [23] Return
+
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:23] deps=[] {
+    [1] Let mutate a$18_@0[1:23] = Object {  }
+    [2] Let mutate b$20_@0[1:23] = Object {  }
+    [3] Let mutate c$22_@0[1:23] = Object {  }
+    [4] Let mutate d$24_@0[1:23] = Object {  }
+    scope @1 [6:8] deps=[] {
+      while (
+        [6] Const mutate $17_@1[6:8] = true
+        read $17_@1
+      ) {
+        [8] Const mutate z$19_@0[1:23] = read a$18_@0
+        [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
+        [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+        [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
+        [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
+        [13] Call mutate mutate$7(mutate a$18_@0, mutate b$20_@0)
+        [14] Const mutate $29_@0[1:23] = Call mutate cond$8(mutate a$18_@0)
+        if (read $29_@0) {
+          break
+        }
+      }
+    }
+    if (read a$18_@0) {
+    }
+    if (read b$20_@0) {
+    }
+    if (read c$22_@0) {
+    }
+    if (read d$24_@0) {
+    }
+    [21] Const mutate $34_@2 = null
+    [22] Call mutate mutate$7(mutate d$24_@0, read $34_@2)
+  }
+  return
+}
 
 ```
 
@@ -146,10 +213,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$18_@0[0:23] = Object {  }
-      [2] Let mutate b$20_@0[0:23] = Object {  }
-      [3] Let mutate c$22_@0[0:23] = Object {  }
-      [4] Let mutate d$24_@0[0:23] = Object {  }
+      [1] Let mutate a$18_@0[1:23] = Object {  }
+      [2] Let mutate b$20_@0[1:23] = Object {  }
+      [3] Let mutate c$22_@0[1:23] = Object {  }
+      [4] Let mutate d$24_@0[1:23] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -161,13 +228,13 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [8] Const mutate z$19_@0[0:23] = read a$18_@0
-      [9] Reassign mutate a$18_@0[0:23] = read b$20_@0
-      [10] Reassign mutate b$20_@0[0:23] = read c$22_@0
-      [11] Reassign mutate c$22_@0[0:23] = read d$24_@0
-      [12] Reassign mutate d$24_@0[0:23] = read z$19_@0
-      [13] Call mutate mutate$7_@0(mutate a$18_@0, mutate b$20_@0)
-      [14] Const mutate $29_@0[0:23] = Call mutate cond$8_@0(mutate a$18_@0)
+      [8] Const mutate z$19_@0[1:23] = read a$18_@0
+      [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
+      [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+      [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
+      [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
+      [13] Call mutate mutate$7(mutate a$18_@0, mutate b$20_@0)
+      [14] Const mutate $29_@0[1:23] = Call mutate cond$8(mutate a$18_@0)
     "]
     bb3_instrs --> bb3_terminal(["If (read $29_@0)"])
   end
@@ -189,7 +256,7 @@ flowchart TB
   subgraph bb13
     bb13_instrs["
       [21] Const mutate $34_@2 = null
-      [22] Call mutate mutate$7_@0(mutate d$24_@0, read $34_@2)
+      [22] Call mutate mutate$7(mutate d$24_@0, read $34_@2)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end

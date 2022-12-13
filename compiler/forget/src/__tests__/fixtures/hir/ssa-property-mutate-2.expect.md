@@ -16,11 +16,27 @@ function foo() {
 
 ```
 bb0:
-  [1] Const mutate x$4_@0[0:5] = Array []
-  [2] Const mutate y$5_@0[0:5] = Object {  }
-  [3] Reassign mutate y$5_@0.x[0:5] = read x$4_@0
-  [4] Call mutate mutate$3_@0(mutate x$4_@0)
+  [1] Const mutate x$4_@0[1:5] = Array []
+  [2] Const mutate y$5_@0[1:5] = Object {  }
+  [3] Reassign mutate y$5_@0.x[1:5] = read x$4_@0
+  [4] Call mutate mutate$3(mutate x$4_@0)
   [5] Return freeze y$5_@0
+
+```
+
+## Reactive Scopes
+
+```
+function foo(
+) {
+  scope @0 [1:5] deps=[] {
+    [1] Const mutate x$4_@0[1:5] = Array []
+    [2] Const mutate y$5_@0[1:5] = Object {  }
+    [3] Reassign mutate y$5_@0.x[1:5] = read x$4_@0
+    [4] Call mutate mutate$3(mutate x$4_@0)
+  }
+  return freeze y$5_@0
+}
 
 ```
 
@@ -31,10 +47,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$4_@0[0:5] = Array []
-      [2] Const mutate y$5_@0[0:5] = Object {  }
-      [3] Reassign mutate y$5_@0.x[0:5] = read x$4_@0
-      [4] Call mutate mutate$3_@0(mutate x$4_@0)
+      [1] Const mutate x$4_@0[1:5] = Array []
+      [2] Const mutate y$5_@0[1:5] = Object {  }
+      [3] Reassign mutate y$5_@0.x[1:5] = read x$4_@0
+      [4] Call mutate mutate$3(mutate x$4_@0)
     "]
     bb0_instrs --> bb0_terminal(["Return freeze y$5_@0"])
   end

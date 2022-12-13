@@ -42,6 +42,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function mutate(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -69,6 +79,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function cond(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -92,19 +112,19 @@ function cond$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$12_@0[0:18] = Object {  }
-  [2] Const mutate b$13_@0[0:18] = Object {  }
+  [1] Const mutate a$12_@0[1:18] = Object {  }
+  [2] Const mutate b$13_@0[1:18] = Object {  }
   [3] Const mutate c$14_@1 = Object {  }
-  [4] Const mutate d$15_@0[0:18] = Object {  }
+  [4] Const mutate d$15_@0[1:18] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [6] Const mutate $16_@2[6:8] = true
-  [7] If (read $16_@2) then:bb3 else:bb2 fallthrough=bb2
+  [6] Const mutate $16_@3[6:8] = true
+  [7] If (read $16_@3) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [8] Call mutate mutate$6_@0(mutate a$12_@0, mutate b$13_@0)
-  [9] Const mutate $21_@0[0:18] = Call mutate cond$7_@0(mutate a$12_@0)
+  [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
+  [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
   [10] If (read $21_@0) then:bb2 else:bb4 fallthrough=bb4
 bb4:
   predecessor blocks: bb3
@@ -123,9 +143,50 @@ bb11:
   [15] If (read d$15_@0) then:bb13 else:bb13 fallthrough=bb13
 bb13:
   predecessor blocks: bb11
-  [16] Const mutate $28_@3 = null
-  [17] Call mutate mutate$6_@0(mutate d$15_@0, read $28_@3)
+  [16] Const mutate $28_@4 = null
+  [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
   [18] Return
+
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:18] deps=[] {
+    [1] Const mutate a$12_@0[1:18] = Object {  }
+    [2] Const mutate b$13_@0[1:18] = Object {  }
+    scope @1 [3:4] deps=[] {
+      [3] Const mutate c$14_@1 = Object {  }
+    }
+    [4] Const mutate d$15_@0[1:18] = Object {  }
+    scope @3 [6:8] deps=[] {
+      while (
+        [6] Const mutate $16_@3[6:8] = true
+        read $16_@3
+      ) {
+        [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
+        [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
+        if (read $21_@0) {
+          break
+        }
+      }
+    }
+    if (read a$12_@0) {
+    }
+    if (read b$13_@0) {
+    }
+    if (read c$14_@1) {
+    }
+    if (read d$15_@0) {
+    }
+    [16] Const mutate $28_@4 = null
+    [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
+  }
+  return
+}
 
 ```
 
@@ -136,23 +197,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$12_@0[0:18] = Object {  }
-      [2] Const mutate b$13_@0[0:18] = Object {  }
+      [1] Const mutate a$12_@0[1:18] = Object {  }
+      [2] Const mutate b$13_@0[1:18] = Object {  }
       [3] Const mutate c$14_@1 = Object {  }
-      [4] Const mutate d$15_@0[0:18] = Object {  }
+      [4] Const mutate d$15_@0[1:18] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $16_@2[6:8] = true
+      [6] Const mutate $16_@3[6:8] = true
     "]
-    bb1_instrs --> bb1_terminal(["If (read $16_@2)"])
+    bb1_instrs --> bb1_terminal(["If (read $16_@3)"])
   end
   subgraph bb3
     bb3_instrs["
-      [8] Call mutate mutate$6_@0(mutate a$12_@0, mutate b$13_@0)
-      [9] Const mutate $21_@0[0:18] = Call mutate cond$7_@0(mutate a$12_@0)
+      [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
+      [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
     "]
     bb3_instrs --> bb3_terminal(["If (read $21_@0)"])
   end
@@ -173,8 +234,8 @@ flowchart TB
   end
   subgraph bb13
     bb13_instrs["
-      [16] Const mutate $28_@3 = null
-      [17] Call mutate mutate$6_@0(mutate d$15_@0, read $28_@3)
+      [16] Const mutate $28_@4 = null
+      [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end

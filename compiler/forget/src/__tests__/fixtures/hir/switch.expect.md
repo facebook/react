@@ -64,6 +64,42 @@ scope6 [14:15]:
   - dependency: read child$19_@5
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @1 [1:12] deps=[] {
+    [1] Const mutate x$9_@1[1:12] = Array []
+    [2] Let mutate y$10_@1[1:12] = undefined
+    [3] Const mutate $11_@2 = false
+    [4] Const mutate $12_@3 = true
+    switch (read props$8.p0) {
+      case read $12_@3: {
+          [6] Call mutate x$9_@1.push(read props$8.p2)
+          [7] Call mutate x$9_@1.push(read props$8.p3)
+          scope @4 [8:9] deps=[] {
+            [8] Const mutate y$13_@4 = Array []
+          }
+      }
+      case read $11_@2: {
+          [10] Reassign mutate y$10_@1[1:12] = read x$9_@1
+      }
+    }
+  }
+  scope @5 [12:13] deps=[read Component$0, freeze x$9_@1, read y$10_@1.push, read props$8.p4] {
+    [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$9_@1} ></read Component$0>
+  }
+  [13] Call read y$10_@1.push(read props$8.p4)
+  scope @6 [14:15] deps=[read Component$0, read y$10_@1, read child$19_@5] {
+    [14] Const mutate $23_@6 = JSX <read Component$0 data={read y$10_@1} >{read child$19_@5}</read Component$0>
+  }
+  return read $23_@6
+}
+
+```
+
 ### CFG
 
 ```mermaid

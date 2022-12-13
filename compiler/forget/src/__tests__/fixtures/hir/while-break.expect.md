@@ -25,6 +25,23 @@ bb2:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+) {
+  while (
+    read a$3
+  ) {
+    break
+  }
+  return read b$4
+}
+
+```
+
 ### CFG
 
 ```mermaid

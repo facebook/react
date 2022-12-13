@@ -25,6 +25,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function log(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -53,7 +63,7 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [3] Const mutate str$7_@1 = "other test"
-  [4] Call mutate log$4_@2(read str$7_@1)
+  [4] Call mutate log$4(read str$7_@1)
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -61,8 +71,30 @@ bb3:
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [8] Call mutate log$4_@2(read str$6_@0)
+  [8] Call mutate log$4(read str$6_@0)
   [9] Return
+scope0 [1:8]:
+  - dependency: read cond$5
+```
+
+## Reactive Scopes
+
+```
+function Foo(
+  cond,
+) {
+  scope @0 [1:8] deps=[read cond$5] {
+    [1] Let mutate str$6_@0[1:8] = ""
+    if (read cond$5) {
+      [3] Const mutate str$7_@1 = "other test"
+      [4] Call mutate log$4(read str$7_@1)
+    } else {
+      [6] Reassign mutate str$6_@0[1:8] = "fallthrough test"
+    }
+  }
+  [8] Call mutate log$4(read str$6_@0)
+  return
+}
 
 ```
 
@@ -80,7 +112,7 @@ flowchart TB
   subgraph bb2
     bb2_instrs["
       [3] Const mutate str$7_@1 = 'other test'
-      [4] Call mutate log$4_@2(read str$7_@1)
+      [4] Call mutate log$4(read str$7_@1)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -92,7 +124,7 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [8] Call mutate log$4_@2(read str$6_@0)
+      [8] Call mutate log$4(read str$6_@0)
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

@@ -50,6 +50,35 @@ scope3 [8:9]:
   - dependency: freeze y$12_@1
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  scope @0 [1:11] deps=[read a$8] {
+    [1] Const mutate x$11_@0[1:11] = Array []
+    if (read a$8) {
+      scope @1 [3:7] deps=[read c$10, read b$9] {
+        [3] Const mutate y$12_@1[3:7] = Array []
+        if (read b$9) {
+          [5] Call mutate y$12_@1.push(read c$10)
+        }
+      }
+      [7] Const mutate $13_@2 = "div"
+      scope @3 [8:9] deps=[read $13_@2, freeze y$12_@1] {
+        [8] Const mutate $15_@3 = JSX <read $13_@2>{freeze y$12_@1}</read $13_@2>
+      }
+      [9] Call mutate x$11_@0.push(read $15_@3)
+    }
+  }
+  return freeze x$11_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid

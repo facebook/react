@@ -26,6 +26,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -49,28 +59,58 @@ function foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$11_@0[0:10] = Array []
-  [2] Const mutate b$12_@0[0:10] = Object {  }
-  [3] Call mutate foo$4_@0(mutate a$11_@0, mutate b$12_@0)
-  [4] Const mutate $13_@0[0:10] = Call mutate foo$4_@0()
-  [5] If (read $13_@0) then:bb2 else:bb1 fallthrough=bb1
+  [1] Const mutate a$11_@0[1:10] = Array []
+  [2] Const mutate b$12_@0[1:10] = Object {  }
+  [3] Call mutate foo$4(mutate a$11_@0, mutate b$12_@0)
+  [4] Const mutate $13_@1 = Call mutate foo$4()
+  [5] If (read $13_@1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [6] Const mutate $14_@1 = "div"
-  [7] Const mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
+  [6] Const mutate $14_@2 = "div"
+  [7] Const mutate _$15_@3 = JSX <read $14_@2 a={freeze a$11_@0} ></read $14_@2>
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [9] Call mutate foo$4_@0(read a$11_@0, mutate b$12_@0)
-  [10] Const mutate $19_@3 = "div"
-  [11] Const mutate $20_@4 = JSX <read $19_@3 a={freeze a$11_@0} b={freeze b$12_@0} ></read $19_@3>
-  [12] Return read $20_@4
-scope2 [7:8]:
-  - dependency: read $14_@1
-scope4 [11:12]:
-  - dependency: read $19_@3
+  [9] Call mutate foo$4(read a$11_@0, mutate b$12_@0)
+  [10] Const mutate $19_@4 = "div"
+  [11] Const mutate $20_@5 = JSX <read $19_@4 a={freeze a$11_@0} b={freeze b$12_@0} ></read $19_@4>
+  [12] Return read $20_@5
+scope3 [7:8]:
+  - dependency: read $14_@2
+scope5 [11:12]:
+  - dependency: read $19_@4
   - dependency: freeze a$11_@0
   - dependency: freeze b$12_@0
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:10] deps=[] {
+    [1] Const mutate a$11_@0[1:10] = Array []
+    [2] Const mutate b$12_@0[1:10] = Object {  }
+    [3] Call mutate foo$4(mutate a$11_@0, mutate b$12_@0)
+    scope @1 [4:5] deps=[] {
+      [4] Const mutate $13_@1 = Call mutate foo$4()
+    }
+    if (read $13_@1) {
+      [6] Const mutate $14_@2 = "div"
+      scope @3 [7:8] deps=[read $14_@2] {
+        [7] Const mutate _$15_@3 = JSX <read $14_@2 a={freeze a$11_@0} ></read $14_@2>
+      }
+    }
+    [9] Call mutate foo$4(read a$11_@0, mutate b$12_@0)
+  }
+  [10] Const mutate $19_@4 = "div"
+  scope @5 [11:12] deps=[read $19_@4, freeze a$11_@0, freeze b$12_@0] {
+    [11] Const mutate $20_@5 = JSX <read $19_@4 a={freeze a$11_@0} b={freeze b$12_@0} ></read $19_@4>
+  }
+  return read $20_@5
+}
+
 ```
 
 ### CFG
@@ -80,27 +120,27 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$11_@0[0:10] = Array []
-      [2] Const mutate b$12_@0[0:10] = Object {  }
-      [3] Call mutate foo$4_@0(mutate a$11_@0, mutate b$12_@0)
-      [4] Const mutate $13_@0[0:10] = Call mutate foo$4_@0()
+      [1] Const mutate a$11_@0[1:10] = Array []
+      [2] Const mutate b$12_@0[1:10] = Object {  }
+      [3] Call mutate foo$4(mutate a$11_@0, mutate b$12_@0)
+      [4] Const mutate $13_@1 = Call mutate foo$4()
     "]
-    bb0_instrs --> bb0_terminal(["If (read $13_@0)"])
+    bb0_instrs --> bb0_terminal(["If (read $13_@1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [6] Const mutate $14_@1 = 'div'
-      [7] Const mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
+      [6] Const mutate $14_@2 = 'div'
+      [7] Const mutate _$15_@3 = JSX <read $14_@2 a={freeze a$11_@0} ></read $14_@2>
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [9] Call mutate foo$4_@0(read a$11_@0, mutate b$12_@0)
-      [10] Const mutate $19_@3 = 'div'
-      [11] Const mutate $20_@4 = JSX <read $19_@3 a={freeze a$11_@0} b={freeze b$12_@0} ></read $19_@3>
+      [9] Call mutate foo$4(read a$11_@0, mutate b$12_@0)
+      [10] Const mutate $19_@4 = 'div'
+      [11] Const mutate $20_@5 = JSX <read $19_@4 a={freeze a$11_@0} b={freeze b$12_@0} ></read $19_@4>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $20_@4"])
+    bb1_instrs --> bb1_terminal(["Return read $20_@5"])
   end
 
   %% Jumps

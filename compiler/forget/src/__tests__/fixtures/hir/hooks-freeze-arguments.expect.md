@@ -22,8 +22,24 @@ bb0:
   [1] Const mutate a$4_@0 = Array []
   [2] Call read useFreeze$2(freeze a$4_@0)
   [3] Call read useFreeze$2(read a$4_@0)
-  [4] Call mutate call$3_@1(read a$4_@0)
+  [4] Call mutate call$3(read a$4_@0)
   [5] Return read a$4_@0
+
+```
+
+## Reactive Scopes
+
+```
+function Component(
+) {
+  scope @0 [1:2] deps=[] {
+    [1] Const mutate a$4_@0 = Array []
+  }
+  [2] Call read useFreeze$2(freeze a$4_@0)
+  [3] Call read useFreeze$2(read a$4_@0)
+  [4] Call mutate call$3(read a$4_@0)
+  return read a$4_@0
+}
 
 ```
 
@@ -37,7 +53,7 @@ flowchart TB
       [1] Const mutate a$4_@0 = Array []
       [2] Call read useFreeze$2(freeze a$4_@0)
       [3] Call read useFreeze$2(read a$4_@0)
-      [4] Call mutate call$3_@1(read a$4_@0)
+      [4] Call mutate call$3(read a$4_@0)
     "]
     bb0_instrs --> bb0_terminal(["Return read a$4_@0"])
   end
@@ -66,6 +82,17 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function useFreeze(
+  x,
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -90,6 +117,17 @@ function useFreeze$0(x$2) {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function call(
+  x,
+) {
+  return
+}
 
 ```
 

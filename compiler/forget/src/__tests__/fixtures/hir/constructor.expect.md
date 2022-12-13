@@ -23,6 +23,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function Foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -46,12 +56,12 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$10_@0[0:7] = Array []
-  [2] Const mutate b$11_@0[0:7] = Object {  }
-  [3] New mutate Foo$4_@0(mutate a$10_@0, mutate b$11_@0)
+  [1] Const mutate a$10_@0[1:7] = Array []
+  [2] Const mutate b$11_@0[1:7] = Object {  }
+  [3] New mutate Foo$4(mutate a$10_@0, mutate b$11_@0)
   [4] Const mutate $12_@1 = "div"
   [5] Const mutate _$13_@2 = JSX <read $12_@1 a={freeze a$10_@0} ></read $12_@1>
-  [6] New mutate Foo$4_@0(mutate b$11_@0)
+  [6] New mutate Foo$4(mutate b$11_@0)
   [7] Const mutate $14_@3 = "div"
   [8] Const mutate $15_@4 = JSX <read $14_@3 a={read a$10_@0} b={freeze b$11_@0} ></read $14_@3>
   [9] Return read $15_@4
@@ -63,6 +73,31 @@ scope4 [8:9]:
   - dependency: freeze b$11_@0
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:7] deps=[] {
+    [1] Const mutate a$10_@0[1:7] = Array []
+    [2] Const mutate b$11_@0[1:7] = Object {  }
+    [3] New mutate Foo$4(mutate a$10_@0, mutate b$11_@0)
+    [4] Const mutate $12_@1 = "div"
+    scope @2 [5:6] deps=[read $12_@1] {
+      [5] Const mutate _$13_@2 = JSX <read $12_@1 a={freeze a$10_@0} ></read $12_@1>
+    }
+    [6] New mutate Foo$4(mutate b$11_@0)
+  }
+  [7] Const mutate $14_@3 = "div"
+  scope @4 [8:9] deps=[read $14_@3, read a$10_@0, freeze b$11_@0] {
+    [8] Const mutate $15_@4 = JSX <read $14_@3 a={read a$10_@0} b={freeze b$11_@0} ></read $14_@3>
+  }
+  return read $15_@4
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -70,12 +105,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$10_@0[0:7] = Array []
-      [2] Const mutate b$11_@0[0:7] = Object {  }
-      [3] New mutate Foo$4_@0(mutate a$10_@0, mutate b$11_@0)
+      [1] Const mutate a$10_@0[1:7] = Array []
+      [2] Const mutate b$11_@0[1:7] = Object {  }
+      [3] New mutate Foo$4(mutate a$10_@0, mutate b$11_@0)
       [4] Const mutate $12_@1 = 'div'
       [5] Const mutate _$13_@2 = JSX <read $12_@1 a={freeze a$10_@0} ></read $12_@1>
-      [6] New mutate Foo$4_@0(mutate b$11_@0)
+      [6] New mutate Foo$4(mutate b$11_@0)
       [7] Const mutate $14_@3 = 'div'
       [8] Const mutate $15_@4 = JSX <read $14_@3 a={read a$10_@0} b={freeze b$11_@0} ></read $14_@3>
     "]

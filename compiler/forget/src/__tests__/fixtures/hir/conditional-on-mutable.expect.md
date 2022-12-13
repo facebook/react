@@ -58,6 +58,30 @@ scope2 [9:10]:
   - dependency: freeze b$8_@0
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:9] deps=[] {
+    [1] Const mutate a$7_@0[1:9] = Array []
+    [2] Const mutate b$8_@0[1:9] = Array []
+    if (read b$8_@0) {
+      [4] Call mutate a$7_@0.push(read props$6.p0)
+    }
+    if (read props$6.p1) {
+      [7] Call mutate b$8_@0.push(read props$6.p2)
+    }
+  }
+  scope @2 [9:10] deps=[freeze a$7_@0, freeze b$8_@0] {
+    [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@0} ></read Foo$4>
+  }
+  return read $16_@2
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -124,9 +148,9 @@ function Component$0(props$6) {
 
 ```
 bb0:
-  [1] Const mutate a$9_@0[0:10] = Array []
-  [2] Const mutate b$10_@0[0:10] = Array []
-  [3] Const mutate $11_@0[0:10] = Call mutate mayMutate$4_@0(mutate b$10_@0)
+  [1] Const mutate a$9_@0[1:10] = Array []
+  [2] Const mutate b$10_@0[1:10] = Array []
+  [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4(mutate b$10_@0)
   [4] If (read $11_@0) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
@@ -148,6 +172,31 @@ scope2 [10:11]:
   - dependency: freeze b$10_@0
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:10] deps=[] {
+    [1] Const mutate a$9_@0[1:10] = Array []
+    [2] Const mutate b$10_@0[1:10] = Array []
+    [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4(mutate b$10_@0)
+    if (read $11_@0) {
+      [5] Call mutate a$9_@0.push(read props$8.p0)
+    }
+    if (read props$8.p1) {
+      [8] Call mutate b$10_@0.push(read props$8.p2)
+    }
+  }
+  scope @2 [10:11] deps=[freeze a$9_@0, freeze b$10_@0] {
+    [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
+  }
+  return read $19_@2
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -155,9 +204,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@0[0:10] = Array []
-      [2] Const mutate b$10_@0[0:10] = Array []
-      [3] Const mutate $11_@0[0:10] = Call mutate mayMutate$4_@0(mutate b$10_@0)
+      [1] Const mutate a$9_@0[1:10] = Array []
+      [2] Const mutate b$10_@0[1:10] = Array []
+      [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4(mutate b$10_@0)
     "]
     bb0_instrs --> bb0_terminal(["If (read $11_@0)"])
   end
@@ -219,6 +268,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function Foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -243,6 +302,16 @@ function Foo$0() {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function mayMutate(
+) {
+  return
+}
 
 ```
 

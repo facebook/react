@@ -28,13 +28,37 @@ function Foo() {}
 
 ```
 bb0:
-  [1] Const mutate a$8_@0[0:3] = Call mutate compute$3_@0(read props$7.a)
-  [2] Const mutate b$9_@0[0:3] = Call mutate compute$3_@0(read props$7.b)
-  [3] Const mutate $10_@1 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@0} ></read Foo$5>
-  [4] Return read $10_@1
-scope1 [3:4]:
+  [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
+  [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+  [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
+  [4] Return read $10_@2
+scope0 [1:2]:
+  - dependency: read props$7.a
+scope1 [2:3]:
+  - dependency: read props$7.b
+scope2 [3:4]:
   - dependency: freeze a$8_@0
-  - dependency: freeze b$9_@0
+  - dependency: freeze b$9_@1
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:2] deps=[read props$7.a] {
+    [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
+  }
+  scope @1 [2:3] deps=[read props$7.b] {
+    [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+  }
+  scope @2 [3:4] deps=[freeze a$8_@0, freeze b$9_@1] {
+    [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
+  }
+  return read $10_@2
+}
+
 ```
 
 ### CFG
@@ -44,11 +68,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$8_@0[0:3] = Call mutate compute$3_@0(read props$7.a)
-      [2] Const mutate b$9_@0[0:3] = Call mutate compute$3_@0(read props$7.b)
-      [3] Const mutate $10_@1 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@0} ></read Foo$5>
+      [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
+      [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+      [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $10_@1"])
+    bb0_instrs --> bb0_terminal(["Return read $10_@2"])
   end
 
   %% Jumps
@@ -70,6 +94,16 @@ function Component$0(props$7) {
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function compute(
+) {
+  return
+}
 
 ```
 
@@ -100,6 +134,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -124,6 +168,16 @@ function foo$0() {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function Foo(
+) {
+  return
+}
 
 ```
 

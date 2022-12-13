@@ -29,6 +29,23 @@ scope3 [4:5]:
   - dependency: read c$7
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  [1] Const mutate x$8_@0 = 0
+  [2] Const mutate x$9_@1 = read a$5
+  [3] Const mutate x$10_@2 = read b$6
+  [4] Const mutate x$11_@3 = read c$7
+  return read x$11_@3
+}
+
+```
+
 ### CFG
 
 ```mermaid

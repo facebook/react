@@ -77,15 +77,15 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
       if (instr.lvalue !== null) {
-        // invariant(
-        //   isMutable(instr, instr.lvalue!.place),
-        //   "Assignment always means the value is mutable:\n" +
-        //     printMixedHIR(instr)
-        // );
         operands.push(instr.lvalue!.place.identifier);
       }
       for (const operand of eachInstructionOperand(instr)) {
-        if (isMutable(instr, operand)) {
+        if (
+          isMutable(instr, operand) &&
+          // exclude global variables from being added to scopes, we can't recreate them!
+          // TODO: improve handling of module-scoped variables and globals
+          operand.identifier.mutableRange.start > 0
+        ) {
           operands.push(operand.identifier);
         }
       }

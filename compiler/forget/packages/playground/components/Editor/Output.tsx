@@ -20,6 +20,8 @@ import type { Store } from "../../lib/stores";
 import TabbedWindow, { TabTypes } from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
 const {
+  buildReactiveFunction,
+  printReactiveFunction,
   parseFunctions,
   Environment,
   enterSSA,
@@ -54,6 +56,7 @@ type CompilerOutput = {
   inferReactiveScopeVariablesOutput: string;
   inferReactiveScopesOutput: string;
   inferReactiveScopeDependenciesOutput: string;
+  reactiveFunctionOutput: string;
   leaveSSAOutput: string;
   codegenOutput: string;
   sourceMapUrl: string | null;
@@ -99,6 +102,9 @@ function compile(source: string): CompilerOutput | CompilerError {
     inferReactiveScopeDependencies(ir);
     const inferReactiveScopeDependenciesOutput = printHIR(ir.body);
 
+    const reactiveFunction = buildReactiveFunction(ir);
+    const reactiveFunctionOutput = printReactiveFunction(reactiveFunction);
+
     codegen(ir);
     const ast = codegen(ir);
     const generated = generate(
@@ -128,6 +134,7 @@ function compile(source: string): CompilerOutput | CompilerError {
       inferReactiveScopeDependenciesOutput,
       inferReactiveScopeVariablesOutput,
       inferReactiveScopesOutput,
+      reactiveFunctionOutput,
       leaveSSAOutput,
       codegenOutput,
       sourceMapUrl,
@@ -201,6 +208,11 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
         InferReactiveScopeDependencies: (
           <TextTabContent
             output={compilerOutput.inferReactiveScopeDependenciesOutput}
+          ></TextTabContent>
+        ),
+        ReactiveFunctions: (
+          <TextTabContent
+            output={compilerOutput.reactiveFunctionOutput}
           ></TextTabContent>
         ),
         JS: <TextTabContent output={compilerOutput.codegenOutput} />,

@@ -21,24 +21,50 @@ function foo(a) {
 
 ```
 bb0:
-  [1] Const mutate x$7_@0[0:10] = Object {  }
+  [1] Const mutate x$7_@0[1:10] = Object {  }
   [2] If (read a$6) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate y$8_@0[0:10] = Object {  }
-  [4] Reassign mutate x$7_@0.y[0:10] = read y$8_@0
-  [5] Call mutate mutate$4_@0(mutate y$8_@0)
+  [3] Const mutate y$8_@0[1:10] = Object {  }
+  [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0
+  [5] Call mutate mutate$4(mutate y$8_@0)
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
   [7] Const mutate z$9_@1 = Object {  }
-  [8] Reassign mutate x$7_@0.z[0:10] = read z$9_@1
+  [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1
   [9] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
   [10] Return freeze x$7_@0
+scope0 [1:10]:
+  - dependency: read a$6
 scope1 [7:8]:
   - dependency: mutate x$7_@0.z
+```
+
+## Reactive Scopes
+
+```
+function foo(
+  a,
+) {
+  scope @0 [1:10] deps=[read a$6] {
+    [1] Const mutate x$7_@0[1:10] = Object {  }
+    if (read a$6) {
+      [3] Const mutate y$8_@0[1:10] = Object {  }
+      [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0
+      [5] Call mutate mutate$4(mutate y$8_@0)
+    } else {
+      scope @1 [7:8] deps=[mutate x$7_@0.z] {
+        [7] Const mutate z$9_@1 = Object {  }
+      }
+      [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1
+    }
+  }
+  return freeze x$7_@0
+}
+
 ```
 
 ### CFG
@@ -48,22 +74,22 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$7_@0[0:10] = Object {  }
+      [1] Const mutate x$7_@0[1:10] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["If (read a$6)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate y$8_@0[0:10] = Object {  }
-      [4] Reassign mutate x$7_@0.y[0:10] = read y$8_@0
-      [5] Call mutate mutate$4_@0(mutate y$8_@0)
+      [3] Const mutate y$8_@0[1:10] = Object {  }
+      [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0
+      [5] Call mutate mutate$4(mutate y$8_@0)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
       [7] Const mutate z$9_@1 = Object {  }
-      [8] Reassign mutate x$7_@0.z[0:10] = read z$9_@1
+      [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

@@ -88,6 +88,48 @@ scope1 [2:18]:
   - dependency: read props$6.cond
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  [1] Const mutate x$7_@0 = undefined
+  scope @1 [2:18] deps=[read props$6.v2, read props$6.v1, read props$6.v0, read props$6.test, read props$6.b, read props$6.c, read props$6.cond2, read props$6.cond] {
+    [2] Let mutate x$11_@1[2:18] = undefined
+    if (read props$6.cond) {
+      [3] Const mutate $8_@2 = 2
+      [4] Const mutate $9_@3 = 1
+      [5] Const mutate $10_@4 = 0
+      switch (read props$6.test) {
+        case read $10_@4: {
+            [7] Reassign mutate x$11_@1[2:18] = read props$6.v0
+            break bb1
+        }
+        case read $9_@3: {
+            [9] Reassign mutate x$11_@1[2:18] = read props$6.v1
+            break bb1
+        }
+        case read $8_@2: {
+        }
+        default: {
+            [11] Reassign mutate x$11_@1[2:18] = read props$6.v2
+        }
+      }
+    } else {
+      if (read props$6.cond2) {
+        [14] Reassign mutate x$11_@1[2:18] = read props$6.b
+      } else {
+        [16] Reassign mutate x$11_@1[2:18] = read props$6.c
+      }
+    }
+  }
+  [18] read x$11_@1
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

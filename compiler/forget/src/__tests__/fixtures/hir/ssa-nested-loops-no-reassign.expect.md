@@ -56,6 +56,34 @@ scope1 [8:9]:
   - dependency: read x$9_@0
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  [1] Const mutate x$9_@0 = 0
+  while (
+    read a$6
+  ) {
+    while (
+      read b$7
+    ) {
+      while (
+        read c$8
+      ) {
+        [8] Const mutate $13_@1 = 1
+        [9] Binary read x$9_@0 + read $13_@1
+      }
+    }
+  }
+  return read x$9_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid

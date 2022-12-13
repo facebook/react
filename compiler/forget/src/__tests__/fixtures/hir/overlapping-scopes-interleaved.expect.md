@@ -23,6 +23,24 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+) {
+  scope @0 [1:5] deps=[] {
+    [1] Const mutate x$7_@0[1:5] = Array []
+    [2] Const mutate y$8_@0[1:5] = Array []
+    [3] Call mutate x$7_@0.push(read a$5)
+    [4] Call mutate y$8_@0.push(read b$6)
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

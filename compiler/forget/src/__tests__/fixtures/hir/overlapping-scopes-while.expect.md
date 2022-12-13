@@ -34,6 +34,29 @@ bb2:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  scope @0 [1:8] deps=[] {
+    [1] Const mutate x$9_@0[1:8] = Array []
+    [2] Const mutate y$10_@0[1:8] = Array []
+    while (
+      read c$8
+    ) {
+      [5] Call mutate y$10_@0.push(read b$7)
+      [6] Call mutate x$9_@0.push(read a$6)
+    }
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

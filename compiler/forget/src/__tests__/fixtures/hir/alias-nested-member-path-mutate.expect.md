@@ -17,13 +17,31 @@ function component() {
 
 ```
 bb0:
-  [1] Const mutate z$5_@0[0:7] = Array []
-  [2] Const mutate y$6_@0[0:7] = Object {  }
-  [3] Reassign mutate y$6_@0.z[0:7] = read z$5_@0
-  [4] Const mutate x$7_@0[0:7] = Object {  }
-  [5] Reassign mutate x$7_@0.y[0:7] = read y$6_@0
-  [6] Call mutate mutate$4_@0(mutate x$7_@0.y.z)
+  [1] Const mutate z$5_@0[1:7] = Array []
+  [2] Const mutate y$6_@0[1:7] = Object {  }
+  [3] Reassign mutate y$6_@0.z[1:7] = read z$5_@0
+  [4] Const mutate x$7_@0[1:7] = Object {  }
+  [5] Reassign mutate x$7_@0.y[1:7] = read y$6_@0
+  [6] Call mutate mutate$4(mutate x$7_@0.y.z)
   [7] Return
+
+```
+
+## Reactive Scopes
+
+```
+function component(
+) {
+  scope @0 [1:7] deps=[] {
+    [1] Const mutate z$5_@0[1:7] = Array []
+    [2] Const mutate y$6_@0[1:7] = Object {  }
+    [3] Reassign mutate y$6_@0.z[1:7] = read z$5_@0
+    [4] Const mutate x$7_@0[1:7] = Object {  }
+    [5] Reassign mutate x$7_@0.y[1:7] = read y$6_@0
+    [6] Call mutate mutate$4(mutate x$7_@0.y.z)
+  }
+  return
+}
 
 ```
 
@@ -34,12 +52,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate z$5_@0[0:7] = Array []
-      [2] Const mutate y$6_@0[0:7] = Object {  }
-      [3] Reassign mutate y$6_@0.z[0:7] = read z$5_@0
-      [4] Const mutate x$7_@0[0:7] = Object {  }
-      [5] Reassign mutate x$7_@0.y[0:7] = read y$6_@0
-      [6] Call mutate mutate$4_@0(mutate x$7_@0.y.z)
+      [1] Const mutate z$5_@0[1:7] = Array []
+      [2] Const mutate y$6_@0[1:7] = Object {  }
+      [3] Reassign mutate y$6_@0.z[1:7] = read z$5_@0
+      [4] Const mutate x$7_@0[1:7] = Object {  }
+      [5] Reassign mutate x$7_@0.y[1:7] = read y$6_@0
+      [6] Call mutate mutate$4(mutate x$7_@0.y.z)
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

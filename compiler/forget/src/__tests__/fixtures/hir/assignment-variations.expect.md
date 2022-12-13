@@ -39,6 +39,23 @@ scope6 [7:8]:
   - dependency: read $10_@5
 ```
 
+## Reactive Scopes
+
+```
+function f(
+) {
+  [1] Const mutate x$5_@0 = 1
+  [2] Const mutate $6_@1 = 1
+  [3] Const mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
+  [4] Const mutate $8_@3 = 1
+  [5] Const mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
+  [6] Const mutate $10_@5 = 1
+  [7] Const mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -83,6 +100,23 @@ bb0:
   [5] Return
 scope2 [3:4]:
   - dependency: mutate a$4_@1.b.c
+```
+
+## Reactive Scopes
+
+```
+function g(
+  a,
+) {
+  [1] Const mutate $5_@0 = 1
+  scope @1 [0:5] deps=[] {
+    [2] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c + read $5_@0
+    [3] Const mutate $6_@2 = 2
+    [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2
+  }
+  return
+}
+
 ```
 
 ### CFG

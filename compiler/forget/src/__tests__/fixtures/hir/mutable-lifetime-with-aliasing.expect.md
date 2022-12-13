@@ -43,6 +43,18 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function mutate(
+  x,
+  y,
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -67,12 +79,12 @@ function mutate$0(x$3, y$4) {}
 ```
 bb0:
   [1] Const mutate a$11_@0 = Object {  }
-  [2] Const mutate b$12_@1[0:15] = Array [read a$11_@0]
+  [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
   [3] Const mutate c$13_@2 = Object {  }
-  [4] Const mutate d$14_@1[0:15] = Object { c: read c$13_@2 }
-  [5] Const mutate x$15_@1[0:15] = Object {  }
-  [6] Reassign mutate x$15_@1.b[0:15] = read b$12_@1
-  [7] Const mutate y$16_@1[0:15] = Call mutate mutate$8_@1(mutate x$15_@1, mutate d$14_@1)
+  [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
+  [5] Const mutate x$15_@1[2:15] = Object {  }
+  [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
+  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
   [8] If (read a$11_@0) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
@@ -89,8 +101,46 @@ bb7:
 bb9:
   predecessor blocks: bb7
   [13] Const mutate $17_@3 = null
-  [14] Call mutate mutate$8_@1(mutate x$15_@1, read $17_@3)
+  [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
   [15] Return
+scope1 [2:15]:
+  - dependency: read a$11_@0
+  - dependency: read a$11_@0
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:2] deps=[] {
+    [1] Const mutate a$11_@0 = Object {  }
+  }
+  scope @1 [2:15] deps=[read a$11_@0, read a$11_@0] {
+    [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
+    scope @2 [3:4] deps=[] {
+      [3] Const mutate c$13_@2 = Object {  }
+    }
+    [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
+    [5] Const mutate x$15_@1[2:15] = Object {  }
+    [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
+    [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
+    if (read a$11_@0) {
+    }
+    if (read b$12_@1) {
+    }
+    if (read c$13_@2) {
+    }
+    if (read d$14_@1) {
+    }
+    if (read y$16_@1) {
+    }
+    [13] Const mutate $17_@3 = null
+    [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
+  }
+  return
+}
 
 ```
 
@@ -102,12 +152,12 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$11_@0 = Object {  }
-      [2] Const mutate b$12_@1[0:15] = Array [read a$11_@0]
+      [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
       [3] Const mutate c$13_@2 = Object {  }
-      [4] Const mutate d$14_@1[0:15] = Object { c: read c$13_@2 }
-      [5] Const mutate x$15_@1[0:15] = Object {  }
-      [6] Reassign mutate x$15_@1.b[0:15] = read b$12_@1
-      [7] Const mutate y$16_@1[0:15] = Call mutate mutate$8_@1(mutate x$15_@1, mutate d$14_@1)
+      [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
+      [5] Const mutate x$15_@1[2:15] = Object {  }
+      [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
+      [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
     "]
     bb0_instrs --> bb0_terminal(["If (read a$11_@0)"])
   end
@@ -126,7 +176,7 @@ flowchart TB
   subgraph bb9
     bb9_instrs["
       [13] Const mutate $17_@3 = null
-      [14] Call mutate mutate$8_@1(mutate x$15_@1, read $17_@3)
+      [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
     "]
     bb9_instrs --> bb9_terminal(["Return"])
   end

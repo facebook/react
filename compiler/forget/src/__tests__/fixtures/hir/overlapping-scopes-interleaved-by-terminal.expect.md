@@ -30,6 +30,27 @@ bb1:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  scope @0 [1:6] deps=[] {
+    [1] Const mutate x$9_@0[1:6] = Array []
+    [2] Const mutate y$10_@0[1:6] = Array []
+    if (read x$9_@0) {
+    }
+    [4] Call mutate y$10_@0.push(read a$6)
+    [5] Call mutate x$9_@0.push(read b$7)
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

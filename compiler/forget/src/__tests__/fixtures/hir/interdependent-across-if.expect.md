@@ -35,6 +35,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function compute(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -59,6 +69,16 @@ function compute$0() {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function foo(
+) {
+  return
+}
 
 ```
 
@@ -89,6 +109,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function Foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -112,20 +142,45 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$9_@0[0:6] = Call mutate compute$3_@0(read props$8.a)
-  [2] Const mutate b$10_@0[0:6] = Call mutate compute$3_@0(read props$8.b)
+  [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
+  [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Call mutate foo$5_@0(mutate a$9_@0, mutate b$10_@0)
+  [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
   [5] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
   [6] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
   [7] Return read $14_@1
+scope0 [1:6]:
+  - dependency: read props$8.a
+  - dependency: read props$8.b
+  - dependency: read props$8.c
 scope1 [6:7]:
   - dependency: freeze a$9_@0
   - dependency: freeze b$10_@0
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:6] deps=[read props$8.a, read props$8.b, read props$8.c] {
+    [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
+    [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
+    if (read props$8.c) {
+      [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
+    }
+  }
+  scope @1 [6:7] deps=[freeze a$9_@0, freeze b$10_@0] {
+    [6] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
+  }
+  return read $14_@1
+}
+
 ```
 
 ### CFG
@@ -135,14 +190,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@0[0:6] = Call mutate compute$3_@0(read props$8.a)
-      [2] Const mutate b$10_@0[0:6] = Call mutate compute$3_@0(read props$8.b)
+      [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
+      [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Call mutate foo$5_@0(mutate a$9_@0, mutate b$10_@0)
+      [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

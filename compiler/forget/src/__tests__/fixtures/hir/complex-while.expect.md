@@ -37,6 +37,28 @@ bb1:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  if (read a$4) {
+    while (
+      read b$5
+    ) {
+      if (read c$6) {
+        break
+      }
+    }
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

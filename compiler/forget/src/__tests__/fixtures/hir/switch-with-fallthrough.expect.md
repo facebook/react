@@ -82,6 +82,49 @@ bb1:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  x,
+) {
+  [1] Const mutate y$10_@0 = undefined
+  [2] Const mutate $11_@1 = 5
+  [3] Const mutate $12_@2 = 4
+  [4] Const mutate $13_@3 = 3
+  [5] Const mutate $14_@4 = 2
+  [6] Const mutate $15_@5 = 1
+  [7] Const mutate $16_@6 = 0
+  switch (read x$9) {
+    case read $16_@6: {
+        [9] Const mutate y$17_@7 = 0
+    }
+    case read $15_@5: {
+        [11] Const mutate y$18_@8 = 1
+        break bb1
+    }
+    case read $14_@4: {
+        break bb1
+    }
+    case read $13_@3: {
+        [13] Const mutate y$19_@9 = 3
+        break bb1
+    }
+    case read $12_@2: {
+        [15] Const mutate y$20_@10 = 4
+    }
+    case read $11_@1: {
+        [17] Const mutate y$21_@11 = 5
+    }
+    default: {
+        [19] Const mutate y$22_@12 = 0
+    }
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

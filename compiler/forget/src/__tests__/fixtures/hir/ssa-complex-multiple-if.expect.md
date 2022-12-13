@@ -53,6 +53,31 @@ scope6 [13:14]:
   - dependency: read x$7_@0
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  scope @0 [1:13] deps=[] {
+    [1] Let mutate x$7_@0[1:13] = 1
+    [2] Const mutate y$8_@1 = 2
+    [3] Const mutate $9_@2 = 2
+    [4] Const mutate $10_@3 = Binary read y$8_@1 === read $9_@2
+    if (read $10_@3) {
+      [6] Reassign mutate x$7_@0[1:13] = 3
+    }
+    [8] Const mutate $12_@4 = 3
+    [9] Const mutate $14_@5 = Binary read y$8_@1 === read $12_@4
+    if (read $14_@5) {
+      [11] Reassign mutate x$7_@0[1:13] = 5
+    }
+  }
+  [13] Const mutate y$18_@6 = read x$7_@0
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

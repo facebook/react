@@ -21,15 +21,35 @@ function component() {
 
 ```
 bb0:
-  [1] Const mutate x$6_@0[0:9] = Object {  }
-  [2] Const mutate p$7_@0[0:9] = Object {  }
-  [3] Const mutate q$8_@0[0:9] = Object {  }
-  [4] Const mutate y$9_@0[0:9] = Object {  }
-  [5] Reassign mutate x$6_@0.y[0:9] = read y$9_@0
-  [6] Reassign mutate p$7_@0.y[0:9] = read x$6_@0.y
-  [7] Reassign mutate q$8_@0.y[0:9] = read p$7_@0.y
-  [8] Call mutate mutate$5_@0(mutate q$8_@0)
+  [1] Const mutate x$6_@0[1:9] = Object {  }
+  [2] Const mutate p$7_@0[1:9] = Object {  }
+  [3] Const mutate q$8_@0[1:9] = Object {  }
+  [4] Const mutate y$9_@0[1:9] = Object {  }
+  [5] Reassign mutate x$6_@0.y[1:9] = read y$9_@0
+  [6] Reassign mutate p$7_@0.y[1:9] = read x$6_@0.y
+  [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
+  [8] Call mutate mutate$5(mutate q$8_@0)
   [9] Return
+
+```
+
+## Reactive Scopes
+
+```
+function component(
+) {
+  scope @0 [1:9] deps=[] {
+    [1] Const mutate x$6_@0[1:9] = Object {  }
+    [2] Const mutate p$7_@0[1:9] = Object {  }
+    [3] Const mutate q$8_@0[1:9] = Object {  }
+    [4] Const mutate y$9_@0[1:9] = Object {  }
+    [5] Reassign mutate x$6_@0.y[1:9] = read y$9_@0
+    [6] Reassign mutate p$7_@0.y[1:9] = read x$6_@0.y
+    [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
+    [8] Call mutate mutate$5(mutate q$8_@0)
+  }
+  return
+}
 
 ```
 
@@ -40,14 +60,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$6_@0[0:9] = Object {  }
-      [2] Const mutate p$7_@0[0:9] = Object {  }
-      [3] Const mutate q$8_@0[0:9] = Object {  }
-      [4] Const mutate y$9_@0[0:9] = Object {  }
-      [5] Reassign mutate x$6_@0.y[0:9] = read y$9_@0
-      [6] Reassign mutate p$7_@0.y[0:9] = read x$6_@0.y
-      [7] Reassign mutate q$8_@0.y[0:9] = read p$7_@0.y
-      [8] Call mutate mutate$5_@0(mutate q$8_@0)
+      [1] Const mutate x$6_@0[1:9] = Object {  }
+      [2] Const mutate p$7_@0[1:9] = Object {  }
+      [3] Const mutate q$8_@0[1:9] = Object {  }
+      [4] Const mutate y$9_@0[1:9] = Object {  }
+      [5] Reassign mutate x$6_@0.y[1:9] = read y$9_@0
+      [6] Reassign mutate p$7_@0.y[1:9] = read x$6_@0.y
+      [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
+      [8] Call mutate mutate$5(mutate q$8_@0)
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

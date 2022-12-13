@@ -78,6 +78,45 @@ scope5 [13:18]:
   - dependency: read $19_@4
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+  d,
+) {
+  [1] Const mutate x$13_@0 = 0
+  [2] Const mutate $14_@1 = true
+  if (read $14_@1) {
+    [4] Const mutate $15_@2 = true
+    scope @3 [5:10] deps=[read a$9, read b$10, read $15_@2] {
+      [5] Let mutate x$16_@3[5:10] = undefined
+      if (read $15_@2) {
+        [6] Reassign mutate x$16_@3[5:10] = read a$9
+      } else {
+        [8] Reassign mutate x$16_@3[5:10] = read b$10
+      }
+    }
+    [10] read x$16_@3
+  } else {
+    [12] Const mutate $19_@4 = true
+    scope @5 [13:18] deps=[read c$11, read d$12, read $19_@4] {
+      [13] Let mutate x$20_@5[13:18] = undefined
+      if (read $19_@4) {
+        [14] Reassign mutate x$20_@5[13:18] = read c$11
+      } else {
+        [16] Reassign mutate x$20_@5[13:18] = read d$12
+      }
+    }
+    [18] read x$20_@5
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

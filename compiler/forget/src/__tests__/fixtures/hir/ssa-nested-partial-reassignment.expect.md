@@ -43,6 +43,31 @@ scope0 [1:8]:
   - dependency: read a$7
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+  d,
+  e,
+) {
+  scope @0 [1:8] deps=[read b$8, read d$10, read c$9, read a$7] {
+    [1] Let mutate x$12_@0[1:8] = null
+    if (read a$7) {
+      [3] Reassign mutate x$12_@0[1:8] = read b$8
+    } else {
+      if (read c$9) {
+        [6] Reassign mutate x$12_@0[1:8] = read d$10
+      }
+    }
+  }
+  return read x$12_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid

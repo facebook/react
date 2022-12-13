@@ -19,6 +19,18 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  [1] Const mutate x$3_@0 = 1
+  [2] Const mutate y$4_@1 = 2
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

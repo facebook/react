@@ -38,6 +38,30 @@ scope4 [7:8]:
   - dependency: read $13_@3
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  x,
+  y,
+) {
+  if (read x$8) {
+    [2] Const mutate $10_@0 = false
+    scope @1 [3:4] deps=[read foo$0, read $10_@0, read y$9] {
+      [3] Const mutate $11_@1 = Call read foo$0(read $10_@0, read y$9)
+    }
+    return freeze $11_@1
+  }
+  [5] Const mutate $12_@2 = 10
+  [6] Const mutate $13_@3 = Binary read y$9 * read $12_@2
+  scope @4 [7:8] deps=[read $13_@3] {
+    [7] Const mutate $14_@4 = Array [read $13_@3]
+  }
+  return freeze $14_@4
+}
+
+```
+
 ### CFG
 
 ```mermaid

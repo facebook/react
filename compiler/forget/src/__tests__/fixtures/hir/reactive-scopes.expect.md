@@ -46,6 +46,32 @@ scope4 [9:10]:
   - dependency: freeze x$10_@0
 ```
 
+## Reactive Scopes
+
+```
+function f(
+  a,
+  b,
+) {
+  scope @0 [1:8] deps=[read b$9, read b$9] {
+    [1] Const mutate x$10_@0[1:8] = Array []
+    [2] Const mutate $11_@1 = 1
+    [3] Const mutate $12_@2 = Binary read a$8.length === read $11_@1
+    if (read $12_@2) {
+      if (read b$9) {
+        [6] Call mutate x$10_@0.push(read b$9)
+      }
+    }
+  }
+  [8] Const mutate $13_@3 = "div"
+  scope @4 [9:10] deps=[read $13_@3, freeze x$10_@0] {
+    [9] Const mutate $15_@4 = JSX <read $13_@3>{freeze x$10_@0}</read $13_@3>
+  }
+  return read $15_@4
+}
+
+```
+
 ### CFG
 
 ```mermaid

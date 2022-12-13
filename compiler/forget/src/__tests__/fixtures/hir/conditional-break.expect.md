@@ -95,6 +95,26 @@ scope0 [1:7]:
   - dependency: read props$4.d
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:7] deps=[read props$4.a, read props$4.b, read props$4.d] {
+    [1] Const mutate a_DEBUG$5_@0[1:7] = Array []
+    [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
+    if (read props$4.b) {
+      [4] Const mutate $6_@1 = null
+      return read $6_@1
+    }
+    [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
+  }
+  return freeze a_DEBUG$5_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -161,6 +181,25 @@ scope0 [1:7]:
   - dependency: read props$3.c
   - dependency: read props$3.b
   - dependency: read props$3.d
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.c, read props$3.b, read props$3.d] {
+    [1] Const mutate a$4_@0[1:7] = Array []
+    [2] Call mutate a$4_@0.push(read props$3.a)
+    if (read props$3.b) {
+      [4] Call mutate a$4_@0.push(read props$3.c)
+    }
+    [6] Call mutate a$4_@0.push(read props$3.d)
+  }
+  return freeze a$4_@0
+}
+
 ```
 
 ### CFG
@@ -233,6 +272,27 @@ scope0 [1:8]:
   - dependency: read props$4.d
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:8] deps=[read props$4.a, read props$4.c, read props$4.b, read props$4.d] {
+    [1] Const mutate a$5_@0[1:8] = Array []
+    [2] Call mutate a$5_@0.push(read props$4.a)
+    if (read props$4.b) {
+      [4] Call mutate a$5_@0.push(read props$4.c)
+      [5] Const mutate $6_@1 = null
+      return read $6_@1
+    }
+    [7] Call mutate a$5_@0.push(read props$4.d)
+  }
+  return freeze a$5_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -303,6 +363,26 @@ scope0 [1:7]:
   - dependency: read props$3.d
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.c, read props$3.b, read props$3.d] {
+    [1] Const mutate a$4_@0[1:7] = Array []
+    [2] Call mutate a$4_@0.push(read props$3.a)
+    if (read props$3.b) {
+      [4] Call mutate a$4_@0.push(read props$3.c)
+      return freeze a$4_@0
+    }
+    [6] Call mutate a$4_@0.push(read props$3.d)
+  }
+  return freeze a$4_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -369,6 +449,25 @@ scope0 [1:7]:
   - dependency: read props$3.a
   - dependency: read props$3.d
   - dependency: read props$3.c
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.d, read props$3.c] {
+    [1] Const mutate a$4_@0[1:7] = Array []
+    [2] Call mutate a$4_@0.push(read props$3.a)
+    if (read props$3.b) {
+      [6] Call mutate a$4_@0.push(read props$3.d)
+      return freeze a$4_@0
+    }
+    [4] Call mutate a$4_@0.push(read props$3.c)
+  }
+}
+
 ```
 
 ### CFG

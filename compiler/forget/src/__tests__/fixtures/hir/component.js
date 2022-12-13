@@ -1,4 +1,3 @@
-// @Out DefUseGraph
 function Component(props) {
   const items = props.items;
   const maxItems = props.maxItems;
@@ -6,7 +5,8 @@ function Component(props) {
   const renderedItems = [];
   const seen = new Set();
   const max = Math.max(0, maxItems);
-  for (const item of items) {
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items.at(i);
     if (item == null || seen.has(item)) {
       continue;
     }

@@ -43,7 +43,7 @@ bb1:
   predecessor blocks: bb2 bb3
   [9] Call read useFreeze$5(freeze a$11_@3)
   [10] Call read useFreeze$5(read a$11_@3)
-  [11] Call mutate call$6_@4(read a$11_@3)
+  [11] Call mutate call$6(read a$11_@3)
   [12] Return read a$11_@3
 scope0 [1:2]:
   - dependency: read props$7.cond
@@ -52,6 +52,31 @@ scope1 [2:3]:
 scope3 [4:9]:
   - dependency: read x$9_@1
   - dependency: read cond$8_@0
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  [1] Const mutate cond$8_@0 = read props$7.cond
+  [2] Const mutate x$9_@1 = read props$7.x
+  [3] Const mutate a$10_@2 = undefined
+  scope @3 [4:9] deps=[read x$9_@1, read cond$8_@0] {
+    [4] Let mutate a$11_@3[4:9] = undefined
+    if (read cond$8_@0) {
+      [5] Reassign mutate a$11_@3[4:9] = read x$9_@1
+    } else {
+      [7] Reassign mutate a$11_@3[4:9] = Array []
+    }
+  }
+  [9] Call read useFreeze$5(freeze a$11_@3)
+  [10] Call read useFreeze$5(read a$11_@3)
+  [11] Call mutate call$6(read a$11_@3)
+  return read a$11_@3
+}
+
 ```
 
 ### CFG
@@ -84,7 +109,7 @@ flowchart TB
     bb1_instrs["
       [9] Call read useFreeze$5(freeze a$11_@3)
       [10] Call read useFreeze$5(read a$11_@3)
-      [11] Call mutate call$6_@4(read a$11_@3)
+      [11] Call mutate call$6(read a$11_@3)
     "]
     bb1_instrs --> bb1_terminal(["Return read a$11_@3"])
   end
@@ -127,6 +152,17 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function useFreeze(
+  x,
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -151,6 +187,17 @@ function useFreeze$0(x$2) {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function call(
+  x,
+) {
+  return
+}
 
 ```
 

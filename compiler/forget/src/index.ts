@@ -25,6 +25,7 @@ import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { lower } from "./HIR/BuildHIR";
+import { buildReactiveFunction } from "./HIR/BuildReactiveFunction";
 import codegen from "./HIR/Codegen";
 import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
 import enterSSA from "./HIR/EnterSSA";
@@ -35,7 +36,8 @@ import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
 import { leaveSSA } from "./HIR/LeaveSSA";
-import printHIR from "./HIR/PrintHIR";
+import printHIR, { printFunction } from "./HIR/PrintHIR";
+import { printReactiveFunction } from "./HIR/PrintReactiveFunction";
 
 function parseFunctions(
   source: string
@@ -68,6 +70,9 @@ export const HIR = {
   inferReactiveScopeDependencies,
   inferReactiveScopeVariables,
   inferReactiveScopes,
+  buildReactiveFunction,
+  printReactiveFunction,
+  printFunction,
   printHIR,
   Environment,
   leaveSSA,

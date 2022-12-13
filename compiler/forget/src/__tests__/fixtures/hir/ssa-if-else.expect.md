@@ -40,6 +40,23 @@ scope3 [6:7]:
   - dependency: read x$5_@0
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  [1] Const mutate x$5_@0 = 1
+  [2] Const mutate y$6_@1 = 2
+  if (read y$6_@1) {
+    [4] Const mutate z$7_@2 = Binary read x$5_@0 + read y$6_@1
+  } else {
+    [6] Const mutate z$8_@3 = read x$5_@0
+  }
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

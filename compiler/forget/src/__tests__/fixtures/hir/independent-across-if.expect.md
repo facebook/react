@@ -41,6 +41,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function compute(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -65,6 +75,16 @@ function compute$0() {}
 ```
 bb0:
   [1] Return
+
+```
+
+## Reactive Scopes
+
+```
+function mutate(
+) {
+  return
+}
 
 ```
 
@@ -95,6 +115,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -122,6 +152,16 @@ bb0:
 
 ```
 
+## Reactive Scopes
+
+```
+function Foo(
+) {
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid
@@ -145,21 +185,45 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$9_@0[0:7] = Call mutate compute$3_@0(read props$8.a)
-  [2] Const mutate b$10_@0[0:7] = Call mutate compute$3_@0(read props$8.b)
+  [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
+  [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Call mutate mutate$5_@0(mutate a$9_@0)
-  [5] Call mutate mutate$5_@0(mutate b$10_@0)
+  [4] Call mutate mutate$5(mutate a$9_@1)
+  [5] Call mutate mutate$5(mutate b$10_@1)
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
-  [8] Return read $14_@1
-scope1 [7:8]:
-  - dependency: freeze a$9_@0
-  - dependency: freeze b$10_@0
+  [7] Const mutate $14_@2 = JSX <read Foo$6 a={freeze a$9_@1} b={freeze b$10_@1} ></read Foo$6>
+  [8] Return read $14_@2
+scope1 [1:7]:
+  - dependency: read props$8.a
+scope2 [7:8]:
+  - dependency: freeze a$9_@1
+  - dependency: freeze b$10_@1
+```
+
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  scope @1 [1:7] deps=[read props$8.a] {
+    [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
+    [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
+    if (read props$8.c) {
+      [4] Call mutate mutate$5(mutate a$9_@1)
+      [5] Call mutate mutate$5(mutate b$10_@1)
+    }
+  }
+  scope @2 [7:8] deps=[freeze a$9_@1, freeze b$10_@1] {
+    [7] Const mutate $14_@2 = JSX <read Foo$6 a={freeze a$9_@1} b={freeze b$10_@1} ></read Foo$6>
+  }
+  return read $14_@2
+}
+
 ```
 
 ### CFG
@@ -169,23 +233,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@0[0:7] = Call mutate compute$3_@0(read props$8.a)
-      [2] Const mutate b$10_@0[0:7] = Call mutate compute$3_@0(read props$8.b)
+      [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
+      [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Call mutate mutate$5_@0(mutate a$9_@0)
-      [5] Call mutate mutate$5_@0(mutate b$10_@0)
+      [4] Call mutate mutate$5(mutate a$9_@1)
+      [5] Call mutate mutate$5(mutate b$10_@1)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [7] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
+      [7] Const mutate $14_@2 = JSX <read Foo$6 a={freeze a$9_@1} b={freeze b$10_@1} ></read Foo$6>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $14_@1"])
+    bb1_instrs --> bb1_terminal(["Return read $14_@2"])
   end
 
   %% Jumps

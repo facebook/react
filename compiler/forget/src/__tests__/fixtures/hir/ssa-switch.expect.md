@@ -76,6 +76,41 @@ scope9 [16:17]:
   - dependency: read x$16_@5
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  [1] Const mutate x$10_@0 = 1
+  [2] Const mutate $11_@1 = 2
+  [3] Const mutate $12_@2 = Binary read x$10_@0 === read $11_@1
+  [4] Const mutate $13_@3 = 1
+  [5] Const mutate $14_@4 = Binary read x$10_@0 === read $13_@3
+  scope @5 [6:16] deps=[read x$10_@0] {
+    [6] Let mutate x$16_@5[6:16] = undefined
+    switch (read x$10_@0) {
+      case read $14_@4: {
+          [7] Const mutate $15_@6 = 1
+          [8] Reassign mutate x$16_@5[6:16] = Binary read x$10_@0 + read $15_@6
+          break bb1
+      }
+      case read $12_@2: {
+          [10] Const mutate $17_@7 = 2
+          [11] Reassign mutate x$16_@5[6:16] = Binary read x$10_@0 + read $17_@7
+          break bb1
+      }
+      default: {
+          [13] Const mutate $19_@8 = 3
+          [14] Reassign mutate x$16_@5[6:16] = Binary read x$10_@0 + read $19_@8
+      }
+    }
+  }
+  [16] Const mutate y$22_@9 = read x$16_@5
+  return
+}
+
+```
+
 ### CFG
 
 ```mermaid

@@ -24,6 +24,22 @@ scope2 [3:4]:
   - dependency: read b$7_@1
 ```
 
+## Reactive Scopes
+
+```
+function Component(
+  props,
+) {
+  [1] Const mutate a$6_@0 = 1
+  [2] Const mutate b$7_@1 = 2
+  scope @2 [3:4] deps=[read a$6_@0, read b$7_@1] {
+    [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
+  }
+  return freeze x$8_@2
+}
+
+```
+
 ### CFG
 
 ```mermaid

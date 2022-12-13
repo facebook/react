@@ -87,6 +87,51 @@ scope9 [19:20]:
   - dependency: read $28_@8
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+  b,
+  c,
+) {
+  scope @0 [1:5] deps=[read a$13, read a$13] {
+    [1] Const mutate x$16_@0[1:5] = Array []
+    if (read a$13) {
+      [3] Call mutate x$16_@0.push(read a$13)
+    }
+  }
+  [5] Const mutate $17_@1 = "div"
+  scope @2 [6:7] deps=[read $17_@1, freeze x$16_@0] {
+    [6] Const mutate y$19_@2 = JSX <read $17_@1>{freeze x$16_@0}</read $17_@1>
+  }
+  [7] Const mutate $20_@3 = 0
+  scope @4 [8:15] deps=[read c$15, read b$14, read b$14] {
+    [8] Let mutate x$22_@4[8:15] = undefined
+    switch (read b$14) {
+      case read $20_@3: {
+          [9] Reassign mutate x$22_@4[8:15] = Array []
+          [10] Call mutate x$22_@4.push(read b$14)
+          break bb3
+      }
+      default: {
+          [12] Reassign mutate x$22_@4[8:15] = Array []
+          [13] Call mutate x$22_@4.push(read c$15)
+      }
+    }
+  }
+  [15] Const mutate $25_@5 = "div"
+  [16] Const mutate $26_@6 = "\n      "
+  [17] Const mutate $27_@7 = "\n      "
+  [18] Const mutate $28_@8 = "\n    "
+  scope @9 [19:20] deps=[read $25_@5, read $26_@6, read y$19_@2, read $27_@7, freeze x$22_@4, read $28_@8] {
+    [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4}{read $28_@8}</read $25_@5>
+  }
+  return read $31_@9
+}
+
+```
+
 ### CFG
 
 ```mermaid

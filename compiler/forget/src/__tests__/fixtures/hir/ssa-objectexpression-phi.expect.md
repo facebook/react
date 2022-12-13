@@ -44,6 +44,30 @@ scope3 [10:11]:
   - dependency: read y$7_@0
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  scope @0 [1:10] deps=[] {
+    [1] Let mutate x$6_@0[1:10] = 1
+    [2] Let mutate y$7_@0[1:10] = 2
+    [3] Const mutate $8_@2 = 1
+    [4] Const mutate $9_@0[1:10] = Binary read x$6_@0 > read $8_@2
+    if (read $9_@0) {
+      [6] Reassign mutate x$6_@0[1:10] = 2
+    } else {
+      [8] Reassign mutate y$7_@0[1:10] = 3
+    }
+  }
+  scope @3 [10:11] deps=[read x$6_@0, read y$7_@0] {
+    [10] Const mutate t$14_@3 = Object { x: read x$6_@0, y: read y$7_@0 }
+  }
+  return freeze t$14_@3
+}
+
+```
+
 ### CFG
 
 ```mermaid

@@ -52,6 +52,32 @@ scope1 [3:7]:
   - dependency: read x$6
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  x,
+  y,
+  z,
+) {
+  scope @0 [1:10] deps=[read z$8, read x$6, read x$6, read y$7] {
+    [1] Const mutate items$9_@0[1:10] = Array [read z$8]
+    [2] Call mutate items$9_@0.push(read x$6)
+    scope @1 [3:7] deps=[read y$7, read x$6] {
+      [3] Const mutate items2$10_@1[3:7] = Array []
+      if (read x$6) {
+        [5] Call mutate items2$10_@1.push(read y$7)
+      }
+    }
+    if (read y$7) {
+      [8] Call mutate items$9_@0.push(read x$6)
+    }
+  }
+  return freeze items2$10_@1
+}
+
+```
+
 ### CFG
 
 ```mermaid

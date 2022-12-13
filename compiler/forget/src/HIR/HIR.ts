@@ -14,47 +14,93 @@ import { invariant } from "../CompilerError";
 // *******************************************************************************************
 // *******************************************************************************************
 
-// option 1: control dependencies using CFG (done in Joe's PR)
-// option 2: reachability (did execution reach this point last time, if not calculate)
-// option 3: push change variable calculation to point of use (more allocations)
-// option 4: compute intermediates
-
-// AST -> (lowering) -> HIR -> (dep analysis) -> Reactive Scopes -> (scheduling?) -> HIR -> (codegen) -> AST
+// AST -> (lowering) -> HIR -> (analysis) -> Reactive Scopes -> (scheduling?) -> HIR -> (codegen) -> AST
 
 /**
  * A location in a source file, intended to be used for providing diagnostic information and
  * transforming code while preserving source information (ie to emit source maps).
  *
  * `GeneratedSource` indicates that there is no single source location from which the code derives.
- *
  */
 export const GeneratedSource = Symbol();
 export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
 
 /**
- * A React function defines a computation that takes some set of reactive
- * inputs (eg props, hook arguments) and returns a result (JSX, hook return
- * value). It is composed of one or more Reactive Scopes, where each
- * Reactive Scope takes a set of reactive inputs and produces one *or more*
- * result values. The idea is that each Reactive Scope is responsible for
- * producing its result values whenever its inputs change: scopes contain
- * instructions to produce the result values, deriving from the inputs
- * as well as from the results of other scopes.
+ * A React function defines a computation that takes some set of reactive inputs
+ * (props, hook arguments) and return a result (JSX, hook return value). Unlike
+ * HIR, the data model is tree-shaped:
  *
- * A React function comprises a Reactive Scope responsible for producing the
- * return value of the function, plus additional scopes that the return scopes
- * may depend upon (transitively).
+ * ReactFunction
+ *   ReactiveBlock
+ *     ReactiveBlockScope*
+ *      Place* (dependencies)
+ *      (ReactiveInstruction | ReactiveTerminal)*
+ *
+ * Where ReactiveTerminal may recursively contain zero or more ReactiveBlocks.
+ *
+ * Each ReactiveBlockScope describes a set of dependencies as well as the instructions (and terminals)
+ * within that scope.
  */
-export type ReactFunction = {
+export type ReactiveFunction = {
   loc: SourceLocation;
   id: Identifier | null;
   params: Array<Place>;
-  returnScope: ScopeId;
-  scopes: Map<ScopeId, ReactiveScope>;
+  generator: boolean;
+  async: boolean;
+  body: ReactiveBasicBlock;
 };
 
+export type ReactiveBlock = {
+  kind: "block";
+  id: ScopeId;
+  range: MutableRange;
+  dependencies: Set<Place>;
+  instructions: ReactiveBasicBlock;
+};
+
+export type ReactiveBasicBlock = Array<ReactiveInstruction>;
+
+export type ReactiveValueBlock = {
+  kind: "value-block";
+  instructions: ReactiveBasicBlock;
+  value: InstructionValue | null;
+};
+
+export type ReactiveInstruction =
+  | { kind: "instruction"; instruction: Instruction }
+  | { kind: "terminal"; terminal: ReactiveTerminal; label: BlockId | null }
+  | ReactiveBlock;
+
+export type ReactiveTerminal =
+  | { kind: "break"; label: BlockId | null }
+  | { kind: "continue"; label: BlockId | null }
+  | { kind: "return"; value: Place | null }
+  | { kind: "throw"; value: Place }
+  | {
+      kind: "switch";
+      test: Place;
+      cases: Array<{
+        test: Place | null;
+        block: ReactiveBasicBlock | void;
+      }>;
+    }
+  | { kind: "while"; test: ReactiveValueBlock; loop: ReactiveBasicBlock }
+  | {
+      kind: "for";
+      init: ReactiveValueBlock;
+      test: ReactiveValueBlock;
+      update: ReactiveValueBlock;
+      loop: ReactiveBasicBlock;
+    }
+  | {
+      kind: "if";
+      test: Place;
+      consequent: ReactiveBasicBlock;
+      alternate: ReactiveBasicBlock | null;
+    };
+
 /**
- * A function declaration including its path
+ * A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
  */
 export type HIRFunction = {
   loc: SourceLocation;

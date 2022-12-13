@@ -43,6 +43,31 @@ scope2 [6:7]:
   - dependency: mutate x$6_@0.z
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+  a,
+) {
+  scope @0 [1:9] deps=[read a$5] {
+    [1] Const mutate x$6_@0[1:9] = Object {  }
+    if (read a$5) {
+      scope @1 [3:4] deps=[mutate x$6_@0.y] {
+        [3] Const mutate y$7_@1 = Object {  }
+      }
+      [4] Reassign mutate x$6_@0.y[1:9] = read y$7_@1
+    } else {
+      scope @2 [6:7] deps=[mutate x$6_@0.z] {
+        [6] Const mutate z$8_@2 = Object {  }
+      }
+      [7] Reassign mutate x$6_@0.z[1:9] = read z$8_@2
+    }
+  }
+  return freeze x$6_@0
+}
+
+```
+
 ### CFG
 
 ```mermaid

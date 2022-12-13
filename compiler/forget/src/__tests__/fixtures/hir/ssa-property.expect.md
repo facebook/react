@@ -23,6 +23,23 @@ scope1 [2:4]:
   - dependency: read x$3_@0
 ```
 
+## Reactive Scopes
+
+```
+function foo(
+) {
+  scope @0 [1:2] deps=[] {
+    [1] Const mutate x$3_@0 = Array []
+  }
+  scope @1 [2:4] deps=[read x$3_@0] {
+    [2] Const mutate y$4_@1[2:4] = Object {  }
+    [3] Reassign mutate y$4_@1.x[2:4] = read x$3_@0
+  }
+  return freeze y$4_@1
+}
+
+```
+
 ### CFG
 
 ```mermaid
