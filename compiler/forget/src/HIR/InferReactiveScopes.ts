@@ -166,7 +166,7 @@ type ShadowableReactiveScope = {
 };
 
 class MergeOverlappingReactiveScopesVisitor
-  implements Visitor<void, void, void, void, void, void>
+  implements Visitor<void, void, void, void, void, void, void>
 {
   scopes: Array<BlockScope> = [];
   seenScopes: Set<ScopeId> = new Set();
@@ -332,7 +332,7 @@ type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
  * were opened (start encountered).
  */
 class AlignReactiveScopesToBlockScopeRangeVisitor
-  implements Visitor<void, void, void, void, void, void>
+  implements Visitor<void, void, void, void, void, void, void>
 {
   // For each block scope (outer array) stores a list of ReactiveScopes that start
   // in that block scope.

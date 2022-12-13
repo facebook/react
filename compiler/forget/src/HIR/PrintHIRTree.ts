@@ -29,6 +29,7 @@ class PrintVisitor
   implements
     Visitor<
       Array<string>,
+      string,
       Array<string>,
       Array<string>,
       string,

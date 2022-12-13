@@ -35,7 +35,7 @@ export function instructionInScope(
 }
 
 class ScopeDependenciesVisitor
-  implements Visitor<void, void, void, InstructionValue, void, void>
+  implements Visitor<void, void, void, void, InstructionValue, void, void>
 {
   #identifiers: Map<Identifier, InstructionId> = new Map();
   // Scopes that are currently active at this point in the traversal

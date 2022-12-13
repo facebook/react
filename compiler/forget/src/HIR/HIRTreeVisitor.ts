@@ -28,6 +28,7 @@ import {
  * See the {@link Visitor} interface for more about implementing a visitor.
  */
 export function visitTree<
+  TBlockBuilder,
   TBlock,
   TInit,
   TValueBlock,
@@ -36,32 +37,64 @@ export function visitTree<
   TCase
 >(
   fn: HIRFunction,
-  visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>
-): TStatement {
+  visitor: Visitor<
+    TBlockBuilder,
+    TBlock,
+    TInit,
+    TValueBlock,
+    TValue,
+    TStatement,
+    TCase
+  >
+): TBlock {
   const cx = new Context(fn.body);
   const driver = new Driver(cx, visitor);
   return driver.traverseBlock(cx.block(fn.body.entry));
 }
 
-class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
+class Driver<
+  TBlockBuilder,
+  TBlock,
+  TInit,
+  TValueBlock,
+  TValue,
+  TStatement,
+  TCase
+> {
   cx: Context;
-  visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>;
+  visitor: Visitor<
+    TBlockBuilder,
+    TBlock,
+    TInit,
+    TValueBlock,
+    TValue,
+    TStatement,
+    TCase
+  >;
 
   constructor(
     cx: Context,
-    visitor: Visitor<TBlock, TInit, TValueBlock, TValue, TStatement, TCase>
+    visitor: Visitor<
+      TBlockBuilder,
+      TBlock,
+      TInit,
+      TValueBlock,
+      TValue,
+      TStatement,
+      TCase
+    >
   ) {
     this.cx = cx;
     this.visitor = visitor;
   }
 
-  traverseBlock(block: BasicBlock): TStatement {
+  traverseBlock(block: BasicBlock): TBlock {
     const blockValue = this.visitor.enterBlock();
     this.visitBlock(block, blockValue);
     return this.visitor.leaveBlock(blockValue);
   }
 
-  visitBlock(block: BasicBlock, blockValue: TBlock): void {
+  visitBlock(block: BasicBlock, blockValue: TBlockBuilder): void {
     invariant(
       !this.cx.emitted.has(block.id),
       `Cannot emit the same block twice: bb${block.id}`
@@ -120,19 +153,29 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
         }
 
         this.visitor.visitTerminalId(terminal.id);
-        let consequent: TStatement | null = null;
+        let consequent: TBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
-          consequent = this.visitBreak(terminal.consequent);
+          const break_ = this.visitBreak(terminal.consequent);
+          if (break_ !== null) {
+            const builder = this.visitor.enterBlock();
+            this.visitor.appendBlock(builder, break_);
+            consequent = this.visitor.leaveBlock(builder);
+          }
         } else {
           consequent = this.traverseBlock(
             this.cx.ir.blocks.get(terminal.consequent)!
           );
         }
 
-        let alternate: TStatement | null = null;
+        let alternate: TBlock | null = null;
         if (alternateId !== null) {
           if (this.cx.isScheduled(alternateId)) {
-            alternate = this.visitBreak(alternateId);
+            const break_ = this.visitBreak(alternateId);
+            if (break_ !== null) {
+              const builder = this.visitor.enterBlock();
+              this.visitor.appendBlock(builder, break_);
+              alternate = this.visitor.leaveBlock(builder);
+            }
           } else {
             alternate = this.traverseBlock(this.cx.ir.blocks.get(alternateId)!);
           }
@@ -271,7 +314,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
           value: testTerminal.test,
           id: testTerminal.id,
         });
-        let loopBody: TStatement;
+        let loopBody: TBlock;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
@@ -360,7 +403,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
         );
         const updateValue = this.visitValueBlock(blockValue, updateBlock);
 
-        let loopBody: TStatement;
+        let loopBody: TBlock;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
@@ -434,7 +477,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
     }
   }
 
-  visitInitBlock(parent: TBlock, block: BasicBlock): TInit {
+  visitInitBlock(parent: TBlockBuilder, block: BasicBlock): TInit {
     const initBlock = this.visitor.enterInitBlock(parent);
     for (const instr of block.instructions) {
       const value = this.visitor.visitValue(instr.value, instr.id);
@@ -445,7 +488,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
   }
 
   visitValueBlock(
-    parent: TBlock,
+    parent: TBlockBuilder,
     block: BasicBlock,
     terminalValue?: { value: InstructionValue; id: InstructionId }
   ): TValue {
@@ -475,7 +518,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
     return this.visitor.leaveValueBlock(valueBlock, value);
   }
 
-  emptyBlock(): TStatement {
+  emptyBlock(): TBlock {
     const block = this.visitor.enterBlock();
     return this.visitor.leaveBlock(block);
   }
@@ -533,7 +576,7 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
     }
   }
 
-  visitInstr(instr: Instruction, blockValue: TBlock): void {
+  visitInstr(instr: Instruction, blockValue: TBlockBuilder): void {
     const value = this.visitor.visitValue(instr.value, instr.id);
     const item = this.visitor.visitInstruction(instr, value);
     this.visitor.appendBlock(blockValue, item);
@@ -775,6 +818,7 @@ type ControlFlowTarget =
  * TCase = representation of a switch case
  */
 export interface Visitor<
+  TBlockBuilder,
   TBlock,
   TInit,
   TValueBlock,
@@ -786,20 +830,20 @@ export interface Visitor<
    * Must create an "empty" instance of the visitor's represenation for
    * the contents of a block.
    */
-  enterBlock(): TBlock;
+  enterBlock(): TBlockBuilder;
 
   /**
    * Appends an item onto the given block, with an optional label. The label
    * indicates that a break/continue will proceed to code *after* the given item.
    */
-  appendBlock(block: TBlock, item: TStatement, label?: BlockId): void;
+  appendBlock(block: TBlockBuilder, item: TStatement, label?: BlockId): void;
 
   /**
    * Converts the visitor's block representation into the representation of a
    * block item, simultaneously "closing" the given block. The block will no
    * longer be modified by the visitor driver.
    */
-  leaveBlock(block: TBlock): TStatement;
+  leaveBlock(block: TBlockBuilder): TBlock;
 
   /**
    * Must create an "empty" instance of the visitor's representation for a value
@@ -809,7 +853,7 @@ export interface Visitor<
    * The exception is the for initializer, which may contain declarations but not
    * other statement types.
    */
-  enterValueBlock(block: TBlock): TValueBlock;
+  enterValueBlock(block: TBlockBuilder): TValueBlock;
 
   /**
    * Appends an item onto the given value block.
@@ -822,7 +866,7 @@ export interface Visitor<
    */
   leaveValueBlock(block: TValueBlock, value: TValue | null): TValue;
 
-  enterInitBlock(block: TBlock): TValueBlock;
+  enterInitBlock(block: TBlockBuilder): TValueBlock;
 
   appendInitBlock(block: TValueBlock, item: TStatement): void;
 
@@ -860,38 +904,38 @@ export interface Visitor<
    * own representations.
    */
   visitTerminal(
-    terminal: BlockTerminal<TInit, TValue, TStatement, TCase>
+    terminal: BlockTerminal<TInit, TValue, TBlock, TCase>
   ): TStatement;
 
   /**
    * Visits a switch case statement, which is collected into a switch terminal
    * variant.
    */
-  visitCase(test: TValue | null, block: TStatement): TCase;
+  visitCase(test: TValue | null, block: TBlock): TCase;
 }
 
-export type BlockTerminal<TInit, TValue, TStatement, TCase> =
+export type BlockTerminal<TInit, TValue, TBlock, TCase> =
   | { kind: "return"; loc: SourceLocation; value: TValue | null }
   | { kind: "throw"; value: TValue }
   | {
       kind: "if";
       test: TValue;
-      consequent: TStatement;
-      alternate: TStatement | null;
+      consequent: TBlock;
+      alternate: TBlock | null;
     }
   | { kind: "switch"; test: TValue; cases: Array<TCase> }
   | {
       kind: "while";
       loc: SourceLocation;
       test: TValue;
-      loop: TStatement;
+      loop: TBlock;
     }
   | {
       kind: "for";
       init: TInit;
       test: TValue;
       update: TValue;
-      loop: TStatement;
+      loop: TBlock;
     }
   | { kind: "break"; label: BlockId | null }
   | { kind: "continue"; label: BlockId | null };

@@ -210,7 +210,9 @@ function Component$0(props$11) {
   bb2: while (true) {
     mutate$6(a$12, b$13);
 
-    bb4: if (cond$7(a$12)) break;
+    bb4: if (cond$7(a$12)) {
+      break;
+    }
   }
 
   bb7: if (a$12) {

@@ -230,7 +230,9 @@ function Component$0(props$12) {
     d$24 = z$19;
     mutate$7(a$18, b$20);
 
-    bb4: if (cond$8(a$18)) break;
+    bb4: if (cond$8(a$18)) {
+      break;
+    }
   }
 
   bb7: if (a$18) {

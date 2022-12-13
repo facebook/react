@@ -93,6 +93,7 @@ class CodegenVisitor
   implements
     Visitor<
       Array<t.Statement>,
+      t.Statement,
       Array<t.Statement>,
       Array<t.Statement>,
       t.Expression,
