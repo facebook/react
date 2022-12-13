@@ -2051,7 +2051,7 @@ function updateEffect(
   updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
-function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
+function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
   payload: EventFunctionPayload<Args, Return, F>,
 ) {
   currentlyRenderingFiber.flags |= UpdateEffect;
@@ -2080,7 +2080,7 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
-        "A function wrapped in useEvent can't be called during rendering.",
+        "A function wrapped in useEffectEvent can't be called during rendering.",
       );
     }
     return ref.impl.apply(undefined, arguments);
@@ -2092,12 +2092,12 @@ function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
 ): F {
   const hook = updateWorkInProgressHook();
   const ref = hook.memoizedState;
-  useEventImpl({ref, nextImpl: callback});
+  useEffectEventImpl({ref, nextImpl: callback});
   // $FlowIgnore[incompatible-return]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
-        "A function wrapped in useEvent can't be called during rendering.",
+        "A function wrapped in useEffectEvent can't be called during rendering.",
       );
     }
     return ref.impl.apply(undefined, arguments);
@@ -2781,7 +2781,7 @@ if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
 if (enableUseEventHook) {
-  (ContextOnlyDispatcher: Dispatcher).useEvent = throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -2815,7 +2815,7 @@ if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
 }
 if (enableUseEventHook) {
-  (HooksDispatcherOnMount: Dispatcher).useEvent = mountEvent;
+  (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -2847,7 +2847,7 @@ if (enableUseHook) {
   (HooksDispatcherOnUpdate: Dispatcher).use = use;
 }
 if (enableUseEventHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useEvent = updateEvent;
+  (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -2880,7 +2880,7 @@ if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
 }
 if (enableUseEventHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useEvent = updateEvent;
+  (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -3060,12 +3060,12 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
+    (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       mountHookTypesDev();
       return mountEvent(callback);
     };
@@ -3215,12 +3215,12 @@ if (__DEV__) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEvent = function useEvent<
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       updateHookTypesDev();
       return mountEvent(callback);
     };
@@ -3370,12 +3370,12 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       updateHookTypesDev();
       return updateEvent(callback);
     };
@@ -3526,12 +3526,12 @@ if (__DEV__) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       updateHookTypesDev();
       return updateEvent(callback);
     };
@@ -3708,12 +3708,12 @@ if (__DEV__) {
     };
   }
   if (enableUseEventHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountEvent(callback);
@@ -3891,12 +3891,12 @@ if (__DEV__) {
     };
   }
   if (enableUseEventHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEvent(callback);
@@ -4075,12 +4075,12 @@ if (__DEV__) {
     };
   }
   if (enableUseEventHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
       Args,
       Return,
       F: (...Array<Args>) => Return,
     >(callback: F): F {
-      currentHookNameInDev = 'useEvent';
+      currentHookNameInDev = 'useEffectEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEvent(callback);

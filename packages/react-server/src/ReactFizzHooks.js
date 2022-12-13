@@ -509,11 +509,11 @@ export function useCallback<T>(
 
 function throwOnUseEventCall() {
   throw new Error(
-    "A function wrapped in useEvent can't be called during rendering.",
+    "A function wrapped in useEffectEvent can't be called during rendering.",
   );
 }
 
-export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
+export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
   // $FlowIgnore[incompatible-return]
@@ -652,7 +652,7 @@ if (enableCache) {
   HooksDispatcher.useCacheRefresh = useCacheRefresh;
 }
 if (enableUseEventHook) {
-  HooksDispatcher.useEvent = useEvent;
+  HooksDispatcher.useEffectEvent = useEffectEvent;
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
