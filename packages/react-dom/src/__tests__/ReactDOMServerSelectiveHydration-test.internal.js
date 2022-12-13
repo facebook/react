@@ -1953,4 +1953,66 @@ describe('ReactDOMServerSelectiveHydration', () => {
       ]);
     });
   });
+
+  it('regression test: can unwind context on selective hydration interruption for sync updates', async () => {
+    const Context = React.createContext('DefaultContext');
+
+    function ContextReader(props) {
+      const value = React.useContext(Context);
+      Scheduler.unstable_yieldValue(value);
+      return null;
+    }
+
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return <span>{text}</span>;
+    }
+    const ChildWithBoundary = React.memo(function({text}) {
+      return (
+        <Suspense fallback="Loading...">
+          <Child text={text} />
+        </Suspense>
+      );
+    });
+
+    function App({a}) {
+      Scheduler.unstable_yieldValue('App');
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <Context.Provider value="SiblingContext">
+            <ChildWithBoundary text={a} />
+          </Context.Provider>
+          <ContextReader />
+        </>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App a="A" />);
+    expect(Scheduler).toHaveYielded(['App', 'A', 'DefaultContext']);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    await act(async () => {
+      const root = ReactDOMClient.hydrateRoot(container, <App a="A" />);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'App',
+        'DefaultContext',
+        'Commit',
+      ]);
+
+      ReactDOM.flushSync(() => {
+        root.render(<App a="AA" />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'App',
+        'A',
+        'App',
+        'AA',
+        'DefaultContext',
+        'Commit',
+      ]);
+    });
+  });
 });
