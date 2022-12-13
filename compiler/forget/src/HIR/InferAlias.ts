@@ -3,96 +3,13 @@ import DisjointSet from "./DisjointSet";
 import { HIRFunction, Identifier, Instruction, LValue, Place } from "./HIR";
 import { printInstructionValue } from "./PrintHIR";
 
-type AbstractValue = AbstractObject | AbstractPrimitive;
-type AbstractObject = {
-  kind: "Object";
-  values: Map<string, AbstractValue>;
-};
-type AbstractPrimitive = {
-  kind: "Primitive";
-  value: number | boolean | string | null | undefined;
-};
-
 export type AliasSet = Set<Identifier>;
 
-class AbstractState {
+class AliasAnalyser {
   aliases = new DisjointSet<Identifier>();
   // NOTE(gsn): Should this be a part of AbstractObject? No, because this has
   // nothing to do with values in the object.
   objectAliases = new Map<Identifier, Map<string, AliasSet>>();
-
-  #values = new Map<Identifier, AbstractValue>();
-
-  read(alias: Place): AbstractValue {
-    // Simple alias:
-    //    read(alias);
-    if (alias.memberPath === null) {
-      let value = this.#values.get(alias.identifier);
-
-      // Don't know what this is, let's default to an Object conservatively.
-      if (value === undefined) {
-        value = { kind: "Object", values: new Map() };
-      }
-
-      this.#values.set(alias.identifier, value);
-      return value;
-    }
-
-    if (alias.memberPath.length > 1) {
-      // TODO(gsn): Correctly handle nested member paths when reading values
-      return { kind: "Object", values: new Map() };
-    }
-
-    // Complex alias:
-    //   read(alias.memberPath);
-    let object = this.#values.get(alias.identifier);
-
-    // Don't know what this is, let's default to an Object conservatively.
-    if (object === undefined) {
-      object = { kind: "Object", values: new Map() };
-      this.#values.set(alias.identifier, object);
-    }
-
-    // We're doing a member lookup on a non object.
-    //
-    //   alias = 1;
-    //   read(alias.memberPath);
-    if (object.kind !== "Object") {
-      // Update alias to be an object
-      object = { kind: "Object", values: new Map() };
-      this.#values.set(alias.identifier, object);
-
-      // Conservatively type the value as object.
-      //
-      // NOTE(gsn): Should this be an AbstractUnknown rather than an
-      // AbstractObject?
-      let value: AbstractObject = { kind: "Object", values: new Map() };
-      object.values.set(alias.memberPath[0], value);
-      return value;
-    }
-
-    let value = object.values.get(alias.memberPath[0]);
-
-    // We don't have a value for this member path.
-    //
-    //   alias = {};
-    //   read(alias.memberPath);
-    if (value === undefined) {
-      // Conservatively type the value as object.
-      value = {
-        kind: "Object",
-        values: new Map(),
-      };
-      object.values.set(alias.memberPath[0], value);
-      return value;
-    }
-
-    // We have a value for this memberPath!
-    //
-    //   alias.memberPath = value;
-    //   read(alias.memberPath);
-    return value;
-  }
 
   alias(lvalue: LValue, alias: Place) {
     // Complex lvalue:
@@ -141,66 +58,37 @@ class AbstractState {
     //   lvalue = alias.memberPath;
     this.aliases.union([lvalue.place.identifier, alias.identifier]);
   }
-
-  store(lvalue: LValue, value: AbstractValue) {
-    // TODO(gsn): Handle stores for complex lvalue
-    if (lvalue.place.memberPath !== null) {
-      return;
-    }
-
-    // Simple lvalue:
-    //   lvalue = alias;
-    //   lvalue = alias.memberPath;
-    this.#values.set(lvalue.place.identifier, value);
-  }
 }
 
 export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
-  const state = new AbstractState();
+  const analyser = new AliasAnalyser();
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
-      inferInstr(instr, state);
+      inferInstr(instr, analyser);
     }
   }
 
-  return state.aliases;
+  return analyser.aliases;
 }
 
-function inferInstr(instr: Instruction, state: AbstractState) {
+function inferInstr(instr: Instruction, state: AliasAnalyser) {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
-  let value: AbstractValue | null = null;
   switch (instrValue.kind) {
-    case "Primitive": {
-      value = {
-        kind: "Primitive",
-        value: instrValue.value,
-      };
-      break;
-    }
     case "Identifier": {
       alias = instrValue;
-      value = state.read(alias);
       break;
     }
     default:
       return;
   }
 
-  invariant(
-    value !== null,
-    `expected ${printInstructionValue(instrValue)} to be an alias or value`
-  );
-
   // TODO(gsn): handle this.
   if (lvalue === null) {
     return;
   }
 
-  // No need to alias Primitives.
-  if (alias !== null && value.kind !== "Primitive") {
+  if (alias !== null) {
     state.alias(lvalue, alias);
   }
-
-  state.store(lvalue, value);
 }
