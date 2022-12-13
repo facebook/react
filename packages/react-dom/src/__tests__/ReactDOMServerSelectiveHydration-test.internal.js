@@ -1826,7 +1826,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       TODO_scheduleIdleDOMSchedulerTask(() => {
         root.render(<App a="AA" />);
       });
-      expect(Scheduler).toFlushAndYieldThrough(['App', 'AA', 'DefaultContext']);
+      expect(Scheduler).toFlushAndYieldThrough(['App', 'A']);
 
       dispatchClickEvent(spanA);
       expect(Scheduler).toHaveYielded(['A']);

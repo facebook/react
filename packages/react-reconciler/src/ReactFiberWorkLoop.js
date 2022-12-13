@@ -2245,8 +2245,9 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Selective hydration. An update flowed into a dehydrated tree.
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
-            workInProgress = null;
             workInProgressRootExitStatus = RootDidNotComplete;
+            // `workInProgress` is not set to `null` to allow unwinding in
+            // `prepareFreshStack`.
             break outer;
           }
           default: {
