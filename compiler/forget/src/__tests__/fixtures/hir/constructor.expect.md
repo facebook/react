@@ -52,6 +52,8 @@ bb0:
   [7] Const mutate $14:TPrimitive = "div"
   [8] Const mutate $15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
   [9] Return read $15_@2
+scope0 [1:7]:
+  - dependency: read $12:TPrimitive
 scope1 [5:6]:
   - dependency: read $12:TPrimitive
 scope2 [8:9]:
@@ -66,7 +68,7 @@ scope2 [8:9]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[] {
+  scope @0 [1:7] deps=[read $12:TPrimitive] {
     [1] Const mutate a$10_@0[1:7] = Array []
     [2] Const mutate b$11_@0:TObject[1:7] = Object {  }
     [3] New mutate Foo$4(mutate a$10_@0, mutate b$11_@0:TObject)

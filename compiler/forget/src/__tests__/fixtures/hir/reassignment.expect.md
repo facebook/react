@@ -31,6 +31,9 @@ bb0:
   [8] Return read $11_@3
 scope0 [1:7]:
   - dependency: read props$6.p0
+  - dependency: read Component$0
+  - dependency: freeze x$9_@1
+  - dependency: read props$6.p1
 scope2 [5:6]:
   - dependency: read Component$0
   - dependency: freeze x$9_@1
@@ -47,7 +50,7 @@ scope3 [7:8]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$6.p0] {
+  scope @0 [1:7] deps=[read props$6.p0, read Component$0, freeze x$9_@1, read props$6.p1] {
     [1] Const mutate x$7_@0:TFunction[1:7] = Array []
     [2] Call mutate x$7_@0.push(read props$6.p0)
     [3] Const mutate y$8_@0:TFunction[1:7] = read x$7_@0:TFunction

@@ -20,6 +20,9 @@ bb0:
   [3] Call mutate y$8_@1.push(read b$6)
   [4] Call mutate x$7_@0.push(read a$5)
   [5] Return
+scope0 [1:5]:
+  - dependency: read b$6
+  - dependency: read a$5
 scope1 [2:4]:
   - dependency: read b$6
   - dependency: read a$5
@@ -32,7 +35,7 @@ function foo(
   a,
   b,
 ) {
-  scope @0 [1:5] deps=[] {
+  scope @0 [1:5] deps=[read b$6, read a$5] {
     [1] Const mutate x$7_@0:TFunction[1:5] = Array []
     scope @1 [2:4] deps=[read b$6, read a$5] {
       [2] Const mutate y$8_@1:TFunction[2:4] = Array []

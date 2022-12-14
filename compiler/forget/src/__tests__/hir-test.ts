@@ -20,6 +20,7 @@ import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
 import { printReactiveFunction } from "../HIR/PrintReactiveFunction";
+import { propagateScopeDependencies } from "../HIR/PropagateScopeDependencies";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -150,6 +151,7 @@ function transform(text: string, file: string): Array<TestOutput> {
 
         const reactiveFunction = buildReactiveFunction(ir);
         flattenReactiveLoops(reactiveFunction);
+        propagateScopeDependencies(reactiveFunction);
         const scopes = printReactiveFunction(reactiveFunction);
 
         const textHIR = printFunction(ir);

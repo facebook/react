@@ -100,6 +100,9 @@ bb2:
   [40] Const mutate $73 = "\n    "
   [41] Const mutate $74_@5 = JSX <read $67:TPrimitive>{read $68}{read $71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
   [42] Return read $74_@5
+scope0 [3:33]:
+  - dependency: read $34:TPrimitive
+  - dependency: read maxItems$31:TProp
 scope2 [6:7]:
   - dependency: read $34:TPrimitive
   - dependency: read maxItems$31:TProp
@@ -126,7 +129,7 @@ function Component(
 ) {
   [1] Const mutate items$30:TProp = read props$29.items
   [2] Const mutate maxItems$31:TProp = read props$29.maxItems
-  scope @0 [3:33] deps=[] {
+  scope @0 [3:33] deps=[read $34:TPrimitive, read maxItems$31:TProp] {
     [3] Const mutate renderedItems$32_@0:TFunction[3:33] = Array []
     [4] Const mutate seen$33_@0:TFunction[3:33] = New mutate Set$6()
     [5] Const mutate $34:TPrimitive = 0

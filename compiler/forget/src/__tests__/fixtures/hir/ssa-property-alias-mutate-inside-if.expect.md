@@ -39,6 +39,7 @@ bb1:
   [10] Return freeze x$7_@0:TObject
 scope0 [1:10]:
   - dependency: read a$6
+  - dependency: mutate x$7_@0.z
 scope1 [7:8]:
   - dependency: mutate x$7_@0.z
 ```
@@ -49,7 +50,7 @@ scope1 [7:8]:
 function foo(
   a,
 ) {
-  scope @0 [1:10] deps=[read a$6] {
+  scope @0 [1:10] deps=[read a$6, mutate x$7_@0.z] {
     [1] Const mutate x$7_@0:TObject[1:10] = Object {  }
     if (read a$6) {
       [3] Const mutate y$8_@0:TObject[1:10] = Object {  }

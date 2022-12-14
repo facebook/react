@@ -40,6 +40,9 @@ bb1:
 scope0 [1:11]:
   - dependency: read c$10
   - dependency: read a$8
+  - dependency: read b$9
+  - dependency: read $13:TPrimitive
+  - dependency: freeze y$12_@1:TFunction
 scope1 [3:5]:
   - dependency: read b$9
 scope2 [6:7]:
@@ -55,7 +58,7 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:11] deps=[read c$10, read a$8] {
+  scope @0 [1:11] deps=[read c$10, read a$8, read b$9, read $13:TPrimitive, freeze y$12_@1:TFunction] {
     [1] Const mutate x$11_@0:TFunction[1:11] = Array []
     if (read a$8) {
       scope @1 [3:5] deps=[read b$9] {

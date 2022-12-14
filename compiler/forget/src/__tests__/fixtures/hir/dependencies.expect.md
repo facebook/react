@@ -47,6 +47,8 @@ scope0 [1:10]:
   - dependency: read x$6
   - dependency: read x$6
   - dependency: read y$7
+  - dependency: read y$7
+  - dependency: read x$6
 scope1 [3:7]:
   - dependency: read y$7
   - dependency: read x$6
@@ -60,7 +62,7 @@ function foo(
   y,
   z,
 ) {
-  scope @0 [1:10] deps=[read z$8, read x$6, read x$6, read y$7] {
+  scope @0 [1:10] deps=[read z$8, read x$6, read x$6, read y$7, read y$7, read x$6] {
     [1] Const mutate items$9_@0:TFunction[1:10] = Array [read z$8]
     [2] Call mutate items$9_@0.push(read x$6)
     scope @1 [3:7] deps=[read y$7, read x$6] {

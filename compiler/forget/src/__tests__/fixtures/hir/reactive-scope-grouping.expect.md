@@ -24,6 +24,8 @@ bb0:
   [4] Call mutate y$5_@1.push(mutate z$6_@1:TObject)
   [5] Reassign mutate x$4_@0.y[1:6] = read y$5_@1:TFunction
   [6] Return freeze x$4_@0:TObject
+scope0 [1:6]:
+  - dependency: mutate x$4_@0.y
 scope1 [2:5]:
   - dependency: mutate x$4_@0.y
 ```
@@ -33,7 +35,7 @@ scope1 [2:5]:
 ```
 function foo(
 ) {
-  scope @0 [1:6] deps=[] {
+  scope @0 [1:6] deps=[mutate x$4_@0.y] {
     [1] Const mutate x$4_@0:TObject[1:6] = Object {  }
     scope @1 [2:5] deps=[mutate x$4_@0.y] {
       [2] Const mutate y$5_@1:TFunction[2:5] = Array []
