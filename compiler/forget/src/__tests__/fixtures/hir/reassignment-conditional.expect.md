@@ -43,8 +43,6 @@ scope0 [1:7]:
 scope1 [7:8]:
   - dependency: read Component$0
   - dependency: freeze x$7_@0:TFunction
-  - dependency: read y$8.push
-  - dependency: read props$6.p2
 scope2 [9:10]:
   - dependency: read Component$0
   - dependency: read x$7_@0:TFunction
@@ -65,7 +63,7 @@ function Component(
       [5] Reassign mutate x$7_@0:TFunction[1:7] = Array []
     }
   }
-  scope @1 [7:8] deps=[read Component$0, freeze x$7_@0:TFunction, read y$8.push, read props$6.p2] {
+  scope @1 [7:8] deps=[read Component$0, freeze x$7_@0:TFunction] {
     [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0:TFunction} ></read Component$0>
   }
   [8] Call read y$8.push(read props$6.p2)

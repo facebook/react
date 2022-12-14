@@ -127,6 +127,7 @@ class ScopeDependenciesVisitor
   }
 
   visitInstruction(instr: Instruction, _value: InstructionValue): void {
+    this.#visitId(instr.id);
     const { lvalue, value } = instr;
     if (lvalue !== null && lvalue.place.memberPath === null) {
       if (!this.#identifiers.has(lvalue.place.identifier)) {
@@ -173,8 +174,6 @@ class ScopeDependenciesVisitor
         }
       }
     }
-
-    this.#visitId(instr.id);
   }
 
   enterBlock(): void {}

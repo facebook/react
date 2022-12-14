@@ -56,8 +56,6 @@ bb1:
 scope3 [12:13]:
   - dependency: read Component$0
   - dependency: freeze x$9_@1:TFunction
-  - dependency: read y$10_@1.push
-  - dependency: read props$8.p4
 scope4 [14:15]:
   - dependency: read Component$0
   - dependency: read y$10_@1:TPrimitive
@@ -88,7 +86,7 @@ function Component(
       }
     }
   }
-  scope @3 [12:13] deps=[read Component$0, freeze x$9_@1:TFunction, read y$10_@1.push, read props$8.p4] {
+  scope @3 [12:13] deps=[read Component$0, freeze x$9_@1:TFunction] {
     [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1:TFunction} ></read Component$0>
   }
   [13] Call read y$10_@1.push(read props$8.p4)

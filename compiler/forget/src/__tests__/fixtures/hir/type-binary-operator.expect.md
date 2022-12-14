@@ -27,8 +27,7 @@ bb2:
 bb1:
   predecessor blocks: bb2 bb0
   [7] Return
-scope1 [2:3]:
-  - dependency: read a$7_@0:TPrimitive
+
 ```
 
 ## Reactive Scopes
@@ -39,7 +38,7 @@ function component(
   scope @0 [1:2] deps=[] {
     [1] Const mutate a$7_@0:TPrimitive = Call mutate some$2:TFunction()
   }
-  scope @1 [2:3] deps=[read a$7_@0:TPrimitive] {
+  scope @1 [2:3] deps=[] {
     [2] Const mutate b$8_@1:TPrimitive = Call mutate someOther$4:TFunction()
   }
   [3] Const mutate $9:TPrimitive = Binary read a$7_@0:TPrimitive > read b$8_@1:TPrimitive

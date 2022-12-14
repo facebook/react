@@ -39,9 +39,6 @@ bb1:
   [10] Return freeze x$7_@0:TObject
 scope0 [1:10]:
   - dependency: read a$6
-  - dependency: mutate x$7_@0.z
-scope1 [7:8]:
-  - dependency: mutate x$7_@0.z
 ```
 
 ## Reactive Scopes
@@ -50,14 +47,14 @@ scope1 [7:8]:
 function foo(
   a,
 ) {
-  scope @0 [1:10] deps=[read a$6, mutate x$7_@0.z] {
+  scope @0 [1:10] deps=[read a$6] {
     [1] Const mutate x$7_@0:TObject[1:10] = Object {  }
     if (read a$6) {
       [3] Const mutate y$8_@0:TObject[1:10] = Object {  }
       [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0:TObject
       [5] Call mutate mutate$4:TFunction(mutate y$8_@0:TObject)
     } else {
-      scope @1 [7:8] deps=[mutate x$7_@0.z] {
+      scope @1 [7:8] deps=[] {
         [7] Const mutate z$9_@1:TObject = Object {  }
       }
       [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1:TObject

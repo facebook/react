@@ -81,7 +81,6 @@ bb0:
   [8] Return read $16_@2
 scope1 [2:3]:
   - dependency: freeze x$11_@0
-  - dependency: read x$11_@0
 scope2 [7:8]:
   - dependency: read Component$0
   - dependency: read $13
@@ -100,7 +99,7 @@ function Component(
   scope @0 [1:2] deps=[] {
     [1] Const mutate x$11_@0 = Array []
   }
-  scope @1 [2:3] deps=[freeze x$11_@0, read x$11_@0] {
+  scope @1 [2:3] deps=[freeze x$11_@0] {
     [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
   }
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)

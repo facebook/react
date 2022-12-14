@@ -20,10 +20,7 @@ bb0:
   [3] Reassign mutate x$4_@0.t[1:4] = read q$5_@1:TObject
   [4] Const mutate z$6:TObject = read x$4_@0.t
   [5] Return
-scope0 [1:4]:
-  - dependency: mutate x$4_@0.t
-scope1 [2:3]:
-  - dependency: mutate x$4_@0.t
+
 ```
 
 ## Reactive Scopes
@@ -31,9 +28,9 @@ scope1 [2:3]:
 ```
 function component(
 ) {
-  scope @0 [1:4] deps=[mutate x$4_@0.t] {
+  scope @0 [1:4] deps=[] {
     [1] Const mutate x$4_@0:TObject[1:4] = Object {  }
-    scope @1 [2:3] deps=[mutate x$4_@0.t] {
+    scope @1 [2:3] deps=[] {
       [2] Const mutate q$5_@1:TObject = Object {  }
     }
     [3] Reassign mutate x$4_@0.t[1:4] = read q$5_@1:TObject
