@@ -83,8 +83,8 @@ bb0:
   [3] If (read props$4.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Const mutate $6_@1:TPrimitive = null
-  [5] Return read $6_@1:TPrimitive
+  [4] Const mutate $6:TPrimitive = null
+  [5] Return read $6:TPrimitive
 bb1:
   predecessor blocks: bb0
   [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
@@ -105,8 +105,8 @@ function Component(
     [1] Const mutate a_DEBUG$5_@0:TFunction[1:7] = Array []
     [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
     if (read props$4.b) {
-      [4] Const mutate $6_@1:TPrimitive = null
-      return read $6_@1:TPrimitive
+      [4] Const mutate $6:TPrimitive = null
+      return read $6:TPrimitive
     }
     [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
   }
@@ -196,8 +196,8 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$5_@0.push(read props$4.c)
-  [5] Const mutate $6_@1:TPrimitive = null
-  [6] Return read $6_@1:TPrimitive
+  [5] Const mutate $6:TPrimitive = null
+  [6] Return read $6:TPrimitive
 bb1:
   predecessor blocks: bb0
   [7] Call mutate a$5_@0.push(read props$4.d)
@@ -220,8 +220,8 @@ function Component(
     [2] Call mutate a$5_@0.push(read props$4.a)
     if (read props$4.b) {
       [4] Call mutate a$5_@0.push(read props$4.c)
-      [5] Const mutate $6_@1:TPrimitive = null
-      return read $6_@1:TPrimitive
+      [5] Const mutate $6:TPrimitive = null
+      return read $6:TPrimitive
     }
     [7] Call mutate a$5_@0.push(read props$4.d)
   }

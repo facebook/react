@@ -134,27 +134,24 @@ function Or$0() {
 ```
 bb0:
   [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
-  [2] Const mutate $10_@1:TPrimitive = null
-  [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
-  [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
-  [4] If (read $11_@2:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
+  [2] Const mutate $10:TPrimitive = null
+  [3] Const mutate $11:TPrimitive = Binary read $9_@0:TPrimitive != read $10:TPrimitive
+  [4] Let mutate $12_@1:TPrimitive[4:9] = undefined
+  [4] If (read $11:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
+  [5] Const mutate $12_@1:TPrimitive[4:9] = read $9_@0:TPrimitive
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
+  [7] Const mutate $12_@1:TPrimitive[4:9] = Call mutate g$7:TFunction()
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [9] Return freeze $12_@3:TPrimitive
-scope2 [3:4]:
+  [9] Return freeze $12_@1:TPrimitive
+scope1 [4:9]:
   - dependency: read $9_@0:TPrimitive
-  - dependency: read $10_@1:TPrimitive
-scope3 [4:9]:
-  - dependency: read $9_@0:TPrimitive
-  - dependency: read $11_@2:TPrimitive
+  - dependency: read $11:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -166,17 +163,17 @@ function QuestionQuestion(
   scope @0 [1:2] deps=[] {
     [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
   }
-  [2] Const mutate $10_@1:TPrimitive = null
-  [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
-  scope @3 [4:9] deps=[read $9_@0:TPrimitive, read $11_@2:TPrimitive] {
-    [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
-    if (read $11_@2:TPrimitive) {
-      [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
+  [2] Const mutate $10:TPrimitive = null
+  [3] Const mutate $11:TPrimitive = Binary read $9_@0:TPrimitive != read $10:TPrimitive
+  scope @1 [4:9] deps=[read $9_@0:TPrimitive, read $11:TPrimitive] {
+    [4] Let mutate $12_@1:TPrimitive[4:9] = undefined
+    if (read $11:TPrimitive) {
+      [5] Const mutate $12_@1:TPrimitive[4:9] = read $9_@0:TPrimitive
     } else {
-      [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
+      [7] Const mutate $12_@1:TPrimitive[4:9] = Call mutate g$7:TFunction()
     }
   }
-  return freeze $12_@3:TPrimitive
+  return freeze $12_@1:TPrimitive
 }
 
 ```

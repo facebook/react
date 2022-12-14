@@ -93,8 +93,8 @@ bb0:
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [6] Const mutate $16_@3:TPrimitive[6:8] = true
-  [7] If (read $16_@3:TPrimitive) then:bb3 else:bb2 fallthrough=bb2
+  [6] Const mutate $16:TPrimitive = true
+  [7] If (read $16:TPrimitive) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
@@ -117,8 +117,8 @@ bb11:
   [15] If (read d$15_@0:TObject) then:bb13 else:bb13 fallthrough=bb13
 bb13:
   predecessor blocks: bb11
-  [16] Const mutate $28_@4:TPrimitive = null
-  [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28_@4:TPrimitive)
+  [16] Const mutate $28:TPrimitive = null
+  [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28:TPrimitive)
   [18] Return
 
 ```
@@ -136,16 +136,14 @@ function Component(
       [3] Const mutate c$14_@1:TObject = Object {  }
     }
     [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
-    scope @3 [6:8] deps=[] {
-      while (
-        [6] Const mutate $16_@3:TPrimitive[6:8] = true
-        read $16_@3:TPrimitive
-      ) {
-        [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
-        [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
-        if (read $21_@0) {
-          break
-        }
+    while (
+      [6] Const mutate $16:TPrimitive = true
+      read $16:TPrimitive
+    ) {
+      [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
+      [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
+      if (read $21_@0) {
+        break
       }
     }
     if (read a$12_@0:TObject) {
@@ -156,8 +154,8 @@ function Component(
     }
     if (read d$15_@0:TObject) {
     }
-    [16] Const mutate $28_@4:TPrimitive = null
-    [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28_@4:TPrimitive)
+    [16] Const mutate $28:TPrimitive = null
+    [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28:TPrimitive)
   }
   return
 }

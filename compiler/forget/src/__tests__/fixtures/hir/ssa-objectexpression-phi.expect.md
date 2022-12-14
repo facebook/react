@@ -24,9 +24,9 @@ function foo() {
 bb0:
   [1] Let mutate x$6_@0:TPrimitive[1:10] = 1
   [2] Let mutate y$7_@0:TPrimitive[1:10] = 2
-  [3] Const mutate $8_@2:TPrimitive = 1
-  [4] Const mutate $9_@0:TPrimitive[1:10] = Binary read x$6_@0:TPrimitive > read $8_@2:TPrimitive
-  [5] If (read $9_@0:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
+  [3] Const mutate $8:TPrimitive = 1
+  [4] Const mutate $9:TPrimitive = Binary read x$6_@0:TPrimitive > read $8:TPrimitive
+  [5] If (read $9:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Reassign mutate x$6_@0:TPrimitive[1:10] = 2
@@ -37,9 +37,9 @@ bb3:
   [9] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [10] Const mutate t$14_@3:TObject = Object { x: read x$6_@0:TPrimitive, y: read y$7_@0:TPrimitive }
-  [11] Return freeze t$14_@3:TObject
-scope3 [10:11]:
+  [10] Const mutate t$14_@2:TObject = Object { x: read x$6_@0:TPrimitive, y: read y$7_@0:TPrimitive }
+  [11] Return freeze t$14_@2:TObject
+scope2 [10:11]:
   - dependency: read x$6_@0:TPrimitive
   - dependency: read y$7_@0:TPrimitive
 ```
@@ -52,18 +52,18 @@ function foo(
   scope @0 [1:10] deps=[] {
     [1] Let mutate x$6_@0:TPrimitive[1:10] = 1
     [2] Let mutate y$7_@0:TPrimitive[1:10] = 2
-    [3] Const mutate $8_@2:TPrimitive = 1
-    [4] Const mutate $9_@0:TPrimitive[1:10] = Binary read x$6_@0:TPrimitive > read $8_@2:TPrimitive
-    if (read $9_@0:TPrimitive) {
+    [3] Const mutate $8:TPrimitive = 1
+    [4] Const mutate $9:TPrimitive = Binary read x$6_@0:TPrimitive > read $8:TPrimitive
+    if (read $9:TPrimitive) {
       [6] Reassign mutate x$6_@0:TPrimitive[1:10] = 2
     } else {
       [8] Reassign mutate y$7_@0:TPrimitive[1:10] = 3
     }
   }
-  scope @3 [10:11] deps=[read x$6_@0:TPrimitive, read y$7_@0:TPrimitive] {
-    [10] Const mutate t$14_@3:TObject = Object { x: read x$6_@0:TPrimitive, y: read y$7_@0:TPrimitive }
+  scope @2 [10:11] deps=[read x$6_@0:TPrimitive, read y$7_@0:TPrimitive] {
+    [10] Const mutate t$14_@2:TObject = Object { x: read x$6_@0:TPrimitive, y: read y$7_@0:TPrimitive }
   }
-  return freeze t$14_@3:TObject
+  return freeze t$14_@2:TObject
 }
 
 ```

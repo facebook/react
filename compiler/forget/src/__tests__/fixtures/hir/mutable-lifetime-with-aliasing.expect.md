@@ -87,8 +87,8 @@ bb7:
   [12] If (read y$16_@1) then:bb9 else:bb9 fallthrough=bb9
 bb9:
   predecessor blocks: bb7
-  [13] Const mutate $17_@3:TPrimitive = null
-  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
+  [13] Const mutate $17:TPrimitive = null
+  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   [15] Return
 scope1 [2:15]:
   - dependency: read a$11_@0:TObject
@@ -123,8 +123,8 @@ function Component(
     }
     if (read y$16_@1) {
     }
-    [13] Const mutate $17_@3:TPrimitive = null
-    [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
+    [13] Const mutate $17:TPrimitive = null
+    [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   }
   return
 }

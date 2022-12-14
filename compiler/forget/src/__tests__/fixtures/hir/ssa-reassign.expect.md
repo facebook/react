@@ -16,17 +16,12 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$8_@0:TPrimitive = 0
-  [2] Const mutate x$9_@1 = read a$5
-  [3] Const mutate x$10_@2 = read b$6
-  [4] Const mutate x$11_@3 = read c$7
-  [5] Return read x$11_@3
-scope1 [2:3]:
-  - dependency: read a$5
-scope2 [3:4]:
-  - dependency: read b$6
-scope3 [4:5]:
-  - dependency: read c$7
+  [1] Const mutate x$8:TPrimitive = 0
+  [2] Const mutate x$9 = read a$5
+  [3] Const mutate x$10 = read b$6
+  [4] Const mutate x$11 = read c$7
+  [5] Return read x$11
+
 ```
 
 ## Reactive Scopes
@@ -37,11 +32,11 @@ function foo(
   b,
   c,
 ) {
-  [1] Const mutate x$8_@0:TPrimitive = 0
-  [2] Const mutate x$9_@1 = read a$5
-  [3] Const mutate x$10_@2 = read b$6
-  [4] Const mutate x$11_@3 = read c$7
-  return read x$11_@3
+  [1] Const mutate x$8:TPrimitive = 0
+  [2] Const mutate x$9 = read a$5
+  [3] Const mutate x$10 = read b$6
+  [4] Const mutate x$11 = read c$7
+  return read x$11
 }
 
 ```

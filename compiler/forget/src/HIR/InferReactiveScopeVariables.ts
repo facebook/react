@@ -6,11 +6,13 @@
  */
 
 import invariant from "invariant";
+import { assertExhaustive } from "../Common/utils";
 import DisjointSet from "./DisjointSet";
 import {
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionValue,
   makeInstructionId,
   makeScopeId,
   Place,
@@ -77,7 +79,14 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
       if (instr.lvalue !== null) {
-        operands.push(instr.lvalue!.place.identifier);
+        const range = instr.lvalue.place.identifier.mutableRange;
+        if (
+          instr.lvalue.place.memberPath !== null ||
+          range.end > range.start + 1 ||
+          mayAllocate(instr.value)
+        ) {
+          operands.push(instr.lvalue!.place.identifier);
+        }
       }
       for (const operand of eachInstructionOperand(instr)) {
         if (
@@ -145,9 +154,31 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
 }
 
 // Is the operand mutable at this given instruction
-function isMutable(instr: Instruction, place: Place): boolean {
-  return (
-    instr.id >= place.identifier.mutableRange.start &&
-    instr.id < place.identifier.mutableRange.end
-  );
+function isMutable({ id }: Instruction, place: Place): boolean {
+  const range = place.identifier.mutableRange;
+  return id >= range.start && id < range.end;
+}
+
+function mayAllocate(value: InstructionValue): boolean {
+  switch (value.kind) {
+    case "BinaryExpression":
+    case "Identifier":
+    case "JSXText":
+    case "Primitive": {
+      return false;
+    }
+    case "ArrayExpression":
+    case "CallExpression":
+    case "JsxExpression":
+    case "JsxFragment":
+    case "NewExpression":
+    case "ObjectExpression":
+    case "OtherStatement":
+    case "UnaryExpression": {
+      return true;
+    }
+    default: {
+      assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
+    }
+  }
 }

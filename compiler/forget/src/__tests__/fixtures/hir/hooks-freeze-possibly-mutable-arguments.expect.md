@@ -26,32 +26,28 @@ function call(x) {}
 
 ```
 bb0:
-  [1] Const mutate cond$8_@0:TProp = read props$7.cond
-  [2] Const mutate x$9_@1:TProp = read props$7.x
-  [3] Const mutate a$10_@2:TPrimitive = undefined
-  [4] Let mutate a$11_@3:TProp[4:9] = undefined
-  [4] If (read cond$8_@0:TProp) then:bb2 else:bb3 fallthrough=bb1
+  [1] Const mutate cond$8:TProp = read props$7.cond
+  [2] Const mutate x$9:TProp = read props$7.x
+  [3] Const mutate a$10:TPrimitive = undefined
+  [4] Let mutate a$11_@0:TProp[4:9] = undefined
+  [4] If (read cond$8:TProp) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate a$11_@3:TProp[4:9] = read x$9_@1:TProp
+  [5] Reassign mutate a$11_@0:TProp[4:9] = read x$9:TProp
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Reassign mutate a$11_@3:TProp[4:9] = Array []
+  [7] Reassign mutate a$11_@0:TProp[4:9] = Array []
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [9] Call read useFreeze$5:TFunction(freeze a$11_@3:TProp)
-  [10] Call read useFreeze$5:TFunction(read a$11_@3:TProp)
-  [11] Call mutate call$6:TFunction(read a$11_@3:TProp)
-  [12] Return read a$11_@3:TProp
-scope0 [1:2]:
-  - dependency: read props$7.cond
-scope1 [2:3]:
-  - dependency: read props$7.x
-scope3 [4:9]:
-  - dependency: read x$9_@1:TProp
-  - dependency: read cond$8_@0:TProp
+  [9] Call read useFreeze$5:TFunction(freeze a$11_@0:TProp)
+  [10] Call read useFreeze$5:TFunction(read a$11_@0:TProp)
+  [11] Call mutate call$6:TFunction(read a$11_@0:TProp)
+  [12] Return read a$11_@0:TProp
+scope0 [4:9]:
+  - dependency: read x$9:TProp
+  - dependency: read cond$8:TProp
 ```
 
 ## Reactive Scopes
@@ -60,21 +56,21 @@ scope3 [4:9]:
 function Component(
   props,
 ) {
-  [1] Const mutate cond$8_@0:TProp = read props$7.cond
-  [2] Const mutate x$9_@1:TProp = read props$7.x
-  [3] Const mutate a$10_@2:TPrimitive = undefined
-  scope @3 [4:9] deps=[read x$9_@1:TProp, read cond$8_@0:TProp] {
-    [4] Let mutate a$11_@3:TProp[4:9] = undefined
-    if (read cond$8_@0:TProp) {
-      [5] Reassign mutate a$11_@3:TProp[4:9] = read x$9_@1:TProp
+  [1] Const mutate cond$8:TProp = read props$7.cond
+  [2] Const mutate x$9:TProp = read props$7.x
+  [3] Const mutate a$10:TPrimitive = undefined
+  scope @0 [4:9] deps=[read x$9:TProp, read cond$8:TProp] {
+    [4] Let mutate a$11_@0:TProp[4:9] = undefined
+    if (read cond$8:TProp) {
+      [5] Reassign mutate a$11_@0:TProp[4:9] = read x$9:TProp
     } else {
-      [7] Reassign mutate a$11_@3:TProp[4:9] = Array []
+      [7] Reassign mutate a$11_@0:TProp[4:9] = Array []
     }
   }
-  [9] Call read useFreeze$5:TFunction(freeze a$11_@3:TProp)
-  [10] Call read useFreeze$5:TFunction(read a$11_@3:TProp)
-  [11] Call mutate call$6:TFunction(read a$11_@3:TProp)
-  return read a$11_@3:TProp
+  [9] Call read useFreeze$5:TFunction(freeze a$11_@0:TProp)
+  [10] Call read useFreeze$5:TFunction(read a$11_@0:TProp)
+  [11] Call mutate call$6:TFunction(read a$11_@0:TProp)
+  return read a$11_@0:TProp
 }
 
 ```

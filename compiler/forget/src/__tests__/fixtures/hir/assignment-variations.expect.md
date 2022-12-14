@@ -20,23 +20,15 @@ function g(a) {
 
 ```
 bb0:
-  [1] Const mutate x$5_@0:TPrimitive = 1
-  [2] Const mutate $6_@1:TPrimitive = 1
-  [3] Const mutate x$7_@2:TPrimitive = Binary read x$5_@0:TPrimitive + read $6_@1:TPrimitive
-  [4] Const mutate $8_@3:TPrimitive = 1
-  [5] Const mutate x$9_@4:TPrimitive = Binary read x$7_@2:TPrimitive + read $8_@3:TPrimitive
-  [6] Const mutate $10_@5:TPrimitive = 1
-  [7] Const mutate x$11_@6:TPrimitive = Binary read x$9_@4:TPrimitive >>> read $10_@5:TPrimitive
+  [1] Const mutate x$5:TPrimitive = 1
+  [2] Const mutate $6:TPrimitive = 1
+  [3] Const mutate x$7:TPrimitive = Binary read x$5:TPrimitive + read $6:TPrimitive
+  [4] Const mutate $8:TPrimitive = 1
+  [5] Const mutate x$9:TPrimitive = Binary read x$7:TPrimitive + read $8:TPrimitive
+  [6] Const mutate $10:TPrimitive = 1
+  [7] Const mutate x$11:TPrimitive = Binary read x$9:TPrimitive >>> read $10:TPrimitive
   [8] Return
-scope2 [3:4]:
-  - dependency: read x$5_@0:TPrimitive
-  - dependency: read $6_@1:TPrimitive
-scope4 [5:6]:
-  - dependency: read x$7_@2:TPrimitive
-  - dependency: read $8_@3:TPrimitive
-scope6 [7:8]:
-  - dependency: read x$9_@4:TPrimitive
-  - dependency: read $10_@5:TPrimitive
+
 ```
 
 ## Reactive Scopes
@@ -44,13 +36,13 @@ scope6 [7:8]:
 ```
 function f(
 ) {
-  [1] Const mutate x$5_@0:TPrimitive = 1
-  [2] Const mutate $6_@1:TPrimitive = 1
-  [3] Const mutate x$7_@2:TPrimitive = Binary read x$5_@0:TPrimitive + read $6_@1:TPrimitive
-  [4] Const mutate $8_@3:TPrimitive = 1
-  [5] Const mutate x$9_@4:TPrimitive = Binary read x$7_@2:TPrimitive + read $8_@3:TPrimitive
-  [6] Const mutate $10_@5:TPrimitive = 1
-  [7] Const mutate x$11_@6:TPrimitive = Binary read x$9_@4:TPrimitive >>> read $10_@5:TPrimitive
+  [1] Const mutate x$5:TPrimitive = 1
+  [2] Const mutate $6:TPrimitive = 1
+  [3] Const mutate x$7:TPrimitive = Binary read x$5:TPrimitive + read $6:TPrimitive
+  [4] Const mutate $8:TPrimitive = 1
+  [5] Const mutate x$9:TPrimitive = Binary read x$7:TPrimitive + read $8:TPrimitive
+  [6] Const mutate $10:TPrimitive = 1
+  [7] Const mutate x$11:TPrimitive = Binary read x$9:TPrimitive >>> read $10:TPrimitive
   return
 }
 
@@ -71,13 +63,12 @@ function f$0() {
 
 ```
 bb0:
-  [1] Const mutate $5_@0:TPrimitive = 1
-  [2] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c + read $5_@0:TPrimitive
-  [3] Const mutate $6_@2:TPrimitive = 2
-  [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2:TPrimitive
+  [1] Const mutate $5:TPrimitive = 1
+  [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
+  [3] Const mutate $6:TPrimitive = 2
+  [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
   [5] Return
-scope2 [3:4]:
-  - dependency: mutate a$4_@1.b.c
+
 ```
 
 ## Reactive Scopes
@@ -86,11 +77,11 @@ scope2 [3:4]:
 function g(
   a,
 ) {
-  [1] Const mutate $5_@0:TPrimitive = 1
-  scope @1 [0:5] deps=[] {
-    [2] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c + read $5_@0:TPrimitive
-    [3] Const mutate $6_@2:TPrimitive = 2
-    [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2:TPrimitive
+  [1] Const mutate $5:TPrimitive = 1
+  scope @0 [0:5] deps=[] {
+    [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
+    [3] Const mutate $6:TPrimitive = 2
+    [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
   }
   return
 }

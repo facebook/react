@@ -21,7 +21,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$9_@0:TPrimitive = 0
+  [1] Const mutate x$9:TPrimitive = 0
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5
@@ -40,8 +40,8 @@ bb7:
   [7] If (read c$8) then:bb9 else:bb8 fallthrough=bb8
 bb9:
   predecessor blocks: bb7
-  [8] Const mutate $13_@1:TPrimitive = 1
-  [9] Binary read x$9_@0:TPrimitive + read $13_@1:TPrimitive
+  [8] Const mutate $13:TPrimitive = 1
+  [9] Binary read x$9:TPrimitive + read $13:TPrimitive
   [10] Goto(Continue) bb7
 bb8:
   predecessor blocks: bb7
@@ -51,9 +51,8 @@ bb5:
   [12] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [13] Return read x$9_@0:TPrimitive
-scope1 [8:9]:
-  - dependency: read x$9_@0:TPrimitive
+  [13] Return read x$9:TPrimitive
+
 ```
 
 ## Reactive Scopes
@@ -64,7 +63,7 @@ function foo(
   b,
   c,
 ) {
-  [1] Const mutate x$9_@0:TPrimitive = 0
+  [1] Const mutate x$9:TPrimitive = 0
   while (
     read a$6
   ) {
@@ -74,12 +73,12 @@ function foo(
       while (
         read c$8
       ) {
-        [8] Const mutate $13_@1:TPrimitive = 1
-        [9] Binary read x$9_@0:TPrimitive + read $13_@1:TPrimitive
+        [8] Const mutate $13:TPrimitive = 1
+        [9] Binary read x$9:TPrimitive + read $13:TPrimitive
       }
     }
   }
-  return read x$9_@0:TPrimitive
+  return read x$9:TPrimitive
 }
 
 ```

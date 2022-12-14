@@ -42,49 +42,49 @@ bb2:
   [4] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [5] Const mutate $17_@1:TPrimitive = "div"
-  [6] Const mutate y$19_@2 = JSX <read $17_@1:TPrimitive>{freeze x$16_@0:TFunction}</read $17_@1:TPrimitive>
-  [7] Const mutate $20_@3:TPrimitive = 0
-  [8] Let mutate x$22_@4:TFunction[8:15] = undefined
+  [5] Const mutate $17:TPrimitive = "div"
+  [6] Const mutate y$19_@1 = JSX <read $17:TPrimitive>{freeze x$16_@0:TFunction}</read $17:TPrimitive>
+  [7] Const mutate $20:TPrimitive = 0
+  [8] Let mutate x$22_@2:TFunction[8:15] = undefined
   [8] Switch (read b$14)
-    Case read $20_@3:TPrimitive: bb5
+    Case read $20:TPrimitive: bb5
     Default: bb4
     Fallthrough: bb3
 bb5:
   predecessor blocks: bb1
-  [9] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-  [10] Call mutate x$22_@4.push(read b$14)
+  [9] Reassign mutate x$22_@2:TFunction[8:15] = Array []
+  [10] Call mutate x$22_@2.push(read b$14)
   [11] Goto bb3
 bb4:
   predecessor blocks: bb1
-  [12] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-  [13] Call mutate x$22_@4.push(read c$15)
+  [12] Reassign mutate x$22_@2:TFunction[8:15] = Array []
+  [13] Call mutate x$22_@2.push(read c$15)
   [14] Goto bb3
 bb3:
   predecessor blocks: bb5 bb4
-  [15] Const mutate $25_@5:TPrimitive = "div"
-  [16] Const mutate $26_@6 = "\n      "
-  [17] Const mutate $27_@7 = "\n      "
-  [18] Const mutate $28_@8 = "\n    "
-  [19] Const mutate $31_@9 = JSX <read $25_@5:TPrimitive>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4:TFunction}{read $28_@8}</read $25_@5:TPrimitive>
-  [20] Return read $31_@9
+  [15] Const mutate $25:TPrimitive = "div"
+  [16] Const mutate $26 = "\n      "
+  [17] Const mutate $27 = "\n      "
+  [18] Const mutate $28 = "\n    "
+  [19] Const mutate $31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
+  [20] Return read $31_@3
 scope0 [1:5]:
   - dependency: read a$13
   - dependency: read a$13
-scope2 [6:7]:
-  - dependency: read $17_@1:TPrimitive
+scope1 [6:7]:
+  - dependency: read $17:TPrimitive
   - dependency: freeze x$16_@0:TFunction
-scope4 [8:15]:
+scope2 [8:15]:
   - dependency: read c$15
   - dependency: read b$14
   - dependency: read b$14
-scope9 [19:20]:
-  - dependency: read $25_@5:TPrimitive
-  - dependency: read $26_@6
-  - dependency: read y$19_@2
-  - dependency: read $27_@7
-  - dependency: freeze x$22_@4:TFunction
-  - dependency: read $28_@8
+scope3 [19:20]:
+  - dependency: read $25:TPrimitive
+  - dependency: read $26
+  - dependency: read y$19_@1
+  - dependency: read $27
+  - dependency: freeze x$22_@2:TFunction
+  - dependency: read $28
 ```
 
 ## Reactive Scopes
@@ -101,33 +101,33 @@ function foo(
       [3] Call mutate x$16_@0.push(read a$13)
     }
   }
-  [5] Const mutate $17_@1:TPrimitive = "div"
-  scope @2 [6:7] deps=[read $17_@1:TPrimitive, freeze x$16_@0:TFunction] {
-    [6] Const mutate y$19_@2 = JSX <read $17_@1:TPrimitive>{freeze x$16_@0:TFunction}</read $17_@1:TPrimitive>
+  [5] Const mutate $17:TPrimitive = "div"
+  scope @1 [6:7] deps=[read $17:TPrimitive, freeze x$16_@0:TFunction] {
+    [6] Const mutate y$19_@1 = JSX <read $17:TPrimitive>{freeze x$16_@0:TFunction}</read $17:TPrimitive>
   }
-  [7] Const mutate $20_@3:TPrimitive = 0
-  scope @4 [8:15] deps=[read c$15, read b$14, read b$14] {
-    [8] Let mutate x$22_@4:TFunction[8:15] = undefined
+  [7] Const mutate $20:TPrimitive = 0
+  scope @2 [8:15] deps=[read c$15, read b$14, read b$14] {
+    [8] Let mutate x$22_@2:TFunction[8:15] = undefined
     switch (read b$14) {
-      case read $20_@3:TPrimitive: {
-          [9] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-          [10] Call mutate x$22_@4.push(read b$14)
+      case read $20:TPrimitive: {
+          [9] Reassign mutate x$22_@2:TFunction[8:15] = Array []
+          [10] Call mutate x$22_@2.push(read b$14)
           break bb3
       }
       default: {
-          [12] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-          [13] Call mutate x$22_@4.push(read c$15)
+          [12] Reassign mutate x$22_@2:TFunction[8:15] = Array []
+          [13] Call mutate x$22_@2.push(read c$15)
       }
     }
   }
-  [15] Const mutate $25_@5:TPrimitive = "div"
-  [16] Const mutate $26_@6 = "\n      "
-  [17] Const mutate $27_@7 = "\n      "
-  [18] Const mutate $28_@8 = "\n    "
-  scope @9 [19:20] deps=[read $25_@5:TPrimitive, read $26_@6, read y$19_@2, read $27_@7, freeze x$22_@4:TFunction, read $28_@8] {
-    [19] Const mutate $31_@9 = JSX <read $25_@5:TPrimitive>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4:TFunction}{read $28_@8}</read $25_@5:TPrimitive>
+  [15] Const mutate $25:TPrimitive = "div"
+  [16] Const mutate $26 = "\n      "
+  [17] Const mutate $27 = "\n      "
+  [18] Const mutate $28 = "\n    "
+  scope @3 [19:20] deps=[read $25:TPrimitive, read $26, read y$19_@1, read $27, freeze x$22_@2:TFunction, read $28] {
+    [19] Const mutate $31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
   }
-  return read $31_@9
+  return read $31_@3
 }
 
 ```

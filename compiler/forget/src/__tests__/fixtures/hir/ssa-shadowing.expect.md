@@ -49,8 +49,8 @@ bb0:
   [2] If (read cond$5) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate str$7_@1:TPrimitive = "other test"
-  [4] Call mutate log$4:TFunction(read str$7_@1:TPrimitive)
+  [3] Const mutate str$7:TPrimitive = "other test"
+  [4] Call mutate log$4:TFunction(read str$7:TPrimitive)
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -73,8 +73,8 @@ function Foo(
   scope @0 [1:8] deps=[read cond$5] {
     [1] Let mutate str$6_@0:TPrimitive[1:8] = ""
     if (read cond$5) {
-      [3] Const mutate str$7_@1:TPrimitive = "other test"
-      [4] Call mutate log$4:TFunction(read str$7_@1:TPrimitive)
+      [3] Const mutate str$7:TPrimitive = "other test"
+      [4] Call mutate log$4:TFunction(read str$7:TPrimitive)
     } else {
       [6] Reassign mutate str$6_@0:TPrimitive[1:8] = "fallthrough test"
     }

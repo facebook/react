@@ -19,23 +19,19 @@ function foo() {
 ```
 bb0:
   [1] Let mutate x$5_@0:TPrimitive[1:8] = 1
-  [2] Const mutate y$6_@1:TPrimitive = 2
-  [3] Const mutate $7_@2:TPrimitive = 2
-  [4] Const mutate $8_@3:TPrimitive = Binary read y$6_@1:TPrimitive === read $7_@2:TPrimitive
-  [5] If (read $8_@3:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
+  [2] Const mutate y$6:TPrimitive = 2
+  [3] Const mutate $7:TPrimitive = 2
+  [4] Const mutate $8:TPrimitive = Binary read y$6:TPrimitive === read $7:TPrimitive
+  [5] If (read $8:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Reassign mutate x$5_@0:TPrimitive[1:8] = 3
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [8] Const mutate y$11_@4 = read x$5_@0:TPrimitive
+  [8] Const mutate y$11 = read x$5_@0:TPrimitive
   [9] Return
-scope3 [4:5]:
-  - dependency: read y$6_@1:TPrimitive
-  - dependency: read $7_@2:TPrimitive
-scope4 [8:9]:
-  - dependency: read x$5_@0:TPrimitive
+
 ```
 
 ## Reactive Scopes
@@ -45,14 +41,14 @@ function foo(
 ) {
   scope @0 [1:8] deps=[] {
     [1] Let mutate x$5_@0:TPrimitive[1:8] = 1
-    [2] Const mutate y$6_@1:TPrimitive = 2
-    [3] Const mutate $7_@2:TPrimitive = 2
-    [4] Const mutate $8_@3:TPrimitive = Binary read y$6_@1:TPrimitive === read $7_@2:TPrimitive
-    if (read $8_@3:TPrimitive) {
+    [2] Const mutate y$6:TPrimitive = 2
+    [3] Const mutate $7:TPrimitive = 2
+    [4] Const mutate $8:TPrimitive = Binary read y$6:TPrimitive === read $7:TPrimitive
+    if (read $8:TPrimitive) {
       [6] Reassign mutate x$5_@0:TPrimitive[1:8] = 3
     }
   }
-  [8] Const mutate y$11_@4 = read x$5_@0:TPrimitive
+  [8] Const mutate y$11 = read x$5_@0:TPrimitive
   return
 }
 

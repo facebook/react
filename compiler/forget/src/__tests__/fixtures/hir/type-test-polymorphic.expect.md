@@ -29,13 +29,11 @@ bb0:
   [5] Reassign mutate x$9_@2.t[4:8] = read p$7_@0:TPrimitive
   [6] Const mutate z$10_@2:TPrimitive[4:8] = read x$9_@2.t
   [7] Reassign mutate x$9_@2.t[4:8] = read o$8_@1:TObject
-  [8] Const mutate y$11_@3:TPoly = read x$9_@2.t
+  [8] Const mutate y$11:TPoly = read x$9_@2.t
   [9] Return
 scope2 [4:8]:
   - dependency: read p$7_@0:TPrimitive
   - dependency: read o$8_@1:TObject
-scope3 [8:9]:
-  - dependency: read x$9_@2.t
 ```
 
 ## Reactive Scopes
@@ -56,7 +54,7 @@ function component(
     [6] Const mutate z$10_@2:TPrimitive[4:8] = read x$9_@2.t
     [7] Reassign mutate x$9_@2.t[4:8] = read o$8_@1:TObject
   }
-  [8] Const mutate y$11_@3:TPoly = read x$9_@2.t
+  [8] Const mutate y$11:TPoly = read x$9_@2.t
   return
 }
 

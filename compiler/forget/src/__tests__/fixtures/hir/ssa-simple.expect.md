@@ -13,8 +13,8 @@ function foo() {
 
 ```
 bb0:
-  [1] Const mutate x$3_@0:TPrimitive = 1
-  [2] Const mutate y$4_@1:TPrimitive = 2
+  [1] Const mutate x$3:TPrimitive = 1
+  [2] Const mutate y$4:TPrimitive = 2
   [3] Return
 
 ```
@@ -24,8 +24,8 @@ bb0:
 ```
 function foo(
 ) {
-  [1] Const mutate x$3_@0:TPrimitive = 1
-  [2] Const mutate y$4_@1:TPrimitive = 2
+  [1] Const mutate x$3:TPrimitive = 1
+  [2] Const mutate y$4:TPrimitive = 2
   return
 }
 

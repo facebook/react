@@ -22,35 +22,28 @@ function foo() {
 ```
 bb0:
   [1] Let mutate x$7_@0:TPrimitive[1:13] = 1
-  [2] Const mutate y$8_@1:TPrimitive = 2
-  [3] Const mutate $9_@2:TPrimitive = 2
-  [4] Const mutate $10_@3:TPrimitive = Binary read y$8_@1:TPrimitive === read $9_@2:TPrimitive
-  [5] If (read $10_@3:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
+  [2] Const mutate y$8:TPrimitive = 2
+  [3] Const mutate $9:TPrimitive = 2
+  [4] Const mutate $10:TPrimitive = Binary read y$8:TPrimitive === read $9:TPrimitive
+  [5] If (read $10:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Reassign mutate x$7_@0:TPrimitive[1:13] = 3
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [8] Const mutate $12_@4:TPrimitive = 3
-  [9] Const mutate $14_@5:TPrimitive = Binary read y$8_@1:TPrimitive === read $12_@4:TPrimitive
-  [10] If (read $14_@5:TPrimitive) then:bb4 else:bb3 fallthrough=bb3
+  [8] Const mutate $12:TPrimitive = 3
+  [9] Const mutate $14:TPrimitive = Binary read y$8:TPrimitive === read $12:TPrimitive
+  [10] If (read $14:TPrimitive) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb1
   [11] Reassign mutate x$7_@0:TPrimitive[1:13] = 5
   [12] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [13] Const mutate y$18_@6 = read x$7_@0:TPrimitive
+  [13] Const mutate y$18 = read x$7_@0:TPrimitive
   [14] Return
-scope3 [4:5]:
-  - dependency: read y$8_@1:TPrimitive
-  - dependency: read $9_@2:TPrimitive
-scope5 [9:10]:
-  - dependency: read y$8_@1:TPrimitive
-  - dependency: read $12_@4:TPrimitive
-scope6 [13:14]:
-  - dependency: read x$7_@0:TPrimitive
+
 ```
 
 ## Reactive Scopes
@@ -60,19 +53,19 @@ function foo(
 ) {
   scope @0 [1:13] deps=[] {
     [1] Let mutate x$7_@0:TPrimitive[1:13] = 1
-    [2] Const mutate y$8_@1:TPrimitive = 2
-    [3] Const mutate $9_@2:TPrimitive = 2
-    [4] Const mutate $10_@3:TPrimitive = Binary read y$8_@1:TPrimitive === read $9_@2:TPrimitive
-    if (read $10_@3:TPrimitive) {
+    [2] Const mutate y$8:TPrimitive = 2
+    [3] Const mutate $9:TPrimitive = 2
+    [4] Const mutate $10:TPrimitive = Binary read y$8:TPrimitive === read $9:TPrimitive
+    if (read $10:TPrimitive) {
       [6] Reassign mutate x$7_@0:TPrimitive[1:13] = 3
     }
-    [8] Const mutate $12_@4:TPrimitive = 3
-    [9] Const mutate $14_@5:TPrimitive = Binary read y$8_@1:TPrimitive === read $12_@4:TPrimitive
-    if (read $14_@5:TPrimitive) {
+    [8] Const mutate $12:TPrimitive = 3
+    [9] Const mutate $14:TPrimitive = Binary read y$8:TPrimitive === read $12:TPrimitive
+    if (read $14:TPrimitive) {
       [11] Reassign mutate x$7_@0:TPrimitive[1:13] = 5
     }
   }
-  [13] Const mutate y$18_@6 = read x$7_@0:TPrimitive
+  [13] Const mutate y$18 = read x$7_@0:TPrimitive
   return
 }
 

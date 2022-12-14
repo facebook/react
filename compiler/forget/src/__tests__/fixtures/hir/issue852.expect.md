@@ -17,15 +17,11 @@ function Component(c) {
 bb0:
   [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
   [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
-  [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
-  [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
+  [3] Const mutate a$8:TObject = read x$7_@0:TObject
+  [4] Const mutate b$9:TObject = read a$8:TObject
   [5] Return
 scope0 [1:3]:
   - dependency: read c$6
-scope1 [3:4]:
-  - dependency: read x$7_@0:TObject
-scope2 [4:5]:
-  - dependency: read a$8_@1:TObject
 ```
 
 ## Reactive Scopes
@@ -38,8 +34,8 @@ function Component(
     [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
     [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
   }
-  [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
-  [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
+  [3] Const mutate a$8:TObject = read x$7_@0:TObject
+  [4] Const mutate b$9:TObject = read a$8:TObject
   return
 }
 

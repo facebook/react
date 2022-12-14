@@ -21,13 +21,13 @@ bb0:
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [3] Const mutate $6_@0:TPrimitive[1:9] = 10
-  [4] Const mutate $8_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive < read $6_@0:TPrimitive
-  [5] If (read $8_@0:TPrimitive) then:bb3 else:bb2 fallthrough=bb2
+  [3] Const mutate $6:TPrimitive = 10
+  [4] Const mutate $8:TPrimitive = Binary read x$5_@0:TPrimitive < read $6:TPrimitive
+  [5] If (read $8:TPrimitive) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [6] Const mutate $9_@2:TPrimitive = 1
-  [7] Reassign mutate x$5_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive + read $9_@2:TPrimitive
+  [6] Const mutate $9:TPrimitive = 1
+  [7] Reassign mutate x$5_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive + read $9:TPrimitive
   [8] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
@@ -43,12 +43,12 @@ function foo(
   scope @0 [1:9] deps=[] {
     [1] Let mutate x$5_@0:TPrimitive[1:9] = 1
     while (
-      [3] Const mutate $6_@0:TPrimitive[1:9] = 10
-      [4] Const mutate $8_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive < read $6_@0:TPrimitive
-      read $8_@0:TPrimitive
+      [3] Const mutate $6:TPrimitive = 10
+      [4] Const mutate $8:TPrimitive = Binary read x$5_@0:TPrimitive < read $6:TPrimitive
+      read $8:TPrimitive
     ) {
-      [6] Const mutate $9_@2:TPrimitive = 1
-      [7] Reassign mutate x$5_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive + read $9_@2:TPrimitive
+      [6] Const mutate $9:TPrimitive = 1
+      [7] Reassign mutate x$5_@0:TPrimitive[1:9] = Binary read x$5_@0:TPrimitive + read $9:TPrimitive
     }
   }
   return read x$5_@0:TPrimitive

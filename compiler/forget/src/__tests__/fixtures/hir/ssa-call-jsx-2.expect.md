@@ -53,19 +53,19 @@ bb0:
   [5] If (read $13_@1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [6] Const mutate $14_@2:TPrimitive = "div"
-  [7] Const mutate _$15_@3 = JSX <read $14_@2:TPrimitive a={freeze a$11_@0} ></read $14_@2:TPrimitive>
+  [6] Const mutate $14:TPrimitive = "div"
+  [7] Const mutate _$15_@2 = JSX <read $14:TPrimitive a={freeze a$11_@0} ></read $14:TPrimitive>
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
   [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
-  [10] Const mutate $19_@4:TPrimitive = "div"
-  [11] Const mutate $20_@5 = JSX <read $19_@4:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19_@4:TPrimitive>
-  [12] Return read $20_@5
-scope3 [7:8]:
-  - dependency: read $14_@2:TPrimitive
-scope5 [11:12]:
-  - dependency: read $19_@4:TPrimitive
+  [10] Const mutate $19:TPrimitive = "div"
+  [11] Const mutate $20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
+  [12] Return read $20_@3
+scope2 [7:8]:
+  - dependency: read $14:TPrimitive
+scope3 [11:12]:
+  - dependency: read $19:TPrimitive
   - dependency: freeze a$11_@0
   - dependency: freeze b$12_@0:TObject
 ```
@@ -84,18 +84,18 @@ function Component(
       [4] Const mutate $13_@1 = Call mutate foo$4:TFunction()
     }
     if (read $13_@1) {
-      [6] Const mutate $14_@2:TPrimitive = "div"
-      scope @3 [7:8] deps=[read $14_@2:TPrimitive] {
-        [7] Const mutate _$15_@3 = JSX <read $14_@2:TPrimitive a={freeze a$11_@0} ></read $14_@2:TPrimitive>
+      [6] Const mutate $14:TPrimitive = "div"
+      scope @2 [7:8] deps=[read $14:TPrimitive] {
+        [7] Const mutate _$15_@2 = JSX <read $14:TPrimitive a={freeze a$11_@0} ></read $14:TPrimitive>
       }
     }
     [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
   }
-  [10] Const mutate $19_@4:TPrimitive = "div"
-  scope @5 [11:12] deps=[read $19_@4:TPrimitive, freeze a$11_@0, freeze b$12_@0:TObject] {
-    [11] Const mutate $20_@5 = JSX <read $19_@4:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19_@4:TPrimitive>
+  [10] Const mutate $19:TPrimitive = "div"
+  scope @3 [11:12] deps=[read $19:TPrimitive, freeze a$11_@0, freeze b$12_@0:TObject] {
+    [11] Const mutate $20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
   }
-  return read $20_@5
+  return read $20_@3
 }
 
 ```

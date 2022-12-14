@@ -33,8 +33,8 @@ bb4:
   [4] If (read c$9) then:bb6 else:bb1 fallthrough=bb1
 bb6:
   predecessor blocks: bb4
-  [5] Const mutate $11_@1:TPrimitive = 0
-  [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
+  [5] Const mutate $11:TPrimitive = 0
+  [6] Call mutate x$10_@0.push(read $11:TPrimitive)
   [7] Goto bb1
 bb1:
   predecessor blocks: bb6 bb4 bb2 bb0
@@ -44,8 +44,8 @@ bb8:
   [9] Return read a$7
 bb7:
   predecessor blocks: bb1
-  [10] Const mutate $13_@2:TPrimitive = null
-  [11] Return read $13_@2:TPrimitive
+  [10] Const mutate $13:TPrimitive = null
+  [11] Return read $13:TPrimitive
 scope0 [1:8]:
   - dependency: read c$9
   - dependency: read b$8
@@ -65,8 +65,8 @@ function foo(
     if (read a$7) {
       if (read b$8) {
         if (read c$9) {
-          [5] Const mutate $11_@1:TPrimitive = 0
-          [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
+          [5] Const mutate $11:TPrimitive = 0
+          [6] Call mutate x$10_@0.push(read $11:TPrimitive)
         }
       }
     }
@@ -74,8 +74,8 @@ function foo(
   if (read a$7.length) {
     return read a$7
   }
-  [10] Const mutate $13_@2:TPrimitive = null
-  return read $13_@2:TPrimitive
+  [10] Const mutate $13:TPrimitive = null
+  return read $13:TPrimitive
 }
 
 ```

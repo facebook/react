@@ -33,9 +33,9 @@ bb4:
   [6] Goto bb3
 bb3:
   predecessor blocks: bb4 bb2
-  [7] Const mutate $13_@2:TPrimitive = "div"
-  [8] Const mutate $15_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
-  [9] Call mutate x$11_@0.push(read $15_@3)
+  [7] Const mutate $13:TPrimitive = "div"
+  [8] Const mutate $15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
+  [9] Call mutate x$11_@0.push(read $15_@2)
   [10] Goto bb1
 bb1:
   predecessor blocks: bb3 bb0
@@ -45,8 +45,8 @@ scope0 [1:11]:
 scope1 [3:7]:
   - dependency: read c$10
   - dependency: read b$9
-scope3 [8:9]:
-  - dependency: read $13_@2:TPrimitive
+scope2 [8:9]:
+  - dependency: read $13:TPrimitive
   - dependency: freeze y$12_@1:TFunction
 ```
 
@@ -67,11 +67,11 @@ function foo(
           [5] Call mutate y$12_@1.push(read c$10)
         }
       }
-      [7] Const mutate $13_@2:TPrimitive = "div"
-      scope @3 [8:9] deps=[read $13_@2:TPrimitive, freeze y$12_@1:TFunction] {
-        [8] Const mutate $15_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
+      [7] Const mutate $13:TPrimitive = "div"
+      scope @2 [8:9] deps=[read $13:TPrimitive, freeze y$12_@1:TFunction] {
+        [8] Const mutate $15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
       }
-      [9] Call mutate x$11_@0.push(read $15_@3)
+      [9] Call mutate x$11_@0.push(read $15_@2)
     }
   }
   return freeze x$11_@0:TFunction
