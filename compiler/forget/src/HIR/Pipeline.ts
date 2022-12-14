@@ -12,13 +12,17 @@ import enterSSA from "../HIR/EnterSSA";
 import { Environment } from "../HIR/HIRBuilder";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import { leaveSSA } from "../HIR/LeaveSSA";
-import codegen from "./Codegen";
+import { buildReactiveFunction } from "./BuildReactiveFunction";
+import { codegenReactiveFunction } from "./CodegenReactiveFunction";
+import { flattenReactiveLoops } from "./FlattenReactiveLoops";
 import { HIRFunction } from "./HIR";
 import { inferMutableRanges } from "./InferMutableRanges";
 import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 import { inferTypes } from "./InferTypes";
 import { logHIRFunction } from "./logger";
+import { printReactiveFunction } from "./PrintReactiveFunction";
+import { propagateScopeDependencies } from "./PropagateScopeDependencies";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
@@ -35,6 +39,7 @@ export type CompilerFlags = {
 export type CompilerResult = {
   ir: HIRFunction;
   ast: t.Function | null;
+  scopes: string | null;
 };
 
 export default function (
@@ -83,11 +88,17 @@ export default function (
   }
 
   if (flags.codegen) {
+    const reactiveFunction = buildReactiveFunction(ir);
+    flattenReactiveLoops(reactiveFunction);
+    propagateScopeDependencies(reactiveFunction);
+    const scopes = printReactiveFunction(reactiveFunction);
+    const ast = codegenReactiveFunction(reactiveFunction);
     return {
-      ast: codegen(ir),
-      ir: ir,
+      ast,
+      ir,
+      scopes,
     };
   }
 
-  return { ast: null, ir: ir };
+  return { ast: null, scopes: null, ir: ir };
 }

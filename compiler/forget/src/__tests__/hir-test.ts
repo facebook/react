@@ -14,13 +14,9 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
-import { buildReactiveFunction } from "../HIR/BuildReactiveFunction";
-import { flattenReactiveLoops } from "../HIR/FlattenReactiveLoops";
 import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
-import { printReactiveFunction } from "../HIR/PrintReactiveFunction";
-import { propagateScopeDependencies } from "../HIR/PropagateScopeDependencies";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -137,7 +133,7 @@ function transform(text: string, file: string): Array<TestOutput> {
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
-        const { ir, ast } = run(nodePath, {
+        const { ir, scopes, ast } = run(nodePath, {
           eliminateRedundantPhi: true,
           inferReferenceEffects: true,
           inferTypes: true,
@@ -149,14 +145,9 @@ function transform(text: string, file: string): Array<TestOutput> {
           codegen: true,
         });
 
-        const reactiveFunction = buildReactiveFunction(ir);
-        flattenReactiveLoops(reactiveFunction);
-        propagateScopeDependencies(reactiveFunction);
-        const scopes = printReactiveFunction(reactiveFunction);
-
         const textHIR = printFunction(ir);
-
-        invariant(ast !== null, "ast is null when codegen option is enabled");
+        invariant(ast, "Expected an ast");
+        invariant(scopes, "Expected printed scope data");
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
           semi: true,
           parser: "babel-ts",

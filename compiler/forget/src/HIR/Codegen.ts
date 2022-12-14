@@ -44,13 +44,13 @@ function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
   };
 }
 
-const createBinaryExpression = withLoc(t.binaryExpression);
-const createCallExpression = withLoc(t.callExpression);
-const createExpressionStatement = withLoc(t.expressionStatement);
-const createFunctionDeclaration = withLoc(t.functionDeclaration);
-const createLabelledStatement = withLoc(t.labeledStatement);
-const createVariableDeclaration = withLoc(t.variableDeclaration);
-const createWhileStatement = withLoc(t.whileStatement);
+export const createBinaryExpression = withLoc(t.binaryExpression);
+export const createCallExpression = withLoc(t.callExpression);
+export const createExpressionStatement = withLoc(t.expressionStatement);
+export const createFunctionDeclaration = withLoc(t.functionDeclaration);
+export const createLabelledStatement = withLoc(t.labeledStatement);
+export const createVariableDeclaration = withLoc(t.variableDeclaration);
+export const createWhileStatement = withLoc(t.whileStatement);
 
 /**
  * Converts HIR into Babel nodes, which can then be printed into source text.
@@ -87,7 +87,7 @@ export default function codegen(fn: HIRFunction): t.Function {
   );
 }
 
-type Temporaries = Map<IdentifierId, t.Expression>;
+export type Temporaries = Map<IdentifierId, t.Expression>;
 
 class CodegenVisitor
   implements
@@ -189,45 +189,7 @@ class CodegenVisitor
     return codegenInstructionValue(this.temp, value);
   }
   visitInstruction(instr: Instruction, value: t.Expression): t.Statement {
-    if (t.isStatement(value)) {
-      return value;
-    }
-    if (instr.lvalue === null) {
-      return t.expressionStatement(value);
-    }
-    if (
-      instr.lvalue.place.memberPath === null &&
-      instr.lvalue.place.identifier.name === null
-    ) {
-      // temporary
-      this.temp.set(instr.lvalue.place.identifier.id, value);
-      return t.emptyStatement();
-    } else {
-      switch (instr.lvalue.kind) {
-        case InstructionKind.Const: {
-          return createVariableDeclaration(instr.loc, "const", [
-            t.variableDeclarator(codegenLVal(instr.lvalue), value),
-          ]);
-        }
-        case InstructionKind.Let: {
-          return createVariableDeclaration(instr.loc, "let", [
-            t.variableDeclarator(codegenLVal(instr.lvalue), value),
-          ]);
-        }
-        case InstructionKind.Reassign: {
-          return createExpressionStatement(
-            instr.loc,
-            t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
-          );
-        }
-        default: {
-          assertExhaustive(
-            instr.lvalue.kind,
-            `Unexpected instruction kind '${instr.lvalue.kind}'`
-          );
-        }
-      }
-    }
+    return codegenInstruction(this.temp, instr, value);
   }
   visitTerminalId(id: InstructionId): void {}
   visitImplicitTerminal(): t.Statement | null {
@@ -325,11 +287,57 @@ class CodegenVisitor
   }
 }
 
-function codegenLabel(id: BlockId): string {
+export function codegenLabel(id: BlockId): string {
   return `bb${id}`;
 }
 
-function codegenInstructionValue(
+export function codegenInstruction(
+  temp: Temporaries,
+  instr: Instruction,
+  value: t.Expression
+): t.Statement {
+  if (t.isStatement(value)) {
+    return value;
+  }
+  if (instr.lvalue === null) {
+    return t.expressionStatement(value);
+  }
+  if (
+    instr.lvalue.place.memberPath === null &&
+    instr.lvalue.place.identifier.name === null
+  ) {
+    // temporary
+    temp.set(instr.lvalue.place.identifier.id, value);
+    return t.emptyStatement();
+  } else {
+    switch (instr.lvalue.kind) {
+      case InstructionKind.Const: {
+        return createVariableDeclaration(instr.loc, "const", [
+          t.variableDeclarator(codegenLVal(instr.lvalue), value),
+        ]);
+      }
+      case InstructionKind.Let: {
+        return createVariableDeclaration(instr.loc, "let", [
+          t.variableDeclarator(codegenLVal(instr.lvalue), value),
+        ]);
+      }
+      case InstructionKind.Reassign: {
+        return createExpressionStatement(
+          instr.loc,
+          t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
+        );
+      }
+      default: {
+        assertExhaustive(
+          instr.lvalue.kind,
+          `Unexpected instruction kind '${instr.lvalue.kind}'`
+        );
+      }
+    }
+  }
+}
+
+export function codegenInstructionValue(
   temp: Temporaries,
   instrValue: InstructionValue
 ): t.Expression {
@@ -484,7 +492,7 @@ function codegenJsxElement(
   }
 }
 
-function codegenLVal(lval: LValue): t.LVal {
+export function codegenLVal(lval: LValue): t.LVal {
   const expr = convertIdentifier(lval.place.identifier);
   const memberPath = lval.place.memberPath;
   return memberPath == null
@@ -515,7 +523,7 @@ function codegenValue(
   }
 }
 
-function codegenPlace(temp: Temporaries, place: Place): t.Expression {
+export function codegenPlace(temp: Temporaries, place: Place): t.Expression {
   todoInvariant(place.kind === "Identifier", "support scope values");
   if (place.memberPath === null) {
     let tmp = temp.get(place.identifier.id);
@@ -532,7 +540,7 @@ function codegenPlace(temp: Temporaries, place: Place): t.Expression {
   }
 }
 
-function convertIdentifier(identifier: Identifier): t.Identifier {
+export function convertIdentifier(identifier: Identifier): t.Identifier {
   if (identifier.name !== null) {
     return t.identifier(`${identifier.name}$${identifier.id}`);
   }
