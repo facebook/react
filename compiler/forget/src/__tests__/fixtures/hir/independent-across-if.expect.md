@@ -51,19 +51,6 @@ function compute(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -86,19 +73,6 @@ function mutate(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code
@@ -125,19 +99,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -160,19 +121,6 @@ function Foo(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code
@@ -223,39 +171,6 @@ function Component(
   }
   return read $14_@2
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
-      [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate mutate$5:TFunction(mutate a$9_@1)
-      [5] Call mutate mutate$5:TFunction(mutate b$10_@1)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [7] Const mutate $14_@2 = JSX <read Foo$6 a={freeze a$9_@1} b={freeze b$10_@1} ></read Foo$6>
-    "]
-    bb1_instrs --> bb1_terminal(["Return read $14_@2"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
 
 ```
 

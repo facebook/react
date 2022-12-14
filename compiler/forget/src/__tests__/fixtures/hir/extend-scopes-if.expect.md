@@ -80,56 +80,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$10_@0:TFunction[1:8] = Array []
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$7)"])
-  end
-  subgraph bb2
-    bb2_terminal(["If (read b$8)"])
-  end
-  subgraph bb4
-    bb4_terminal(["If (read c$9)"])
-  end
-  subgraph bb6
-    bb6_instrs["
-      [5] Const mutate $11_@1:TPrimitive = 0
-      [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
-    "]
-    bb6_instrs --> bb6_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read a$7.length)"])
-  end
-  subgraph bb8
-    bb8_terminal(["Return read a$7"])
-  end
-  subgraph bb7
-    bb7_instrs["
-      [10] Const mutate $13_@2:TPrimitive = null
-    "]
-    bb7_instrs --> bb7_terminal(["Return read $13_@2:TPrimitive"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal -- "then" --> bb4
-  bb2_terminal -- "else" --> bb1
-  bb4_terminal -- "then" --> bb6
-  bb4_terminal -- "else" --> bb1
-  bb6_terminal --> bb1
-  bb1_terminal -- "then" --> bb8
-  bb1_terminal -- "else" --> bb7
-
-```
-
 ## Code
 
 ```javascript

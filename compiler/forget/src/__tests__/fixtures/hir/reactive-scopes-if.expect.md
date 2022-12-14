@@ -76,46 +76,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$11_@0:TFunction[1:11] = Array []
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$8)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [3] Const mutate y$12_@1:TFunction[3:5] = Array []
-      [4] Call mutate y$12_@1.push(read b$9)
-      [5] Const mutate $13_@2:TPrimitive = 'div'
-      [6] Const mutate $14_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
-      [7] Call mutate x$11_@0.push(read $14_@3)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [9] Call mutate x$11_@0.push(read c$10)
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return freeze x$11_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

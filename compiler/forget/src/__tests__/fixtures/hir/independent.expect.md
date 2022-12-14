@@ -61,24 +61,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
-      [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
-      [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
-    "]
-    bb0_instrs --> bb0_terminal(["Return read $10_@2"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -107,19 +89,6 @@ function compute(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -144,19 +113,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -179,19 +135,6 @@ function Foo(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

@@ -63,49 +63,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["While"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read a$5)"])
-  end
-  subgraph bb3
-    bb3_terminal(["If (read b$6)"])
-  end
-  subgraph bb5
-    bb5_terminal(["Goto"])
-  end
-  subgraph bb4
-    bb4_instrs["
-      [5] Call read c$7:TFunction()
-    "]
-    bb4_instrs --> bb4_terminal(["Goto"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [7] Call read d$8:TFunction()
-    "]
-    bb2_instrs --> bb2_terminal(["Return"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "test" --> bb1
-  bb0_terminal -- "loop" --> bb3
-  bb0_terminal -- "fallthrough" --> bb2
-  bb1_terminal -- "then" --> bb3
-  bb1_terminal -- "else" --> bb2
-  bb3_terminal -- "then" --> bb5
-  bb3_terminal -- "else" --> bb4
-  bb5_terminal --> bb1
-  bb4_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

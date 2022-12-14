@@ -63,43 +63,6 @@ function And(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
-      [2] Let mutate $6_@1[2:7] = undefined
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $5_@0)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [5] Const mutate $6_@1[2:7] = read $5_@0
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return freeze $6_@1"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -152,43 +115,6 @@ function Or(
   }
   return freeze $6_@1
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
-      [2] Let mutate $6_@1[2:7] = undefined
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $5_@0)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [3] Const mutate $6_@1[2:7] = read $5_@0
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [5] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return freeze $6_@1"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
 
 ```
 
@@ -255,45 +181,6 @@ function QuestionQuestion(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
-      [2] Const mutate $10_@1:TPrimitive = null
-      [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
-      [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $11_@2:TPrimitive)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return freeze $12_@3:TPrimitive"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -323,19 +210,6 @@ function f(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -358,19 +232,6 @@ function g(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

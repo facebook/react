@@ -111,61 +111,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$10_@0:TPrimitive = 1
-      [2] Const mutate $11_@1:TPrimitive = 2
-      [3] Const mutate $12_@2:TPrimitive = Binary read x$10_@0:TPrimitive === read $11_@1:TPrimitive
-      [4] Const mutate $13_@3:TPrimitive = 1
-      [5] Const mutate $14_@4:TPrimitive = Binary read x$10_@0:TPrimitive === read $13_@3:TPrimitive
-      [6] Let mutate x$16_@5:TPrimitive[6:16] = undefined
-    "]
-    bb0_instrs --> bb0_terminal(["Switch (read x$10_@0:TPrimitive)"])
-  end
-  subgraph bb5
-    bb5_instrs["
-      [7] Const mutate $15_@6:TPrimitive = 1
-      [8] Reassign mutate x$16_@5:TPrimitive[6:16] = Binary read x$10_@0:TPrimitive + read $15_@6:TPrimitive
-    "]
-    bb5_instrs --> bb5_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [10] Const mutate $17_@7:TPrimitive = 2
-      [11] Reassign mutate x$16_@5:TPrimitive[6:16] = Binary read x$10_@0:TPrimitive + read $17_@7:TPrimitive
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [13] Const mutate $19_@8:TPrimitive = 3
-      [14] Reassign mutate x$16_@5:TPrimitive[6:16] = Binary read x$10_@0:TPrimitive + read $19_@8:TPrimitive
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [16] Const mutate y$22_@9 = read x$16_@5:TPrimitive
-    "]
-    bb1_instrs --> bb1_terminal(["Return"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "read $14_@4:TPrimitive" --> bb5
-  bb0_terminal -- "read $12_@2:TPrimitive" --> bb3
-  bb0_terminal -- "default" --> bb2
-  bb0_terminal -- "fallthrough" --> bb1
-  bb5_terminal --> bb1
-  bb3_terminal --> bb1
-  bb2_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

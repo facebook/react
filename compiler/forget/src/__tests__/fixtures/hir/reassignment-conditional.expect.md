@@ -77,41 +77,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Let mutate x$7_@0:TFunction[1:7] = Array []
-      [2] Call mutate x$7_@0.push(read props$6.p0)
-      [3] Const mutate y$8_@0:TFunction[1:7] = read x$7_@0:TFunction
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$6.p1)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Reassign mutate x$7_@0:TFunction[1:7] = Array []
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0:TFunction} ></read Component$0>
-      [8] Call read y$8_@0.push(read props$6.p2)
-      [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$7_@0:TFunction} y={read y$8_@0:TFunction} ></read Component$0>
-    "]
-    bb1_instrs --> bb1_terminal(["Return read $15_@2"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

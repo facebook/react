@@ -54,27 +54,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
-      [2] Const mutate y$8_@0[1:6] = Array []
-      [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
-      [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
-      [5] Call mutate x$7_@0.y.push(read props$6.p0)
-      [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
-    "]
-    bb0_instrs --> bb0_terminal(["Return read $10_@1"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

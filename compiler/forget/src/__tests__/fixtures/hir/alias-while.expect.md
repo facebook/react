@@ -80,51 +80,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Let mutate a$8_@0:TObject[1:12] = Object {  }
-      [2] Let mutate b$9_@0:TObject[1:12] = Object {  }
-      [3] Let mutate c$10_@0:TObject[1:12] = Object {  }
-    "]
-    bb0_instrs --> bb0_terminal(["While"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read cond$7)"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [6] Const mutate z$13_@0[1:12] = read a$8_@0:TObject
-      [7] Reassign mutate a$8_@0:TObject[1:12] = read b$9_@0:TObject
-      [8] Reassign mutate b$9_@0:TObject[1:12] = read c$10_@0:TObject
-      [9] Reassign mutate c$10_@0:TObject[1:12] = read z$13_@0
-      [10] Call mutate mutate$6:TFunction(mutate a$8_@0:TObject, mutate b$9_@0:TObject)
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [12] read a$8_@0:TObject
-      [13] read b$9_@0:TObject
-      [14] read c$10_@0:TObject
-    "]
-    bb2_instrs --> bb2_terminal(["Return freeze a$8_@0:TObject"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "test" --> bb1
-  bb0_terminal -- "loop" --> bb3
-  bb0_terminal -- "fallthrough" --> bb2
-  bb1_terminal -- "then" --> bb3
-  bb1_terminal -- "else" --> bb2
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -165,19 +120,6 @@ function mutate(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

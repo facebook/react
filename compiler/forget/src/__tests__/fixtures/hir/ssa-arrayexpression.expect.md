@@ -40,24 +40,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$6_@0:TPrimitive = 1
-      [2] Const mutate b$7_@1:TPrimitive = 2
-      [3] Const mutate x$8_@2 = Array [read a$6_@0:TPrimitive, read b$7_@1:TPrimitive]
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze x$8_@2"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

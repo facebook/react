@@ -82,50 +82,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$7_@0:TFunction[1:9] = Array []
-      [2] Const mutate b$8_@0:TFunction[1:9] = Array []
-    "]
-    bb0_instrs --> bb0_terminal(["If (read b$8_@0:TFunction)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate a$7_@0.push(read props$6.p0)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read props$6.p1)"])
-  end
-  subgraph bb4
-    bb4_instrs["
-      [7] Call mutate b$8_@0.push(read props$6.p2)
-    "]
-    bb4_instrs --> bb4_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0:TFunction} b={freeze b$8_@0:TFunction} ></read Foo$4>
-    "]
-    bb3_instrs --> bb3_terminal(["Return read $16_@2"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
-  bb1_terminal -- "then" --> bb4
-  bb1_terminal -- "else" --> bb3
-  bb4_terminal --> bb3
-
-```
-
 ## Code
 
 ```javascript
@@ -197,51 +153,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$9_@0:TFunction[1:10] = Array []
-      [2] Const mutate b$10_@0:TFunction[1:10] = Array []
-      [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4:TFunction(mutate b$10_@0:TFunction)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $11_@0)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Call mutate a$9_@0.push(read props$8.p0)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read props$8.p1)"])
-  end
-  subgraph bb4
-    bb4_instrs["
-      [8] Call mutate b$10_@0.push(read props$8.p2)
-    "]
-    bb4_instrs --> bb4_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0:TFunction} b={freeze b$10_@0:TFunction} ></read Foo$6>
-    "]
-    bb3_instrs --> bb3_terminal(["Return read $19_@2"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
-  bb1_terminal -- "then" --> bb4
-  bb1_terminal -- "else" --> bb3
-  bb4_terminal --> bb3
-
-```
-
 ## Code
 
 ```javascript
@@ -278,19 +189,6 @@ function Foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -313,19 +211,6 @@ function mayMutate(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

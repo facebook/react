@@ -47,26 +47,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$4_@0:TObject[1:6] = Object {  }
-      [2] Const mutate y$5_@1:TFunction[2:5] = Array []
-      [3] Const mutate z$6_@1:TObject[2:5] = Object {  }
-      [4] Call mutate y$5_@1.push(mutate z$6_@1:TObject)
-      [5] Reassign mutate x$4_@0.y[1:6] = read y$5_@1:TFunction
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze x$4_@0:TObject"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

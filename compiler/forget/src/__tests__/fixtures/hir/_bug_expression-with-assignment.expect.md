@@ -42,25 +42,6 @@ function f(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$4_@0:TPrimitive = 1
-      [2] Const mutate x$5_@1:TPrimitive = 2
-      [3] Const mutate $6_@2:TPrimitive = Binary read x$5_@1:TPrimitive + read x$5_@1:TPrimitive
-      [4] Const mutate $7_@3:TPrimitive = Binary read $6_@2:TPrimitive + read x$5_@1:TPrimitive
-    "]
-    bb0_instrs --> bb0_terminal(["Return read $7_@3:TPrimitive"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

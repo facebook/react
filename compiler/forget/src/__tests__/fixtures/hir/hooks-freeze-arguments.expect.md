@@ -43,25 +43,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$4_@0 = Array []
-      [2] Call read useFreeze$2:TFunction(freeze a$4_@0)
-      [3] Call read useFreeze$2:TFunction(read a$4_@0)
-      [4] Call mutate call$3:TFunction(read a$4_@0)
-    "]
-    bb0_instrs --> bb0_terminal(["Return read a$4_@0"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -93,19 +74,6 @@ function useFreeze(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -129,19 +97,6 @@ function call(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

@@ -31,19 +31,6 @@ function Foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -75,24 +62,6 @@ function Component(
   return freeze c$9_@0
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$7_@0[1:4] = Array []
-      [2] Const mutate b$8_@0:TObject[1:4] = Object {  }
-      [3] Const mutate c$9_@0[1:4] = New mutate Foo$5(mutate a$7_@0, mutate b$8_@0:TObject)
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze c$9_@0"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

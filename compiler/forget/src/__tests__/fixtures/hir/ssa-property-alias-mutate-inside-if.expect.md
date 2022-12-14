@@ -67,45 +67,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$7_@0:TObject[1:10] = Object {  }
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$6)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [3] Const mutate y$8_@0:TObject[1:10] = Object {  }
-      [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0:TObject
-      [5] Call mutate mutate$4:TFunction(mutate y$8_@0:TObject)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [7] Const mutate z$9_@1:TObject = Object {  }
-      [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1:TObject
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return freeze x$7_@0:TObject"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

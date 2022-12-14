@@ -50,26 +50,6 @@ function component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate z$4_@0 = Array []
-      [2] Const mutate y$5_@1:TObject[2:4] = Object {  }
-      [3] Reassign mutate y$5_@1.z[2:4] = read z$4_@0
-      [4] Const mutate x$6_@2:TObject[4:6] = Object {  }
-      [5] Reassign mutate x$6_@2.y[4:6] = read y$5_@1:TObject
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze x$6_@2:TObject"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

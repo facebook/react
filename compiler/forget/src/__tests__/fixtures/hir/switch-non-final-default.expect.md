@@ -110,54 +110,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$10_@1:TFunction[1:12] = Array []
-      [2] Let mutate y$11_@1:TPrimitive[1:12] = undefined
-      [3] Const mutate $12_@2:TPrimitive = false
-      [4] Const mutate $13_@3:TPrimitive = true
-      [5] Const mutate $14_@4:TPrimitive = 1
-    "]
-    bb0_instrs --> bb0_terminal(["Switch (read props$9.p0)"])
-  end
-  subgraph bb6
-    bb6_instrs["
-      [7] Call mutate x$10_@1.push(read props$9.p2)
-      [8] Reassign mutate y$11_@1:TPrimitive[1:12] = Array []
-    "]
-    bb6_instrs --> bb6_terminal(["Goto"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [10] Reassign mutate y$11_@1:TPrimitive[1:12] = read x$10_@1:TFunction
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
-      [13] Call read y$11_@1.push(read props$9.p4)
-      [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@5}</read Component$0>
-    "]
-    bb1_instrs --> bb1_terminal(["Return read $22_@6"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "read $14_@4:TPrimitive" --> bb1
-  bb0_terminal -- "read $13_@3:TPrimitive" --> bb6
-  bb0_terminal -- "default" --> bb1
-  bb0_terminal -- "read $12_@2:TPrimitive" --> bb2
-  bb0_terminal -- "fallthrough" --> bb1
-  bb6_terminal --> bb1
-  bb2_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

@@ -62,36 +62,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["If (read x$8)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [2] Const mutate $10_@0:TPrimitive = false
-      [3] Const mutate $11_@1 = Call read foo$0:TFunction(read $10_@0:TPrimitive, read y$9:TPrimitive)
-    "]
-    bb2_instrs --> bb2_terminal(["Return freeze $11_@1"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [5] Const mutate $12_@2:TPrimitive = 10
-      [6] Const mutate $13_@3:TPrimitive = Binary read y$9:TPrimitive * read $12_@2:TPrimitive
-      [7] Const mutate $14_@4 = Array [read $13_@3:TPrimitive]
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze $14_@4"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-
-```
-
 ## Code
 
 ```javascript

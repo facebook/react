@@ -54,36 +54,6 @@ function component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$7_@0:TPrimitive = Call mutate some$2:TFunction()
-      [2] Const mutate b$8_@1:TPrimitive = Call mutate someOther$4:TFunction()
-      [3] Const mutate $9_@2:TPrimitive = Binary read a$7_@0:TPrimitive > read b$8_@1:TPrimitive
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $9_@2:TPrimitive)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Const mutate m$10_@3:TObject = Object {  }
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

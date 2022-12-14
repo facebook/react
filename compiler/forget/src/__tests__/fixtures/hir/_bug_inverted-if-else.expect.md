@@ -56,41 +56,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$8_@0:TPrimitive = null
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$5)"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [3] Const mutate x$9_@1 = read b$6
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Const mutate x$10_@2 = read c$7
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_terminal(["Return read x$11"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb3
-  bb0_terminal -- "else" --> bb2
-  bb3_terminal --> bb1
-  bb2_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript

@@ -34,19 +34,6 @@ function mutate(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -87,28 +74,6 @@ function foo(
   return freeze c$10_@1:TObject
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$5_@0:TObject = Object {  }
-      [2] Const mutate b$6_@1:TObject[2:8] = Object {  }
-      [3] Const mutate c$7_@1:TObject[2:8] = Object {  }
-      [4] Const mutate a$8_@1:TObject[2:8] = read b$6_@1:TObject
-      [5] Const mutate b$9_@1:TObject[2:8] = read c$7_@1:TObject
-      [6] Const mutate c$10_@1:TObject[2:8] = read a$8_@1:TObject
-      [7] Call mutate mutate$4:TFunction(mutate a$8_@1:TObject, mutate b$9_@1:TObject)
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze c$10_@1:TObject"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

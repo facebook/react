@@ -45,25 +45,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
-      [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
-      [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
-      [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
-    "]
-    bb0_instrs --> bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

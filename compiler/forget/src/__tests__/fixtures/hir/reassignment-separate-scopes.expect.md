@@ -132,69 +132,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$16_@0:TFunction[1:5] = Array []
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$13)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [3] Call mutate x$16_@0.push(read a$13)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [5] Const mutate $17_@1:TPrimitive = 'div'
-      [6] Const mutate y$19_@2 = JSX <read $17_@1:TPrimitive>{freeze x$16_@0:TFunction}</read $17_@1:TPrimitive>
-      [7] Const mutate $20_@3:TPrimitive = 0
-      [8] Let mutate x$22_@4:TFunction[8:15] = undefined
-    "]
-    bb1_instrs --> bb1_terminal(["Switch (read b$14)"])
-  end
-  subgraph bb5
-    bb5_instrs["
-      [9] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-      [10] Call mutate x$22_@4.push(read b$14)
-    "]
-    bb5_instrs --> bb5_terminal(["Goto"])
-  end
-  subgraph bb4
-    bb4_instrs["
-      [12] Reassign mutate x$22_@4:TFunction[8:15] = Array []
-      [13] Call mutate x$22_@4.push(read c$15)
-    "]
-    bb4_instrs --> bb4_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [15] Const mutate $25_@5:TPrimitive = 'div'
-      [16] Const mutate $26_@6 = '\n      '
-      [17] Const mutate $27_@7 = '\n      '
-      [18] Const mutate $28_@8 = '\n    '
-      [19] Const mutate $31_@9 = JSX <read $25_@5:TPrimitive>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4:TFunction}{read $28_@8}</read $25_@5:TPrimitive>
-    "]
-    bb3_instrs --> bb3_terminal(["Return read $31_@9"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
-  bb1_terminal -- "read $20_@3:TPrimitive" --> bb5
-  bb1_terminal -- "default" --> bb4
-  bb1_terminal -- "fallthrough" --> bb3
-  bb5_terminal --> bb3
-  bb4_terminal --> bb3
-
-```
-
 ## Code
 
 ```javascript

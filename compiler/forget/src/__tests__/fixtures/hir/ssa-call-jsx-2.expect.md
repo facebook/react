@@ -36,19 +36,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -110,43 +97,6 @@ function Component(
   }
   return read $20_@5
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$11_@0[1:10] = Array []
-      [2] Const mutate b$12_@0:TObject[1:10] = Object {  }
-      [3] Call mutate foo$4:TFunction(mutate a$11_@0, mutate b$12_@0:TObject)
-      [4] Const mutate $13_@1 = Call mutate foo$4:TFunction()
-    "]
-    bb0_instrs --> bb0_terminal(["If (read $13_@1)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [6] Const mutate $14_@2:TPrimitive = 'div'
-      [7] Const mutate _$15_@3 = JSX <read $14_@2:TPrimitive a={freeze a$11_@0} ></read $14_@2:TPrimitive>
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
-      [10] Const mutate $19_@4:TPrimitive = 'div'
-      [11] Const mutate $20_@5 = JSX <read $19_@4:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19_@4:TPrimitive>
-    "]
-    bb1_instrs --> bb1_terminal(["Return read $20_@5"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
 
 ```
 

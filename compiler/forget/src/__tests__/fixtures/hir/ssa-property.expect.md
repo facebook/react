@@ -40,24 +40,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate x$3_@0 = Array []
-      [2] Const mutate y$4_@1:TObject[2:4] = Object {  }
-      [3] Reassign mutate y$4_@1.x[2:4] = read x$3_@0
-    "]
-    bb0_instrs --> bb0_terminal(["Return freeze y$4_@1:TObject"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript

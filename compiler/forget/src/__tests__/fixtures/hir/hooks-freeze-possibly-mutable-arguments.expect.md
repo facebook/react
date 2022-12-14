@@ -79,50 +79,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate cond$8_@0:TProp = read props$7.cond
-      [2] Const mutate x$9_@1:TProp = read props$7.x
-      [3] Const mutate a$10_@2:TPrimitive = undefined
-      [4] Let mutate a$11_@3:TProp[4:9] = undefined
-    "]
-    bb0_instrs --> bb0_terminal(["If (read cond$8_@0:TProp)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [5] Reassign mutate a$11_@3:TProp[4:9] = read x$9_@1:TProp
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb3
-    bb3_instrs["
-      [7] Reassign mutate a$11_@3:TProp[4:9] = Array []
-    "]
-    bb3_instrs --> bb3_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [9] Call read useFreeze$5:TFunction(freeze a$11_@3:TProp)
-      [10] Call read useFreeze$5:TFunction(read a$11_@3:TProp)
-      [11] Call mutate call$6:TFunction(read a$11_@3:TProp)
-    "]
-    bb1_instrs --> bb1_terminal(["Return read a$11_@3:TProp"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb3
-  bb0_terminal -- "fallthrough" --> bb1
-  bb2_terminal --> bb1
-  bb3_terminal --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -163,19 +119,6 @@ function useFreeze(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -199,19 +142,6 @@ function call(
   return
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code

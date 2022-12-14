@@ -115,37 +115,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a_DEBUG$5_@0:TFunction[1:7] = Array []
-      [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Const mutate $6_@1:TPrimitive = null
-    "]
-    bb2_instrs --> bb2_terminal(["Return read $6_@1:TPrimitive"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze a_DEBUG$5_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -199,38 +168,6 @@ function Component(
   }
   return freeze a$4_@0:TFunction
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$4_@0:TFunction[1:7] = Array []
-      [2] Call mutate a$4_@0.push(read props$3.a)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate a$4_@0.push(read props$3.c)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [6] Call mutate a$4_@0.push(read props$3.d)
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$4_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-  bb2_terminal --> bb1
 
 ```
 
@@ -293,38 +230,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$5_@0:TFunction[1:8] = Array []
-      [2] Call mutate a$5_@0.push(read props$4.a)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate a$5_@0.push(read props$4.c)
-      [5] Const mutate $6_@1:TPrimitive = null
-    "]
-    bb2_instrs --> bb2_terminal(["Return read $6_@1:TPrimitive"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [7] Call mutate a$5_@0.push(read props$4.d)
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$5_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -383,37 +288,6 @@ function Component(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$4_@0:TFunction[1:7] = Array []
-      [2] Call mutate a$4_@0.push(read props$3.a)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate a$4_@0.push(read props$3.c)
-    "]
-    bb2_instrs --> bb2_terminal(["Return freeze a$4_@0:TFunction"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [6] Call mutate a$4_@0.push(read props$3.d)
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$4_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb2
-  bb0_terminal -- "else" --> bb1
-
-```
-
 ## Code
 
 ```javascript
@@ -467,38 +341,6 @@ function Component(
     [4] Call mutate a$4_@0.push(read props$3.c)
   }
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$4_@0:TFunction[1:7] = Array []
-      [2] Call mutate a$4_@0.push(read props$3.a)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
-  end
-  subgraph bb2
-    bb2_instrs["
-      [4] Call mutate a$4_@0.push(read props$3.c)
-    "]
-    bb2_instrs --> bb2_terminal(["Goto"])
-  end
-  subgraph bb1
-    bb1_instrs["
-      [6] Call mutate a$4_@0.push(read props$3.d)
-    "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$4_@0:TFunction"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb1
-  bb0_terminal -- "else" --> bb2
-  bb2_terminal --> bb1
 
 ```
 

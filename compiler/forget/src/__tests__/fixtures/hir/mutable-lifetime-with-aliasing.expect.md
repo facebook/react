@@ -55,19 +55,6 @@ function mutate(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -141,57 +128,6 @@ function Component(
   }
   return
 }
-
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$11_@0:TObject = Object {  }
-      [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
-      [3] Const mutate c$13_@2:TObject = Object {  }
-      [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
-      [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
-      [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
-      [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
-    "]
-    bb0_instrs --> bb0_terminal(["If (read a$11_@0:TObject)"])
-  end
-  subgraph bb1
-    bb1_terminal(["If (read b$12_@1)"])
-  end
-  subgraph bb3
-    bb3_terminal(["If (read c$13_@2:TObject)"])
-  end
-  subgraph bb5
-    bb5_terminal(["If (read d$14_@1:TObject)"])
-  end
-  subgraph bb7
-    bb7_terminal(["If (read y$16_@1)"])
-  end
-  subgraph bb9
-    bb9_instrs["
-      [13] Const mutate $17_@3:TPrimitive = null
-      [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
-    "]
-    bb9_instrs --> bb9_terminal(["Return"])
-  end
-
-  %% Jumps
-  bb0_terminal -- "then" --> bb1
-  bb0_terminal -- "else" --> bb1
-  bb1_terminal -- "then" --> bb3
-  bb1_terminal -- "else" --> bb3
-  bb3_terminal -- "then" --> bb5
-  bb3_terminal -- "else" --> bb5
-  bb5_terminal -- "then" --> bb7
-  bb5_terminal -- "else" --> bb7
-  bb7_terminal -- "then" --> bb9
-  bb7_terminal -- "else" --> bb9
 
 ```
 

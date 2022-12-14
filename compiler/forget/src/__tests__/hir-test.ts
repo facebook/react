@@ -19,7 +19,6 @@ import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
 import { printReactiveFunction } from "../HIR/PrintReactiveFunction";
-import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -104,7 +103,7 @@ ${wrapWithTripleBackticks(error.message)}
 }
 
 function formatOutput(items: Array<TestOutput>): Array<string> {
-  return items.map(({ ir, js, mermaid, scopes }) => {
+  return items.map(({ ir, js, scopes }) => {
     return `
 ## HIR
 
@@ -113,10 +112,6 @@ ${wrapWithTripleBackticks(ir)}
 ## Reactive Scopes
 
 ${wrapWithTripleBackticks(scopes)}
-
-### CFG
-
-${wrapWithTripleBackticks(mermaid, "mermaid")}
 
 ## Code
 
@@ -128,7 +123,6 @@ ${wrapWithTripleBackticks(js, "javascript")}
 type TestOutput = {
   ir: string;
   js: string;
-  mermaid: string;
   scopes: string;
 };
 
@@ -157,14 +151,13 @@ function transform(text: string, file: string): Array<TestOutput> {
         const scopes = printReactiveFunction(reactiveFunction);
 
         const textHIR = printFunction(ir);
-        const mermaid = visualizeHIRMermaid(ir);
 
         invariant(ast !== null, "ast is null when codegen option is enabled");
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
           semi: true,
           parser: "babel-ts",
         });
-        items.push({ ir: textHIR, js: text, scopes, mermaid });
+        items.push({ ir: textHIR, js: text, scopes });
       },
     },
   });

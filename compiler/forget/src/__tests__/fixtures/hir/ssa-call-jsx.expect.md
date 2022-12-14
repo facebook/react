@@ -33,19 +33,6 @@ function foo(
 
 ```
 
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_terminal(["Return"])
-  end
-
-  %% Jumps
-  %% empty
-```
-
 ## Code
 
 ```javascript
@@ -96,29 +83,6 @@ function Component(
   return read $15_@4
 }
 
-```
-
-### CFG
-
-```mermaid
-flowchart TB
-  %% Basic Blocks
-  subgraph bb0
-    bb0_instrs["
-      [1] Const mutate a$10_@0[1:7] = Array []
-      [2] Const mutate b$11_@0:TObject[1:7] = Object {  }
-      [3] Call mutate foo$4:TFunction(mutate a$10_@0, mutate b$11_@0:TObject)
-      [4] Const mutate $12_@1:TPrimitive = 'div'
-      [5] Const mutate _$13_@2 = JSX <read $12_@1:TPrimitive a={freeze a$10_@0} ></read $12_@1:TPrimitive>
-      [6] Call mutate foo$4:TFunction(read a$10_@0, mutate b$11_@0:TObject)
-      [7] Const mutate $14_@3:TPrimitive = 'div'
-      [8] Const mutate $15_@4 = JSX <read $14_@3:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14_@3:TPrimitive>
-    "]
-    bb0_instrs --> bb0_terminal(["Return read $15_@4"])
-  end
-
-  %% Jumps
-  %% empty
 ```
 
 ## Code
