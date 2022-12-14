@@ -106,7 +106,7 @@ function Component(
   [4] Const mutate $13 = "\n      "
   [5] Const mutate $14 = "\n      "
   [6] Const mutate $15 = "\n    "
-  scope @2 [7:8] deps=[read Component$0, read $13, read x$11_@0, read $14, read y$12_@1, read $15] {
+  scope @2 [7:8] deps=[read x$11_@0, read y$12_@1] {
     [7] Const mutate $16_@2 = JSX <read Component$0>{read $13}{read x$11_@0}{read $14}{read y$12_@1}{read $15}</read Component$0>
   }
   return read $16_@2

@@ -59,7 +59,7 @@ function Component(
   [1] Const mutate cond$8:TProp = read props$7.cond
   [2] Const mutate x$9:TProp = read props$7.x
   [3] Const mutate a$10:TPrimitive = undefined
-  scope @0 [4:9] deps=[read x$9:TProp, read cond$8:TProp] {
+  scope @0 [4:9] deps=[read cond$8:TProp, read x$9:TProp] {
     [4] Let mutate a$11_@0:TProp[4:9] = undefined
     if (read cond$8:TProp) {
       [5] Reassign mutate a$11_@0:TProp[4:9] = read x$9:TProp

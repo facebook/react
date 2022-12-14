@@ -158,7 +158,7 @@ scope2 [7:8]:
 function Component(
   props,
 ) {
-  scope @1 [1:7] deps=[read props$8.a] {
+  scope @1 [1:7] deps=[read props$8.a, read props$8.b, read props$8.c] {
     [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
     [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
     if (read props$8.c) {

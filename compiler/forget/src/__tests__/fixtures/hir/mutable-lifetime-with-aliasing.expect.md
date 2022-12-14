@@ -104,7 +104,7 @@ function Component(
   scope @0 [1:2] deps=[] {
     [1] Const mutate a$11_@0:TObject = Object {  }
   }
-  scope @1 [2:15] deps=[read a$11_@0:TObject, read a$11_@0:TObject] {
+  scope @1 [2:15] deps=[read a$11_@0:TObject] {
     [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
     scope @2 [3:4] deps=[] {
       [3] Const mutate c$13_@2:TObject = Object {  }

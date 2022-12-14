@@ -53,7 +53,7 @@ function foo(
   d,
   e,
 ) {
-  scope @0 [1:8] deps=[read b$8, read d$10, read c$9, read a$7] {
+  scope @0 [1:8] deps=[read a$7, read b$8, read c$9, read d$10] {
     [1] Let mutate x$12_@0:TPrimitive[1:8] = null
     if (read a$7) {
       [3] Reassign mutate x$12_@0:TPrimitive[1:8] = read b$8

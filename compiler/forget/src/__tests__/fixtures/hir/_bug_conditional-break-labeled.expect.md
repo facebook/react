@@ -47,7 +47,7 @@ scope0 [1:7]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.d, read props$3.c] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.d, read props$3.c] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {

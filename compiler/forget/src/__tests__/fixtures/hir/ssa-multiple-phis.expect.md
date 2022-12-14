@@ -87,7 +87,7 @@ function foo(
 ) {
   [1] Const mutate x$13:TPrimitive = 0
   [2] Const mutate $14:TPrimitive = true
-  scope @0 [3:20] deps=[read a$9, read b$10, read c$11, read d$12, read $14:TPrimitive] {
+  scope @0 [3:20] deps=[read a$9, read b$10, read c$11, read d$12] {
     [3] Let mutate x$18_@0[3:20] = undefined
     if (read $14:TPrimitive) {
       [4] Const mutate $15:TPrimitive = true

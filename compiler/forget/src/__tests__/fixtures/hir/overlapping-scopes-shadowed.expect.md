@@ -22,7 +22,6 @@ bb0:
   [5] Return
 scope0 [1:5]:
   - dependency: read a$5
-  - dependency: read b$6
 scope1 [2:4]:
   - dependency: read b$6
 ```
@@ -34,7 +33,7 @@ function foo(
   a,
   b,
 ) {
-  scope @0 [1:5] deps=[read a$5, read b$6] {
+  scope @0 [1:5] deps=[read b$6, read a$5] {
     [1] Const mutate x$7_@0:TFunction[1:5] = Array []
     scope @1 [2:4] deps=[read b$6] {
       [2] Const mutate y$8_@1:TFunction[2:4] = Array []

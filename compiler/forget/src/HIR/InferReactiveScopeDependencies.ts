@@ -37,6 +37,7 @@ export function instructionInScope(
 class ScopeDependenciesVisitor
   implements Visitor<void, void, void, void, InstructionValue, void, void>
 {
+  #kinds: Map<Identifier, DeclKind> = new Map();
   #identifiers: Map<Identifier, InstructionId> = new Map();
   // Scopes that are currently active at this point in the traversal
   #activeScopes: Set<ReactiveScope> = new Set();
@@ -49,9 +50,11 @@ class ScopeDependenciesVisitor
   constructor(fn: HIRFunction) {
     if (fn.id !== null) {
       this.#identifiers.set(fn.id, makeInstructionId(0));
+      this.#kinds.set(fn.id, DeclKind.Const);
     }
     for (const param of fn.params) {
       this.#identifiers.set(param.identifier, makeInstructionId(0));
+      this.#kinds.set(param.identifier, DeclKind.Dynamic);
     }
   }
 
@@ -189,4 +192,57 @@ class ScopeDependenciesVisitor
     return value;
   }
   leaveInitBlock(block: void): void {}
+}
+
+enum DeclKind {
+  Const = "Const",
+  Dynamic = "Dynamic",
+}
+
+function visitOperand(
+  operand: Place,
+  dependencies: Set<Place>,
+  declarations: Map<Identifier, DeclKind>
+): void {
+  const kind = declarations.get(operand.identifier);
+  if (kind === undefined) {
+    // TODO: global, ignore
+    return;
+  } else if (kind === DeclKind.Const) {
+    // constant, dont need to add a dep
+    return;
+  } else {
+    for (const dep of dependencies) {
+      // not the same identifier
+      if (dep.identifier !== operand.identifier) {
+        continue;
+      }
+      const depPath = dep.memberPath;
+      // existing dep covers all paths
+      if (depPath === null) {
+        return;
+      }
+      const operandPath = operand.memberPath;
+      // existing dep is for a path, this operand covers all paths so swap them
+      if (operandPath === null) {
+        dependencies.delete(dep);
+        dependencies.add(operand);
+        return;
+      }
+      // both the operand and dep have paths, determine if the existing path
+      // is a subset of the new path
+      let commonPathIndex = 0;
+      while (
+        commonPathIndex < operandPath.length &&
+        commonPathIndex < depPath.length &&
+        operandPath[commonPathIndex] === depPath[commonPathIndex]
+      ) {
+        commonPathIndex++;
+      }
+      if (commonPathIndex === depPath.length) {
+        return;
+      }
+    }
+    dependencies.add(operand);
+  }
 }

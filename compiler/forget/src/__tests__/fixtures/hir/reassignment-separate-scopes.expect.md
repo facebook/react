@@ -95,18 +95,18 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:5] deps=[read a$13, read a$13] {
+  scope @0 [1:5] deps=[read a$13] {
     [1] Const mutate x$16_@0:TFunction[1:5] = Array []
     if (read a$13) {
       [3] Call mutate x$16_@0.push(read a$13)
     }
   }
   [5] Const mutate $17:TPrimitive = "div"
-  scope @1 [6:7] deps=[read $17:TPrimitive, freeze x$16_@0:TFunction] {
+  scope @1 [6:7] deps=[freeze x$16_@0:TFunction] {
     [6] Const mutate y$19_@1 = JSX <read $17:TPrimitive>{freeze x$16_@0:TFunction}</read $17:TPrimitive>
   }
   [7] Const mutate $20:TPrimitive = 0
-  scope @2 [8:15] deps=[read c$15, read b$14, read b$14] {
+  scope @2 [8:15] deps=[read b$14, read c$15] {
     [8] Let mutate x$22_@2:TFunction[8:15] = undefined
     switch (read b$14) {
       case read $20:TPrimitive: {
@@ -124,7 +124,7 @@ function foo(
   [16] Const mutate $26 = "\n      "
   [17] Const mutate $27 = "\n      "
   [18] Const mutate $28 = "\n    "
-  scope @3 [19:20] deps=[read $25:TPrimitive, read $26, read y$19_@1, read $27, freeze x$22_@2:TFunction, read $28] {
+  scope @3 [19:20] deps=[read y$19_@1] {
     [19] Const mutate $31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
   }
   return read $31_@3

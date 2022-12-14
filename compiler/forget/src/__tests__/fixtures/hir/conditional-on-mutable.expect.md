@@ -64,7 +64,7 @@ scope2 [9:10]:
 function Component(
   props,
 ) {
-  scope @0 [1:9] deps=[] {
+  scope @0 [1:9] deps=[read props$6.p0, read props$6.p1, read props$6.p2] {
     [1] Const mutate a$7_@0:TFunction[1:9] = Array []
     [2] Const mutate b$8_@0:TFunction[1:9] = Array []
     if (read b$8_@0:TFunction) {
@@ -134,7 +134,7 @@ scope2 [10:11]:
 function Component(
   props,
 ) {
-  scope @0 [1:10] deps=[] {
+  scope @0 [1:10] deps=[read props$8.p0, read props$8.p1, read props$8.p2] {
     [1] Const mutate a$9_@0:TFunction[1:10] = Array []
     [2] Const mutate b$10_@0:TFunction[1:10] = Array []
     [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4:TFunction(mutate b$10_@0:TFunction)

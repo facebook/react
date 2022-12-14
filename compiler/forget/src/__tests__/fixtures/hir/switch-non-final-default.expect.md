@@ -73,7 +73,7 @@ scope3 [14:15]:
 function Component(
   props,
 ) {
-  scope @1 [1:12] deps=[] {
+  scope @1 [1:12] deps=[read props$9.p0, read props$9.p2] {
     [1] Const mutate x$10_@1:TFunction[1:12] = Array []
     [2] Let mutate y$11_@1:TPrimitive[1:12] = undefined
     [3] Const mutate $12:TPrimitive = false
@@ -96,11 +96,11 @@ function Component(
       }
     }
   }
-  scope @2 [12:13] deps=[read Component$0, freeze x$10_@1:TFunction] {
+  scope @2 [12:13] deps=[freeze x$10_@1:TFunction] {
     [12] Const mutate child$19_@2 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
   }
   [13] Call read y$11_@1.push(read props$9.p4)
-  scope @3 [14:15] deps=[read Component$0, freeze y$11_@1:TPrimitive, read child$19_@2] {
+  scope @3 [14:15] deps=[read child$19_@2] {
     [14] Const mutate $22_@3 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@2}</read Component$0>
   }
   return read $22_@3

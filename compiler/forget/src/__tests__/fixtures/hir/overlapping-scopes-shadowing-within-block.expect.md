@@ -42,10 +42,6 @@ bb1:
   [11] Return freeze x$11_@0:TFunction
 scope0 [1:11]:
   - dependency: read a$8
-  - dependency: read c$10
-  - dependency: read b$9
-  - dependency: read $13:TPrimitive
-  - dependency: freeze y$12_@1:TFunction
 scope1 [3:7]:
   - dependency: read c$10
   - dependency: read b$9
@@ -62,17 +58,17 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:11] deps=[read a$8, read c$10, read b$9, read $13:TPrimitive, freeze y$12_@1:TFunction] {
+  scope @0 [1:11] deps=[read a$8, read b$9, read c$10] {
     [1] Const mutate x$11_@0:TFunction[1:11] = Array []
     if (read a$8) {
-      scope @1 [3:7] deps=[read c$10, read b$9] {
+      scope @1 [3:7] deps=[read b$9, read c$10] {
         [3] Const mutate y$12_@1:TFunction[3:7] = Array []
         if (read b$9) {
           [5] Call mutate y$12_@1.push(read c$10)
         }
       }
       [7] Const mutate $13:TPrimitive = "div"
-      scope @2 [8:9] deps=[read $13:TPrimitive, freeze y$12_@1:TFunction] {
+      scope @2 [8:9] deps=[freeze y$12_@1:TFunction] {
         [8] Const mutate $15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
       }
       [9] Call mutate x$11_@0.push(read $15_@2)

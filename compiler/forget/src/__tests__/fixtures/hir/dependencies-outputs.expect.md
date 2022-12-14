@@ -64,7 +64,7 @@ function foo(
   }
   [3] Const mutate $9:TPrimitive = "div"
   [4] JSX <read $9:TPrimitive>{freeze x$8_@0:TFunction}</read $9:TPrimitive>
-  scope @1 [5:12] deps=[read x$8_@0:TFunction, read x$8_@0.length, read b$7:TFunction, read b$7:TFunction] {
+  scope @1 [5:12] deps=[read x$8_@0:TFunction, read b$7:TFunction] {
     [5] Const mutate y$10_@1:TFunction[5:12] = Array []
     if (read x$8_@0.length) {
       [7] Call mutate y$10_@1.push(read x$8_@0:TFunction)

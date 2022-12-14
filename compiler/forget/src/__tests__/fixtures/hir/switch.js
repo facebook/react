@@ -1,4 +1,3 @@
-// @Out DefUseGraph
 function Component(props) {
   let x = [];
   let y;

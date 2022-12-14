@@ -38,7 +38,7 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:6] deps=[] {
+  scope @0 [1:6] deps=[read a$6, read b$7] {
     [1] Const mutate x$9_@0:TFunction[1:6] = Array []
     [2] Const mutate y$10_@0:TFunction[1:6] = Array []
     if (read x$9_@0:TFunction) {

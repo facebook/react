@@ -158,7 +158,7 @@ scope0 [1:7]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.c, read props$3.b, read props$3.d] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
@@ -215,7 +215,7 @@ scope0 [1:8]:
 function Component(
   props,
 ) {
-  scope @0 [1:8] deps=[read props$4.a, read props$4.c, read props$4.b, read props$4.d] {
+  scope @0 [1:8] deps=[read props$4.a, read props$4.b, read props$4.c, read props$4.d] {
     [1] Const mutate a$5_@0:TFunction[1:8] = Array []
     [2] Call mutate a$5_@0.push(read props$4.a)
     if (read props$4.b) {
@@ -274,7 +274,7 @@ scope0 [1:7]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.c, read props$3.b, read props$3.d] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
@@ -331,7 +331,7 @@ scope0 [1:7]:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.d, read props$3.c] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.d, read props$3.c] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {

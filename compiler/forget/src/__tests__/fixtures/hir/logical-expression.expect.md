@@ -50,7 +50,7 @@ function And(
   scope @0 [1:2] deps=[] {
     [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   }
-  scope @1 [2:7] deps=[read $5_@0, read $5_@0] {
+  scope @1 [2:7] deps=[read $5_@0] {
     [2] Let mutate $6_@1[2:7] = undefined
     if (read $5_@0) {
       [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
@@ -105,7 +105,7 @@ function Or(
   scope @0 [1:2] deps=[] {
     [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   }
-  scope @1 [2:7] deps=[read $5_@0, read $5_@0] {
+  scope @1 [2:7] deps=[read $5_@0] {
     [2] Let mutate $6_@1[2:7] = undefined
     if (read $5_@0) {
       [3] Const mutate $6_@1[2:7] = read $5_@0
@@ -165,7 +165,7 @@ function QuestionQuestion(
   }
   [2] Const mutate $10:TPrimitive = null
   [3] Const mutate $11:TPrimitive = Binary read $9_@0:TPrimitive != read $10:TPrimitive
-  scope @1 [4:9] deps=[read $9_@0:TPrimitive, read $11:TPrimitive] {
+  scope @1 [4:9] deps=[read $9_@0:TPrimitive] {
     [4] Let mutate $12_@1:TPrimitive[4:9] = undefined
     if (read $11:TPrimitive) {
       [5] Const mutate $12_@1:TPrimitive[4:9] = read $9_@0:TPrimitive

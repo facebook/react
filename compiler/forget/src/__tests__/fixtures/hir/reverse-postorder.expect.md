@@ -95,7 +95,7 @@ function Component(
   props,
 ) {
   [1] Const mutate x$7:TPrimitive = undefined
-  scope @0 [2:18] deps=[read props$6.v2, read props$6.v1, read props$6.v0, read props$6.test, read props$6.b, read props$6.c, read props$6.cond2, read props$6.cond] {
+  scope @0 [2:18] deps=[read props$6.cond, read props$6.test, read props$6.v0, read props$6.v1, read props$6.v2, read props$6.cond2, read props$6.b, read props$6.c] {
     [2] Let mutate x$11_@0:TProp[2:18] = undefined
     if (read props$6.cond) {
       [3] Const mutate $8:TPrimitive = 2

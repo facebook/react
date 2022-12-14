@@ -30,7 +30,7 @@ function foo(
   a,
   b,
 ) {
-  scope @0 [1:5] deps=[] {
+  scope @0 [1:5] deps=[read a$5, read b$6] {
     [1] Const mutate x$7_@0:TFunction[1:5] = Array []
     [2] Const mutate y$8_@0:TFunction[1:5] = Array []
     [3] Call mutate x$7_@0.push(read a$5)
