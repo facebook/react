@@ -68,23 +68,6 @@ bb3:
   [18] Const mutate $28 = "\n    "
   [19] Const mutate $31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
   [20] Return read $31_@3
-scope0 [1:5]:
-  - dependency: read a$13
-  - dependency: read a$13
-scope1 [6:7]:
-  - dependency: read $17:TPrimitive
-  - dependency: freeze x$16_@0:TFunction
-scope2 [8:15]:
-  - dependency: read c$15
-  - dependency: read b$14
-  - dependency: read b$14
-scope3 [19:20]:
-  - dependency: read $25:TPrimitive
-  - dependency: read $26
-  - dependency: read y$19_@1
-  - dependency: read $27
-  - dependency: freeze x$22_@2:TFunction
-  - dependency: read $28
 ```
 
 ## Reactive Scopes

@@ -27,12 +27,6 @@ bb1:
   [6] Const mutate $13:TPrimitive = Binary read y$9:TPrimitive * read $12:TPrimitive
   [7] Const mutate $14_@1 = Array [read $13:TPrimitive]
   [8] Return freeze $14_@1
-scope0 [3:4]:
-  - dependency: read foo$0:TFunction
-  - dependency: read $10:TPrimitive
-  - dependency: read y$9:TPrimitive
-scope1 [7:8]:
-  - dependency: read $13:TPrimitive
 ```
 
 ## Reactive Scopes

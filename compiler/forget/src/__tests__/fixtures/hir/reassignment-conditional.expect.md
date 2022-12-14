@@ -37,16 +37,6 @@ bb1:
   [8] Call read y$8.push(read props$6.p2)
   [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$7_@0:TFunction} y={read y$8:TFunction} ></read Component$0>
   [10] Return read $15_@2
-scope0 [1:7]:
-  - dependency: read props$6.p0
-  - dependency: read props$6.p1
-scope1 [7:8]:
-  - dependency: read Component$0
-  - dependency: freeze x$7_@0:TFunction
-scope2 [9:10]:
-  - dependency: read Component$0
-  - dependency: read x$7_@0:TFunction
-  - dependency: read y$8:TFunction
 ```
 
 ## Reactive Scopes

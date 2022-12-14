@@ -40,14 +40,6 @@ bb3:
 bb1:
   predecessor blocks: bb3 bb0
   [11] Return freeze x$11_@0:TFunction
-scope0 [1:11]:
-  - dependency: read a$8
-scope1 [3:7]:
-  - dependency: read c$10
-  - dependency: read b$9
-scope2 [8:9]:
-  - dependency: read $13:TPrimitive
-  - dependency: freeze y$12_@1:TFunction
 ```
 
 ## Reactive Scopes

@@ -18,7 +18,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -45,7 +44,6 @@ bb0:
   [2] Const mutate b$8_@0:TObject[1:4] = Object {  }
   [3] Const mutate c$9_@0[1:4] = New mutate Foo$5(mutate a$7_@0, mutate b$8_@0:TObject)
   [4] Return freeze c$9_@0
-
 ```
 
 ## Reactive Scopes

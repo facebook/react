@@ -32,13 +32,6 @@ bb0:
   [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
   [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
   [4] Return read $10_@2
-scope0 [1:2]:
-  - dependency: read props$7.a
-scope1 [2:3]:
-  - dependency: read props$7.b
-scope2 [3:4]:
-  - dependency: freeze a$8_@0
-  - dependency: freeze b$9_@1
 ```
 
 ## Reactive Scopes
@@ -76,7 +69,6 @@ function Component$0(props$7) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -100,7 +92,6 @@ function compute$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -124,7 +115,6 @@ function foo$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes

@@ -37,9 +37,6 @@ bb3:
 bb1:
   predecessor blocks: bb2 bb3
   [7] Return freeze $6_@1
-scope1 [2:7]:
-  - dependency: read $5_@0
-  - dependency: read $5_@0
 ```
 
 ## Reactive Scopes
@@ -92,9 +89,6 @@ bb3:
 bb1:
   predecessor blocks: bb2 bb3
   [7] Return freeze $6_@1
-scope1 [2:7]:
-  - dependency: read $5_@0
-  - dependency: read $5_@0
 ```
 
 ## Reactive Scopes
@@ -149,9 +143,6 @@ bb3:
 bb1:
   predecessor blocks: bb2 bb3
   [9] Return freeze $12_@1:TPrimitive
-scope1 [4:9]:
-  - dependency: read $9_@0:TPrimitive
-  - dependency: read $11:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -194,7 +185,6 @@ function QuestionQuestion$0(props$8) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -218,7 +208,6 @@ function f$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes

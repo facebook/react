@@ -35,10 +35,6 @@ bb1:
   predecessor blocks: bb0 bb2
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0:TFunction
-scope0 [1:7]:
-  - dependency: read props$3.a
-  - dependency: read props$3.d
-  - dependency: read props$3.c
 ```
 
 ## Reactive Scopes

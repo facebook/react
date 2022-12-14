@@ -15,7 +15,6 @@ import { leaveSSA } from "../HIR/LeaveSSA";
 import codegen from "./Codegen";
 import { HIRFunction } from "./HIR";
 import { inferMutableRanges } from "./InferMutableRanges";
-import { inferReactiveScopeDependencies } from "./InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 import { inferTypes } from "./InferTypes";
@@ -81,11 +80,6 @@ export default function (
   if (flags.inferReactiveScopes) {
     inferReactiveScopes(ir);
     logHIRFunction("inferReactiveScopes", ir);
-  }
-
-  if (flags.inferReactiveScopeDependencies) {
-    inferReactiveScopeDependencies(ir);
-    logHIRFunction("inferReactiveScopeDependencies", ir);
   }
 
   if (flags.codegen) {

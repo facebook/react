@@ -21,7 +21,6 @@ bb0:
   [3] Reassign mutate y$5_@0.x[1:5] = read x$4_@0
   [4] Call mutate mutate$3:TFunction(mutate x$4_@0)
   [5] Return freeze y$5_@0:TObject
-
 ```
 
 ## Reactive Scopes

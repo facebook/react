@@ -39,9 +39,6 @@ bb1:
   predecessor blocks: bb2 bb3
   [10] Const mutate t$14_@2:TObject = Object { x: read x$6_@0:TPrimitive, y: read y$7_@0:TPrimitive }
   [11] Return freeze t$14_@2:TObject
-scope2 [10:11]:
-  - dependency: read x$6_@0:TPrimitive
-  - dependency: read y$7_@0:TPrimitive
 ```
 
 ## Reactive Scopes

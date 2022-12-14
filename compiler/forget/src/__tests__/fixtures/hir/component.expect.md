@@ -100,22 +100,6 @@ bb2:
   [40] Const mutate $73 = "\n    "
   [41] Const mutate $74_@5 = JSX <read $67:TPrimitive>{read $68}{read $71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
   [42] Return read $74_@5
-scope2 [6:7]:
-  - dependency: read $34:TPrimitive
-  - dependency: read maxItems$31:TProp
-scope3 [24:25]:
-  - dependency: read $49:TPrimitive
-scope4 [38:39]:
-  - dependency: read $69:TPrimitive
-  - dependency: freeze count$66:TProp
-  - dependency: read $70
-scope5 [41:42]:
-  - dependency: read $67:TPrimitive
-  - dependency: read $68
-  - dependency: read $71_@4
-  - dependency: read $72
-  - dependency: freeze renderedItems$32_@0:TFunction
-  - dependency: read $73
 ```
 
 ## Reactive Scopes

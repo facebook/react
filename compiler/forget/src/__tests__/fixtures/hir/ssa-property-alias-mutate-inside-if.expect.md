@@ -37,8 +37,6 @@ bb3:
 bb1:
   predecessor blocks: bb2 bb3
   [10] Return freeze x$7_@0:TObject
-scope0 [1:10]:
-  - dependency: read a$6
 ```
 
 ## Reactive Scopes

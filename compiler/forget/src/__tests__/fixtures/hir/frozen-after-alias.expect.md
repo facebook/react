@@ -23,7 +23,6 @@ bb0:
   [3] Call read useFreeze$3:TFunction(freeze a$5_@0)
   [4] Call mutate foo$4:TFunction(read b$6)
   [5] Return
-
 ```
 
 ## Reactive Scopes
@@ -58,7 +57,6 @@ function Component$0() {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -82,7 +80,6 @@ function useFreeze$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes

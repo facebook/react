@@ -20,8 +20,6 @@ bb0:
   [3] Const mutate a$8:TObject = read x$7_@0:TObject
   [4] Const mutate b$9:TObject = read a$8:TObject
   [5] Return
-scope0 [1:3]:
-  - dependency: read c$6
 ```
 
 ## Reactive Scopes

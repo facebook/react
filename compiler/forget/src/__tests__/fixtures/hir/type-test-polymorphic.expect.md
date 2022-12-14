@@ -31,9 +31,6 @@ bb0:
   [7] Reassign mutate x$9_@2.t[4:8] = read o$8_@1:TObject
   [8] Const mutate y$11:TPoly = read x$9_@2.t
   [9] Return
-scope2 [4:8]:
-  - dependency: read p$7_@0:TPrimitive
-  - dependency: read o$8_@1:TObject
 ```
 
 ## Reactive Scopes

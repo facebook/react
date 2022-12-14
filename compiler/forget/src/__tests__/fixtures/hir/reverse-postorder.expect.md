@@ -77,15 +77,6 @@ bb1:
   predecessor blocks: bb8 bb6 bb4 bb12 bb13
   [18] read x$11_@0:TProp
   [19] Return
-scope0 [2:18]:
-  - dependency: read props$6.v2
-  - dependency: read props$6.v1
-  - dependency: read props$6.v0
-  - dependency: read props$6.test
-  - dependency: read props$6.b
-  - dependency: read props$6.c
-  - dependency: read props$6.cond2
-  - dependency: read props$6.cond
 ```
 
 ## Reactive Scopes

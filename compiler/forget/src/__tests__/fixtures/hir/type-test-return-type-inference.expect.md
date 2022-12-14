@@ -30,7 +30,6 @@ bb1:
   predecessor blocks: bb2 bb0
   [7] Const mutate z$12_@3:TPrimitive = Call mutate foo$2:TFunction()
   [8] Return
-
 ```
 
 ## Reactive Scopes

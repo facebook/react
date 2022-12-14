@@ -38,7 +38,6 @@ bb4:
 bb2:
   predecessor blocks: bb1
   [9] Return freeze items$5_@0
-
 ```
 
 ## Reactive Scopes

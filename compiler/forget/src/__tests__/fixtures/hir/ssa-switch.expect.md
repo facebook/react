@@ -58,11 +58,6 @@ bb1:
   predecessor blocks: bb5 bb3 bb2
   [16] Const mutate y$22 = read x$16_@0:TPrimitive
   [17] Return
-scope0 [6:16]:
-  - dependency: read x$10:TPrimitive
-  - dependency: read x$10:TPrimitive
-  - dependency: read x$10:TPrimitive
-  - dependency: read x$10:TPrimitive
 ```
 
 ## Reactive Scopes

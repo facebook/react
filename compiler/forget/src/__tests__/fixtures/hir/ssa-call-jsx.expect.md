@@ -20,7 +20,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -52,12 +51,6 @@ bb0:
   [7] Const mutate $14:TPrimitive = "div"
   [8] Const mutate $15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
   [9] Return read $15_@2
-scope1 [5:6]:
-  - dependency: read $12:TPrimitive
-scope2 [8:9]:
-  - dependency: read $14:TPrimitive
-  - dependency: read a$10_@0
-  - dependency: freeze b$11_@0:TObject
 ```
 
 ## Reactive Scopes

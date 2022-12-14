@@ -15,7 +15,6 @@ export type TabTypes =
   | "InferMutableRanges"
   | "InferReactiveScopeVariables"
   | "InferReactiveScopes"
-  | "InferReactiveScopeDependencies"
   | "ReactiveFunctions"
   | "LeaveSSA"
   | "JS"

@@ -20,10 +20,6 @@ bb0:
   [3] Call mutate y$8_@1.push(read b$6)
   [4] Call mutate x$7_@0.push(read a$5)
   [5] Return
-scope0 [1:5]:
-  - dependency: read a$5
-scope1 [2:4]:
-  - dependency: read b$6
 ```
 
 ## Reactive Scopes

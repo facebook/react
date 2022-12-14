@@ -24,13 +24,6 @@ bb0:
   [5] Call mutate x$7_@0.y.push(read props$6.p0)
   [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
   [7] Return read $10_@1
-scope0 [1:6]:
-  - dependency: read Component$0
-  - dependency: read props$6.p0
-scope1 [6:7]:
-  - dependency: read Component$0
-  - dependency: freeze x$7_@0:TObject
-  - dependency: read child$9_@0
 ```
 
 ## Reactive Scopes

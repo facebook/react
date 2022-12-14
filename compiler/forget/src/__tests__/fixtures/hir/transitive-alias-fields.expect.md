@@ -30,7 +30,6 @@ bb0:
   [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
   [8] Call mutate mutate$5:TFunction(mutate q$8_@0:TObject)
   [9] Return
-
 ```
 
 ## Reactive Scopes

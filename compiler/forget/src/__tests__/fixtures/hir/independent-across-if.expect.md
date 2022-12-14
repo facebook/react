@@ -38,7 +38,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -62,7 +61,6 @@ function compute$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -86,7 +84,6 @@ function mutate$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -110,7 +107,6 @@ function foo$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -145,11 +141,6 @@ bb1:
   predecessor blocks: bb2 bb0
   [7] Const mutate $14_@2 = JSX <read Foo$6 a={freeze a$9_@1} b={freeze b$10_@1} ></read Foo$6>
   [8] Return read $14_@2
-scope1 [1:7]:
-  - dependency: read props$8.a
-scope2 [7:8]:
-  - dependency: freeze a$9_@1
-  - dependency: freeze b$10_@1
 ```
 
 ## Reactive Scopes

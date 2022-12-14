@@ -68,14 +68,6 @@ bb7:
 bb1:
   predecessor blocks: bb3 bb7
   [20] Return
-scope0 [5:10]:
-  - dependency: read a$9
-  - dependency: read b$10
-  - dependency: read $15:TPrimitive
-scope1 [13:18]:
-  - dependency: read c$11
-  - dependency: read d$12
-  - dependency: read $19:TPrimitive
 ```
 
 ## Reactive Scopes

@@ -31,20 +31,6 @@ bb0:
   [10] Const mutate $23 = "\n    "
   [11] Const mutate $24_@2 = JsxFragment [read $14, read props$13.greeting, read $15:TPrimitive, read $16, read $22_@1, read $23]
   [12] Return read $24_@2
-scope0 [7:8]:
-  - dependency: read $19
-scope1 [9:10]:
-  - dependency: read $17:TPrimitive
-  - dependency: read $18
-  - dependency: read $20_@0
-  - dependency: read $21
-scope2 [11:12]:
-  - dependency: read $14
-  - dependency: read props$13.greeting
-  - dependency: read $15:TPrimitive
-  - dependency: read $16
-  - dependency: read $22_@1
-  - dependency: read $23
 ```
 
 ## Reactive Scopes

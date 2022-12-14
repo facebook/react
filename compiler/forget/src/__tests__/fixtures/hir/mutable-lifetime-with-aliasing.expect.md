@@ -40,7 +40,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -90,9 +89,6 @@ bb9:
   [13] Const mutate $17:TPrimitive = null
   [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   [15] Return
-scope1 [2:15]:
-  - dependency: read a$11_@0:TObject
-  - dependency: read a$11_@0:TObject
 ```
 
 ## Reactive Scopes

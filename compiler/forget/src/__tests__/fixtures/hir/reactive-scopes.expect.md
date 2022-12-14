@@ -35,13 +35,6 @@ bb1:
   [8] Const mutate $13:TPrimitive = "div"
   [9] Const mutate $15_@1 = JSX <read $13:TPrimitive>{freeze x$10_@0:TFunction}</read $13:TPrimitive>
   [10] Return read $15_@1
-scope0 [1:8]:
-  - dependency: read a$8.length
-  - dependency: read b$9
-  - dependency: read b$9
-scope1 [9:10]:
-  - dependency: read $13:TPrimitive
-  - dependency: freeze x$10_@0:TFunction
 ```
 
 ## Reactive Scopes

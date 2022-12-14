@@ -21,7 +21,6 @@ function foo() {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -52,7 +51,6 @@ bb0:
   [6] Const mutate c$10_@1:TObject[2:8] = read a$8_@1:TObject
   [7] Call mutate mutate$4:TFunction(mutate a$8_@1:TObject, mutate b$9_@1:TObject)
   [8] Return freeze c$10_@1:TObject
-
 ```
 
 ## Reactive Scopes

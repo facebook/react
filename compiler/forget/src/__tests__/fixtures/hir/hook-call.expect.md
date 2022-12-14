@@ -24,7 +24,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -48,7 +47,6 @@ function useFreeze$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -79,15 +77,6 @@ bb0:
   [6] Const mutate $15 = "\n    "
   [7] Const mutate $16_@2 = JSX <read Component$0>{read $13}{read x$11_@0}{read $14}{read y$12_@1}{read $15}</read Component$0>
   [8] Return read $16_@2
-scope1 [2:3]:
-  - dependency: freeze x$11_@0
-scope2 [7:8]:
-  - dependency: read Component$0
-  - dependency: read $13
-  - dependency: read x$11_@0
-  - dependency: read $14
-  - dependency: read y$12_@1
-  - dependency: read $15
 ```
 
 ## Reactive Scopes

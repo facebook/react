@@ -21,7 +21,6 @@ bb0:
   [3] Const mutate x$10 = read b$6
   [4] Const mutate x$11 = read c$7
   [5] Return read x$11
-
 ```
 
 ## Reactive Scopes

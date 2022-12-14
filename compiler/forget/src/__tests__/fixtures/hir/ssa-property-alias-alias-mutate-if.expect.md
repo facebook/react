@@ -39,8 +39,6 @@ bb1:
   predecessor blocks: bb2 bb3
   [10] Call mutate mutate$6:TFunction(mutate b$8_@0:TObject)
   [11] Return freeze x$9_@0:TObject
-scope0 [1:11]:
-  - dependency: read a$7
 ```
 
 ## Reactive Scopes

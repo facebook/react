@@ -36,11 +36,6 @@ bb5:
 bb1:
   predecessor blocks: bb2 bb5 bb3
   [8] Return read x$12_@0:TPrimitive
-scope0 [1:8]:
-  - dependency: read b$8
-  - dependency: read d$10
-  - dependency: read c$9
-  - dependency: read a$7
 ```
 
 ## Reactive Scopes

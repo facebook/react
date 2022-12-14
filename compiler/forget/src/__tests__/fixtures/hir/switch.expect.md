@@ -52,13 +52,6 @@ bb1:
   [13] Call read y$10_@1.push(read props$8.p4)
   [14] Const mutate $23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
   [15] Return read $23_@4
-scope3 [12:13]:
-  - dependency: read Component$0
-  - dependency: freeze x$9_@1:TFunction
-scope4 [14:15]:
-  - dependency: read Component$0
-  - dependency: read y$10_@1:TPrimitive
-  - dependency: read child$19_@3
 ```
 
 ## Reactive Scopes

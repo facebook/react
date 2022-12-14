@@ -22,7 +22,6 @@ function Foo(cond) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -60,8 +59,6 @@ bb1:
   predecessor blocks: bb2 bb3
   [8] Call mutate log$4:TFunction(read str$6_@0:TPrimitive)
   [9] Return
-scope0 [1:8]:
-  - dependency: read cond$5
 ```
 
 ## Reactive Scopes

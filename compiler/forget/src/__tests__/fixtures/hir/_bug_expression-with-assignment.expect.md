@@ -20,7 +20,6 @@ bb0:
   [3] Const mutate $6:TPrimitive = Binary read x$5:TPrimitive + read x$5:TPrimitive
   [4] Const mutate $7:TPrimitive = Binary read $6:TPrimitive + read x$5:TPrimitive
   [5] Return read $7:TPrimitive
-
 ```
 
 ## Reactive Scopes

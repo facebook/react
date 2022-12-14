@@ -28,7 +28,6 @@ bb0:
   [6] Const mutate $10:TPrimitive = 1
   [7] Const mutate x$11:TPrimitive = Binary read x$9:TPrimitive >>> read $10:TPrimitive
   [8] Return
-
 ```
 
 ## Reactive Scopes
@@ -68,7 +67,6 @@ bb0:
   [3] Const mutate $6:TPrimitive = 2
   [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
   [5] Return
-
 ```
 
 ## Reactive Scopes

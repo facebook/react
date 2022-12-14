@@ -89,10 +89,6 @@ bb1:
   predecessor blocks: bb0
   [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
   [7] Return freeze a_DEBUG$5_@0:TFunction
-scope0 [1:7]:
-  - dependency: read props$4.a
-  - dependency: read props$4.b
-  - dependency: read props$4.d
 ```
 
 ## Reactive Scopes
@@ -145,11 +141,6 @@ bb1:
   predecessor blocks: bb2 bb0
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0:TFunction
-scope0 [1:7]:
-  - dependency: read props$3.a
-  - dependency: read props$3.c
-  - dependency: read props$3.b
-  - dependency: read props$3.d
 ```
 
 ## Reactive Scopes
@@ -202,11 +193,6 @@ bb1:
   predecessor blocks: bb0
   [7] Call mutate a$5_@0.push(read props$4.d)
   [8] Return freeze a$5_@0:TFunction
-scope0 [1:8]:
-  - dependency: read props$4.a
-  - dependency: read props$4.c
-  - dependency: read props$4.b
-  - dependency: read props$4.d
 ```
 
 ## Reactive Scopes
@@ -261,11 +247,6 @@ bb1:
   predecessor blocks: bb0
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0:TFunction
-scope0 [1:7]:
-  - dependency: read props$3.a
-  - dependency: read props$3.c
-  - dependency: read props$3.b
-  - dependency: read props$3.d
 ```
 
 ## Reactive Scopes
@@ -319,10 +300,6 @@ bb1:
   predecessor blocks: bb0 bb2
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0:TFunction
-scope0 [1:7]:
-  - dependency: read props$3.a
-  - dependency: read props$3.d
-  - dependency: read props$3.c
 ```
 
 ## Reactive Scopes

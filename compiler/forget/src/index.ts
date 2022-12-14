@@ -31,7 +31,6 @@ import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
 import enterSSA from "./HIR/EnterSSA";
 import { Environment } from "./HIR/HIRBuilder";
 import { inferMutableRanges } from "./HIR/InferMutableRanges";
-import { inferReactiveScopeDependencies } from "./HIR/InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
@@ -67,7 +66,6 @@ export const HIR = {
   enterSSA,
   inferMutableRanges,
   inferReferenceEffects,
-  inferReactiveScopeDependencies,
   inferReactiveScopeVariables,
   inferReactiveScopes,
   buildReactiveFunction,

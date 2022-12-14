@@ -33,7 +33,6 @@ bb3:
 bb1:
   predecessor blocks: bb2 bb3
   [8] Return
-
 ```
 
 ## Reactive Scopes

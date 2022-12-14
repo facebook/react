@@ -44,7 +44,6 @@ function Component(props) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -70,7 +69,6 @@ function mutate$0(x$3, y$4) {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -133,7 +131,6 @@ bb13:
   [21] Const mutate $34:TPrimitive = null
   [22] Call mutate mutate$7:TFunction(mutate d$24_@0, read $34:TPrimitive)
   [23] Return
-
 ```
 
 ## Reactive Scopes

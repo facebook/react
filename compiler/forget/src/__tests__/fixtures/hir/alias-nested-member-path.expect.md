@@ -23,10 +23,6 @@ bb0:
   [4] Const mutate x$6_@2:TObject[4:6] = Object {  }
   [5] Reassign mutate x$6_@2.y[4:6] = read y$5_@1:TObject
   [6] Return freeze x$6_@2:TObject
-scope1 [2:4]:
-  - dependency: read z$4_@0
-scope2 [4:6]:
-  - dependency: read y$5_@1:TObject
 ```
 
 ## Reactive Scopes

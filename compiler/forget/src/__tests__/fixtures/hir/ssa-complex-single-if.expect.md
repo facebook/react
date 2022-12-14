@@ -31,7 +31,6 @@ bb1:
   predecessor blocks: bb2 bb0
   [8] Const mutate y$11 = read x$5_@0:TPrimitive
   [9] Return
-
 ```
 
 ## Reactive Scopes

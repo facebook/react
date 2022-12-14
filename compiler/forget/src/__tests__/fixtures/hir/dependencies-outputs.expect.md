@@ -42,13 +42,6 @@ bb4:
 bb3:
   predecessor blocks: bb4 bb1
   [12] Return
-scope0 [1:3]:
-  - dependency: read a$6
-scope1 [5:12]:
-  - dependency: read x$8_@0:TFunction
-  - dependency: read x$8_@0.length
-  - dependency: read b$7:TFunction
-  - dependency: read b$7:TFunction
 ```
 
 ## Reactive Scopes

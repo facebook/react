@@ -46,10 +46,6 @@ bb7:
   predecessor blocks: bb1
   [10] Const mutate $13:TPrimitive = null
   [11] Return read $13:TPrimitive
-scope0 [1:8]:
-  - dependency: read c$9
-  - dependency: read b$8
-  - dependency: read a$7
 ```
 
 ## Reactive Scopes

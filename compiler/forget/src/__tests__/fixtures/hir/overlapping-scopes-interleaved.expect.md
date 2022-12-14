@@ -20,7 +20,6 @@ bb0:
   [3] Call mutate x$7_@0.push(read a$5)
   [4] Call mutate y$8_@0.push(read b$6)
   [5] Return
-
 ```
 
 ## Reactive Scopes

@@ -20,7 +20,6 @@ bb0:
   [3] Reassign mutate x$4_@0.t[1:4] = read q$5_@1:TObject
   [4] Const mutate z$6:TObject = read x$4_@0.t
   [5] Return
-
 ```
 
 ## Reactive Scopes

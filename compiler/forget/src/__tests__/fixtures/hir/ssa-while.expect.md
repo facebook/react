@@ -32,7 +32,6 @@ bb3:
 bb2:
   predecessor blocks: bb1
   [9] Return read x$5_@0:TPrimitive
-
 ```
 
 ## Reactive Scopes

@@ -45,9 +45,6 @@ bb1:
   [10] Call read useFreeze$5:TFunction(read a$11_@0:TProp)
   [11] Call mutate call$6:TFunction(read a$11_@0:TProp)
   [12] Return read a$11_@0:TProp
-scope0 [4:9]:
-  - dependency: read x$9:TProp
-  - dependency: read cond$8:TProp
 ```
 
 ## Reactive Scopes
@@ -101,7 +98,6 @@ function Component$0(props$7) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -126,7 +122,6 @@ function useFreeze$0(x$2) {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes

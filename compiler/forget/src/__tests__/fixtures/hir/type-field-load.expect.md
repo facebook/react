@@ -17,8 +17,6 @@ bb0:
   [2] Const mutate x$5_@0:TObject = Object { t: read $4:TPrimitive }
   [3] Const mutate p$6:TPrimitive = read x$5_@0.t
   [4] Return
-scope0 [2:3]:
-  - dependency: read $4:TPrimitive
 ```
 
 ## Reactive Scopes

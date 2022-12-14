@@ -53,9 +53,6 @@ bb3:
   predecessor blocks: bb4 bb1
   [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0:TFunction} b={freeze b$8_@0:TFunction} ></read Foo$4>
   [10] Return read $16_@2
-scope2 [9:10]:
-  - dependency: freeze a$7_@0:TFunction
-  - dependency: freeze b$8_@0:TFunction
 ```
 
 ## Reactive Scopes
@@ -123,9 +120,6 @@ bb3:
   predecessor blocks: bb4 bb1
   [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0:TFunction} b={freeze b$10_@0:TFunction} ></read Foo$6>
   [11] Return read $19_@2
-scope2 [10:11]:
-  - dependency: freeze a$9_@0:TFunction
-  - dependency: freeze b$10_@0:TFunction
 ```
 
 ## Reactive Scopes
@@ -176,7 +170,6 @@ function Component$0(props$8) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
@@ -200,7 +193,6 @@ function Foo$0() {}
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes

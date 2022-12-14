@@ -19,9 +19,6 @@ bb0:
   [2] Const mutate b$7:TPrimitive = 2
   [3] Const mutate x$8_@0 = Array [read a$6:TPrimitive, read b$7:TPrimitive]
   [4] Return freeze x$8_@0
-scope0 [3:4]:
-  - dependency: read a$6:TPrimitive
-  - dependency: read b$7:TPrimitive
 ```
 
 ## Reactive Scopes

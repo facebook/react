@@ -31,9 +31,6 @@ bb1:
   [8] Const mutate y$16:TPrimitive = read x$12_@2.u
   [9] Const mutate z$17:TPrimitive = read x$12_@2.v
   [10] Return
-scope2 [3:4]:
-  - dependency: read $10_@0:TPrimitive
-  - dependency: read $11_@1:TPrimitive
 ```
 
 ## Reactive Scopes

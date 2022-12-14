@@ -48,8 +48,6 @@ bb2:
   [13] read b$9_@0:TObject
   [14] read c$10_@0:TObject
   [15] Return freeze a$8_@0:TObject
-scope0 [1:12]:
-  - dependency: read cond$7
 ```
 
 ## Reactive Scopes
@@ -107,7 +105,6 @@ function foo$0(cond$7) {
 ```
 bb0:
   [1] Return
-
 ```
 
 ## Reactive Scopes
