@@ -309,86 +309,20 @@ function getInstructionScope(instr: Instruction): ReactiveScope | null {
     instr.lvalue.place.identifier.scope !== null &&
     isScopeActive(instr.lvalue.place.identifier.scope, instr.id)
   ) {
-    scope = instr.lvalue.place.identifier.scope;
+    return instr.lvalue.place.identifier.scope;
   } else {
     for (const operand of eachInstructionOperand(instr)) {
       if (
         operand.identifier.scope !== null &&
         isScopeActive(operand.identifier.scope, instr.id)
       ) {
-        scope = operand.identifier.scope;
-        break;
+        return operand.identifier.scope;
       }
     }
-  }
-  if (
-    scope !== null &&
-    (scope.range.end > scope.range.start + 1 || mayAllocate(instr.value))
-  ) {
-    return scope;
   }
   return null;
 }
 
-function mayAllocate(value: InstructionValue): boolean {
-  switch (value.kind) {
-    case "BinaryExpression":
-    case "Identifier":
-    case "JSXText":
-    case "Primitive": {
-      return false;
-    }
-    case "ArrayExpression":
-    case "CallExpression":
-    case "JsxExpression":
-    case "JsxFragment":
-    case "NewExpression":
-    case "ObjectExpression":
-    case "OtherStatement":
-    case "UnaryExpression": {
-      return true;
-    }
-    default: {
-      assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
-    }
-  }
-}
-
 function isScopeActive(scope: ReactiveScope, id: InstructionId): boolean {
   return id >= scope.range.start && id < scope.range.end;
-}
-
-class ArraySet<T> {
-  items: Array<T> = [];
-  set: Set<T> = new Set();
-
-  add(item: T) {
-    if (!this.set.has(item)) {
-      this.set.add(item);
-      this.items.push(item);
-    }
-  }
-
-  delete(item: T) {
-    if (this.set.has(item)) {
-      this.set.delete(item);
-      this.items.splice(
-        this.items.findIndex((x) => x === item),
-        1
-      );
-    }
-  }
-
-  has(item: T): boolean {
-    return this.set.has(item);
-  }
-
-  last(): T {
-    invariant(this.items.length > 0, "Called ArraySet::last on empty set");
-    return this.items[this.items.length - 1];
-  }
-
-  *[Symbol.iterator]() {
-    yield* this.items;
-  }
 }
