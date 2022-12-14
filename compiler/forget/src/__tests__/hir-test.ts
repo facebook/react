@@ -144,6 +144,7 @@ function transform(text: string, file: string): Array<TestOutput> {
         const { ir, ast } = run(nodePath, {
           eliminateRedundantPhi: true,
           inferReferenceEffects: true,
+          inferTypes: true,
           inferMutableRanges: true,
           inferReactiveScopeVariables: true,
           inferReactiveScopes: true,

@@ -23,12 +23,12 @@ function g() {}
 
 ```
 bb0:
-  [1] Const mutate $5_@0 = Call mutate f$1()
+  [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   [2] Let mutate $6_@1[2:7] = undefined
   [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate $6_@1[2:7] = Call mutate g$4()
+  [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -48,12 +48,12 @@ scope1 [2:7]:
 function And(
 ) {
   scope @0 [1:2] deps=[] {
-    [1] Const mutate $5_@0 = Call mutate f$1()
+    [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   }
   scope @1 [2:7] deps=[read $5_@0, read $5_@0] {
     [2] Let mutate $6_@1[2:7] = undefined
     if (read $5_@0) {
-      [3] Const mutate $6_@1[2:7] = Call mutate g$4()
+      [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
     } else {
       [5] Const mutate $6_@1[2:7] = read $5_@0
     }
@@ -70,14 +70,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $5_@0 = Call mutate f$1()
+      [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
       [2] Let mutate $6_@1[2:7] = undefined
     "]
     bb0_instrs --> bb0_terminal(["If (read $5_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate $6_@1[2:7] = Call mutate g$4()
+      [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -115,7 +115,7 @@ function And$0() {
 
 ```
 bb0:
-  [1] Const mutate $5_@0 = Call mutate f$1()
+  [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   [2] Let mutate $6_@1[2:7] = undefined
   [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
@@ -124,7 +124,7 @@ bb2:
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@1[2:7] = Call mutate g$4()
+  [5] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -140,14 +140,14 @@ scope1 [2:7]:
 function Or(
 ) {
   scope @0 [1:2] deps=[] {
-    [1] Const mutate $5_@0 = Call mutate f$1()
+    [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
   }
   scope @1 [2:7] deps=[read $5_@0, read $5_@0] {
     [2] Let mutate $6_@1[2:7] = undefined
     if (read $5_@0) {
       [3] Const mutate $6_@1[2:7] = read $5_@0
     } else {
-      [5] Const mutate $6_@1[2:7] = Call mutate g$4()
+      [5] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
     }
   }
   return freeze $6_@1
@@ -162,7 +162,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $5_@0 = Call mutate f$1()
+      [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
       [2] Let mutate $6_@1[2:7] = undefined
     "]
     bb0_instrs --> bb0_terminal(["If (read $5_@0)"])
@@ -175,7 +175,7 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [5] Const mutate $6_@1[2:7] = Call mutate g$4()
+      [5] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -207,28 +207,28 @@ function Or$0() {
 
 ```
 bb0:
-  [1] Const mutate $9_@0 = Call mutate f$2()
-  [2] Const mutate $10_@1 = null
-  [3] Const mutate $11_@2 = Binary read $9_@0 != read $10_@1
-  [4] Let mutate $12_@3[4:9] = undefined
-  [4] If (read $11_@2) then:bb2 else:bb3 fallthrough=bb1
+  [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
+  [2] Const mutate $10_@1:TPrimitive = null
+  [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
+  [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
+  [4] If (read $11_@2:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate $12_@3[4:9] = read $9_@0
+  [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Const mutate $12_@3[4:9] = Call mutate g$7()
+  [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [9] Return freeze $12_@3
+  [9] Return freeze $12_@3:TPrimitive
 scope2 [3:4]:
-  - dependency: read $9_@0
-  - dependency: read $10_@1
+  - dependency: read $9_@0:TPrimitive
+  - dependency: read $10_@1:TPrimitive
 scope3 [4:9]:
-  - dependency: read $9_@0
-  - dependency: read $11_@2
+  - dependency: read $9_@0:TPrimitive
+  - dependency: read $11_@2:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -238,19 +238,19 @@ function QuestionQuestion(
   props,
 ) {
   scope @0 [1:2] deps=[] {
-    [1] Const mutate $9_@0 = Call mutate f$2()
+    [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
   }
-  [2] Const mutate $10_@1 = null
-  [3] Const mutate $11_@2 = Binary read $9_@0 != read $10_@1
-  scope @3 [4:9] deps=[read $9_@0, read $11_@2] {
-    [4] Let mutate $12_@3[4:9] = undefined
-    if (read $11_@2) {
-      [5] Const mutate $12_@3[4:9] = read $9_@0
+  [2] Const mutate $10_@1:TPrimitive = null
+  [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
+  scope @3 [4:9] deps=[read $9_@0:TPrimitive, read $11_@2:TPrimitive] {
+    [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
+    if (read $11_@2:TPrimitive) {
+      [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
     } else {
-      [7] Const mutate $12_@3[4:9] = Call mutate g$7()
+      [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
     }
   }
-  return freeze $12_@3
+  return freeze $12_@3:TPrimitive
 }
 
 ```
@@ -262,27 +262,27 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $9_@0 = Call mutate f$2()
-      [2] Const mutate $10_@1 = null
-      [3] Const mutate $11_@2 = Binary read $9_@0 != read $10_@1
-      [4] Let mutate $12_@3[4:9] = undefined
+      [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
+      [2] Const mutate $10_@1:TPrimitive = null
+      [3] Const mutate $11_@2:TPrimitive = Binary read $9_@0:TPrimitive != read $10_@1:TPrimitive
+      [4] Let mutate $12_@3:TPrimitive[4:9] = undefined
     "]
-    bb0_instrs --> bb0_terminal(["If (read $11_@2)"])
+    bb0_instrs --> bb0_terminal(["If (read $11_@2:TPrimitive)"])
   end
   subgraph bb2
     bb2_instrs["
-      [5] Const mutate $12_@3[4:9] = read $9_@0
+      [5] Const mutate $12_@3:TPrimitive[4:9] = read $9_@0:TPrimitive
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [7] Const mutate $12_@3[4:9] = Call mutate g$7()
+      [7] Const mutate $12_@3:TPrimitive[4:9] = Call mutate g$7:TFunction()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return freeze $12_@3"])
+    bb1_terminal(["Return freeze $12_@3:TPrimitive"])
   end
 
   %% Jumps

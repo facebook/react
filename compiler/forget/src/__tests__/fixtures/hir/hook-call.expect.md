@@ -98,8 +98,8 @@ function foo$0() {}
 ```
 bb0:
   [1] Const mutate x$11_@0 = Array []
-  [2] Const mutate y$12_@1 = Call read useFreeze$4(freeze x$11_@0)
-  [3] Call mutate foo$5(read y$12_@1, read x$11_@0)
+  [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
+  [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
   [4] Const mutate $13_@2 = "\n      "
   [5] Const mutate $14_@3 = "\n      "
   [6] Const mutate $15_@4 = "\n    "
@@ -127,9 +127,9 @@ function Component(
     [1] Const mutate x$11_@0 = Array []
   }
   scope @1 [2:3] deps=[freeze x$11_@0, read x$11_@0] {
-    [2] Const mutate y$12_@1 = Call read useFreeze$4(freeze x$11_@0)
+    [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
   }
-  [3] Call mutate foo$5(read y$12_@1, read x$11_@0)
+  [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
   [4] Const mutate $13_@2 = "\n      "
   [5] Const mutate $14_@3 = "\n      "
   [6] Const mutate $15_@4 = "\n    "
@@ -149,8 +149,8 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate x$11_@0 = Array []
-      [2] Const mutate y$12_@1 = Call read useFreeze$4(freeze x$11_@0)
-      [3] Call mutate foo$5(read y$12_@1, read x$11_@0)
+      [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
+      [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
       [4] Const mutate $13_@2 = '\n      '
       [5] Const mutate $14_@3 = '\n      '
       [6] Const mutate $15_@4 = '\n    '

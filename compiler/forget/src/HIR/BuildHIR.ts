@@ -22,7 +22,7 @@ import {
   ReturnTerminal,
   SourceLocation,
   ThrowTerminal,
-  Type,
+  makeType,
 } from "./HIR";
 import HIRBuilder, { Environment } from "./HIRBuilder";
 import todo, { todoInvariant } from "./todo";
@@ -83,7 +83,6 @@ export function lower(
       memberPath: null,
       effect: Effect.Unknown,
       loc: param.loc ?? GeneratedSource,
-      type: Type.Any,
     };
     params.push(place);
   });
@@ -892,7 +891,6 @@ function lowerExpression(
             memberPath: null,
             effect: Effect.Unknown,
             loc: left.loc,
-            type: Type.Any,
           };
           builder.push({
             id: makeInstructionId(0),
@@ -911,7 +909,6 @@ function lowerExpression(
             memberPath: null,
             effect: Effect.Unknown,
             loc: left.loc,
-            type: Type.Any,
           };
           builder.push({
             id: makeInstructionId(0),
@@ -1010,7 +1007,6 @@ function lowerExpression(
         memberPath: [...(object.memberPath ?? []), property.node.name],
         effect: Effect.Unknown,
         loc: exprLoc,
-        type: Type.Any,
       };
       return place;
     }
@@ -1087,7 +1083,6 @@ function lowerConditional(
     memberPath: null,
     effect: Effect.Read,
     loc,
-    type: Type.Any,
   };
   //  Block for code following the if
   const continuationBlock = builder.reserve();
@@ -1159,7 +1154,6 @@ function lowerJsxElementName(
       memberPath: null,
       effect: Effect.Unknown,
       loc: exprLoc,
-      type: Type.Any,
     };
     return place;
   } else {
@@ -1169,7 +1163,6 @@ function lowerJsxElementName(
       memberPath: null,
       effect: Effect.Unknown,
       loc: exprLoc,
-      type: Type.Any,
     };
     builder.push({
       id: makeInstructionId(0),
@@ -1210,7 +1203,6 @@ function lowerJsxElement(
       memberPath: null,
       effect: Effect.Unknown,
       loc: exprLoc,
-      type: Type.Any,
     };
     builder.push({
       id: makeInstructionId(0),
@@ -1234,7 +1226,6 @@ function lowerJsxElement(
       memberPath: null,
       effect: Effect.Unknown,
       loc: exprLoc,
-      type: Type.Any,
     };
     builder.push({
       id: makeInstructionId(0),
@@ -1265,7 +1256,6 @@ function lowerExpressionToPlace(
     memberPath: null,
     effect: Effect.Unknown,
     loc: exprLoc,
-    type: Type.Any,
   };
   builder.push({
     id: makeInstructionId(0),
@@ -1315,7 +1305,6 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
         memberPath: null,
         effect: Effect.Unknown,
         loc: exprLoc,
-        type: Type.Any,
       };
       return place;
     }
@@ -1335,7 +1324,6 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
         memberPath: [...(object.memberPath ?? []), propertyPath.node.name],
         effect: Effect.Unknown,
         loc: exprLoc,
-        type: Type.Any,
       };
       return place;
     }

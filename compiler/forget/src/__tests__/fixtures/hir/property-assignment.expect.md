@@ -17,19 +17,19 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate x$7_@0[1:6] = Object {  }
+  [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
   [2] Const mutate y$8_@0[1:6] = Array []
   [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
   [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
   [5] Call mutate x$7_@0.y.push(read props$6.p0)
-  [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
+  [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
   [7] Return read $10_@1
 scope0 [1:6]:
   - dependency: read Component$0
   - dependency: read props$6.p0
 scope1 [6:7]:
   - dependency: read Component$0
-  - dependency: freeze x$7_@0
+  - dependency: freeze x$7_@0:TObject
   - dependency: read child$9_@0
 ```
 
@@ -40,14 +40,14 @@ function Component(
   props,
 ) {
   scope @0 [1:6] deps=[read Component$0, read props$6.p0] {
-    [1] Const mutate x$7_@0[1:6] = Object {  }
+    [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
     [2] Const mutate y$8_@0[1:6] = Array []
     [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
     [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
     [5] Call mutate x$7_@0.y.push(read props$6.p0)
   }
-  scope @1 [6:7] deps=[read Component$0, freeze x$7_@0, read child$9_@0] {
-    [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
+  scope @1 [6:7] deps=[read Component$0, freeze x$7_@0:TObject, read child$9_@0] {
+    [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
   }
   return read $10_@1
 }
@@ -61,12 +61,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$7_@0[1:6] = Object {  }
+      [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
       [2] Const mutate y$8_@0[1:6] = Array []
       [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
       [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
       [5] Call mutate x$7_@0.y.push(read props$6.p0)
-      [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
+      [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
     "]
     bb0_instrs --> bb0_terminal(["Return read $10_@1"])
   end

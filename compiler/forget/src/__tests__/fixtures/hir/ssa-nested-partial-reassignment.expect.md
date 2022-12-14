@@ -20,22 +20,22 @@ function foo(a, b, c, d, e) {
 
 ```
 bb0:
-  [1] Let mutate x$12_@0[1:8] = null
+  [1] Let mutate x$12_@0:TPrimitive[1:8] = null
   [2] If (read a$7) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Reassign mutate x$12_@0[1:8] = read b$8
+  [3] Reassign mutate x$12_@0:TPrimitive[1:8] = read b$8
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
   [5] If (read c$9) then:bb5 else:bb1 fallthrough=bb1
 bb5:
   predecessor blocks: bb3
-  [6] Reassign mutate x$12_@0[1:8] = read d$10
+  [6] Reassign mutate x$12_@0:TPrimitive[1:8] = read d$10
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb5 bb3
-  [8] Return read x$12_@0
+  [8] Return read x$12_@0:TPrimitive
 scope0 [1:8]:
   - dependency: read b$8
   - dependency: read d$10
@@ -54,16 +54,16 @@ function foo(
   e,
 ) {
   scope @0 [1:8] deps=[read b$8, read d$10, read c$9, read a$7] {
-    [1] Let mutate x$12_@0[1:8] = null
+    [1] Let mutate x$12_@0:TPrimitive[1:8] = null
     if (read a$7) {
-      [3] Reassign mutate x$12_@0[1:8] = read b$8
+      [3] Reassign mutate x$12_@0:TPrimitive[1:8] = read b$8
     } else {
       if (read c$9) {
-        [6] Reassign mutate x$12_@0[1:8] = read d$10
+        [6] Reassign mutate x$12_@0:TPrimitive[1:8] = read d$10
       }
     }
   }
-  return read x$12_@0
+  return read x$12_@0:TPrimitive
 }
 
 ```
@@ -75,13 +75,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$12_@0[1:8] = null
+      [1] Let mutate x$12_@0:TPrimitive[1:8] = null
     "]
     bb0_instrs --> bb0_terminal(["If (read a$7)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Reassign mutate x$12_@0[1:8] = read b$8
+      [3] Reassign mutate x$12_@0:TPrimitive[1:8] = read b$8
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -90,12 +90,12 @@ flowchart TB
   end
   subgraph bb5
     bb5_instrs["
-      [6] Reassign mutate x$12_@0[1:8] = read d$10
+      [6] Reassign mutate x$12_@0:TPrimitive[1:8] = read d$10
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return read x$12_@0"])
+    bb1_terminal(["Return read x$12_@0:TPrimitive"])
   end
 
   %% Jumps

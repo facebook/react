@@ -31,11 +31,11 @@ bb5:
   [4] Goto(Continue) bb1
 bb4:
   predecessor blocks: bb3
-  [5] Call read c$7()
+  [5] Call read c$7:TFunction()
   [6] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [7] Call read d$8()
+  [7] Call read d$8:TFunction()
   [8] Return
 
 ```
@@ -55,9 +55,9 @@ function foo(
     if (read b$6) {
       continue
     }
-    [5] Call read c$7()
+    [5] Call read c$7:TFunction()
   }
-  [7] Call read d$8()
+  [7] Call read d$8:TFunction()
   return
 }
 
@@ -82,13 +82,13 @@ flowchart TB
   end
   subgraph bb4
     bb4_instrs["
-      [5] Call read c$7()
+      [5] Call read c$7:TFunction()
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [7] Call read d$8()
+      [7] Call read d$8:TFunction()
     "]
     bb2_instrs --> bb2_terminal(["Return"])
   end

@@ -26,11 +26,11 @@ bb1:
   [3] If (read items$5_@0) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [4] Const mutate y$7_@1 = 0
+  [4] Const mutate y$7_@1:TPrimitive = 0
   [5] If (read cond$4) then:bb5 else:bb4 fallthrough=bb4
 bb5:
   predecessor blocks: bb3
-  [6] Const mutate y$9_@2 = 1
+  [6] Const mutate y$9_@2:TPrimitive = 1
   [7] Goto bb4
 bb4:
   predecessor blocks: bb5 bb3
@@ -70,13 +70,13 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [4] Const mutate y$7_@1 = 0
+      [4] Const mutate y$7_@1:TPrimitive = 0
     "]
     bb3_instrs --> bb3_terminal(["If (read cond$4)"])
   end
   subgraph bb5
     bb5_instrs["
-      [6] Const mutate y$9_@2 = 1
+      [6] Const mutate y$9_@2:TPrimitive = 1
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end

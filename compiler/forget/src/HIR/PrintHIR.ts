@@ -20,8 +20,10 @@ import {
   MutableRange,
   Phi,
   Place,
+  ReactiveScope,
   SourceLocation,
   Terminal,
+  Type,
 } from "./HIR";
 import { eachReactiveScope } from "./visitors";
 
@@ -310,19 +312,32 @@ export function printLValue(lval: LValue): string {
 
 export function printPlace(place: Place): string {
   const items = [place.effect, " ", printIdentifier(place.identifier)];
-  if (place.memberPath != null) {
+  if (place.memberPath !== null) {
     for (const path of place.memberPath) {
       items.push(".");
       items.push(path);
     }
+  } else {
+    items.push(printType(place.identifier.type));
   }
   return items.filter((x) => x != null).join("");
 }
 
 export function printIdentifier(id: Identifier): string {
-  return `${id.name ?? ""}\$${id.id}${
-    id.scope !== null ? `_@${id.scope.id}` : ""
-  }`;
+  return `${printName(id.name)}\$${id.id}${printScope(id.scope)}`;
+}
+
+function printName(name: string | null): string {
+  return name ?? "";
+}
+
+function printScope(scope: ReactiveScope | null): string {
+  return `${scope !== null ? `_@${scope.id}` : ""}`;
+}
+
+function printType(type: Type): string {
+  if (type.kind === "Type") return "";
+  return `:T${type.kind}`;
 }
 
 export function printSourceLocation(loc: SourceLocation): string {

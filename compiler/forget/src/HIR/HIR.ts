@@ -316,7 +316,6 @@ export type Place = {
   memberPath: Array<string> | null;
   effect: Effect;
   loc: SourceLocation;
-  type: Type;
 };
 
 /**
@@ -343,15 +342,17 @@ export type MutableRange = {
  * Represents a user-defined variable (has a name) or a temporary variable (no name).
  */
 export type Identifier = {
-  // unique value to distinguish a variable, since name is not guaranteed to exist or be unique
+  // unique value to distinguish a variable, since name is not guaranteed to
+  // exist or be unique
   id: IdentifierId;
   // null for temporaries. name is primarily used for debugging.
   name: string | null;
   // The range for which this variable is mutable
   mutableRange: MutableRange;
-  // The ID of the reactive scope which will compute this value. Multiple variables may have
-  // the same scope id.
+  // The ID of the reactive scope which will compute this value. Multiple
+  // variables may have the same scope id.
   scope: ReactiveScope | null;
+  type: Type;
 };
 
 /**
@@ -445,8 +446,108 @@ export function makeInstructionId(id: number): InstructionId {
   return id as InstructionId;
 }
 
-export enum Type {
-  Any,
-  Primitive,
-  Object,
+export type Type =
+  | PrimitiveType
+  | FunctionType
+  | ObjectType
+  | PropType
+  | PolyType
+  | TypeVar;
+export type PrimitiveType = { kind: "Primitive" };
+export type FunctionType = {
+  kind: "Function";
+  argTypes: Array<Type>;
+  returnType: Type;
+};
+export type ObjectType = { kind: "Object"; properties: Map<string, Type> };
+export type PropType = { kind: "Prop"; objectType: Type; name: string };
+export type TypeVar = {
+  kind: "Type";
+  name: string;
+};
+export type PolyType = {
+  kind: "Poly";
+};
+
+let typeCounter = 0;
+export function makeType(): Type {
+  return {
+    kind: "Type",
+    name: `t${typeCounter++}`, //TODO(gsn): Use a TypeID here
+  };
+}
+
+export function typeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind !== tB.kind) return false;
+  return (
+    typeVarEquals(tA, tB) ||
+    funcTypeEquals(tA, tB) ||
+    objectTypeEquals(tA, tB) ||
+    propTypeEquals(tA, tB) ||
+    primitiveTypeEquals(tA, tB) ||
+    polyTypeEquals(tA, tB)
+  );
+}
+
+function typeVarEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Type" && tB.kind === "Type") {
+    return tA.name === tB.name;
+  }
+  return false;
+}
+
+function primitiveTypeEquals(tA: Type, tB: Type): boolean {
+  return tA.kind === "Primitive" && tB.kind === "Primitive";
+}
+
+function polyTypeEquals(tA: Type, tB: Type): boolean {
+  return tA.kind === "Poly" && tB.kind === "Poly";
+}
+
+function objectTypeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Object" && tB.kind === "Object") {
+    if (tA.properties.size !== tB.properties.size) {
+      return false;
+    }
+
+    for (const key of tA.properties.keys()) {
+      if (tA.properties.get(key) !== tB.properties.get(key)) return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+function propTypeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Prop" && tB.kind === "Prop") {
+    if (tA.name !== tB.name) {
+      return false;
+    }
+    return objectTypeEquals(tA.objectType, tB.objectType);
+  }
+
+  return false;
+}
+
+function funcTypeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Function" && tB.kind === "Function") {
+    if (tA.returnType !== tB.returnType) {
+      return false;
+    }
+
+    if (tA.argTypes.length !== tB.argTypes.length) {
+      return false;
+    }
+
+    for (let i = 0; i < tA.argTypes.length; i++) {
+      if (!typeVarEquals(tA.argTypes[i], tB.argTypes[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  return false;
 }

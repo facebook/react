@@ -20,7 +20,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$8_@0 = null
+  [1] Const mutate x$8_@0:TPrimitive = null
   [2] If (read a$5) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb0
@@ -47,7 +47,7 @@ function foo(
   b,
   c,
 ) {
-  [1] Const mutate x$8_@0 = null
+  [1] Const mutate x$8_@0:TPrimitive = null
   if (read a$5) {
     [3] Const mutate x$9_@1 = read b$6
   }
@@ -63,7 +63,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$8_@0 = null
+      [1] Const mutate x$8_@0:TPrimitive = null
     "]
     bb0_instrs --> bb0_terminal(["If (read a$5)"])
   end

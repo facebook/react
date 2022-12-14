@@ -32,40 +32,40 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate x$10_@1[1:12] = Array []
-  [2] Let mutate y$11_@1[1:12] = undefined
-  [3] Const mutate $12_@2 = false
-  [4] Const mutate $13_@3 = true
-  [5] Const mutate $14_@4 = 1
+  [1] Const mutate x$10_@1:TFunction[1:12] = Array []
+  [2] Let mutate y$11_@1:TPrimitive[1:12] = undefined
+  [3] Const mutate $12_@2:TPrimitive = false
+  [4] Const mutate $13_@3:TPrimitive = true
+  [5] Const mutate $14_@4:TPrimitive = 1
   [6] Switch (read props$9.p0)
-    Case read $14_@4: bb1
-    Case read $13_@3: bb6
+    Case read $14_@4:TPrimitive: bb1
+    Case read $13_@3:TPrimitive: bb6
     Default: bb1
-    Case read $12_@2: bb2
+    Case read $12_@2:TPrimitive: bb2
     Fallthrough: bb1
 bb6:
   predecessor blocks: bb0
   [7] Call mutate x$10_@1.push(read props$9.p2)
-  [8] Reassign mutate y$11_@1[1:12] = Array []
+  [8] Reassign mutate y$11_@1:TPrimitive[1:12] = Array []
   [9] Goto bb1
 bb2:
   predecessor blocks: bb0
-  [10] Reassign mutate y$11_@1[1:12] = read x$10_@1
+  [10] Reassign mutate y$11_@1:TPrimitive[1:12] = read x$10_@1:TFunction
   [11] Goto bb1
 bb1:
   predecessor blocks: bb0 bb6 bb2
-  [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1} ></read Component$0>
+  [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
   [13] Call read y$11_@1.push(read props$9.p4)
-  [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1} >{read child$19_@5}</read Component$0>
+  [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@5}</read Component$0>
   [15] Return read $22_@6
 scope5 [12:13]:
   - dependency: read Component$0
-  - dependency: freeze x$10_@1
+  - dependency: freeze x$10_@1:TFunction
   - dependency: read y$11_@1.push
   - dependency: read props$9.p4
 scope6 [14:15]:
   - dependency: read Component$0
-  - dependency: freeze y$11_@1
+  - dependency: freeze y$11_@1:TPrimitive
   - dependency: read child$19_@5
 ```
 
@@ -76,34 +76,34 @@ function Component(
   props,
 ) {
   scope @1 [1:12] deps=[] {
-    [1] Const mutate x$10_@1[1:12] = Array []
-    [2] Let mutate y$11_@1[1:12] = undefined
-    [3] Const mutate $12_@2 = false
-    [4] Const mutate $13_@3 = true
-    [5] Const mutate $14_@4 = 1
+    [1] Const mutate x$10_@1:TFunction[1:12] = Array []
+    [2] Let mutate y$11_@1:TPrimitive[1:12] = undefined
+    [3] Const mutate $12_@2:TPrimitive = false
+    [4] Const mutate $13_@3:TPrimitive = true
+    [5] Const mutate $14_@4:TPrimitive = 1
     switch (read props$9.p0) {
-      case read $14_@4: {
+      case read $14_@4:TPrimitive: {
           break bb1
       }
-      case read $13_@3: {
+      case read $13_@3:TPrimitive: {
           [7] Call mutate x$10_@1.push(read props$9.p2)
-          [8] Reassign mutate y$11_@1[1:12] = Array []
+          [8] Reassign mutate y$11_@1:TPrimitive[1:12] = Array []
           break bb1
       }
       default: {
           break bb1
       }
-      case read $12_@2: {
-          [10] Reassign mutate y$11_@1[1:12] = read x$10_@1
+      case read $12_@2:TPrimitive: {
+          [10] Reassign mutate y$11_@1:TPrimitive[1:12] = read x$10_@1:TFunction
       }
     }
   }
-  scope @5 [12:13] deps=[read Component$0, freeze x$10_@1, read y$11_@1.push, read props$9.p4] {
-    [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1} ></read Component$0>
+  scope @5 [12:13] deps=[read Component$0, freeze x$10_@1:TFunction, read y$11_@1.push, read props$9.p4] {
+    [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
   }
   [13] Call read y$11_@1.push(read props$9.p4)
-  scope @6 [14:15] deps=[read Component$0, freeze y$11_@1, read child$19_@5] {
-    [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1} >{read child$19_@5}</read Component$0>
+  scope @6 [14:15] deps=[read Component$0, freeze y$11_@1:TPrimitive, read child$19_@5] {
+    [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@5}</read Component$0>
   }
   return read $22_@6
 }
@@ -117,41 +117,41 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$10_@1[1:12] = Array []
-      [2] Let mutate y$11_@1[1:12] = undefined
-      [3] Const mutate $12_@2 = false
-      [4] Const mutate $13_@3 = true
-      [5] Const mutate $14_@4 = 1
+      [1] Const mutate x$10_@1:TFunction[1:12] = Array []
+      [2] Let mutate y$11_@1:TPrimitive[1:12] = undefined
+      [3] Const mutate $12_@2:TPrimitive = false
+      [4] Const mutate $13_@3:TPrimitive = true
+      [5] Const mutate $14_@4:TPrimitive = 1
     "]
     bb0_instrs --> bb0_terminal(["Switch (read props$9.p0)"])
   end
   subgraph bb6
     bb6_instrs["
       [7] Call mutate x$10_@1.push(read props$9.p2)
-      [8] Reassign mutate y$11_@1[1:12] = Array []
+      [8] Reassign mutate y$11_@1:TPrimitive[1:12] = Array []
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [10] Reassign mutate y$11_@1[1:12] = read x$10_@1
+      [10] Reassign mutate y$11_@1:TPrimitive[1:12] = read x$10_@1:TFunction
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1} ></read Component$0>
+      [12] Const mutate child$19_@5 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
       [13] Call read y$11_@1.push(read props$9.p4)
-      [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1} >{read child$19_@5}</read Component$0>
+      [14] Const mutate $22_@6 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@5}</read Component$0>
     "]
     bb1_instrs --> bb1_terminal(["Return read $22_@6"])
   end
 
   %% Jumps
-  bb0_terminal -- "read $14_@4" --> bb1
-  bb0_terminal -- "read $13_@3" --> bb6
+  bb0_terminal -- "read $14_@4:TPrimitive" --> bb1
+  bb0_terminal -- "read $13_@3:TPrimitive" --> bb6
   bb0_terminal -- "default" --> bb1
-  bb0_terminal -- "read $12_@2" --> bb2
+  bb0_terminal -- "read $12_@2:TPrimitive" --> bb2
   bb0_terminal -- "fallthrough" --> bb1
   bb6_terminal --> bb1
   bb2_terminal --> bb1

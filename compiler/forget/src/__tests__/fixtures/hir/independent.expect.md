@@ -28,8 +28,8 @@ function Foo() {}
 
 ```
 bb0:
-  [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
-  [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+  [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
+  [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
   [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
   [4] Return read $10_@2
 scope0 [1:2]:
@@ -48,10 +48,10 @@ function Component(
   props,
 ) {
   scope @0 [1:2] deps=[read props$7.a] {
-    [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
+    [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
   }
   scope @1 [2:3] deps=[read props$7.b] {
-    [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+    [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
   }
   scope @2 [3:4] deps=[freeze a$8_@0, freeze b$9_@1] {
     [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
@@ -68,8 +68,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$8_@0 = Call mutate compute$3(read props$7.a)
-      [2] Const mutate b$9_@1 = Call mutate compute$3(read props$7.b)
+      [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
+      [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
       [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
     "]
     bb0_instrs --> bb0_terminal(["Return read $10_@2"])

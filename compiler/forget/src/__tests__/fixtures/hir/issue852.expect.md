@@ -15,17 +15,17 @@ function Component(c) {
 
 ```
 bb0:
-  [1] Const mutate x$7_@0[1:3] = Object { c: read c$6 }
-  [2] Call mutate mutate$3(mutate x$7_@0)
-  [3] Const mutate a$8_@1 = read x$7_@0
-  [4] Const mutate b$9_@2 = read a$8_@1
+  [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
+  [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
+  [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
+  [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
   [5] Return
 scope0 [1:3]:
   - dependency: read c$6
 scope1 [3:4]:
-  - dependency: read x$7_@0
+  - dependency: read x$7_@0:TObject
 scope2 [4:5]:
-  - dependency: read a$8_@1
+  - dependency: read a$8_@1:TObject
 ```
 
 ## Reactive Scopes
@@ -35,11 +35,11 @@ function Component(
   c,
 ) {
   scope @0 [1:3] deps=[read c$6] {
-    [1] Const mutate x$7_@0[1:3] = Object { c: read c$6 }
-    [2] Call mutate mutate$3(mutate x$7_@0)
+    [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
+    [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
   }
-  [3] Const mutate a$8_@1 = read x$7_@0
-  [4] Const mutate b$9_@2 = read a$8_@1
+  [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
+  [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
   return
 }
 
@@ -52,10 +52,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$7_@0[1:3] = Object { c: read c$6 }
-      [2] Call mutate mutate$3(mutate x$7_@0)
-      [3] Const mutate a$8_@1 = read x$7_@0
-      [4] Const mutate b$9_@2 = read a$8_@1
+      [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
+      [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
+      [3] Const mutate a$8_@1:TObject = read x$7_@0:TObject
+      [4] Const mutate b$9_@2:TObject = read a$8_@1:TObject
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

@@ -16,7 +16,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$8_@0 = 0
+  [1] Const mutate x$8_@0:TPrimitive = 0
   [2] Const mutate x$9_@1 = read a$5
   [3] Const mutate x$10_@2 = read b$6
   [4] Const mutate x$11_@3 = read c$7
@@ -37,7 +37,7 @@ function foo(
   b,
   c,
 ) {
-  [1] Const mutate x$8_@0 = 0
+  [1] Const mutate x$8_@0:TPrimitive = 0
   [2] Const mutate x$9_@1 = read a$5
   [3] Const mutate x$10_@2 = read b$6
   [4] Const mutate x$11_@3 = read c$7
@@ -53,7 +53,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$8_@0 = 0
+      [1] Const mutate x$8_@0:TPrimitive = 0
       [2] Const mutate x$9_@1 = read a$5
       [3] Const mutate x$10_@2 = read b$6
       [4] Const mutate x$11_@3 = read c$7

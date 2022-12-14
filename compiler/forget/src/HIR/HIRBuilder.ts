@@ -20,6 +20,7 @@ import {
   makeBlockId,
   makeIdentifierId,
   makeInstructionId,
+  makeType,
   Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
@@ -115,6 +116,7 @@ export default class HIRBuilder {
       name: null,
       mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
       scope: null,
+      type: makeType(),
     };
   }
 
@@ -130,6 +132,7 @@ export default class HIRBuilder {
           end: makeInstructionId(0),
         },
         scope: null,
+        type: makeType(),
       };
       this.#bindings.set(node, identifier);
     }

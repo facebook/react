@@ -58,20 +58,20 @@ function log$0() {}
 
 ```
 bb0:
-  [1] Let mutate str$6_@0[1:8] = ""
+  [1] Let mutate str$6_@0:TPrimitive[1:8] = ""
   [2] If (read cond$5) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate str$7_@1 = "other test"
-  [4] Call mutate log$4(read str$7_@1)
+  [3] Const mutate str$7_@1:TPrimitive = "other test"
+  [4] Call mutate log$4:TFunction(read str$7_@1:TPrimitive)
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Reassign mutate str$6_@0[1:8] = "fallthrough test"
+  [6] Reassign mutate str$6_@0:TPrimitive[1:8] = "fallthrough test"
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [8] Call mutate log$4(read str$6_@0)
+  [8] Call mutate log$4:TFunction(read str$6_@0:TPrimitive)
   [9] Return
 scope0 [1:8]:
   - dependency: read cond$5
@@ -84,15 +84,15 @@ function Foo(
   cond,
 ) {
   scope @0 [1:8] deps=[read cond$5] {
-    [1] Let mutate str$6_@0[1:8] = ""
+    [1] Let mutate str$6_@0:TPrimitive[1:8] = ""
     if (read cond$5) {
-      [3] Const mutate str$7_@1 = "other test"
-      [4] Call mutate log$4(read str$7_@1)
+      [3] Const mutate str$7_@1:TPrimitive = "other test"
+      [4] Call mutate log$4:TFunction(read str$7_@1:TPrimitive)
     } else {
-      [6] Reassign mutate str$6_@0[1:8] = "fallthrough test"
+      [6] Reassign mutate str$6_@0:TPrimitive[1:8] = "fallthrough test"
     }
   }
-  [8] Call mutate log$4(read str$6_@0)
+  [8] Call mutate log$4:TFunction(read str$6_@0:TPrimitive)
   return
 }
 
@@ -105,26 +105,26 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate str$6_@0[1:8] = ''
+      [1] Let mutate str$6_@0:TPrimitive[1:8] = ''
     "]
     bb0_instrs --> bb0_terminal(["If (read cond$5)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate str$7_@1 = 'other test'
-      [4] Call mutate log$4(read str$7_@1)
+      [3] Const mutate str$7_@1:TPrimitive = 'other test'
+      [4] Call mutate log$4:TFunction(read str$7_@1:TPrimitive)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Reassign mutate str$6_@0[1:8] = 'fallthrough test'
+      [6] Reassign mutate str$6_@0:TPrimitive[1:8] = 'fallthrough test'
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [8] Call mutate log$4(read str$6_@0)
+      [8] Call mutate log$4:TFunction(read str$6_@0:TPrimitive)
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

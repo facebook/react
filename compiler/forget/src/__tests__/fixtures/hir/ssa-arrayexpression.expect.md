@@ -15,13 +15,13 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a$6_@0 = 1
-  [2] Const mutate b$7_@1 = 2
-  [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
+  [1] Const mutate a$6_@0:TPrimitive = 1
+  [2] Const mutate b$7_@1:TPrimitive = 2
+  [3] Const mutate x$8_@2 = Array [read a$6_@0:TPrimitive, read b$7_@1:TPrimitive]
   [4] Return freeze x$8_@2
 scope2 [3:4]:
-  - dependency: read a$6_@0
-  - dependency: read b$7_@1
+  - dependency: read a$6_@0:TPrimitive
+  - dependency: read b$7_@1:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -30,10 +30,10 @@ scope2 [3:4]:
 function Component(
   props,
 ) {
-  [1] Const mutate a$6_@0 = 1
-  [2] Const mutate b$7_@1 = 2
-  scope @2 [3:4] deps=[read a$6_@0, read b$7_@1] {
-    [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
+  [1] Const mutate a$6_@0:TPrimitive = 1
+  [2] Const mutate b$7_@1:TPrimitive = 2
+  scope @2 [3:4] deps=[read a$6_@0:TPrimitive, read b$7_@1:TPrimitive] {
+    [3] Const mutate x$8_@2 = Array [read a$6_@0:TPrimitive, read b$7_@1:TPrimitive]
   }
   return freeze x$8_@2
 }
@@ -47,9 +47,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$6_@0 = 1
-      [2] Const mutate b$7_@1 = 2
-      [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
+      [1] Const mutate a$6_@0:TPrimitive = 1
+      [2] Const mutate b$7_@1:TPrimitive = 2
+      [3] Const mutate x$8_@2 = Array [read a$6_@0:TPrimitive, read b$7_@1:TPrimitive]
     "]
     bb0_instrs --> bb0_terminal(["Return freeze x$8_@2"])
   end

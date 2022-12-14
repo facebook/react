@@ -14,9 +14,9 @@ import {
   HIRFunction,
   IdentifierId,
   InstructionValue,
+  makeType,
   Phi,
   Place,
-  Type,
   ValueKind,
 } from "./HIR";
 import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
@@ -78,7 +78,6 @@ export default function inferReferenceEffects(fn: HIRFunction) {
     identifier: fn.id as any,
     loc: fn.loc,
     effect: Effect.Freeze,
-    type: Type.Any,
   };
   const value: InstructionValue = {
     kind: "Primitive",

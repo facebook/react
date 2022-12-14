@@ -27,27 +27,27 @@ function mutate(x, y) {}
 
 ```
 bb0:
-  [1] Let mutate a$8_@0[1:12] = Object {  }
-  [2] Let mutate b$9_@0[1:12] = Object {  }
-  [3] Let mutate c$10_@0[1:12] = Object {  }
+  [1] Let mutate a$8_@0:TObject[1:12] = Object {  }
+  [2] Let mutate b$9_@0:TObject[1:12] = Object {  }
+  [3] Let mutate c$10_@0:TObject[1:12] = Object {  }
   [4] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
   [5] If (read cond$7) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [6] Const mutate z$13_@0[1:12] = read a$8_@0
-  [7] Reassign mutate a$8_@0[1:12] = read b$9_@0
-  [8] Reassign mutate b$9_@0[1:12] = read c$10_@0
-  [9] Reassign mutate c$10_@0[1:12] = read z$13_@0
-  [10] Call mutate mutate$6(mutate a$8_@0, mutate b$9_@0)
+  [6] Const mutate z$13_@0[1:12] = read a$8_@0:TObject
+  [7] Reassign mutate a$8_@0:TObject[1:12] = read b$9_@0:TObject
+  [8] Reassign mutate b$9_@0:TObject[1:12] = read c$10_@0:TObject
+  [9] Reassign mutate c$10_@0:TObject[1:12] = read z$13_@0
+  [10] Call mutate mutate$6:TFunction(mutate a$8_@0:TObject, mutate b$9_@0:TObject)
   [11] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [12] read a$8_@0
-  [13] read b$9_@0
-  [14] read c$10_@0
-  [15] Return freeze a$8_@0
+  [12] read a$8_@0:TObject
+  [13] read b$9_@0:TObject
+  [14] read c$10_@0:TObject
+  [15] Return freeze a$8_@0:TObject
 scope0 [1:12]:
   - dependency: read cond$7
 ```
@@ -59,23 +59,23 @@ function foo(
   cond,
 ) {
   scope @0 [1:12] deps=[read cond$7] {
-    [1] Let mutate a$8_@0[1:12] = Object {  }
-    [2] Let mutate b$9_@0[1:12] = Object {  }
-    [3] Let mutate c$10_@0[1:12] = Object {  }
+    [1] Let mutate a$8_@0:TObject[1:12] = Object {  }
+    [2] Let mutate b$9_@0:TObject[1:12] = Object {  }
+    [3] Let mutate c$10_@0:TObject[1:12] = Object {  }
     while (
       read cond$7
     ) {
-      [6] Const mutate z$13_@0[1:12] = read a$8_@0
-      [7] Reassign mutate a$8_@0[1:12] = read b$9_@0
-      [8] Reassign mutate b$9_@0[1:12] = read c$10_@0
-      [9] Reassign mutate c$10_@0[1:12] = read z$13_@0
-      [10] Call mutate mutate$6(mutate a$8_@0, mutate b$9_@0)
+      [6] Const mutate z$13_@0[1:12] = read a$8_@0:TObject
+      [7] Reassign mutate a$8_@0:TObject[1:12] = read b$9_@0:TObject
+      [8] Reassign mutate b$9_@0:TObject[1:12] = read c$10_@0:TObject
+      [9] Reassign mutate c$10_@0:TObject[1:12] = read z$13_@0
+      [10] Call mutate mutate$6:TFunction(mutate a$8_@0:TObject, mutate b$9_@0:TObject)
     }
   }
-  [12] read a$8_@0
-  [13] read b$9_@0
-  [14] read c$10_@0
-  return freeze a$8_@0
+  [12] read a$8_@0:TObject
+  [13] read b$9_@0:TObject
+  [14] read c$10_@0:TObject
+  return freeze a$8_@0:TObject
 }
 
 ```
@@ -87,9 +87,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$8_@0[1:12] = Object {  }
-      [2] Let mutate b$9_@0[1:12] = Object {  }
-      [3] Let mutate c$10_@0[1:12] = Object {  }
+      [1] Let mutate a$8_@0:TObject[1:12] = Object {  }
+      [2] Let mutate b$9_@0:TObject[1:12] = Object {  }
+      [3] Let mutate c$10_@0:TObject[1:12] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -98,21 +98,21 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [6] Const mutate z$13_@0[1:12] = read a$8_@0
-      [7] Reassign mutate a$8_@0[1:12] = read b$9_@0
-      [8] Reassign mutate b$9_@0[1:12] = read c$10_@0
-      [9] Reassign mutate c$10_@0[1:12] = read z$13_@0
-      [10] Call mutate mutate$6(mutate a$8_@0, mutate b$9_@0)
+      [6] Const mutate z$13_@0[1:12] = read a$8_@0:TObject
+      [7] Reassign mutate a$8_@0:TObject[1:12] = read b$9_@0:TObject
+      [8] Reassign mutate b$9_@0:TObject[1:12] = read c$10_@0:TObject
+      [9] Reassign mutate c$10_@0:TObject[1:12] = read z$13_@0
+      [10] Call mutate mutate$6:TFunction(mutate a$8_@0:TObject, mutate b$9_@0:TObject)
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [12] read a$8_@0
-      [13] read b$9_@0
-      [14] read c$10_@0
+      [12] read a$8_@0:TObject
+      [13] read b$9_@0:TObject
+      [14] read c$10_@0:TObject
     "]
-    bb2_instrs --> bb2_terminal(["Return freeze a$8_@0"])
+    bb2_instrs --> bb2_terminal(["Return freeze a$8_@0:TObject"])
   end
 
   %% Jumps

@@ -20,10 +20,12 @@ import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 import { log } from "./logger";
 import { printFunction } from "./PrintHIR";
+import { inferTypes } from "./InferTypes";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
   inferReferenceEffects: boolean;
+  inferTypes: boolean;
   inferMutableRanges: boolean;
   inferReactiveScopeVariables: boolean;
   inferReactiveScopes: boolean;
@@ -53,7 +55,10 @@ export default function (
     eliminateRedundantPhi(ir);
     logStep("eliminateRedundantPhi", ir);
   }
-
+  if (flags.inferTypes) {
+    inferTypes(ir);
+    logStep("inferTypes", ir);
+  }
   if (flags.inferReferenceEffects) {
     inferReferenceEffects(ir);
     logStep("inferReferenceEffects", ir);

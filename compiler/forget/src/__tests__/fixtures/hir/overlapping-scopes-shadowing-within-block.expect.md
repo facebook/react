@@ -21,11 +21,11 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$11_@0[1:11] = Array []
+  [1] Const mutate x$11_@0:TFunction[1:11] = Array []
   [2] If (read a$8) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate y$12_@1[3:7] = Array []
+  [3] Const mutate y$12_@1:TFunction[3:7] = Array []
   [4] If (read b$9) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb2
@@ -33,21 +33,21 @@ bb4:
   [6] Goto bb3
 bb3:
   predecessor blocks: bb4 bb2
-  [7] Const mutate $13_@2 = "div"
-  [8] Const mutate $15_@3 = JSX <read $13_@2>{freeze y$12_@1}</read $13_@2>
+  [7] Const mutate $13_@2:TPrimitive = "div"
+  [8] Const mutate $15_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
   [9] Call mutate x$11_@0.push(read $15_@3)
   [10] Goto bb1
 bb1:
   predecessor blocks: bb3 bb0
-  [11] Return freeze x$11_@0
+  [11] Return freeze x$11_@0:TFunction
 scope0 [1:11]:
   - dependency: read a$8
 scope1 [3:7]:
   - dependency: read c$10
   - dependency: read b$9
 scope3 [8:9]:
-  - dependency: read $13_@2
-  - dependency: freeze y$12_@1
+  - dependency: read $13_@2:TPrimitive
+  - dependency: freeze y$12_@1:TFunction
 ```
 
 ## Reactive Scopes
@@ -59,22 +59,22 @@ function foo(
   c,
 ) {
   scope @0 [1:11] deps=[read a$8] {
-    [1] Const mutate x$11_@0[1:11] = Array []
+    [1] Const mutate x$11_@0:TFunction[1:11] = Array []
     if (read a$8) {
       scope @1 [3:7] deps=[read c$10, read b$9] {
-        [3] Const mutate y$12_@1[3:7] = Array []
+        [3] Const mutate y$12_@1:TFunction[3:7] = Array []
         if (read b$9) {
           [5] Call mutate y$12_@1.push(read c$10)
         }
       }
-      [7] Const mutate $13_@2 = "div"
-      scope @3 [8:9] deps=[read $13_@2, freeze y$12_@1] {
-        [8] Const mutate $15_@3 = JSX <read $13_@2>{freeze y$12_@1}</read $13_@2>
+      [7] Const mutate $13_@2:TPrimitive = "div"
+      scope @3 [8:9] deps=[read $13_@2:TPrimitive, freeze y$12_@1:TFunction] {
+        [8] Const mutate $15_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
       }
       [9] Call mutate x$11_@0.push(read $15_@3)
     }
   }
-  return freeze x$11_@0
+  return freeze x$11_@0:TFunction
 }
 
 ```
@@ -86,13 +86,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$11_@0[1:11] = Array []
+      [1] Const mutate x$11_@0:TFunction[1:11] = Array []
     "]
     bb0_instrs --> bb0_terminal(["If (read a$8)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate y$12_@1[3:7] = Array []
+      [3] Const mutate y$12_@1:TFunction[3:7] = Array []
     "]
     bb2_instrs --> bb2_terminal(["If (read b$9)"])
   end
@@ -104,14 +104,14 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [7] Const mutate $13_@2 = 'div'
-      [8] Const mutate $15_@3 = JSX <read $13_@2>{freeze y$12_@1}</read $13_@2>
+      [7] Const mutate $13_@2:TPrimitive = 'div'
+      [8] Const mutate $15_@3 = JSX <read $13_@2:TPrimitive>{freeze y$12_@1:TFunction}</read $13_@2:TPrimitive>
       [9] Call mutate x$11_@0.push(read $15_@3)
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return freeze x$11_@0"])
+    bb1_terminal(["Return freeze x$11_@0:TFunction"])
   end
 
   %% Jumps

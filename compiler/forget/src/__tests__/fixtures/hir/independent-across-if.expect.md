@@ -185,13 +185,13 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
-  [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
+  [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
+  [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Call mutate mutate$5(mutate a$9_@1)
-  [5] Call mutate mutate$5(mutate b$10_@1)
+  [4] Call mutate mutate$5:TFunction(mutate a$9_@1)
+  [5] Call mutate mutate$5:TFunction(mutate b$10_@1)
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -211,11 +211,11 @@ function Component(
   props,
 ) {
   scope @1 [1:7] deps=[read props$8.a] {
-    [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
-    [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
+    [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
+    [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
     if (read props$8.c) {
-      [4] Call mutate mutate$5(mutate a$9_@1)
-      [5] Call mutate mutate$5(mutate b$10_@1)
+      [4] Call mutate mutate$5:TFunction(mutate a$9_@1)
+      [5] Call mutate mutate$5:TFunction(mutate b$10_@1)
     }
   }
   scope @2 [7:8] deps=[freeze a$9_@1, freeze b$10_@1] {
@@ -233,15 +233,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@1[1:7] = Call mutate compute$3(read props$8.a)
-      [2] Const mutate b$10_@1[1:7] = Call mutate compute$3(read props$8.b)
+      [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
+      [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Call mutate mutate$5(mutate a$9_@1)
-      [5] Call mutate mutate$5(mutate b$10_@1)
+      [4] Call mutate mutate$5:TFunction(mutate a$9_@1)
+      [5] Call mutate mutate$5:TFunction(mutate b$10_@1)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

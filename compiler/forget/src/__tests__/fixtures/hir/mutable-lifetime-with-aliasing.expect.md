@@ -78,34 +78,34 @@ function mutate$0(x$3, y$4) {}
 
 ```
 bb0:
-  [1] Const mutate a$11_@0 = Object {  }
-  [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
-  [3] Const mutate c$13_@2 = Object {  }
-  [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
-  [5] Const mutate x$15_@1[2:15] = Object {  }
+  [1] Const mutate a$11_@0:TObject = Object {  }
+  [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
+  [3] Const mutate c$13_@2:TObject = Object {  }
+  [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
+  [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
   [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
-  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
-  [8] If (read a$11_@0) then:bb1 else:bb1 fallthrough=bb1
+  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
+  [8] If (read a$11_@0:TObject) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
   [9] If (read b$12_@1) then:bb3 else:bb3 fallthrough=bb3
 bb3:
   predecessor blocks: bb1
-  [10] If (read c$13_@2) then:bb5 else:bb5 fallthrough=bb5
+  [10] If (read c$13_@2:TObject) then:bb5 else:bb5 fallthrough=bb5
 bb5:
   predecessor blocks: bb3
-  [11] If (read d$14_@1) then:bb7 else:bb7 fallthrough=bb7
+  [11] If (read d$14_@1:TObject) then:bb7 else:bb7 fallthrough=bb7
 bb7:
   predecessor blocks: bb5
   [12] If (read y$16_@1) then:bb9 else:bb9 fallthrough=bb9
 bb9:
   predecessor blocks: bb7
-  [13] Const mutate $17_@3 = null
-  [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
+  [13] Const mutate $17_@3:TPrimitive = null
+  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
   [15] Return
 scope1 [2:15]:
-  - dependency: read a$11_@0
-  - dependency: read a$11_@0
+  - dependency: read a$11_@0:TObject
+  - dependency: read a$11_@0:TObject
 ```
 
 ## Reactive Scopes
@@ -115,29 +115,29 @@ function Component(
   props,
 ) {
   scope @0 [1:2] deps=[] {
-    [1] Const mutate a$11_@0 = Object {  }
+    [1] Const mutate a$11_@0:TObject = Object {  }
   }
-  scope @1 [2:15] deps=[read a$11_@0, read a$11_@0] {
-    [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
+  scope @1 [2:15] deps=[read a$11_@0:TObject, read a$11_@0:TObject] {
+    [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
     scope @2 [3:4] deps=[] {
-      [3] Const mutate c$13_@2 = Object {  }
+      [3] Const mutate c$13_@2:TObject = Object {  }
     }
-    [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
-    [5] Const mutate x$15_@1[2:15] = Object {  }
+    [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
+    [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
     [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
-    [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
-    if (read a$11_@0) {
+    [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
+    if (read a$11_@0:TObject) {
     }
     if (read b$12_@1) {
     }
-    if (read c$13_@2) {
+    if (read c$13_@2:TObject) {
     }
-    if (read d$14_@1) {
+    if (read d$14_@1:TObject) {
     }
     if (read y$16_@1) {
     }
-    [13] Const mutate $17_@3 = null
-    [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
+    [13] Const mutate $17_@3:TPrimitive = null
+    [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
   }
   return
 }
@@ -151,32 +151,32 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$11_@0 = Object {  }
-      [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0]
-      [3] Const mutate c$13_@2 = Object {  }
-      [4] Const mutate d$14_@1[2:15] = Object { c: read c$13_@2 }
-      [5] Const mutate x$15_@1[2:15] = Object {  }
+      [1] Const mutate a$11_@0:TObject = Object {  }
+      [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
+      [3] Const mutate c$13_@2:TObject = Object {  }
+      [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
+      [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
       [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
-      [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8(mutate x$15_@1, mutate d$14_@1)
+      [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
     "]
-    bb0_instrs --> bb0_terminal(["If (read a$11_@0)"])
+    bb0_instrs --> bb0_terminal(["If (read a$11_@0:TObject)"])
   end
   subgraph bb1
     bb1_terminal(["If (read b$12_@1)"])
   end
   subgraph bb3
-    bb3_terminal(["If (read c$13_@2)"])
+    bb3_terminal(["If (read c$13_@2:TObject)"])
   end
   subgraph bb5
-    bb5_terminal(["If (read d$14_@1)"])
+    bb5_terminal(["If (read d$14_@1:TObject)"])
   end
   subgraph bb7
     bb7_terminal(["If (read y$16_@1)"])
   end
   subgraph bb9
     bb9_instrs["
-      [13] Const mutate $17_@3 = null
-      [14] Call mutate mutate$8(mutate x$15_@1, read $17_@3)
+      [13] Const mutate $17_@3:TPrimitive = null
+      [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17_@3:TPrimitive)
     "]
     bb9_instrs --> bb9_terminal(["Return"])
   end

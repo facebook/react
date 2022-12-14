@@ -15,17 +15,17 @@ function f() {
 
 ```
 bb0:
-  [1] Const mutate x$4_@0 = 1
-  [2] Const mutate x$5_@1 = 2
-  [3] Const mutate $6_@2 = Binary read x$5_@1 + read x$5_@1
-  [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
-  [5] Return read $7_@3
+  [1] Const mutate x$4_@0:TPrimitive = 1
+  [2] Const mutate x$5_@1:TPrimitive = 2
+  [3] Const mutate $6_@2:TPrimitive = Binary read x$5_@1:TPrimitive + read x$5_@1:TPrimitive
+  [4] Const mutate $7_@3:TPrimitive = Binary read $6_@2:TPrimitive + read x$5_@1:TPrimitive
+  [5] Return read $7_@3:TPrimitive
 scope2 [3:4]:
-  - dependency: read x$5_@1
-  - dependency: read x$5_@1
+  - dependency: read x$5_@1:TPrimitive
+  - dependency: read x$5_@1:TPrimitive
 scope3 [4:5]:
-  - dependency: read $6_@2
-  - dependency: read x$5_@1
+  - dependency: read $6_@2:TPrimitive
+  - dependency: read x$5_@1:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -33,11 +33,11 @@ scope3 [4:5]:
 ```
 function f(
 ) {
-  [1] Const mutate x$4_@0 = 1
-  [2] Const mutate x$5_@1 = 2
-  [3] Const mutate $6_@2 = Binary read x$5_@1 + read x$5_@1
-  [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
-  return read $7_@3
+  [1] Const mutate x$4_@0:TPrimitive = 1
+  [2] Const mutate x$5_@1:TPrimitive = 2
+  [3] Const mutate $6_@2:TPrimitive = Binary read x$5_@1:TPrimitive + read x$5_@1:TPrimitive
+  [4] Const mutate $7_@3:TPrimitive = Binary read $6_@2:TPrimitive + read x$5_@1:TPrimitive
+  return read $7_@3:TPrimitive
 }
 
 ```
@@ -49,12 +49,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$4_@0 = 1
-      [2] Const mutate x$5_@1 = 2
-      [3] Const mutate $6_@2 = Binary read x$5_@1 + read x$5_@1
-      [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
+      [1] Const mutate x$4_@0:TPrimitive = 1
+      [2] Const mutate x$5_@1:TPrimitive = 2
+      [3] Const mutate $6_@2:TPrimitive = Binary read x$5_@1:TPrimitive + read x$5_@1:TPrimitive
+      [4] Const mutate $7_@3:TPrimitive = Binary read $6_@2:TPrimitive + read x$5_@1:TPrimitive
     "]
-    bb0_instrs --> bb0_terminal(["Return read $7_@3"])
+    bb0_instrs --> bb0_terminal(["Return read $7_@3:TPrimitive"])
   end
 
   %% Jumps

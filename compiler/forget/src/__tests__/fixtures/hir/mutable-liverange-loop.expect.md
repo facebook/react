@@ -112,39 +112,39 @@ function cond$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$12_@0[1:18] = Object {  }
-  [2] Const mutate b$13_@0[1:18] = Object {  }
-  [3] Const mutate c$14_@1 = Object {  }
-  [4] Const mutate d$15_@0[1:18] = Object {  }
+  [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
+  [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
+  [3] Const mutate c$14_@1:TObject = Object {  }
+  [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [6] Const mutate $16_@3[6:8] = true
-  [7] If (read $16_@3) then:bb3 else:bb2 fallthrough=bb2
+  [6] Const mutate $16_@3:TPrimitive[6:8] = true
+  [7] If (read $16_@3:TPrimitive) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
-  [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
+  [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
+  [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
   [10] If (read $21_@0) then:bb2 else:bb4 fallthrough=bb4
 bb4:
   predecessor blocks: bb3
   [11] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb3 bb1
-  [12] If (read a$12_@0) then:bb7 else:bb7 fallthrough=bb7
+  [12] If (read a$12_@0:TObject) then:bb7 else:bb7 fallthrough=bb7
 bb7:
   predecessor blocks: bb2
-  [13] If (read b$13_@0) then:bb9 else:bb9 fallthrough=bb9
+  [13] If (read b$13_@0:TObject) then:bb9 else:bb9 fallthrough=bb9
 bb9:
   predecessor blocks: bb7
-  [14] If (read c$14_@1) then:bb11 else:bb11 fallthrough=bb11
+  [14] If (read c$14_@1:TObject) then:bb11 else:bb11 fallthrough=bb11
 bb11:
   predecessor blocks: bb9
-  [15] If (read d$15_@0) then:bb13 else:bb13 fallthrough=bb13
+  [15] If (read d$15_@0:TObject) then:bb13 else:bb13 fallthrough=bb13
 bb13:
   predecessor blocks: bb11
-  [16] Const mutate $28_@4 = null
-  [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
+  [16] Const mutate $28_@4:TPrimitive = null
+  [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28_@4:TPrimitive)
   [18] Return
 
 ```
@@ -156,34 +156,34 @@ function Component(
   props,
 ) {
   scope @0 [1:18] deps=[] {
-    [1] Const mutate a$12_@0[1:18] = Object {  }
-    [2] Const mutate b$13_@0[1:18] = Object {  }
+    [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
+    [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
     scope @1 [3:4] deps=[] {
-      [3] Const mutate c$14_@1 = Object {  }
+      [3] Const mutate c$14_@1:TObject = Object {  }
     }
-    [4] Const mutate d$15_@0[1:18] = Object {  }
+    [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
     scope @3 [6:8] deps=[] {
       while (
-        [6] Const mutate $16_@3[6:8] = true
-        read $16_@3
+        [6] Const mutate $16_@3:TPrimitive[6:8] = true
+        read $16_@3:TPrimitive
       ) {
-        [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
-        [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
+        [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
+        [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
         if (read $21_@0) {
           break
         }
       }
     }
-    if (read a$12_@0) {
+    if (read a$12_@0:TObject) {
     }
-    if (read b$13_@0) {
+    if (read b$13_@0:TObject) {
     }
-    if (read c$14_@1) {
+    if (read c$14_@1:TObject) {
     }
-    if (read d$15_@0) {
+    if (read d$15_@0:TObject) {
     }
-    [16] Const mutate $28_@4 = null
-    [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
+    [16] Const mutate $28_@4:TPrimitive = null
+    [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28_@4:TPrimitive)
   }
   return
 }
@@ -197,23 +197,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$12_@0[1:18] = Object {  }
-      [2] Const mutate b$13_@0[1:18] = Object {  }
-      [3] Const mutate c$14_@1 = Object {  }
-      [4] Const mutate d$15_@0[1:18] = Object {  }
+      [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
+      [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
+      [3] Const mutate c$14_@1:TObject = Object {  }
+      [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $16_@3[6:8] = true
+      [6] Const mutate $16_@3:TPrimitive[6:8] = true
     "]
-    bb1_instrs --> bb1_terminal(["If (read $16_@3)"])
+    bb1_instrs --> bb1_terminal(["If (read $16_@3:TPrimitive)"])
   end
   subgraph bb3
     bb3_instrs["
-      [8] Call mutate mutate$6(mutate a$12_@0, mutate b$13_@0)
-      [9] Const mutate $21_@0[1:18] = Call mutate cond$7(mutate a$12_@0)
+      [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
+      [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
     "]
     bb3_instrs --> bb3_terminal(["If (read $21_@0)"])
   end
@@ -221,21 +221,21 @@ flowchart TB
     bb4_terminal(["Goto"])
   end
   subgraph bb2
-    bb2_terminal(["If (read a$12_@0)"])
+    bb2_terminal(["If (read a$12_@0:TObject)"])
   end
   subgraph bb7
-    bb7_terminal(["If (read b$13_@0)"])
+    bb7_terminal(["If (read b$13_@0:TObject)"])
   end
   subgraph bb9
-    bb9_terminal(["If (read c$14_@1)"])
+    bb9_terminal(["If (read c$14_@1:TObject)"])
   end
   subgraph bb11
-    bb11_terminal(["If (read d$15_@0)"])
+    bb11_terminal(["If (read d$15_@0:TObject)"])
   end
   subgraph bb13
     bb13_instrs["
-      [16] Const mutate $28_@4 = null
-      [17] Call mutate mutate$6(mutate d$15_@0, read $28_@4)
+      [16] Const mutate $28_@4:TPrimitive = null
+      [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28_@4:TPrimitive)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end

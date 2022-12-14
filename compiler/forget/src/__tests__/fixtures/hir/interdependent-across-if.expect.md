@@ -142,12 +142,12 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
-  [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
+  [1] Const mutate a$9_@0[1:6] = Call mutate compute$3:TFunction(read props$8.a)
+  [2] Const mutate b$10_@0[1:6] = Call mutate compute$3:TFunction(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
+  [4] Call mutate foo$5:TFunction(mutate a$9_@0, mutate b$10_@0)
   [5] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -169,10 +169,10 @@ function Component(
   props,
 ) {
   scope @0 [1:6] deps=[read props$8.a, read props$8.b, read props$8.c] {
-    [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
-    [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
+    [1] Const mutate a$9_@0[1:6] = Call mutate compute$3:TFunction(read props$8.a)
+    [2] Const mutate b$10_@0[1:6] = Call mutate compute$3:TFunction(read props$8.b)
     if (read props$8.c) {
-      [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
+      [4] Call mutate foo$5:TFunction(mutate a$9_@0, mutate b$10_@0)
     }
   }
   scope @1 [6:7] deps=[freeze a$9_@0, freeze b$10_@0] {
@@ -190,14 +190,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@0[1:6] = Call mutate compute$3(read props$8.a)
-      [2] Const mutate b$10_@0[1:6] = Call mutate compute$3(read props$8.b)
+      [1] Const mutate a$9_@0[1:6] = Call mutate compute$3:TFunction(read props$8.a)
+      [2] Const mutate b$10_@0[1:6] = Call mutate compute$3:TFunction(read props$8.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Call mutate foo$5(mutate a$9_@0, mutate b$10_@0)
+      [4] Call mutate foo$5:TFunction(mutate a$9_@0, mutate b$10_@0)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

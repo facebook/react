@@ -23,7 +23,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$10_@0[1:8] = Array []
+  [1] Const mutate x$10_@0:TFunction[1:8] = Array []
   [2] If (read a$7) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
@@ -33,8 +33,8 @@ bb4:
   [4] If (read c$9) then:bb6 else:bb1 fallthrough=bb1
 bb6:
   predecessor blocks: bb4
-  [5] Const mutate $11_@1 = 0
-  [6] Call mutate x$10_@0.push(read $11_@1)
+  [5] Const mutate $11_@1:TPrimitive = 0
+  [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
   [7] Goto bb1
 bb1:
   predecessor blocks: bb6 bb4 bb2 bb0
@@ -44,8 +44,8 @@ bb8:
   [9] Return read a$7
 bb7:
   predecessor blocks: bb1
-  [10] Const mutate $13_@2 = null
-  [11] Return read $13_@2
+  [10] Const mutate $13_@2:TPrimitive = null
+  [11] Return read $13_@2:TPrimitive
 scope0 [1:8]:
   - dependency: read c$9
   - dependency: read b$8
@@ -61,12 +61,12 @@ function foo(
   c,
 ) {
   scope @0 [1:8] deps=[read c$9, read b$8, read a$7] {
-    [1] Const mutate x$10_@0[1:8] = Array []
+    [1] Const mutate x$10_@0:TFunction[1:8] = Array []
     if (read a$7) {
       if (read b$8) {
         if (read c$9) {
-          [5] Const mutate $11_@1 = 0
-          [6] Call mutate x$10_@0.push(read $11_@1)
+          [5] Const mutate $11_@1:TPrimitive = 0
+          [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
         }
       }
     }
@@ -74,8 +74,8 @@ function foo(
   if (read a$7.length) {
     return read a$7
   }
-  [10] Const mutate $13_@2 = null
-  return read $13_@2
+  [10] Const mutate $13_@2:TPrimitive = null
+  return read $13_@2:TPrimitive
 }
 
 ```
@@ -87,7 +87,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$10_@0[1:8] = Array []
+      [1] Const mutate x$10_@0:TFunction[1:8] = Array []
     "]
     bb0_instrs --> bb0_terminal(["If (read a$7)"])
   end
@@ -99,8 +99,8 @@ flowchart TB
   end
   subgraph bb6
     bb6_instrs["
-      [5] Const mutate $11_@1 = 0
-      [6] Call mutate x$10_@0.push(read $11_@1)
+      [5] Const mutate $11_@1:TPrimitive = 0
+      [6] Call mutate x$10_@0.push(read $11_@1:TPrimitive)
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end
@@ -112,9 +112,9 @@ flowchart TB
   end
   subgraph bb7
     bb7_instrs["
-      [10] Const mutate $13_@2 = null
+      [10] Const mutate $13_@2:TPrimitive = null
     "]
-    bb7_instrs --> bb7_terminal(["Return read $13_@2"])
+    bb7_instrs --> bb7_terminal(["Return read $13_@2:TPrimitive"])
   end
 
   %% Jumps
