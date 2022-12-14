@@ -44,7 +44,7 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:8] deps=[read a$5, read b$6, read c$7] {
+  scope @0 [1:8] deps=[read a$5, read b$6, read c$7] out=[] {
     [1] Const mutate x$8_@0[1:8] = read a$5
     if (read b$6) {
       if (read c$7) {

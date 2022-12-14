@@ -37,7 +37,7 @@ bb0:
 ```
 function component(
 ) {
-  scope @0 [1:9] deps=[] {
+  scope @0 [1:9] deps=[] out=[] {
     [1] Const mutate x$6_@0:TObject[1:9] = Object {  }
     [2] Const mutate p$7_@0:TObject[1:9] = Object {  }
     [3] Const mutate q$8_@0:TObject[1:9] = Object {  }

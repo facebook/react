@@ -56,7 +56,7 @@ bb2:
 function foo(
   cond,
 ) {
-  scope @0 [1:12] deps=[read cond$7] {
+  scope @0 [1:12] deps=[read cond$7] out=[a$8_@0, b$9_@0, c$10_@0] {
     [1] Let mutate a$8_@0:TObject[1:12] = Object {  }
     [2] Let mutate b$9_@0:TObject[1:12] = Object {  }
     [3] Let mutate c$10_@0:TObject[1:12] = Object {  }

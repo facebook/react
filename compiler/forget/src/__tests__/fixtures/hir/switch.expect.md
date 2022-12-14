@@ -60,7 +60,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @1 [1:12] deps=[read props$8.p0, read props$8.p2, read props$8.p3] {
+  scope @1 [1:12] deps=[read props$8.p0, read props$8.p2, read props$8.p3] out=[x$9_@1] {
     [1] Const mutate x$9_@1:TFunction[1:12] = Array []
     [2] Let mutate y$10_@1:TPrimitive[1:12] = undefined
     [3] Const mutate $11:TPrimitive = false
@@ -69,7 +69,7 @@ function Component(
       case read $12:TPrimitive: {
           [6] Call mutate x$9_@1.push(read props$8.p2)
           [7] Call mutate x$9_@1.push(read props$8.p3)
-          scope @2 [8:9] deps=[] {
+          scope @2 [8:9] deps=[] out=[] {
             [8] Const mutate y$13_@2 = Array []
           }
       }
@@ -78,11 +78,11 @@ function Component(
       }
     }
   }
-  scope @3 [12:13] deps=[freeze x$9_@1:TFunction] {
+  scope @3 [12:13] deps=[freeze x$9_@1:TFunction] out=[child$19_@3] {
     [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1:TFunction} ></read Component$0>
   }
   [13] Call read y$10_@1.push(read props$8.p4)
-  scope @4 [14:15] deps=[read child$19_@3] {
+  scope @4 [14:15] deps=[read y$10_@1:TPrimitive, read child$19_@3] out=[$23_@4] {
     [14] Const mutate $23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
   }
   return read $23_@4

@@ -38,14 +38,14 @@ bb0:
 ```
 function component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[p$7_@0] {
     [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$2:TFunction()
   }
   [2] Binary read p$7_@0:TPrimitive + read p$7_@0:TPrimitive
-  scope @1 [3:4] deps=[] {
+  scope @1 [3:4] deps=[] out=[o$8_@1] {
     [3] Const mutate o$8_@1:TObject = Object {  }
   }
-  scope @2 [4:8] deps=[read p$7_@0:TPrimitive, read o$8_@1:TObject] {
+  scope @2 [4:8] deps=[read p$7_@0:TPrimitive, read o$8_@1:TObject] out=[x$9_@2] {
     [4] Const mutate x$9_@2:TObject[4:8] = Object {  }
     [5] Reassign mutate x$9_@2.t[4:8] = read p$7_@0:TPrimitive
     [6] Const mutate z$10_@2:TPrimitive[4:8] = read x$9_@2.t

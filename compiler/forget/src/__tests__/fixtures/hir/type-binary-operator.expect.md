@@ -34,15 +34,15 @@ bb1:
 ```
 function component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[a$7_@0] {
     [1] Const mutate a$7_@0:TPrimitive = Call mutate some$2:TFunction()
   }
-  scope @1 [2:3] deps=[] {
+  scope @1 [2:3] deps=[] out=[b$8_@1] {
     [2] Const mutate b$8_@1:TPrimitive = Call mutate someOther$4:TFunction()
   }
   [3] Const mutate $9:TPrimitive = Binary read a$7_@0:TPrimitive > read b$8_@1:TPrimitive
   if (read $9:TPrimitive) {
-    scope @2 [5:6] deps=[] {
+    scope @2 [5:6] deps=[] out=[] {
       [5] Const mutate m$10_@2:TObject = Object {  }
     }
   }

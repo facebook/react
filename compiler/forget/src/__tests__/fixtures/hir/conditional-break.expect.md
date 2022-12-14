@@ -97,7 +97,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$4.a, read props$4.b, read props$4.d] {
+  scope @0 [1:7] deps=[read props$4.a, read props$4.b, read props$4.d] out=[a_DEBUG$5_@0] {
     [1] Const mutate a_DEBUG$5_@0:TFunction[1:7] = Array []
     [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
     if (read props$4.b) {
@@ -149,7 +149,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] out=[a$4_@0] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
@@ -201,7 +201,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:8] deps=[read props$4.a, read props$4.b, read props$4.c, read props$4.d] {
+  scope @0 [1:8] deps=[read props$4.a, read props$4.b, read props$4.c, read props$4.d] out=[a$5_@0] {
     [1] Const mutate a$5_@0:TFunction[1:8] = Array []
     [2] Call mutate a$5_@0.push(read props$4.a)
     if (read props$4.b) {
@@ -255,7 +255,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] out=[a$4_@0] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
@@ -308,7 +308,7 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.d, read props$3.c] {
+  scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.d, read props$3.c] out=[] {
     [1] Const mutate a$4_@0:TFunction[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {

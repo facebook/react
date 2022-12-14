@@ -52,7 +52,7 @@ bb0:
 function Component(
   props,
 ) {
-  scope @0 [1:4] deps=[] {
+  scope @0 [1:4] deps=[] out=[c$9_@0] {
     [1] Const mutate a$7_@0[1:4] = Array []
     [2] Const mutate b$8_@0:TObject[1:4] = Object {  }
     [3] Const mutate c$9_@0[1:4] = New mutate Foo$5(mutate a$7_@0, mutate b$8_@0:TObject)

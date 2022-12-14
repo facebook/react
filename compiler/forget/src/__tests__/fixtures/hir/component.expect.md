@@ -110,11 +110,11 @@ function Component(
 ) {
   [1] Const mutate items$30:TProp = read props$29.items
   [2] Const mutate maxItems$31:TProp = read props$29.maxItems
-  scope @0 [3:33] deps=[read maxItems$31:TProp, read items$30.length, read items$30] {
+  scope @0 [3:33] deps=[read maxItems$31:TProp, read items$30.length, read items$30] out=[renderedItems$32_@0] {
     [3] Const mutate renderedItems$32_@0:TFunction[3:33] = Array []
     [4] Const mutate seen$33_@0:TFunction[3:33] = New mutate Set$6()
     [5] Const mutate $34:TPrimitive = 0
-    scope @2 [6:7] deps=[read maxItems$31:TProp] {
+    scope @2 [6:7] deps=[read maxItems$31:TProp] out=[] {
       [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$8.max(read $34:TPrimitive, read maxItems$31:TProp)
     }
     for (
@@ -154,12 +154,12 @@ function Component(
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  scope @4 [38:39] deps=[freeze count$66:TProp] {
+  scope @4 [38:39] deps=[freeze count$66:TProp] out=[$71_@4] {
     [38] Const mutate $71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
   }
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  scope @5 [41:42] deps=[read $71_@4, freeze renderedItems$32_@0:TFunction] {
+  scope @5 [41:42] deps=[read $71_@4, freeze renderedItems$32_@0:TFunction] out=[$74_@5] {
     [41] Const mutate $74_@5 = JSX <read $67:TPrimitive>{read $68}{read $71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
   }
   return read $74_@5

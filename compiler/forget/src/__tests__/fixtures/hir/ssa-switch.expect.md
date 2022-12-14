@@ -70,7 +70,7 @@ function foo(
   [3] Const mutate $12:TPrimitive = Binary read x$10:TPrimitive === read $11:TPrimitive
   [4] Const mutate $13:TPrimitive = 1
   [5] Const mutate $14:TPrimitive = Binary read x$10:TPrimitive === read $13:TPrimitive
-  scope @0 [6:16] deps=[] {
+  scope @0 [6:16] deps=[] out=[x$16_@0] {
     [6] Let mutate x$16_@0:TPrimitive[6:16] = undefined
     switch (read x$10:TPrimitive) {
       case read $14:TPrimitive: {

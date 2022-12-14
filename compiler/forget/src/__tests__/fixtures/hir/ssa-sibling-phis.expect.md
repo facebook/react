@@ -83,7 +83,7 @@ function foo(
   [2] Const mutate $14:TPrimitive = true
   if (read $14:TPrimitive) {
     [4] Const mutate $15:TPrimitive = true
-    scope @0 [5:10] deps=[read a$9, read b$10] {
+    scope @0 [5:10] deps=[read a$9, read b$10] out=[x$16_@0] {
       [5] Let mutate x$16_@0[5:10] = undefined
       if (read $15:TPrimitive) {
         [6] Reassign mutate x$16_@0[5:10] = read a$9
@@ -94,7 +94,7 @@ function foo(
     [10] read x$16_@0
   } else {
     [12] Const mutate $19:TPrimitive = true
-    scope @1 [13:18] deps=[read c$11, read d$12] {
+    scope @1 [13:18] deps=[read c$11, read d$12] out=[x$20_@1] {
       [13] Let mutate x$20_@1[13:18] = undefined
       if (read $19:TPrimitive) {
         [14] Reassign mutate x$20_@1[13:18] = read c$11

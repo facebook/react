@@ -30,7 +30,7 @@ bb0:
 ```
 function Component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[a$5_@0] {
     [1] Const mutate a$5_@0 = Array []
   }
   [2] Const mutate b$6 = read a$5_@0

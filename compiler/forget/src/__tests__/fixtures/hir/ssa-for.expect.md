@@ -48,7 +48,7 @@ bb2:
 ```
 function foo(
 ) {
-  scope @1 [1:15] deps=[] {
+  scope @1 [1:15] deps=[] out=[x$7_@1] {
     [1] Let mutate x$7_@1:TPrimitive[1:15] = 1
     for (
       [3] Let mutate i$8_@1:TPrimitive[1:15] = 0

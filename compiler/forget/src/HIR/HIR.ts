@@ -382,6 +382,7 @@ export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
   dependencies: Set<Place>;
+  outputs: Set<Identifier>;
 };
 
 /**

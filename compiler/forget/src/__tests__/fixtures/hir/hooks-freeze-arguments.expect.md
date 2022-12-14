@@ -31,7 +31,7 @@ bb0:
 ```
 function Component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[a$4_@0] {
     [1] Const mutate a$4_@0 = Array []
   }
   [2] Call read useFreeze$2:TFunction(freeze a$4_@0)

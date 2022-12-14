@@ -139,7 +139,7 @@ bb13:
 function Component(
   props,
 ) {
-  scope @0 [1:23] deps=[] {
+  scope @0 [1:23] deps=[] out=[] {
     [1] Let mutate a$18_@0[1:23] = Object {  }
     [2] Let mutate b$20_@0[1:23] = Object {  }
     [3] Let mutate c$22_@0:TPrimitive[1:23] = Object {  }

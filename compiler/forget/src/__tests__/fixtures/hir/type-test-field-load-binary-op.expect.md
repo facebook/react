@@ -38,13 +38,13 @@ bb1:
 ```
 function component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[$10_@0] {
     [1] Const mutate $10_@0:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
   }
-  scope @1 [2:3] deps=[] {
+  scope @1 [2:3] deps=[] out=[$11_@1] {
     [2] Const mutate $11_@1:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
   }
-  scope @2 [3:4] deps=[read $10_@0:TPrimitive, read $11_@1:TPrimitive] {
+  scope @2 [3:4] deps=[read $10_@0:TPrimitive, read $11_@1:TPrimitive] out=[x$12_@2] {
     [3] Const mutate x$12_@2:TObject = Object { u: read $10_@0:TPrimitive, v: read $11_@1:TPrimitive }
   }
   [4] Const mutate u$13:TPrimitive = read x$12_@2.u

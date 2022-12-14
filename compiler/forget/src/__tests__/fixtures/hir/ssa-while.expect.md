@@ -39,7 +39,7 @@ bb2:
 ```
 function foo(
 ) {
-  scope @0 [1:9] deps=[] {
+  scope @0 [1:9] deps=[] out=[x$5_@0] {
     [1] Let mutate x$5_@0:TPrimitive[1:9] = 1
     while (
       [3] Const mutate $6:TPrimitive = 10

@@ -126,10 +126,10 @@ bb13:
 function Component(
   props,
 ) {
-  scope @0 [1:18] deps=[] {
+  scope @0 [1:18] deps=[] out=[] {
     [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
     [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
-    scope @1 [3:4] deps=[] {
+    scope @1 [3:4] deps=[] out=[] {
       [3] Const mutate c$14_@1:TObject = Object {  }
     }
     [4] Const mutate d$15_@0:TObject[1:18] = Object {  }

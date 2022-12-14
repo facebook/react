@@ -27,9 +27,9 @@ bb0:
 ```
 function component(
 ) {
-  scope @0 [1:4] deps=[] {
+  scope @0 [1:4] deps=[] out=[x$4_@0] {
     [1] Const mutate x$4_@0:TObject[1:4] = Object {  }
-    scope @1 [2:3] deps=[] {
+    scope @1 [2:3] deps=[] out=[] {
       [2] Const mutate q$5_@1:TObject = Object {  }
     }
     [3] Reassign mutate x$4_@0.t[1:4] = read q$5_@1:TObject

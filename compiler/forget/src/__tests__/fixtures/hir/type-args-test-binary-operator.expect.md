@@ -34,7 +34,7 @@ function component(
 ) {
   [1] Const mutate $7:TPrimitive = Binary read a$5:TPrimitive > read b$6:TPrimitive
   if (read $7:TPrimitive) {
-    scope @0 [3:4] deps=[] {
+    scope @0 [3:4] deps=[] out=[] {
       [3] Const mutate m$8_@0:TObject = Object {  }
     }
   }

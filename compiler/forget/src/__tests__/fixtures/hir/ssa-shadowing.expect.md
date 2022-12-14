@@ -67,7 +67,7 @@ bb1:
 function Foo(
   cond,
 ) {
-  scope @0 [1:8] deps=[read cond$5] {
+  scope @0 [1:8] deps=[read cond$5] out=[str$6_@0] {
     [1] Let mutate str$6_@0:TPrimitive[1:8] = ""
     if (read cond$5) {
       [3] Const mutate str$7:TPrimitive = "other test"

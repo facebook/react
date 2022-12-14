@@ -31,7 +31,7 @@ bb0:
 ```
 function component(
 ) {
-  scope @0 [1:7] deps=[] {
+  scope @0 [1:7] deps=[] out=[] {
     [1] Const mutate z$5_@0[1:7] = Array []
     [2] Const mutate y$6_@0:TObject[1:7] = Object {  }
     [3] Reassign mutate y$6_@0.z[1:7] = read z$5_@0

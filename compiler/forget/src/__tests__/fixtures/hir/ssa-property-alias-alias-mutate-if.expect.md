@@ -47,7 +47,7 @@ bb1:
 function foo(
   a,
 ) {
-  scope @0 [1:11] deps=[read a$7] {
+  scope @0 [1:11] deps=[read a$7] out=[x$9_@0] {
     [1] Const mutate b$8_@0:TObject[1:11] = Object {  }
     [2] Const mutate x$9_@0:TObject[1:11] = read b$8_@0:TObject
     if (read a$7) {

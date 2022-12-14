@@ -61,7 +61,7 @@ bb3:
 function Component(
   props,
 ) {
-  scope @0 [1:9] deps=[read props$6.p0, read props$6.p1, read props$6.p2] {
+  scope @0 [1:9] deps=[read props$6.p0, read props$6.p1, read props$6.p2] out=[a$7_@0] {
     [1] Const mutate a$7_@0:TFunction[1:9] = Array []
     [2] Const mutate b$8_@0:TFunction[1:9] = Array []
     if (read b$8_@0:TFunction) {
@@ -71,7 +71,7 @@ function Component(
       [7] Call mutate b$8_@0.push(read props$6.p2)
     }
   }
-  scope @2 [9:10] deps=[freeze a$7_@0:TFunction, freeze b$8_@0:TFunction] {
+  scope @2 [9:10] deps=[freeze a$7_@0:TFunction, freeze b$8_@0:TFunction] out=[$16_@2] {
     [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0:TFunction} b={freeze b$8_@0:TFunction} ></read Foo$4>
   }
   return read $16_@2
@@ -128,7 +128,7 @@ bb3:
 function Component(
   props,
 ) {
-  scope @0 [1:10] deps=[read props$8.p0, read props$8.p1, read props$8.p2] {
+  scope @0 [1:10] deps=[read props$8.p0, read props$8.p1, read props$8.p2] out=[a$9_@0] {
     [1] Const mutate a$9_@0:TFunction[1:10] = Array []
     [2] Const mutate b$10_@0:TFunction[1:10] = Array []
     [3] Const mutate $11_@0[1:10] = Call mutate mayMutate$4:TFunction(mutate b$10_@0:TFunction)
@@ -139,7 +139,7 @@ function Component(
       [8] Call mutate b$10_@0.push(read props$8.p2)
     }
   }
-  scope @2 [10:11] deps=[freeze a$9_@0:TFunction, freeze b$10_@0:TFunction] {
+  scope @2 [10:11] deps=[freeze a$9_@0:TFunction, freeze b$10_@0:TFunction] out=[$19_@2] {
     [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0:TFunction} b={freeze b$10_@0:TFunction} ></read Foo$6>
   }
   return read $19_@2

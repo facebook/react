@@ -13,6 +13,7 @@ import {
   InstructionKind,
   InstructionValue,
   makeInstructionId,
+  MutableRange,
   Place,
   ReactiveBasicBlock,
   ReactiveFunction,
@@ -52,7 +53,7 @@ function visit(
   block: ReactiveBasicBlock,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeStart: InstructionId | null
+  scopeRange: MutableRange | null
 ): void {
   for (const item of block) {
     switch (item.kind) {
@@ -64,7 +65,7 @@ function visit(
           item.instructions,
           scopeDependencies,
           scopeDeclarations,
-          item.scope.range.start
+          item.scope.range
         );
         item.scope.dependencies = scopeDependencies;
         for (const dep of scopeDependencies) {
@@ -72,7 +73,7 @@ function visit(
           // normal dependency collection. child scopes may have dependencies
           // on values created within the outer scope, which necessarily cannot
           // be dependencies of the outer scope
-          visitOperand(dep, dependencies, declarations, scopeStart);
+          visitOperand(dep, dependencies, declarations, scopeRange);
         }
         for (const [ident, kind] of scopeDeclarations) {
           declarations.set(ident, kind);
@@ -84,7 +85,7 @@ function visit(
           item.instruction,
           dependencies,
           declarations,
-          scopeStart
+          scopeRange
         );
         break;
       }
@@ -101,7 +102,7 @@ function visit(
                 terminal.value,
                 dependencies,
                 declarations,
-                scopeStart
+                scopeRange
               );
             }
             break;
@@ -111,7 +112,7 @@ function visit(
               terminal.value,
               dependencies,
               declarations,
-              scopeStart
+              scopeRange
             );
             break;
           }
@@ -120,21 +121,21 @@ function visit(
               terminal.init,
               dependencies,
               declarations,
-              scopeStart
+              scopeRange
             );
             visitValueBlock(
               terminal.test,
               dependencies,
               declarations,
-              scopeStart
+              scopeRange
             );
             visitValueBlock(
               terminal.update,
               dependencies,
               declarations,
-              scopeStart
+              scopeRange
             );
-            visit(terminal.loop, dependencies, declarations, scopeStart);
+            visit(terminal.loop, dependencies, declarations, scopeRange);
             break;
           }
           case "while": {
@@ -142,24 +143,24 @@ function visit(
               terminal.test,
               dependencies,
               declarations,
-              scopeStart
+              scopeRange
             );
-            visit(terminal.loop, dependencies, declarations, scopeStart);
+            visit(terminal.loop, dependencies, declarations, scopeRange);
             break;
           }
           case "if": {
-            visitOperand(terminal.test, dependencies, declarations, scopeStart);
-            visit(terminal.consequent, dependencies, declarations, scopeStart);
+            visitOperand(terminal.test, dependencies, declarations, scopeRange);
+            visit(terminal.consequent, dependencies, declarations, scopeRange);
             if (terminal.alternate !== null) {
-              visit(terminal.alternate, dependencies, declarations, scopeStart);
+              visit(terminal.alternate, dependencies, declarations, scopeRange);
             }
             break;
           }
           case "switch": {
-            visitOperand(terminal.test, dependencies, declarations, scopeStart);
+            visitOperand(terminal.test, dependencies, declarations, scopeRange);
             for (const case_ of terminal.cases) {
               if (case_.block !== undefined) {
-                visit(case_.block, dependencies, declarations, scopeStart);
+                visit(case_.block, dependencies, declarations, scopeRange);
               }
             }
             break;
@@ -184,7 +185,7 @@ function visitValueBlock(
   block: ReactiveValueBlock,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeStart: InstructionId | null
+  scopeRange: MutableRange | null
 ): void {
   for (const initItem of block.instructions) {
     if (initItem.kind === "instruction") {
@@ -192,34 +193,49 @@ function visitValueBlock(
         initItem.instruction,
         dependencies,
         declarations,
-        scopeStart
+        scopeRange
       );
     }
   }
   if (block.value !== null) {
-    visitInstructionValue(block.value, dependencies, declarations, scopeStart);
+    visitInstructionValue(block.value, dependencies, declarations, scopeRange);
   }
 }
 
 function visitOperand(
-  operand: Place,
+  maybeDependency: Place,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeStart: InstructionId | null
+  scopeRange: MutableRange | null
 ): void {
-  const decl = declarations.get(operand.identifier);
-  if (decl === undefined) {
-    // Probably a global, ignore for now
-    // TODO @josephsavona: improve handling of globals
-    return;
-  } else if (decl.kind === DeclKind.Const) {
-    // constant, dont need to add a dep
-    return;
-  } else if (scopeStart !== null && decl.id < scopeStart) {
+  const decl = declarations.get(maybeDependency.identifier);
+
+  // Any value used after its defining scope has concluded must be added as an
+  // output of its defining scope. Regardless of whether its a const or not,
+  // some later code needs access to the value.
+  if (decl !== undefined) {
+    const operandScope = maybeDependency.identifier.scope;
+    if (
+      operandScope !== null &&
+      ((scopeRange !== null && operandScope.range.end <= scopeRange.start) ||
+        scopeRange === null)
+    ) {
+      operandScope.outputs.add(maybeDependency.identifier);
+    }
+  }
+
+  // If this operand is used in a scope, has a dynamic value, and was defined
+  // before this scope, then its a dependency of the scope.
+  if (
+    decl !== undefined &&
+    decl.kind !== DeclKind.Const &&
+    scopeRange !== null &&
+    decl.id < scopeRange.start
+  ) {
     // Check if there is an existing dependency that describes this operand
     for (const dep of dependencies) {
       // not the same identifier
-      if (dep.identifier !== operand.identifier) {
+      if (dep.identifier !== maybeDependency.identifier) {
         continue;
       }
       const depPath = dep.memberPath;
@@ -227,11 +243,11 @@ function visitOperand(
       if (depPath === null) {
         return;
       }
-      const operandPath = operand.memberPath;
+      const operandPath = maybeDependency.memberPath;
       // existing dep is for a path, this operand covers all paths so swap them
       if (operandPath === null) {
         dependencies.delete(dep);
-        dependencies.add(operand);
+        dependencies.add(maybeDependency);
         return;
       }
       // both the operand and dep have paths, determine if the existing path
@@ -248,7 +264,7 @@ function visitOperand(
         return;
       }
     }
-    dependencies.add(operand);
+    dependencies.add(maybeDependency);
   }
 }
 
@@ -256,7 +272,7 @@ function visitInstructionValue(
   value: InstructionValue,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeStart: InstructionId | null
+  scopeRange: MutableRange | null
 ): void {
   for (const operand of eachInstructionValueOperand(value)) {
     // check for method invocation, we want to depend on the callee, not the method
@@ -269,9 +285,9 @@ function visitInstructionValue(
         ...operand,
         memberPath: operand.memberPath.slice(0, -1),
       };
-      visitOperand(callee, dependencies, declarations, scopeStart);
+      visitOperand(callee, dependencies, declarations, scopeRange);
     } else {
-      visitOperand(operand, dependencies, declarations, scopeStart);
+      visitOperand(operand, dependencies, declarations, scopeRange);
     }
   }
 }
@@ -280,16 +296,19 @@ function visitInstruction(
   instr: Instruction,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeStart: InstructionId | null
+  scopeRange: MutableRange | null
 ): void {
-  visitInstructionValue(instr.value, dependencies, declarations, scopeStart);
+  visitInstructionValue(instr.value, dependencies, declarations, scopeRange);
   const { lvalue } = instr;
   if (
     lvalue !== null &&
     lvalue.kind !== InstructionKind.Reassign &&
     lvalue.place.memberPath === null
   ) {
-    const kind = valueKind(instr.value);
+    const range = lvalue.place.identifier.mutableRange;
+    // TODO: only assign Const if the value is never reassigned
+    const kind =
+      range.end === range.start + 1 ? valueKind(instr.value) : DeclKind.Dynamic;
     declarations.set(lvalue.place.identifier, { kind, id: instr.id });
   }
 }

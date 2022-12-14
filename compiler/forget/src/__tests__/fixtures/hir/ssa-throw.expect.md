@@ -34,7 +34,7 @@ bb1:
 ```
 function foo(
 ) {
-  scope @0 [1:7] deps=[] {
+  scope @0 [1:7] deps=[] out=[x$4_@0] {
     [1] Let mutate x$4_@0:TPrimitive[1:7] = 1
     [2] Const mutate $5:TPrimitive = 1
     [3] Const mutate $6:TPrimitive = Binary read x$4_@0:TPrimitive === read $5:TPrimitive

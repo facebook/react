@@ -51,13 +51,13 @@ function foo(
   a,
   b,
 ) {
-  scope @0 [1:3] deps=[read a$6] {
+  scope @0 [1:3] deps=[read a$6] out=[x$8_@0] {
     [1] Const mutate x$8_@0:TFunction[1:3] = Array []
     [2] Call mutate x$8_@0.push(read a$6)
   }
   [3] Const mutate $9:TPrimitive = "div"
   [4] JSX <read $9:TPrimitive>{freeze x$8_@0:TFunction}</read $9:TPrimitive>
-  scope @1 [5:12] deps=[read x$8_@0:TFunction, read b$7:TFunction] {
+  scope @1 [5:12] deps=[read x$8_@0:TFunction, read b$7:TFunction] out=[] {
     [5] Const mutate y$10_@1:TFunction[5:12] = Array []
     if (read x$8_@0.length) {
       [7] Call mutate y$10_@1.push(read x$8_@0:TFunction)

@@ -25,7 +25,7 @@ bb0:
 function component(
 ) {
   [1] Const mutate $4:TPrimitive = 1
-  scope @0 [2:3] deps=[] {
+  scope @0 [2:3] deps=[] out=[x$5_@0] {
     [2] Const mutate x$5_@0:TObject = Object { t: read $4:TPrimitive }
   }
   [3] Const mutate p$6:TPrimitive = read x$5_@0.t

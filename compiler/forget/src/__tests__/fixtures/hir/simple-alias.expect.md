@@ -58,10 +58,10 @@ bb0:
 ```
 function foo(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[] {
     [1] Const mutate a$5_@0:TObject = Object {  }
   }
-  scope @1 [2:8] deps=[] {
+  scope @1 [2:8] deps=[] out=[c$10_@1] {
     [2] Const mutate b$6_@1:TObject[2:8] = Object {  }
     [3] Const mutate c$7_@1:TObject[2:8] = Object {  }
     [4] Const mutate a$8_@1:TObject[2:8] = read b$6_@1:TObject

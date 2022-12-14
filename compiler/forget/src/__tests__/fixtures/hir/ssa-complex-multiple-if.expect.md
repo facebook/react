@@ -50,7 +50,7 @@ bb3:
 ```
 function foo(
 ) {
-  scope @0 [1:13] deps=[] {
+  scope @0 [1:13] deps=[] out=[x$7_@0] {
     [1] Let mutate x$7_@0:TPrimitive[1:13] = 1
     [2] Const mutate y$8:TPrimitive = 2
     [3] Const mutate $9:TPrimitive = 2

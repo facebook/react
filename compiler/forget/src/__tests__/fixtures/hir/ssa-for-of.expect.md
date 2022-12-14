@@ -46,7 +46,7 @@ bb2:
 function foo(
   cond,
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[] {
     [1] Const mutate items$5_@0 = Array []
   }
 }

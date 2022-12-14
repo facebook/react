@@ -29,9 +29,9 @@ function foo(
   a,
   b,
 ) {
-  scope @0 [1:5] deps=[read b$6, read a$5] {
+  scope @0 [1:5] deps=[read b$6, read a$5] out=[] {
     [1] Const mutate x$7_@0:TFunction[1:5] = Array []
-    scope @1 [2:4] deps=[read b$6] {
+    scope @1 [2:4] deps=[read b$6] out=[] {
       [2] Const mutate y$8_@1:TFunction[2:4] = Array []
       [3] Call mutate y$8_@1.push(read b$6)
     }

@@ -15,6 +15,7 @@ import {
   ReactiveValueBlock,
 } from "./HIR";
 import {
+  printIdentifier,
   printInstruction,
   printInstructionValue,
   printPlace,
@@ -40,6 +41,8 @@ export function printReactiveBlock(writer: Writer, block: ReactiveBlock): void {
       block.scope.range.end
     }] deps=[${Array.from(block.scope.dependencies)
       .map((dep) => printPlace(dep))
+      .join(", ")}] out=[${Array.from(block.scope.outputs)
+      .map((out) => printIdentifier(out))
       .join(", ")}] {`
   );
   printReactiveInstructions(writer, block.instructions);

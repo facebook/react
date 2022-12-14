@@ -28,7 +28,7 @@ bb0:
 function Component(
   c,
 ) {
-  scope @0 [1:3] deps=[read c$6] {
+  scope @0 [1:3] deps=[read c$6] out=[x$7_@0] {
     [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
     [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
   }

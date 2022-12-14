@@ -38,7 +38,7 @@ bb1:
 ```
 function foo(
 ) {
-  scope @0 [1:8] deps=[] {
+  scope @0 [1:8] deps=[] out=[x$5_@0] {
     [1] Let mutate x$5_@0:TPrimitive[1:8] = 1
     [2] Const mutate y$6:TPrimitive = 2
     [3] Const mutate $7:TPrimitive = 2

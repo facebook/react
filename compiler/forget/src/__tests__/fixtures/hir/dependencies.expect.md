@@ -52,10 +52,10 @@ function foo(
   y,
   z,
 ) {
-  scope @0 [1:10] deps=[read z$8, read x$6, read y$7] {
+  scope @0 [1:10] deps=[read z$8, read x$6, read y$7] out=[] {
     [1] Const mutate items$9_@0:TFunction[1:10] = Array [read z$8]
     [2] Call mutate items$9_@0.push(read x$6)
-    scope @1 [3:7] deps=[read x$6, read y$7] {
+    scope @1 [3:7] deps=[read x$6, read y$7] out=[items2$10_@1] {
       [3] Const mutate items2$10_@1:TFunction[3:7] = Array []
       if (read x$6) {
         [5] Call mutate items2$10_@1.push(read y$7)

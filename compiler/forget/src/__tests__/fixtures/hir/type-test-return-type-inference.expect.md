@@ -37,19 +37,19 @@ bb1:
 ```
 function component(
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[x$7_@0] {
     [1] Const mutate x$7_@0:TPrimitive = Call mutate foo$2:TFunction()
   }
-  scope @1 [2:3] deps=[] {
+  scope @1 [2:3] deps=[] out=[y$8_@1] {
     [2] Const mutate y$8_@1:TPrimitive = Call mutate foo$2:TFunction()
   }
   [3] Const mutate $9:TPrimitive = Binary read x$7_@0:TPrimitive > read y$8_@1:TPrimitive
   if (read $9:TPrimitive) {
-    scope @2 [5:6] deps=[] {
+    scope @2 [5:6] deps=[] out=[] {
       [5] Const mutate z$10_@2:TObject = Object {  }
     }
   }
-  scope @3 [7:8] deps=[] {
+  scope @3 [7:8] deps=[] out=[] {
     [7] Const mutate z$12_@3:TPrimitive = Call mutate foo$2:TFunction()
   }
   return

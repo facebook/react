@@ -47,7 +47,7 @@ function foo(
   [1] Const mutate y$5:TPrimitive = 2
   [2] Const mutate $6:TPrimitive = 1
   [3] Const mutate $7:TPrimitive = Binary read y$5:TPrimitive > read $6:TPrimitive
-  scope @0 [4:9] deps=[] {
+  scope @0 [4:9] deps=[] out=[y$8_@0] {
     [4] Let mutate y$8_@0:TPrimitive[4:9] = undefined
     if (read $7:TPrimitive) {
       [5] Reassign mutate y$8_@0:TPrimitive[4:9] = 1

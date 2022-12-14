@@ -119,14 +119,14 @@ bb1:
 function Component(
   props,
 ) {
-  scope @0 [1:6] deps=[read props$8.a, read props$8.b, read props$8.c] {
+  scope @0 [1:6] deps=[read props$8.a, read props$8.b, read props$8.c] out=[a$9_@0, b$10_@0] {
     [1] Const mutate a$9_@0[1:6] = Call mutate compute$3:TFunction(read props$8.a)
     [2] Const mutate b$10_@0[1:6] = Call mutate compute$3:TFunction(read props$8.b)
     if (read props$8.c) {
       [4] Call mutate foo$5:TFunction(mutate a$9_@0, mutate b$10_@0)
     }
   }
-  scope @1 [6:7] deps=[freeze a$9_@0, freeze b$10_@0] {
+  scope @1 [6:7] deps=[freeze a$9_@0, freeze b$10_@0] out=[$14_@1] {
     [6] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
   }
   return read $14_@1

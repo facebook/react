@@ -32,7 +32,7 @@ bb0:
 ```
 function foo(
 ) {
-  scope @0 [1:6] deps=[] {
+  scope @0 [1:6] deps=[] out=[y$7_@0] {
     [1] Const mutate a$5_@0:TObject[1:6] = Object {  }
     [2] Const mutate x$6_@0:TObject[1:6] = read a$5_@0:TObject
     [3] Const mutate y$7_@0:TObject[1:6] = Object {  }

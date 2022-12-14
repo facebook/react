@@ -38,14 +38,14 @@ function foo(
 ) {
   if (read x$8) {
     [2] Const mutate $10:TPrimitive = false
-    scope @0 [3:4] deps=[read y$9:TPrimitive] {
+    scope @0 [3:4] deps=[read y$9:TPrimitive] out=[$11_@0] {
       [3] Const mutate $11_@0 = Call read foo$0:TFunction(read $10:TPrimitive, read y$9:TPrimitive)
     }
     return freeze $11_@0
   }
   [5] Const mutate $12:TPrimitive = 10
   [6] Const mutate $13:TPrimitive = Binary read y$9:TPrimitive * read $12:TPrimitive
-  scope @1 [7:8] deps=[] {
+  scope @1 [7:8] deps=[] out=[$14_@1] {
     [7] Const mutate $14_@1 = Array [read $13:TPrimitive]
   }
   return freeze $14_@1

@@ -40,7 +40,7 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:6] deps=[read a$5, read b$6, read c$7] {
+  scope @0 [1:6] deps=[read a$5, read b$6, read c$7] out=[] {
     [1] Const mutate y$8_@0:TFunction[1:6] = Array []
     if (read a$5) {
       if (read b$6) {

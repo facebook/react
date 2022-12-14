@@ -97,12 +97,12 @@ bb9:
 function Component(
   props,
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[a$11_@0] {
     [1] Const mutate a$11_@0:TObject = Object {  }
   }
-  scope @1 [2:15] deps=[read a$11_@0:TObject] {
+  scope @1 [2:15] deps=[read a$11_@0:TObject] out=[] {
     [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
-    scope @2 [3:4] deps=[] {
+    scope @2 [3:4] deps=[] out=[] {
       [3] Const mutate c$13_@2:TObject = Object {  }
     }
     [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }

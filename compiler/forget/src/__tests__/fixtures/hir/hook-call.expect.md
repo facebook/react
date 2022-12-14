@@ -85,17 +85,17 @@ bb0:
 function Component(
   props,
 ) {
-  scope @0 [1:2] deps=[] {
+  scope @0 [1:2] deps=[] out=[x$11_@0] {
     [1] Const mutate x$11_@0 = Array []
   }
-  scope @1 [2:3] deps=[freeze x$11_@0] {
+  scope @1 [2:3] deps=[freeze x$11_@0] out=[y$12_@1] {
     [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
   }
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
   [4] Const mutate $13 = "\n      "
   [5] Const mutate $14 = "\n      "
   [6] Const mutate $15 = "\n    "
-  scope @2 [7:8] deps=[read x$11_@0, read y$12_@1] {
+  scope @2 [7:8] deps=[read x$11_@0, read y$12_@1] out=[$16_@2] {
     [7] Const mutate $16_@2 = JSX <read Component$0>{read $13}{read x$11_@0}{read $14}{read y$12_@1}{read $15}</read Component$0>
   }
   return read $16_@2

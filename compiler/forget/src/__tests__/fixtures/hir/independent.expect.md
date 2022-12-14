@@ -40,13 +40,13 @@ bb0:
 function Component(
   props,
 ) {
-  scope @0 [1:2] deps=[read props$7.a] {
+  scope @0 [1:2] deps=[read props$7.a] out=[a$8_@0] {
     [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
   }
-  scope @1 [2:3] deps=[read props$7.b] {
+  scope @1 [2:3] deps=[read props$7.b] out=[b$9_@1] {
     [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
   }
-  scope @2 [3:4] deps=[freeze a$8_@0, freeze b$9_@1] {
+  scope @2 [3:4] deps=[freeze a$8_@0, freeze b$9_@1] out=[$10_@2] {
     [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
   }
   return read $10_@2

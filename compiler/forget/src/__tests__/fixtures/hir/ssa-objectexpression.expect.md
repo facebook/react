@@ -29,7 +29,7 @@ function Component(
 ) {
   [1] Const mutate a$6:TPrimitive = 1
   [2] Const mutate b$7:TPrimitive = 2
-  scope @0 [3:4] deps=[] {
+  scope @0 [3:4] deps=[] out=[x$8_@0] {
     [3] Const mutate x$8_@0:TObject = Object { a: read a$6:TPrimitive, b: read b$7:TPrimitive }
   }
   return freeze x$8_@0:TObject

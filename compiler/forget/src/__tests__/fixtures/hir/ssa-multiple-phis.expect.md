@@ -19,7 +19,7 @@ function foo(a, b, c, d) {
     }
     x;
   }
-  x;
+  return x;
 }
 
 ```
@@ -66,8 +66,7 @@ bb7:
   [19] Goto bb1
 bb1:
   predecessor blocks: bb3 bb7
-  [20] read x$18_@0
-  [21] Return
+  [20] Return read x$18_@0
 ```
 
 ## Reactive Scopes
@@ -81,7 +80,7 @@ function foo(
 ) {
   [1] Const mutate x$13:TPrimitive = 0
   [2] Const mutate $14:TPrimitive = true
-  scope @0 [3:20] deps=[read a$9, read b$10, read c$11, read d$12] {
+  scope @0 [3:20] deps=[read a$9, read b$10, read c$11, read d$12] out=[x$18_@0] {
     [3] Let mutate x$18_@0[3:20] = undefined
     if (read $14:TPrimitive) {
       [4] Const mutate $15:TPrimitive = true
@@ -101,8 +100,7 @@ function foo(
       [18] read x$18_@0
     }
   }
-  [20] read x$18_@0
-  return
+  return read x$18_@0
 }
 
 ```
@@ -131,7 +129,7 @@ function foo$0(a$9, b$10, c$11, d$12) {
     x$18;
   }
 
-  x$18;
+  return x$18;
 }
 
 ```
