@@ -53,7 +53,7 @@ export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
-export const enableUseEventHook = true;
+export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
