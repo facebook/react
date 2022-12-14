@@ -1704,7 +1704,7 @@ export function getRenderLanes(): Lanes {
 }
 
 function resetWorkInProgressStack() {
-  if (workInProgress == null) return;
+  if (workInProgress === null) return;
   let interruptedWork;
   if (workInProgressSuspendedReason === NotSuspended) {
     // Normal case. Work-in-progress hasn't started yet. Unwind all
@@ -1725,6 +1725,7 @@ function resetWorkInProgressStack() {
     );
     interruptedWork = interruptedWork.return;
   }
+  workInProgress = null;
 }
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
@@ -2075,7 +2076,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             // Selective hydration. An update flowed into a dehydrated tree.
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
-            workInProgress = null;
+            resetWorkInProgressStack();
             workInProgressRootExitStatus = RootDidNotComplete;
             break outer;
           }
@@ -2250,7 +2251,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // hydration lane.
             resetWorkInProgressStack();
             workInProgressRootExitStatus = RootDidNotComplete;
-            workInProgress = null;
             break outer;
           }
           default: {
