@@ -8872,15 +8872,15 @@ function useCallback(callback, deps) {
   }, deps);
 }
 
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw new Error(
-    "A function wrapped in useEvent can't be called during rendering."
+    "A function wrapped in useEffectEvent can't be called during rendering."
   );
 }
 
-function useEvent(callback) {
+function useEffectEvent(callback) {
   // $FlowIgnore[incompatible-return]
-  return throwOnUseEventCall;
+  return throwOnUseEffectEventCall;
 } // TODO Decide on how to implement this hook for server rendering.
 // If a mutation occurs during render, consider triggering a Suspense boundary
 // and falling back to client rendering.
@@ -9006,7 +9006,7 @@ var HooksDispatcher = {
 }
 
 {
-  HooksDispatcher.useEvent = useEvent;
+  HooksDispatcher.useEffectEvent = useEffectEvent;
 }
 
 {

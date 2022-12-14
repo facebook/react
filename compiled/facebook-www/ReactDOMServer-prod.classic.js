@@ -2236,7 +2236,7 @@ function dispatchAction(componentIdentity, queue, action) {
       queue.next = componentIdentity;
     }
 }
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw Error(formatProdErrorMessage(440));
 }
 function unsupportedStartTransition() {
@@ -2315,8 +2315,8 @@ var HooksDispatcher = {
     useCacheRefresh: function() {
       return unsupportedRefresh;
     },
-    useEvent: function() {
-      return throwOnUseEventCall;
+    useEffectEvent: function() {
+      return throwOnUseEffectEventCall;
     },
     useMemoCache: function(size) {
       for (var data = Array(size), i = 0; i < size; i++)
@@ -3633,4 +3633,4 @@ exports.renderToString = function(children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-4dda96a40-20221213";
+exports.version = "18.3.0-www-classic-84a0a171e-20221214";

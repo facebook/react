@@ -23192,7 +23192,7 @@ function updateEffect(create, deps) {
   updateEffectImpl(Passive, Passive$1, create, deps);
 }
 
-function useEventImpl(payload) {
+function useEffectEventImpl(payload) {
   currentlyRenderingFiber.flags |= Update;
   var componentUpdateQueue = currentlyRenderingFiber.updateQueue;
 
@@ -23221,7 +23221,7 @@ function mountEvent(callback) {
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
-        "A function wrapped in useEvent can't be called during rendering."
+        "A function wrapped in useEffectEvent can't be called during rendering."
       );
     }
 
@@ -23232,7 +23232,7 @@ function mountEvent(callback) {
 function updateEvent(callback) {
   var hook = updateWorkInProgressHook();
   var ref = hook.memoizedState;
-  useEventImpl({
+  useEffectEventImpl({
     ref: ref,
     nextImpl: callback
   }); // $FlowIgnore[incompatible-return]
@@ -23240,7 +23240,7 @@ function updateEvent(callback) {
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
-        "A function wrapped in useEvent can't be called during rendering."
+        "A function wrapped in useEffectEvent can't be called during rendering."
       );
     }
 
@@ -23877,7 +23877,7 @@ var ContextOnlyDispatcher = {
 }
 
 {
-  ContextOnlyDispatcher.useEvent = throwInvalidHookError;
+  ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 }
 
 var HooksDispatcherOnMountInDEV = null;
@@ -24037,8 +24037,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    HooksDispatcherOnMountInDEV.useEvent = function useEvent(callback) {
-      currentHookNameInDev = "useEvent";
+    HooksDispatcherOnMountInDEV.useEffectEvent = function useEffectEvent(
+      callback
+    ) {
+      currentHookNameInDev = "useEffectEvent";
       mountHookTypesDev();
       return mountEvent(callback);
     };
@@ -24168,10 +24170,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    HooksDispatcherOnMountWithHookTypesInDEV.useEvent = function useEvent(
+    HooksDispatcherOnMountWithHookTypesInDEV.useEffectEvent = function useEffectEvent(
       callback
     ) {
-      currentHookNameInDev = "useEvent";
+      currentHookNameInDev = "useEffectEvent";
       updateHookTypesDev();
       return mountEvent(callback);
     };
@@ -24301,8 +24303,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    HooksDispatcherOnUpdateInDEV.useEvent = function useEvent(callback) {
-      currentHookNameInDev = "useEvent";
+    HooksDispatcherOnUpdateInDEV.useEffectEvent = function useEffectEvent(
+      callback
+    ) {
+      currentHookNameInDev = "useEffectEvent";
       updateHookTypesDev();
       return updateEvent(callback);
     };
@@ -24432,8 +24436,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    HooksDispatcherOnRerenderInDEV.useEvent = function useEvent(callback) {
-      currentHookNameInDev = "useEvent";
+    HooksDispatcherOnRerenderInDEV.useEffectEvent = function useEffectEvent(
+      callback
+    ) {
+      currentHookNameInDev = "useEffectEvent";
       updateHookTypesDev();
       return updateEvent(callback);
     };
@@ -24586,10 +24592,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    InvalidNestedHooksDispatcherOnMountInDEV.useEvent = function useEvent(
+    InvalidNestedHooksDispatcherOnMountInDEV.useEffectEvent = function useEffectEvent(
       callback
     ) {
-      currentHookNameInDev = "useEvent";
+      currentHookNameInDev = "useEffectEvent";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountEvent(callback);
@@ -24743,10 +24749,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.useEvent = function useEvent(
+    InvalidNestedHooksDispatcherOnUpdateInDEV.useEffectEvent = function useEffectEvent(
       callback
     ) {
-      currentHookNameInDev = "useEvent";
+      currentHookNameInDev = "useEffectEvent";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEvent(callback);
@@ -24900,10 +24906,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.useEvent = function useEvent(
+    InvalidNestedHooksDispatcherOnRerenderInDEV.useEffectEvent = function useEffectEvent(
       callback
     ) {
-      currentHookNameInDev = "useEvent";
+      currentHookNameInDev = "useEffectEvent";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEvent(callback);
@@ -33642,7 +33648,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork) {
     case FunctionComponent: {
       {
         if ((flags & Update) !== NoFlags) {
-          commitUseEventMount(finishedWork);
+          commitUseEffectEventMount(finishedWork);
         }
       }
 
@@ -33922,7 +33928,7 @@ function commitHookEffectListMount(flags, finishedWork) {
   }
 }
 
-function commitUseEventMount(finishedWork) {
+function commitUseEffectEventMount(finishedWork) {
   var updateQueue = finishedWork.updateQueue;
   var eventPayloads = updateQueue !== null ? updateQueue.events : null;
 
@@ -42565,7 +42571,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-4dda96a40-20221213";
+var ReactVersion = "18.3.0-www-classic-84a0a171e-20221214";
 
 function createPortal(
   children,

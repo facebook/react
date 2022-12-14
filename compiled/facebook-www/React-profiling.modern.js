@@ -534,8 +534,8 @@ exports.createServerContext = function(globalName, defaultValue) {
     throw Error("ServerContext: " + globalName + " already defined");
   return context$1;
 };
-exports.experimental_useEvent = function(callback) {
-  return ReactCurrentDispatcher.current.useEvent(callback);
+exports.experimental_useEffectEvent = function(callback) {
+  return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
 exports.forwardRef = function(render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -646,7 +646,7 @@ exports.useSyncExternalStore = function(
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-modern-4dda96a40-20221213";
+exports.version = "18.3.0-www-modern-84a0a171e-20221214";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

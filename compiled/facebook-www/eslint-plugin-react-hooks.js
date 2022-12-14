@@ -163,7 +163,7 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
-function isUseEventIdentifier(node) {
+function isUseEffectEventIdentifier(node) {
 
   return false;
 }
@@ -186,11 +186,11 @@ var RulesOfHooks = {
     var lastEffect = null;
     var codePathReactHooksMapStack = [];
     var codePathSegmentStack = [];
-    var useEventFunctions = new WeakSet(); // For a given scope, iterate through the references and add all useEvent definitions. We can
-    // do this in non-Program nodes because we can rely on the assumption that useEvent functions
+    var useEffectEventFunctions = new WeakSet(); // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
+    // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
     // can only be declared within a component or hook at its top level.
 
-    function recordAllUseEventFunctions(scope) {
+    function recordAllUseEffectEventFunctions(scope) {
       var _iterator = _createForOfIteratorHelper(scope.references),
           _step;
 
@@ -199,7 +199,7 @@ var RulesOfHooks = {
           var reference = _step.value;
           var parent = reference.identifier.parent;
 
-          if (parent.type === 'VariableDeclarator' && parent.init && parent.init.type === 'CallExpression' && parent.init.callee && isUseEventIdentifier(parent.init.callee)) {
+          if (parent.type === 'VariableDeclarator' && parent.init && parent.init.type === 'CallExpression' && parent.init.callee && isUseEffectEventIdentifier(parent.init.callee)) {
             var _iterator2 = _createForOfIteratorHelper(reference.resolved.references),
                 _step2;
 
@@ -208,7 +208,7 @@ var RulesOfHooks = {
                 var ref = _step2.value;
 
                 if (ref !== reference) {
-                  useEventFunctions.add(ref.identifier);
+                  useEffectEventFunctions.add(ref.identifier);
                 }
               }
             } catch (err) {
@@ -703,23 +703,23 @@ var RulesOfHooks = {
           }
 
           reactHooks.push(node.callee);
-        } // useEvent: useEvent functions can be passed by reference within useEffect as well as in
-        // another useEvent
+        } // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
+        // another useEffectEvent
 
 
-        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEventIdentifier(node.callee)) && node.arguments.length > 0) {
+        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEffectEventIdentifier(node.callee)) && node.arguments.length > 0) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
           // comparison later when we exit
           lastEffect = node;
         }
       },
       Identifier: function (node) {
-        // This identifier resolves to a useEvent function, but isn't being referenced in an
+        // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
-        if (lastEffect == null && useEventFunctions.has(node) && node.parent.type !== 'CallExpression') {
+        if (lastEffect == null && useEffectEventFunctions.has(node) && node.parent.type !== 'CallExpression') {
           context.report({
             node: node,
-            message: "`" + context.getSource(node) + "` is a function created with React Hook \"useEvent\", and can only be called from " + 'the same component. They cannot be assigned to variables or passed down.'
+            message: "`" + context.getSource(node) + "` is a function created with React Hook \"useEffectEvent\", and can only be called from " + 'the same component. They cannot be assigned to variables or passed down.'
           });
         }
       },
@@ -729,15 +729,15 @@ var RulesOfHooks = {
         }
       },
       FunctionDeclaration: function (node) {
-        // function MyComponent() { const onClick = useEvent(...) }
+        // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       },
       ArrowFunctionExpression: function (node) {
-        // const MyComponent = () => { const onClick = useEvent(...) }
+        // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       }
     };
@@ -850,7 +850,7 @@ var ExhaustiveDeps = {
     var stateVariables = new WeakSet();
     var stableKnownValueCache = new WeakMap();
     var functionWithoutCapturedValueCache = new WeakMap();
-    var useEventVariables = new WeakSet();
+    var useEffectEventVariables = new WeakSet();
 
     function memoizeWithWeakMap(fn, map) {
       return function (arg) {
@@ -921,7 +921,7 @@ var ExhaustiveDeps = {
       //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
-      // const onStuff = useEvent(() => {})
+      // const onStuff = useEffectEvent(() => {})
       //       ^^^ true for this reference
       // False for everything else.
 
@@ -995,7 +995,7 @@ var ExhaustiveDeps = {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (isUseEventIdentifier$1() && id.type === 'Identifier') {
+        } else if (isUseEffectEventIdentifier$1() && id.type === 'Identifier') {
           var _iterator = _createForOfIteratorHelper(resolved.references),
               _step;
 
@@ -1004,9 +1004,9 @@ var ExhaustiveDeps = {
               var ref = _step.value;
 
               if (ref !== id) {
-                useEventVariables.add(ref.identifier);
+                useEffectEventVariables.add(ref.identifier);
               }
-            } // useEvent() return value is always unstable.
+            } // useEffectEvent() return value is always unstable.
 
           } catch (err) {
             _iterator.e(err);
@@ -1407,10 +1407,10 @@ var ExhaustiveDeps = {
             return;
           }
 
-          if (useEventVariables.has(declaredDependencyNode)) {
+          if (useEffectEventVariables.has(declaredDependencyNode)) {
             reportProblem({
               node: declaredDependencyNode,
-              message: 'Functions returned from `useEvent` must not be included in the dependency array. ' + ("Remove `" + context.getSource(declaredDependencyNode) + "` from the list."),
+              message: 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' + ("Remove `" + context.getSource(declaredDependencyNode) + "` from the list."),
               suggest: [{
                 desc: "Remove the dependency `" + context.getSource(declaredDependencyNode) + "`",
                 fix: function (fixer) {
@@ -2558,7 +2558,7 @@ function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
 }
 
-function isUseEventIdentifier$1(node) {
+function isUseEffectEventIdentifier$1(node) {
 
   return false;
 }

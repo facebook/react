@@ -2228,9 +2228,9 @@ function dispatchAction(componentIdentity, queue, action) {
       queue.next = componentIdentity;
     }
 }
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw Error(
-    "A function wrapped in useEvent can't be called during rendering."
+    "A function wrapped in useEffectEvent can't be called during rendering."
   );
 }
 function unsupportedStartTransition() {
@@ -2314,8 +2314,8 @@ var HooksDispatcher = {
     useCacheRefresh: function() {
       return unsupportedRefresh;
     },
-    useEvent: function() {
-      return throwOnUseEventCall;
+    useEffectEvent: function() {
+      return throwOnUseEffectEventCall;
     },
     useMemoCache: function(size) {
       for (var data = Array(size), i = 0; i < size; i++)

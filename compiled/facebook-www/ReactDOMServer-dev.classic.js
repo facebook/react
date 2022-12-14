@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-4dda96a40-20221213";
+var ReactVersion = "18.3.0-www-classic-84a0a171e-20221214";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9189,15 +9189,15 @@ function useCallback(callback, deps) {
   }, deps);
 }
 
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw new Error(
-    "A function wrapped in useEvent can't be called during rendering."
+    "A function wrapped in useEffectEvent can't be called during rendering."
   );
 }
 
-function useEvent(callback) {
+function useEffectEvent(callback) {
   // $FlowIgnore[incompatible-return]
-  return throwOnUseEventCall;
+  return throwOnUseEffectEventCall;
 } // TODO Decide on how to implement this hook for server rendering.
 // If a mutation occurs during render, consider triggering a Suspense boundary
 // and falling back to client rendering.
@@ -9323,7 +9323,7 @@ var HooksDispatcher = {
 }
 
 {
-  HooksDispatcher.useEvent = useEvent;
+  HooksDispatcher.useEffectEvent = useEffectEvent;
 }
 
 {

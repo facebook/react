@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-4dda96a40-20221213";
+var ReactVersion = "18.3.0-www-classic-84a0a171e-20221214";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2054,10 +2054,10 @@ function useMemoCache(size) {
 
   return dispatcher.useMemoCache(size);
 }
-function useEvent(callback) {
+function useEffectEvent(callback) {
   var dispatcher = resolveDispatcher(); // $FlowFixMe This is unstable, thus optional
 
-  return dispatcher.useEvent(callback);
+  return dispatcher.useEffectEvent(callback);
 }
 
 // Helpers to patch console.logs to avoid logging during side-effect free
@@ -4197,7 +4197,7 @@ exports.createFactory = createFactory;
 exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
-exports.experimental_useEvent = useEvent;
+exports.experimental_useEffectEvent = useEffectEvent;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement;
 exports.jsx = jsx;

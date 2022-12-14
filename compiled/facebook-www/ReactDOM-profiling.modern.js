@@ -7371,7 +7371,7 @@ function mountEffect(create, deps) {
 function updateEffect(create, deps) {
   updateEffectImpl(2048, 8, create, deps);
 }
-function useEventImpl(payload) {
+function useEffectEventImpl(payload) {
   currentlyRenderingFiber.flags |= 4;
   var componentUpdateQueue = currentlyRenderingFiber.updateQueue;
   if (null === componentUpdateQueue)
@@ -7387,7 +7387,7 @@ function useEventImpl(payload) {
 }
 function updateEvent(callback) {
   var ref = updateWorkInProgressHook().memoizedState;
-  useEventImpl({ ref: ref, nextImpl: callback });
+  useEffectEventImpl({ ref: ref, nextImpl: callback });
   return function() {
     if (0 !== (executionContext & 2)) throw Error(formatProdErrorMessage(440));
     return ref.impl.apply(void 0, arguments);
@@ -7617,7 +7617,7 @@ var ContextOnlyDispatcher = {
 ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.use = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
-ContextOnlyDispatcher.useEvent = throwInvalidHookError;
+ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
   useCallback: function(callback, deps) {
@@ -7772,7 +7772,7 @@ var HooksDispatcherOnMount = {
 };
 HooksDispatcherOnMount.use = use;
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
-HooksDispatcherOnMount.useEvent = function(callback) {
+HooksDispatcherOnMount.useEffectEvent = function(callback) {
   var hook = mountWorkInProgressHook(),
     ref = { impl: callback };
   hook.memoizedState = ref;
@@ -7812,7 +7812,7 @@ var HooksDispatcherOnUpdate = {
 HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.use = use;
-HooksDispatcherOnUpdate.useEvent = updateEvent;
+HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   useCallback: updateCallback,
@@ -7846,7 +7846,7 @@ var HooksDispatcherOnRerender = {
 HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.use = use;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
-HooksDispatcherOnRerender.useEvent = updateEvent;
+HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 var now$1 = Scheduler.unstable_now,
   commitTime = 0,
   layoutEffectStartTime = -1,
@@ -15878,7 +15878,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1812 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-4dda96a40-20221213",
+  version: "18.3.0-www-modern-84a0a171e-20221214",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -15923,7 +15923,7 @@ var devToolsConfig$jscomp$inline_1812 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-4dda96a40-20221213"
+  reconcilerVersion: "18.3.0-next-84a0a171e-20221214"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function(children, container) {
@@ -16098,7 +16098,7 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-4dda96a40-20221213";
+exports.version = "18.3.0-next-84a0a171e-20221214";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
