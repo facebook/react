@@ -15,6 +15,7 @@ import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
 import { buildReactiveFunction } from "../HIR/BuildReactiveFunction";
+import { flattenReactiveLoops } from "../HIR/FlattenReactiveLoops";
 import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
@@ -148,6 +149,7 @@ function transform(text: string, file: string): Array<TestOutput> {
         });
 
         const reactiveFunction = buildReactiveFunction(ir);
+        flattenReactiveLoops(reactiveFunction);
         const scopes = printReactiveFunction(reactiveFunction);
 
         const textHIR = printFunction(ir);

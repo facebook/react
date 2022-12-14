@@ -157,9 +157,7 @@ function Component(
       }
       [22] Call mutate seen$33_@0.add(mutate item$40_@0:TPrimitive)
       [23] Const mutate $49:TPrimitive = "div"
-      scope @3 [24:25] deps=[read $49:TPrimitive] {
-        [24] Const mutate $50_@3 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
-      }
+      [24] Const mutate $50_@3 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
       [25] Call mutate renderedItems$32_@0.push(read $50_@3)
       [26] Const mutate $55:TPrimitive = Binary read renderedItems$32_@0.length >= read max$35_@2:TPrimitive
       if (read $55:TPrimitive) {
