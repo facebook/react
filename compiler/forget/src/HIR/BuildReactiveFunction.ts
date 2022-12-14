@@ -68,9 +68,7 @@ class Builder {
   startScope(scope: ReactiveScope): void {
     const block: ReactiveBlock = {
       kind: "block",
-      id: scope.id,
-      range: scope.range,
-      dependencies: scope.dependencies,
+      scope,
       instructions: [],
     };
     this.append(block, undefined);
@@ -80,8 +78,8 @@ class Builder {
 
   visitId(id: InstructionId): void {
     for (let i = 0; i < this.#stack.length; i++) {
-      const scope = this.#stack[i]!;
-      if (scope.kind === "scope" && id >= scope.block.range.end) {
+      const entry = this.#stack[i]!;
+      if (entry.kind === "scope" && id >= entry.block.scope.range.end) {
         this.#stack.length = i;
         break;
       }

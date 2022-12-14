@@ -36,9 +36,9 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
 
 export function printReactiveBlock(writer: Writer, block: ReactiveBlock): void {
   writer.writeLine(
-    `scope @${block.id} [${block.range.start}:${
-      block.range.end
-    }] deps=[${Array.from(block.dependencies)
+    `scope @${block.scope.id} [${block.scope.range.start}:${
+      block.scope.range.end
+    }] deps=[${Array.from(block.scope.dependencies)
       .map((dep) => printPlace(dep))
       .join(", ")}] {`
   );

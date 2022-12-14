@@ -64,9 +64,9 @@ function visit(
           item.instructions,
           scopeDependencies,
           scopeDeclarations,
-          item.range.start
+          item.scope.range.start
         );
-        item.dependencies = scopeDependencies;
+        item.scope.dependencies = scopeDependencies;
         for (const dep of scopeDependencies) {
           // propagate dependencies upward using the same rules as
           // normal dependency collection. child scopes may have dependencies

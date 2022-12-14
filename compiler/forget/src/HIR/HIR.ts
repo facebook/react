@@ -52,9 +52,7 @@ export type ReactiveFunction = {
 
 export type ReactiveBlock = {
   kind: "block";
-  id: ScopeId;
-  range: MutableRange;
-  dependencies: Set<Place>;
+  scope: ReactiveScope;
   instructions: ReactiveBasicBlock;
 };
 
