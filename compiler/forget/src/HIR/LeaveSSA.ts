@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   Effect,
   GeneratedSource,
@@ -34,6 +35,11 @@ export function leaveSSA(fn: HIRFunction) {
   const hasDeclaration: Set<Identifier> = new Set();
 
   for (const [, block] of fn.body.blocks) {
+    invariant(
+      block.phis.size === 0,
+      "Expected all phis to be cleared by predecessors"
+    );
+
     // Identifiers (from phis) that *may* need a new `let` declaration created. If the original
     // variable declaration flows into the phi, then we can reuse its declaration - this is
     // discovered during iteration of instructions.
@@ -53,18 +59,25 @@ export function leaveSSA(fn: HIRFunction) {
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
       phis.push(...fallthrough.phis);
+      fallthrough.phis.clear();
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
       const test = fn.body.blocks.get(terminal.test)!;
       phis.push(...test.phis);
+      test.phis.clear();
+
       const loop = fn.body.blocks.get(terminal.loop)!;
       phis.push(...loop.phis);
+      loop.phis.clear();
     }
     if (terminal.kind === "for") {
       const init = fn.body.blocks.get(terminal.init)!;
       phis.push(...init.phis);
+      init.phis.clear();
+
       const update = fn.body.blocks.get(terminal.update)!;
       phis.push(...update.phis);
+      update.phis.clear();
 
       // find declarations in the for init
       for (const instr of init.instructions) {
@@ -174,8 +187,6 @@ export function leaveSSA(fn: HIRFunction) {
       };
       block.instructions.push(instr);
     }
-
-    block.phis.clear();
   }
 }
 

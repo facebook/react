@@ -23,6 +23,7 @@ import {
   makeType,
   Terminal,
 } from "./HIR";
+import { logHIR } from "./logger";
 import { printInstruction } from "./PrintHIR";
 import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
 
@@ -156,16 +157,19 @@ export default class HIRBuilder {
       preds: new Set(),
       phis: new Set(),
     });
-    // First reduce indirections and prune unreachable blocks
-    let reduced = shrink({
+    let ir: HIR = {
       blocks: this.#completed,
       entry: this.#entry,
-    });
+    };
+    logHIR("Build (pre-shrink)", ir);
+    // First reduce indirections and prune unreachable blocks
+    let shrunk = shrink(ir);
+    logHIR("Build (shrunk)", shrunk);
     // then convert to reverse postorder
-    const blocks = reversePostorderBlocks(reduced);
-    markInstructionIds(blocks);
-    markPredecessors(blocks);
-    return blocks;
+    const rpo = reversePostorderBlocks(shrunk);
+    markInstructionIds(rpo);
+    markPredecessors(rpo);
+    return rpo;
   }
 
   /**

@@ -18,9 +18,8 @@ import { inferMutableRanges } from "./InferMutableRanges";
 import { inferReactiveScopeDependencies } from "./InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
-import { log } from "./logger";
-import { printFunction } from "./PrintHIR";
 import { inferTypes } from "./InferTypes";
+import { logHIRFunction } from "./logger";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
@@ -46,47 +45,47 @@ export default function (
   const env = new Environment();
 
   const ir = lower(func, env);
-  logStep("HIR", ir);
+  logHIRFunction("HIR", ir);
 
   enterSSA(ir, env);
-  logStep("SSA", ir);
+  logHIRFunction("SSA", ir);
 
   if (flags.eliminateRedundantPhi) {
     eliminateRedundantPhi(ir);
-    logStep("eliminateRedundantPhi", ir);
+    logHIRFunction("eliminateRedundantPhi", ir);
   }
   if (flags.inferTypes) {
     inferTypes(ir);
-    logStep("inferTypes", ir);
+    logHIRFunction("inferTypes", ir);
   }
   if (flags.inferReferenceEffects) {
     inferReferenceEffects(ir);
-    logStep("inferReferenceEffects", ir);
+    logHIRFunction("inferReferenceEffects", ir);
   }
 
   if (flags.inferMutableRanges) {
     inferMutableRanges(ir);
-    logStep("inferMutableRanges", ir);
+    logHIRFunction("inferMutableRanges", ir);
   }
 
   if (flags.leaveSSA) {
     leaveSSA(ir);
-    logStep("leaveSSA", ir);
+    logHIRFunction("leaveSSA", ir);
   }
 
   if (flags.inferReactiveScopeVariables) {
     inferReactiveScopeVariables(ir);
-    logStep("inferReactiveScopeVariables", ir);
+    logHIRFunction("inferReactiveScopeVariables", ir);
   }
 
   if (flags.inferReactiveScopes) {
     inferReactiveScopes(ir);
-    logStep("inferReactiveScopes", ir);
+    logHIRFunction("inferReactiveScopes", ir);
   }
 
   if (flags.inferReactiveScopeDependencies) {
     inferReactiveScopeDependencies(ir);
-    logStep("inferReactiveScopeDependencies", ir);
+    logHIRFunction("inferReactiveScopeDependencies", ir);
   }
 
   if (flags.codegen) {
@@ -97,8 +96,4 @@ export default function (
   }
 
   return { ast: null, ir: ir };
-}
-
-function logStep(step: string, ir: HIRFunction) {
-  log(() => `${step}:\n${printFunction(ir)}`);
 }
