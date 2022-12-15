@@ -60,11 +60,11 @@ export default function Editor() {
 
   return (
     <>
-      <div className="flex grow">
-        <div className={clsx("relative sm:min-w-[300px] sm:block")}>
+      <div className="flex basis">
+        <div className={clsx("relative sm:basis-1/4")}>
           <Input diagnostics={diagnostics} />
         </div>
-        <div className={clsx("flex sm:flex sm:min-w-[300px]")}>
+        <div className={clsx("flex sm:flex")}>
           <Output
             tabsOpen={tabsOpen}
             setTabsOpen={setTabsOpen}
