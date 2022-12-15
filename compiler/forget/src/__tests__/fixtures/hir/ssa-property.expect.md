@@ -42,9 +42,27 @@ function foo(
 
 ```javascript
 function foo$0() {
-  const x$3 = [];
-  const y$4 = {};
-  y$4.x = x$3;
+  const $ = React.useMemoCache();
+  let x$3;
+  if (true) {
+    x$3 = [];
+    $[0] = x$3;
+  } else {
+    x$3 = $[0];
+  }
+
+  const c_1 = $[1] !== x$3;
+  let y$4;
+
+  if (c_1) {
+    y$4 = {};
+    y$4.x = x$3;
+    $[1] = x$3;
+    $[2] = y$4;
+  } else {
+    y$4 = $[2];
+  }
+
   return y$4;
 }
 

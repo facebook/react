@@ -75,16 +75,36 @@ function foo(
 
 ```javascript
 function foo$0(a$6, b$7) {
-  const x$8 = [];
-  x$8.push(a$6);
-  <div>{x$8}</div>;
-  const y$10 = [];
-  bb1: if (x$8.length) {
-    y$10.push(x$8);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$6;
+  let x$8;
+  if (c_0) {
+    x$8 = [];
+    x$8.push(a$6);
+    $[0] = a$6;
+    $[1] = x$8;
+  } else {
+    x$8 = $[1];
   }
 
-  bb3: if (b$7) {
-    y$10.push(b$7);
+  <div>{x$8}</div>;
+  const c_2 = $[2] !== x$8;
+  const c_3 = $[3] !== b$7;
+
+  if (c_2 || c_3) {
+    const y$10 = [];
+
+    bb1: if (x$8.length) {
+      y$10.push(x$8);
+    }
+
+    bb3: if (b$7) {
+      y$10.push(b$7);
+    }
+
+    $[2] = x$8;
+    $[3] = b$7;
+  } else {
   }
 }
 

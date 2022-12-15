@@ -57,10 +57,19 @@ function foo(
 
 ```javascript
 function foo$0() {
-  let x$5 = 1;
-  const y$6 = 2;
-  bb1: if (y$6 === 2) {
-    x$5 = 3;
+  const $ = React.useMemoCache();
+  let x$5;
+  if (true) {
+    x$5 = 1;
+    const y$6 = 2;
+
+    bb1: if (y$6 === 2) {
+      x$5 = 3;
+    }
+
+    $[0] = x$5;
+  } else {
+    x$5 = $[0];
   }
 
   const y$11 = x$5;

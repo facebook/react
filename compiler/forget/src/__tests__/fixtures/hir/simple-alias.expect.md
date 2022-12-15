@@ -78,13 +78,26 @@ function foo(
 
 ```javascript
 function foo$0() {
-  const a$5 = {};
-  const b$6 = {};
-  const c$7 = {};
-  const a$8 = b$6;
-  const b$9 = c$7;
-  const c$10 = a$8;
-  mutate$4(a$8, b$9);
+  const $ = React.useMemoCache();
+  if (true) {
+    const a$5 = {};
+  } else {
+  }
+
+  let c$10;
+
+  if (true) {
+    const b$6 = {};
+    const c$7 = {};
+    const a$8 = b$6;
+    const b$9 = c$7;
+    c$10 = a$8;
+    mutate$4(a$8, b$9);
+    $[0] = c$10;
+  } else {
+    c$10 = $[0];
+  }
+
   return c$10;
 }
 

@@ -65,12 +65,21 @@ function foo(
 
 ```javascript
 function foo$0() {
+  const $ = React.useMemoCache();
   const y$5 = 2;
-  let y$8 = undefined;
-  bb1: if (y$5 > 1) {
-    y$8 = 1;
+  let y$8;
+  if (true) {
+    y$8 = undefined;
+
+    bb1: if (y$5 > 1) {
+      y$8 = 1;
+    } else {
+      y$8 = 2;
+    }
+
+    $[0] = y$8;
   } else {
-    y$8 = 2;
+    y$8 = $[0];
   }
 
   const x$11 = y$8;

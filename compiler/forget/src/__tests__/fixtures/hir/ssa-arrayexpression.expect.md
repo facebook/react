@@ -41,9 +41,17 @@ function Component(
 
 ```javascript
 function Component$0(props$5) {
+  const $ = React.useMemoCache();
   const a$6 = 1;
   const b$7 = 2;
-  const x$8 = [a$6, b$7];
+  let x$8;
+  if (true) {
+    x$8 = [a$6, b$7];
+    $[0] = x$8;
+  } else {
+    x$8 = $[0];
+  }
+
   return x$8;
 }
 

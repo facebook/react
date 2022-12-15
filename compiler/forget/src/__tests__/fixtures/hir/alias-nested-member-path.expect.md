@@ -50,11 +50,39 @@ function component(
 
 ```javascript
 function component$0() {
-  const z$4 = [];
-  const y$5 = {};
-  y$5.z = z$4;
-  const x$6 = {};
-  x$6.y = y$5;
+  const $ = React.useMemoCache();
+  let z$4;
+  if (true) {
+    z$4 = [];
+    $[0] = z$4;
+  } else {
+    z$4 = $[0];
+  }
+
+  const c_1 = $[1] !== z$4;
+  let y$5;
+
+  if (c_1) {
+    y$5 = {};
+    y$5.z = z$4;
+    $[1] = z$4;
+    $[2] = y$5;
+  } else {
+    y$5 = $[2];
+  }
+
+  const c_3 = $[3] !== y$5;
+  let x$6;
+
+  if (c_3) {
+    x$6 = {};
+    x$6.y = y$5;
+    $[3] = y$5;
+    $[4] = x$6;
+  } else {
+    x$6 = $[4];
+  }
+
   return x$6;
 }
 

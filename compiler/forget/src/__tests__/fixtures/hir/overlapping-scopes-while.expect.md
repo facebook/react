@@ -60,11 +60,23 @@ function foo(
 
 ```javascript
 function foo$0(a$6, b$7, c$8) {
-  const x$9 = [];
-  const y$10 = [];
-  bb2: while (c$8) {
-    y$10.push(b$7);
-    x$9.push(a$6);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== c$8;
+  const c_1 = $[1] !== b$7;
+  const c_2 = $[2] !== a$6;
+  if (c_0 || c_1 || c_2) {
+    const x$9 = [];
+    const y$10 = [];
+
+    bb2: while (c$8) {
+      y$10.push(b$7);
+      x$9.push(a$6);
+    }
+
+    $[0] = c$8;
+    $[1] = b$7;
+    $[2] = a$6;
+  } else {
   }
 }
 

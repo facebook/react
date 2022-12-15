@@ -66,8 +66,8 @@ bb3:
   [16] Const mutate $26 = "\n      "
   [17] Const mutate $27 = "\n      "
   [18] Const mutate $28 = "\n    "
-  [19] Const mutate $31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
-  [20] Return read $31_@3
+  [19] Const mutate t9$31_@3 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$22_@2:TFunction}{read $28}</read $25:TPrimitive>
+  [20] Return read t9$31_@3
 ```
 
 ## Reactive Scopes
@@ -119,33 +119,79 @@ function foo(
 
 ```javascript
 function foo$0(a$13, b$14, c$15) {
-  const x$16 = [];
-  bb1: if (a$13) {
-    x$16.push(a$13);
-  }
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$13;
+  let x$16;
+  if (c_0) {
+    x$16 = [];
 
-  const y$19 = <div>{x$16}</div>;
-  let x$22 = undefined;
-
-  bb3: switch (b$14) {
-    case 0: {
-      x$22 = [];
-      x$22.push(b$14);
-      break bb3;
+    bb1: if (a$13) {
+      x$16.push(a$13);
     }
 
-    default: {
-      x$22 = [];
-      x$22.push(c$15);
-    }
+    $[0] = a$13;
+    $[1] = x$16;
+  } else {
+    x$16 = $[1];
   }
 
-  return (
-    <div>
-      {y$19}
-      {x$22}
-    </div>
-  );
+  const c_2 = $[2] !== x$16;
+  let y$19;
+
+  if (c_2) {
+    y$19 = <div>{x$16}</div>;
+    $[2] = x$16;
+    $[3] = y$19;
+  } else {
+    y$19 = $[3];
+  }
+
+  const c_4 = $[4] !== b$14;
+  const c_5 = $[5] !== c$15;
+  let x$22;
+
+  if (c_4 || c_5) {
+    x$22 = undefined;
+
+    bb3: switch (b$14) {
+      case 0: {
+        x$22 = [];
+        x$22.push(b$14);
+        break bb3;
+      }
+
+      default: {
+        x$22 = [];
+        x$22.push(c$15);
+      }
+    }
+
+    $[4] = b$14;
+    $[5] = c$15;
+    $[6] = x$22;
+  } else {
+    x$22 = $[6];
+  }
+
+  const c_7 = $[7] !== y$19;
+  const c_8 = $[8] !== x$22;
+  let t9$31;
+
+  if (c_7 || c_8) {
+    t9$31 = (
+      <div>
+        {y$19}
+        {x$22}
+      </div>
+    );
+    $[7] = y$19;
+    $[8] = x$22;
+    $[9] = t9$31;
+  } else {
+    t9$31 = $[9];
+  }
+
+  return t9$31;
 }
 
 ```

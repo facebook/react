@@ -82,15 +82,32 @@ function foo(
 
 ```javascript
 function foo$0(cond$7) {
-  let a$8 = {};
-  let b$9 = {};
-  let c$10 = {};
-  bb2: while (cond$7) {
-    const z$13 = a$8;
-    a$8 = b$9;
-    b$9 = c$10;
-    c$10 = z$13;
-    mutate$6(a$8, b$9);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== cond$7;
+  let a$8;
+  let b$9;
+  let c$10;
+  if (c_0) {
+    a$8 = {};
+    b$9 = {};
+    c$10 = {};
+
+    bb2: while (cond$7) {
+      const z$13 = a$8;
+      a$8 = b$9;
+      b$9 = c$10;
+      c$10 = z$13;
+      mutate$6(a$8, b$9);
+    }
+
+    $[0] = cond$7;
+    $[1] = a$8;
+    $[2] = b$9;
+    $[3] = c$10;
+  } else {
+    a$8 = $[1];
+    b$9 = $[2];
+    c$10 = $[3];
   }
 
   a$8;

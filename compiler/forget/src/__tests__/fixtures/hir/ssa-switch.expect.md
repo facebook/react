@@ -99,22 +99,31 @@ function foo(
 
 ```javascript
 function foo$0() {
+  const $ = React.useMemoCache();
   const x$10 = 1;
-  let x$16 = undefined;
-  bb1: switch (x$10) {
-    case x$10 === 1: {
-      x$16 = x$10 + 1;
-      break bb1;
+  let x$16;
+  if (true) {
+    x$16 = undefined;
+
+    bb1: switch (x$10) {
+      case x$10 === 1: {
+        x$16 = x$10 + 1;
+        break bb1;
+      }
+
+      case x$10 === 2: {
+        x$16 = x$10 + 2;
+        break bb1;
+      }
+
+      default: {
+        x$16 = x$10 + 3;
+      }
     }
 
-    case x$10 === 2: {
-      x$16 = x$10 + 2;
-      break bb1;
-    }
-
-    default: {
-      x$16 = x$10 + 3;
-    }
+    $[0] = x$16;
+  } else {
+    x$16 = $[0];
   }
 
   const y$22 = x$16;

@@ -19,14 +19,14 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [2] Const mutate $10:TPrimitive = false
-  [3] Const mutate $11_@0 = Call read foo$0:TFunction(read $10:TPrimitive, read y$9:TPrimitive)
-  [4] Return freeze $11_@0
+  [3] Const mutate t1$11_@0 = Call read foo$0:TFunction(read $10:TPrimitive, read y$9:TPrimitive)
+  [4] Return freeze t1$11_@0
 bb1:
   predecessor blocks: bb0
   [5] Const mutate $12:TPrimitive = 10
   [6] Const mutate $13:TPrimitive = Binary read y$9:TPrimitive * read $12:TPrimitive
-  [7] Const mutate $14_@1 = Array [read $13:TPrimitive]
-  [8] Return freeze $14_@1
+  [7] Const mutate t2$14_@1 = Array [read $13:TPrimitive]
+  [8] Return freeze t2$14_@1
 ```
 
 ## Reactive Scopes
@@ -57,10 +57,32 @@ function foo(
 
 ```javascript
 function foo$0(x$8, y$9) {
+  const $ = React.useMemoCache();
   bb1: if (x$8) {
-    return foo$0(false, y$9);
+    const c_0 = $[0] !== y$9;
+    let t1$11;
+
+    if (c_0) {
+      t1$11 = foo$0(false, y$9);
+      $[0] = y$9;
+      $[1] = t1$11;
+    } else {
+      t1$11 = $[1];
+    }
+
+    return t1$11;
   }
-  return [y$9 * 10];
+
+  let t2$14;
+
+  if (true) {
+    t2$14 = [y$9 * 10];
+    $[2] = t2$14;
+  } else {
+    t2$14 = $[2];
+  }
+
+  return t2$14;
 }
 
 ```

@@ -56,8 +56,8 @@ bb1:
   predecessor blocks: bb0 bb6 bb2
   [12] Const mutate child$19_@2 = JSX <read Component$0 data={freeze x$10_@1:TFunction} ></read Component$0>
   [13] Call read y$11_@1.push(read props$9.p4)
-  [14] Const mutate $22_@3 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@2}</read Component$0>
-  [15] Return read $22_@3
+  [14] Const mutate t7$22_@3 = JSX <read Component$0 data={freeze y$11_@1:TPrimitive} >{read child$19_@2}</read Component$0>
+  [15] Return read t7$22_@3
 ```
 
 ## Reactive Scopes
@@ -105,31 +105,67 @@ function Component(
 
 ```javascript
 function Component$0(props$9) {
-  const x$10 = [];
-  let y$11 = undefined;
-  bb1: switch (props$9.p0) {
-    case 1: {
-      break bb1;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$9.p0;
+  const c_1 = $[1] !== props$9.p2;
+  let x$10;
+  if (c_0 || c_1) {
+    x$10 = [];
+    let y$11 = undefined;
+
+    bb1: switch (props$9.p0) {
+      case 1: {
+        break bb1;
+      }
+
+      case true: {
+        x$10.push(props$9.p2);
+        y$11 = [];
+        break bb1;
+      }
+
+      default: {
+        break bb1;
+      }
+
+      case false: {
+        y$11 = x$10;
+      }
     }
 
-    case true: {
-      x$10.push(props$9.p2);
-      y$11 = [];
-      break bb1;
-    }
-
-    default: {
-      break bb1;
-    }
-
-    case false: {
-      y$11 = x$10;
-    }
+    $[0] = props$9.p0;
+    $[1] = props$9.p2;
+    $[2] = x$10;
+  } else {
+    x$10 = $[2];
   }
 
-  const child$19 = <Component$0 data={x$10}></Component$0>;
+  const c_3 = $[3] !== x$10;
+  let child$19;
+
+  if (c_3) {
+    child$19 = <Component$0 data={x$10}></Component$0>;
+    $[3] = x$10;
+    $[4] = child$19;
+  } else {
+    child$19 = $[4];
+  }
+
   y$11.push(props$9.p4);
-  return <Component$0 data={y$11}>{child$19}</Component$0>;
+  const c_5 = $[5] !== y$11;
+  const c_6 = $[6] !== child$19;
+  let t7$22;
+
+  if (c_5 || c_6) {
+    t7$22 = <Component$0 data={y$11}>{child$19}</Component$0>;
+    $[5] = y$11;
+    $[6] = child$19;
+    $[7] = t7$22;
+  } else {
+    t7$22 = $[7];
+  }
+
+  return t7$22;
 }
 
 ```

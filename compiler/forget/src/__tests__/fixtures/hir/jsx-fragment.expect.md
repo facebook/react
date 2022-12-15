@@ -25,12 +25,12 @@ bb0:
   [4] Const mutate $17:TPrimitive = "div"
   [5] Const mutate $18 = "\n        "
   [6] Const mutate $19 = "Text"
-  [7] Const mutate $20_@0 = JsxFragment [read $19]
+  [7] Const mutate t0$20_@0 = JsxFragment [read $19]
   [8] Const mutate $21 = "\n      "
-  [9] Const mutate $22_@1 = JSX <read $17:TPrimitive>{read $18}{read $20_@0}{read $21}</read $17:TPrimitive>
+  [9] Const mutate t2$22_@1 = JSX <read $17:TPrimitive>{read $18}{read t0$20_@0}{read $21}</read $17:TPrimitive>
   [10] Const mutate $23 = "\n    "
-  [11] Const mutate $24_@2 = JsxFragment [read $14, read props$13.greeting, read $15:TPrimitive, read $16, read $22_@1, read $23]
-  [12] Return read $24_@2
+  [11] Const mutate t5$24_@2 = JsxFragment [read $14, read props$13.greeting, read $15:TPrimitive, read $16, read t2$22_@1, read $23]
+  [12] Return read t5$24_@2
 ```
 
 ## Reactive Scopes
@@ -65,12 +65,45 @@ function Foo(
 
 ```javascript
 function Foo$0(props$13) {
-  return (
-    <>
-      Hello {props$13.greeting}
-      {<div>{<>Text</>}</div>}
-    </>
-  );
+  const $ = React.useMemoCache();
+  let t0$20;
+  if (true) {
+    t0$20 = <>Text</>;
+    $[0] = t0$20;
+  } else {
+    t0$20 = $[0];
+  }
+
+  const c_1 = $[1] !== t0$20;
+  let t2$22;
+
+  if (c_1) {
+    t2$22 = <div>{t0$20}</div>;
+    $[1] = t0$20;
+    $[2] = t2$22;
+  } else {
+    t2$22 = $[2];
+  }
+
+  const c_3 = $[3] !== props$13.greeting;
+  const c_4 = $[4] !== t2$22;
+  let t5$24;
+
+  if (c_3 || c_4) {
+    t5$24 = (
+      <>
+        Hello {props$13.greeting}
+        {t2$22}
+      </>
+    );
+    $[3] = props$13.greeting;
+    $[4] = t2$22;
+    $[5] = t5$24;
+  } else {
+    t5$24 = $[5];
+  }
+
+  return t5$24;
 }
 
 ```

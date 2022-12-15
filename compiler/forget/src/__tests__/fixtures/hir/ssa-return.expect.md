@@ -52,9 +52,18 @@ function foo(
 
 ```javascript
 function foo$0() {
-  let x$4 = 1;
-  bb1: if (x$4 === 1) {
-    x$4 = 2;
+  const $ = React.useMemoCache();
+  let x$4;
+  if (true) {
+    x$4 = 1;
+
+    bb1: if (x$4 === 1) {
+      x$4 = 2;
+    }
+
+    $[0] = x$4;
+  } else {
+    x$4 = $[0];
   }
 
   return x$4;

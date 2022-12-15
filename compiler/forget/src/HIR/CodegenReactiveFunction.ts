@@ -18,7 +18,9 @@ import {
   Temporaries,
 } from "./Codegen";
 import {
+  Identifier,
   Instruction,
+  InstructionKind,
   ReactiveBasicBlock,
   ReactiveFunction,
   ReactiveScope,
@@ -38,6 +40,22 @@ export function codegenReactiveFunction(fn: ReactiveFunction): t.Function {
       statements.pop();
     }
   }
+  if (cx.nextCacheIndex !== 0) {
+    statements.unshift(
+      t.variableDeclaration("const", [
+        t.variableDeclarator(
+          t.identifier("$"),
+          t.callExpression(
+            t.memberExpression(
+              t.identifier("React"),
+              t.identifier("useMemoCache")
+            ),
+            []
+          )
+        ),
+      ])
+    );
+  }
   return createFunctionDeclaration(
     fn.loc,
     fn.id !== null ? convertIdentifier(fn.id) : null,
@@ -49,7 +67,21 @@ export function codegenReactiveFunction(fn: ReactiveFunction): t.Function {
 }
 
 class Context {
+  #nextCacheIndex: number = 0;
+  #identifiers: Set<Identifier> = new Set();
   temp: Temporaries = new Map();
+
+  get nextCacheIndex(): number {
+    return this.#nextCacheIndex++;
+  }
+
+  declare(identifier: Identifier): void {
+    this.#identifiers.add(identifier);
+  }
+
+  declared(identifier: Identifier): boolean {
+    return this.#identifiers.has(identifier);
+  }
 }
 
 function codegenBlock(
@@ -61,7 +93,7 @@ function codegenBlock(
     switch (item.kind) {
       case "instruction": {
         const statement = codegenInstructionNullable(
-          cx.temp,
+          cx,
           item.instruction,
           codegenInstructionValue(cx.temp, item.instruction.value)
         );
@@ -102,9 +134,84 @@ function codegenReactiveScope(
   scope: ReactiveScope,
   block: ReactiveBasicBlock
 ): void {
-  // TODO @josephsavona: Emit memoized blocks!
-  const body = codegenBlock(cx, block).body;
-  statements.push(...body);
+  const cacheStoreStatements: Array<t.Statement> = [];
+  const cacheLoadStatements: Array<t.Statement> = [];
+  const changeIdentifiers: Array<t.Identifier> = [];
+  for (const dep of scope.dependencies) {
+    const index = cx.nextCacheIndex;
+    const changeIdentifier = t.identifier(`c_${index}`);
+    const depValue = codegenPlace(cx.temp, dep);
+
+    changeIdentifiers.push(changeIdentifier);
+    statements.push(
+      t.variableDeclaration("const", [
+        t.variableDeclarator(
+          changeIdentifier,
+          t.binaryExpression(
+            "!==",
+            t.memberExpression(
+              t.identifier("$"),
+              t.numericLiteral(index),
+              true
+            ),
+            depValue
+          )
+        ),
+      ])
+    );
+    cacheStoreStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          "=",
+          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          depValue
+        )
+      )
+    );
+  }
+  for (const output of scope.outputs) {
+    const index = cx.nextCacheIndex;
+
+    // TODO @josephsavona: ensure change and temp variables have non-conflicting names
+    output.name ??= `t${index}`;
+
+    const name = convertIdentifier(output);
+    cx.declare(output);
+    statements.push(t.variableDeclaration("let", [t.variableDeclarator(name)]));
+    cacheStoreStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          "=",
+          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          name
+        )
+      )
+    );
+    cacheLoadStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          "=",
+          name,
+          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true)
+        )
+      )
+    );
+  }
+  const testCondition =
+    (changeIdentifiers as Array<t.Expression>).reduce(
+      (acc: t.Expression | null, ident: t.Expression) => {
+        if (acc == null) {
+          return ident;
+        }
+        return t.logicalExpression("||", acc, ident);
+      },
+      null as t.Expression | null
+    ) ?? t.booleanLiteral(true); // TODO @josephsavona handle case of empty dependencies
+
+  const computationBlock = codegenBlock(cx, block);
+  computationBlock.body.push(...cacheStoreStatements);
+  const memoBlock = t.blockStatement(cacheLoadStatements);
+  statements.push(t.ifStatement(testCondition, computationBlock, memoBlock));
 }
 
 function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
@@ -173,11 +280,30 @@ function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
 }
 
 export function codegenInstructionNullable(
-  temp: Temporaries,
+  cx: Context,
   instr: Instruction,
   value: t.Expression
 ): t.Statement | null {
-  const statement = codegenInstruction(temp, instr, value);
+  let statement;
+  if (
+    instr.lvalue !== null &&
+    instr.lvalue.place.memberPath === null &&
+    cx.declared(instr.lvalue.place.identifier)
+  ) {
+    statement = codegenInstruction(
+      cx.temp,
+      {
+        ...instr,
+        lvalue: {
+          ...instr.lvalue,
+          kind: InstructionKind.Reassign,
+        },
+      },
+      value
+    );
+  } else {
+    statement = codegenInstruction(cx.temp, instr, value);
+  }
   if (statement.type === "EmptyStatement") {
     return null;
   }

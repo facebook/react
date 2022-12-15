@@ -57,7 +57,10 @@ function foo(
 
 ```javascript
 function foo$0(cond$4) {
-  const items$5 = [];
+  if (true) {
+    const items$5 = [];
+  } else {
+  }
 }
 
 ```

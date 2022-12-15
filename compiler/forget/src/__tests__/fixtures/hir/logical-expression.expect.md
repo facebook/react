@@ -23,20 +23,20 @@ function g() {}
 
 ```
 bb0:
-  [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
-  [2] Let mutate $6_@1[2:7] = undefined
-  [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
+  [1] Const mutate t0$5_@0 = Call mutate f$1:TFunction()
+  [2] Let mutate t2$6_@1[2:7] = undefined
+  [2] If (read t0$5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
+  [3] Const mutate t2$6_@1[2:7] = Call mutate g$4:TFunction()
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@1[2:7] = read $5_@0
+  [5] Const mutate t2$6_@1[2:7] = read t0$5_@0
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [7] Return freeze $6_@1
+  [7] Return freeze t2$6_@1
 ```
 
 ## Reactive Scopes
@@ -64,10 +64,34 @@ function And(
 
 ```javascript
 function And$0() {
-  bb1: if (f$1()) {
+  const $ = React.useMemoCache();
+  let t0$5;
+  if (true) {
+    t0$5 = f$1();
+    $[0] = t0$5;
   } else {
+    t0$5 = $[0];
   }
-  return f$1();
+
+  const c_1 = $[1] !== t0$5;
+  let t2$6;
+
+  if (c_1) {
+    t2$6 = undefined;
+
+    bb1: if (t0$5) {
+      t2$6 = g$4();
+    } else {
+      t2$6 = t0$5;
+    }
+
+    $[1] = t0$5;
+    $[2] = t2$6;
+  } else {
+    t2$6 = $[2];
+  }
+
+  return t2$6;
 }
 
 ```
@@ -75,20 +99,20 @@ function And$0() {
 
 ```
 bb0:
-  [1] Const mutate $5_@0 = Call mutate f$1:TFunction()
-  [2] Let mutate $6_@1[2:7] = undefined
-  [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
+  [1] Const mutate t0$5_@0 = Call mutate f$1:TFunction()
+  [2] Let mutate t2$6_@1[2:7] = undefined
+  [2] If (read t0$5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate $6_@1[2:7] = read $5_@0
+  [3] Const mutate t2$6_@1[2:7] = read t0$5_@0
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@1[2:7] = Call mutate g$4:TFunction()
+  [5] Const mutate t2$6_@1[2:7] = Call mutate g$4:TFunction()
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [7] Return freeze $6_@1
+  [7] Return freeze t2$6_@1
 ```
 
 ## Reactive Scopes
@@ -116,10 +140,34 @@ function Or(
 
 ```javascript
 function Or$0() {
-  bb1: if (f$1()) {
+  const $ = React.useMemoCache();
+  let t0$5;
+  if (true) {
+    t0$5 = f$1();
+    $[0] = t0$5;
   } else {
+    t0$5 = $[0];
   }
-  return g$4();
+
+  const c_1 = $[1] !== t0$5;
+  let t2$6;
+
+  if (c_1) {
+    t2$6 = undefined;
+
+    bb1: if (t0$5) {
+      t2$6 = t0$5;
+    } else {
+      t2$6 = g$4();
+    }
+
+    $[1] = t0$5;
+    $[2] = t2$6;
+  } else {
+    t2$6 = $[2];
+  }
+
+  return t2$6;
 }
 
 ```
@@ -127,22 +175,22 @@ function Or$0() {
 
 ```
 bb0:
-  [1] Const mutate $9_@0:TPrimitive = Call mutate f$2:TFunction()
+  [1] Const mutate t0$9_@0:TPrimitive = Call mutate f$2:TFunction()
   [2] Const mutate $10:TPrimitive = null
-  [3] Const mutate $11:TPrimitive = Binary read $9_@0:TPrimitive != read $10:TPrimitive
-  [4] Let mutate $12_@1:TPrimitive[4:9] = undefined
+  [3] Const mutate $11:TPrimitive = Binary read t0$9_@0:TPrimitive != read $10:TPrimitive
+  [4] Let mutate t2$12_@1:TPrimitive[4:9] = undefined
   [4] If (read $11:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate $12_@1:TPrimitive[4:9] = read $9_@0:TPrimitive
+  [5] Const mutate t2$12_@1:TPrimitive[4:9] = read t0$9_@0:TPrimitive
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Const mutate $12_@1:TPrimitive[4:9] = Call mutate g$7:TFunction()
+  [7] Const mutate t2$12_@1:TPrimitive[4:9] = Call mutate g$7:TFunction()
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [9] Return freeze $12_@1:TPrimitive
+  [9] Return freeze t2$12_@1:TPrimitive
 ```
 
 ## Reactive Scopes
@@ -173,10 +221,34 @@ function QuestionQuestion(
 
 ```javascript
 function QuestionQuestion$0(props$8) {
-  bb1: if (f$2() != null) {
+  const $ = React.useMemoCache();
+  let t0$9;
+  if (true) {
+    t0$9 = f$2();
+    $[0] = t0$9;
   } else {
+    t0$9 = $[0];
   }
-  return g$7();
+
+  const c_1 = $[1] !== t0$9;
+  let t2$12;
+
+  if (c_1) {
+    t2$12 = undefined;
+
+    bb1: if (t0$9 != null) {
+      t2$12 = t0$9;
+    } else {
+      t2$12 = g$7();
+    }
+
+    $[1] = t0$9;
+    $[2] = t2$12;
+  } else {
+    t2$12 = $[2];
+  }
+
+  return t2$12;
 }
 
 ```

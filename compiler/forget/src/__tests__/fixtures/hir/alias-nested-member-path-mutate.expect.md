@@ -48,12 +48,15 @@ function component(
 
 ```javascript
 function component$0() {
-  const z$5 = [];
-  const y$6 = {};
-  y$6.z = z$5;
-  const x$7 = {};
-  x$7.y = y$6;
-  mutate$4(x$7.y.z);
+  if (true) {
+    const z$5 = [];
+    const y$6 = {};
+    y$6.z = z$5;
+    const x$7 = {};
+    x$7.y = y$6;
+    mutate$4(x$7.y.z);
+  } else {
+  }
 }
 
 ```

@@ -67,13 +67,30 @@ function foo(
 
 ```javascript
 function foo$0(a$7, b$8, c$9, d$10, e$11) {
-  let x$12 = null;
-  bb1: if (a$7) {
-    x$12 = b$8;
-  } else {
-    if (c$9) {
-      x$12 = d$10;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$7;
+  const c_1 = $[1] !== b$8;
+  const c_2 = $[2] !== c$9;
+  const c_3 = $[3] !== d$10;
+  let x$12;
+  if (c_0 || c_1 || c_2 || c_3) {
+    x$12 = null;
+
+    bb1: if (a$7) {
+      x$12 = b$8;
+    } else {
+      if (c$9) {
+        x$12 = d$10;
+      }
     }
+
+    $[0] = a$7;
+    $[1] = b$8;
+    $[2] = c$9;
+    $[3] = d$10;
+    $[4] = x$12;
+  } else {
+    x$12 = $[4];
   }
 
   return x$12;

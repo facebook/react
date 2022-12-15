@@ -61,13 +61,41 @@ function component(
 
 ```javascript
 function component$0() {
-  const p$7 = makePrimitive$2();
+  const $ = React.useMemoCache();
+  let p$7;
+  if (true) {
+    p$7 = makePrimitive$2();
+    $[0] = p$7;
+  } else {
+    p$7 = $[0];
+  }
+
   p$7 + p$7;
-  const o$8 = {};
-  const x$9 = {};
-  x$9.t = p$7;
-  const z$10 = x$9.t;
-  x$9.t = o$8;
+  let o$8;
+
+  if (true) {
+    o$8 = {};
+    $[1] = o$8;
+  } else {
+    o$8 = $[1];
+  }
+
+  const c_2 = $[2] !== p$7;
+  const c_3 = $[3] !== o$8;
+  let x$9;
+
+  if (c_2 || c_3) {
+    x$9 = {};
+    x$9.t = p$7;
+    const z$10 = x$9.t;
+    x$9.t = o$8;
+    $[2] = p$7;
+    $[3] = o$8;
+    $[4] = x$9;
+  } else {
+    x$9 = $[4];
+  }
+
   const y$11 = x$9.t;
 }
 

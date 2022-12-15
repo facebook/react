@@ -50,8 +50,8 @@ bb1:
   predecessor blocks: bb2 bb0
   [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1:TFunction} ></read Component$0>
   [13] Call read y$10_@1.push(read props$8.p4)
-  [14] Const mutate $23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
-  [15] Return read $23_@4
+  [14] Const mutate t8$23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
+  [15] Return read t8$23_@4
 ```
 
 ## Reactive Scopes
@@ -94,23 +94,65 @@ function Component(
 
 ```javascript
 function Component$0(props$8) {
-  const x$9 = [];
-  let y$10 = undefined;
-  bb1: switch (props$8.p0) {
-    case true: {
-      x$9.push(props$8.p2);
-      x$9.push(props$8.p3);
-      const y$13 = [];
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$8.p0;
+  const c_1 = $[1] !== props$8.p2;
+  const c_2 = $[2] !== props$8.p3;
+  let x$9;
+  if (c_0 || c_1 || c_2) {
+    x$9 = [];
+    let y$10 = undefined;
+
+    bb1: switch (props$8.p0) {
+      case true: {
+        x$9.push(props$8.p2);
+        x$9.push(props$8.p3);
+
+        if (true) {
+          const y$13 = [];
+        } else {
+        }
+      }
+
+      case false: {
+        y$10 = x$9;
+      }
     }
 
-    case false: {
-      y$10 = x$9;
-    }
+    $[0] = props$8.p0;
+    $[1] = props$8.p2;
+    $[2] = props$8.p3;
+    $[3] = x$9;
+  } else {
+    x$9 = $[3];
   }
 
-  const child$19 = <Component$0 data={x$9}></Component$0>;
+  const c_4 = $[4] !== x$9;
+  let child$19;
+
+  if (c_4) {
+    child$19 = <Component$0 data={x$9}></Component$0>;
+    $[4] = x$9;
+    $[5] = child$19;
+  } else {
+    child$19 = $[5];
+  }
+
   y$10.push(props$8.p4);
-  return <Component$0 data={y$10}>{child$19}</Component$0>;
+  const c_6 = $[6] !== y$10;
+  const c_7 = $[7] !== child$19;
+  let t8$23;
+
+  if (c_6 || c_7) {
+    t8$23 = <Component$0 data={y$10}>{child$19}</Component$0>;
+    $[6] = y$10;
+    $[7] = child$19;
+    $[8] = t8$23;
+  } else {
+    t8$23 = $[8];
+  }
+
+  return t8$23;
 }
 
 ```

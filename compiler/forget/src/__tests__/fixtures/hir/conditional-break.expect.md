@@ -115,13 +115,28 @@ function Component(
 
 ```javascript
 function Component$0(props$4) {
-  const a_DEBUG$5 = [];
-  a_DEBUG$5.push(props$4.a);
-  bb1: if (props$4.b) {
-    return null;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$4.a;
+  const c_1 = $[1] !== props$4.b;
+  const c_2 = $[2] !== props$4.d;
+  let a_DEBUG$5;
+  if (c_0 || c_1 || c_2) {
+    a_DEBUG$5 = [];
+    a_DEBUG$5.push(props$4.a);
+
+    bb1: if (props$4.b) {
+      return null;
+    }
+
+    a_DEBUG$5.push(props$4.d);
+    $[0] = props$4.a;
+    $[1] = props$4.b;
+    $[2] = props$4.d;
+    $[3] = a_DEBUG$5;
+  } else {
+    a_DEBUG$5 = $[3];
   }
 
-  a_DEBUG$5.push(props$4.d);
   return a_DEBUG$5;
 }
 
@@ -166,13 +181,30 @@ function Component(
 
 ```javascript
 function Component$0(props$3) {
-  const a$4 = [];
-  a$4.push(props$3.a);
-  bb1: if (props$3.b) {
-    a$4.push(props$3.c);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$3.a;
+  const c_1 = $[1] !== props$3.b;
+  const c_2 = $[2] !== props$3.c;
+  const c_3 = $[3] !== props$3.d;
+  let a$4;
+  if (c_0 || c_1 || c_2 || c_3) {
+    a$4 = [];
+    a$4.push(props$3.a);
+
+    bb1: if (props$3.b) {
+      a$4.push(props$3.c);
+    }
+
+    a$4.push(props$3.d);
+    $[0] = props$3.a;
+    $[1] = props$3.b;
+    $[2] = props$3.c;
+    $[3] = props$3.d;
+    $[4] = a$4;
+  } else {
+    a$4 = $[4];
   }
 
-  a$4.push(props$3.d);
   return a$4;
 }
 
@@ -220,14 +252,31 @@ function Component(
 
 ```javascript
 function Component$0(props$4) {
-  const a$5 = [];
-  a$5.push(props$4.a);
-  bb1: if (props$4.b) {
-    a$5.push(props$4.c);
-    return null;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$4.a;
+  const c_1 = $[1] !== props$4.b;
+  const c_2 = $[2] !== props$4.c;
+  const c_3 = $[3] !== props$4.d;
+  let a$5;
+  if (c_0 || c_1 || c_2 || c_3) {
+    a$5 = [];
+    a$5.push(props$4.a);
+
+    bb1: if (props$4.b) {
+      a$5.push(props$4.c);
+      return null;
+    }
+
+    a$5.push(props$4.d);
+    $[0] = props$4.a;
+    $[1] = props$4.b;
+    $[2] = props$4.c;
+    $[3] = props$4.d;
+    $[4] = a$5;
+  } else {
+    a$5 = $[4];
   }
 
-  a$5.push(props$4.d);
   return a$5;
 }
 
@@ -273,14 +322,31 @@ function Component(
 
 ```javascript
 function Component$0(props$3) {
-  const a$4 = [];
-  a$4.push(props$3.a);
-  bb1: if (props$3.b) {
-    a$4.push(props$3.c);
-    return a$4;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$3.a;
+  const c_1 = $[1] !== props$3.b;
+  const c_2 = $[2] !== props$3.c;
+  const c_3 = $[3] !== props$3.d;
+  let a$4;
+  if (c_0 || c_1 || c_2 || c_3) {
+    a$4 = [];
+    a$4.push(props$3.a);
+
+    bb1: if (props$3.b) {
+      a$4.push(props$3.c);
+      return a$4;
+    }
+
+    a$4.push(props$3.d);
+    $[0] = props$3.a;
+    $[1] = props$3.b;
+    $[2] = props$3.c;
+    $[3] = props$3.d;
+    $[4] = a$4;
+  } else {
+    a$4 = $[4];
   }
 
-  a$4.push(props$3.d);
   return a$4;
 }
 
@@ -325,14 +391,27 @@ function Component(
 
 ```javascript
 function Component$0(props$3) {
-  const a$4 = [];
-  a$4.push(props$3.a);
-  bb2: if (props$3.b) {
-    a$4.push(props$3.d);
-    return a$4;
-  }
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$3.a;
+  const c_1 = $[1] !== props$3.b;
+  const c_2 = $[2] !== props$3.d;
+  const c_3 = $[3] !== props$3.c;
+  if (c_0 || c_1 || c_2 || c_3) {
+    const a$4 = [];
+    a$4.push(props$3.a);
 
-  a$4.push(props$3.c);
+    bb2: if (props$3.b) {
+      a$4.push(props$3.d);
+      return a$4;
+    }
+
+    a$4.push(props$3.c);
+    $[0] = props$3.a;
+    $[1] = props$3.b;
+    $[2] = props$3.d;
+    $[3] = props$3.c;
+  } else {
+  }
 }
 
 ```

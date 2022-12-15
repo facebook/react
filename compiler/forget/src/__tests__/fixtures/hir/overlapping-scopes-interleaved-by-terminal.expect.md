@@ -54,13 +54,22 @@ function foo(
 
 ```javascript
 function foo$0(a$6, b$7, c$8) {
-  const x$9 = [];
-  const y$10 = [];
-  bb1: if (x$9) {
-  }
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$6;
+  const c_1 = $[1] !== b$7;
+  if (c_0 || c_1) {
+    const x$9 = [];
+    const y$10 = [];
 
-  y$10.push(a$6);
-  x$9.push(b$7);
+    bb1: if (x$9) {
+    }
+
+    y$10.push(a$6);
+    x$9.push(b$7);
+    $[0] = a$6;
+    $[1] = b$7;
+  } else {
+  }
 }
 
 ```

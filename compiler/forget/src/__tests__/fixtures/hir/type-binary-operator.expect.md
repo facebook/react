@@ -55,10 +55,29 @@ function component(
 
 ```javascript
 function component$0() {
-  const a$7 = some$2();
-  const b$8 = someOther$4();
+  const $ = React.useMemoCache();
+  let a$7;
+  if (true) {
+    a$7 = some$2();
+    $[0] = a$7;
+  } else {
+    a$7 = $[0];
+  }
+
+  let b$8;
+
+  if (true) {
+    b$8 = someOther$4();
+    $[1] = b$8;
+  } else {
+    b$8 = $[1];
+  }
+
   bb1: if (a$7 > b$8) {
-    const m$10 = {};
+    if (true) {
+      const m$10 = {};
+    } else {
+    }
   }
 }
 

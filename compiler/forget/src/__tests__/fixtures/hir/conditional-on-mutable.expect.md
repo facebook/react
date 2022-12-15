@@ -51,8 +51,8 @@ bb4:
   [8] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0:TFunction} b={freeze b$8_@0:TFunction} ></read Foo$4>
-  [10] Return read $16_@2
+  [9] Const mutate t6$16_@2 = JSX <read Foo$4 a={freeze a$7_@0:TFunction} b={freeze b$8_@0:TFunction} ></read Foo$4>
+  [10] Return read t6$16_@2
 ```
 
 ## Reactive Scopes
@@ -83,17 +83,45 @@ function Component(
 
 ```javascript
 function Component$0(props$6) {
-  const a$7 = [];
-  const b$8 = [];
-  bb1: if (b$8) {
-    a$7.push(props$6.p0);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$6.p0;
+  const c_1 = $[1] !== props$6.p1;
+  const c_2 = $[2] !== props$6.p2;
+  let a$7;
+  if (c_0 || c_1 || c_2) {
+    a$7 = [];
+    const b$8 = [];
+
+    bb1: if (b$8) {
+      a$7.push(props$6.p0);
+    }
+
+    bb3: if (props$6.p1) {
+      b$8.push(props$6.p2);
+    }
+
+    $[0] = props$6.p0;
+    $[1] = props$6.p1;
+    $[2] = props$6.p2;
+    $[3] = a$7;
+  } else {
+    a$7 = $[3];
   }
 
-  bb3: if (props$6.p1) {
-    b$8.push(props$6.p2);
+  const c_4 = $[4] !== a$7;
+  const c_5 = $[5] !== b$8;
+  let t6$16;
+
+  if (c_4 || c_5) {
+    t6$16 = <Foo$4 a={a$7} b={b$8}></Foo$4>;
+    $[4] = a$7;
+    $[5] = b$8;
+    $[6] = t6$16;
+  } else {
+    t6$16 = $[6];
   }
 
-  return <Foo$4 a={a$7} b={b$8}></Foo$4>;
+  return t6$16;
 }
 
 ```
@@ -118,8 +146,8 @@ bb4:
   [9] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0:TFunction} b={freeze b$10_@0:TFunction} ></read Foo$6>
-  [11] Return read $19_@2
+  [10] Const mutate t6$19_@2 = JSX <read Foo$6 a={freeze a$9_@0:TFunction} b={freeze b$10_@0:TFunction} ></read Foo$6>
+  [11] Return read t6$19_@2
 ```
 
 ## Reactive Scopes
@@ -151,17 +179,45 @@ function Component(
 
 ```javascript
 function Component$0(props$8) {
-  const a$9 = [];
-  const b$10 = [];
-  bb1: if (mayMutate$4(b$10)) {
-    a$9.push(props$8.p0);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$8.p0;
+  const c_1 = $[1] !== props$8.p1;
+  const c_2 = $[2] !== props$8.p2;
+  let a$9;
+  if (c_0 || c_1 || c_2) {
+    a$9 = [];
+    const b$10 = [];
+
+    bb1: if (mayMutate$4(b$10)) {
+      a$9.push(props$8.p0);
+    }
+
+    bb3: if (props$8.p1) {
+      b$10.push(props$8.p2);
+    }
+
+    $[0] = props$8.p0;
+    $[1] = props$8.p1;
+    $[2] = props$8.p2;
+    $[3] = a$9;
+  } else {
+    a$9 = $[3];
   }
 
-  bb3: if (props$8.p1) {
-    b$10.push(props$8.p2);
+  const c_4 = $[4] !== a$9;
+  const c_5 = $[5] !== b$10;
+  let t6$19;
+
+  if (c_4 || c_5) {
+    t6$19 = <Foo$6 a={a$9} b={b$10}></Foo$6>;
+    $[4] = a$9;
+    $[5] = b$10;
+    $[6] = t6$19;
+  } else {
+    t6$19 = $[6];
   }
 
-  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
+  return t6$19;
 }
 
 ```

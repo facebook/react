@@ -49,8 +49,8 @@ bb0:
   [5] Const mutate _$13_@1 = JSX <read $12:TPrimitive a={freeze a$10_@0} ></read $12:TPrimitive>
   [6] New mutate Foo$4(mutate b$11_@0:TObject)
   [7] Const mutate $14:TPrimitive = "div"
-  [8] Const mutate $15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
-  [9] Return read $15_@2
+  [8] Const mutate t5$15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
+  [9] Return read t5$15_@2
 ```
 
 ## Reactive Scopes
@@ -82,13 +82,44 @@ function Component(
 
 ```javascript
 function Component$0(props$9) {
-  const a$10 = [];
-  const b$11 = {};
-  new Foo$4(a$10, b$11);
-  const _$13 = <div a={a$10}></div>;
+  const $ = React.useMemoCache();
+  let a$10;
+  let b$11;
+  if (true) {
+    a$10 = [];
+    b$11 = {};
+    new Foo$4(a$10, b$11);
+    const c_2 = $[2] !== a$10;
 
-  new Foo$4(b$11);
-  return <div a={a$10} b={b$11}></div>;
+    if (c_2) {
+      const _$13 = <div a={a$10}></div>;
+
+      $[2] = a$10;
+    } else {
+    }
+
+    new Foo$4(b$11);
+    $[0] = a$10;
+    $[1] = b$11;
+  } else {
+    a$10 = $[0];
+    b$11 = $[1];
+  }
+
+  const c_3 = $[3] !== a$10;
+  const c_4 = $[4] !== b$11;
+  let t5$15;
+
+  if (c_3 || c_4) {
+    t5$15 = <div a={a$10} b={b$11}></div>;
+    $[3] = a$10;
+    $[4] = b$11;
+    $[5] = t5$15;
+  } else {
+    t5$15 = $[5];
+  }
+
+  return t5$15;
 }
 
 ```

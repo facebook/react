@@ -61,13 +61,35 @@ function component(
 
 ```javascript
 function component$0() {
-  const x$7 = foo$2();
-  const y$8 = foo$2();
-  bb1: if (x$7 > y$8) {
-    const z$10 = {};
+  const $ = React.useMemoCache();
+  let x$7;
+  if (true) {
+    x$7 = foo$2();
+    $[0] = x$7;
+  } else {
+    x$7 = $[0];
   }
 
-  const z$12 = foo$2();
+  let y$8;
+
+  if (true) {
+    y$8 = foo$2();
+    $[1] = y$8;
+  } else {
+    y$8 = $[1];
+  }
+
+  bb1: if (x$7 > y$8) {
+    if (true) {
+      const z$10 = {};
+    } else {
+    }
+  }
+
+  if (true) {
+    const z$12 = foo$2();
+  } else {
+  }
 }
 
 ```

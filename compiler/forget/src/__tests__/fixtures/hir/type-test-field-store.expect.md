@@ -44,9 +44,22 @@ function component(
 
 ```javascript
 function component$0() {
-  const x$4 = {};
-  const q$5 = {};
-  x$4.t = q$5;
+  const $ = React.useMemoCache();
+  let x$4;
+  if (true) {
+    x$4 = {};
+
+    if (true) {
+      const q$5 = {};
+    } else {
+    }
+
+    x$4.t = q$5;
+    $[0] = x$4;
+  } else {
+    x$4 = $[0];
+  }
+
   const z$6 = x$4.t;
 }
 

@@ -131,31 +131,51 @@ function Component(
 
 ```javascript
 function Component$0(props$10) {
-  const a$11 = {};
-  const b$12 = [a$11];
-  const c$13 = {};
-  const d$14 = {
-    c: c$13,
-  };
-  const x$15 = {};
-  x$15.b = b$12;
-  const y$16 = mutate$8(x$15, d$14);
-  bb1: if (a$11) {
+  const $ = React.useMemoCache();
+  let a$11;
+  if (true) {
+    a$11 = {};
+    $[0] = a$11;
+  } else {
+    a$11 = $[0];
   }
 
-  bb3: if (b$12) {
-  }
+  const c_1 = $[1] !== a$11;
 
-  bb5: if (c$13) {
-  }
+  if (c_1) {
+    const b$12 = [a$11];
 
-  bb7: if (d$14) {
-  }
+    if (true) {
+      const c$13 = {};
+    } else {
+    }
 
-  bb9: if (y$16) {
-  }
+    const d$14 = {
+      c: c$13,
+    };
+    const x$15 = {};
+    x$15.b = b$12;
+    const y$16 = mutate$8(x$15, d$14);
 
-  mutate$8(x$15, null);
+    bb1: if (a$11) {
+    }
+
+    bb3: if (b$12) {
+    }
+
+    bb5: if (c$13) {
+    }
+
+    bb7: if (d$14) {
+    }
+
+    bb9: if (y$16) {
+    }
+
+    mutate$8(x$15, null);
+    $[1] = a$11;
+  } else {
+  }
 }
 
 ```

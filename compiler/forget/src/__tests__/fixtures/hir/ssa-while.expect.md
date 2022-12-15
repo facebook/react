@@ -59,9 +59,18 @@ function foo(
 
 ```javascript
 function foo$0() {
-  let x$5 = 1;
-  bb2: while (x$5 < 10) {
-    x$5 = x$5 + 1;
+  const $ = React.useMemoCache();
+  let x$5;
+  if (true) {
+    x$5 = 1;
+
+    bb2: while (x$5 < 10) {
+      x$5 = x$5 + 1;
+    }
+
+    $[0] = x$5;
+  } else {
+    x$5 = $[0];
   }
 
   return x$5;

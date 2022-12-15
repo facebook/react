@@ -33,8 +33,8 @@ bb4:
 bb1:
   predecessor blocks: bb4 bb2 bb0
   [8] Const mutate $13:TPrimitive = "div"
-  [9] Const mutate $15_@1 = JSX <read $13:TPrimitive>{freeze x$10_@0:TFunction}</read $13:TPrimitive>
-  [10] Return read $15_@1
+  [9] Const mutate t4$15_@1 = JSX <read $13:TPrimitive>{freeze x$10_@0:TFunction}</read $13:TPrimitive>
+  [10] Return read t4$15_@1
 ```
 
 ## Reactive Scopes
@@ -67,14 +67,38 @@ function f(
 
 ```javascript
 function f$0(a$8, b$9) {
-  const x$10 = [];
-  bb1: if (a$8.length === 1) {
-    if (b$9) {
-      x$10.push(b$9);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$8.length;
+  const c_1 = $[1] !== b$9;
+  let x$10;
+  if (c_0 || c_1) {
+    x$10 = [];
+
+    bb1: if (a$8.length === 1) {
+      if (b$9) {
+        x$10.push(b$9);
+      }
     }
+
+    $[0] = a$8.length;
+    $[1] = b$9;
+    $[2] = x$10;
+  } else {
+    x$10 = $[2];
   }
 
-  return <div>{x$10}</div>;
+  const c_3 = $[3] !== x$10;
+  let t4$15;
+
+  if (c_3) {
+    t4$15 = <div>{x$10}</div>;
+    $[3] = x$10;
+    $[4] = t4$15;
+  } else {
+    t4$15 = $[4];
+  }
+
+  return t4$15;
 }
 
 ```

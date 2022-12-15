@@ -45,7 +45,15 @@ function Component(
 
 ```javascript
 function Component$0() {
-  const a$5 = [];
+  const $ = React.useMemoCache();
+  let a$5;
+  if (true) {
+    a$5 = [];
+    $[0] = a$5;
+  } else {
+    a$5 = $[0];
+  }
+
   const b$6 = a$5;
   useFreeze$3(a$5);
   foo$4(b$6);

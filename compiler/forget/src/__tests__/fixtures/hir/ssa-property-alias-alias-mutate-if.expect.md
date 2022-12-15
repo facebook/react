@@ -68,17 +68,28 @@ function foo(
 
 ```javascript
 function foo$0(a$7) {
-  const b$8 = {};
-  const x$9 = b$8;
-  bb1: if (a$7) {
-    const y$10 = {};
-    x$9.y = y$10;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a$7;
+  let x$9;
+  if (c_0) {
+    const b$8 = {};
+    x$9 = b$8;
+
+    bb1: if (a$7) {
+      const y$10 = {};
+      x$9.y = y$10;
+    } else {
+      const z$11 = {};
+      x$9.z = z$11;
+    }
+
+    mutate$6(b$8);
+    $[0] = a$7;
+    $[1] = x$9;
   } else {
-    const z$11 = {};
-    x$9.z = z$11;
+    x$9 = $[1];
   }
 
-  mutate$6(b$8);
   return x$9;
 }
 

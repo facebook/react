@@ -43,10 +43,18 @@ function foo(
 
 ```javascript
 function foo$0() {
-  const x$4 = [];
-  const y$5 = {};
-  y$5.x = x$4;
-  mutate$3(x$4);
+  const $ = React.useMemoCache();
+  let y$5;
+  if (true) {
+    const x$4 = [];
+    y$5 = {};
+    y$5.x = x$4;
+    mutate$3(x$4);
+    $[0] = y$5;
+  } else {
+    y$5 = $[0];
+  }
+
   return y$5;
 }
 

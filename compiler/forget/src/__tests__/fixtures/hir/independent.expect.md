@@ -30,8 +30,8 @@ function Foo() {}
 bb0:
   [1] Const mutate a$8_@0 = Call mutate compute$3:TFunction(read props$7.a)
   [2] Const mutate b$9_@1 = Call mutate compute$3:TFunction(read props$7.b)
-  [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
-  [4] Return read $10_@2
+  [3] Const mutate t6$10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
+  [4] Return read t6$10_@2
 ```
 
 ## Reactive Scopes
@@ -58,9 +58,42 @@ function Component(
 
 ```javascript
 function Component$0(props$7) {
-  const a$8 = compute$3(props$7.a);
-  const b$9 = compute$3(props$7.b);
-  return <Foo$5 a={a$8} b={b$9}></Foo$5>;
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$7.a;
+  let a$8;
+  if (c_0) {
+    a$8 = compute$3(props$7.a);
+    $[0] = props$7.a;
+    $[1] = a$8;
+  } else {
+    a$8 = $[1];
+  }
+
+  const c_2 = $[2] !== props$7.b;
+  let b$9;
+
+  if (c_2) {
+    b$9 = compute$3(props$7.b);
+    $[2] = props$7.b;
+    $[3] = b$9;
+  } else {
+    b$9 = $[3];
+  }
+
+  const c_4 = $[4] !== a$8;
+  const c_5 = $[5] !== b$9;
+  let t6$10;
+
+  if (c_4 || c_5) {
+    t6$10 = <Foo$5 a={a$8} b={b$9}></Foo$5>;
+    $[4] = a$8;
+    $[5] = b$9;
+    $[6] = t6$10;
+  } else {
+    t6$10 = $[6];
+  }
+
+  return t6$10;
 }
 
 ```

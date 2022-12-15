@@ -95,11 +95,11 @@ bb2:
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  [38] Const mutate $71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  [38] Const mutate t6$71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  [41] Const mutate $74_@5 = JSX <read $67:TPrimitive>{read $68}{read $71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
-  [42] Return read $74_@5
+  [41] Const mutate t9$74_@5 = JSX <read $67:TPrimitive>{read $68}{read t6$71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
+  [42] Return read t9$74_@5
 ```
 
 ## Reactive Scopes
@@ -171,37 +171,82 @@ function Component(
 
 ```javascript
 function Component$0(props$29) {
+  const $ = React.useMemoCache();
   const items$30 = props$29.items;
   const maxItems$31 = props$29.maxItems;
-  const renderedItems$32 = [];
-  const seen$33 = new Set$6();
-  const max$35 = Math$8.max(0, maxItems$31);
-  bb2: for (let i$36 = 0; i$36 < items$30.length; i$36 = i$36 + 1, i$36) {
-    const item$40 = items$30.at(i$36);
+  const c_0 = $[0] !== maxItems$31;
+  const c_1 = $[1] !== items$30.length;
+  const c_2 = $[2] !== items$30;
+  let renderedItems$32;
+  if (c_0 || c_1 || c_2) {
+    renderedItems$32 = [];
+    const seen$33 = new Set$6();
+    const c_4 = $[4] !== maxItems$31;
 
-    bb9: if (item$40 == null) {
+    if (c_4) {
+      const max$35 = Math$8.max(0, maxItems$31);
+      $[4] = maxItems$31;
     } else {
     }
 
-    bb6: if (seen$33.has(item$40)) {
-      continue;
+    bb2: for (let i$36 = 0; i$36 < items$30.length; i$36 = i$36 + 1, i$36) {
+      const item$40 = items$30.at(i$36);
+
+      bb9: if (item$40 == null) {
+      } else {
+      }
+
+      bb6: if (seen$33.has(item$40)) {
+        continue;
+      }
+
+      seen$33.add(item$40);
+      renderedItems$32.push(<div>{item$40}</div>);
+
+      bb12: if (renderedItems$32.length >= max$35) {
+        break;
+      }
     }
 
-    seen$33.add(item$40);
-    renderedItems$32.push(<div>{item$40}</div>);
-
-    bb12: if (renderedItems$32.length >= max$35) {
-      break;
-    }
+    $[0] = maxItems$31;
+    $[1] = items$30.length;
+    $[2] = items$30;
+    $[3] = renderedItems$32;
+  } else {
+    renderedItems$32 = $[3];
   }
 
   const count$66 = renderedItems$32.length;
-  return (
-    <div>
-      {<h1>{count$66} Items</h1>}
-      {renderedItems$32}
-    </div>
-  );
+  const c_5 = $[5] !== count$66;
+  let t6$71;
+
+  if (c_5) {
+    t6$71 = <h1>{count$66} Items</h1>;
+    $[5] = count$66;
+    $[6] = t6$71;
+  } else {
+    t6$71 = $[6];
+  }
+
+  const c_7 = $[7] !== t6$71;
+  const c_8 = $[8] !== renderedItems$32;
+  let t9$74;
+
+  if (c_7 || c_8) {
+    t9$74 = (
+      <div>
+        {t6$71}
+        {renderedItems$32}
+      </div>
+    );
+    $[7] = t6$71;
+    $[8] = renderedItems$32;
+    $[9] = t9$74;
+  } else {
+    t9$74 = $[9];
+  }
+
+  return t9$74;
 }
 
 ```

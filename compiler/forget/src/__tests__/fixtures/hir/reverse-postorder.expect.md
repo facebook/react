@@ -125,33 +125,58 @@ function Component(
 
 ```javascript
 function Component$0(props$6) {
+  const $ = React.useMemoCache();
   const x$7 = undefined;
-  let x$11 = undefined;
-  bb1: if (props$6.cond) {
-    switch (props$6.test) {
-      case 0: {
-        x$11 = props$6.v0;
-        break bb1;
-      }
+  const c_0 = $[0] !== props$6.cond;
+  const c_1 = $[1] !== props$6.test;
+  const c_2 = $[2] !== props$6.v0;
+  const c_3 = $[3] !== props$6.v1;
+  const c_4 = $[4] !== props$6.v2;
+  const c_5 = $[5] !== props$6.cond2;
+  const c_6 = $[6] !== props$6.b;
+  const c_7 = $[7] !== props$6.c;
+  let x$11;
+  if (c_0 || c_1 || c_2 || c_3 || c_4 || c_5 || c_6 || c_7) {
+    x$11 = undefined;
 
-      case 1: {
-        x$11 = props$6.v1;
-        break bb1;
-      }
+    bb1: if (props$6.cond) {
+      switch (props$6.test) {
+        case 0: {
+          x$11 = props$6.v0;
+          break bb1;
+        }
 
-      case 2: {
-      }
+        case 1: {
+          x$11 = props$6.v1;
+          break bb1;
+        }
 
-      default: {
-        x$11 = props$6.v2;
+        case 2: {
+        }
+
+        default: {
+          x$11 = props$6.v2;
+        }
       }
-    }
-  } else {
-    if (props$6.cond2) {
-      x$11 = props$6.b;
     } else {
-      x$11 = props$6.c;
+      if (props$6.cond2) {
+        x$11 = props$6.b;
+      } else {
+        x$11 = props$6.c;
+      }
     }
+
+    $[0] = props$6.cond;
+    $[1] = props$6.test;
+    $[2] = props$6.v0;
+    $[3] = props$6.v1;
+    $[4] = props$6.v2;
+    $[5] = props$6.cond2;
+    $[6] = props$6.b;
+    $[7] = props$6.c;
+    $[8] = x$11;
+  } else {
+    x$11 = $[8];
   }
 
   x$11;

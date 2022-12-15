@@ -163,31 +163,39 @@ function Component(
 
 ```javascript
 function Component$0(props$11) {
-  const a$12 = {};
-  const b$13 = {};
-  const c$14 = {};
-  const d$15 = {};
-  bb2: while (true) {
-    mutate$6(a$12, b$13);
-
-    bb4: if (cond$7(a$12)) {
-      break;
+  if (true) {
+    const a$12 = {};
+    const b$13 = {};
+    if (true) {
+      const c$14 = {};
+    } else {
     }
-  }
 
-  bb7: if (a$12) {
-  }
+    const d$15 = {};
 
-  bb9: if (b$13) {
-  }
+    bb2: while (true) {
+      mutate$6(a$12, b$13);
 
-  bb11: if (c$14) {
-  }
+      bb4: if (cond$7(a$12)) {
+        break;
+      }
+    }
 
-  bb13: if (d$15) {
-  }
+    bb7: if (a$12) {
+    }
 
-  mutate$6(d$15, null);
+    bb9: if (b$13) {
+    }
+
+    bb11: if (c$14) {
+    }
+
+    bb13: if (d$15) {
+    }
+
+    mutate$6(d$15, null);
+  } else {
+  }
 }
 
 ```

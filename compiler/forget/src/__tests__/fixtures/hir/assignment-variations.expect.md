@@ -90,8 +90,11 @@ function g(
 
 ```javascript
 function g$0(a$4) {
-  a$4.c.b = a$4.b.c + 1;
-  a$4.c.b = a$4.b.c * 2;
+  if (true) {
+    a$4.c.b = a$4.b.c + 1;
+    a$4.c.b = a$4.b.c * 2;
+  } else {
+  }
 }
 
 ```

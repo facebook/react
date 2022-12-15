@@ -76,14 +76,27 @@ function Component(
 
 ```javascript
 function Component$0(props$7) {
+  const $ = React.useMemoCache();
   const cond$8 = props$7.cond;
   const x$9 = props$7.x;
   const a$10 = undefined;
-  let a$11 = undefined;
-  bb1: if (cond$8) {
-    a$11 = x$9;
+  const c_0 = $[0] !== cond$8;
+  const c_1 = $[1] !== x$9;
+  let a$11;
+  if (c_0 || c_1) {
+    a$11 = undefined;
+
+    bb1: if (cond$8) {
+      a$11 = x$9;
+    } else {
+      a$11 = [];
+    }
+
+    $[0] = cond$8;
+    $[1] = x$9;
+    $[2] = a$11;
   } else {
-    a$11 = [];
+    a$11 = $[2];
   }
 
   useFreeze$5(a$11);

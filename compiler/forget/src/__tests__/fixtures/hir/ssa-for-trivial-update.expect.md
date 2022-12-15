@@ -70,9 +70,18 @@ function foo(
 
 ```javascript
 function foo$0() {
-  let x$6 = 1;
-  bb2: for (const i$7 = 0; i$7 < 10; i$7) {
-    x$6 = x$6 + 1;
+  const $ = React.useMemoCache();
+  let x$6;
+  if (true) {
+    x$6 = 1;
+
+    bb2: for (const i$7 = 0; i$7 < 10; i$7) {
+      x$6 = x$6 + 1;
+    }
+
+    $[0] = x$6;
+  } else {
+    x$6 = $[0];
   }
 
   return x$6;

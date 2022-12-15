@@ -109,8 +109,8 @@ bb2:
   [5] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [6] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
-  [7] Return read $14_@1
+  [6] Const mutate t7$14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
+  [7] Return read t7$14_@1
 ```
 
 ## Reactive Scopes
@@ -138,13 +138,44 @@ function Component(
 
 ```javascript
 function Component$0(props$8) {
-  const a$9 = compute$3(props$8.a);
-  const b$10 = compute$3(props$8.b);
-  bb1: if (props$8.c) {
-    foo$5(a$9, b$10);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== props$8.a;
+  const c_1 = $[1] !== props$8.b;
+  const c_2 = $[2] !== props$8.c;
+  let a$9;
+  let b$10;
+  if (c_0 || c_1 || c_2) {
+    a$9 = compute$3(props$8.a);
+    b$10 = compute$3(props$8.b);
+
+    bb1: if (props$8.c) {
+      foo$5(a$9, b$10);
+    }
+
+    $[0] = props$8.a;
+    $[1] = props$8.b;
+    $[2] = props$8.c;
+    $[3] = a$9;
+    $[4] = b$10;
+  } else {
+    a$9 = $[3];
+    b$10 = $[4];
   }
 
-  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
+  const c_5 = $[5] !== a$9;
+  const c_6 = $[6] !== b$10;
+  let t7$14;
+
+  if (c_5 || c_6) {
+    t7$14 = <Foo$6 a={a$9} b={b$10}></Foo$6>;
+    $[5] = a$9;
+    $[6] = b$10;
+    $[7] = t7$14;
+  } else {
+    t7$14 = $[7];
+  }
+
+  return t7$14;
 }
 
 ```

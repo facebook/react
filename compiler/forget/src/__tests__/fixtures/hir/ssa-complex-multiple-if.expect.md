@@ -74,14 +74,23 @@ function foo(
 
 ```javascript
 function foo$0() {
-  let x$7 = 1;
-  const y$8 = 2;
-  bb1: if (y$8 === 2) {
-    x$7 = 3;
-  }
+  const $ = React.useMemoCache();
+  let x$7;
+  if (true) {
+    x$7 = 1;
+    const y$8 = 2;
 
-  bb3: if (y$8 === 3) {
-    x$7 = 5;
+    bb1: if (y$8 === 2) {
+      x$7 = 3;
+    }
+
+    bb3: if (y$8 === 3) {
+      x$7 = 5;
+    }
+
+    $[0] = x$7;
+  } else {
+    x$7 = $[0];
   }
 
   const y$18 = x$7;

@@ -43,10 +43,20 @@ function Component(
 
 ```javascript
 function Component$0(c$6) {
-  const x$7 = {
-    c: c$6,
-  };
-  mutate$3(x$7);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== c$6;
+  let x$7;
+  if (c_0) {
+    x$7 = {
+      c: c$6,
+    };
+    mutate$3(x$7);
+    $[0] = c$6;
+    $[1] = x$7;
+  } else {
+    x$7 = $[1];
+  }
+
   const a$8 = x$7;
   const b$9 = a$8;
 }

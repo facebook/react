@@ -109,24 +109,41 @@ function foo(
 
 ```javascript
 function foo$0(a$9, b$10, c$11, d$12) {
+  const $ = React.useMemoCache();
   const x$13 = 0;
-  let x$18 = undefined;
-  bb1: if (true) {
-    bb3: if (true) {
-      x$18 = a$9;
+  const c_0 = $[0] !== a$9;
+  const c_1 = $[1] !== b$10;
+  const c_2 = $[2] !== c$11;
+  const c_3 = $[3] !== d$12;
+  let x$18;
+  if (c_0 || c_1 || c_2 || c_3) {
+    x$18 = undefined;
+
+    bb1: if (true) {
+      bb3: if (true) {
+        x$18 = a$9;
+      } else {
+        x$18 = b$10;
+      }
+
+      x$18;
     } else {
-      x$18 = b$10;
+      bb7: if (true) {
+        x$18 = c$11;
+      } else {
+        x$18 = d$12;
+      }
+
+      x$18;
     }
 
-    x$18;
+    $[0] = a$9;
+    $[1] = b$10;
+    $[2] = c$11;
+    $[3] = d$12;
+    $[4] = x$18;
   } else {
-    bb7: if (true) {
-      x$18 = c$11;
-    } else {
-      x$18 = d$12;
-    }
-
-    x$18;
+    x$18 = $[4];
   }
 
   return x$18;

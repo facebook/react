@@ -38,9 +38,17 @@ function component(
 
 ```javascript
 function component$0() {
-  const x$5 = {
-    t: 1,
-  };
+  const $ = React.useMemoCache();
+  let x$5;
+  if (true) {
+    x$5 = {
+      t: 1,
+    };
+    $[0] = x$5;
+  } else {
+    x$5 = $[0];
+  }
+
   const p$6 = x$5.t;
 }
 
