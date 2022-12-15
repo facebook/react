@@ -249,6 +249,10 @@ function TextTabContent({ output }: { output: string }) {
           ...monacoOptions,
           readOnly: true,
           lineNumbers: "off",
+          glyphMargin: false,
+          // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 0,
         }}
       />
     </div>
