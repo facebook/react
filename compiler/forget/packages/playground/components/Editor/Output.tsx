@@ -21,19 +21,21 @@ import TabbedWindow, { TabTypes } from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
 const {
   buildReactiveFunction,
-  printReactiveFunction,
-  parseFunctions,
-  Environment,
-  enterSSA,
+  codegenReactiveFunction,
   eliminateRedundantPhi,
-  inferReferenceEffects,
+  enterSSA,
+  Environment,
+  flattenReactiveLoops,
   inferMutableRanges,
-  inferReactiveScopeVariables,
   inferReactiveScopes,
+  inferReactiveScopeVariables,
+  inferReferenceEffects,
   leaveSSA,
   lower,
+  parseFunctions,
   printHIR,
-  codegen,
+  printReactiveFunction,
+  propagateScopeDependencies,
 } = HIR;
 const MemoizedOutput = memo(Output);
 
@@ -98,10 +100,11 @@ function compile(source: string): CompilerOutput | CompilerError {
     const inferReactiveScopesOutput = printHIR(ir.body);
 
     const reactiveFunction = buildReactiveFunction(ir);
+    flattenReactiveLoops(reactiveFunction);
+    propagateScopeDependencies(reactiveFunction);
     const reactiveFunctionOutput = printReactiveFunction(reactiveFunction);
 
-    codegen(ir);
-    const ast = codegen(ir);
+    const ast = codegenReactiveFunction(reactiveFunction);
     const generated = generate(
       ast,
       {
@@ -163,6 +166,7 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
       setTabsOpen={setTabsOpen}
       tabsOpen={tabsOpen}
       tabs={{
+        JS: <TextTabContent output={compilerOutput.codegenOutput} />,
         HIR: (
           <TextTabContent output={compilerOutput.hirOutput}></TextTabContent>
         ),
@@ -204,7 +208,6 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
             output={compilerOutput.reactiveFunctionOutput}
           ></TextTabContent>
         ),
-        JS: <TextTabContent output={compilerOutput.codegenOutput} />,
         SourceMap: (
           <>
             {compilerOutput.sourceMapUrl && (

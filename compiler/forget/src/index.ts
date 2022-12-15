@@ -27,8 +27,10 @@ import * as t from "@babel/types";
 import { lower } from "./HIR/BuildHIR";
 import { buildReactiveFunction } from "./HIR/BuildReactiveFunction";
 import codegen from "./HIR/Codegen";
+import { codegenReactiveFunction } from "./HIR/CodegenReactiveFunction";
 import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
 import enterSSA from "./HIR/EnterSSA";
+import { flattenReactiveLoops } from "./HIR/FlattenReactiveLoops";
 import { Environment } from "./HIR/HIRBuilder";
 import { inferMutableRanges } from "./HIR/InferMutableRanges";
 import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
@@ -37,6 +39,7 @@ import inferReferenceEffects from "./HIR/InferReferenceEffects";
 import { leaveSSA } from "./HIR/LeaveSSA";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { printReactiveFunction } from "./HIR/PrintReactiveFunction";
+import { propagateScopeDependencies } from "./HIR/PropagateScopeDependencies";
 
 function parseFunctions(
   source: string
@@ -60,21 +63,24 @@ function parseFunctions(
 }
 
 export const HIR = {
-  parseFunctions,
-  lower,
+  codegenReactiveFunction,
+  flattenReactiveLoops,
+  propagateScopeDependencies,
+  buildReactiveFunction,
+  codegen,
   eliminateRedundantPhi,
   enterSSA,
+  Environment,
   inferMutableRanges,
-  inferReferenceEffects,
-  inferReactiveScopeVariables,
   inferReactiveScopes,
-  buildReactiveFunction,
-  printReactiveFunction,
+  inferReactiveScopeVariables,
+  inferReferenceEffects,
+  leaveSSA,
+  lower,
+  parseFunctions,
   printFunction,
   printHIR,
-  Environment,
-  leaveSSA,
-  codegen,
+  printReactiveFunction,
 };
 
 export default BabelPlugin;
