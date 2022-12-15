@@ -33,10 +33,6 @@ export default function Editor() {
   const [showOutputOnMobile, setShowOutputOnMobile] = useState(false);
   const { width: windowWidth } = useWindowSize();
   const isMobile = windowWidth < 640;
-  const [inputWidthInPct, setInputWidthInPct] = useState(50);
-  const handleDrag = useDrag(({ delta: [x], xy: [currentPos] }) => {
-    if (x !== 0) setInputWidthInPct(((currentPos + x) / windowWidth) * 100);
-  });
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const updateDiagnostics = useCallback(
     (newDiags: Diagnostic[]) => setDiagnostics(newDiags),
@@ -74,20 +70,16 @@ export default function Editor() {
       <div className="flex grow">
         <div
           style={{
-            width: isMobile ? "100%" : `${inputWidthInPct}%`,
+            width: isMobile ? "100%" : "50%",
           }}
           className={clsx("relative sm:min-w-[300px] sm:block", {
             hidden: showOutputOnMobile,
           })}
         >
           <Input diagnostics={diagnostics} />
-          <div
-            {...handleDrag()}
-            className="absolute w-[5px] top-0 h-full right-[-2px] flex-none hidden transition-opacity duration-300 ease-out opacity-0 hover:opacity-100 bg-gray-300 sm:block cursor-col-resize touch-pan-x z-50"
-          />
         </div>
         <div
-          style={{ width: isMobile ? "100%" : `${100 - inputWidthInPct}%` }}
+          style={{ width: isMobile ? "100%" : `${50}%` }}
           className={clsx("flex sm:flex sm:min-w-[300px]", {
             hidden: !showOutputOnMobile,
           })}
