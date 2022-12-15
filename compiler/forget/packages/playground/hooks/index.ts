@@ -3,4 +3,3 @@
  */
 
 export { default as useMountEffect } from "./useMountEffect";
-export { default as useWindowSize } from "./useWindowSize";

@@ -5,13 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { useDrag } from "@use-gesture/react";
 import type { Diagnostic } from "babel-plugin-react-forget";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";
 import { useCallback, useDeferredValue, useState } from "react";
-import { useMountEffect, useWindowSize } from "../../hooks";
+import { useMountEffect } from "../../hooks";
 import { defaultStore } from "../../lib/defaultStore";
 import {
   createMessage,
@@ -30,9 +29,6 @@ export default function Editor() {
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const [showOutputOnMobile, setShowOutputOnMobile] = useState(false);
-  const { width: windowWidth } = useWindowSize();
-  const isMobile = windowWidth < 640;
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const updateDiagnostics = useCallback(
     (newDiags: Diagnostic[]) => setDiagnostics(newDiags),
@@ -40,9 +36,6 @@ export default function Editor() {
   );
   const [tabsOpen, setTabsOpen] = useState<Map<TabTypes, boolean>>(new Map());
 
-  /**
-   * Initialize store from encoded data or fallback to the default store.
-   */
   useMountEffect(() => {
     let mountStore: Store;
     try {
@@ -68,22 +61,10 @@ export default function Editor() {
   return (
     <>
       <div className="flex grow">
-        <div
-          style={{
-            width: isMobile ? "100%" : "50%",
-          }}
-          className={clsx("relative sm:min-w-[300px] sm:block", {
-            hidden: showOutputOnMobile,
-          })}
-        >
+        <div className={clsx("relative sm:min-w-[300px] sm:block")}>
           <Input diagnostics={diagnostics} />
         </div>
-        <div
-          style={{ width: isMobile ? "100%" : `${50}%` }}
-          className={clsx("flex sm:flex sm:min-w-[300px]", {
-            hidden: !showOutputOnMobile,
-          })}
-        >
+        <div className={clsx("flex sm:flex sm:min-w-[300px]")}>
           <Output
             tabsOpen={tabsOpen}
             setTabsOpen={setTabsOpen}
@@ -92,12 +73,6 @@ export default function Editor() {
           />
         </div>
       </div>
-      <button
-        className="w-full px-3 py-2 font-mono text-sm bg-highlight text-link sm:hidden"
-        onClick={() => setShowOutputOnMobile(!showOutputOnMobile)}
-      >
-        {showOutputOnMobile ? "< Code" : "Output >"}
-      </button>
     </>
   );
 }
