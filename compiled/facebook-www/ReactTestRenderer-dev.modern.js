@@ -10997,7 +10997,14 @@ function throwException(
   } while (workInProgress !== null);
 }
 
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner; // A special exception that's used to unwind the stack when an update flows
+// into a dehydrated boundary.
+
+var SelectiveHydrationException = new Error(
+  "This is not a real error. It's an implementation detail of React's " +
+    "selective hydration feature. If this leaks into userspace, it's a bug in " +
+    "React. Please file an issue."
+);
 var didReceiveUpdate = false;
 var didWarnAboutBadClass;
 var didWarnAboutModulePatternComponent;
@@ -12954,18 +12961,29 @@ function updateDehydratedSuspenseComponent(
             current,
             attemptHydrationAtLane,
             eventTime
-          );
-        }
-      } // If we have scheduled higher pri work above, this will just abort the render
-      // since we now have higher priority work. We'll try to infinitely suspend until
-      // we yield. TODO: We could probably just force yielding earlier instead.
+          ); // Throw a special object that signals to the work loop that it should
+          // interrupt the current render.
+          //
+          // Because we're inside a React-only execution stack, we don't
+          // strictly need to throw here — we could instead modify some internal
+          // work loop state. But using an exception means we don't need to
+          // check for this case on every iteration of the work loop. So doing
+          // it this way moves the check out of the fast path.
 
-      renderDidSuspendDelayIfPossible(); // If we rendered synchronously, we won't yield so have to render something.
-      // This will cause us to delete any existing content.
+          throw SelectiveHydrationException;
+        }
+      } // If we did not selectively hydrate, we'll continue rendering without
+      // hydrating. Mark this tree as suspended to prevent it from committing
+      // outside a transition.
+      //
+      // This path should only happen if the hydration lane already suspended.
+      // Currently, it also happens during sync updates because there is no
+      // hydration lane for sync updates.
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
 
+      renderDidSuspendDelayIfPossible();
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -19823,7 +19841,8 @@ var SuspendedOnError = 1;
 var SuspendedOnData = 2;
 var SuspendedOnImmediate = 3;
 var SuspendedOnDeprecatedThrowPromise = 4;
-var SuspendedAndReadyToUnwind = 5; // When this is true, the work-in-progress fiber just suspended (or errored) and
+var SuspendedAndReadyToUnwind = 5;
+var SuspendedOnHydration = 6; // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
 // after this happens. If the fiber is pinged before we resume, we can retry
 // immediately instead of unwinding the stack.
@@ -20829,6 +20848,30 @@ function getRenderLanes() {
   return renderLanes$1;
 }
 
+function resetWorkInProgressStack() {
+  if (workInProgress === null) return;
+  var interruptedWork;
+
+  if (workInProgressSuspendedReason === NotSuspended) {
+    // Normal case. Work-in-progress hasn't started yet. Unwind all
+    // its parents.
+    interruptedWork = workInProgress.return;
+  } else {
+    // Work-in-progress is in suspended state. Reset the work loop and unwind
+    // both the suspended fiber and all its parents.
+    resetSuspendedWorkLoopOnUnwind();
+    interruptedWork = workInProgress;
+  }
+
+  while (interruptedWork !== null) {
+    var current = interruptedWork.alternate;
+    unwindInterruptedWork(current, interruptedWork);
+    interruptedWork = interruptedWork.return;
+  }
+
+  workInProgress = null;
+}
+
 function prepareFreshStack(root, lanes) {
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
@@ -20842,27 +20885,7 @@ function prepareFreshStack(root, lanes) {
     cancelTimeout(timeoutHandle);
   }
 
-  if (workInProgress !== null) {
-    var interruptedWork;
-
-    if (workInProgressSuspendedReason === NotSuspended) {
-      // Normal case. Work-in-progress hasn't started yet. Unwind all
-      // its parents.
-      interruptedWork = workInProgress.return;
-    } else {
-      // Work-in-progress is in suspended state. Reset the work loop and unwind
-      // both the suspended fiber and all its parents.
-      resetSuspendedWorkLoopOnUnwind();
-      interruptedWork = workInProgress;
-    }
-
-    while (interruptedWork !== null) {
-      var current = interruptedWork.alternate;
-      unwindInterruptedWork(current, interruptedWork);
-      interruptedWork = interruptedWork.return;
-    }
-  }
-
+  resetWorkInProgressStack();
   workInProgressRoot = root;
   var rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
@@ -20921,6 +20944,17 @@ function handleThrow(root, thrownValue) {
     workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
       ? SuspendedOnData
       : SuspendedOnImmediate;
+  } else if (thrownValue === SelectiveHydrationException) {
+    // An update flowed into a dehydrated boundary. Before we can apply the
+    // update, we need to finish hydrating. Interrupt the work-in-progress
+    // render so we can restart at the hydration lane.
+    //
+    // The ideal implementation would be able to switch contexts without
+    // unwinding the current stack.
+    //
+    // We could name this something more general but as of now it's the only
+    // case where we think this should happen.
+    workInProgressSuspendedReason = SuspendedOnHydration;
   } else {
     // This is a regular error.
     var isWakeable =
@@ -21101,7 +21135,7 @@ function renderRootSync(root, lanes) {
     prepareFreshStack(root, lanes);
   }
 
-  do {
+  outer: do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -21117,9 +21151,25 @@ function renderRootSync(root, lanes) {
         // function and fork the behavior some other way.
         var unitOfWork = workInProgress;
         var thrownValue = workInProgressThrownValue;
-        workInProgressSuspendedReason = NotSuspended;
-        workInProgressThrownValue = null;
-        unwindSuspendedUnitOfWork(unitOfWork, thrownValue); // Continue with the normal work loop.
+
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
+          }
+
+          default: {
+            // Continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+        }
       }
 
       workLoopSync();
@@ -21246,6 +21296,15 @@ function renderRootConcurrent(root, lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
+          }
+
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
           }
 
           default: {
@@ -23801,7 +23860,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-84a0a171e-20221214";
+var ReactVersion = "18.3.0-www-modern-7efa9e597-20221215";
 
 var didWarnAboutNestedUpdates;
 

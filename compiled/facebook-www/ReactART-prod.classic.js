@@ -3585,6 +3585,7 @@ function pushMarkerInstance(workInProgress, markerInstance) {
         ));
 }
 var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
+  SelectiveHydrationException = Error(formatProdErrorMessage(461)),
   didReceiveUpdate = !1;
 function reconcileChildren(current, workInProgress, nextChildren, renderLanes) {
   workInProgress.child =
@@ -4490,11 +4491,11 @@ function updateDehydratedSuspenseComponent(
         0 !== (didSuspend & (nextProps.suspendedLanes | renderLanes))
           ? 0
           : didSuspend;
-      0 !== didSuspend &&
-        didSuspend !== suspenseState.retryLane &&
-        ((suspenseState.retryLane = didSuspend),
+      if (0 !== didSuspend && didSuspend !== suspenseState.retryLane)
+        throw ((suspenseState.retryLane = didSuspend),
         enqueueConcurrentRenderForLane(current, didSuspend),
-        scheduleUpdateOnFiber(nextProps, current, didSuspend, -1));
+        scheduleUpdateOnFiber(nextProps, current, didSuspend, -1),
+        SelectiveHydrationException);
     }
     renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
@@ -8128,24 +8129,27 @@ function performSyncWorkOnRoot(root) {
   ensureRootIsScheduled(root, now());
   return null;
 }
+function resetWorkInProgressStack() {
+  if (null !== workInProgress) {
+    if (0 === workInProgressSuspendedReason)
+      var interruptedWork = workInProgress.return;
+    else
+      resetContextDependencies(),
+        resetHooksOnUnwind(),
+        (interruptedWork = workInProgress);
+    for (; null !== interruptedWork; )
+      unwindInterruptedWork(interruptedWork.alternate, interruptedWork),
+        (interruptedWork = interruptedWork.return);
+    workInProgress = null;
+  }
+}
 function prepareFreshStack(root, lanes) {
   root.finishedWork = null;
   root.finishedLanes = 0;
   var timeoutHandle = root.timeoutHandle;
   -1 !== timeoutHandle &&
     ((root.timeoutHandle = -1), cancelTimeout(timeoutHandle));
-  if (null !== workInProgress)
-    for (
-      0 === workInProgressSuspendedReason
-        ? (timeoutHandle = workInProgress.return)
-        : (resetContextDependencies(),
-          resetHooksOnUnwind(),
-          (timeoutHandle = workInProgress));
-      null !== timeoutHandle;
-
-    )
-      unwindInterruptedWork(timeoutHandle.alternate, timeoutHandle),
-        (timeoutHandle = timeoutHandle.return);
+  resetWorkInProgressStack();
   workInProgressRoot = root;
   workInProgress = root = createWorkInProgress(root.current, null);
   workInProgressRootRenderLanes = renderLanes$1 = lanes;
@@ -8172,9 +8176,11 @@ function handleThrow(root, thrownValue) {
       : 3;
   } else
     workInProgressSuspendedReason =
-      null !== thrownValue &&
-      "object" === typeof thrownValue &&
-      "function" === typeof thrownValue.then
+      thrownValue === SelectiveHydrationException
+        ? 6
+        : null !== thrownValue &&
+          "object" === typeof thrownValue &&
+          "function" === typeof thrownValue.then
         ? 4
         : 1;
   workInProgressThrownValue = thrownValue;
@@ -8234,14 +8240,21 @@ function renderRootSync(root, lanes) {
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
     (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
       prepareFreshStack(root, lanes);
-  do
+  a: do
     try {
       if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
         lanes = workInProgress;
         var thrownValue = workInProgressThrownValue;
-        workInProgressSuspendedReason = 0;
-        workInProgressThrownValue = null;
-        unwindSuspendedUnitOfWork(lanes, thrownValue);
+        switch (workInProgressSuspendedReason) {
+          case 6:
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = 6;
+            break a;
+          default:
+            (workInProgressSuspendedReason = 0),
+              (workInProgressThrownValue = null),
+              unwindSuspendedUnitOfWork(lanes, thrownValue);
+        }
       }
       workLoopSync();
       break;
@@ -8311,6 +8324,10 @@ function renderRootConcurrent(root, lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(lanes, thrownValue);
             break;
+          case 6:
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = 6;
+            break a;
           default:
             throw Error(formatProdErrorMessage(462));
         }
@@ -9807,7 +9824,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-84a0a171e-20221214",
+    version: "18.3.0-www-classic-7efa9e597-20221215",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1338 = {
@@ -9838,7 +9855,7 @@ var internals$jscomp$inline_1338 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-84a0a171e-20221214"
+  reconcilerVersion: "18.3.0-next-7efa9e597-20221215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
