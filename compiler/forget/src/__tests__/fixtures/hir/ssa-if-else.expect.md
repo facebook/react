@@ -58,7 +58,7 @@ function foo(
 function foo$0() {
   const x$5 = 1;
   const y$6 = 2;
-  bb1: if (y$6) {
+  if (y$6) {
     const z$7 = x$5 + y$6;
   } else {
     const z$8 = x$5;

@@ -58,7 +58,7 @@ function foo(
 ```javascript
 function foo$0(x$8, y$9) {
   const $ = React.useMemoCache();
-  bb1: if (x$8) {
+  if (x$8) {
     const c_0 = $[0] !== y$9;
     let t1$11;
 

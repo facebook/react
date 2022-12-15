@@ -94,11 +94,11 @@ function foo$0(a$6, b$7) {
   if (c_2 || c_3) {
     const y$10 = [];
 
-    bb1: if (x$8.length) {
+    if (x$8.length) {
       y$10.push(x$8);
     }
 
-    bb3: if (b$7) {
+    if (b$7) {
       y$10.push(b$7);
     }
 

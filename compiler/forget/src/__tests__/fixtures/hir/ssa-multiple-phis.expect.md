@@ -119,8 +119,8 @@ function foo$0(a$9, b$10, c$11, d$12) {
   if (c_0 || c_1 || c_2 || c_3) {
     x$18 = undefined;
 
-    bb1: if (true) {
-      bb3: if (true) {
+    if (true) {
+      if (true) {
         x$18 = a$9;
       } else {
         x$18 = b$10;
@@ -128,7 +128,7 @@ function foo$0(a$9, b$10, c$11, d$12) {
 
       x$18;
     } else {
-      bb7: if (true) {
+      if (true) {
         x$18 = c$11;
       } else {
         x$18 = d$12;

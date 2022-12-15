@@ -75,10 +75,10 @@ function foo$0(a$6, b$7, c$8) {
   if (c_0 || c_1 || c_2) {
     x$9 = [];
 
-    bb1: if (a$6) {
+    if (a$6) {
       const y$10 = [];
 
-      bb3: if (b$7) {
+      if (b$7) {
         y$10.push(c$8);
       }
 

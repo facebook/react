@@ -69,8 +69,8 @@ function foo$0(a$5, b$6, c$7) {
   if (c_0 || c_1 || c_2) {
     const x$8 = a$5;
 
-    bb1: if (b$6) {
-      bb3: if (c$7) {
+    if (b$6) {
+      if (c$7) {
         x$8 = c$7;
       }
 

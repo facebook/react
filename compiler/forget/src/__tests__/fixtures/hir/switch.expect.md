@@ -103,7 +103,7 @@ function Component$0(props$8) {
     x$9 = [];
     let y$10 = undefined;
 
-    bb1: switch (props$8.p0) {
+    switch (props$8.p0) {
       case true: {
         x$9.push(props$8.p2);
         x$9.push(props$8.p3);

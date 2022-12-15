@@ -78,7 +78,7 @@ function Component$0(props$6) {
     x$7.push(props$6.p0);
     const y$8 = x$7;
 
-    bb1: if (props$6.p1) {
+    if (props$6.p1) {
       x$7 = [];
     }
 

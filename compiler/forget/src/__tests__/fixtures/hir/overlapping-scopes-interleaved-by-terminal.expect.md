@@ -61,7 +61,7 @@ function foo$0(a$6, b$7, c$8) {
     const x$9 = [];
     const y$10 = [];
 
-    bb1: if (x$9) {
+    if (x$9) {
     }
 
     y$10.push(a$6);

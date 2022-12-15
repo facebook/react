@@ -45,7 +45,7 @@ function foo(
 
 ```javascript
 function foo$0(a$3, b$4) {
-  bb2: while (a$3) {
+  while (a$3) {
     break;
   }
   return b$4;

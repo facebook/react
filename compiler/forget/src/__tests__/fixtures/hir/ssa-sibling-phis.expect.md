@@ -115,7 +115,7 @@ function foo(
 function foo$0(a$9, b$10, c$11, d$12) {
   const $ = React.useMemoCache();
   const x$13 = 0;
-  bb1: if (true) {
+  if (true) {
     const c_0 = $[0] !== a$9;
     const c_1 = $[1] !== b$10;
     let x$16;
@@ -123,7 +123,7 @@ function foo$0(a$9, b$10, c$11, d$12) {
     if (c_0 || c_1) {
       x$16 = undefined;
 
-      bb3: if (true) {
+      if (true) {
         x$16 = a$9;
       } else {
         x$16 = b$10;
@@ -145,7 +145,7 @@ function foo$0(a$9, b$10, c$11, d$12) {
     if (c_3 || c_4) {
       x$20 = undefined;
 
-      bb7: if (true) {
+      if (true) {
         x$20 = c$11;
       } else {
         x$20 = d$12;

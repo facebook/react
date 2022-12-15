@@ -73,7 +73,7 @@ function foo$0(a$6) {
   if (c_0) {
     x$7 = {};
 
-    bb1: if (a$6) {
+    if (a$6) {
       const y$8 = {};
       x$7.y = y$8;
       mutate$4(y$8);

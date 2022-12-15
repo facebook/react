@@ -71,7 +71,7 @@ function foo$0() {
   if (true) {
     y$8 = undefined;
 
-    bb1: if (y$5 > 1) {
+    if (y$5 > 1) {
       y$8 = 1;
     } else {
       y$8 = 2;

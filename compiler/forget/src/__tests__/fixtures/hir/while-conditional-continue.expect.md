@@ -66,8 +66,8 @@ function foo(
 
 ```javascript
 function foo$0(a$5, b$6, c$7, d$8) {
-  bb2: while (a$5) {
-    bb4: if (b$6) {
+  while (a$5) {
+    if (b$6) {
       continue;
     }
     c$7();

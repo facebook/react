@@ -100,7 +100,7 @@ function component$0() {
   const u$13 = x$12.u;
   const v$14 = x$12.v;
 
-  bb1: if (u$13 > v$14) {
+  if (u$13 > v$14) {
   }
 
   const y$16 = x$12.u;

@@ -69,7 +69,7 @@ function Component$0(props$3) {
     const a$4 = [];
     a$4.push(props$3.a);
 
-    bb2: if (props$3.b) {
+    if (props$3.b) {
       a$4.push(props$3.d);
       return a$4;
     }

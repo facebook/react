@@ -64,7 +64,7 @@ function foo$0() {
   if (true) {
     x$5 = 1;
 
-    bb2: while (x$5 < 10) {
+    while (x$5 < 10) {
       x$5 = x$5 + 1;
     }
 

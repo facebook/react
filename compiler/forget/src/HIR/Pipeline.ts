@@ -23,6 +23,7 @@ import { inferTypes } from "./InferTypes";
 import { logHIRFunction } from "./logger";
 import { printReactiveFunction } from "./PrintReactiveFunction";
 import { propagateScopeDependencies } from "./PropagateScopeDependencies";
+import { pruneUnusedLabels } from "./PruneUnusedLabels";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
@@ -89,6 +90,7 @@ export default function (
 
   if (flags.codegen) {
     const reactiveFunction = buildReactiveFunction(ir);
+    pruneUnusedLabels(reactiveFunction);
     flattenReactiveLoops(reactiveFunction);
     propagateScopeDependencies(reactiveFunction);
     const scopes = printReactiveFunction(reactiveFunction);

@@ -87,9 +87,9 @@ function foo(
 ```javascript
 function foo$0(a$6, b$7, c$8) {
   const x$9 = 0;
-  bb2: while (a$6) {
-    bb5: while (b$7) {
-      bb8: while (c$8) {
+  while (a$6) {
+    while (b$7) {
+      while (c$8) {
         x$9 + 1;
       }
     }

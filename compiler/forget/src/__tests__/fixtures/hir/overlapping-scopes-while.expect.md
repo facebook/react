@@ -68,7 +68,7 @@ function foo$0(a$6, b$7, c$8) {
     const x$9 = [];
     const y$10 = [];
 
-    bb2: while (c$8) {
+    while (c$8) {
       y$10.push(b$7);
       x$9.push(a$6);
     }

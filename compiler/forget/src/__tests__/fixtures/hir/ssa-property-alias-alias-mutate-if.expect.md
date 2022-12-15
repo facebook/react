@@ -75,7 +75,7 @@ function foo$0(a$7) {
     const b$8 = {};
     x$9 = b$8;
 
-    bb1: if (a$7) {
+    if (a$7) {
       const y$10 = {};
       x$9.y = y$10;
     } else {

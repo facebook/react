@@ -87,7 +87,7 @@ function foo$0(a$7, b$8, c$9) {
   if (c_0 || c_1 || c_2) {
     const x$10 = [];
 
-    bb1: if (a$7) {
+    if (a$7) {
       if (b$8) {
         if (c$9) {
           x$10.push(0);
@@ -101,7 +101,7 @@ function foo$0(a$7, b$8, c$9) {
   } else {
   }
 
-  bb7: if (a$7.length) {
+  if (a$7.length) {
     return a$7;
   }
 

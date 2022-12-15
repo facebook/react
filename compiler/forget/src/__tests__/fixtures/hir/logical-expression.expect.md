@@ -79,7 +79,7 @@ function And$0() {
   if (c_1) {
     t2$6 = undefined;
 
-    bb1: if (t0$5) {
+    if (t0$5) {
       t2$6 = g$4();
     } else {
       t2$6 = t0$5;
@@ -155,7 +155,7 @@ function Or$0() {
   if (c_1) {
     t2$6 = undefined;
 
-    bb1: if (t0$5) {
+    if (t0$5) {
       t2$6 = t0$5;
     } else {
       t2$6 = g$4();
@@ -236,7 +236,7 @@ function QuestionQuestion$0(props$8) {
   if (c_1) {
     t2$12 = undefined;
 
-    bb1: if (t0$9 != null) {
+    if (t0$9 != null) {
       t2$12 = t0$9;
     } else {
       t2$12 = g$7();

@@ -75,7 +75,7 @@ function foo$0() {
     x$6 = 1;
     let y$7 = 2;
 
-    bb1: if (x$6 > 1) {
+    if (x$6 > 1) {
       x$6 = 2;
     } else {
       y$7 = 3;

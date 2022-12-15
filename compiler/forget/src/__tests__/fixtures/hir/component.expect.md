@@ -189,21 +189,21 @@ function Component$0(props$29) {
     } else {
     }
 
-    bb2: for (let i$36 = 0; i$36 < items$30.length; i$36 = i$36 + 1, i$36) {
+    for (let i$36 = 0; i$36 < items$30.length; i$36 = i$36 + 1, i$36) {
       const item$40 = items$30.at(i$36);
 
-      bb9: if (item$40 == null) {
+      if (item$40 == null) {
       } else {
       }
 
-      bb6: if (seen$33.has(item$40)) {
+      if (seen$33.has(item$40)) {
         continue;
       }
 
       seen$33.add(item$40);
       renderedItems$32.push(<div>{item$40}</div>);
 
-      bb12: if (renderedItems$32.length >= max$35) {
+      if (renderedItems$32.length >= max$35) {
         break;
       }
     }

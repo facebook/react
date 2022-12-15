@@ -80,7 +80,7 @@ function foo$0(a$8, b$9, c$10) {
   if (c_0 || c_1 || c_2) {
     x$11 = [];
 
-    bb1: if (a$8) {
+    if (a$8) {
       const c_4 = $[4] !== b$9;
       let y$12;
 

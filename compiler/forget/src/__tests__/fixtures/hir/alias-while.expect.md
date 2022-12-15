@@ -92,7 +92,7 @@ function foo$0(cond$7) {
     b$9 = {};
     c$10 = {};
 
-    bb2: while (cond$7) {
+    while (cond$7) {
       const z$13 = a$8;
       a$8 = b$9;
       b$9 = c$10;

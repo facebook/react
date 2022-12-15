@@ -173,24 +173,24 @@ function Component$0(props$11) {
 
     const d$15 = {};
 
-    bb2: while (true) {
+    while (true) {
       mutate$6(a$12, b$13);
 
-      bb4: if (cond$7(a$12)) {
+      if (cond$7(a$12)) {
         break;
       }
     }
 
-    bb7: if (a$12) {
+    if (a$12) {
     }
 
-    bb9: if (b$13) {
+    if (b$13) {
     }
 
-    bb11: if (c$14) {
+    if (c$14) {
     }
 
-    bb13: if (d$15) {
+    if (d$15) {
     }
 
     mutate$6(d$15, null);

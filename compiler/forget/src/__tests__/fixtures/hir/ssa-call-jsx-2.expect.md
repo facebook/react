@@ -109,7 +109,7 @@ function Component$0(props$10) {
     } else {
     }
 
-    bb1: if (foo$4()) {
+    if (foo$4()) {
       const c_2 = $[2] !== a$11;
 
       if (c_2) {

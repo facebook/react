@@ -76,7 +76,7 @@ function foo$0(a$7, b$8, c$9, d$10, e$11) {
   if (c_0 || c_1 || c_2 || c_3) {
     x$12 = null;
 
-    bb1: if (a$7) {
+    if (a$7) {
       x$12 = b$8;
     } else {
       if (c$9) {

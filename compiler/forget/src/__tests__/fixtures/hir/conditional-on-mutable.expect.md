@@ -92,11 +92,11 @@ function Component$0(props$6) {
     a$7 = [];
     const b$8 = [];
 
-    bb1: if (b$8) {
+    if (b$8) {
       a$7.push(props$6.p0);
     }
 
-    bb3: if (props$6.p1) {
+    if (props$6.p1) {
       b$8.push(props$6.p2);
     }
 
@@ -188,11 +188,11 @@ function Component$0(props$8) {
     a$9 = [];
     const b$10 = [];
 
-    bb1: if (mayMutate$4(b$10)) {
+    if (mayMutate$4(b$10)) {
       a$9.push(props$8.p0);
     }
 
-    bb3: if (props$8.p1) {
+    if (props$8.p1) {
       b$10.push(props$8.p2);
     }
 

@@ -124,7 +124,7 @@ function Component$0(props$4) {
     a_DEBUG$5 = [];
     a_DEBUG$5.push(props$4.a);
 
-    bb1: if (props$4.b) {
+    if (props$4.b) {
       return null;
     }
 
@@ -191,7 +191,7 @@ function Component$0(props$3) {
     a$4 = [];
     a$4.push(props$3.a);
 
-    bb1: if (props$3.b) {
+    if (props$3.b) {
       a$4.push(props$3.c);
     }
 
@@ -262,7 +262,7 @@ function Component$0(props$4) {
     a$5 = [];
     a$5.push(props$4.a);
 
-    bb1: if (props$4.b) {
+    if (props$4.b) {
       a$5.push(props$4.c);
       return null;
     }
@@ -332,7 +332,7 @@ function Component$0(props$3) {
     a$4 = [];
     a$4.push(props$3.a);
 
-    bb1: if (props$3.b) {
+    if (props$3.b) {
       a$4.push(props$3.c);
       return a$4;
     }
@@ -400,7 +400,7 @@ function Component$0(props$3) {
     const a$4 = [];
     a$4.push(props$3.a);
 
-    bb2: if (props$3.b) {
+    if (props$3.b) {
       a$4.push(props$3.d);
       return a$4;
     }

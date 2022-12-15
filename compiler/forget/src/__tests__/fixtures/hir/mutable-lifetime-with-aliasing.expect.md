@@ -157,19 +157,19 @@ function Component$0(props$10) {
     x$15.b = b$12;
     const y$16 = mutate$8(x$15, d$14);
 
-    bb1: if (a$11) {
+    if (a$11) {
     }
 
-    bb3: if (b$12) {
+    if (b$12) {
     }
 
-    bb5: if (c$13) {
+    if (c$13) {
     }
 
-    bb7: if (d$14) {
+    if (d$14) {
     }
 
-    bb9: if (y$16) {
+    if (y$16) {
     }
 
     mutate$8(x$15, null);

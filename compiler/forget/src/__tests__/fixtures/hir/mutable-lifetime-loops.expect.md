@@ -184,7 +184,7 @@ function Component$0(props$12) {
     let b$20 = {};
     let c$22 = {};
     let d$24 = {};
-    bb2: while (true) {
+    while (true) {
       const z$19 = a$18;
       a$18 = b$20;
       b$20 = c$22;
@@ -192,21 +192,21 @@ function Component$0(props$12) {
       d$24 = z$19;
       mutate$7(a$18, b$20);
 
-      bb4: if (cond$8(a$18)) {
+      if (cond$8(a$18)) {
         break;
       }
     }
 
-    bb7: if (a$18) {
+    if (a$18) {
     }
 
-    bb9: if (b$20) {
+    if (b$20) {
     }
 
-    bb11: if (c$22) {
+    if (c$22) {
     }
 
-    bb13: if (d$24) {
+    if (d$24) {
     }
 
     mutate$7(d$24, null);

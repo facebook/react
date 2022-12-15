@@ -47,7 +47,7 @@ function component(
 
 ```javascript
 function component$0(a$5, b$6) {
-  bb1: if (a$5 > b$6) {
+  if (a$5 > b$6) {
     if (true) {
       const m$8 = {};
     } else {

@@ -40,6 +40,7 @@ import { leaveSSA } from "./HIR/LeaveSSA";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { printReactiveFunction } from "./HIR/PrintReactiveFunction";
 import { propagateScopeDependencies } from "./HIR/PropagateScopeDependencies";
+import { pruneUnusedLabels } from "./HIR/PruneUnusedLabels";
 
 function parseFunctions(
   source: string
@@ -81,6 +82,7 @@ export const HIR = {
   printFunction,
   printHIR,
   printReactiveFunction,
+  pruneUnusedLabels,
 };
 
 export default BabelPlugin;

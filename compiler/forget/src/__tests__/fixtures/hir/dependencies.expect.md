@@ -88,7 +88,7 @@ function foo$0(x$6, y$7, z$8) {
     if (c_3 || c_4) {
       items2$10 = [];
 
-      bb1: if (x$6) {
+      if (x$6) {
         items2$10.push(y$7);
       }
 
@@ -99,7 +99,7 @@ function foo$0(x$6, y$7, z$8) {
       items2$10 = $[5];
     }
 
-    bb3: if (y$7) {
+    if (y$7) {
       items$9.push(x$6);
     }
 

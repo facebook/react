@@ -148,7 +148,7 @@ function Component$0(props$8) {
     a$9 = compute$3(props$8.a);
     b$10 = compute$3(props$8.b);
 
-    bb1: if (props$8.c) {
+    if (props$8.c) {
       foo$5(a$9, b$10);
     }
 

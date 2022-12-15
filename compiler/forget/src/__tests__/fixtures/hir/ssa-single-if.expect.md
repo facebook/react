@@ -50,7 +50,7 @@ function foo(
 function foo$0() {
   const x$4 = 1;
   const y$5 = 2;
-  bb1: if (y$5) {
+  if (y$5) {
     const z$6 = x$4 + y$5;
   }
 }

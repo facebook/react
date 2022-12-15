@@ -92,7 +92,7 @@ function Foo$0(cond$5) {
   if (c_0) {
     str$6 = "";
 
-    bb1: if (cond$5) {
+    if (cond$5) {
       const str$7 = "other test";
       log$4(str$7);
     } else {

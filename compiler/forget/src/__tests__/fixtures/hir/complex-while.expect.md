@@ -62,9 +62,9 @@ function foo(
 
 ```javascript
 function foo$0(a$4, b$5, c$6) {
-  bb1: if (a$4) {
+  if (a$4) {
     while (b$5) {
-      bb7: if (c$6) {
+      if (c$6) {
         break;
       }
     }

@@ -86,7 +86,7 @@ function Component$0(props$7) {
   if (c_0 || c_1) {
     a$11 = undefined;
 
-    bb1: if (cond$8) {
+    if (cond$8) {
       a$11 = x$9;
     } else {
       a$11 = [];

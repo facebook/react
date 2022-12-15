@@ -125,7 +125,7 @@ function foo$0(a$13, b$14, c$15) {
   if (c_0) {
     x$16 = [];
 
-    bb1: if (a$13) {
+    if (a$13) {
       x$16.push(a$13);
     }
 

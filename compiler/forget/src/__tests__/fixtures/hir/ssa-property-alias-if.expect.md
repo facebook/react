@@ -72,7 +72,7 @@ function foo$0(a$5) {
   if (c_0) {
     x$6 = {};
 
-    bb1: if (a$5) {
+    if (a$5) {
       if (true) {
         const y$7 = {};
       } else {

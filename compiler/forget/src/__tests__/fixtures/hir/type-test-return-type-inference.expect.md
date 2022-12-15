@@ -79,7 +79,7 @@ function component$0() {
     y$8 = $[1];
   }
 
-  bb1: if (x$7 > y$8) {
+  if (x$7 > y$8) {
     if (true) {
       const z$10 = {};
     } else {

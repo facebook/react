@@ -64,7 +64,7 @@ function foo$0(a$5, b$6, c$7) {
   if (c_0 || c_1 || c_2) {
     const y$8 = [];
 
-    bb1: if (a$5) {
+    if (a$5) {
       if (b$6) {
         y$8.push(c$7);
       }

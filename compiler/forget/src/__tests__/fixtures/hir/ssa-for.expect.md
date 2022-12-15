@@ -79,7 +79,7 @@ function foo$0() {
   if (true) {
     x$7 = 1;
 
-    bb2: for (let i$8 = 0; i$8 < 10; i$8 = i$8 + 1, i$8) {
+    for (let i$8 = 0; i$8 < 10; i$8 = i$8 + 1, i$8) {
       x$7 = x$7 + 1;
     }
 

@@ -83,7 +83,7 @@ function foo$0(a$8, b$9, c$10) {
   if (c_0 || c_1 || c_2) {
     x$11 = [];
 
-    bb1: if (a$8) {
+    if (a$8) {
       const c_4 = $[4] !== b$9;
       const c_5 = $[5] !== c$10;
       let y$12;
@@ -91,7 +91,7 @@ function foo$0(a$8, b$9, c$10) {
       if (c_4 || c_5) {
         y$12 = [];
 
-        bb3: if (b$9) {
+        if (b$9) {
           y$12.push(c$10);
         }
 

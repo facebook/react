@@ -74,7 +74,7 @@ function f$0(a$8, b$9) {
   if (c_0 || c_1) {
     x$10 = [];
 
-    bb1: if (a$8.length === 1) {
+    if (a$8.length === 1) {
       if (b$9) {
         x$10.push(b$9);
       }

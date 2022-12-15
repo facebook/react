@@ -63,7 +63,7 @@ function foo$0() {
     x$5 = 1;
     const y$6 = 2;
 
-    bb1: if (y$6 === 2) {
+    if (y$6 === 2) {
       x$5 = 3;
     }
 

@@ -56,7 +56,7 @@ function foo$0() {
   if (true) {
     x$4 = 1;
 
-    bb1: if (x$4 === 1) {
+    if (x$4 === 1) {
       x$4 = 2;
     }
 
