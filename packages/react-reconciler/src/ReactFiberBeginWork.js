@@ -282,6 +282,14 @@ import {
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
+// A special exception that's used to unwind the stack when an update flows
+// into a dehydrated boundary.
+export const SelectiveHydrationException: mixed = new Error(
+  "This is not a real error. It's an implementation detail of React's " +
+    "selective hydration feature. If this leaks into userspace, it's a bug in " +
+    'React. Please file an issue.',
+);
+
 let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
@@ -2861,6 +2869,16 @@ function updateDehydratedSuspenseComponent(
             attemptHydrationAtLane,
             eventTime,
           );
+
+          // Throw a special object that signals to the work loop that it should
+          // interrupt the current render.
+          //
+          // Because we're inside a React-only execution stack, we don't
+          // strictly need to throw here — we could instead modify some internal
+          // work loop state. But using an exception means we don't need to
+          // check for this case on every iteration of the work loop. So doing
+          // it this way moves the check out of the fast path.
+          throw SelectiveHydrationException;
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must
@@ -2871,15 +2889,17 @@ function updateDehydratedSuspenseComponent(
         }
       }
 
-      // If we have scheduled higher pri work above, this will just abort the render
-      // since we now have higher priority work. We'll try to infinitely suspend until
-      // we yield. TODO: We could probably just force yielding earlier instead.
-      renderDidSuspendDelayIfPossible();
-      // If we rendered synchronously, we won't yield so have to render something.
-      // This will cause us to delete any existing content.
+      // If we did not selectively hydrate, we'll continue rendering without
+      // hydrating. Mark this tree as suspended to prevent it from committing
+      // outside a transition.
+      //
+      // This path should only happen if the hydration lane already suspended.
+      // Currently, it also happens during sync updates because there is no
+      // hydration lane for sync updates.
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
+      renderDidSuspendDelayIfPossible();
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
