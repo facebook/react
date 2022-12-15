@@ -1260,6 +1260,46 @@ describe('DOMPluginEventSystem', () => {
           }
         });
 
+        it('flushes continuous events in the capture phase of a discrete event', async () => {
+          const buttonRef = React.createRef();
+          function Test() {
+            const [clientX, setClientX] = React.useState(0);
+            Scheduler.unstable_yieldValue(`Render:${clientX}`);
+            return (
+              <div>
+                <button
+                  ref={buttonRef}
+                  onClickCapture={() => {
+                    Scheduler.unstable_yieldValue(`Click:${clientX}`);
+                  }}
+                  onMouseOver={e => {
+                    setClientX(e.clientX);
+                  }}
+                />
+              </div>
+            );
+          }
+          const root = ReactDOMClient.createRoot(container);
+          root.render(<Test />);
+          expect(Scheduler).toFlushAndYieldThrough(['Render:0']);
+          const buttonElement = buttonRef.current;
+
+          // Expect the click event to be able to get the latest state value set by mouse over events
+          await act(async () => {
+            buttonElement.dispatchEvent(
+              new MouseEvent('mouseover', {
+                bubbles: true,
+                capture: true,
+                cancelable: true,
+                relatedTarget: null,
+                clientX: 5,
+              }),
+            );
+            dispatchClickEvent(buttonElement);
+          });
+          expect(Scheduler).toHaveYielded(['Render:5', 'Click:5']);
+        });
+
         describe('ReactDOM.createEventHandle', () => {
           beforeEach(() => {
             jest.resetModules();
@@ -3254,5 +3294,5 @@ describe('DOMPluginEventSystem', () => {
   }
 
   withEnableLegacyFBSupport(false);
-  withEnableLegacyFBSupport(true);
+  // withEnableLegacyFBSupport(true);
 });
