@@ -9,6 +9,7 @@
     "directory": "packages/jest-react"
   },
   "keywords": [
+    // taking this for an example
     "react",
     "jest",
     "react-testing"
