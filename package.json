@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@actuallyworks/node-fetch": "^2.6.0",
     "@babel/cli": "^7.10.5",
     "@babel/code-frame": "^7.10.4",
     "@babel/core": "^7.11.1",
@@ -50,7 +51,6 @@
     "danger": "^9.2.10",
     "error-stack-parser": "^2.0.6",
     "eslint": "^7.7.0",
-    "eslint-config-fbjs": "^3.1.1",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-eslint-plugin": "^3.5.3",
@@ -77,7 +77,6 @@
     "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
-    "@actuallyworks/node-fetch": "^2.6.0",
     "pacote": "^10.3.0",
     "prettier": "1.19.1",
     "prop-types": "^15.6.2",
