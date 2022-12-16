@@ -30,7 +30,7 @@ export default function Post({post}) {
       </h4>
       <p>{post.body}</p>
       <Suspense
-        fallback={<h5>Loading comments...</h5>}
+        fallback={<h5>Loading likes...</h5>}
         unstable_avoidThisFallback={true}>
         <Comments postId={post.id} />
       </Suspense>

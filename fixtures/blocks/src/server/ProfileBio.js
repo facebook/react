@@ -14,7 +14,7 @@ export default function ProfileBio({userId}) {
   const bio = fetch(`/bios/${user.bioId}`).json().text;
   return (
     <>
-      <h3>{user.name}'s Bio</h3>
+      <h3>{user.name}'s Biography</h3>
       <p>{bio}</p>
     </>
   );

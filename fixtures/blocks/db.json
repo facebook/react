@@ -4,12 +4,12 @@
       "id": 1,
       "userId": 2,
       "title": "Welcome",
-      "body": "Hello, world!"
+      "body": "Hello!"
     },
     {
       "id": 2,
       "userId": 3,
-      "title": "A Guide to useEffect",
+      "title": "A Guidelines",
       "body": "Let me tell you everything about useEffect"
     },
     {
@@ -66,7 +66,7 @@
   }],
   "bios": [{
     "id": 10,
-    "text": "I like European movies"
+    "text": "I like Spanish movies"
   }, {
     "id": 20,
     "text": "I like math puzzles"
