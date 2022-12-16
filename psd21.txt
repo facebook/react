@@ -1,0 +1,18 @@
+
+Error 1307 not found-
+THis is the error I have been trying to resolve, Could not exactly verify the solution but 
+has got some ways to resolve it and the reason why the error occured in the first place.
+This is a permission issue, the error is noticed when local and domain user of
+same name is present on the server and same is used as a installation account.
+The issue should resolve after removing the local user.
+If the operating system is unable to add and/or remove the products that you are requesting, 
+It requests you to verify file’s signature that required to install the office product.
+Usually, returns error code series 300XX, 1xxx series depends on the cause of the issue.
+There will be a log for every action on your computer which records all the events.
+ It is termed as an Event viewer. This is a Windows Inbuilt program under system tools,
+ it provides all the information for the problem causing keys. 
+This could cause due to the failure with your Windows related services and the executable
+ file is unable to read the required files when you try installing Office. Solutions include:
+Repair/Uninstall office program and reinstall, Registry fix.
+
+
