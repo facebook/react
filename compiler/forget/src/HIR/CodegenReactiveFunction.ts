@@ -21,7 +21,7 @@ import {
   Identifier,
   Instruction,
   InstructionKind,
-  ReactiveBasicBlock,
+  ReactiveBlock,
   ReactiveFunction,
   ReactiveScope,
   ReactiveTerminal,
@@ -84,10 +84,7 @@ class Context {
   }
 }
 
-function codegenBlock(
-  cx: Context,
-  block: ReactiveBasicBlock
-): t.BlockStatement {
+function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
   const statements: Array<t.Statement> = [];
   for (const item of block) {
     switch (item.kind) {
@@ -102,7 +99,7 @@ function codegenBlock(
         }
         break;
       }
-      case "block": {
+      case "scope": {
         codegenReactiveScope(cx, statements, item.scope, item.instructions);
         break;
       }
@@ -132,7 +129,7 @@ function codegenReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
   scope: ReactiveScope,
-  block: ReactiveBasicBlock
+  block: ReactiveBlock
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];

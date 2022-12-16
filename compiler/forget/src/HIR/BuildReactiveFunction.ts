@@ -14,11 +14,11 @@ import {
   InstructionId,
   InstructionValue,
   Place,
-  ReactiveBasicBlock,
   ReactiveBlock,
   ReactiveFunction,
-  ReactiveInstruction,
   ReactiveScope,
+  ReactiveScopeBlock,
+  ReactiveStatement,
   ReactiveTerminal,
   ReactiveValueBlock,
   ScopeId,
@@ -41,23 +41,23 @@ export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
 }
 
 type BlockKind =
-  | { kind: "block"; block: ReactiveBasicBlock }
-  | { kind: "scope"; block: ReactiveBasicBlock; scope: ReactiveScope };
+  | { kind: "block"; block: ReactiveBlock }
+  | { kind: "scope"; block: ReactiveBlock; scope: ReactiveScope };
 
 class Builder {
-  #instructions: ReactiveBasicBlock;
+  #instructions: ReactiveBlock;
   #stack: Array<
-    | { kind: "scope"; block: ReactiveBlock }
-    | { kind: "block"; block: ReactiveBasicBlock }
+    | { kind: "scope"; block: ReactiveScopeBlock }
+    | { kind: "block"; block: ReactiveBlock }
   >;
 
   constructor() {
-    const block: ReactiveBasicBlock = [];
+    const block: ReactiveBlock = [];
     this.#instructions = block;
     this.#stack = [{ kind: "block", block }];
   }
 
-  append(item: ReactiveInstruction, label: BlockId | undefined): void {
+  append(item: ReactiveStatement, label: BlockId | undefined): void {
     if (label !== undefined) {
       invariant(item.kind === "terminal", "Only terminals may have a label");
       item.label = label;
@@ -66,8 +66,8 @@ class Builder {
   }
 
   startScope(scope: ReactiveScope): void {
-    const block: ReactiveBlock = {
-      kind: "block",
+    const block: ReactiveScopeBlock = {
+      kind: "scope",
       scope,
       instructions: [],
     };
@@ -92,7 +92,7 @@ class Builder {
     }
   }
 
-  complete(): ReactiveBasicBlock {
+  complete(): ReactiveBlock {
     // TODO @josephsavona: debug two failures of this
     // invariant(
     //   this.#stack.length === 1,
@@ -111,12 +111,12 @@ class ReactiveFunctionBuilder
   implements
     Visitor<
       Builder,
-      ReactiveBasicBlock,
+      ReactiveBlock,
       ReactiveValueBlock,
       ReactiveValueBlock,
       InstructionValue | ReactiveValueBlock,
-      ReactiveInstruction,
-      { test: InstructionValue | null; block: ReactiveBasicBlock }
+      ReactiveStatement,
+      { test: InstructionValue | null; block: ReactiveBlock }
     >
 {
   #builders: Array<Builder> = [];
@@ -134,12 +134,12 @@ class ReactiveFunctionBuilder
   }
   appendBlock(
     block: Builder,
-    item: ReactiveInstruction,
+    item: ReactiveStatement,
     label?: BlockId | undefined
   ): void {
     block.append(item, label);
   }
-  leaveBlock(block: Builder): ReactiveBasicBlock {
+  leaveBlock(block: Builder): ReactiveBlock {
     const builder = this.#builders.pop();
     invariant(
       builder === block,
@@ -155,7 +155,7 @@ class ReactiveFunctionBuilder
       value: null,
     };
   }
-  appendValueBlock(block: ReactiveValueBlock, item: ReactiveInstruction): void {
+  appendValueBlock(block: ReactiveValueBlock, item: ReactiveStatement): void {
     block.instructions.push(item);
   }
   leaveValueBlock(
@@ -175,7 +175,7 @@ class ReactiveFunctionBuilder
   enterInitBlock(block: Builder): ReactiveValueBlock {
     return this.enterValueBlock(block);
   }
-  appendInitBlock(block: ReactiveValueBlock, item: ReactiveInstruction): void {
+  appendInitBlock(block: ReactiveValueBlock, item: ReactiveStatement): void {
     this.appendValueBlock(block, item);
   }
   leaveInitBlock(block: ReactiveValueBlock): ReactiveValueBlock {
@@ -191,7 +191,7 @@ class ReactiveFunctionBuilder
   visitInstruction(
     instruction: Instruction,
     value: InstructionValue | ReactiveValueBlock
-  ): ReactiveInstruction {
+  ): ReactiveStatement {
     this.visitId(instruction.id);
     const scope = getInstructionScope(instruction);
     if (scope !== null && !this.#scopes.has(scope.id)) {
@@ -204,17 +204,17 @@ class ReactiveFunctionBuilder
   visitTerminalId(id: InstructionId): void {
     this.visitId(id);
   }
-  visitImplicitTerminal(): ReactiveInstruction | null {
+  visitImplicitTerminal(): ReactiveStatement | null {
     return null;
   }
   visitTerminal(
     terminal: BlockTerminal<
       ReactiveValueBlock,
       InstructionValue | ReactiveValueBlock,
-      ReactiveBasicBlock,
-      { test: InstructionValue | null; block: ReactiveBasicBlock }
+      ReactiveBlock,
+      { test: InstructionValue | null; block: ReactiveBlock }
     >
-  ): ReactiveInstruction {
+  ): ReactiveStatement {
     let result: ReactiveTerminal;
     switch (terminal.kind) {
       case "break": {
@@ -259,7 +259,7 @@ class ReactiveFunctionBuilder
           test: terminal.test as Place,
           cases: terminal.cases as Array<{
             test: Place | null;
-            block: ReactiveBasicBlock | void;
+            block: ReactiveBlock | void;
           }>,
         };
         break;
@@ -291,8 +291,8 @@ class ReactiveFunctionBuilder
   }
   visitCase(
     test: InstructionValue | ReactiveValueBlock | null,
-    block: ReactiveBasicBlock
-  ): { test: InstructionValue | null; block: ReactiveBasicBlock } {
+    block: ReactiveBlock
+  ): { test: InstructionValue | null; block: ReactiveBlock } {
     if (test !== null && test.kind !== "Identifier") {
       invariant(false, "Expected a Place");
     }

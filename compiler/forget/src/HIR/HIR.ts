@@ -14,7 +14,7 @@ import { invariant } from "../CompilerError";
 // *******************************************************************************************
 // *******************************************************************************************
 
-// AST -> (lowering) -> HIR -> (analysis) -> Reactive Scopes -> (scheduling?) -> HIR -> (codegen) -> AST
+// AST -> (lowering) -> HIR -> (analysis) -> Reactive Scopes -> (codegen) -> AST
 
 /**
  * A location in a source file, intended to be used for providing diagnostic information and
@@ -47,27 +47,27 @@ export type ReactiveFunction = {
   params: Array<Place>;
   generator: boolean;
   async: boolean;
-  body: ReactiveBasicBlock;
+  body: ReactiveBlock;
 };
 
-export type ReactiveBlock = {
-  kind: "block";
+export type ReactiveScopeBlock = {
+  kind: "scope";
   scope: ReactiveScope;
-  instructions: ReactiveBasicBlock;
+  instructions: ReactiveBlock;
 };
 
-export type ReactiveBasicBlock = Array<ReactiveInstruction>;
+export type ReactiveBlock = Array<ReactiveStatement>;
 
 export type ReactiveValueBlock = {
   kind: "value-block";
-  instructions: ReactiveBasicBlock;
+  instructions: ReactiveBlock;
   value: InstructionValue | null;
 };
 
-export type ReactiveInstruction =
+export type ReactiveStatement =
   | { kind: "instruction"; instruction: Instruction }
   | { kind: "terminal"; terminal: ReactiveTerminal; label: BlockId | null }
-  | ReactiveBlock;
+  | ReactiveScopeBlock;
 
 export type ReactiveTerminal =
   | { kind: "break"; label: BlockId | null }
@@ -79,22 +79,22 @@ export type ReactiveTerminal =
       test: Place;
       cases: Array<{
         test: Place | null;
-        block: ReactiveBasicBlock | void;
+        block: ReactiveBlock | void;
       }>;
     }
-  | { kind: "while"; test: ReactiveValueBlock; loop: ReactiveBasicBlock }
+  | { kind: "while"; test: ReactiveValueBlock; loop: ReactiveBlock }
   | {
       kind: "for";
       init: ReactiveValueBlock;
       test: ReactiveValueBlock;
       update: ReactiveValueBlock;
-      loop: ReactiveBasicBlock;
+      loop: ReactiveBlock;
     }
   | {
       kind: "if";
       test: Place;
-      consequent: ReactiveBasicBlock;
-      alternate: ReactiveBasicBlock | null;
+      consequent: ReactiveBlock;
+      alternate: ReactiveBlock | null;
     };
 
 /**

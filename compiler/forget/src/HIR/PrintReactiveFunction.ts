@@ -8,9 +8,9 @@
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
 import {
-  ReactiveBlock,
   ReactiveFunction,
-  ReactiveInstruction,
+  ReactiveScopeBlock,
+  ReactiveStatement,
   ReactiveTerminal,
   ReactiveValueBlock,
 } from "./HIR";
@@ -35,7 +35,10 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
   return writer.complete();
 }
 
-export function printReactiveBlock(writer: Writer, block: ReactiveBlock): void {
+export function printReactiveBlock(
+  writer: Writer,
+  block: ReactiveScopeBlock
+): void {
   writer.writeLine(
     `scope @${block.scope.id} [${block.scope.range.start}:${
       block.scope.range.end
@@ -51,7 +54,7 @@ export function printReactiveBlock(writer: Writer, block: ReactiveBlock): void {
 
 export function printReactiveInstructions(
   writer: Writer,
-  instructions: Array<ReactiveInstruction>
+  instructions: Array<ReactiveStatement>
 ): void {
   writer.indented(() => {
     for (const instr of instructions) {
@@ -62,14 +65,14 @@ export function printReactiveInstructions(
 
 function printReactiveInstruction(
   writer: Writer,
-  instr: ReactiveInstruction
+  instr: ReactiveStatement
 ): void {
   switch (instr.kind) {
     case "instruction": {
       writer.writeLine(printInstruction(instr.instruction));
       break;
     }
-    case "block": {
+    case "scope": {
       printReactiveBlock(writer, instr);
       break;
     }

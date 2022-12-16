@@ -15,7 +15,7 @@ import {
   makeInstructionId,
   MutableRange,
   Place,
-  ReactiveBasicBlock,
+  ReactiveBlock,
   ReactiveFunction,
   ReactiveValueBlock,
 } from "./HIR";
@@ -50,14 +50,14 @@ enum DeclKind {
 type DeclMap = Map<Identifier, { kind: DeclKind; id: InstructionId }>;
 
 function visit(
-  block: ReactiveBasicBlock,
+  block: ReactiveBlock,
   dependencies: Set<Place>,
   declarations: DeclMap,
   scopeRange: MutableRange | null
 ): void {
   for (const item of block) {
     switch (item.kind) {
-      case "block": {
+      case "scope": {
         const scopeDependencies: Set<Place> = new Set();
         // TODO: it would be sufficient to use a single mapping of declarations
         const scopeDeclarations: DeclMap = new Map(declarations);

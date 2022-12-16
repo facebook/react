@@ -6,7 +6,7 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { ReactiveBasicBlock, ReactiveBlock, ReactiveFunction } from "./HIR";
+import { ReactiveBlock, ReactiveFunction, ReactiveScopeBlock } from "./HIR";
 
 /**
  * Given a reactive function, flattens any scopes contained within a loop construct.
@@ -16,12 +16,12 @@ export function flattenReactiveLoops(fn: ReactiveFunction): void {
   visit(fn.body, false);
 }
 
-function visit(block: ReactiveBasicBlock, shouldFlatten: boolean): void {
+function visit(block: ReactiveBlock, shouldFlatten: boolean): void {
   let i = 0;
   while (i < block.length) {
     const item = block[i]!;
     switch (item.kind) {
-      case "block": {
+      case "scope": {
         if (shouldFlatten) {
           const successors = block.splice(i + 1);
           block.pop(); // remove the current element
@@ -87,10 +87,10 @@ function visit(block: ReactiveBasicBlock, shouldFlatten: boolean): void {
   }
 }
 
-function flatten(scope: ReactiveBlock, block: ReactiveBasicBlock): void {
+function flatten(scope: ReactiveScopeBlock, block: ReactiveBlock): void {
   for (const item of scope.instructions) {
     switch (item.kind) {
-      case "block": {
+      case "scope": {
         flatten(item, block);
         break;
       }

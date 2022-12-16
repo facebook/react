@@ -8,7 +8,7 @@
 import { assertExhaustive } from "../Common/utils";
 import {
   BlockId,
-  ReactiveBasicBlock,
+  ReactiveBlock,
   ReactiveFunction,
   ReactiveTerminal,
 } from "./HIR";
@@ -23,7 +23,7 @@ export function pruneUnusedLabels(fn: ReactiveFunction): void {
 
 type Labels = Set<BlockId>;
 
-function visitBlock(labels: Labels, block: ReactiveBasicBlock): void {
+function visitBlock(labels: Labels, block: ReactiveBlock): void {
   for (const item of block) {
     if (item.kind === "terminal") {
       // first visit the terminal's contents, which is the only place that can
@@ -33,7 +33,7 @@ function visitBlock(labels: Labels, block: ReactiveBasicBlock): void {
       if (item.label !== null && !labels.has(item.label)) {
         item.label = null;
       }
-    } else if (item.kind === "block") {
+    } else if (item.kind === "scope") {
       visitBlock(labels, item.instructions);
     }
   }
