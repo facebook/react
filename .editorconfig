@@ -9,7 +9,7 @@ indent_style = space
 insert_final_newline = true
 max_line_length = 80
 trim_trailing_whitespace = true
-
+// example changed for exam
 [*.md]
 max_line_length = 0
 trim_trailing_whitespace = false
