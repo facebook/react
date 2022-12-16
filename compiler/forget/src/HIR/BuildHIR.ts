@@ -22,7 +22,6 @@ import {
   ReturnTerminal,
   SourceLocation,
   ThrowTerminal,
-  makeType,
 } from "./HIR";
 import HIRBuilder, { Environment } from "./HIRBuilder";
 import todo, { todoInvariant } from "./todo";

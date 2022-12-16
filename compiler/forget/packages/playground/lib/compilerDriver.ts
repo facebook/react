@@ -14,8 +14,8 @@ import {
   type CompilerOptions,
   type CompilerOutputs,
   type Diagnostic,
-} from "babel-plugin-react-forget";
-import { PassName } from "../../../dist/Pass";
+} from "babel-plugin-react-forget-legacy";
+import { PassName } from "../../babel-plugin-react-forget-legacy/dist/Pass";
 // @ts-ignore
 import ESLint from "eslint-browser";
 import { getBabelPlugins } from "./utils";

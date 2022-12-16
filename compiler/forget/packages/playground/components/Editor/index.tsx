@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Diagnostic } from "babel-plugin-react-forget";
+import type { Diagnostic } from "babel-plugin-react-forget-legacy";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";

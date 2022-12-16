@@ -6,8 +6,8 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { BlockId } from "../ControlFlowGraph";
 import {
+  BlockId,
   HIRFunction,
   Instruction,
   InstructionId,

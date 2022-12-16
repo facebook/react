@@ -6,7 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import * as IR from "../IR";
+import * as IR from ".";
 import { dumpNodeLoc } from "../Common/Dumper";
 
 export class ValSnapshot {

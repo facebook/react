@@ -1,5 +1,8 @@
 import { graphviz, wasmFolder } from "@hpcc-js/wasm";
-import { OutputKind, type CompilerOutputs } from "babel-plugin-react-forget";
+import {
+  OutputKind,
+  type CompilerOutputs,
+} from "babel-plugin-react-forget-legacy";
 import { memo, useEffect, useState } from "react";
 import genDotProgram from "../lib/dotProgramGenerator";
 

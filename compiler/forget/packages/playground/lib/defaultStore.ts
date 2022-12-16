@@ -2,8 +2,8 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
+import { createCompilerFlags } from "babel-plugin-react-forget-legacy";
 import type { Store } from "./stores";
-import { createCompilerFlags } from "babel-plugin-react-forget";
 
 const index = `\
 function fibbonacci(n) {

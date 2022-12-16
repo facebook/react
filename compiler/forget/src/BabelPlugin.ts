@@ -7,11 +7,11 @@
 
 /// <reference path="./plugin-syntax-jsx.d.ts" />
 
-import jsx from "@babel/plugin-syntax-jsx";
-import type { PluginObj } from "@babel/core";
 import type * as BabelCore from "@babel/core";
-import { createCompilerDriver } from "./CompilerDriver";
-import { CompilerOptions, parseCompilerOptions } from "./CompilerOptions";
+import type { PluginObj } from "@babel/core";
+import jsx from "@babel/plugin-syntax-jsx";
+import { invariant } from "./CompilerError";
+import Pipeline from "./HIR/Pipeline";
 
 /**
  * The React Forget Babel Plugin
@@ -23,18 +23,21 @@ export default function (babel: typeof BabelCore): PluginObj {
     name: "react-forget",
     inherits: jsx,
     visitor: {
-      Program: {
-        enter(program, pass) {
-          let compilerOptions: CompilerOptions;
-          try {
-            compilerOptions = parseCompilerOptions(pass.opts);
-          } catch (err) {
-            throw new Error(
-              `PluginOptions is required to be valid CompilerOptions: ${err}.`
-            );
-          }
-          let compiler = createCompilerDriver(compilerOptions, program);
-          compiler.compile();
+      FunctionDeclaration: {
+        enter(fn, pass) {
+          const { ast } = Pipeline(fn, {
+            eliminateRedundantPhi: true,
+            inferReferenceEffects: true,
+            inferTypes: true,
+            inferMutableRanges: true,
+            inferReactiveScopeVariables: true,
+            inferReactiveScopes: true,
+            inferReactiveScopeDependencies: true,
+            leaveSSA: true,
+            codegen: true,
+          });
+          invariant(ast !== null, "Expected ast to be present");
+          fn.replaceWith(ast);
         },
       },
     },

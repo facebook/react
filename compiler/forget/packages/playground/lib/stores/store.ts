@@ -2,12 +2,14 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import { createCompilerFlags } from "babel-plugin-react-forget";
+import {
+  createCompilerFlags,
+  parseCompilerFlags,
+} from "babel-plugin-react-forget-legacy";
 import invariant from "invariant";
+import { ForgetCompilerFlags } from "../compilerDriver";
 import { defaultStore } from "../defaultStore";
 import { codec } from "../utils";
-import { ForgetCompilerFlags } from "../compilerDriver";
-import { parseCompilerFlags } from "babel-plugin-react-forget";
 
 /**
  * Global Store for Playground

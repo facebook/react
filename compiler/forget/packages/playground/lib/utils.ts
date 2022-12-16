@@ -1,10 +1,10 @@
 /*
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
-import type { PluginItem, TransformOptions } from "@babel/core";
+import type { PluginItem } from "@babel/core";
 import ReactForgetBabelPlugin, {
   CompilerOptions,
-} from "babel-plugin-react-forget";
+} from "babel-plugin-react-forget-legacy";
 
 /**
  * Unicode-Base64 Codec.

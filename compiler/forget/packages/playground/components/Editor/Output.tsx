@@ -6,12 +6,12 @@
  */
 import generate from "@babel/generator";
 import MonacoEditor from "@monaco-editor/react";
+import { HIR } from "babel-plugin-react-forget";
 import {
   Diagnostic,
-  HIR,
   OutputKind,
   stringifyCompilerOutputs,
-} from "babel-plugin-react-forget";
+} from "babel-plugin-react-forget-legacy";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo } from "react";

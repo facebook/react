@@ -3,7 +3,7 @@
  */
 
 import { Monaco } from "@monaco-editor/react";
-import { Diagnostic, DiagnosticLevel } from "babel-plugin-react-forget";
+import { Diagnostic, DiagnosticLevel } from "babel-plugin-react-forget-legacy";
 import { MarkerSeverity, type editor } from "monaco-editor";
 
 function mapForgetSeverityToMonaco(

@@ -7,6 +7,7 @@
 
 import generate from "@babel/generator";
 import * as t from "@babel/types";
+import * as LIR from ".";
 import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import * as IR from "../IR";
@@ -16,7 +17,6 @@ import {
   revertAddComments,
   revertRenameReactiveVal,
 } from "../IR/PrettyPrinter";
-import * as LIR from "../LIR";
 import {
   EntryKind,
   isExprEntry,

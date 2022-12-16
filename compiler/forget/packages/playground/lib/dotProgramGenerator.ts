@@ -4,7 +4,7 @@
 
 // TODO: Add transform tests for these.
 
-import { SCCGraph, ValGraph } from "babel-plugin-react-forget";
+import { SCCGraph, ValGraph } from "babel-plugin-react-forget-legacy";
 import invariant from "invariant";
 
 const dotPrologue = `\

@@ -3,7 +3,7 @@
  */
 
 import MonacoEditor, { type Monaco } from "@monaco-editor/react";
-import type { Diagnostic } from "babel-plugin-react-forget";
+import type { Diagnostic } from "babel-plugin-react-forget-legacy";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import { useEffect, useState } from "react";

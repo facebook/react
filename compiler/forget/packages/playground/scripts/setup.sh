@@ -8,19 +8,29 @@
 
 ## Build Forget plugin and link it so it can be used by playground
 cd ../..
+echo "building forget"
 yarn
 yarn build
 yarn link
 
 ## Build ESLint for the browser and link it so it can be used by playground
 cd packages/eslint-browser
+echo "building eslint-browser"
+yarn
+yarn build
+yarn link
+
+cd ../babel-plugin-react-forget-legacy
+echo "building legacy forget"
 yarn
 yarn build
 yarn link
 
 ## Configure the playground itself to use the above locally linked packages
 cd ../playground
+echo "linking playground"
 yarn link babel-plugin-react-forget
+yarn link babel-plugin-react-forget-legacy
 yarn link eslint-browser
 
 
