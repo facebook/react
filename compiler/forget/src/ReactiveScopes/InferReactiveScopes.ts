@@ -6,8 +6,6 @@
  */
 
 import invariant from "invariant";
-import { retainWhere } from "../Common/utils";
-import DisjointSet from "./DisjointSet";
 import {
   BlockId,
   HIRFunction,
@@ -18,14 +16,16 @@ import {
   MutableRange,
   ReactiveScope,
   ScopeId,
-} from "./HIR";
-import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
-import { log } from "./logger";
-import { printFunction } from "./PrintHIR";
+} from "../HIR/HIR";
+import { BlockTerminal, Visitor, visitTree } from "../HIR/HIRTreeVisitor";
+import { printFunction } from "../HIR/PrintHIR";
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
-} from "./visitors";
+} from "../HIR/visitors";
+import DisjointSet from "../Utils/DisjointSet";
+import { log } from "../Utils/logger";
+import { retainWhere } from "../Utils/utils";
 
 /**
  * This is a second (final) stage of constructing reactive scopes. Prior to this pass,

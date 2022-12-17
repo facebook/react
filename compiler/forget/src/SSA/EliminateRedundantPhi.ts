@@ -6,8 +6,8 @@
  */
 
 import invariant from "invariant";
-import { BlockId, HIRFunction, Identifier, Place } from "./HIR";
-import { eachInstructionOperand, eachTerminalOperand } from "./visitors";
+import { BlockId, HIRFunction, Identifier, Place } from "../HIR/HIR";
+import { eachInstructionOperand, eachTerminalOperand } from "../HIR/visitors";
 
 /**
  * Pass to eliminate redundant phi nodes:

@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Common/utils";
 import {
   BlockId,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveTerminal,
-} from "./HIR";
+} from "../HIR/HIR";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * Prunes terminal labels that are never explicitly jumped to.

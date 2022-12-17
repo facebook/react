@@ -6,7 +6,6 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
 import {
   BlockId,
   HIRFunction,
@@ -22,9 +21,10 @@ import {
   ReactiveTerminal,
   ReactiveValueBlock,
   ScopeId,
-} from "./HIR";
-import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
-import { eachInstructionOperand } from "./visitors";
+} from "../HIR/HIR";
+import { BlockTerminal, Visitor, visitTree } from "../HIR/HIRTreeVisitor";
+import { eachInstructionOperand } from "../HIR/visitors";
+import { assertExhaustive } from "../Utils/utils";
 
 export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
   const builder = new ReactiveFunctionBuilder();

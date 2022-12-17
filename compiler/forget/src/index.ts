@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import BabelPlugin from "./BabelPlugin";
+import BabelPlugin from "./Babel/BabelPlugin";
 
 declare global {
   var __DEV__: boolean | null | undefined;
@@ -15,22 +15,22 @@ import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { lower } from "./HIR/BuildHIR";
-import { buildReactiveFunction } from "./HIR/BuildReactiveFunction";
 import codegen from "./HIR/Codegen";
-import { codegenReactiveFunction } from "./HIR/CodegenReactiveFunction";
-import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
-import enterSSA from "./HIR/EnterSSA";
-import { flattenReactiveLoops } from "./HIR/FlattenReactiveLoops";
 import { Environment } from "./HIR/HIRBuilder";
 import { inferMutableRanges } from "./HIR/InferMutableRanges";
-import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
-import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
-import { leaveSSA } from "./HIR/LeaveSSA";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
-import { printReactiveFunction } from "./HIR/PrintReactiveFunction";
-import { propagateScopeDependencies } from "./HIR/PropagateScopeDependencies";
-import { pruneUnusedLabels } from "./HIR/PruneUnusedLabels";
+import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunction";
+import { codegenReactiveFunction } from "./ReactiveScopes/CodegenReactiveFunction";
+import { flattenReactiveLoops } from "./ReactiveScopes/FlattenReactiveLoops";
+import { inferReactiveScopes } from "./ReactiveScopes/InferReactiveScopes";
+import { inferReactiveScopeVariables } from "./ReactiveScopes/InferReactiveScopeVariables";
+import { printReactiveFunction } from "./ReactiveScopes/PrintReactiveFunction";
+import { propagateScopeDependencies } from "./ReactiveScopes/PropagateScopeDependencies";
+import { pruneUnusedLabels } from "./ReactiveScopes/PruneUnusedLabels";
+import { eliminateRedundantPhi } from "./SSA/EliminateRedundantPhi";
+import enterSSA from "./SSA/EnterSSA";
+import { leaveSSA } from "./SSA/LeaveSSA";
 
 function parseFunctions(
   source: string

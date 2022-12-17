@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { invariant } from "../CompilerError";
+import { invariant } from "./CompilerError";
 
 /**
  * Represents items which form disjoint sets.

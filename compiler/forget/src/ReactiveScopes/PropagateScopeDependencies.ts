@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Common/utils";
 import {
   Identifier,
   Instruction,
@@ -18,8 +17,9 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveValueBlock,
-} from "./HIR";
-import { eachInstructionValueOperand } from "./visitors";
+} from "../HIR/HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * Infers the dependencies of each scope to include variables whose values

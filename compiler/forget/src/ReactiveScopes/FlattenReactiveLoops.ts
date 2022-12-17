@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Common/utils";
-import { ReactiveBlock, ReactiveFunction, ReactiveScopeBlock } from "./HIR";
+import {
+  ReactiveBlock,
+  ReactiveFunction,
+  ReactiveScopeBlock,
+} from "../HIR/HIR";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * Given a reactive function, flattens any scopes contained within a loop construct.

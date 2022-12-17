@@ -1,4 +1,3 @@
-import { invariant } from "../CompilerError";
 import {
   BasicBlock,
   HIRFunction,
@@ -8,14 +7,15 @@ import {
   makeType,
   Phi,
   Place,
-} from "./HIR";
-import { Environment } from "./HIRBuilder";
-import { printIdentifier } from "./PrintHIR";
+} from "../HIR/HIR";
+import { Environment } from "../HIR/HIRBuilder";
+import { printIdentifier } from "../HIR/PrintHIR";
 import {
   eachTerminalSuccessor,
   mapInstructionOperands,
   mapTerminalOperands,
-} from "./visitors";
+} from "../HIR/visitors";
+import { invariant } from "../Utils/CompilerError";
 
 type IncompletePhi = {
   oldId: Identifier;

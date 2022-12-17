@@ -6,8 +6,6 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
-import DisjointSet from "./DisjointSet";
 import {
   HIRFunction,
   Identifier,
@@ -18,8 +16,10 @@ import {
   Place,
   ReactiveScope,
   ScopeId,
-} from "./HIR";
-import { eachInstructionOperand } from "./visitors";
+} from "../HIR/HIR";
+import { eachInstructionOperand } from "../HIR/visitors";
+import DisjointSet from "../Utils/DisjointSet";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * For each mutable variable, infers a reactive scope which will construct that

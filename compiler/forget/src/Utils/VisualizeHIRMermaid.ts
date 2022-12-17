@@ -1,6 +1,6 @@
-import { assertExhaustive } from "../Common/utils";
-import { BasicBlock, BlockId, HIRFunction, Terminal } from "./HIR";
-import { printInstruction, printPlace } from "./PrintHIR";
+import { BasicBlock, BlockId, HIRFunction, Terminal } from "../HIR/HIR";
+import { printInstruction, printPlace } from "../HIR/PrintHIR";
+import { assertExhaustive } from "./utils";
 
 const INSTRUCTIONS_NODE_NAME = "instrs";
 const TERMINAL_NODE_NAME = "terminal";

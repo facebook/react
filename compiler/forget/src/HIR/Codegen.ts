@@ -6,8 +6,9 @@
  */
 
 import * as t from "@babel/types";
-import { assertExhaustive } from "../Common/utils";
-import { invariant } from "../CompilerError";
+import { invariant } from "../Utils/CompilerError";
+import { todoInvariant } from "../Utils/todo";
+import { assertExhaustive } from "../Utils/utils";
 import {
   BlockId,
   GeneratedSource,
@@ -23,7 +24,6 @@ import {
   SourceLocation,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
-import { todoInvariant } from "./todo";
 
 function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
   fn: T

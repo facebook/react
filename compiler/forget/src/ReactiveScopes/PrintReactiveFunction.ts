@@ -6,20 +6,20 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
 import {
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveStatement,
   ReactiveTerminal,
   ReactiveValueBlock,
-} from "./HIR";
+} from "../HIR/HIR";
 import {
   printIdentifier,
   printInstruction,
   printInstructionValue,
   printPlace,
-} from "./PrintHIR";
+} from "../HIR/PrintHIR";
+import { assertExhaustive } from "../Utils/utils";
 
 export function printReactiveFunction(fn: ReactiveFunction): string {
   const writer = new Writer();

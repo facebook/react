@@ -17,8 +17,11 @@ import {
   makeInstructionId,
   Phi,
   Place,
-} from "./HIR";
-import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
+} from "../HIR/HIR";
+import {
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 
 /**
  * Removes SSA form by creating unique variable declarations for the versions of each variables.

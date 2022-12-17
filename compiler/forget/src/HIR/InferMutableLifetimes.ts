@@ -6,7 +6,7 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
+import { assertExhaustive } from "../Utils/utils";
 import {
   Effect,
   HIRFunction,

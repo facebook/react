@@ -7,7 +7,6 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
 import {
   codegenInstruction,
   codegenInstructionValue,
@@ -16,7 +15,7 @@ import {
   convertIdentifier,
   createFunctionDeclaration,
   Temporaries,
-} from "./Codegen";
+} from "../HIR/Codegen";
 import {
   Identifier,
   Instruction,
@@ -26,8 +25,9 @@ import {
   ReactiveScope,
   ReactiveTerminal,
   ReactiveValueBlock,
-} from "./HIR";
-import { todoInvariant } from "./todo";
+} from "../HIR/HIR";
+import { todoInvariant } from "../Utils/todo";
+import { assertExhaustive } from "../Utils/utils";
 
 export function codegenReactiveFunction(fn: ReactiveFunction): t.Function {
   const cx = new Context();

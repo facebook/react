@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Common/utils";
-import { invariant } from "../CompilerError";
+import { invariant } from "../Utils/CompilerError";
+import { assertExhaustive } from "../Utils/utils";
 import {
   BasicBlock,
   BlockId,
@@ -14,7 +14,6 @@ import {
   HIRFunction,
   IdentifierId,
   InstructionValue,
-  makeType,
   Phi,
   Place,
   ValueKind,

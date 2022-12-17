@@ -1,7 +1,5 @@
-import invariant from "invariant";
-import DisjointSet from "./DisjointSet";
+import DisjointSet from "../Utils/DisjointSet";
 import { HIRFunction, Identifier, Instruction, LValue, Place } from "./HIR";
-import { printInstructionValue } from "./PrintHIR";
 
 export type AliasSet = Set<Identifier>;
 

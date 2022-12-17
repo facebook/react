@@ -7,8 +7,9 @@
 
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { assertExhaustive } from "../Common/utils";
-import { invariant } from "../CompilerError";
+import { invariant } from "../Utils/CompilerError";
+import todo, { todoInvariant } from "../Utils/todo";
+import { assertExhaustive } from "../Utils/utils";
 import {
   Effect,
   GeneratedSource,
@@ -24,7 +25,6 @@ import {
   ThrowTerminal,
 } from "./HIR";
 import HIRBuilder, { Environment } from "./HIRBuilder";
-import todo, { todoInvariant } from "./todo";
 
 // *******************************************************************************************
 // *******************************************************************************************

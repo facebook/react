@@ -7,23 +7,23 @@
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { lower } from "../HIR/BuildHIR";
-import { eliminateRedundantPhi } from "../HIR/EliminateRedundantPhi";
-import enterSSA from "../HIR/EnterSSA";
 import { Environment } from "../HIR/HIRBuilder";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
-import { leaveSSA } from "../HIR/LeaveSSA";
-import { buildReactiveFunction } from "./BuildReactiveFunction";
-import { codegenReactiveFunction } from "./CodegenReactiveFunction";
-import { flattenReactiveLoops } from "./FlattenReactiveLoops";
+import { buildReactiveFunction } from "../ReactiveScopes/BuildReactiveFunction";
+import { codegenReactiveFunction } from "../ReactiveScopes/CodegenReactiveFunction";
+import { flattenReactiveLoops } from "../ReactiveScopes/FlattenReactiveLoops";
+import { inferReactiveScopes } from "../ReactiveScopes/InferReactiveScopes";
+import { inferReactiveScopeVariables } from "../ReactiveScopes/InferReactiveScopeVariables";
+import { printReactiveFunction } from "../ReactiveScopes/PrintReactiveFunction";
+import { propagateScopeDependencies } from "../ReactiveScopes/PropagateScopeDependencies";
+import { pruneUnusedLabels } from "../ReactiveScopes/PruneUnusedLabels";
+import { eliminateRedundantPhi } from "../SSA/EliminateRedundantPhi";
+import enterSSA from "../SSA/EnterSSA";
+import { leaveSSA } from "../SSA/LeaveSSA";
+import { logHIRFunction } from "../Utils/logger";
 import { HIRFunction } from "./HIR";
 import { inferMutableRanges } from "./InferMutableRanges";
-import { inferReactiveScopes } from "./InferReactiveScopes";
-import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 import { inferTypes } from "./InferTypes";
-import { logHIRFunction } from "./logger";
-import { printReactiveFunction } from "./PrintReactiveFunction";
-import { propagateScopeDependencies } from "./PropagateScopeDependencies";
-import { pruneUnusedLabels } from "./PruneUnusedLabels";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;

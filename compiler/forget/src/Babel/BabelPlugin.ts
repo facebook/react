@@ -10,8 +10,8 @@
 import type * as BabelCore from "@babel/core";
 import type { PluginObj } from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
-import { invariant } from "./CompilerError";
-import Pipeline from "./HIR/Pipeline";
+import Pipeline from "../HIR/Pipeline";
+import { invariant } from "../Utils/CompilerError";
 
 /**
  * The React Forget Babel Plugin

@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIR, HIRFunction } from "./HIR";
-import printHIR, { printFunction } from "./PrintHIR";
+import { HIR, HIRFunction } from "../HIR/HIR";
+import printHIR, { printFunction } from "../HIR/PrintHIR";
 
 let ENABLED: boolean = false;
 

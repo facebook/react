@@ -6,8 +6,9 @@
  */
 
 import * as t from "@babel/types";
-import { assertExhaustive } from "../Common/utils";
-import { invariant } from "../CompilerError";
+import { invariant } from "../Utils/CompilerError";
+import { logHIR } from "../Utils/logger";
+import { assertExhaustive } from "../Utils/utils";
 import {
   BasicBlock,
   BlockId,
@@ -23,7 +24,6 @@ import {
   makeType,
   Terminal,
 } from "./HIR";
-import { logHIR } from "./logger";
 import { printInstruction } from "./PrintHIR";
 import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
 

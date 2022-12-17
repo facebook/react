@@ -14,9 +14,9 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
-import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
+import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {

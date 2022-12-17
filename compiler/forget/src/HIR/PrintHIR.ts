@@ -6,8 +6,8 @@
  */
 
 import generate from "@babel/generator";
-import { assertExhaustive } from "../Common/utils";
-import DisjointSet from "./DisjointSet";
+import DisjointSet from "../Utils/DisjointSet";
+import { assertExhaustive } from "../Utils/utils";
 import {
   GotoVariant,
   HIR,
