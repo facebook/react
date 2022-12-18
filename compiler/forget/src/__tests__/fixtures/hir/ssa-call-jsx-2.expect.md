@@ -48,8 +48,8 @@ bb0:
   [1] Const mutate a$11_@0[1:10] = Array []
   [2] Const mutate b$12_@0:TObject[1:10] = Object {  }
   [3] Call mutate foo$4:TFunction(mutate a$11_@0, mutate b$12_@0:TObject)
-  [4] Const mutate $13_@1 = Call mutate foo$4:TFunction()
-  [5] If (read $13_@1) then:bb2 else:bb1 fallthrough=bb1
+  [4] Const mutate t2$13_@1 = Call mutate foo$4:TFunction()
+  [5] If (read t2$13_@1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Const mutate $14:TPrimitive = "div"
@@ -59,8 +59,8 @@ bb1:
   predecessor blocks: bb2 bb0
   [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
   [10] Const mutate $19:TPrimitive = "div"
-  [11] Const mutate t5$20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
-  [12] Return read t5$20_@3
+  [11] Const mutate t6$20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
+  [12] Return read t6$20_@3
 ```
 
 ## Reactive Scopes
@@ -73,7 +73,7 @@ function Component(
     [1] Const mutate a$11_@0[1:10] = Array []
     [2] Const mutate b$12_@0:TObject[1:10] = Object {  }
     [3] Call mutate foo$4:TFunction(mutate a$11_@0, mutate b$12_@0:TObject)
-    scope @1 [4:5] deps=[] out=[] {
+    scope @1 [4:5] deps=[] out=[$13_@1] {
       [4] Const mutate $13_@1 = Call mutate foo$4:TFunction()
     }
     if (read $13_@1) {
@@ -104,18 +104,22 @@ function Component$0(props$10) {
     a$11 = [];
     b$12 = {};
     foo$4(a$11, b$12);
+    let t2$13;
 
     if (true) {
+      t2$13 = foo$4();
+      $[2] = t2$13;
     } else {
+      t2$13 = $[2];
     }
 
-    if (foo$4()) {
-      const c_2 = $[2] !== a$11;
+    if (t2$13) {
+      const c_3 = $[3] !== a$11;
 
-      if (c_2) {
+      if (c_3) {
         const _$15 = <div a={a$11}></div>;
 
-        $[2] = a$11;
+        $[3] = a$11;
       } else {
       }
     }
@@ -128,20 +132,20 @@ function Component$0(props$10) {
     b$12 = $[1];
   }
 
-  const c_3 = $[3] !== a$11;
-  const c_4 = $[4] !== b$12;
-  let t5$20;
+  const c_4 = $[4] !== a$11;
+  const c_5 = $[5] !== b$12;
+  let t6$20;
 
-  if (c_3 || c_4) {
-    t5$20 = <div a={a$11} b={b$12}></div>;
-    $[3] = a$11;
-    $[4] = b$12;
-    $[5] = t5$20;
+  if (c_4 || c_5) {
+    t6$20 = <div a={a$11} b={b$12}></div>;
+    $[4] = a$11;
+    $[5] = b$12;
+    $[6] = t6$20;
   } else {
-    t5$20 = $[5];
+    t6$20 = $[6];
   }
 
-  return t5$20;
+  return t6$20;
 }
 
 ```

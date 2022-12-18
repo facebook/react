@@ -52,7 +52,7 @@ function foo(
       [4] Reassign mutate x$7_@0.y[1:10] = read y$8_@0:TObject
       [5] Call mutate mutate$4:TFunction(mutate y$8_@0:TObject)
     } else {
-      scope @1 [7:8] deps=[] out=[] {
+      scope @1 [7:8] deps=[] out=[z$9_@1] {
         [7] Const mutate z$9_@1:TObject = Object {  }
       }
       [8] Reassign mutate x$7_@0.z[1:10] = read z$9_@1:TObject
@@ -78,9 +78,13 @@ function foo$0(a$6) {
       x$7.y = y$8;
       mutate$4(y$8);
     } else {
+      let z$9;
+
       if (true) {
-        const z$9 = {};
+        z$9 = {};
+        $[2] = z$9;
       } else {
+        z$9 = $[2];
       }
 
       x$7.z = z$9;

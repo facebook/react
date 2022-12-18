@@ -102,7 +102,7 @@ function Component(
   }
   scope @1 [2:15] deps=[read a$11_@0:TObject] out=[] {
     [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
-    scope @2 [3:4] deps=[] out=[] {
+    scope @2 [3:4] deps=[] out=[c$13_@2] {
       [3] Const mutate c$13_@2:TObject = Object {  }
     }
     [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
@@ -144,10 +144,13 @@ function Component$0(props$10) {
 
   if (c_1) {
     const b$12 = [a$11];
+    let c$13;
 
     if (true) {
-      const c$13 = {};
+      c$13 = {};
+      $[2] = c$13;
     } else {
+      c$13 = $[2];
     }
 
     const d$14 = {

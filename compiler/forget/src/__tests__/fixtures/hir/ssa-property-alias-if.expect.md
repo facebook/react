@@ -46,12 +46,12 @@ function foo(
   scope @0 [1:9] deps=[read a$5] out=[x$6_@0] {
     [1] Const mutate x$6_@0:TObject[1:9] = Object {  }
     if (read a$5) {
-      scope @1 [3:4] deps=[] out=[] {
+      scope @1 [3:4] deps=[] out=[y$7_@1] {
         [3] Const mutate y$7_@1:TObject = Object {  }
       }
       [4] Reassign mutate x$6_@0.y[1:9] = read y$7_@1:TObject
     } else {
-      scope @2 [6:7] deps=[] out=[] {
+      scope @2 [6:7] deps=[] out=[z$8_@2] {
         [6] Const mutate z$8_@2:TObject = Object {  }
       }
       [7] Reassign mutate x$6_@0.z[1:9] = read z$8_@2:TObject
@@ -73,16 +73,24 @@ function foo$0(a$5) {
     x$6 = {};
 
     if (a$5) {
+      let y$7;
+
       if (true) {
-        const y$7 = {};
+        y$7 = {};
+        $[2] = y$7;
       } else {
+        y$7 = $[2];
       }
 
       x$6.y = y$7;
     } else {
+      let z$8;
+
       if (true) {
-        const z$8 = {};
+        z$8 = {};
+        $[3] = z$8;
       } else {
+        z$8 = $[3];
       }
 
       x$6.z = z$8;

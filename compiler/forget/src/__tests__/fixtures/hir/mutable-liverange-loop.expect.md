@@ -129,7 +129,7 @@ function Component(
   scope @0 [1:18] deps=[] out=[] {
     [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
     [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
-    scope @1 [3:4] deps=[] out=[] {
+    scope @1 [3:4] deps=[] out=[c$14_@1] {
       [3] Const mutate c$14_@1:TObject = Object {  }
     }
     [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
@@ -163,12 +163,17 @@ function Component(
 
 ```javascript
 function Component$0(props$11) {
+  const $ = React.useMemoCache();
   if (true) {
     const a$12 = {};
     const b$13 = {};
+    let c$14;
+
     if (true) {
-      const c$14 = {};
+      c$14 = {};
+      $[0] = c$14;
     } else {
+      c$14 = $[0];
     }
 
     const d$15 = {};

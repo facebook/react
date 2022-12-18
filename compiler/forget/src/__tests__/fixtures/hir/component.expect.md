@@ -95,11 +95,11 @@ bb2:
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  [38] Const mutate t6$71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  [38] Const mutate t7$71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  [41] Const mutate t9$74_@5 = JSX <read $67:TPrimitive>{read $68}{read t6$71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
-  [42] Return read t9$74_@5
+  [41] Const mutate t10$74_@5 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@4}{read $72}{freeze renderedItems$32_@0:TFunction}{read $73}</read $67:TPrimitive>
+  [42] Return read t10$74_@5
 ```
 
 ## Reactive Scopes
@@ -114,7 +114,7 @@ function Component(
     [3] Const mutate renderedItems$32_@0:TFunction[3:33] = Array []
     [4] Const mutate seen$33_@0:TFunction[3:33] = New mutate Set$6()
     [5] Const mutate $34:TPrimitive = 0
-    scope @2 [6:7] deps=[read maxItems$31:TProp] out=[] {
+    scope @2 [6:7] deps=[read maxItems$31:TProp] out=[max$35_@2] {
       [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$8.max(read $34:TPrimitive, read maxItems$31:TProp)
     }
     for (
@@ -182,11 +182,14 @@ function Component$0(props$29) {
     renderedItems$32 = [];
     const seen$33 = new Set$6();
     const c_4 = $[4] !== maxItems$31;
+    let max$35;
 
     if (c_4) {
-      const max$35 = Math$8.max(0, maxItems$31);
+      max$35 = Math$8.max(0, maxItems$31);
       $[4] = maxItems$31;
+      $[5] = max$35;
     } else {
+      max$35 = $[5];
     }
 
     for (let i$36 = 0; i$36 < items$30.length; i$36 = i$36 + 1, i$36) {
@@ -217,36 +220,36 @@ function Component$0(props$29) {
   }
 
   const count$66 = renderedItems$32.length;
-  const c_5 = $[5] !== count$66;
-  let t6$71;
+  const c_6 = $[6] !== count$66;
+  let t7$71;
 
-  if (c_5) {
-    t6$71 = <h1>{count$66} Items</h1>;
-    $[5] = count$66;
-    $[6] = t6$71;
+  if (c_6) {
+    t7$71 = <h1>{count$66} Items</h1>;
+    $[6] = count$66;
+    $[7] = t7$71;
   } else {
-    t6$71 = $[6];
+    t7$71 = $[7];
   }
 
-  const c_7 = $[7] !== t6$71;
-  const c_8 = $[8] !== renderedItems$32;
-  let t9$74;
+  const c_8 = $[8] !== t7$71;
+  const c_9 = $[9] !== renderedItems$32;
+  let t10$74;
 
-  if (c_7 || c_8) {
-    t9$74 = (
+  if (c_8 || c_9) {
+    t10$74 = (
       <div>
-        {t6$71}
+        {t7$71}
         {renderedItems$32}
       </div>
     );
-    $[7] = t6$71;
-    $[8] = renderedItems$32;
-    $[9] = t9$74;
+    $[8] = t7$71;
+    $[9] = renderedItems$32;
+    $[10] = t10$74;
   } else {
-    t9$74 = $[9];
+    t10$74 = $[10];
   }
 
-  return t9$74;
+  return t10$74;
 }
 
 ```

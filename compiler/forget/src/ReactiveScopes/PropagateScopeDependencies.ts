@@ -12,10 +12,10 @@ import {
   InstructionKind,
   InstructionValue,
   makeInstructionId,
-  MutableRange,
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveScope,
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
@@ -39,7 +39,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
       id: makeInstructionId(0),
     });
   }
-  visit(fn.body, dependencies, declarations, null);
+  visit(fn.body, dependencies, declarations, []);
 }
 
 enum DeclKind {
@@ -49,11 +49,13 @@ enum DeclKind {
 
 type DeclMap = Map<Identifier, { kind: DeclKind; id: InstructionId }>;
 
+type Scopes = Array<ReactiveScope>;
+
 function visit(
   block: ReactiveBlock,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeRange: MutableRange | null
+  scopes: Scopes
 ): void {
   for (const item of block) {
     switch (item.kind) {
@@ -61,19 +63,16 @@ function visit(
         const scopeDependencies: Set<Place> = new Set();
         // TODO: it would be sufficient to use a single mapping of declarations
         const scopeDeclarations: DeclMap = new Map(declarations);
-        visit(
-          item.instructions,
-          scopeDependencies,
-          scopeDeclarations,
-          item.scope.range
-        );
+        scopes.push(item.scope);
+        visit(item.instructions, scopeDependencies, scopeDeclarations, scopes);
+        scopes.pop();
         item.scope.dependencies = scopeDependencies;
         for (const dep of scopeDependencies) {
           // propagate dependencies upward using the same rules as
           // normal dependency collection. child scopes may have dependencies
           // on values created within the outer scope, which necessarily cannot
           // be dependencies of the outer scope
-          visitOperand(dep, dependencies, declarations, scopeRange);
+          visitOperand(dep, dependencies, declarations, scopes);
         }
         for (const [ident, kind] of scopeDeclarations) {
           declarations.set(ident, kind);
@@ -81,12 +80,7 @@ function visit(
         break;
       }
       case "instruction": {
-        visitInstruction(
-          item.instruction,
-          dependencies,
-          declarations,
-          scopeRange
-        );
+        visitInstruction(item.instruction, dependencies, declarations, scopes);
         break;
       }
       case "terminal": {
@@ -98,69 +92,44 @@ function visit(
           }
           case "return": {
             if (terminal.value !== null) {
-              visitOperand(
-                terminal.value,
-                dependencies,
-                declarations,
-                scopeRange
-              );
+              visitOperand(terminal.value, dependencies, declarations, scopes);
             }
             break;
           }
           case "throw": {
-            visitOperand(
-              terminal.value,
-              dependencies,
-              declarations,
-              scopeRange
-            );
+            visitOperand(terminal.value, dependencies, declarations, scopes);
             break;
           }
           case "for": {
-            visitValueBlock(
-              terminal.init,
-              dependencies,
-              declarations,
-              scopeRange
-            );
-            visitValueBlock(
-              terminal.test,
-              dependencies,
-              declarations,
-              scopeRange
-            );
+            visitValueBlock(terminal.init, dependencies, declarations, scopes);
+            visitValueBlock(terminal.test, dependencies, declarations, scopes);
             visitValueBlock(
               terminal.update,
               dependencies,
               declarations,
-              scopeRange
+              scopes
             );
-            visit(terminal.loop, dependencies, declarations, scopeRange);
+            visit(terminal.loop, dependencies, declarations, scopes);
             break;
           }
           case "while": {
-            visitValueBlock(
-              terminal.test,
-              dependencies,
-              declarations,
-              scopeRange
-            );
-            visit(terminal.loop, dependencies, declarations, scopeRange);
+            visitValueBlock(terminal.test, dependencies, declarations, scopes);
+            visit(terminal.loop, dependencies, declarations, scopes);
             break;
           }
           case "if": {
-            visitOperand(terminal.test, dependencies, declarations, scopeRange);
-            visit(terminal.consequent, dependencies, declarations, scopeRange);
+            visitOperand(terminal.test, dependencies, declarations, scopes);
+            visit(terminal.consequent, dependencies, declarations, scopes);
             if (terminal.alternate !== null) {
-              visit(terminal.alternate, dependencies, declarations, scopeRange);
+              visit(terminal.alternate, dependencies, declarations, scopes);
             }
             break;
           }
           case "switch": {
-            visitOperand(terminal.test, dependencies, declarations, scopeRange);
+            visitOperand(terminal.test, dependencies, declarations, scopes);
             for (const case_ of terminal.cases) {
               if (case_.block !== undefined) {
-                visit(case_.block, dependencies, declarations, scopeRange);
+                visit(case_.block, dependencies, declarations, scopes);
               }
             }
             break;
@@ -185,7 +154,7 @@ function visitValueBlock(
   block: ReactiveValueBlock,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeRange: MutableRange | null
+  scopes: Scopes
 ): void {
   for (const initItem of block.instructions) {
     if (initItem.kind === "instruction") {
@@ -193,12 +162,12 @@ function visitValueBlock(
         initItem.instruction,
         dependencies,
         declarations,
-        scopeRange
+        scopes
       );
     }
   }
   if (block.value !== null) {
-    visitInstructionValue(block.value, dependencies, declarations, scopeRange);
+    visitInstructionValue(block.value, dependencies, declarations, scopes);
   }
 }
 
@@ -206,7 +175,7 @@ function visitOperand(
   maybeDependency: Place,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeRange: MutableRange | null
+  scopes: Scopes
 ): void {
   const decl = declarations.get(maybeDependency.identifier);
 
@@ -215,22 +184,19 @@ function visitOperand(
   // some later code needs access to the value.
   if (decl !== undefined) {
     const operandScope = maybeDependency.identifier.scope;
-    if (
-      operandScope !== null &&
-      ((scopeRange !== null && operandScope.range.end <= scopeRange.start) ||
-        scopeRange === null)
-    ) {
+    if (operandScope !== null && scopes.indexOf(operandScope) === -1) {
       operandScope.outputs.add(maybeDependency.identifier);
     }
   }
 
   // If this operand is used in a scope, has a dynamic value, and was defined
   // before this scope, then its a dependency of the scope.
+  const currentScope = scopes.at(-1);
   if (
     decl !== undefined &&
     decl.kind !== DeclKind.Const &&
-    scopeRange !== null &&
-    decl.id < scopeRange.start
+    currentScope !== undefined &&
+    decl.id < currentScope.range.start
   ) {
     // Check if there is an existing dependency that describes this operand
     for (const dep of dependencies) {
@@ -272,7 +238,7 @@ function visitInstructionValue(
   value: InstructionValue,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeRange: MutableRange | null
+  scopes: Scopes
 ): void {
   for (const operand of eachInstructionValueOperand(value)) {
     // check for method invocation, we want to depend on the callee, not the method
@@ -285,9 +251,9 @@ function visitInstructionValue(
         ...operand,
         memberPath: operand.memberPath.slice(0, -1),
       };
-      visitOperand(callee, dependencies, declarations, scopeRange);
+      visitOperand(callee, dependencies, declarations, scopes);
     } else {
-      visitOperand(operand, dependencies, declarations, scopeRange);
+      visitOperand(operand, dependencies, declarations, scopes);
     }
   }
 }
@@ -296,9 +262,9 @@ function visitInstruction(
   instr: Instruction,
   dependencies: Set<Place>,
   declarations: DeclMap,
-  scopeRange: MutableRange | null
+  scopes: Scopes
 ): void {
-  visitInstructionValue(instr.value, dependencies, declarations, scopeRange);
+  visitInstructionValue(instr.value, dependencies, declarations, scopes);
   const { lvalue } = instr;
   if (
     lvalue !== null &&

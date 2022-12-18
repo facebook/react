@@ -33,7 +33,7 @@ function foo(
 ) {
   scope @0 [1:6] deps=[] out=[x$4_@0] {
     [1] Const mutate x$4_@0:TObject[1:6] = Object {  }
-    scope @1 [2:5] deps=[] out=[] {
+    scope @1 [2:5] deps=[] out=[y$5_@1] {
       [2] Const mutate y$5_@1:TFunction[2:5] = Array []
       [3] Const mutate z$6_@1:TObject[2:5] = Object {  }
       [4] Call mutate y$5_@1.push(mutate z$6_@1:TObject)
@@ -53,12 +53,15 @@ function foo$0() {
   let x$4;
   if (true) {
     x$4 = {};
+    let y$5;
 
     if (true) {
-      const y$5 = [];
+      y$5 = [];
       const z$6 = {};
       y$5.push(z$6);
+      $[1] = y$5;
     } else {
+      y$5 = $[1];
     }
 
     x$4.y = y$5;

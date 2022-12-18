@@ -27,8 +27,8 @@ bb0:
   [3] Const mutate y$12_@1:TObject[3:6] = Object { a: read a$8 }
   [4] Const mutate z$13_@2 = Array [read b$9, read c$10]
   [5] Reassign mutate y$12_@1.y[3:6] = read z$13_@2
-  [6] Const mutate t12$14_@3 = Array [read x$11_@0:TObject, read y$12_@1:TObject]
-  [7] Return freeze t12$14_@3
+  [6] Const mutate t13$14_@3 = Array [read x$11_@0:TObject, read y$12_@1:TObject]
+  [7] Return freeze t13$14_@3
 ```
 
 ## Reactive Scopes
@@ -45,7 +45,7 @@ function foo(
   }
   scope @1 [3:6] deps=[read a$8, read b$9, read c$10] out=[y$12_@1] {
     [3] Const mutate y$12_@1:TObject[3:6] = Object { a: read a$8 }
-    scope @2 [4:5] deps=[read b$9, read c$10] out=[] {
+    scope @2 [4:5] deps=[read b$9, read c$10] out=[z$13_@2] {
       [4] Const mutate z$13_@2 = Array [read b$9, read c$10]
     }
     [5] Reassign mutate y$12_@1.y[3:6] = read z$13_@2
@@ -91,12 +91,15 @@ function foo$0(a$8, b$9, c$10) {
     };
     const c_8 = $[8] !== b$9;
     const c_9 = $[9] !== c$10;
+    let z$13;
 
     if (c_8 || c_9) {
-      const z$13 = [b$9, c$10];
+      z$13 = [b$9, c$10];
       $[8] = b$9;
       $[9] = c$10;
+      $[10] = z$13;
     } else {
+      z$13 = $[10];
     }
 
     y$12.y = z$13;
@@ -108,20 +111,20 @@ function foo$0(a$8, b$9, c$10) {
     y$12 = $[7];
   }
 
-  const c_10 = $[10] !== x$11;
-  const c_11 = $[11] !== y$12;
-  let t12$14;
+  const c_11 = $[11] !== x$11;
+  const c_12 = $[12] !== y$12;
+  let t13$14;
 
-  if (c_10 || c_11) {
-    t12$14 = [x$11, y$12];
-    $[10] = x$11;
-    $[11] = y$12;
-    $[12] = t12$14;
+  if (c_11 || c_12) {
+    t13$14 = [x$11, y$12];
+    $[11] = x$11;
+    $[12] = y$12;
+    $[13] = t13$14;
   } else {
-    t12$14 = $[12];
+    t13$14 = $[13];
   }
 
-  return t12$14;
+  return t13$14;
 }
 
 ```

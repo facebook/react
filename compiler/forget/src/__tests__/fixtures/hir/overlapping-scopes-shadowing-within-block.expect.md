@@ -34,8 +34,8 @@ bb4:
 bb3:
   predecessor blocks: bb4 bb2
   [7] Const mutate $13:TPrimitive = "div"
-  [8] Const mutate $15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
-  [9] Call mutate x$11_@0.push(read $15_@2)
+  [8] Const mutate t8$15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
+  [9] Call mutate x$11_@0.push(read t8$15_@2)
   [10] Goto bb1
 bb1:
   predecessor blocks: bb3 bb0
@@ -60,7 +60,7 @@ function foo(
         }
       }
       [7] Const mutate $13:TPrimitive = "div"
-      scope @2 [8:9] deps=[freeze y$12_@1:TFunction] out=[] {
+      scope @2 [8:9] deps=[freeze y$12_@1:TFunction] out=[$15_@2] {
         [8] Const mutate $15_@2 = JSX <read $13:TPrimitive>{freeze y$12_@1:TFunction}</read $13:TPrimitive>
       }
       [9] Call mutate x$11_@0.push(read $15_@2)
@@ -103,13 +103,17 @@ function foo$0(a$8, b$9, c$10) {
       }
 
       const c_7 = $[7] !== y$12;
+      let t8$15;
 
       if (c_7) {
+        t8$15 = <div>{y$12}</div>;
         $[7] = y$12;
+        $[8] = t8$15;
       } else {
+        t8$15 = $[8];
       }
 
-      x$11.push(<div>{y$12}</div>);
+      x$11.push(t8$15);
     }
 
     $[0] = a$8;
