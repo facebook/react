@@ -19,7 +19,7 @@ module.exports = {
 
   plugins: [
     'babel',
-    'flowtype',
+    'ft-flow',
     'jest',
     'no-for-of-loops',
     'no-function-declare-after-return',
@@ -27,7 +27,7 @@ module.exports = {
     'react-internal',
   ],
 
-  parser: 'babel-eslint',
+  parser: 'hermes-eslint',
   parserOptions: {
     ecmaVersion: 9,
     sourceType: 'script',
@@ -36,6 +36,16 @@ module.exports = {
   // We're stricter than the default config, mostly. We'll override a few rules
   // and then enable some React specific ones.
   rules: {
+    'ft-flow/array-style-complex-type': [OFF, 'verbose'],
+    'ft-flow/array-style-simple-type': [OFF, 'verbose'], // TODO should be WARNING
+    'ft-flow/boolean-style': ERROR,
+    'ft-flow/no-dupe-keys': ERROR,
+    'ft-flow/no-primitive-constructor-types': ERROR,
+    'ft-flow/no-types-missing-file-annotation': OFF, // TODO should be ERROR
+    'ft-flow/no-unused-expressions': ERROR,
+    // 'ft-flow/no-weak-types': WARNING,
+    // 'ft-flow/require-valid-file-annotation': ERROR,
+
     'no-cond-assign': OFF,
     'no-constant-condition': OFF,
     'no-control-regex': OFF,
@@ -90,7 +100,7 @@ module.exports = {
     'no-param-reassign': OFF,
     'no-process-env': OFF,
     'no-proto': ERROR,
-    'no-redeclare': WARNING,
+    'no-redeclare': OFF, // TODO should be WARNING?
     'no-return-assign': OFF,
     'no-script-url': ERROR,
     'no-self-compare': WARNING,
@@ -209,8 +219,6 @@ module.exports = {
     'react/require-render-return': OFF,
     'react/sort-comp': OFF,
     'react/sort-prop-types': OFF,
-    'flowtype/define-flow-type': WARNING,
-    'flowtype/use-flow-type': WARNING,
 
     'accessor-pairs': OFF,
     'brace-style': [ERROR, '1tbs'],
@@ -230,7 +238,6 @@ module.exports = {
     'no-restricted-globals': [ERROR].concat(restrictedGlobals),
     'no-restricted-syntax': [ERROR, 'WithStatement'],
     'no-shadow': ERROR,
-    'no-unused-expressions': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
     'no-use-before-define': OFF,
     'no-useless-concat': OFF,
@@ -253,8 +260,6 @@ module.exports = {
     // deal. But I turned it off because loading the plugin causes some obscure
     // syntax error and it didn't seem worth investigating.
     'max-len': OFF,
-    // Prettier forces semicolons in a few places
-    'flowtype/object-type-delimiter': OFF,
 
     // React & JSX
     // Our transforms set this automatically
@@ -345,7 +350,7 @@ module.exports = {
       // We apply these settings to the source files that get compiled.
       // They can use all features including JSX (but shouldn't use `var`).
       files: esNextPaths,
-      parser: 'babel-eslint',
+      parser: 'hermes-eslint',
       parserOptions: {
         ecmaVersion: 8,
         sourceType: 'module',
@@ -433,6 +438,56 @@ module.exports = {
   },
 
   globals: {
+    $Call: 'readonly',
+    $ElementType: 'readonly',
+    $Flow$ModuleRef: 'readonly',
+    $FlowFixMe: 'readonly',
+    $Keys: 'readonly',
+    $NonMaybeType: 'readonly',
+    $PropertyType: 'readonly',
+    $ReadOnly: 'readonly',
+    $ReadOnlyArray: 'readonly',
+    $Shape: 'readonly',
+    AnimationFrameID: 'readonly',
+    Class: 'readonly',
+    ClientRect: 'readonly',
+    CopyInspectedElementPath: 'readonly',
+    DOMHighResTimeStamp: 'readonly',
+    EventListener: 'readonly',
+    Iterable: 'readonly',
+    Iterator: 'readonly',
+    JSONValue: 'readonly',
+    JSResourceReference: 'readonly',
+    MouseEventHandler: 'readonly',
+    PropagationPhases: 'readonly',
+    PropertyDescriptor: 'readonly',
+    React$AbstractComponent: 'readonly',
+    React$Component: 'readonly',
+    React$ComponentType: 'readonly',
+    React$Config: 'readonly',
+    React$Context: 'readonly',
+    React$Element: 'readonly',
+    React$ElementConfig: 'readonly',
+    React$ElementProps: 'readonly',
+    React$ElementRef: 'readonly',
+    React$ElementType: 'readonly',
+    React$Key: 'readonly',
+    React$Node: 'readonly',
+    React$Portal: 'readonly',
+    React$Ref: 'readonly',
+    React$StatelessFunctionalComponent: 'readonly',
+    ReadableStreamController: 'readonly',
+    RequestInfo: 'readonly',
+    RequestOptions: 'readonly',
+    ResponseState: 'readonly',
+    StoreAsGlobal: 'readonly',
+    symbol: 'readonly',
+    SyntheticEvent: 'readonly',
+    SyntheticMouseEvent: 'readonly',
+    Thenable: 'readonly',
+    TimeoutID: 'readonly',
+    WheelEventHandler: 'readonly',
+
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
     spyOnProd: 'readonly',

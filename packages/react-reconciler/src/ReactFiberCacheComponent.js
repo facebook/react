@@ -38,7 +38,7 @@ const AbortControllerLocal: typeof AbortController = enableCache
   : (null: any);
 
 export type Cache = {
-  controller: AbortControllerLocal,
+  controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
 };

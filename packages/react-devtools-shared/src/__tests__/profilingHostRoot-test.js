@@ -12,7 +12,7 @@ describe('profiling HostRoot', () => {
   let ReactDOMClient;
   let Scheduler;
   let legacyRender;
-  let store: Store;
+  let store;
   let utils;
   let getEffectDurations;
   let effectDurations;
