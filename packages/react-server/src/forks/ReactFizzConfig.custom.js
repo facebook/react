@@ -27,7 +27,7 @@ import type {Request} from 'react-server/src/ReactFizzServer';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 declare const $$$config: any;
-export opaque type Destination = mixed; // eslint-disable-line no-undef
+export opaque type Destination = mixed;
 export opaque type RenderState = mixed;
 export opaque type HoistableState = mixed;
 export opaque type ResumableState = mixed;

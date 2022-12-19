@@ -760,7 +760,6 @@ describe('ReactUpdates', () => {
       });
     });
 
-    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
       'Inner-render-0-0',
@@ -789,7 +788,6 @@ describe('ReactUpdates', () => {
       'Inner-didUpdate-2-2',
       'Inner-callback-2',
     ]);
-    /* eslint-enable indent */
   });
 
   it('should flush updates in the correct order across roots', async () => {
