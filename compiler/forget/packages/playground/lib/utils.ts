@@ -1,10 +1,6 @@
 /*
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
-import type { PluginItem } from "@babel/core";
-import ReactForgetBabelPlugin, {
-  CompilerOptions,
-} from "babel-plugin-react-forget-legacy";
 
 /**
  * Unicode-Base64 Codec.
@@ -24,21 +20,3 @@ export const codec = {
     return decodeURIComponent(escape(atob(base64)));
   },
 };
-
-export function getBabelPlugins(
-  language: string | null,
-  enableForget: boolean,
-  compilerOptions: Partial<CompilerOptions>
-): PluginItem[] {
-  const babelPlugins: PluginItem[] = ["syntax-jsx"];
-  if (language === "typescript") {
-    babelPlugins.push(["transform-typescript", { isTSX: true }]);
-  } else if (language == "javascript") {
-    babelPlugins.push("transform-flow-strip-types");
-  }
-
-  if (enableForget) {
-    babelPlugins.push([ReactForgetBabelPlugin, compilerOptions]);
-  }
-  return babelPlugins;
-}

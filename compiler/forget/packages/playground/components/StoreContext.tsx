@@ -8,7 +8,6 @@ import createContext from "../lib/createContext";
 import { emptyStore } from "../lib/defaultStore";
 import type { Store } from "../lib/stores";
 import { saveStore } from "../lib/stores";
-import { ForgetCompilerFlags } from "../lib/compilerDriver";
 
 const StoreContext = createContext<Store>();
 
@@ -51,10 +50,6 @@ type ReducerAction =
       payload: {
         source: string;
       };
-    }
-  | {
-      type: "setCompilerFlag";
-      payload: { flag: keyof ForgetCompilerFlags; value: boolean };
     };
 
 function storeReducer(store: Store, action: ReducerAction): Store {
@@ -73,17 +68,6 @@ function storeReducer(store: Store, action: ReducerAction): Store {
         source,
       };
 
-      saveStore(newStore);
-      return newStore;
-    }
-    case "setCompilerFlag": {
-      const { flag, value } = action.payload;
-
-      const newStore = {
-        ...store,
-        compilerFlags: { ...store.compilerFlags },
-      };
-      newStore.compilerFlags[flag] = value;
       saveStore(newStore);
       return newStore;
     }

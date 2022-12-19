@@ -2,7 +2,6 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import { createCompilerFlags } from "babel-plugin-react-forget-legacy";
 import type { Store } from "./stores";
 
 const index = `\
@@ -21,7 +20,6 @@ function fibbonacci(n) {
 
 export const defaultStore: Store = {
   source: index,
-  compilerFlags: createCompilerFlags(),
 };
 
 const minimalIndex = `\
@@ -32,10 +30,8 @@ export default function MyApp() {
 
 export const minimalStore: Store = {
   source: minimalIndex,
-  compilerFlags: createCompilerFlags(),
 };
 
 export const emptyStore: Store = {
   source: "",
-  compilerFlags: createCompilerFlags(),
 };

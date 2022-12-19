@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Diagnostic } from "babel-plugin-react-forget-legacy";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";
-import { useCallback, useDeferredValue, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useMountEffect } from "../../hooks";
 import { defaultStore } from "../../lib/defaultStore";
 import {
@@ -29,11 +28,6 @@ export default function Editor() {
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
-  const updateDiagnostics = useCallback(
-    (newDiags: Diagnostic[]) => setDiagnostics(newDiags),
-    [setDiagnostics]
-  );
   const [tabsOpen, setTabsOpen] = useState<Map<TabTypes, boolean>>(new Map());
 
   useMountEffect(() => {
@@ -61,15 +55,17 @@ export default function Editor() {
   return (
     <>
       <div className="flex basis">
-        <div className={clsx("relative sm:basis-1/4")}>
-          <Input diagnostics={diagnostics} />
+        <div
+          style={{ minWidth: 650 }}
+          className={clsx("relative sm:basis-1/4")}
+        >
+          <Input />
         </div>
         <div className={clsx("flex sm:flex")}>
           <Output
             tabsOpen={tabsOpen}
             setTabsOpen={setTabsOpen}
             store={deferredStore}
-            updateDiagnostics={updateDiagnostics}
           />
         </div>
       </div>

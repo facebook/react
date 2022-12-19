@@ -2,12 +2,7 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import {
-  createCompilerFlags,
-  parseCompilerFlags,
-} from "babel-plugin-react-forget-legacy";
 import invariant from "invariant";
-import { ForgetCompilerFlags } from "../compilerDriver";
 import { defaultStore } from "../defaultStore";
 import { codec } from "../utils";
 
@@ -16,8 +11,6 @@ import { codec } from "../utils";
  */
 export interface Store {
   source: string;
-
-  compilerFlags: ForgetCompilerFlags;
 }
 
 /**
@@ -34,23 +27,8 @@ export function saveStore(store: Store) {
  * - it has a `source` property and is a string
  */
 function getValidStore(raw: any): Store | null {
-  if ("compilerFlags" in raw && !(raw["compilerFlags"] instanceof Object)) {
-    return null;
-  }
   const isValidStore = "source" in raw && typeof raw["source"] === "string";
   if (isValidStore) {
-    if ("compilerFlags" in raw) {
-      // Merge flags from decoded store into flags valid for this compiler version
-      // Since the compiler is in active dev, if
-      //   - a flag exists in the decoded store but is not supported by the compiler,
-      //      we discard + ignore it
-      //   - a flag does not exist in the decoded store but is used by the compiler,
-      //      we use the default value
-      raw.compilerFlags = parseCompilerFlags(raw.compilerFlags, true);
-    } else {
-      // some saved Stores may not have `compilerFlags`
-      raw.compilerFlags = createCompilerFlags();
-    }
     return raw;
   } else {
     return null;

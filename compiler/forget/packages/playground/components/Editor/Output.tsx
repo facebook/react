@@ -7,15 +7,9 @@
 import generate from "@babel/generator";
 import MonacoEditor from "@monaco-editor/react";
 import { HIR } from "babel-plugin-react-forget";
-import {
-  Diagnostic,
-  OutputKind,
-  stringifyCompilerOutputs,
-} from "babel-plugin-react-forget-legacy";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo } from "react";
-import compileOldArchitecture from "../../lib/compilerDriver";
 import type { Store } from "../../lib/stores";
 import TabbedWindow, { TabTypes } from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
@@ -44,7 +38,6 @@ export default MemoizedOutput;
 
 type Props = {
   store: Store;
-  updateDiagnostics: (newDiags: Diagnostic[]) => void;
   tabsOpen: Map<TabTypes, boolean>;
   setTabsOpen: (newTab: Map<TabTypes, boolean>) => void;
 };
@@ -146,16 +139,6 @@ function compile(source: string): CompilerOutput | CompilerError {
 // TODO(gsn: Update diagnostics ƒrom HIR output
 function Output({ store, setTabsOpen, tabsOpen }: Props) {
   const compilerOutput = useMemo(() => compile(store.source), [store.source]);
-  const { outputs: oldCompilerOutputs } = useMemo(
-    () => compileOldArchitecture(store.source, store.compilerFlags),
-    [store]
-  );
-  const prettyOldCompilerOutput = useMemo(
-    () => stringifyCompilerOutputs(oldCompilerOutputs),
-    [oldCompilerOutputs]
-  );
-  const prettyOldCompilerOutputJS =
-    prettyOldCompilerOutput[OutputKind.JS] ?? "(Empty)";
 
   if (typeof compilerOutput === "string") {
     if (compilerOutput === "") return <div></div>;
@@ -221,7 +204,6 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
             )}
           </>
         ),
-        OldArchitecture: <TextTabContent output={prettyOldCompilerOutputJS} />,
       }}
     />
   );

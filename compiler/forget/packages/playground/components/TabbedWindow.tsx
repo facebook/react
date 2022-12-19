@@ -18,8 +18,7 @@ export type TabTypes =
   | "ReactiveFunctions"
   | "LeaveSSA"
   | "JS"
-  | "SourceMap"
-  | "OldArchitecture";
+  | "SourceMap";
 
 type TabsRecord = Record<TabTypes, React.ReactNode>;
 

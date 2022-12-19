@@ -3,29 +3,19 @@
  */
 
 import MonacoEditor, { type Monaco } from "@monaco-editor/react";
-import type { Diagnostic } from "babel-plugin-react-forget-legacy";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import { useEffect, useState } from "react";
-import { renderForgetMarkers } from "../../lib/forgetMonacoDiagnostics";
 import { useStore, useStoreDispatch } from "../StoreContext";
 import { monacoOptions } from "./monacoOptions";
 // TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 // @ts-ignore
 import React$Types from "../../node_modules/@types/react/index.d.ts";
 
-export default function Input({ diagnostics }: { diagnostics: Diagnostic[] }) {
+export default function Input({}: {}) {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
-
-  useEffect(() => {
-    if (!monaco) return;
-    const uri = monaco.Uri.parse(`file:///index.js`);
-    const model = monaco.editor.getModel(uri);
-    invariant(model, "Model must exist for the selected input file.");
-    renderForgetMarkers({ monaco, model, diagnostics });
-  }, [diagnostics, monaco]);
 
   // Set tab width to 2 spaces for the selected input file.
   useEffect(() => {
