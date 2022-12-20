@@ -20,9 +20,12 @@ module.exports = (test) => {
           const { ast } = run(nodePath, {
             eliminateRedundantPhi: true,
             inferReferenceEffects: true,
+            inferTypes: true,
             inferMutableRanges: true,
-            leaveSSA: true,
             inferReactiveScopeVariables: true,
+            inferReactiveScopes: true,
+            inferReactiveScopeDependencies: true,
+            leaveSSA: true,
             codegen: true,
           });
           codegenText = prettier.format(
