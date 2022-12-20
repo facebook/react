@@ -62,11 +62,12 @@ function f$0() {
 
 ```
 bb0:
-  [1] Const mutate $5:TPrimitive = 1
-  [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
-  [3] Const mutate $6:TPrimitive = 2
-  [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
-  [5] Return
+  [1] Const mutate $6:TPrimitive = 1
+  [2] Const mutate $7:TPrimitive = Binary read a$5_@0.b.c + read $6:TPrimitive
+  [3] Reassign read a$5_@0.b.c[0:6] = read $7:TPrimitive
+  [4] Const mutate $8:TPrimitive = 2
+  [5] Reassign mutate a$5_@0.b.c[0:6] = Binary read a$5_@0.b.c * read $8:TPrimitive
+  [6] Return
 ```
 
 ## Reactive Scopes
@@ -75,10 +76,11 @@ bb0:
 function g(
   a,
 ) {
-  [1] Const mutate $5:TPrimitive = 1
-  [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
-  [3] Const mutate $6:TPrimitive = 2
-  [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
+  [1] Const mutate $6:TPrimitive = 1
+  [2] Const mutate $7:TPrimitive = Binary read a$5_@0.b.c + read $6:TPrimitive
+  [3] Reassign read a$5_@0.b.c[0:6] = read $7:TPrimitive
+  [4] Const mutate $8:TPrimitive = 2
+  [5] Reassign mutate a$5_@0.b.c[0:6] = Binary read a$5_@0.b.c * read $8:TPrimitive
   return
 }
 
@@ -87,9 +89,9 @@ function g(
 ## Code
 
 ```javascript
-function g$0(a$4) {
-  a$4.c.b = a$4.b.c + 1;
-  a$4.c.b = a$4.b.c * 2;
+function g$0(a$5) {
+  a$5.c.b = a$5.b.c + 1;
+  a$5.c.b = a$5.b.c * 2;
 }
 
 ```

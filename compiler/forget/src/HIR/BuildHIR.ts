@@ -946,7 +946,10 @@ function lowerExpression(
       const operator = expr.node.operator;
 
       if (operator === "=") {
-        const right = lowerExpression(builder, expr.get("right"));
+        const right =
+          left.memberPath === null
+            ? lowerExpression(builder, expr.get("right"))
+            : lowerExpressionToPlace(builder, expr.get("right"));
         builder.push({
           id: makeInstructionId(0),
           lvalue: { place: left, kind: InstructionKind.Reassign },
