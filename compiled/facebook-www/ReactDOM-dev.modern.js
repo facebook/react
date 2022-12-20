@@ -9940,10 +9940,10 @@ function getOffsets(outerNode) {
   // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
 
   try {
-    /* eslint-disable no-unused-expressions */
+    /* eslint-disable ft-flow/no-unused-expressions */
     anchorNode.nodeType;
     focusNode.nodeType;
-    /* eslint-enable no-unused-expressions */
+    /* eslint-enable ft-flow/no-unused-expressions */
   } catch (e) {
     return null;
   }
@@ -38800,6 +38800,7 @@ function discreteUpdates(fn, a, b, c, d) {
   }
 } // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
+// eslint-disable-next-line no-unused-vars
 
 // eslint-disable-next-line no-redeclare
 function flushSync(fn) {
@@ -42366,7 +42367,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-fabef7a6b-20221215";
+var ReactVersion = "18.3.0-www-modern-2b1fb91a5-20221220";
 
 function createPortal(
   children,

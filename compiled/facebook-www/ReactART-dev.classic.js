@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-fabef7a6b-20221215";
+var ReactVersion = "18.3.0-www-classic-2b1fb91a5-20221220";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2926,7 +2926,7 @@ function getInstanceFromNode(node) {
 }
 function preparePortalMount(portalInstance) {
   // noop
-}
+} // eslint-disable-next-line no-undef
 
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var prefix;
@@ -24093,6 +24093,7 @@ function getExecutionContext() {
   return executionContext;
 }
 // Warning, this opts-out of checking the function body.
+// eslint-disable-next-line no-unused-vars
 
 // eslint-disable-next-line no-redeclare
 function flushSync(fn) {

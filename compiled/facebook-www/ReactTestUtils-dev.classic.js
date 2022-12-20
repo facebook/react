@@ -1456,7 +1456,10 @@ function executeDispatchesInOrder(event) {
  * @private
  */
 
-var executeDispatchesAndRelease = function(event) {
+var executeDispatchesAndRelease = function(
+  event
+  /* ReactSyntheticEvent */
+) {
   if (event) {
     executeDispatchesInOrder(event);
 
@@ -1538,7 +1541,11 @@ function shouldPreventMouseEvent(name, type, props) {
  * @return {?function} The stored callback.
  */
 
-function getListener(inst, registrationName) {
+function getListener(
+  inst,
+  /* Fiber */
+  registrationName
+) {
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
   var stateNode = inst.stateNode;
