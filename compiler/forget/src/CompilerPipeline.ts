@@ -6,24 +6,26 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { lower } from "../HIR/BuildHIR";
-import { Environment } from "../HIR/HIRBuilder";
-import inferReferenceEffects from "../HIR/InferReferenceEffects";
-import { buildReactiveFunction } from "../ReactiveScopes/BuildReactiveFunction";
-import { codegenReactiveFunction } from "../ReactiveScopes/CodegenReactiveFunction";
-import { flattenReactiveLoops } from "../ReactiveScopes/FlattenReactiveLoops";
-import { inferReactiveScopes } from "../ReactiveScopes/InferReactiveScopes";
-import { inferReactiveScopeVariables } from "../ReactiveScopes/InferReactiveScopeVariables";
-import { printReactiveFunction } from "../ReactiveScopes/PrintReactiveFunction";
-import { propagateScopeDependencies } from "../ReactiveScopes/PropagateScopeDependencies";
-import { pruneUnusedLabels } from "../ReactiveScopes/PruneUnusedLabels";
-import { eliminateRedundantPhi } from "../SSA/EliminateRedundantPhi";
-import enterSSA from "../SSA/EnterSSA";
-import { leaveSSA } from "../SSA/LeaveSSA";
-import { logHIRFunction } from "../Utils/logger";
-import { HIRFunction } from "./HIR";
-import { inferMutableRanges } from "./InferMutableRanges";
-import { inferTypes } from "./InferTypes";
+import {
+  Environment,
+  HIRFunction,
+  inferMutableRanges,
+  inferReferenceEffects,
+  inferTypes,
+  lower,
+} from "./HIR";
+import {
+  buildReactiveFunction,
+  codegenReactiveFunction,
+  flattenReactiveLoops,
+  inferReactiveScopes,
+  inferReactiveScopeVariables,
+  printReactiveFunction,
+  propagateScopeDependencies,
+  pruneUnusedLabels,
+} from "./ReactiveScopes";
+import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
+import { logHIRFunction } from "./Utils/logger";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
