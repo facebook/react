@@ -317,12 +317,15 @@ class Unifier {
       objectType.kind === "Object" &&
       objectType.properties.has(name[0])
     ) {
-      const newType: Type = {
-        kind: "Poly",
-      };
+      let type = objectType.properties.get(name[0])!;
+      if (type.kind === "Poly") {
+        return type;
+      }
 
-      objectType.properties.set(name[0], newType);
-      return newType;
+      type = { kind: "Poly" };
+
+      objectType.properties.set(name[0], type);
+      return type;
     }
 
     return null;
