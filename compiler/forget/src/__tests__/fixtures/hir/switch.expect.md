@@ -28,9 +28,10 @@ function Component(props) {
 ```
 bb0:
   [1] Const mutate x$9_@1[1:12] = Array []
-  [2] Let mutate y$10_@1:TPrimitive[1:12] = undefined
+  [2] Const mutate y$10:TPrimitive = undefined
   [3] Const mutate $11:TPrimitive = false
   [4] Const mutate $12:TPrimitive = true
+  [5] Let mutate y$20_@1[1:12] = read y$10:TPrimitive
   [5] Switch (read props$8.p0)
     Case read $12:TPrimitive: bb4
     Case read $11:TPrimitive: bb2
@@ -44,13 +45,14 @@ bb4:
   [9] Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1
+  [10] Const mutate y$15 = read x$9_@1
+  [11] Reassign mutate y$20_@1[1:12] = read y$15
   [11] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
   [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1} ></read Component$0>
-  [13] Call read y$10_@1.push(read props$8.p4)
-  [14] Const mutate t8$23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
+  [13] Call read y$20_@1.push(read props$8.p4)
+  [14] Const mutate t8$23_@4 = JSX <read Component$0 data={read y$20_@1} >{read child$19_@3}</read Component$0>
   [15] Return read t8$23_@4
 ```
 
@@ -62,9 +64,10 @@ function Component(
 ) {
   scope @1 [1:12] deps=[read props$8.p0, read props$8.p2, read props$8.p3] out=[x$9_@1] {
     [1] Const mutate x$9_@1[1:12] = Array []
-    [2] Let mutate y$10_@1:TPrimitive[1:12] = undefined
+    [2] Const mutate y$10:TPrimitive = undefined
     [3] Const mutate $11:TPrimitive = false
     [4] Const mutate $12:TPrimitive = true
+    [5] Let mutate y$20_@1[1:12] = read y$10:TPrimitive
     switch (read props$8.p0) {
       case read $12:TPrimitive: {
           [6] Call mutate x$9_@1.push(read props$8.p2)
@@ -72,16 +75,17 @@ function Component(
           [8] Const mutate y$13_@2 = Array []
       }
       case read $11:TPrimitive: {
-          [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1
+          [10] Const mutate y$15 = read x$9_@1
+          [11] Reassign mutate y$20_@1[1:12] = read y$15
       }
     }
   }
   scope @3 [12:13] deps=[freeze x$9_@1] out=[child$19_@3] {
     [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1} ></read Component$0>
   }
-  [13] Call read y$10_@1.push(read props$8.p4)
-  scope @4 [14:15] deps=[read y$10_@1:TPrimitive, read child$19_@3] out=[$23_@4] {
-    [14] Const mutate $23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
+  [13] Call read y$20_@1.push(read props$8.p4)
+  scope @4 [14:15] deps=[read y$20_@1, read child$19_@3] out=[$23_@4] {
+    [14] Const mutate $23_@4 = JSX <read Component$0 data={read y$20_@1} >{read child$19_@3}</read Component$0>
   }
   return read $23_@4
 }
@@ -99,7 +103,8 @@ function Component$0(props$8) {
   let x$9;
   if (c_0 || c_1 || c_2) {
     x$9 = [];
-    let y$10 = undefined;
+    const y$10 = undefined;
+    let y$20 = y$10;
 
     switch (props$8.p0) {
       case true: {
@@ -109,7 +114,8 @@ function Component$0(props$8) {
       }
 
       case false: {
-        y$10 = x$9;
+        const y$15 = x$9;
+        y$20 = y$15;
       }
     }
 
@@ -132,14 +138,14 @@ function Component$0(props$8) {
     child$19 = $[5];
   }
 
-  y$10.push(props$8.p4);
-  const c_6 = $[6] !== y$10;
+  y$20.push(props$8.p4);
+  const c_6 = $[6] !== y$20;
   const c_7 = $[7] !== child$19;
   let t8$23;
 
   if (c_6 || c_7) {
-    t8$23 = <Component$0 data={y$10}>{child$19}</Component$0>;
-    $[6] = y$10;
+    t8$23 = <Component$0 data={y$20}>{child$19}</Component$0>;
+    $[6] = y$20;
     $[7] = child$19;
     $[8] = t8$23;
   } else {

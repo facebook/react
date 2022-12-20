@@ -55,19 +55,21 @@ bb5:
   [12] Const mutate item$40_@0:TPrimitive[3:33] = Call read items$30.at(read i$36_@0:TPrimitive)
   [13] Const mutate $41:TPrimitive = null
   [14] Const mutate $42:TPrimitive = Binary read item$40_@0:TPrimitive == read $41:TPrimitive
-  [15] Let mutate $43_@0:TPrimitive[3:33] = undefined
+  [15] Let mutate $46_@0[3:33] = undefined
   [15] If (read $42:TPrimitive) then:bb10 else:bb11 fallthrough=bb9
 bb10:
   predecessor blocks: bb5
-  [16] Const mutate $43_@0:TPrimitive[3:33] = read $42:TPrimitive
+  [16] Const mutate $43:TPrimitive = read $42:TPrimitive
+  [17] Reassign mutate $46_@0[3:33] = read $43:TPrimitive
   [17] Goto bb9
 bb11:
   predecessor blocks: bb5
-  [18] Const mutate $43_@0:TPrimitive[3:33] = Call mutate seen$33_@0.has(mutate item$40_@0:TPrimitive)
+  [18] Const mutate $45_@0[3:33] = Call mutate seen$33_@0.has(mutate item$40_@0:TPrimitive)
+  [19] Reassign mutate $46_@0[3:33] = read $45_@0
   [19] Goto bb9
 bb9:
   predecessor blocks: bb10 bb11
-  [20] If (read $43_@0:TPrimitive) then:bb7 else:bb6 fallthrough=bb6
+  [20] If (read $46_@0) then:bb7 else:bb6 fallthrough=bb6
 bb7:
   predecessor blocks: bb9
   [21] Goto(Continue) bb4
@@ -75,8 +77,8 @@ bb6:
   predecessor blocks: bb9
   [22] Call mutate seen$33_@0.add(mutate item$40_@0:TPrimitive)
   [23] Const mutate $49:TPrimitive = "div"
-  [24] Const mutate $50_@3 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
-  [25] Call mutate renderedItems$32_@0.push(read $50_@3)
+  [24] Const mutate $50_@4 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
+  [25] Call mutate renderedItems$32_@0.push(read $50_@4)
   [26] Const mutate $55:TPrimitive = Binary read renderedItems$32_@0.length >= read max$35_@2:TPrimitive
   [27] If (read $55:TPrimitive) then:bb2 else:bb12 fallthrough=bb12
 bb12:
@@ -95,11 +97,11 @@ bb2:
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  [38] Const mutate t7$71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  [38] Const mutate t7$71_@5 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  [41] Const mutate t10$74_@5 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@4}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
-  [42] Return read t10$74_@5
+  [41] Const mutate t10$74_@6 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@5}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
+  [42] Return read t10$74_@6
 ```
 
 ## Reactive Scopes
@@ -130,19 +132,21 @@ function Component(
       [12] Const mutate item$40_@0:TPrimitive[3:33] = Call read items$30.at(read i$36_@0:TPrimitive)
       [13] Const mutate $41:TPrimitive = null
       [14] Const mutate $42:TPrimitive = Binary read item$40_@0:TPrimitive == read $41:TPrimitive
-      [15] Let mutate $43_@0:TPrimitive[3:33] = undefined
+      [15] Let mutate $46_@0[3:33] = undefined
       if (read $42:TPrimitive) {
-        [16] Const mutate $43_@0:TPrimitive[3:33] = read $42:TPrimitive
+        [16] Const mutate $43:TPrimitive = read $42:TPrimitive
+        [17] Reassign mutate $46_@0[3:33] = read $43:TPrimitive
       } else {
-        [18] Const mutate $43_@0:TPrimitive[3:33] = Call mutate seen$33_@0.has(mutate item$40_@0:TPrimitive)
+        [18] Const mutate $45_@0[3:33] = Call mutate seen$33_@0.has(mutate item$40_@0:TPrimitive)
+        [19] Reassign mutate $46_@0[3:33] = read $45_@0
       }
-      if (read $43_@0:TPrimitive) {
+      if (read $46_@0) {
         continue
       }
       [22] Call mutate seen$33_@0.add(mutate item$40_@0:TPrimitive)
       [23] Const mutate $49:TPrimitive = "div"
-      [24] Const mutate $50_@3 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
-      [25] Call mutate renderedItems$32_@0.push(read $50_@3)
+      [24] Const mutate $50_@4 = JSX <read $49:TPrimitive>{freeze item$40_@0:TPrimitive}</read $49:TPrimitive>
+      [25] Call mutate renderedItems$32_@0.push(read $50_@4)
       [26] Const mutate $55:TPrimitive = Binary read renderedItems$32_@0.length >= read max$35_@2:TPrimitive
       if (read $55:TPrimitive) {
         break
@@ -154,15 +158,15 @@ function Component(
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  scope @4 [38:39] deps=[freeze count$66:TProp] out=[$71_@4] {
-    [38] Const mutate $71_@4 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  scope @5 [38:39] deps=[freeze count$66:TProp] out=[$71_@5] {
+    [38] Const mutate $71_@5 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
   }
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  scope @5 [41:42] deps=[read $71_@4, freeze renderedItems$32_@0:TPrimitive] out=[$74_@5] {
-    [41] Const mutate $74_@5 = JSX <read $67:TPrimitive>{read $68}{read $71_@4}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
+  scope @6 [41:42] deps=[read $71_@5, freeze renderedItems$32_@0:TPrimitive] out=[$74_@6] {
+    [41] Const mutate $74_@6 = JSX <read $67:TPrimitive>{read $68}{read $71_@5}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
   }
-  return read $74_@5
+  return read $74_@6
 }
 
 ```

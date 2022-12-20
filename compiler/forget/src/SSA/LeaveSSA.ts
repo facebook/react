@@ -24,18 +24,77 @@ import {
 } from "../HIR/visitors";
 
 /**
- * Removes SSA form by creating unique variable declarations for the versions of each variables.
- * - Versions of a variable that do not flow into a phi node are each assigned their own const variable
- * declaration.
- * - If multiple versions of a variable flow into some phi node, then all those versions are reassigned to
- * the phi version. A single declaration is created at the same block scope as the phi, prior to any of the
- * assignments.
+ * Removes SSA form by converting all phis into explicit bindings and assignments. There are two main categories
+ * of phis:
+ *
+ * ## Reassignments (operands are independently memoizable)
+ *
+ * These are phis that occur after some high-level control flow such as an if, switch, or loop. These phis are rewritten
+ * to add a new `let` binding for the phi id prior to the control flow node (ie prior to the if/switch),
+ * and to add a reassignment to that let binding in each of the phi's predecessors.
+ *
+ * Example:
+ *
+ * ```javascript
+ * // Input
+ * let x1 = null;
+ * if (a) {
+ *   x2 = b;
+ * } else {
+ *   x3 = c;
+ * }
+ * x4 = phi(x2, x3);
+ * return x4;
+ *
+ * // Output
+ * const x1 = null;
+ * let x4; // synthesized binding for the phi identifier
+ * if (a) {
+ *   x2 = b;
+ *   x4 = x2;; // sythesized assignment to the phi identifier
+ * } else {
+ *   x3 = c;
+ *   x4 = x3; // synthesized assignment
+ * }
+ * // phi removed
+ * return x4;
+ * ```
+ *
+ * ## Rewrites (operands are not independently memoizable)
+ *
+ * Phis that occur inside loop constructs cannot use the reassignment strategy, because there isn't an appropriate place
+ * to add the new let binding. Instead, we select a single "canonical" id for these phis which is the operand that is
+ * defined first. Then, all assignments and references for any of the phi ir and operands are rewritten to reference
+ * the canonical id instead.
+ *
+ * Example:
+ *
+ * ```javascript
+ * // Input
+ * for (
+ *  let i1 = 0;
+ *  { i2 = phi(i1, i2); i2 < 10 }; // note the phi in the test block
+ *  i2 += 1
+ * ) { ... }
+ *
+ * // Output
+ * for (
+ *   let i1 = 0; // i1 is defined first, so it becomes the canonical id
+ *   i1 < 10; // rewritten to canonical id
+ *   i1 += 1 // rewritten to canonical id
+ * )
+ * ```
  */
 export function leaveSSA(fn: HIRFunction) {
-  // Maps identifiers that appear as a phi or phi operand to a single canonical identifier
-  // for all instances.
-  const variableMapping: Map<Identifier, Identifier> = new Map();
-  const hasDeclaration: Set<Identifier> = new Set();
+  // For "memoizable" phis (see docblock), this maps the original identifiers to the identifier they
+  // should be reassigned to. The keys are phi operands, and the values are the phi id to which
+  // they are being explicitly reassigned.
+  const reassignments: Map<Identifier, Identifier> = new Map();
+
+  // For non-memoizable phis, this maps original identifiers to the identifier they should be
+  // *rewritten* to. The keys are the original identifiers, and the value will be _either_ the
+  // phi id or, more typically, the operand that was defined prior to the phi.
+  const rewrites: Map<Identifier, Identifier> = new Map();
 
   for (const [, block] of fn.body.blocks) {
     invariant(
@@ -43,15 +102,11 @@ export function leaveSSA(fn: HIRFunction) {
       "Expected all phis to be cleared by predecessors"
     );
 
-    // Identifiers (from phis) that *may* need a new `let` declaration created. If the original
-    // variable declaration flows into the phi, then we can reuse its declaration - this is
-    // discovered during iteration of instructions.
-    const needsDeclaration: Set<Identifier> = new Set();
-
     // Find any phi nodes which need a variable declaration in the current block
     // This includes phis in fallthrough nodes, or blocks that form part of control flow
     // such as for or while (and later if/switch).
-    const phis: Array<Phi> = [];
+    const reassignmentPhis: Array<Phi> = [];
+    const rewritePhis: Array<Phi> = [];
     const terminal = block.terminal;
     if (
       (terminal.kind === "if" ||
@@ -61,61 +116,52 @@ export function leaveSSA(fn: HIRFunction) {
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      phis.push(...fallthrough.phis);
+      reassignmentPhis.push(...fallthrough.phis);
       fallthrough.phis.clear();
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
       const test = fn.body.blocks.get(terminal.test)!;
-      phis.push(...test.phis);
+      rewritePhis.push(...test.phis);
       test.phis.clear();
 
       const loop = fn.body.blocks.get(terminal.loop)!;
-      phis.push(...loop.phis);
+      rewritePhis.push(...loop.phis);
       loop.phis.clear();
     }
     if (terminal.kind === "for") {
       const init = fn.body.blocks.get(terminal.init)!;
-      phis.push(...init.phis);
+      rewritePhis.push(...init.phis);
       init.phis.clear();
 
       const update = fn.body.blocks.get(terminal.update)!;
-      phis.push(...update.phis);
+      rewritePhis.push(...update.phis);
       update.phis.clear();
 
       // find declarations in the for init
       for (const instr of init.instructions) {
         if (instr.lvalue !== null && instr.lvalue.place.memberPath === null) {
-          hasDeclaration.add(instr.lvalue.place.identifier);
+          // hasDeclaration.add(instr.lvalue.place.identifier);
         }
       }
     }
 
-    // For each phi, determine a canonical identifier to use for versions of the variable
-    // that appear in the phi (as its output id and operands). If this is the first time
-    // we're seeing the phi id, then we may need to generate a new variable declaration
-    // Note that there can be multiple phi nodes for the same variable, we capture the
-    // outermost scope by visiting predecessor blocks first.
-    for (const phi of phis) {
-      let canonicalId = variableMapping.get(phi.id);
+    for (const phi of reassignmentPhis) {
+      // In some cases one of the phi operands can be defined *before* the let binding
+      // we will generate. For example, a variable that is only rebound in one branch of
+      // an if but not another. In this case we populate the let binding with this initial
+      // value rather than generate an extra assignment.
+      let initOperand: Identifier | null = null;
+
+      // Determine the canonical id to use for this phi. In general this is the phi id,
+      // but if one phi flows into another as an operand, this will be the final phi.
+      let canonicalId = reassignments.get(phi.id);
       if (canonicalId === undefined) {
-        // Determine a new canonical id. We use the id/operand whose id is lowest,
-        // which ensures that _if_ the original variable declaration is one of the
-        // options we'll choose it and can reuse the declaration.
         canonicalId = phi.id;
-        for (const [, operand] of phi.operands) {
-          let canonicalOperand = variableMapping.get(operand) ?? operand;
-          if (canonicalOperand.id < canonicalId.id) {
-            canonicalId = canonicalOperand;
-          }
-        }
         canonicalId.mutableRange.start = Math.min(
           canonicalId.mutableRange.start,
           terminal.id
         ) as InstructionId;
-        variableMapping.set(phi.id, canonicalId);
-        if (!hasDeclaration.has(canonicalId)) {
-          needsDeclaration.add(canonicalId);
-        }
+        reassignments.set(phi.id, canonicalId);
       }
 
       // all versions of the variable need to be remapped to the canonical id
@@ -126,79 +172,159 @@ export function leaveSSA(fn: HIRFunction) {
       for (const [, operand] of phi.operands) {
         start = Math.min(start, operand.mutableRange.start);
         end = Math.max(end, operand.mutableRange.end);
-        variableMapping.set(operand, canonicalId);
+        reassignments.set(operand, canonicalId);
+
+        if (operand.mutableRange.start < terminal.id) {
+          invariant(
+            initOperand === null,
+            "A phi cannot have two operands initialized before its declaration"
+          );
+          initOperand = operand;
+        }
+      }
+      canonicalId.mutableRange.start = makeInstructionId(start);
+      canonicalId.mutableRange.end = makeInstructionId(end);
+
+      // If this phi id is the canonical id we need to generate a let binding for it
+      // (otherwise, it means this phi merges into some other phi which already generated
+      // a binding
+      if (canonicalId === phi.id) {
+        const instr: Instruction = {
+          // NOTE: reuse the terminal id since these lets must be scoped with the terminal anyway.
+          // the mutable range of this canonical id must by definition span from the binding (before
+          // the if) to the phi, so it's safe to reuse the terminal's id.
+          id: block.terminal.id,
+          lvalue: {
+            place: {
+              kind: "Identifier",
+              memberPath: null,
+              identifier: canonicalId,
+              effect: Effect.Mutate,
+              loc: GeneratedSource,
+            },
+            kind: InstructionKind.Let,
+          },
+          value:
+            initOperand !== null
+              ? {
+                  kind: "Identifier",
+                  memberPath: null,
+                  identifier: initOperand,
+                  effect: Effect.Read,
+                  loc: GeneratedSource,
+                }
+              : {
+                  kind: "Primitive",
+                  // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
+                  value: undefined,
+                  loc: GeneratedSource,
+                },
+          loc: GeneratedSource,
+        };
+        block.instructions.push(instr);
+      }
+
+      // Generate an assignment in each predecessor
+      for (const [predecessor, operand] of phi.operands) {
+        if (operand === initOperand) {
+          continue;
+        }
+        const instr: Instruction = {
+          id: predecessor.terminal.id,
+          lvalue: {
+            place: {
+              kind: "Identifier",
+              memberPath: null,
+              identifier: canonicalId,
+              effect: Effect.Mutate,
+              loc: GeneratedSource,
+            },
+            kind: InstructionKind.Reassign,
+          },
+          value: {
+            kind: "Identifier",
+            memberPath: null,
+            identifier: operand,
+            effect: Effect.Read,
+            loc: GeneratedSource,
+          },
+          loc: GeneratedSource,
+        };
+        predecessor.instructions.push(instr);
+      }
+    }
+
+    // Similar logic for rewrite phis that occur in loops, except that instead of a new let binding
+    // we pick one of the operands as the canonical id, and rewrite all references to the other
+    // operands and the phi to reference this canonical id.
+    for (const phi of rewritePhis) {
+      let canonicalId = rewrites.get(phi.id);
+      if (canonicalId === undefined) {
+        canonicalId = phi.id;
+        for (const [, operand] of phi.operands) {
+          let canonicalOperand = rewrites.get(operand) ?? operand;
+          if (canonicalOperand.id < canonicalId.id) {
+            canonicalId = canonicalOperand;
+          }
+        }
+        canonicalId.mutableRange.start = Math.min(
+          canonicalId.mutableRange.start,
+          terminal.id
+        ) as InstructionId;
+        rewrites.set(phi.id, canonicalId);
+      }
+
+      // all versions of the variable need to be remapped to the canonical id
+      // also extend the mutable range of the canonical id based on the min/max
+      // of the ranges of its operands
+      let start = canonicalId.mutableRange.start as number;
+      let end = canonicalId.mutableRange.end as number;
+      for (const [, operand] of phi.operands) {
+        start = Math.min(start, operand.mutableRange.start);
+        end = Math.max(end, operand.mutableRange.end);
+        rewrites.set(operand, canonicalId);
       }
       canonicalId.mutableRange.start = makeInstructionId(start);
       canonicalId.mutableRange.end = makeInstructionId(end);
     }
 
-    // Visit instructions and rewrite identifiers based on the variable mapping
-    // updated above.
+    // Finally, iterate the instructions and perform any rewrites as well as converting
+    // SSA variables to `const` where possible
     for (const instr of block.instructions) {
       const { lvalue, value } = instr;
       if (lvalue !== null) {
-        updatePlace(lvalue.place, variableMapping);
-        if (lvalue.place.memberPath === null) {
-          if (!variableMapping.has(lvalue.place.identifier)) {
-            // This variable does not flow into a phi, therefore there
-            // is no reassignment. Convert the declaration to a const.
-            lvalue.kind = InstructionKind.Const;
-          } else if (
-            variableMapping.get(lvalue.place.identifier) ===
-            lvalue.place.identifier
-          ) {
-            // This is an existing declaration we can reuse as the canonical declaration for its
-            // phi. Note, the declaration must already be a `let` or else it would be invalid to
-            // reassign the variable in the first place.
-            needsDeclaration.delete(lvalue.place.identifier);
-          }
-          hasDeclaration.add(lvalue.place.identifier);
+        rewritePlace(lvalue.place, rewrites);
+        if (
+          lvalue.kind !== InstructionKind.Const &&
+          lvalue.place.memberPath === null &&
+          !rewrites.has(lvalue.place.identifier) &&
+          (!reassignments.has(lvalue.place.identifier) ||
+            reassignments.get(lvalue.place.identifier) !==
+              lvalue.place.identifier)
+        ) {
+          // Convert individual SSA reassignments into const declarations
+          // otherwise the code would be invalid, since the SSA identifiers
+          // aren't otherwise declared.
+          // TODO @josephsavona: do this in EnterSSA instead?
+          lvalue.kind = InstructionKind.Const;
         }
       }
-      for (const operand of eachInstructionValueOperand(value)) {
-        updatePlace(operand, variableMapping);
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        rewritePlace(operand, rewrites);
       }
     }
-
     for (const operand of eachTerminalOperand(terminal)) {
-      operand.identifier =
-        variableMapping.get(operand.identifier) ?? operand.identifier;
-    }
-
-    // Generate new let declarations for any remaining phi variables
-    for (const identifier of needsDeclaration) {
-      const instr: Instruction = {
-        // NOTE: reuse the terminal id since these lets must be scoped with the terminal anyway
-        // the only reason they exist is that there is a scope that will span the control flow.
-        id: block.terminal.id,
-        lvalue: {
-          place: {
-            kind: "Identifier",
-            memberPath: null,
-            identifier,
-            effect: Effect.Mutate,
-            loc: GeneratedSource,
-          },
-          kind: InstructionKind.Let,
-        },
-        value: {
-          kind: "Primitive",
-          value: undefined,
-          loc: GeneratedSource,
-        },
-        loc: GeneratedSource,
-      };
-      block.instructions.push(instr);
+      rewritePlace(operand, rewrites);
     }
   }
 }
 
-function updatePlace(
-  place: Place,
-  variableMapping: Map<Identifier, Identifier>
-) {
+// Rewrite @param place's identifier based on the given rewrite mapping, if the identifier
+// is present. Also expands the mutable range of the target identifier to include the
+// place's range.
+function rewritePlace(place: Place, rewrites: Map<Identifier, Identifier>) {
   const prevIdentifier = place.identifier;
-  const nextIdentifier = variableMapping.get(prevIdentifier);
+  const nextIdentifier = rewrites.get(prevIdentifier);
   if (nextIdentifier === undefined || nextIdentifier === prevIdentifier) {
     return;
   }

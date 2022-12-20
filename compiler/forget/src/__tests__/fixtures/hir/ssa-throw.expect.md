@@ -16,17 +16,19 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$4_@0:TPrimitive[1:7] = 1
+  [1] Const mutate x$4:TPrimitive = 1
   [2] Const mutate $5:TPrimitive = 1
-  [3] Const mutate $6:TPrimitive = Binary read x$4_@0:TPrimitive === read $5:TPrimitive
+  [3] Const mutate $6:TPrimitive = Binary read x$4:TPrimitive === read $5:TPrimitive
+  [4] Let mutate x$8_@0[1:7] = read x$4:TPrimitive
   [4] If (read $6:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$4_@0:TPrimitive[1:7] = 2
+  [5] Const mutate x$7:TPrimitive = 2
+  [6] Reassign mutate x$8_@0[1:7] = read x$7:TPrimitive
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] Throw read x$4_@0:TPrimitive
+  [7] Throw read x$8_@0
 ```
 
 ## Reactive Scopes
@@ -34,15 +36,17 @@ bb1:
 ```
 function foo(
 ) {
-  scope @0 [1:7] deps=[] out=[x$4_@0] {
-    [1] Let mutate x$4_@0:TPrimitive[1:7] = 1
-    [2] Const mutate $5:TPrimitive = 1
-    [3] Const mutate $6:TPrimitive = Binary read x$4_@0:TPrimitive === read $5:TPrimitive
+  [1] Const mutate x$4:TPrimitive = 1
+  [2] Const mutate $5:TPrimitive = 1
+  [3] Const mutate $6:TPrimitive = Binary read x$4:TPrimitive === read $5:TPrimitive
+  scope @0 [1:7] deps=[] out=[x$8_@0] {
+    [4] Let mutate x$8_@0[1:7] = read x$4:TPrimitive
     if (read $6:TPrimitive) {
-      [5] Reassign mutate x$4_@0:TPrimitive[1:7] = 2
+      [5] Const mutate x$7:TPrimitive = 2
+      [6] Reassign mutate x$8_@0[1:7] = read x$7:TPrimitive
     }
   }
-  throw read x$4_@0:TPrimitive
+  throw read x$8_@0
 }
 
 ```
@@ -52,20 +56,22 @@ function foo(
 ```javascript
 function foo$0() {
   const $ = React.useMemoCache();
-  let x$4;
+  const x$4 = 1;
+  let x$8;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$4 = 1;
+    x$8 = x$4;
 
     if (x$4 === 1) {
-      x$4 = 2;
+      const x$7 = 2;
+      x$8 = x$7;
     }
 
-    $[0] = x$4;
+    $[0] = x$8;
   } else {
-    x$4 = $[0];
+    x$8 = $[0];
   }
 
-  throw x$4;
+  throw x$8;
 }
 
 ```
