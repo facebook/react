@@ -19,9 +19,9 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$9_@0:TFunction[1:6] = Array []
-  [2] Const mutate y$10_@0:TFunction[1:6] = Array []
-  [3] If (read x$9_@0:TFunction) then:bb1 else:bb1 fallthrough=bb1
+  [1] Const mutate x$9_@0[1:6] = Array []
+  [2] Const mutate y$10_@0[1:6] = Array []
+  [3] If (read x$9_@0) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
   [4] Call mutate y$10_@0.push(read a$6)
@@ -38,9 +38,9 @@ function foo(
   c,
 ) {
   scope @0 [1:6] deps=[read a$6, read b$7] out=[] {
-    [1] Const mutate x$9_@0:TFunction[1:6] = Array []
-    [2] Const mutate y$10_@0:TFunction[1:6] = Array []
-    if (read x$9_@0:TFunction) {
+    [1] Const mutate x$9_@0[1:6] = Array []
+    [2] Const mutate y$10_@0[1:6] = Array []
+    if (read x$9_@0) {
     }
     [4] Call mutate y$10_@0.push(read a$6)
     [5] Call mutate x$9_@0.push(read b$7)

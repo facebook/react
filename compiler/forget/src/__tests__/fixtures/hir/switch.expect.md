@@ -27,7 +27,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate x$9_@1:TFunction[1:12] = Array []
+  [1] Const mutate x$9_@1[1:12] = Array []
   [2] Let mutate y$10_@1:TPrimitive[1:12] = undefined
   [3] Const mutate $11:TPrimitive = false
   [4] Const mutate $12:TPrimitive = true
@@ -44,11 +44,11 @@ bb4:
   [9] Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1:TFunction
+  [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1
   [11] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1:TFunction} ></read Component$0>
+  [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1} ></read Component$0>
   [13] Call read y$10_@1.push(read props$8.p4)
   [14] Const mutate t8$23_@4 = JSX <read Component$0 data={read y$10_@1:TPrimitive} >{read child$19_@3}</read Component$0>
   [15] Return read t8$23_@4
@@ -61,7 +61,7 @@ function Component(
   props,
 ) {
   scope @1 [1:12] deps=[read props$8.p0, read props$8.p2, read props$8.p3] out=[x$9_@1] {
-    [1] Const mutate x$9_@1:TFunction[1:12] = Array []
+    [1] Const mutate x$9_@1[1:12] = Array []
     [2] Let mutate y$10_@1:TPrimitive[1:12] = undefined
     [3] Const mutate $11:TPrimitive = false
     [4] Const mutate $12:TPrimitive = true
@@ -74,12 +74,12 @@ function Component(
           }
       }
       case read $11:TPrimitive: {
-          [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1:TFunction
+          [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1
       }
     }
   }
-  scope @3 [12:13] deps=[freeze x$9_@1:TFunction] out=[child$19_@3] {
-    [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1:TFunction} ></read Component$0>
+  scope @3 [12:13] deps=[freeze x$9_@1] out=[child$19_@3] {
+    [12] Const mutate child$19_@3 = JSX <read Component$0 data={freeze x$9_@1} ></read Component$0>
   }
   [13] Call read y$10_@1.push(read props$8.p4)
   scope @4 [14:15] deps=[read y$10_@1:TPrimitive, read child$19_@3] out=[$23_@4] {

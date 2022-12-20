@@ -132,20 +132,17 @@ function generateTypeEquation(
       break;
     }
 
-    // TODO(gsn): This is potentially unsafe if we're modeling JavaScript as
-    // these should be PolyTypes. Modeling PolyTypes seems overkill for Forget
-    // as we're super conservative anyway. Should we not model function
-    // application?
     case "CallExpression": {
       const argTypes = value.args.map((a) => a.identifier.type);
 
+      // TODO(gsn): Handle method calls separately
+      if (value.callee.memberPath !== null) {
+        break;
+      }
+
       equations.push({
         left: value.callee.identifier.type,
-        right: {
-          kind: "Function",
-          argTypes,
-          returnType: left ?? makeType(),
-        },
+        right: { kind: "Function" },
       });
 
       break;
@@ -231,14 +228,6 @@ class Unifier {
       this.bindVariableTo(tB, tA);
       return;
     }
-
-    if (tA.kind === "Function" && tB.kind === "Function") {
-      const len = Math.min(tA.argTypes.length, tB.argTypes.length);
-      for (let i = 0; i < len; i++) {
-        this.unify(tA.argTypes[i], tB.argTypes[i]);
-      }
-      this.unify(tA.returnType, tB.returnType);
-    }
   }
 
   bindVariableTo(v: TypeVar, type: Type): void {
@@ -291,13 +280,6 @@ class Unifier {
       return this.occursCheck(v, this.substitutions.get(type.name)!);
     }
 
-    if (type.kind === "Function") {
-      return (
-        this.occursCheck(v, type.returnType) ||
-        type.argTypes.some((a) => this.occursCheck(v, a))
-      );
-    }
-
     if (type.kind === "Object") {
       return [...type.properties.values()].some((p) => this.occursCheck(v, p));
     }
@@ -320,14 +302,6 @@ class Unifier {
       } else {
         return type;
       }
-    }
-
-    if (type.kind === "Function") {
-      return {
-        kind: "Function",
-        argTypes: type.argTypes.map((a) => this.get(a)),
-        returnType: this.get(type.returnType),
-      };
     }
 
     return type;

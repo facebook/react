@@ -28,7 +28,7 @@ bb2:
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] Const mutate z$12_@3:TPrimitive = Call mutate foo$2:TFunction()
+  [7] Const mutate z$12_@3 = Call mutate foo$2:TFunction()
   [8] Return
 ```
 
@@ -50,7 +50,7 @@ function component(
     }
   }
   scope @3 [7:8] deps=[] out=[] {
-    [7] Const mutate z$12_@3:TPrimitive = Call mutate foo$2:TFunction()
+    [7] Const mutate z$12_@3 = Call mutate foo$2:TFunction()
   }
   return
 }

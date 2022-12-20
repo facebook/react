@@ -455,8 +455,6 @@ export type Type =
 export type PrimitiveType = { kind: "Primitive" };
 export type FunctionType = {
   kind: "Function";
-  argTypes: Array<Type>;
-  returnType: Type;
 };
 export type ObjectType = { kind: "Object"; properties: Map<string, Type> };
 export type PropType = { kind: "Prop"; objectType: Type; name: string };
@@ -531,22 +529,5 @@ function propTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Function" && tB.kind === "Function") {
-    if (tA.returnType !== tB.returnType) {
-      return false;
-    }
-
-    if (tA.argTypes.length !== tB.argTypes.length) {
-      return false;
-    }
-
-    for (let i = 0; i < tA.argTypes.length; i++) {
-      if (!typeVarEquals(tA.argTypes[i], tB.argTypes[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-  return false;
+  return tA.kind === "Function" && tB.kind === "Function";
 }

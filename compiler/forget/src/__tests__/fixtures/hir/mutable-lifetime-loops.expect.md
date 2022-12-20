@@ -94,7 +94,7 @@ function cond$0(x$2) {}
 bb0:
   [1] Let mutate a$18_@0[1:23] = Object {  }
   [2] Let mutate b$20_@0[1:23] = Object {  }
-  [3] Let mutate c$22_@0:TPrimitive[1:23] = Object {  }
+  [3] Let mutate c$22_@0[1:23] = Object {  }
   [4] Let mutate d$24_@0[1:23] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
@@ -105,8 +105,8 @@ bb3:
   predecessor blocks: bb1
   [8] Const mutate z$19_@0[1:23] = read a$18_@0
   [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
-  [10] Reassign mutate b$20_@0[1:23] = read c$22_@0:TPrimitive
-  [11] Reassign mutate c$22_@0:TPrimitive[1:23] = read d$24_@0
+  [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+  [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
   [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
   [13] Call mutate mutate$7:TFunction(mutate a$18_@0, mutate b$20_@0)
   [14] Const mutate $29_@0[1:23] = Call mutate cond$8:TFunction(mutate a$18_@0)
@@ -122,7 +122,7 @@ bb7:
   [18] If (read b$20_@0) then:bb9 else:bb9 fallthrough=bb9
 bb9:
   predecessor blocks: bb7
-  [19] If (read c$22_@0:TPrimitive) then:bb11 else:bb11 fallthrough=bb11
+  [19] If (read c$22_@0) then:bb11 else:bb11 fallthrough=bb11
 bb11:
   predecessor blocks: bb9
   [20] If (read d$24_@0) then:bb13 else:bb13 fallthrough=bb13
@@ -142,7 +142,7 @@ function Component(
   scope @0 [1:23] deps=[] out=[] {
     [1] Let mutate a$18_@0[1:23] = Object {  }
     [2] Let mutate b$20_@0[1:23] = Object {  }
-    [3] Let mutate c$22_@0:TPrimitive[1:23] = Object {  }
+    [3] Let mutate c$22_@0[1:23] = Object {  }
     [4] Let mutate d$24_@0[1:23] = Object {  }
     while (
       [6] Const mutate $17:TPrimitive = true
@@ -150,8 +150,8 @@ function Component(
     ) {
       [8] Const mutate z$19_@0[1:23] = read a$18_@0
       [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
-      [10] Reassign mutate b$20_@0[1:23] = read c$22_@0:TPrimitive
-      [11] Reassign mutate c$22_@0:TPrimitive[1:23] = read d$24_@0
+      [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+      [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
       [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
       [13] Call mutate mutate$7:TFunction(mutate a$18_@0, mutate b$20_@0)
       [14] Const mutate $29_@0[1:23] = Call mutate cond$8:TFunction(mutate a$18_@0)
@@ -163,7 +163,7 @@ function Component(
     }
     if (read b$20_@0) {
     }
-    if (read c$22_@0:TPrimitive) {
+    if (read c$22_@0) {
     }
     if (read d$24_@0) {
     }

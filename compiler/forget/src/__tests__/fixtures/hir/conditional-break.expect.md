@@ -78,7 +78,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a_DEBUG$5_@0:TFunction[1:7] = Array []
+  [1] Const mutate a_DEBUG$5_@0[1:7] = Array []
   [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
   [3] If (read props$4.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
@@ -88,7 +88,7 @@ bb2:
 bb1:
   predecessor blocks: bb0
   [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
-  [7] Return freeze a_DEBUG$5_@0:TFunction
+  [7] Return freeze a_DEBUG$5_@0
 ```
 
 ## Reactive Scopes
@@ -98,7 +98,7 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[read props$4.a, read props$4.b, read props$4.d] out=[a_DEBUG$5_@0] {
-    [1] Const mutate a_DEBUG$5_@0:TFunction[1:7] = Array []
+    [1] Const mutate a_DEBUG$5_@0[1:7] = Array []
     [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
     if (read props$4.b) {
       [4] Const mutate $6:TPrimitive = null
@@ -106,7 +106,7 @@ function Component(
     }
     [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
   }
-  return freeze a_DEBUG$5_@0:TFunction
+  return freeze a_DEBUG$5_@0
 }
 
 ```
@@ -145,7 +145,7 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+  [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
   [3] If (read props$3.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
@@ -155,7 +155,7 @@ bb2:
 bb1:
   predecessor blocks: bb2 bb0
   [6] Call mutate a$4_@0.push(read props$3.d)
-  [7] Return freeze a$4_@0:TFunction
+  [7] Return freeze a$4_@0
 ```
 
 ## Reactive Scopes
@@ -165,14 +165,14 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] out=[a$4_@0] {
-    [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+    [1] Const mutate a$4_@0[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
       [4] Call mutate a$4_@0.push(read props$3.c)
     }
     [6] Call mutate a$4_@0.push(read props$3.d)
   }
-  return freeze a$4_@0:TFunction
+  return freeze a$4_@0
 }
 
 ```
@@ -213,7 +213,7 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  [1] Const mutate a$5_@0:TFunction[1:8] = Array []
+  [1] Const mutate a$5_@0[1:8] = Array []
   [2] Call mutate a$5_@0.push(read props$4.a)
   [3] If (read props$4.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
@@ -224,7 +224,7 @@ bb2:
 bb1:
   predecessor blocks: bb0
   [7] Call mutate a$5_@0.push(read props$4.d)
-  [8] Return freeze a$5_@0:TFunction
+  [8] Return freeze a$5_@0
 ```
 
 ## Reactive Scopes
@@ -234,7 +234,7 @@ function Component(
   props,
 ) {
   scope @0 [1:8] deps=[read props$4.a, read props$4.b, read props$4.c, read props$4.d] out=[a$5_@0] {
-    [1] Const mutate a$5_@0:TFunction[1:8] = Array []
+    [1] Const mutate a$5_@0[1:8] = Array []
     [2] Call mutate a$5_@0.push(read props$4.a)
     if (read props$4.b) {
       [4] Call mutate a$5_@0.push(read props$4.c)
@@ -243,7 +243,7 @@ function Component(
     }
     [7] Call mutate a$5_@0.push(read props$4.d)
   }
-  return freeze a$5_@0:TFunction
+  return freeze a$5_@0
 }
 
 ```
@@ -285,17 +285,17 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+  [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
   [3] If (read props$3.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$4_@0.push(read props$3.c)
-  [5] Return freeze a$4_@0:TFunction
+  [5] Return freeze a$4_@0
 bb1:
   predecessor blocks: bb0
   [6] Call mutate a$4_@0.push(read props$3.d)
-  [7] Return freeze a$4_@0:TFunction
+  [7] Return freeze a$4_@0
 ```
 
 ## Reactive Scopes
@@ -305,15 +305,15 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.c, read props$3.d] out=[a$4_@0] {
-    [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+    [1] Const mutate a$4_@0[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
       [4] Call mutate a$4_@0.push(read props$3.c)
-      return freeze a$4_@0:TFunction
+      return freeze a$4_@0
     }
     [6] Call mutate a$4_@0.push(read props$3.d)
   }
-  return freeze a$4_@0:TFunction
+  return freeze a$4_@0
 }
 
 ```
@@ -355,7 +355,7 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+  [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
   [3] If (read props$3.b) then:bb1 else:bb2 fallthrough=bb2
 bb2:
@@ -365,7 +365,7 @@ bb2:
 bb1:
   predecessor blocks: bb0 bb2
   [6] Call mutate a$4_@0.push(read props$3.d)
-  [7] Return freeze a$4_@0:TFunction
+  [7] Return freeze a$4_@0
 ```
 
 ## Reactive Scopes
@@ -375,11 +375,11 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[read props$3.a, read props$3.b, read props$3.d, read props$3.c] out=[] {
-    [1] Const mutate a$4_@0:TFunction[1:7] = Array []
+    [1] Const mutate a$4_@0[1:7] = Array []
     [2] Call mutate a$4_@0.push(read props$3.a)
     if (read props$3.b) {
       [6] Call mutate a$4_@0.push(read props$3.d)
-      return freeze a$4_@0:TFunction
+      return freeze a$4_@0
     }
     [4] Call mutate a$4_@0.push(read props$3.c)
   }

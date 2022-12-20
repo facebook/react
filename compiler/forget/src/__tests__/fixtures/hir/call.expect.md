@@ -42,14 +42,14 @@ function foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$10_@0:TObject[1:7] = Array []
+  [1] Const mutate a$10_@0[1:7] = Array []
   [2] Const mutate b$11_@0:TObject[1:7] = Object {  }
-  [3] Call mutate foo$4:TFunction(mutate a$10_@0:TObject, mutate b$11_@0:TObject)
+  [3] Call mutate foo$4:TFunction(mutate a$10_@0, mutate b$11_@0:TObject)
   [4] Const mutate $12:TPrimitive = "div"
-  [5] Const mutate _$13_@1 = JSX <read $12:TPrimitive a={freeze a$10_@0:TObject} ></read $12:TPrimitive>
+  [5] Const mutate _$13_@1 = JSX <read $12:TPrimitive a={freeze a$10_@0} ></read $12:TPrimitive>
   [6] Call mutate foo$4:TFunction(mutate b$11_@0:TObject)
   [7] Const mutate $14:TPrimitive = "div"
-  [8] Const mutate t5$15_@2 = JSX <read $14:TPrimitive a={read a$10_@0:TObject} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
+  [8] Const mutate t5$15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
   [9] Return read t5$15_@2
 ```
 
@@ -60,18 +60,18 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[] out=[a$10_@0, b$11_@0] {
-    [1] Const mutate a$10_@0:TObject[1:7] = Array []
+    [1] Const mutate a$10_@0[1:7] = Array []
     [2] Const mutate b$11_@0:TObject[1:7] = Object {  }
-    [3] Call mutate foo$4:TFunction(mutate a$10_@0:TObject, mutate b$11_@0:TObject)
+    [3] Call mutate foo$4:TFunction(mutate a$10_@0, mutate b$11_@0:TObject)
     [4] Const mutate $12:TPrimitive = "div"
-    scope @1 [5:6] deps=[freeze a$10_@0:TObject] out=[] {
-      [5] Const mutate _$13_@1 = JSX <read $12:TPrimitive a={freeze a$10_@0:TObject} ></read $12:TPrimitive>
+    scope @1 [5:6] deps=[freeze a$10_@0] out=[] {
+      [5] Const mutate _$13_@1 = JSX <read $12:TPrimitive a={freeze a$10_@0} ></read $12:TPrimitive>
     }
     [6] Call mutate foo$4:TFunction(mutate b$11_@0:TObject)
   }
   [7] Const mutate $14:TPrimitive = "div"
-  scope @2 [8:9] deps=[read a$10_@0:TObject, freeze b$11_@0:TObject] out=[$15_@2] {
-    [8] Const mutate $15_@2 = JSX <read $14:TPrimitive a={read a$10_@0:TObject} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
+  scope @2 [8:9] deps=[read a$10_@0, freeze b$11_@0:TObject] out=[$15_@2] {
+    [8] Const mutate $15_@2 = JSX <read $14:TPrimitive a={read a$10_@0} b={freeze b$11_@0:TObject} ></read $14:TPrimitive>
   }
   return read $15_@2
 }

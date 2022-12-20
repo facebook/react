@@ -17,8 +17,8 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$9_@0:TFunction[1:8] = Array []
-  [2] Const mutate y$10_@0:TFunction[1:8] = Array []
+  [1] Const mutate x$9_@0[1:8] = Array []
+  [2] Const mutate y$10_@0[1:8] = Array []
   [3] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
@@ -42,8 +42,8 @@ function foo(
   c,
 ) {
   scope @0 [1:8] deps=[read c$8, read b$7, read a$6] out=[] {
-    [1] Const mutate x$9_@0:TFunction[1:8] = Array []
-    [2] Const mutate y$10_@0:TFunction[1:8] = Array []
+    [1] Const mutate x$9_@0[1:8] = Array []
+    [2] Const mutate y$10_@0[1:8] = Array []
     while (
       read c$8
     ) {

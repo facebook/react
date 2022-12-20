@@ -22,22 +22,22 @@ function foo(a, b) {
 
 ```
 bb0:
-  [1] Const mutate x$8_@0:TFunction[1:3] = Array []
+  [1] Const mutate x$8_@0[1:3] = Array []
   [2] Call mutate x$8_@0.push(read a$6)
   [3] Const mutate $9:TPrimitive = "div"
-  [4] JSX <read $9:TPrimitive>{freeze x$8_@0:TFunction}</read $9:TPrimitive>
-  [5] Const mutate y$10_@1:TFunction[5:12] = Array []
+  [4] JSX <read $9:TPrimitive>{freeze x$8_@0}</read $9:TPrimitive>
+  [5] Const mutate y$10_@1[5:12] = Array []
   [6] If (read x$8_@0.length) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [7] Call mutate y$10_@1.push(read x$8_@0:TFunction)
+  [7] Call mutate y$10_@1.push(read x$8_@0)
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [9] If (read b$7:TFunction) then:bb4 else:bb3 fallthrough=bb3
+  [9] If (read b$7) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb1
-  [10] Call mutate y$10_@1.push(read b$7:TFunction)
+  [10] Call mutate y$10_@1.push(read b$7)
   [11] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
@@ -52,18 +52,18 @@ function foo(
   b,
 ) {
   scope @0 [1:3] deps=[read a$6] out=[x$8_@0] {
-    [1] Const mutate x$8_@0:TFunction[1:3] = Array []
+    [1] Const mutate x$8_@0[1:3] = Array []
     [2] Call mutate x$8_@0.push(read a$6)
   }
   [3] Const mutate $9:TPrimitive = "div"
-  [4] JSX <read $9:TPrimitive>{freeze x$8_@0:TFunction}</read $9:TPrimitive>
-  scope @1 [5:12] deps=[read x$8_@0:TFunction, read b$7:TFunction] out=[] {
-    [5] Const mutate y$10_@1:TFunction[5:12] = Array []
+  [4] JSX <read $9:TPrimitive>{freeze x$8_@0}</read $9:TPrimitive>
+  scope @1 [5:12] deps=[read x$8_@0, read b$7] out=[] {
+    [5] Const mutate y$10_@1[5:12] = Array []
     if (read x$8_@0.length) {
-      [7] Call mutate y$10_@1.push(read x$8_@0:TFunction)
+      [7] Call mutate y$10_@1.push(read x$8_@0)
     }
-    if (read b$7:TFunction) {
-      [10] Call mutate y$10_@1.push(read b$7:TFunction)
+    if (read b$7) {
+      [10] Call mutate y$10_@1.push(read b$7)
     }
   }
   return

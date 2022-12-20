@@ -23,7 +23,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Const mutate x$10_@0:TFunction[1:8] = Array []
+  [1] Const mutate x$10_@0[1:8] = Array []
   [2] If (read a$7) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
@@ -57,7 +57,7 @@ function foo(
   c,
 ) {
   scope @0 [1:8] deps=[read a$7, read b$8, read c$9] out=[] {
-    [1] Const mutate x$10_@0:TFunction[1:8] = Array []
+    [1] Const mutate x$10_@0[1:8] = Array []
     if (read a$7) {
       if (read b$8) {
         if (read c$9) {

@@ -23,19 +23,19 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$7_@0:TFunction[1:7] = Array []
+  [1] Let mutate x$7_@0[1:7] = Array []
   [2] Call mutate x$7_@0.push(read props$6.p0)
-  [3] Const mutate y$8:TFunction = read x$7_@0:TFunction
+  [3] Const mutate y$8 = read x$7_@0
   [4] If (read props$6.p1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$7_@0:TFunction[1:7] = Array []
+  [5] Reassign mutate x$7_@0[1:7] = Array []
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0:TFunction} ></read Component$0>
+  [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0} ></read Component$0>
   [8] Call read y$8.push(read props$6.p2)
-  [9] Const mutate t6$15_@2 = JSX <read Component$0 x={read x$7_@0:TFunction} y={read y$8:TFunction} ></read Component$0>
+  [9] Const mutate t6$15_@2 = JSX <read Component$0 x={read x$7_@0} y={read y$8} ></read Component$0>
   [10] Return read t6$15_@2
 ```
 
@@ -46,19 +46,19 @@ function Component(
   props,
 ) {
   scope @0 [1:7] deps=[read props$6.p0, read props$6.p1] out=[x$7_@0] {
-    [1] Let mutate x$7_@0:TFunction[1:7] = Array []
+    [1] Let mutate x$7_@0[1:7] = Array []
     [2] Call mutate x$7_@0.push(read props$6.p0)
-    [3] Const mutate y$8:TFunction = read x$7_@0:TFunction
+    [3] Const mutate y$8 = read x$7_@0
     if (read props$6.p1) {
-      [5] Reassign mutate x$7_@0:TFunction[1:7] = Array []
+      [5] Reassign mutate x$7_@0[1:7] = Array []
     }
   }
-  scope @1 [7:8] deps=[freeze x$7_@0:TFunction] out=[] {
-    [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0:TFunction} ></read Component$0>
+  scope @1 [7:8] deps=[freeze x$7_@0] out=[] {
+    [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0} ></read Component$0>
   }
   [8] Call read y$8.push(read props$6.p2)
-  scope @2 [9:10] deps=[read x$7_@0:TFunction, read y$8:TFunction] out=[$15_@2] {
-    [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$7_@0:TFunction} y={read y$8:TFunction} ></read Component$0>
+  scope @2 [9:10] deps=[read x$7_@0, read y$8] out=[$15_@2] {
+    [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$7_@0} y={read y$8} ></read Component$0>
   }
   return read $15_@2
 }
