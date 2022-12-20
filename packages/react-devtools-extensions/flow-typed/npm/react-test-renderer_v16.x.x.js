@@ -79,7 +79,6 @@ declare module 'react-test-renderer/shallow' {
     static createRenderer(): ShallowRenderer;
     getMountedInstance(): ReactTestInstance;
     getRenderOutput<E: React$Element<any>>(): E;
-    getRenderOutput(): React$Element<any>; // eslint-disable-line ft-flow/no-dupe-keys
     render(element: React$Element<any>, context?: any): void;
     unmount(): void;
   }
