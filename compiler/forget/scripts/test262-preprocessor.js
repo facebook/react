@@ -1,7 +1,7 @@
 const generate = require("@babel/generator").default;
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-const run = require("../dist/HIR/Pipeline").default;
+const run = require("../dist/CompilerPipeline").default;
 const prettier = require("prettier");
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short
