@@ -8749,7 +8749,7 @@ hermes-estree@0.9.0:
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.9.0.tgz#026e0abe6db1dcf50a81a79014b779a83db3b814"
   integrity sha512-5DZ7Y0CbHVk8zPqgRCvqp8iw+P05svnQDI1aJFjdqCfXJ/1CZ+8aYpGlhJ29zCG5SE5duGTzSxogAYYI4QqXqw==
 
-hermes-parser@0.9.0:
+hermes-parser@0.9.0, hermes-parser@^0.9.0:
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.9.0.tgz#ede3044d50479c61843cef5bbdcea83933d4e4ec"
   integrity sha512-IcvJIlAn+9tpHkP+HTsxWKrIdQPp0gvGrrQmxlL4XnNS+Oh6R/Fpxbcoflm2kY3zgQjEvxZxLiK/2+k3/5wsrw==

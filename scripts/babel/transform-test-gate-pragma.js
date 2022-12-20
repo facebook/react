@@ -278,7 +278,7 @@ function transform(babel) {
                 callee.name === 'it' ||
                 callee.name === 'fit'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {
@@ -304,7 +304,7 @@ function transform(babel) {
                 callee.property.type === 'Identifier' &&
                 callee.property.name === 'only'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {
@@ -329,6 +329,28 @@ function transform(babel) {
       },
     },
   };
+}
+
+function getComments(path) {
+  if (path.node.leadingComments) {
+    // Babel AST includes comments.
+    return path.node.leadingComments;
+  }
+  // In Hermes AST we need to find the comments by range.
+  const comments = path.hub.file.ast.comments;
+  let prevSibling = path.getPrevSibling();
+  let searchStart;
+  if (prevSibling.node) {
+    searchStart = prevSibling.node.end;
+  } else if (path.parentPath.node) {
+    searchStart = path.parentPath.node.start;
+  } else {
+    throw new Error('Unexpected AST structure');
+  }
+  const filteredComments = comments.filter(
+    c => c.start >= searchStart && c.end <= path.node.start
+  );
+  return filteredComments.length > 0 ? filteredComments : undefined;
 }
 
 module.exports = transform;
