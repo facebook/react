@@ -20,6 +20,7 @@ const {
   enterSSA,
   Environment,
   flattenReactiveLoops,
+  inferTypes,
   inferMutableRanges,
   inferReactiveScopes,
   inferReactiveScopeVariables,
@@ -47,6 +48,7 @@ type CompilerOutput = {
   ssaOutput: string;
   hirOutput: string;
   eliminateRedundantPhiOutput: string;
+  inferTypesOutput: string;
   inferReferenceEffectsOutput: string;
   inferMutableRangesOutput: string;
   inferReactiveScopeVariablesOutput: string;
@@ -78,6 +80,9 @@ function compile(source: string): CompilerOutput | CompilerError {
 
     eliminateRedundantPhi(ir);
     const eliminateRedundantPhiOutput = printHIR(ir.body);
+
+    inferTypes(ir);
+    const inferTypesOutput = printHIR(ir.body);
 
     inferReferenceEffects(ir);
     const inferReferenceEffectsOutput = printHIR(ir.body);
@@ -124,6 +129,7 @@ function compile(source: string): CompilerOutput | CompilerError {
       hirOutput,
       ssaOutput,
       eliminateRedundantPhiOutput,
+      inferTypesOutput,
       inferReferenceEffectsOutput,
       inferMutableRangesOutput,
       inferReactiveScopeVariablesOutput,
@@ -163,6 +169,11 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
         EliminateRedundantPhi: (
           <TextTabContent
             output={compilerOutput.eliminateRedundantPhiOutput}
+          ></TextTabContent>
+        ),
+        InferTypes: (
+          <TextTabContent
+            output={compilerOutput.inferTypesOutput}
           ></TextTabContent>
         ),
         InferReferenceEffects: (

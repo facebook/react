@@ -11,6 +11,7 @@ export type TabTypes =
   | "HIR"
   | "SSA"
   | "EliminateRedundantPhi"
+  | "InferTypes"
   | "InferReferenceEffects"
   | "InferMutableRanges"
   | "InferReactiveScopeVariables"

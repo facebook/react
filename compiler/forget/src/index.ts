@@ -19,6 +19,7 @@ import codegen from "./HIR/Codegen";
 import { Environment } from "./HIR/HIRBuilder";
 import { inferMutableRanges } from "./HIR/InferMutableRanges";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
+import { inferTypes } from "./HIR/InferTypes";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunction";
 import { codegenReactiveFunction } from "./ReactiveScopes/CodegenReactiveFunction";
@@ -63,6 +64,7 @@ export const HIR = {
   eliminateRedundantPhi,
   enterSSA,
   Environment,
+  inferTypes,
   inferMutableRanges,
   inferReactiveScopes,
   inferReactiveScopeVariables,
