@@ -508,7 +508,9 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
     }
 
     for (const key of tA.properties.keys()) {
-      if (tA.properties.get(key) !== tB.properties.get(key)) return false;
+      if (!typeEquals(tA.properties.get(key)!, tB.properties.get(key)!)) {
+        return false;
+      }
     }
 
     return true;
