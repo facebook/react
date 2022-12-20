@@ -324,6 +324,9 @@ function getPlugins(
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+  // Avoid "Maximum call stack size exceeded" error in DEV
+  const forceClosure =
+    globalName === 'ReactDOMServerStreaming' || globalName === 'ReactDOMServer';
   return [
     // Shim any modules that need forking in this environment.
     useForks(forks),
@@ -367,7 +370,7 @@ function getPlugins(
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
-    isProduction &&
+    (isProduction || forceClosure) &&
       closure({
         compilation_level: 'SIMPLE',
         language_in: 'ECMASCRIPT_2015',
@@ -388,7 +391,7 @@ function getPlugins(
       }),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
+    (isProduction || forceClosure) && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
       prettier({
