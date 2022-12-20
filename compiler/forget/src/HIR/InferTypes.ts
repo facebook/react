@@ -3,13 +3,14 @@ import invariant from "invariant";
 import {
   HIRFunction,
   Instruction,
+  LValue,
   makeType,
+  Place,
   PropType,
   Type,
   typeEquals,
+  TypeId,
   TypeVar,
-  Place,
-  LValue,
 } from "./HIR";
 import { eachInstructionOperand } from "./visitors";
 
@@ -210,7 +211,7 @@ function assignTypeForLvalue(
   );
 }
 
-type Substitution = Map<string, Type>;
+type Substitution = Map<TypeId, Type>;
 class Unifier {
   substitutions: Substitution = new Map();
 
@@ -231,13 +232,13 @@ class Unifier {
   }
 
   bindVariableTo(v: TypeVar, type: Type): void {
-    if (this.substitutions.has(v.name)) {
-      this.unify(this.substitutions.get(v.name)!, type);
+    if (this.substitutions.has(v.id)) {
+      this.unify(this.substitutions.get(v.id)!, type);
       return;
     }
 
-    if (type.kind === "Type" && this.substitutions.has(type.name)) {
-      this.unify(v, this.substitutions.get(type.name)!);
+    if (type.kind === "Type" && this.substitutions.has(type.id)) {
+      this.unify(v, this.substitutions.get(type.id)!);
       return;
     }
 
@@ -250,14 +251,14 @@ class Unifier {
       throw new Error("cycle detected");
     }
 
-    this.substitutions.set(v.name, type);
+    this.substitutions.set(v.id, type);
   }
 
   bindToProp(type: TypeVar, prop: PropType) {
     let object = prop.objectType;
 
-    if (object.kind === "Type" && this.substitutions.has(object.name)) {
-      object = this.substitutions.get(object.name)!;
+    if (object.kind === "Type" && this.substitutions.has(object.id)) {
+      object = this.substitutions.get(object.id)!;
     }
 
     if (object.kind === "Object") {
@@ -270,14 +271,14 @@ class Unifier {
       return;
     }
 
-    this.substitutions.set(type.name, prop);
+    this.substitutions.set(type.id, prop);
   }
 
   occursCheck(v: TypeVar, type: Type): boolean {
     if (typeEquals(v, type)) return true;
 
-    if (type.kind === "Type" && this.substitutions.has(type.name)) {
-      return this.occursCheck(v, this.substitutions.get(type.name)!);
+    if (type.kind === "Type" && this.substitutions.has(type.id)) {
+      return this.occursCheck(v, this.substitutions.get(type.id)!);
     }
 
     if (type.kind === "Object") {
@@ -297,8 +298,8 @@ class Unifier {
     }
 
     if (type.kind === "Type") {
-      if (this.substitutions.has(type.name)) {
-        return this.get(this.substitutions.get(type.name)!);
+      if (this.substitutions.has(type.id)) {
+        return this.get(this.substitutions.get(type.id)!);
       } else {
         return type;
       }
@@ -308,8 +309,8 @@ class Unifier {
   }
 
   generalize(objectType: Type, name: Array<string> | null): Type | null {
-    if (objectType.kind === "Type" && this.substitutions.has(objectType.name)) {
-      objectType = this.substitutions.get(objectType.name)!;
+    if (objectType.kind === "Type" && this.substitutions.has(objectType.id)) {
+      objectType = this.substitutions.get(objectType.id)!;
     }
 
     if (

@@ -460,17 +460,32 @@ export type ObjectType = { kind: "Object"; properties: Map<string, Type> };
 export type PropType = { kind: "Prop"; objectType: Type; name: string };
 export type TypeVar = {
   kind: "Type";
-  name: string;
+  id: TypeId;
 };
 export type PolyType = {
   kind: "Poly";
 };
 
+/**
+ * Simulated opaque type for TypeId to prevent using normal numbers as ids
+ * accidentally.
+ */
+const opaqueTypeId = Symbol();
+export type TypeId = number & { [opaqueTypeId]: "IdentifierId" };
+
+export function makeTypeId(id: number): TypeId {
+  invariant(
+    id >= 0 && Number.isInteger(id),
+    "Expected instruction id to be a non-negative integer"
+  );
+  return id as TypeId;
+}
+
 let typeCounter = 0;
 export function makeType(): TypeVar {
   return {
     kind: "Type",
-    name: `t${typeCounter++}`, //TODO(gsn): Use a TypeID here
+    id: makeTypeId(typeCounter++),
   };
 }
 
@@ -488,7 +503,7 @@ export function typeEquals(tA: Type, tB: Type): boolean {
 
 function typeVarEquals(tA: Type, tB: Type): boolean {
   if (tA.kind === "Type" && tB.kind === "Type") {
-    return tA.name === tB.name;
+    return tA.id === tB.id;
   }
   return false;
 }
