@@ -467,7 +467,7 @@ export type PolyType = {
 };
 
 let typeCounter = 0;
-export function makeType(): Type {
+export function makeType(): TypeVar {
   return {
     kind: "Type",
     name: `t${typeCounter++}`, //TODO(gsn): Use a TypeID here
