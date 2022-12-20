@@ -139,37 +139,35 @@ bb13:
 function Component(
   props,
 ) {
-  scope @0 [1:23] deps=[] out=[] {
-    [1] Let mutate a$18_@0[1:23] = Object {  }
-    [2] Let mutate b$20_@0[1:23] = Object {  }
-    [3] Let mutate c$22_@0[1:23] = Object {  }
-    [4] Let mutate d$24_@0[1:23] = Object {  }
-    while (
-      [6] Const mutate $17:TPrimitive = true
-      read $17:TPrimitive
-    ) {
-      [8] Const mutate z$19_@0[1:23] = read a$18_@0
-      [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
-      [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
-      [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
-      [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
-      [13] Call mutate mutate$7:TFunction(mutate a$18_@0, mutate b$20_@0)
-      [14] Const mutate $29_@0[1:23] = Call mutate cond$8:TFunction(mutate a$18_@0)
-      if (read $29_@0) {
-        break
-      }
+  [1] Let mutate a$18_@0[1:23] = Object {  }
+  [2] Let mutate b$20_@0[1:23] = Object {  }
+  [3] Let mutate c$22_@0[1:23] = Object {  }
+  [4] Let mutate d$24_@0[1:23] = Object {  }
+  while (
+    [6] Const mutate $17:TPrimitive = true
+    read $17:TPrimitive
+  ) {
+    [8] Const mutate z$19_@0[1:23] = read a$18_@0
+    [9] Reassign mutate a$18_@0[1:23] = read b$20_@0
+    [10] Reassign mutate b$20_@0[1:23] = read c$22_@0
+    [11] Reassign mutate c$22_@0[1:23] = read d$24_@0
+    [12] Reassign mutate d$24_@0[1:23] = read z$19_@0
+    [13] Call mutate mutate$7:TFunction(mutate a$18_@0, mutate b$20_@0)
+    [14] Const mutate $29_@0[1:23] = Call mutate cond$8:TFunction(mutate a$18_@0)
+    if (read $29_@0) {
+      break
     }
-    if (read a$18_@0) {
-    }
-    if (read b$20_@0) {
-    }
-    if (read c$22_@0) {
-    }
-    if (read d$24_@0) {
-    }
-    [21] Const mutate $34:TPrimitive = null
-    [22] Call mutate mutate$7:TFunction(mutate d$24_@0, read $34:TPrimitive)
   }
+  if (read a$18_@0) {
+  }
+  if (read b$20_@0) {
+  }
+  if (read c$22_@0) {
+  }
+  if (read d$24_@0) {
+  }
+  [21] Const mutate $34:TPrimitive = null
+  [22] Call mutate mutate$7:TFunction(mutate d$24_@0, read $34:TPrimitive)
   return
 }
 
@@ -179,39 +177,36 @@ function Component(
 
 ```javascript
 function Component$0(props$12) {
-  if (true) {
-    let a$18 = {};
-    let b$20 = {};
-    let c$22 = {};
-    let d$24 = {};
-    while (true) {
-      const z$19 = a$18;
-      a$18 = b$20;
-      b$20 = c$22;
-      c$22 = d$24;
-      d$24 = z$19;
-      mutate$7(a$18, b$20);
+  let a$18 = {};
+  let b$20 = {};
+  let c$22 = {};
+  let d$24 = {};
+  while (true) {
+    const z$19 = a$18;
+    a$18 = b$20;
+    b$20 = c$22;
+    c$22 = d$24;
+    d$24 = z$19;
+    mutate$7(a$18, b$20);
 
-      if (cond$8(a$18)) {
-        break;
-      }
+    if (cond$8(a$18)) {
+      break;
     }
-
-    if (a$18) {
-    }
-
-    if (b$20) {
-    }
-
-    if (c$22) {
-    }
-
-    if (d$24) {
-    }
-
-    mutate$7(d$24, null);
-  } else {
   }
+
+  if (a$18) {
+  }
+
+  if (b$20) {
+  }
+
+  if (c$22) {
+  }
+
+  if (d$24) {
+  }
+
+  mutate$7(d$24, null);
 }
 
 ```

@@ -100,28 +100,26 @@ function Component(
   scope @0 [1:2] deps=[] out=[a$11_@0] {
     [1] Const mutate a$11_@0:TObject = Object {  }
   }
-  scope @1 [2:15] deps=[read a$11_@0:TObject] out=[] {
-    [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
-    scope @2 [3:4] deps=[] out=[c$13_@2] {
-      [3] Const mutate c$13_@2:TObject = Object {  }
-    }
-    [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
-    [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
-    [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
-    [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
-    if (read a$11_@0:TObject) {
-    }
-    if (read b$12_@1) {
-    }
-    if (read c$13_@2:TObject) {
-    }
-    if (read d$14_@1:TObject) {
-    }
-    if (read y$16_@1) {
-    }
-    [13] Const mutate $17:TPrimitive = null
-    [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
+  [2] Const mutate b$12_@1[2:15] = Array [read a$11_@0:TObject]
+  scope @2 [3:4] deps=[] out=[c$13_@2] {
+    [3] Const mutate c$13_@2:TObject = Object {  }
   }
+  [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
+  [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
+  [6] Reassign mutate x$15_@1.b[2:15] = read b$12_@1
+  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
+  if (read a$11_@0:TObject) {
+  }
+  if (read b$12_@1) {
+  }
+  if (read c$13_@2:TObject) {
+  }
+  if (read d$14_@1:TObject) {
+  }
+  if (read y$16_@1) {
+  }
+  [13] Const mutate $17:TPrimitive = null
+  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   return
 }
 
@@ -133,52 +131,46 @@ function Component(
 function Component$0(props$10) {
   const $ = React.useMemoCache();
   let a$11;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a$11 = {};
     $[0] = a$11;
   } else {
     a$11 = $[0];
   }
 
-  const c_1 = $[1] !== a$11;
+  const b$12 = [a$11];
+  let c$13;
 
-  if (c_1) {
-    const b$12 = [a$11];
-    let c$13;
-
-    if (true) {
-      c$13 = {};
-      $[2] = c$13;
-    } else {
-      c$13 = $[2];
-    }
-
-    const d$14 = {
-      c: c$13,
-    };
-    const x$15 = {};
-    x$15.b = b$12;
-    const y$16 = mutate$8(x$15, d$14);
-
-    if (a$11) {
-    }
-
-    if (b$12) {
-    }
-
-    if (c$13) {
-    }
-
-    if (d$14) {
-    }
-
-    if (y$16) {
-    }
-
-    mutate$8(x$15, null);
-    $[1] = a$11;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    c$13 = {};
+    $[1] = c$13;
   } else {
+    c$13 = $[1];
   }
+
+  const d$14 = {
+    c: c$13,
+  };
+  const x$15 = {};
+  x$15.b = b$12;
+  const y$16 = mutate$8(x$15, d$14);
+
+  if (a$11) {
+  }
+
+  if (b$12) {
+  }
+
+  if (c$13) {
+  }
+
+  if (d$14) {
+  }
+
+  if (y$16) {
+  }
+
+  mutate$8(x$15, null);
 }
 
 ```

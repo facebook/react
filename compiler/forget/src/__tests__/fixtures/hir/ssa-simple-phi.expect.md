@@ -68,7 +68,7 @@ function foo$0() {
   const $ = React.useMemoCache();
   const y$5 = 2;
   let y$8;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     y$8 = undefined;
 
     if (y$5 > 1) {

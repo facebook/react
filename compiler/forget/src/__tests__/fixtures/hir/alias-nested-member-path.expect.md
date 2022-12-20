@@ -52,7 +52,7 @@ function component(
 function component$0() {
   const $ = React.useMemoCache();
   let z$4;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     z$4 = [];
     $[0] = z$4;
   } else {

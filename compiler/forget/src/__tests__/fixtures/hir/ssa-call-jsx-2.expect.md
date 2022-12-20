@@ -59,8 +59,8 @@ bb1:
   predecessor blocks: bb2 bb0
   [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
   [10] Const mutate $19:TPrimitive = "div"
-  [11] Const mutate t6$20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
-  [12] Return read t6$20_@3
+  [11] Const mutate t5$20_@3 = JSX <read $19:TPrimitive a={freeze a$11_@0} b={freeze b$12_@0:TObject} ></read $19:TPrimitive>
+  [12] Return read t5$20_@3
 ```
 
 ## Reactive Scopes
@@ -78,9 +78,7 @@ function Component(
     }
     if (read $13_@1) {
       [6] Const mutate $14:TPrimitive = "div"
-      scope @2 [7:8] deps=[freeze a$11_@0] out=[] {
-        [7] Const mutate _$15_@2 = JSX <read $14:TPrimitive a={freeze a$11_@0} ></read $14:TPrimitive>
-      }
+      [7] Const mutate _$15_@2 = JSX <read $14:TPrimitive a={freeze a$11_@0} ></read $14:TPrimitive>
     }
     [9] Call mutate foo$4:TFunction(read a$11_@0, mutate b$12_@0:TObject)
   }
@@ -100,13 +98,13 @@ function Component$0(props$10) {
   const $ = React.useMemoCache();
   let a$11;
   let b$12;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a$11 = [];
     b$12 = {};
     foo$4(a$11, b$12);
     let t2$13;
 
-    if (true) {
+    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
       t2$13 = foo$4();
       $[2] = t2$13;
     } else {
@@ -114,14 +112,7 @@ function Component$0(props$10) {
     }
 
     if (t2$13) {
-      const c_3 = $[3] !== a$11;
-
-      if (c_3) {
-        const _$15 = <div a={a$11}></div>;
-
-        $[3] = a$11;
-      } else {
-      }
+      const _$15 = <div a={a$11}></div>;
     }
 
     foo$4(a$11, b$12);
@@ -132,20 +123,20 @@ function Component$0(props$10) {
     b$12 = $[1];
   }
 
-  const c_4 = $[4] !== a$11;
-  const c_5 = $[5] !== b$12;
-  let t6$20;
+  const c_3 = $[3] !== a$11;
+  const c_4 = $[4] !== b$12;
+  let t5$20;
 
-  if (c_4 || c_5) {
-    t6$20 = <div a={a$11} b={b$12}></div>;
-    $[4] = a$11;
-    $[5] = b$12;
-    $[6] = t6$20;
+  if (c_3 || c_4) {
+    t5$20 = <div a={a$11} b={b$12}></div>;
+    $[3] = a$11;
+    $[4] = b$12;
+    $[5] = t5$20;
   } else {
-    t6$20 = $[6];
+    t5$20 = $[5];
   }
 
-  return t6$20;
+  return t5$20;
 }
 
 ```

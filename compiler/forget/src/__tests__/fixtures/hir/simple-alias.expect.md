@@ -58,9 +58,7 @@ bb0:
 ```
 function foo(
 ) {
-  scope @0 [1:2] deps=[] out=[] {
-    [1] Const mutate a$5_@0:TObject = Object {  }
-  }
+  [1] Const mutate a$5_@0:TObject = Object {  }
   scope @1 [2:8] deps=[] out=[c$10_@1] {
     [2] Const mutate b$6_@1:TObject[2:8] = Object {  }
     [3] Const mutate c$7_@1:TObject[2:8] = Object {  }
@@ -79,14 +77,9 @@ function foo(
 ```javascript
 function foo$0() {
   const $ = React.useMemoCache();
-  if (true) {
-    const a$5 = {};
-  } else {
-  }
-
+  const a$5 = {};
   let c$10;
-
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const b$6 = {};
     const c$7 = {};
     const a$8 = b$6;

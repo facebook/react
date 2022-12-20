@@ -72,7 +72,7 @@ function foo(
 function foo$0() {
   const $ = React.useMemoCache();
   let x$6;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$6 = 1;
 
     for (const i$7 = 0; i$7 < 10; i$7) {

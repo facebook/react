@@ -166,8 +166,12 @@ function codegenReactiveScope(
       )
     );
   }
+  let firstOutputIndex: number | null = null;
   for (const output of scope.outputs) {
     const index = cx.nextCacheIndex;
+    if (firstOutputIndex === null) {
+      firstOutputIndex = index;
+    }
 
     // TODO @josephsavona: ensure change and temp variables have non-conflicting names
     output.name ??= `t${index}`;
@@ -194,16 +198,34 @@ function codegenReactiveScope(
       )
     );
   }
-  const testCondition =
-    (changeIdentifiers as Array<t.Expression>).reduce(
-      (acc: t.Expression | null, ident: t.Expression) => {
-        if (acc == null) {
-          return ident;
-        }
-        return t.logicalExpression("||", acc, ident);
-      },
-      null as t.Expression | null
-    ) ?? t.booleanLiteral(true); // TODO @josephsavona handle case of empty dependencies
+  invariant(
+    firstOutputIndex !== null,
+    "Expected scope '@%s' to have at least one output",
+    scope.id
+  );
+  let testCondition = (changeIdentifiers as Array<t.Expression>).reduce(
+    (acc: t.Expression | null, ident: t.Expression) => {
+      if (acc == null) {
+        return ident;
+      }
+      return t.logicalExpression("||", acc, ident);
+    },
+    null as t.Expression | null
+  );
+  if (testCondition === null) {
+    testCondition = t.binaryExpression(
+      "===",
+      t.memberExpression(
+        t.identifier("$"),
+        t.numericLiteral(firstOutputIndex),
+        true
+      ),
+      t.callExpression(
+        t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
+        [t.stringLiteral("react.memo_cache_sentinel")]
+      )
+    );
+  }
 
   const computationBlock = codegenBlock(cx, block);
   computationBlock.body.push(...cacheStoreStatements);

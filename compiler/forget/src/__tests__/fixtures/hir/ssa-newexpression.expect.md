@@ -68,7 +68,7 @@ function Component(
 function Component$0(props$6) {
   const $ = React.useMemoCache();
   let c$9;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a$7 = [];
     const b$8 = {};
     c$9 = new Foo$5(a$7, b$8);

@@ -67,7 +67,7 @@ function Foo(
 function Foo$0(props$13) {
   const $ = React.useMemoCache();
   let t0$20;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0$20 = <>Text</>;
     $[0] = t0$20;
   } else {

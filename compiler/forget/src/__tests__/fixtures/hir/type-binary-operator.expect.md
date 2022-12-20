@@ -42,9 +42,7 @@ function component(
   }
   [3] Const mutate $9:TPrimitive = Binary read a$7_@0:TPrimitive > read b$8_@1:TPrimitive
   if (read $9:TPrimitive) {
-    scope @2 [5:6] deps=[] out=[] {
-      [5] Const mutate m$10_@2:TObject = Object {  }
-    }
+    [5] Const mutate m$10_@2:TObject = Object {  }
   }
   return
 }
@@ -57,7 +55,7 @@ function component(
 function component$0() {
   const $ = React.useMemoCache();
   let a$7;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a$7 = some$2();
     $[0] = a$7;
   } else {
@@ -66,7 +64,7 @@ function component$0() {
 
   let b$8;
 
-  if (true) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     b$8 = someOther$4();
     $[1] = b$8;
   } else {
@@ -74,10 +72,7 @@ function component$0() {
   }
 
   if (a$7 > b$8) {
-    if (true) {
-      const m$10 = {};
-    } else {
-    }
+    const m$10 = {};
   }
 }
 

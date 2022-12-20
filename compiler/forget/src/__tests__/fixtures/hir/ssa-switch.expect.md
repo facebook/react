@@ -102,7 +102,7 @@ function foo$0() {
   const $ = React.useMemoCache();
   const x$10 = 1;
   let x$16;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$16 = undefined;
 
     bb1: switch (x$10) {

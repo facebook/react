@@ -46,9 +46,7 @@ bb2:
 function foo(
   cond,
 ) {
-  scope @0 [1:2] deps=[] out=[] {
-    [1] Const mutate items$5_@0 = Array []
-  }
+  [1] Const mutate items$5_@0 = Array []
 }
 
 ```
@@ -57,10 +55,7 @@ function foo(
 
 ```javascript
 function foo$0(cond$4) {
-  if (true) {
-    const items$5 = [];
-  } else {
-  }
+  const items$5 = [];
 }
 
 ```

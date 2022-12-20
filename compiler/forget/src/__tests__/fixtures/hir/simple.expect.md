@@ -75,7 +75,7 @@ function foo$0(x$8, y$9) {
 
   let t2$14;
 
-  if (true) {
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2$14 = [y$9 * 10];
     $[2] = t2$14;
   } else {

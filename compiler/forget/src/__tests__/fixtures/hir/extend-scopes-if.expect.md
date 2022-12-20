@@ -56,14 +56,12 @@ function foo(
   b,
   c,
 ) {
-  scope @0 [1:8] deps=[read a$7, read b$8, read c$9] out=[] {
-    [1] Const mutate x$10_@0[1:8] = Array []
-    if (read a$7) {
-      if (read b$8) {
-        if (read c$9) {
-          [5] Const mutate $11:TPrimitive = 0
-          [6] Call mutate x$10_@0.push(read $11:TPrimitive)
-        }
+  [1] Const mutate x$10_@0[1:8] = Array []
+  if (read a$7) {
+    if (read b$8) {
+      if (read c$9) {
+        [5] Const mutate $11:TPrimitive = 0
+        [6] Call mutate x$10_@0.push(read $11:TPrimitive)
       }
     }
   }
@@ -80,25 +78,13 @@ function foo(
 
 ```javascript
 function foo$0(a$7, b$8, c$9) {
-  const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$7;
-  const c_1 = $[1] !== b$8;
-  const c_2 = $[2] !== c$9;
-  if (c_0 || c_1 || c_2) {
-    const x$10 = [];
-
-    if (a$7) {
-      if (b$8) {
-        if (c$9) {
-          x$10.push(0);
-        }
+  const x$10 = [];
+  if (a$7) {
+    if (b$8) {
+      if (c$9) {
+        x$10.push(0);
       }
     }
-
-    $[0] = a$7;
-    $[1] = b$8;
-    $[2] = c$9;
-  } else {
   }
 
   if (a$7.length) {

@@ -27,8 +27,8 @@ bb0:
   [4] Const mutate x$9_@1 = Array []
   [5] Const mutate _$10_@2 = JSX <read Component$0 x={freeze x$9_@1} ></read Component$0>
   [6] Call mutate y$8_@0.push(read props$6.p1)
-  [7] Const mutate t7$11_@3 = JSX <read Component$0 x={read x$9_@1} y={freeze y$8_@0} ></read Component$0>
-  [8] Return read t7$11_@3
+  [7] Const mutate t6$11_@3 = JSX <read Component$0 x={read x$9_@1} y={freeze y$8_@0} ></read Component$0>
+  [8] Return read t6$11_@3
 ```
 
 ## Reactive Scopes
@@ -44,9 +44,7 @@ function Component(
     scope @1 [4:5] deps=[] out=[x$9_@1] {
       [4] Const mutate x$9_@1 = Array []
     }
-    scope @2 [5:6] deps=[freeze x$9_@1] out=[] {
-      [5] Const mutate _$10_@2 = JSX <read Component$0 x={freeze x$9_@1} ></read Component$0>
-    }
+    [5] Const mutate _$10_@2 = JSX <read Component$0 x={freeze x$9_@1} ></read Component$0>
     [6] Call mutate y$8_@0.push(read props$6.p1)
   }
   scope @3 [7:8] deps=[read x$9_@1, freeze y$8_@0] out=[$11_@3] {
@@ -71,21 +69,14 @@ function Component$0(props$6) {
     y$8 = x$7;
     let x$9;
 
-    if (true) {
+    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
       x$9 = [];
       $[3] = x$9;
     } else {
       x$9 = $[3];
     }
 
-    const c_4 = $[4] !== x$9;
-
-    if (c_4) {
-      const _$10 = <Component$0 x={x$9}></Component$0>;
-
-      $[4] = x$9;
-    } else {
-    }
+    const _$10 = <Component$0 x={x$9}></Component$0>;
 
     y$8.push(props$6.p1);
     $[0] = props$6.p0;
@@ -95,20 +86,20 @@ function Component$0(props$6) {
     y$8 = $[2];
   }
 
-  const c_5 = $[5] !== x$9;
-  const c_6 = $[6] !== y$8;
-  let t7$11;
+  const c_4 = $[4] !== x$9;
+  const c_5 = $[5] !== y$8;
+  let t6$11;
 
-  if (c_5 || c_6) {
-    t7$11 = <Component$0 x={x$9} y={y$8}></Component$0>;
-    $[5] = x$9;
-    $[6] = y$8;
-    $[7] = t7$11;
+  if (c_4 || c_5) {
+    t6$11 = <Component$0 x={x$9} y={y$8}></Component$0>;
+    $[4] = x$9;
+    $[5] = y$8;
+    $[6] = t6$11;
   } else {
-    t7$11 = $[7];
+    t6$11 = $[6];
   }
 
-  return t7$11;
+  return t6$11;
 }
 
 ```

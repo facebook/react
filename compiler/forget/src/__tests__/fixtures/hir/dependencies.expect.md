@@ -52,18 +52,16 @@ function foo(
   y,
   z,
 ) {
-  scope @0 [1:10] deps=[read z$8, read x$6, read y$7] out=[] {
-    [1] Const mutate items$9_@0[1:10] = Array [read z$8]
-    [2] Call mutate items$9_@0.push(read x$6)
-    scope @1 [3:7] deps=[read x$6, read y$7] out=[items2$10_@1] {
-      [3] Const mutate items2$10_@1[3:7] = Array []
-      if (read x$6) {
-        [5] Call mutate items2$10_@1.push(read y$7)
-      }
+  [1] Const mutate items$9_@0[1:10] = Array [read z$8]
+  [2] Call mutate items$9_@0.push(read x$6)
+  scope @1 [3:7] deps=[read x$6, read y$7] out=[items2$10_@1] {
+    [3] Const mutate items2$10_@1[3:7] = Array []
+    if (read x$6) {
+      [5] Call mutate items2$10_@1.push(read y$7)
     }
-    if (read y$7) {
-      [8] Call mutate items$9_@0.push(read x$6)
-    }
+  }
+  if (read y$7) {
+    [8] Call mutate items$9_@0.push(read x$6)
   }
   return freeze items2$10_@1
 }
@@ -75,38 +73,27 @@ function foo(
 ```javascript
 function foo$0(x$6, y$7, z$8) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== z$8;
-  const c_1 = $[1] !== x$6;
-  const c_2 = $[2] !== y$7;
-  if (c_0 || c_1 || c_2) {
-    const items$9 = [z$8];
-    items$9.push(x$6);
-    const c_3 = $[3] !== x$6;
-    const c_4 = $[4] !== y$7;
-    let items2$10;
+  const items$9 = [z$8];
+  items$9.push(x$6);
+  const c_0 = $[0] !== x$6;
+  const c_1 = $[1] !== y$7;
+  let items2$10;
+  if (c_0 || c_1) {
+    items2$10 = [];
 
-    if (c_3 || c_4) {
-      items2$10 = [];
-
-      if (x$6) {
-        items2$10.push(y$7);
-      }
-
-      $[3] = x$6;
-      $[4] = y$7;
-      $[5] = items2$10;
-    } else {
-      items2$10 = $[5];
+    if (x$6) {
+      items2$10.push(y$7);
     }
 
-    if (y$7) {
-      items$9.push(x$6);
-    }
-
-    $[0] = z$8;
-    $[1] = x$6;
-    $[2] = y$7;
+    $[0] = x$6;
+    $[1] = y$7;
+    $[2] = items2$10;
   } else {
+    items2$10 = $[2];
+  }
+
+  if (y$7) {
+    items$9.push(x$6);
   }
 
   return items2$10;

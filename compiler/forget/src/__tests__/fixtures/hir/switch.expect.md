@@ -69,9 +69,7 @@ function Component(
       case read $12:TPrimitive: {
           [6] Call mutate x$9_@1.push(read props$8.p2)
           [7] Call mutate x$9_@1.push(read props$8.p3)
-          scope @2 [8:9] deps=[] out=[] {
-            [8] Const mutate y$13_@2 = Array []
-          }
+          [8] Const mutate y$13_@2 = Array []
       }
       case read $11:TPrimitive: {
           [10] Reassign mutate y$10_@1:TPrimitive[1:12] = read x$9_@1
@@ -107,11 +105,7 @@ function Component$0(props$8) {
       case true: {
         x$9.push(props$8.p2);
         x$9.push(props$8.p3);
-
-        if (true) {
-          const y$13 = [];
-        } else {
-        }
+        const y$13 = [];
       }
 
       case false: {

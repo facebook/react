@@ -50,7 +50,7 @@ function foo(
 function foo$0() {
   const $ = React.useMemoCache();
   let y$6;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a$5 = {};
     y$6 = a$5;
     const x$7 = [];

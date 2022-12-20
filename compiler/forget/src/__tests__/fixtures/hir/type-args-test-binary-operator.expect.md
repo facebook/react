@@ -34,9 +34,7 @@ function component(
 ) {
   [1] Const mutate $7:TPrimitive = Binary read a$5:TPrimitive > read b$6:TPrimitive
   if (read $7:TPrimitive) {
-    scope @0 [3:4] deps=[] out=[] {
-      [3] Const mutate m$8_@0:TObject = Object {  }
-    }
+    [3] Const mutate m$8_@0:TObject = Object {  }
   }
   return
 }
@@ -48,10 +46,7 @@ function component(
 ```javascript
 function component$0(a$5, b$6) {
   if (a$5 > b$6) {
-    if (true) {
-      const m$8 = {};
-    } else {
-    }
+    const m$8 = {};
   }
 }
 

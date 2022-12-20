@@ -75,7 +75,7 @@ function foo$0(a$5) {
     if (a$5) {
       let y$7;
 
-      if (true) {
+      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
         y$7 = {};
         $[2] = y$7;
       } else {
@@ -86,7 +86,7 @@ function foo$0(a$5) {
     } else {
       let z$8;
 
-      if (true) {
+      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
         z$8 = {};
         $[3] = z$8;
       } else {

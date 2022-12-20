@@ -66,7 +66,7 @@ function And(
 function And$0() {
   const $ = React.useMemoCache();
   let t0$5;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0$5 = f$1();
     $[0] = t0$5;
   } else {
@@ -142,7 +142,7 @@ function Or(
 function Or$0() {
   const $ = React.useMemoCache();
   let t0$5;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0$5 = f$1();
     $[0] = t0$5;
   } else {
@@ -223,7 +223,7 @@ function QuestionQuestion(
 function QuestionQuestion$0(props$8) {
   const $ = React.useMemoCache();
   let t0$9;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0$9 = f$2();
     $[0] = t0$9;
   } else {

@@ -63,7 +63,7 @@ function component(
 function component$0() {
   const $ = React.useMemoCache();
   let p$7;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     p$7 = makePrimitive$2();
     $[0] = p$7;
   } else {
@@ -73,7 +73,7 @@ function component$0() {
   p$7 + p$7;
   let o$8;
 
-  if (true) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     o$8 = {};
     $[1] = o$8;
   } else {

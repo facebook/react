@@ -51,11 +51,11 @@ function foo(
 function foo$0() {
   const $ = React.useMemoCache();
   let x$4;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$4 = {};
     let y$5;
 
-    if (true) {
+    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
       y$5 = [];
       const z$6 = {};
       y$5.push(z$6);

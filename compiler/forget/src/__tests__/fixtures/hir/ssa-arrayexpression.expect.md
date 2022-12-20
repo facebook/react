@@ -45,7 +45,7 @@ function Component$0(props$5) {
   const a$6 = 1;
   const b$7 = 2;
   let x$8;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$8 = [a$6, b$7];
     $[0] = x$8;
   } else {

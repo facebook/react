@@ -126,34 +126,32 @@ bb13:
 function Component(
   props,
 ) {
-  scope @0 [1:18] deps=[] out=[] {
-    [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
-    [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
-    scope @1 [3:4] deps=[] out=[c$14_@1] {
-      [3] Const mutate c$14_@1:TObject = Object {  }
-    }
-    [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
-    while (
-      [6] Const mutate $16:TPrimitive = true
-      read $16:TPrimitive
-    ) {
-      [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
-      [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
-      if (read $21_@0) {
-        break
-      }
-    }
-    if (read a$12_@0:TObject) {
-    }
-    if (read b$13_@0:TObject) {
-    }
-    if (read c$14_@1:TObject) {
-    }
-    if (read d$15_@0:TObject) {
-    }
-    [16] Const mutate $28:TPrimitive = null
-    [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28:TPrimitive)
+  [1] Const mutate a$12_@0:TObject[1:18] = Object {  }
+  [2] Const mutate b$13_@0:TObject[1:18] = Object {  }
+  scope @1 [3:4] deps=[] out=[c$14_@1] {
+    [3] Const mutate c$14_@1:TObject = Object {  }
   }
+  [4] Const mutate d$15_@0:TObject[1:18] = Object {  }
+  while (
+    [6] Const mutate $16:TPrimitive = true
+    read $16:TPrimitive
+  ) {
+    [8] Call mutate mutate$6:TFunction(mutate a$12_@0:TObject, mutate b$13_@0:TObject)
+    [9] Const mutate $21_@0[1:18] = Call mutate cond$7:TFunction(mutate a$12_@0:TObject)
+    if (read $21_@0) {
+      break
+    }
+  }
+  if (read a$12_@0:TObject) {
+  }
+  if (read b$13_@0:TObject) {
+  }
+  if (read c$14_@1:TObject) {
+  }
+  if (read d$15_@0:TObject) {
+  }
+  [16] Const mutate $28:TPrimitive = null
+  [17] Call mutate mutate$6:TFunction(mutate d$15_@0:TObject, read $28:TPrimitive)
   return
 }
 
@@ -164,43 +162,39 @@ function Component(
 ```javascript
 function Component$0(props$11) {
   const $ = React.useMemoCache();
-  if (true) {
-    const a$12 = {};
-    const b$13 = {};
-    let c$14;
-
-    if (true) {
-      c$14 = {};
-      $[0] = c$14;
-    } else {
-      c$14 = $[0];
-    }
-
-    const d$15 = {};
-
-    while (true) {
-      mutate$6(a$12, b$13);
-
-      if (cond$7(a$12)) {
-        break;
-      }
-    }
-
-    if (a$12) {
-    }
-
-    if (b$13) {
-    }
-
-    if (c$14) {
-    }
-
-    if (d$15) {
-    }
-
-    mutate$6(d$15, null);
+  const a$12 = {};
+  const b$13 = {};
+  let c$14;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    c$14 = {};
+    $[0] = c$14;
   } else {
+    c$14 = $[0];
   }
+
+  const d$15 = {};
+
+  while (true) {
+    mutate$6(a$12, b$13);
+
+    if (cond$7(a$12)) {
+      break;
+    }
+  }
+
+  if (a$12) {
+  }
+
+  if (b$13) {
+  }
+
+  if (c$14) {
+  }
+
+  if (d$15) {
+  }
+
+  mutate$6(d$15, null);
 }
 
 ```

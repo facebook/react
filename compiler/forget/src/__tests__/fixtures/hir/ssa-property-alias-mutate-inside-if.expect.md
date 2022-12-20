@@ -80,7 +80,7 @@ function foo$0(a$6) {
     } else {
       let z$9;
 
-      if (true) {
+      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
         z$9 = {};
         $[2] = z$9;
       } else {

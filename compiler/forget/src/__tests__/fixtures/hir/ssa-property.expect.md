@@ -44,7 +44,7 @@ function foo(
 function foo$0() {
   const $ = React.useMemoCache();
   let x$3;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$3 = [];
     $[0] = x$3;
   } else {

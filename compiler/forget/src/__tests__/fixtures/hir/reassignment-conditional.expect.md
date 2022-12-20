@@ -35,8 +35,8 @@ bb1:
   predecessor blocks: bb2 bb0
   [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0} ></read Component$0>
   [8] Call read y$8.push(read props$6.p2)
-  [9] Const mutate t6$15_@2 = JSX <read Component$0 x={read x$7_@0} y={read y$8} ></read Component$0>
-  [10] Return read t6$15_@2
+  [9] Const mutate t5$15_@2 = JSX <read Component$0 x={read x$7_@0} y={read y$8} ></read Component$0>
+  [10] Return read t5$15_@2
 ```
 
 ## Reactive Scopes
@@ -53,9 +53,7 @@ function Component(
       [5] Reassign mutate x$7_@0[1:7] = Array []
     }
   }
-  scope @1 [7:8] deps=[freeze x$7_@0] out=[] {
-    [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0} ></read Component$0>
-  }
+  [7] Const mutate _$12_@1 = JSX <read Component$0 x={freeze x$7_@0} ></read Component$0>
   [8] Call read y$8.push(read props$6.p2)
   scope @2 [9:10] deps=[read x$7_@0, read y$8] out=[$15_@2] {
     [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$7_@0} y={read y$8} ></read Component$0>
@@ -89,30 +87,23 @@ function Component$0(props$6) {
     x$7 = $[2];
   }
 
-  const c_3 = $[3] !== x$7;
-
-  if (c_3) {
-    const _$12 = <Component$0 x={x$7}></Component$0>;
-
-    $[3] = x$7;
-  } else {
-  }
+  const _$12 = <Component$0 x={x$7}></Component$0>;
 
   y$8.push(props$6.p2);
-  const c_4 = $[4] !== x$7;
-  const c_5 = $[5] !== y$8;
-  let t6$15;
+  const c_3 = $[3] !== x$7;
+  const c_4 = $[4] !== y$8;
+  let t5$15;
 
-  if (c_4 || c_5) {
-    t6$15 = <Component$0 x={x$7} y={y$8}></Component$0>;
-    $[4] = x$7;
-    $[5] = y$8;
-    $[6] = t6$15;
+  if (c_3 || c_4) {
+    t5$15 = <Component$0 x={x$7} y={y$8}></Component$0>;
+    $[3] = x$7;
+    $[4] = y$8;
+    $[5] = t5$15;
   } else {
-    t6$15 = $[6];
+    t5$15 = $[5];
   }
 
-  return t6$15;
+  return t5$15;
 }
 
 ```

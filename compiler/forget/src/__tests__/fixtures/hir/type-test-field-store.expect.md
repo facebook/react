@@ -46,11 +46,11 @@ function component(
 function component$0() {
   const $ = React.useMemoCache();
   let x$4;
-  if (true) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x$4 = {};
     let q$5;
 
-    if (true) {
+    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
       q$5 = {};
       $[1] = q$5;
     } else {

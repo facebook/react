@@ -13,3 +13,4 @@ export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { printReactiveFunction } from "./PrintReactiveFunction";
 export { propagateScopeDependencies } from "./PropagateScopeDependencies";
 export { pruneUnusedLabels } from "./PruneUnusedLabels";
+export { pruneUnusedScopes } from "./PruneUnusedScopes";

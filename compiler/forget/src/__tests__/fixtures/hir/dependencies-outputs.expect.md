@@ -57,14 +57,12 @@ function foo(
   }
   [3] Const mutate $9:TPrimitive = "div"
   [4] JSX <read $9:TPrimitive>{freeze x$8_@0}</read $9:TPrimitive>
-  scope @1 [5:12] deps=[read x$8_@0, read b$7] out=[] {
-    [5] Const mutate y$10_@1[5:12] = Array []
-    if (read x$8_@0.length) {
-      [7] Call mutate y$10_@1.push(read x$8_@0)
-    }
-    if (read b$7) {
-      [10] Call mutate y$10_@1.push(read b$7)
-    }
+  [5] Const mutate y$10_@1[5:12] = Array []
+  if (read x$8_@0.length) {
+    [7] Call mutate y$10_@1.push(read x$8_@0)
+  }
+  if (read b$7) {
+    [10] Call mutate y$10_@1.push(read b$7)
   }
   return
 }
@@ -88,23 +86,14 @@ function foo$0(a$6, b$7) {
   }
 
   <div>{x$8}</div>;
-  const c_2 = $[2] !== x$8;
-  const c_3 = $[3] !== b$7;
+  const y$10 = [];
 
-  if (c_2 || c_3) {
-    const y$10 = [];
+  if (x$8.length) {
+    y$10.push(x$8);
+  }
 
-    if (x$8.length) {
-      y$10.push(x$8);
-    }
-
-    if (b$7) {
-      y$10.push(b$7);
-    }
-
-    $[2] = x$8;
-    $[3] = b$7;
-  } else {
+  if (b$7) {
+    y$10.push(b$7);
   }
 }
 

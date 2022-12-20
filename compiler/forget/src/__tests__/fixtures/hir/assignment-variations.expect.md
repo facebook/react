@@ -76,11 +76,9 @@ function g(
   a,
 ) {
   [1] Const mutate $5:TPrimitive = 1
-  scope @0 [0:5] deps=[] out=[] {
-    [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
-    [3] Const mutate $6:TPrimitive = 2
-    [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
-  }
+  [2] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c + read $5:TPrimitive
+  [3] Const mutate $6:TPrimitive = 2
+  [4] Reassign mutate a$4_@0.b.c[0:5] = Binary read a$4_@0.b.c * read $6:TPrimitive
   return
 }
 
@@ -90,11 +88,8 @@ function g(
 
 ```javascript
 function g$0(a$4) {
-  if (true) {
-    a$4.c.b = a$4.b.c + 1;
-    a$4.c.b = a$4.b.c * 2;
-  } else {
-  }
+  a$4.c.b = a$4.b.c + 1;
+  a$4.c.b = a$4.b.c * 2;
 }
 
 ```
