@@ -25,17 +25,7 @@ export default function (babel: typeof BabelCore): PluginObj {
     visitor: {
       FunctionDeclaration: {
         enter(fn, pass) {
-          const { ast } = Pipeline(fn, {
-            eliminateRedundantPhi: true,
-            inferReferenceEffects: true,
-            inferTypes: true,
-            inferMutableRanges: true,
-            inferReactiveScopeVariables: true,
-            inferReactiveScopes: true,
-            inferReactiveScopeDependencies: true,
-            leaveSSA: true,
-            codegen: true,
-          });
+          const { ast } = Pipeline(fn);
           invariant(ast !== null, "Expected ast to be present");
           fn.replaceWith(ast);
         },

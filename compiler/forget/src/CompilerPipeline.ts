@@ -27,27 +27,14 @@ import {
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { logHIRFunction } from "./Utils/logger";
 
-export type CompilerFlags = {
-  eliminateRedundantPhi: boolean;
-  inferReferenceEffects: boolean;
-  inferTypes: boolean;
-  inferMutableRanges: boolean;
-  inferReactiveScopeVariables: boolean;
-  inferReactiveScopes: boolean;
-  inferReactiveScopeDependencies: boolean;
-  leaveSSA: boolean;
-  codegen: boolean;
-};
-
 export type CompilerResult = {
   ir: HIRFunction;
-  ast: t.Function | null;
-  scopes: string | null;
+  ast: t.Function;
+  scopes: string;
 };
 
 export default function (
-  func: NodePath<t.FunctionDeclaration>,
-  flags: CompilerFlags
+  func: NodePath<t.FunctionDeclaration>
 ): CompilerResult {
   const env = new Environment();
 
@@ -57,52 +44,37 @@ export default function (
   enterSSA(ir, env);
   logHIRFunction("SSA", ir);
 
-  if (flags.eliminateRedundantPhi) {
-    eliminateRedundantPhi(ir);
-    logHIRFunction("eliminateRedundantPhi", ir);
-  }
-  if (flags.inferTypes) {
-    inferTypes(ir);
-    logHIRFunction("inferTypes", ir);
-  }
-  if (flags.inferReferenceEffects) {
-    inferReferenceEffects(ir);
-    logHIRFunction("inferReferenceEffects", ir);
-  }
+  eliminateRedundantPhi(ir);
+  logHIRFunction("eliminateRedundantPhi", ir);
 
-  if (flags.inferMutableRanges) {
-    inferMutableRanges(ir);
-    logHIRFunction("inferMutableRanges", ir);
-  }
+  inferTypes(ir);
+  logHIRFunction("inferTypes", ir);
 
-  if (flags.leaveSSA) {
-    leaveSSA(ir);
-    logHIRFunction("leaveSSA", ir);
-  }
+  inferReferenceEffects(ir);
+  logHIRFunction("inferReferenceEffects", ir);
 
-  if (flags.inferReactiveScopeVariables) {
-    inferReactiveScopeVariables(ir);
-    logHIRFunction("inferReactiveScopeVariables", ir);
-  }
+  inferMutableRanges(ir);
+  logHIRFunction("inferMutableRanges", ir);
 
-  if (flags.inferReactiveScopes) {
-    inferReactiveScopes(ir);
-    logHIRFunction("inferReactiveScopes", ir);
-  }
+  leaveSSA(ir);
+  logHIRFunction("leaveSSA", ir);
 
-  if (flags.codegen) {
-    const reactiveFunction = buildReactiveFunction(ir);
-    pruneUnusedLabels(reactiveFunction);
-    flattenReactiveLoops(reactiveFunction);
-    propagateScopeDependencies(reactiveFunction);
-    const scopes = printReactiveFunction(reactiveFunction);
-    const ast = codegenReactiveFunction(reactiveFunction);
-    return {
-      ast,
-      ir,
-      scopes,
-    };
-  }
+  inferReactiveScopeVariables(ir);
+  logHIRFunction("inferReactiveScopeVariables", ir);
 
-  return { ast: null, scopes: null, ir: ir };
+  inferReactiveScopes(ir);
+  logHIRFunction("inferReactiveScopes", ir);
+
+  const reactiveFunction = buildReactiveFunction(ir);
+  pruneUnusedLabels(reactiveFunction);
+  flattenReactiveLoops(reactiveFunction);
+  propagateScopeDependencies(reactiveFunction);
+  const scopes = printReactiveFunction(reactiveFunction);
+  const ast = codegenReactiveFunction(reactiveFunction);
+
+  return {
+    ast,
+    ir,
+    scopes,
+  };
 }

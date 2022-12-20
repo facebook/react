@@ -133,17 +133,7 @@ function transform(text: string, file: string): Array<TestOutput> {
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
-        const { ir, scopes, ast } = run(nodePath, {
-          eliminateRedundantPhi: true,
-          inferReferenceEffects: true,
-          inferTypes: true,
-          inferMutableRanges: true,
-          inferReactiveScopeVariables: true,
-          inferReactiveScopes: true,
-          inferReactiveScopeDependencies: true,
-          leaveSSA: true,
-          codegen: true,
-        });
+        const { ir, scopes, ast } = run(nodePath);
 
         const textHIR = printFunction(ir);
         invariant(ast, "Expected an ast");

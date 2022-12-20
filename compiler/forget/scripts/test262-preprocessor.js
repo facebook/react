@@ -17,17 +17,7 @@ module.exports = (test) => {
     traverse(sourceAst, {
       FunctionDeclaration: {
         enter(nodePath) {
-          const { ast } = run(nodePath, {
-            eliminateRedundantPhi: true,
-            inferReferenceEffects: true,
-            inferTypes: true,
-            inferMutableRanges: true,
-            inferReactiveScopeVariables: true,
-            inferReactiveScopes: true,
-            inferReactiveScopeDependencies: true,
-            leaveSSA: true,
-            codegen: true,
-          });
+          const { ast } = run(nodePath);
           codegenText = prettier.format(
             generate(ast).code.replace("\n\n", "\n"),
             {
