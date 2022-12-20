@@ -31,6 +31,7 @@ const {
   printReactiveFunction,
   propagateScopeDependencies,
   pruneUnusedLabels,
+  pruneUnusedScopes,
 } = HIR;
 const MemoizedOutput = memo(Output);
 
@@ -97,6 +98,7 @@ function compile(source: string): CompilerOutput | CompilerError {
     pruneUnusedLabels(reactiveFunction);
     flattenReactiveLoops(reactiveFunction);
     propagateScopeDependencies(reactiveFunction);
+    pruneUnusedScopes(reactiveFunction);
     const reactiveFunctionOutput = printReactiveFunction(reactiveFunction);
 
     const ast = codegenReactiveFunction(reactiveFunction);

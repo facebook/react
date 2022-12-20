@@ -28,6 +28,7 @@ import { inferReactiveScopeVariables } from "./ReactiveScopes/InferReactiveScope
 import { printReactiveFunction } from "./ReactiveScopes/PrintReactiveFunction";
 import { propagateScopeDependencies } from "./ReactiveScopes/PropagateScopeDependencies";
 import { pruneUnusedLabels } from "./ReactiveScopes/PruneUnusedLabels";
+import { pruneUnusedScopes } from "./ReactiveScopes/PruneUnusedScopes";
 import { eliminateRedundantPhi } from "./SSA/EliminateRedundantPhi";
 import enterSSA from "./SSA/EnterSSA";
 import { leaveSSA } from "./SSA/LeaveSSA";
@@ -73,6 +74,7 @@ export const HIR = {
   printHIR,
   printReactiveFunction,
   pruneUnusedLabels,
+  pruneUnusedScopes,
 };
 
 export default BabelPlugin;
