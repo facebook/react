@@ -332,25 +332,24 @@ function transform(babel) {
 }
 
 function getComments(path) {
+  const allComments = path.hub.file.ast.comments;
   if (path.node.leadingComments) {
     // Babel AST includes comments.
     return path.node.leadingComments;
   }
   // In Hermes AST we need to find the comments by range.
-  const comments = path.hub.file.ast.comments;
-  let prevSibling = path.getPrevSibling();
-  let searchStart;
-  if (prevSibling.node) {
-    searchStart = prevSibling.node.end;
-  } else if (path.parentPath.node) {
-    searchStart = path.parentPath.node.start;
-  } else {
-    throw new Error('Unexpected AST structure');
+  const comments = [];
+  let line = path.node.loc.start.line;
+  let i = allComments.length - 1;
+  while (i >= 0 && allComments[i].loc.end.line >= line) {
+    i--;
   }
-  const filteredComments = comments.filter(
-    c => c.start >= searchStart && c.end <= path.node.start
-  );
-  return filteredComments.length > 0 ? filteredComments : undefined;
+  while (i >= 0 && allComments[i].loc.end.line === line - 1) {
+    line = allComments[i].loc.start.line;
+    comments.unshift(allComments[i]);
+    i--;
+  }
+  return comments;
 }
 
 module.exports = transform;
