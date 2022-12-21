@@ -60,7 +60,15 @@ import { eachInstructionOperand } from "./visitors";
  * ```
  */
 
-function inferPlace(place: Place, instr: Instruction) {
+function infer(place: Place, instr: Instruction) {
+  place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
+}
+
+function inferPlace(
+  place: Place,
+  instr: Instruction,
+  inferMutableRangeForStores: boolean
+) {
   switch (place.effect) {
     case Effect.Unknown: {
       throw new Error(
@@ -73,8 +81,12 @@ function inferPlace(place: Place, instr: Instruction) {
     case Effect.Freeze:
       return;
     case Effect.Store:
+      if (inferMutableRangeForStores) {
+        infer(place, instr);
+      }
+      return;
     case Effect.Mutate: {
-      place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
+      infer(place, instr);
       return;
     }
     default:
@@ -84,7 +96,7 @@ function inferPlace(place: Place, instr: Instruction) {
 
 export function inferMutableLifetimes(
   func: HIRFunction,
-  inferMutableRangeForFields: boolean
+  inferMutableRangeForStores: boolean
 ) {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
@@ -106,7 +118,7 @@ export function inferMutableLifetimes(
 
     for (const instr of block.instructions) {
       for (const input of eachInstructionOperand(instr)) {
-        inferPlace(input, instr);
+        inferPlace(input, instr, inferMutableRangeForStores);
       }
 
       if (instr.lvalue !== null) {
@@ -120,8 +132,8 @@ export function inferMutableLifetimes(
           // Let's be optimistic and assume this lvalue is not mutable by
           // default.
           lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
-        } else if (inferMutableRangeForFields) {
-          inferPlace(instr.lvalue.place, instr);
+        } else {
+          inferPlace(instr.lvalue.place, instr, inferMutableRangeForStores);
         }
       }
     }
