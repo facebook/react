@@ -14,6 +14,7 @@ import {
   HIRFunction,
   IdentifierId,
   InstructionValue,
+  isObjectType,
   Phi,
   Place,
   ValueKind,
@@ -585,12 +586,14 @@ function inferBlock(env: Environment, block: BasicBlock) {
             // redefine lvalue: `a = b.c.d`
             env.initialize(instrValue, env.kind(instrValue));
             env.define(lvalue.place, instrValue);
-          } else if (instrValue.memberPath === null) {
-            // no-op: `a.b.c = d`
-            env.reference(lvalue.place, Effect.Store);
           } else {
+            // no-op: `a.b.c = d`
+            // or
             // no-op: `a.b.c = d.e.f`
-            env.reference(lvalue.place, Effect.Store);
+            const effect = isObjectType(lvalue.place.identifier)
+              ? Effect.Store
+              : Effect.Mutate;
+            env.reference(lvalue.place, effect);
           }
         }
         continue;

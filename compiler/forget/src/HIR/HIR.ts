@@ -522,3 +522,7 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
 function funcTypeEquals(tA: Type, tB: Type): boolean {
   return tA.kind === "Function" && tB.kind === "Function";
 }
+
+export function isObjectType(id: Identifier): boolean {
+  return id.type.kind === "Object";
+}
