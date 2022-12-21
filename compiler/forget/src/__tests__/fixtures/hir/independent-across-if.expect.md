@@ -129,8 +129,8 @@ function Foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
-  [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
+  [1] Const mutate a$9_@1[1:7] = Call mutate compute$2:TFunction(read props$8.a)
+  [2] Const mutate b$10_@1[1:7] = Call mutate compute$2:TFunction(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
@@ -150,8 +150,8 @@ function Component(
   props,
 ) {
   scope @1 [1:7] deps=[read props$8.a, read props$8.b, read props$8.c] out=[a$9_@1] {
-    [1] Const mutate a$9_@1[1:7] = Call mutate compute$3:TFunction(read props$8.a)
-    [2] Const mutate b$10_@1[1:7] = Call mutate compute$3:TFunction(read props$8.b)
+    [1] Const mutate a$9_@1[1:7] = Call mutate compute$2:TFunction(read props$8.a)
+    [2] Const mutate b$10_@1[1:7] = Call mutate compute$2:TFunction(read props$8.b)
     if (read props$8.c) {
       [4] Call mutate mutate$5:TFunction(mutate a$9_@1)
       [5] Call mutate mutate$5:TFunction(mutate b$10_@1)
@@ -175,8 +175,8 @@ function Component$0(props$8) {
   const c_2 = $[2] !== props$8.c;
   let a$9;
   if (c_0 || c_1 || c_2) {
-    a$9 = compute$3(props$8.a);
-    const b$10 = compute$3(props$8.b);
+    a$9 = compute$2(props$8.a);
+    const b$10 = compute$2(props$8.b);
 
     if (props$8.c) {
       mutate$5(a$9);

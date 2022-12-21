@@ -38,9 +38,9 @@ bb0:
   [1] Const mutate items$30:TProp = read props$29.items
   [2] Const mutate maxItems$31:TProp = read props$29.maxItems
   [3] Const mutate renderedItems$32_@0:TPrimitive[3:33] = Array []
-  [4] Const mutate seen$33_@0[3:33] = New mutate Set$6()
+  [4] Const mutate seen$33_@0[3:33] = New mutate Set$5()
   [5] Const mutate $34:TPrimitive = 0
-  [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$8.max(read $34:TPrimitive, read maxItems$31:TProp)
+  [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31:TProp)
   [7] For init=bb3 test=bb1 loop=bb5 update=bb4 fallthrough=bb2
 bb3:
   predecessor blocks: bb0
@@ -114,10 +114,10 @@ function Component(
   [2] Const mutate maxItems$31:TProp = read props$29.maxItems
   scope @0 [3:33] deps=[read maxItems$31:TProp, read items$30.length, read items$30] out=[renderedItems$32_@0] {
     [3] Const mutate renderedItems$32_@0:TPrimitive[3:33] = Array []
-    [4] Const mutate seen$33_@0[3:33] = New mutate Set$6()
+    [4] Const mutate seen$33_@0[3:33] = New mutate Set$5()
     [5] Const mutate $34:TPrimitive = 0
     scope @2 [6:7] deps=[read maxItems$31:TProp] out=[max$35_@2] {
-      [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$8.max(read $34:TPrimitive, read maxItems$31:TProp)
+      [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31:TProp)
     }
     for (
       [8] Let mutate i$36_@0:TPrimitive[3:33] = 0
@@ -184,12 +184,12 @@ function Component$0(props$29) {
   let renderedItems$32;
   if (c_0 || c_1 || c_2) {
     renderedItems$32 = [];
-    const seen$33 = new Set$6();
+    const seen$33 = new Set$5();
     const c_4 = $[4] !== maxItems$31;
     let max$35;
 
     if (c_4) {
-      max$35 = Math$8.max(0, maxItems$31);
+      max$35 = Math$7.max(0, maxItems$31);
       $[4] = maxItems$31;
       $[5] = max$35;
     } else {

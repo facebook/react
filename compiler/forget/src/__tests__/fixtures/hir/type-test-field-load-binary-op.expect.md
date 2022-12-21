@@ -19,8 +19,8 @@ function component() {
 
 ```
 bb0:
-  [1] Const mutate t0$10_@0:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
-  [2] Const mutate t1$11_@1:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
+  [1] Const mutate t0$10_@0:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
+  [2] Const mutate t1$11_@1:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
   [3] Const mutate x$12_@2:TObject = Object { u: read t0$10_@0:TPrimitive, v: read t1$11_@1:TPrimitive }
   [4] Const mutate u$13:TPrimitive = read x$12_@2.u
   [5] Const mutate v$14:TPrimitive = read x$12_@2.v
@@ -39,10 +39,10 @@ bb1:
 function component(
 ) {
   scope @0 [1:2] deps=[] out=[$10_@0] {
-    [1] Const mutate $10_@0:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
+    [1] Const mutate $10_@0:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
   }
   scope @1 [2:3] deps=[] out=[$11_@1] {
-    [2] Const mutate $11_@1:TPrimitive = Call mutate makeSomePrimitive$2:TFunction()
+    [2] Const mutate $11_@1:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
   }
   scope @2 [3:4] deps=[read $10_@0:TPrimitive, read $11_@1:TPrimitive] out=[x$12_@2] {
     [3] Const mutate x$12_@2:TObject = Object { u: read $10_@0:TPrimitive, v: read $11_@1:TPrimitive }
@@ -66,7 +66,7 @@ function component$0() {
   const $ = React.useMemoCache();
   let t0$10;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$10 = makeSomePrimitive$2();
+    t0$10 = makeSomePrimitive$1();
     $[0] = t0$10;
   } else {
     t0$10 = $[0];
@@ -75,7 +75,7 @@ function component$0() {
   let t1$11;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1$11 = makeSomePrimitive$2();
+    t1$11 = makeSomePrimitive$1();
     $[1] = t1$11;
   } else {
     t1$11 = $[1];

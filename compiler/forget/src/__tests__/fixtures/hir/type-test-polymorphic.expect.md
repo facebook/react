@@ -22,7 +22,7 @@ function component() {
 
 ```
 bb0:
-  [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$2:TFunction()
+  [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$1:TFunction()
   [2] Binary read p$7_@0:TPrimitive + read p$7_@0:TPrimitive
   [3] Const mutate o$8_@1:TObject = Object {  }
   [4] Const mutate x$9_@2:TObject[4:8] = Object {  }
@@ -39,7 +39,7 @@ bb0:
 function component(
 ) {
   scope @0 [1:2] deps=[] out=[p$7_@0] {
-    [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$2:TFunction()
+    [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$1:TFunction()
   }
   [2] Binary read p$7_@0:TPrimitive + read p$7_@0:TPrimitive
   scope @1 [3:4] deps=[] out=[o$8_@1] {
@@ -64,7 +64,7 @@ function component$0() {
   const $ = React.useMemoCache();
   let p$7;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    p$7 = makePrimitive$2();
+    p$7 = makePrimitive$1();
     $[0] = p$7;
   } else {
     p$7 = $[0];

@@ -70,7 +70,7 @@ bb0:
   [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
   [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
   [6] Reassign store x$15_@1.b[2:15] = read b$12_@1
-  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
+  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$7:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
   [8] If (read a$11_@0:TObject) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
@@ -87,7 +87,7 @@ bb7:
 bb9:
   predecessor blocks: bb7
   [13] Const mutate $17:TPrimitive = null
-  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
+  [14] Call mutate mutate$7:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   [15] Return
 ```
 
@@ -107,7 +107,7 @@ function Component(
   [4] Const mutate d$14_@1:TObject[2:15] = Object { c: read c$13_@2:TObject }
   [5] Const mutate x$15_@1:TObject[2:15] = Object {  }
   [6] Reassign store x$15_@1.b[2:15] = read b$12_@1
-  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
+  [7] Const mutate y$16_@1[2:15] = Call mutate mutate$7:TFunction(mutate x$15_@1:TObject, mutate d$14_@1:TObject)
   if (read a$11_@0:TObject) {
   }
   if (read b$12_@1) {
@@ -119,7 +119,7 @@ function Component(
   if (read y$16_@1) {
   }
   [13] Const mutate $17:TPrimitive = null
-  [14] Call mutate mutate$8:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
+  [14] Call mutate mutate$7:TFunction(mutate x$15_@1:TObject, read $17:TPrimitive)
   return
 }
 
@@ -153,7 +153,7 @@ function Component$0(props$10) {
   };
   const x$15 = {};
   x$15.b = b$12;
-  const y$16 = mutate$8(x$15, d$14);
+  const y$16 = mutate$7(x$15, d$14);
 
   if (a$11) {
   }
@@ -170,7 +170,7 @@ function Component$0(props$10) {
   if (y$16) {
   }
 
-  mutate$8(x$15, null);
+  mutate$7(x$15, null);
 }
 
 ```

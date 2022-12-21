@@ -623,7 +623,7 @@ function lowerStatement(
       const kind =
         nodeKind === "let" ? InstructionKind.Let : InstructionKind.Const;
       for (const declaration of stmt.get("declarations")) {
-        const id = lowerLVal(builder, declaration.get("id"));
+        const id = declaration.get("id");
         const init = declaration.get("init");
         let value: InstructionValue;
         if (init.hasNode()) {
@@ -632,15 +632,16 @@ function lowerStatement(
           value = {
             kind: "Primitive",
             value: undefined,
-            loc: id.loc,
+            loc: id.node.loc ?? GeneratedSource,
           };
         }
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { place: id, kind },
-          value,
-          loc: declaration.node.loc ?? GeneratedSource,
-        });
+        lowerAssignment(
+          builder,
+          stmt.node.loc ?? GeneratedSource,
+          kind,
+          id,
+          value
+        );
       }
       return;
     }
@@ -1342,4 +1343,20 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
       //   assertExhaustive(exprNode, "Unexpected lval kind");
     }
   }
+}
+
+function lowerAssignment(
+  builder: HIRBuilder,
+  loc: SourceLocation,
+  kind: InstructionKind,
+  lvalue: NodePath<t.LVal>,
+  value: InstructionValue
+): void {
+  const id = lowerLVal(builder, lvalue);
+  builder.push({
+    id: makeInstructionId(0),
+    lvalue: { place: id, kind },
+    value,
+    loc,
+  });
 }

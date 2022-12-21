@@ -70,7 +70,7 @@ function foo$0() {}
 ```
 bb0:
   [1] Const mutate x$11_@0 = Array []
-  [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
+  [2] Const mutate y$12_@1 = Call read useFreeze$3:TFunction(freeze x$11_@0)
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
   [4] Const mutate $13 = "\n      "
   [5] Const mutate $14 = "\n      "
@@ -89,7 +89,7 @@ function Component(
     [1] Const mutate x$11_@0 = Array []
   }
   scope @1 [2:3] deps=[freeze x$11_@0] out=[y$12_@1] {
-    [2] Const mutate y$12_@1 = Call read useFreeze$4:TFunction(freeze x$11_@0)
+    [2] Const mutate y$12_@1 = Call read useFreeze$3:TFunction(freeze x$11_@0)
   }
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
   [4] Const mutate $13 = "\n      "
@@ -120,7 +120,7 @@ function Component$0(props$10) {
   let y$12;
 
   if (c_1) {
-    y$12 = useFreeze$4(x$11);
+    y$12 = useFreeze$3(x$11);
     $[1] = x$11;
     $[2] = y$12;
   } else {
