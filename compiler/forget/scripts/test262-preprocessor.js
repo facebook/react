@@ -1,35 +1,16 @@
-const generate = require("@babel/generator").default;
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse").default;
-const run = require("../dist/CompilerPipeline").default;
-const prettier = require("prettier");
+const BabelPluginReactForget = require("../dist/BabelPlugin").default;
+const transformSync = require("@babel/core").transformSync;
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short
 // circuit test execution and report an error immediately.
 module.exports = (test) => {
   try {
-    let codegenText = null;
-    // todo: replace with a better entrypoint
-    const sourceAst = parser.parse(test.contents, {
-      sourceFilename: test.file,
-      plugins: ["jsx"],
+    const generated = transformSync(test.contents, {
+      filename: test.file,
+      plugins: [BabelPluginReactForget],
     });
-    traverse(sourceAst, {
-      FunctionDeclaration: {
-        enter(nodePath) {
-          const { ast } = run(nodePath);
-          codegenText = prettier.format(
-            generate(ast).code.replace("\n\n", "\n"),
-            {
-              semi: true,
-              parser: "babel-ts",
-            }
-          );
-        },
-      },
-    });
-    if (codegenText != null) {
-      test.contents = codegenText;
+    if (generated.code != null && generated.code !== "") {
+      test.contents = generated.code;
     } else {
       throw new Error("Codegen returned an empty string");
     }
