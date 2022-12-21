@@ -2060,7 +2060,8 @@ function updateEffectImpl(
       isIdentitySame = areHookInputsEqual(nextIdentityArray, prevIdentityArray);
 
       if (nextDeps !== null) {
-        const prevDeps = prevEffect.updateDeps != null ? prevEffect.updateDeps : null;
+        const prevDeps =
+          prevEffect.updateDeps != null ? prevEffect.updateDeps : null;
         if (isIdentitySame && areHookInputsEqual(nextDeps, prevDeps)) {
           hook.memoizedState = pushEffect(
             hookFlags,
