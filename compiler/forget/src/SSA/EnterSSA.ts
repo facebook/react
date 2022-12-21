@@ -3,6 +3,7 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
+  InstructionKind,
   makeInstructionId,
   makeType,
   Phi,
@@ -202,6 +203,7 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
           newPlace = builder.getPlace(oldPlace);
         } else {
           newPlace = builder.definePlace(oldPlace);
+          instr.lvalue.kind = InstructionKind.Const;
         }
         instr.lvalue.place = newPlace;
       }

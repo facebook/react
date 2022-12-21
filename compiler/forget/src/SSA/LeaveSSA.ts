@@ -291,23 +291,22 @@ export function leaveSSA(fn: HIRFunction) {
     // Finally, iterate the instructions and perform any rewrites as well as converting
     // SSA variables to `const` where possible
     for (const instr of block.instructions) {
-      const { lvalue, value } = instr;
+      const { lvalue } = instr;
       if (lvalue !== null) {
-        rewritePlace(lvalue.place, rewrites);
         if (
-          lvalue.kind !== InstructionKind.Const &&
+          lvalue.kind === InstructionKind.Const &&
           lvalue.place.memberPath === null &&
-          !rewrites.has(lvalue.place.identifier) &&
-          (!reassignments.has(lvalue.place.identifier) ||
-            reassignments.get(lvalue.place.identifier) !==
-              lvalue.place.identifier)
+          rewrites.has(lvalue.place.identifier)
         ) {
-          // Convert individual SSA reassignments into const declarations
-          // otherwise the code would be invalid, since the SSA identifiers
-          // aren't otherwise declared.
-          // TODO @josephsavona: do this in EnterSSA instead?
-          lvalue.kind = InstructionKind.Const;
+          // For rewrites, the declaration of the canonical identifier has to be `let`,
+          // all other assignments are reassignments (which we annotate for codegen
+          // purposes).
+          lvalue.kind =
+            rewrites.get(lvalue.place.identifier) === lvalue.place.identifier
+              ? InstructionKind.Let
+              : InstructionKind.Reassign;
         }
+        rewritePlace(lvalue.place, rewrites);
       }
       for (const operand of eachInstructionValueOperand(instr.value)) {
         rewritePlace(operand, rewrites);
