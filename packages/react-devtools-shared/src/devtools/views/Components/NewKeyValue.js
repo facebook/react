@@ -42,11 +42,14 @@ export default function NewKeyValue({
   const [newPropKey, setNewPropKey] = useState<number>(0);
   const [newPropName, setNewPropName] = useState<string>('');
 
-  const overrideNewEntryName = (oldPath, newPath) => {
+  const overrideNewEntryName = (oldPath: any, newPath) => {
     setNewPropName(newPath[newPath.length - 1]);
   };
 
-  const overrideNewEntryValue = (newPath, value) => {
+  const overrideNewEntryValue = (
+    newPath: Array<string | number>,
+    value: any,
+  ) => {
     if (!newPropName) {
       return;
     }

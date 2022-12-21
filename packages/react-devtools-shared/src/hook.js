@@ -9,7 +9,12 @@
  */
 
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
-import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
+import type {
+  RendererID,
+  ReactRenderer,
+  Handler,
+  DevToolsHook,
+} from 'react-devtools-shared/src/backend/types';
 
 import {
   patchConsoleUsingWindowValues,
@@ -40,7 +45,7 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
-  function detectReactBuildType(renderer) {
+  function detectReactBuildType(renderer: ReactRenderer) {
     try {
       if (typeof renderer.version === 'string') {
         // React DOM Fiber (16+)
@@ -263,7 +268,7 @@ export function installHook(target: any): DevToolsHook | null {
           ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
           : targetConsole[method]);
 
-        const overrideMethod = (...args) => {
+        const overrideMethod = (...args: $ReadOnlyArray<any>) => {
           if (!hideConsoleLogsInStrictMode) {
             // Dim the text color of the double logs if we're not
             // hiding them.
@@ -316,7 +321,7 @@ export function installHook(target: any): DevToolsHook | null {
 
   let uidCounter = 0;
 
-  function inject(renderer) {
+  function inject(renderer: ReactRenderer) {
     const id = ++uidCounter;
     renderers.set(id, renderer);
 
@@ -374,19 +379,19 @@ export function installHook(target: any): DevToolsHook | null {
 
   let hasDetectedBadDCE = false;
 
-  function sub(event, fn) {
+  function sub(event: string, fn: Handler) {
     hook.on(event, fn);
     return () => hook.off(event, fn);
   }
 
-  function on(event, fn) {
+  function on(event: string, fn: Handler) {
     if (!listeners[event]) {
       listeners[event] = [];
     }
     listeners[event].push(fn);
   }
 
-  function off(event, fn) {
+  function off(event: string, fn: Handler) {
     if (!listeners[event]) {
       return;
     }
@@ -399,13 +404,13 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
-  function emit(event, data) {
+  function emit(event: string, data: any) {
     if (listeners[event]) {
       listeners[event].map(fn => fn(data));
     }
   }
 
-  function getFiberRoots(rendererID) {
+  function getFiberRoots(rendererID: RendererID) {
     const roots = fiberRoots;
     if (!roots[rendererID]) {
       roots[rendererID] = new Set();
@@ -413,14 +418,18 @@ export function installHook(target: any): DevToolsHook | null {
     return roots[rendererID];
   }
 
-  function onCommitFiberUnmount(rendererID, fiber) {
+  function onCommitFiberUnmount(rendererID: RendererID, fiber: any) {
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
       rendererInterface.handleCommitFiberUnmount(fiber);
     }
   }
 
-  function onCommitFiberRoot(rendererID, root, priorityLevel) {
+  function onCommitFiberRoot(
+    rendererID: RendererID,
+    root: any,
+    priorityLevel: void | number,
+  ) {
     const mountedRoots = hook.getFiberRoots(rendererID);
     const current = root.current;
     const isKnownRoot = mountedRoots.has(root);
@@ -439,14 +448,14 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
-  function onPostCommitFiberRoot(rendererID, root) {
+  function onPostCommitFiberRoot(rendererID: RendererID, root: any) {
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
       rendererInterface.handlePostCommitFiberRoot(root);
     }
   }
 
-  function setStrictMode(rendererID, isStrictMode) {
+  function setStrictMode(rendererID: RendererID, isStrictMode: any) {
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
       if (isStrictMode) {

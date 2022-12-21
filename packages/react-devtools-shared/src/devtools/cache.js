@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {ReactContext, Thenable} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext} from 'react';
@@ -63,7 +63,7 @@ const Rejected = 2;
 const ReactCurrentDispatcher = (React: any)
   .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
 
-function readContext(Context) {
+function readContext(Context: ReactContext<null>) {
   const dispatcher = ReactCurrentDispatcher.current;
   if (dispatcher === null) {
     throw new Error(

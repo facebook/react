@@ -28,7 +28,7 @@ import type {
   ProfilingDataForRootFrontend,
 } from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cCommitTreeBuilder %c${methodName}`,

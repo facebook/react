@@ -81,7 +81,15 @@ export default function ContextMenu({children, id}: Props): React.Node {
   }, []);
 
   useEffect(() => {
-    const showMenuFn = ({data, pageX, pageY}) => {
+    const showMenuFn = ({
+      data,
+      pageX,
+      pageY,
+    }: {
+      data: any,
+      pageX: number,
+      pageY: number,
+    }) => {
       setState({data, isVisible: true, pageX, pageY});
     };
     const hideMenuFn = () => setState(HIDDEN_STATE);

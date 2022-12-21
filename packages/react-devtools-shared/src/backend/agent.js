@@ -42,7 +42,7 @@ import type {ComponentFilter} from '../types';
 import {isSynchronousXHRSupported} from './utils';
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cAgent %c${methodName}`,

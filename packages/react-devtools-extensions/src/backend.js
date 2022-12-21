@@ -42,7 +42,7 @@ function welcome(event) {
 
 window.addEventListener('message', welcome);
 
-function setup(hook) {
+function setup(hook: any) {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;

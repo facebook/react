@@ -9,7 +9,7 @@ import ListApp from '../e2e-apps/ListApp';
 import ListAppLegacy from '../e2e-apps/ListAppLegacy';
 const version = process.env.E2E_APP_REACT_VERSION;
 
-function mountApp(App) {
+function mountApp(App: () => React$Node) {
   const container = document.createElement('div');
 
   ((document.body: any): HTMLBodyElement).appendChild(container);

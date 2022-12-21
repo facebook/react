@@ -11,7 +11,7 @@ import type {InternalInstance} from './renderer';
 
 export function decorate(object: Object, attr: string, fn: Function): Function {
   const old = object[attr];
-  object[attr] = function(instance: InternalInstance) {
+  object[attr] = function(this: any, instance: InternalInstance) {
     return fn.call(this, old, arguments);
   };
   return old;
@@ -34,7 +34,7 @@ export function restoreMany(source: Object, olds: Object): void {
   }
 }
 
-export function forceUpdate(instance: InternalInstance): void {
+export function forceUpdate(this: any, instance: InternalInstance): void {
   if (typeof instance.forceUpdate === 'function') {
     instance.forceUpdate();
   } else if (

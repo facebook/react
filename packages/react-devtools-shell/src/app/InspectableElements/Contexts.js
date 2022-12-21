@@ -11,9 +11,11 @@ import * as React from 'react';
 import {createContext, Component, useContext, useState} from 'react';
 import PropTypes from 'prop-types';
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 function someNamedFunction() {}
 
-function formatContextForDisplay(name, value) {
+function formatContextForDisplay(name: string, value: any | string) {
   return (
     <li>
       {name}: <pre>{JSON.stringify(value, null, 2)}</pre>
@@ -34,7 +36,17 @@ const contextData = {
 };
 
 class LegacyContextProvider extends Component<any> {
-  static childContextTypes = {
+  static childContextTypes: {
+    array: any,
+    bool: any,
+    func: any,
+    null: any,
+    number: any,
+    object: any,
+    string: any,
+    symbol: any,
+    undefined: any,
+  } = {
     array: PropTypes.array,
     bool: PropTypes.bool,
     func: PropTypes.func,
@@ -46,17 +58,37 @@ class LegacyContextProvider extends Component<any> {
     undefined: PropTypes.any,
   };
 
-  getChildContext() {
+  getChildContext(): {
+    array: Array<string>,
+    bool: boolean,
+    func: () => void,
+    null: null,
+    number: number,
+    object: {outer: {inner: {...}}},
+    string: string,
+    symbol: symbol,
+    undefined: void,
+  } {
     return contextData;
   }
 
-  render() {
+  render(): any {
     return this.props.children;
   }
 }
 
 class LegacyContextConsumer extends Component<any> {
-  static contextTypes = {
+  static contextTypes: {
+    array: any,
+    bool: any,
+    func: any,
+    null: any,
+    number: any,
+    object: any,
+    string: any,
+    symbol: any,
+    undefined: any,
+  } = {
     array: PropTypes.array,
     bool: PropTypes.bool,
     func: PropTypes.func,
@@ -68,18 +100,18 @@ class LegacyContextConsumer extends Component<any> {
     undefined: PropTypes.any,
   };
 
-  render() {
+  render(): any {
     return formatContextForDisplay('LegacyContextConsumer', this.context);
   }
 }
 
 class LegacyContextProviderWithUpdates extends Component<any> {
-  constructor(props) {
+  constructor(props: any) {
     super(props);
     this.state = {type: 'desktop'};
   }
 
-  getChildContext() {
+  getChildContext(): {type: any} {
     return {type: this.state.type};
   }
 
@@ -87,7 +119,7 @@ class LegacyContextProviderWithUpdates extends Component<any> {
     this.setState({type: event.target.value});
   };
 
-  render() {
+  render(): any {
     return (
       <>
         <LegacyFunctionalContextConsumer />
@@ -103,7 +135,7 @@ LegacyContextProviderWithUpdates.childContextTypes = {
   type: PropTypes.string,
 };
 
-function LegacyFunctionalContextConsumer(props, context) {
+function LegacyFunctionalContextConsumer(props: any, context) {
   return formatContextForDisplay('LegacyFunctionContextConsumer', context.type);
 }
 LegacyFunctionalContextConsumer.contextTypes = {
@@ -130,9 +162,9 @@ const UndefinedContext = createContext(undefined);
 UndefinedContext.displayName = 'UndefinedContext';
 
 class ModernContextType extends Component<any> {
-  static contextType = ModernContext;
+  static contextType: ReactContext<void> = ModernContext;
 
-  render() {
+  render(): any {
     return formatContextForDisplay('ModernContextType', this.context);
   }
 }
@@ -198,7 +230,7 @@ function FunctionalContextConsumerWithContextUpdates() {
 }
 
 class ModernClassContextProviderWithUpdates extends Component<any> {
-  constructor(props) {
+  constructor(props: any) {
     super(props);
     this.setString = string => {
       this.setState({string});
@@ -210,7 +242,7 @@ class ModernClassContextProviderWithUpdates extends Component<any> {
     };
   }
 
-  render() {
+  render(): any {
     return (
       <StringContextWithUpdates.Provider value={this.state}>
         <ModernClassContextConsumerWithUpdates />
@@ -220,7 +252,7 @@ class ModernClassContextProviderWithUpdates extends Component<any> {
 }
 
 class ModernClassContextConsumerWithUpdates extends Component<any> {
-  render() {
+  render(): any {
     return (
       <StringContextWithUpdates.Consumer>
         {({string, setString}) => (

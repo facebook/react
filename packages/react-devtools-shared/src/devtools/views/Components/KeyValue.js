@@ -138,7 +138,7 @@ export default function KeyValue({
     paddingLeft: `${(depth - 1) * 0.75}rem`,
   };
 
-  const overrideValue = (newPath, newValue) => {
+  const overrideValue = (newPath: Array<string | number>, newValue: any) => {
     if (hookID != null) {
       newPath = parseHookPathForEdit(newPath);
     }
@@ -156,7 +156,7 @@ export default function KeyValue({
     }
   };
 
-  const deletePath = pathToDelete => {
+  const deletePath = (pathToDelete: Array<string | number>) => {
     if (hookID != null) {
       pathToDelete = parseHookPathForEdit(pathToDelete);
     }
@@ -173,7 +173,10 @@ export default function KeyValue({
     }
   };
 
-  const renamePath = (oldPath, newPath) => {
+  const renamePath = (
+    oldPath: Array<string | number>,
+    newPath: Array<string | number>,
+  ) => {
     if (newPath[newPath.length - 1] === '') {
       // Deleting the key suggests an intent to delete the whole path.
       if (canDeletePaths) {
