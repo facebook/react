@@ -943,21 +943,22 @@ function lowerExpression(
     }
     case "AssignmentExpression": {
       const expr = exprPath as NodePath<t.AssignmentExpression>;
-      const left = lowerLVal(builder, expr.get("left"));
       const operator = expr.node.operator;
 
       if (operator === "=") {
+        const left = expr.get("left");
+        // const left = lowerLVal(builder, expr.get("left"));
         const right =
-          left.memberPath === null
+          left.node.type === "Identifier"
             ? lowerExpression(builder, expr.get("right"))
             : lowerExpressionToPlace(builder, expr.get("right"));
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { place: left, kind: InstructionKind.Reassign },
-          value: right,
-          loc: exprLoc,
-        });
-        return left;
+        return lowerAssignment(
+          builder,
+          expr.node.loc ?? GeneratedSource,
+          InstructionKind.Reassign,
+          left,
+          right
+        );
       }
 
       const operators: { [key: string]: t.BinaryExpression["operator"] } = {
@@ -980,6 +981,7 @@ function lowerExpression(
         `Unhandled assignment operator '${operator}'`
       );
 
+      const left = lowerLVal(builder, expr.get("left"));
       const right = lowerExpressionToPlace(builder, expr.get("right"));
       builder.push({
         id: makeInstructionId(0),
@@ -1351,7 +1353,7 @@ function lowerAssignment(
   kind: InstructionKind,
   lvalue: NodePath<t.LVal>,
   value: InstructionValue
-): void {
+): InstructionValue {
   const id = lowerLVal(builder, lvalue);
   builder.push({
     id: makeInstructionId(0),
@@ -1359,4 +1361,5 @@ function lowerAssignment(
     value,
     loc,
   });
+  return id;
 }
