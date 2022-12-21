@@ -723,7 +723,7 @@ function lowerExpression(
   switch (exprNode.type) {
     case "Identifier": {
       const expr = exprPath as NodePath<t.Identifier>;
-      return lowerLVal(builder, expr);
+      return lowerIdentifier(builder, expr);
     }
     case "NullLiteral": {
       return {
@@ -1285,30 +1285,38 @@ function lowerExpressionToVoid(
   });
 }
 
+function lowerIdentifier(
+  builder: HIRBuilder,
+  exprPath: NodePath<t.Identifier>
+): Place {
+  const exprNode = exprPath.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
+  const binding =
+    exprPath.scope.getBindingIdentifier(exprNode.name) ??
+    getOrAddGlobal(exprNode.name);
+  invariant(
+    binding != null,
+    `Expected to find a binding for variable '%s'`,
+    exprNode.name
+  );
+  const identifier = builder.resolveIdentifier(binding);
+  const place: Place = {
+    kind: "Identifier",
+    identifier: identifier,
+    memberPath: null,
+    effect: Effect.Unknown,
+    loc: exprLoc,
+  };
+  return place;
+}
+
 function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   switch (exprNode.type) {
     case "Identifier": {
-      //   const expr = exprPath as NodePath<t.Identifier>;
-      //   const name: string = expr.get("name");
-      const binding =
-        exprPath.scope.getBindingIdentifier(exprNode.name) ??
-        getOrAddGlobal(exprNode.name);
-      invariant(
-        binding != null,
-        `Expected to find a binding for variable '%s'`,
-        exprNode.name
-      );
-      const identifier = builder.resolveIdentifier(binding);
-      const place: Place = {
-        kind: "Identifier",
-        identifier: identifier,
-        memberPath: null,
-        effect: Effect.Unknown,
-        loc: exprLoc,
-      };
-      return place;
+      const expr = exprPath as NodePath<t.Identifier>;
+      return lowerIdentifier(builder, expr);
     }
     case "MemberExpression": {
       const expr = exprPath as NodePath<t.MemberExpression>;
