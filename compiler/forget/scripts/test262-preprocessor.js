@@ -1,4 +1,4 @@
-const BabelPluginReactForget = require("../dist/BabelPlugin").default;
+const BabelPluginReactForget = require("../dist/Babel/BabelPlugin").default;
 const transformSync = require("@babel/core").transformSync;
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short

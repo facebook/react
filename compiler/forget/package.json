@@ -8,7 +8,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc && scripts/hash-dist.sh",
+    "build": "rimraf dist && tsc && scripts/hash-dist.sh",
     "bundle:meta": "scripts/bundle-meta.sh",
     "dev": "concurrently --kill-others \"tsc --watch\" \"yarn:playground\"",
     "playground": "cd packages/playground && yarn && yarn dev",
@@ -59,6 +59,7 @@
     "jest-environment-jsdom": "^29.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "rimraf": "^3.0.2",
     "test262-harness": "^8.0.0",
     "ts-jest": "^29.0.1",
     "ts-node": "^10.9.1",
