@@ -72,10 +72,10 @@ bb0:
   [1] Const mutate x$11_@0 = Array []
   [2] Const mutate y$12_@1 = Call read useFreeze$3:TFunction(freeze x$11_@0)
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
-  [4] Const mutate $13 = "\n      "
-  [5] Const mutate $14 = "\n      "
-  [6] Const mutate $15 = "\n    "
-  [7] Const mutate t5$16_@2 = JSX <read Component$0>{read $13}{read x$11_@0}{read $14}{read y$12_@1}{read $15}</read Component$0>
+  [4] Const mutate $13:TPrimitive = "\n      "
+  [5] Const mutate $14:TPrimitive = "\n      "
+  [6] Const mutate $15:TPrimitive = "\n    "
+  [7] Const mutate t5$16_@2 = JSX <read Component$0>{read $13:TPrimitive}{read x$11_@0}{read $14:TPrimitive}{read y$12_@1}{read $15:TPrimitive}</read Component$0>
   [8] Return read t5$16_@2
 ```
 
@@ -92,11 +92,11 @@ function Component(
     [2] Const mutate y$12_@1 = Call read useFreeze$3:TFunction(freeze x$11_@0)
   }
   [3] Call mutate foo$5:TFunction(read y$12_@1, read x$11_@0)
-  [4] Const mutate $13 = "\n      "
-  [5] Const mutate $14 = "\n      "
-  [6] Const mutate $15 = "\n    "
+  [4] Const mutate $13:TPrimitive = "\n      "
+  [5] Const mutate $14:TPrimitive = "\n      "
+  [6] Const mutate $15:TPrimitive = "\n    "
   scope @2 [7:8] deps=[read x$11_@0, read y$12_@1] out=[$16_@2] {
-    [7] Const mutate $16_@2 = JSX <read Component$0>{read $13}{read x$11_@0}{read $14}{read y$12_@1}{read $15}</read Component$0>
+    [7] Const mutate $16_@2 = JSX <read Component$0>{read $13:TPrimitive}{read x$11_@0}{read $14:TPrimitive}{read y$12_@1}{read $15:TPrimitive}</read Component$0>
   }
   return read $16_@2
 }

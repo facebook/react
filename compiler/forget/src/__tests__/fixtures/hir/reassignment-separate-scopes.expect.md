@@ -65,10 +65,10 @@ bb4:
 bb3:
   predecessor blocks: bb5 bb4
   [15] Const mutate $25:TPrimitive = "div"
-  [16] Const mutate $26 = "\n      "
-  [17] Const mutate $27 = "\n      "
-  [18] Const mutate $28 = "\n    "
-  [19] Const mutate t13$31_@5 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$30_@2}{read $28}</read $25:TPrimitive>
+  [16] Const mutate $26:TPrimitive = "\n      "
+  [17] Const mutate $27:TPrimitive = "\n      "
+  [18] Const mutate $28:TPrimitive = "\n    "
+  [19] Const mutate t13$31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
   [20] Return read t13$31_@5
 ```
 
@@ -112,11 +112,11 @@ function foo(
     }
   }
   [15] Const mutate $25:TPrimitive = "div"
-  [16] Const mutate $26 = "\n      "
-  [17] Const mutate $27 = "\n      "
-  [18] Const mutate $28 = "\n    "
+  [16] Const mutate $26:TPrimitive = "\n      "
+  [17] Const mutate $27:TPrimitive = "\n      "
+  [18] Const mutate $28:TPrimitive = "\n    "
   scope @5 [19:20] deps=[read y$19_@1, freeze x$30_@2] out=[$31_@5] {
-    [19] Const mutate $31_@5 = JSX <read $25:TPrimitive>{read $26}{read y$19_@1}{read $27}{freeze x$30_@2}{read $28}</read $25:TPrimitive>
+    [19] Const mutate $31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
   }
   return read $31_@5
 }

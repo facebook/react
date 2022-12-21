@@ -95,6 +95,7 @@ function generateTypeEquation(
   const left = assignType(lvalue?.place);
 
   switch (value.kind) {
+    case "JSXText":
     case "Primitive": {
       add(left, { kind: "Primitive" });
       break;

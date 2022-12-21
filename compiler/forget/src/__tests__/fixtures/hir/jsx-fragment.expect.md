@@ -19,17 +19,17 @@ function Foo(props) {
 
 ```
 bb0:
-  [1] Const mutate $14 = "\n      Hello "
+  [1] Const mutate $14:TPrimitive = "\n      Hello "
   [2] Const mutate $15:TPrimitive = " "
-  [3] Const mutate $16 = "\n      "
+  [3] Const mutate $16:TPrimitive = "\n      "
   [4] Const mutate $17:TPrimitive = "div"
-  [5] Const mutate $18 = "\n        "
-  [6] Const mutate $19 = "Text"
-  [7] Const mutate t0$20_@0 = JsxFragment [read $19]
-  [8] Const mutate $21 = "\n      "
-  [9] Const mutate t2$22_@1 = JSX <read $17:TPrimitive>{read $18}{read t0$20_@0}{read $21}</read $17:TPrimitive>
-  [10] Const mutate $23 = "\n    "
-  [11] Const mutate t5$24_@2 = JsxFragment [read $14, read props$13.greeting, read $15:TPrimitive, read $16, read t2$22_@1, read $23]
+  [5] Const mutate $18:TPrimitive = "\n        "
+  [6] Const mutate $19:TPrimitive = "Text"
+  [7] Const mutate t0$20_@0 = JsxFragment [read $19:TPrimitive]
+  [8] Const mutate $21:TPrimitive = "\n      "
+  [9] Const mutate t2$22_@1 = JSX <read $17:TPrimitive>{read $18:TPrimitive}{read t0$20_@0}{read $21:TPrimitive}</read $17:TPrimitive>
+  [10] Const mutate $23:TPrimitive = "\n    "
+  [11] Const mutate t5$24_@2 = JsxFragment [read $14:TPrimitive, read props$13.greeting, read $15:TPrimitive, read $16:TPrimitive, read t2$22_@1, read $23:TPrimitive]
   [12] Return read t5$24_@2
 ```
 
@@ -39,22 +39,22 @@ bb0:
 function Foo(
   props,
 ) {
-  [1] Const mutate $14 = "\n      Hello "
+  [1] Const mutate $14:TPrimitive = "\n      Hello "
   [2] Const mutate $15:TPrimitive = " "
-  [3] Const mutate $16 = "\n      "
+  [3] Const mutate $16:TPrimitive = "\n      "
   [4] Const mutate $17:TPrimitive = "div"
-  [5] Const mutate $18 = "\n        "
-  [6] Const mutate $19 = "Text"
+  [5] Const mutate $18:TPrimitive = "\n        "
+  [6] Const mutate $19:TPrimitive = "Text"
   scope @0 [7:8] deps=[] out=[$20_@0] {
-    [7] Const mutate $20_@0 = JsxFragment [read $19]
+    [7] Const mutate $20_@0 = JsxFragment [read $19:TPrimitive]
   }
-  [8] Const mutate $21 = "\n      "
+  [8] Const mutate $21:TPrimitive = "\n      "
   scope @1 [9:10] deps=[read $20_@0] out=[$22_@1] {
-    [9] Const mutate $22_@1 = JSX <read $17:TPrimitive>{read $18}{read $20_@0}{read $21}</read $17:TPrimitive>
+    [9] Const mutate $22_@1 = JSX <read $17:TPrimitive>{read $18:TPrimitive}{read $20_@0}{read $21:TPrimitive}</read $17:TPrimitive>
   }
-  [10] Const mutate $23 = "\n    "
+  [10] Const mutate $23:TPrimitive = "\n    "
   scope @2 [11:12] deps=[read props$13.greeting, read $22_@1] out=[$24_@2] {
-    [11] Const mutate $24_@2 = JsxFragment [read $14, read props$13.greeting, read $15:TPrimitive, read $16, read $22_@1, read $23]
+    [11] Const mutate $24_@2 = JsxFragment [read $14:TPrimitive, read props$13.greeting, read $15:TPrimitive, read $16:TPrimitive, read $22_@1, read $23:TPrimitive]
   }
   return read $24_@2
 }

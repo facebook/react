@@ -94,13 +94,13 @@ bb2:
   predecessor blocks: bb6 bb1
   [33] Const mutate count$66 = read renderedItems$32_@0.length
   [34] Const mutate $67:TPrimitive = "div"
-  [35] Const mutate $68 = "\n      "
+  [35] Const mutate $68:TPrimitive = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
-  [37] Const mutate $70 = " Items"
-  [38] Const mutate t7$71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70}</read $69:TPrimitive>
-  [39] Const mutate $72 = "\n      "
-  [40] Const mutate $73 = "\n    "
-  [41] Const mutate t10$74_@6 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@5}{read $72}{freeze renderedItems$32_@0}{read $73}</read $67:TPrimitive>
+  [37] Const mutate $70:TPrimitive = " Items"
+  [38] Const mutate t7$71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70:TPrimitive}</read $69:TPrimitive>
+  [39] Const mutate $72:TPrimitive = "\n      "
+  [40] Const mutate $73:TPrimitive = "\n    "
+  [41] Const mutate t10$74_@6 = JSX <read $67:TPrimitive>{read $68:TPrimitive}{read t7$71_@5}{read $72:TPrimitive}{freeze renderedItems$32_@0}{read $73:TPrimitive}</read $67:TPrimitive>
   [42] Return read t10$74_@6
 ```
 
@@ -155,16 +155,16 @@ function Component(
   }
   [33] Const mutate count$66 = read renderedItems$32_@0.length
   [34] Const mutate $67:TPrimitive = "div"
-  [35] Const mutate $68 = "\n      "
+  [35] Const mutate $68:TPrimitive = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
-  [37] Const mutate $70 = " Items"
+  [37] Const mutate $70:TPrimitive = " Items"
   scope @5 [38:39] deps=[freeze count$66] out=[$71_@5] {
-    [38] Const mutate $71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70}</read $69:TPrimitive>
+    [38] Const mutate $71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70:TPrimitive}</read $69:TPrimitive>
   }
-  [39] Const mutate $72 = "\n      "
-  [40] Const mutate $73 = "\n    "
+  [39] Const mutate $72:TPrimitive = "\n      "
+  [40] Const mutate $73:TPrimitive = "\n    "
   scope @6 [41:42] deps=[read $71_@5, freeze renderedItems$32_@0] out=[$74_@6] {
-    [41] Const mutate $74_@6 = JSX <read $67:TPrimitive>{read $68}{read $71_@5}{read $72}{freeze renderedItems$32_@0}{read $73}</read $67:TPrimitive>
+    [41] Const mutate $74_@6 = JSX <read $67:TPrimitive>{read $68:TPrimitive}{read $71_@5}{read $72:TPrimitive}{freeze renderedItems$32_@0}{read $73:TPrimitive}</read $67:TPrimitive>
   }
   return read $74_@6
 }
