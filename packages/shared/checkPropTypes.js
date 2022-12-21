@@ -16,7 +16,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-function setCurrentlyValidatingElement(element) {
+function setCurrentlyValidatingElement(element: any) {
   if (__DEV__) {
     if (element) {
       const owner = element._owner;

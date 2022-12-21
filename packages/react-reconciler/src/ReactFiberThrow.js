@@ -123,7 +123,7 @@ function createClassErrorUpdate(
 
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
-    update.callback = function callback() {
+    update.callback = function callback(this: any) {
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }

@@ -462,7 +462,7 @@ function addTrappedEventListener(
   // need support for such browsers.
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
-    listener = function(...p) {
+    listener = function(this: any, ...p) {
       removeEventListener(
         targetContainer,
         domEventName,

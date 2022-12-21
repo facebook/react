@@ -42,7 +42,7 @@ type StaticResult = {
   prelude: Readable,
 };
 
-function createFakeWritable(readable): Writable {
+function createFakeWritable(readable: any): Writable {
   // The current host config expects a Writable so we create
   // a fake writable for now to push into the Readable.
   return ({

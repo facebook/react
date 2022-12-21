@@ -117,7 +117,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
   return getNearestMountedFiber(fiber) === fiber;
 }
 
-function assertIsMounted(fiber) {
+function assertIsMounted(fiber: Fiber) {
   if (getNearestMountedFiber(fiber) !== fiber) {
     throw new Error('Unable to find node on an unmounted component.');
   }

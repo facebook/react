@@ -21,7 +21,7 @@ import * as Scheduler from 'scheduler';
 const AbortControllerLocal: typeof AbortController = enableCache
   ? typeof AbortController !== 'undefined'
     ? AbortController
-    : (function AbortControllerShim() {
+    : (function AbortControllerShim(this: any) {
         const listeners = [];
         const signal = (this.signal = {
           aborted: false,

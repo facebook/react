@@ -296,7 +296,7 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
-    function() {
+    function(this: any) {
       forEachFunc.apply(this, arguments);
       // Don't return anything.
     },

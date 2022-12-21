@@ -719,7 +719,7 @@ function renderHostElement(
   popComponentStackInDEV(task);
 }
 
-function shouldConstruct(Component) {
+function shouldConstruct(Component: any) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
@@ -1012,7 +1012,7 @@ function resolveDefaultProps(Component: any, baseProps: Object): Object {
 function renderForwardRef(
   request: Request,
   task: Task,
-  prevThenableState,
+  prevThenableState: null | ThenableState,
   type: any,
   props: Object,
   ref: any,
@@ -1505,7 +1505,11 @@ function renderNodeDestructiveImpl(
   }
 }
 
-function renderChildrenArray(request, task, children) {
+function renderChildrenArray(
+  request: Request,
+  task: Task,
+  children: Array<any>,
+) {
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
     const prevTreeContext = task.treeContext;
@@ -2027,7 +2031,7 @@ function flushSubtree(
 
 function flushSegment(
   request: Request,
-  destination,
+  destination: Destination,
   segment: Segment,
 ): boolean {
   const boundary = segment.boundary;

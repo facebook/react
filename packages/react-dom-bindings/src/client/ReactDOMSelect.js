@@ -38,7 +38,7 @@ const valuePropNames = ['value', 'defaultValue'];
 /**
  * Validation function for `value` and `defaultValue`.
  */
-function checkSelectPropTypes(props) {
+function checkSelectPropTypes(props: any) {
   if (__DEV__) {
     checkControlledValueProps('select', props);
 

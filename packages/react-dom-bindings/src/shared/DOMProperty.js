@@ -214,6 +214,7 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
 }
 
 function PropertyInfoRecord(
+  this: any,
   name: string,
   type: PropertyType,
   mustUseProperty: boolean,
@@ -456,7 +457,7 @@ reservedProps.forEach(name => {
 });
 
 const CAMELIZE = /[\-\:]([a-z])/g;
-const capitalize = token => token[1].toUpperCase();
+const capitalize = (token: string) => token[1].toUpperCase();
 
 // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings
