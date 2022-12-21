@@ -376,6 +376,8 @@ export enum Effect {
   Read = "read",
   // This reference may write to (mutate) the value
   Mutate = "mutate",
+  // This reference may alias to (mutate) the value
+  Store = "store",
 }
 
 export type ReactiveScope = {

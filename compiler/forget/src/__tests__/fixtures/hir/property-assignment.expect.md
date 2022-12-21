@@ -19,7 +19,7 @@ function Component(props) {
 bb0:
   [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
   [2] Const mutate y$8_@0[1:6] = Array []
-  [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
+  [3] Reassign store x$7_@0.y[1:6] = read y$8_@0
   [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
   [5] Call mutate x$7_@0.y.push(read props$6.p0)
   [6] Const mutate t5$10_@1 = JSX <read Component$0 data={freeze x$7_@0:TObject} >{read child$9_@0}</read Component$0>
@@ -35,7 +35,7 @@ function Component(
   scope @0 [1:6] deps=[read props$6.p0] out=[x$7_@0, child$9_@0] {
     [1] Const mutate x$7_@0:TObject[1:6] = Object {  }
     [2] Const mutate y$8_@0[1:6] = Array []
-    [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
+    [3] Reassign store x$7_@0.y[1:6] = read y$8_@0
     [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
     [5] Call mutate x$7_@0.y.push(read props$6.p0)
   }

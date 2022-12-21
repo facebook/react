@@ -28,12 +28,12 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [4] Const mutate y$10_@0:TObject[1:11] = Object {  }
-  [5] Reassign mutate x$9_@0.y[1:11] = read y$10_@0:TObject
+  [5] Reassign store x$9_@0.y[1:11] = read y$10_@0:TObject
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
   [7] Const mutate z$11_@0:TObject[1:11] = Object {  }
-  [8] Reassign mutate x$9_@0.z[1:11] = read z$11_@0:TObject
+  [8] Reassign store x$9_@0.z[1:11] = read z$11_@0:TObject
   [9] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -52,10 +52,10 @@ function foo(
     [2] Const mutate x$9_@0:TObject[1:11] = read b$8_@0:TObject
     if (read a$7) {
       [4] Const mutate y$10_@0:TObject[1:11] = Object {  }
-      [5] Reassign mutate x$9_@0.y[1:11] = read y$10_@0:TObject
+      [5] Reassign store x$9_@0.y[1:11] = read y$10_@0:TObject
     } else {
       [7] Const mutate z$11_@0:TObject[1:11] = Object {  }
-      [8] Reassign mutate x$9_@0.z[1:11] = read z$11_@0:TObject
+      [8] Reassign store x$9_@0.z[1:11] = read z$11_@0:TObject
     }
     [10] Call mutate mutate$6:TFunction(mutate b$8_@0:TObject)
   }

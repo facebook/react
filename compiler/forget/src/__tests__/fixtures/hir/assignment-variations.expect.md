@@ -64,7 +64,7 @@ function f$0() {
 bb0:
   [1] Const mutate $6:TPrimitive = 1
   [2] Const mutate $7:TPrimitive = Binary read a$5_@0.b.c + read $6:TPrimitive
-  [3] Reassign read a$5_@0.b.c[0:6] = read $7:TPrimitive
+  [3] Reassign store a$5_@0.b.c[0:6] = read $7:TPrimitive
   [4] Const mutate $8:TPrimitive = 2
   [5] Reassign mutate a$5_@0.b.c[0:6] = Binary read a$5_@0.b.c * read $8:TPrimitive
   [6] Return
@@ -78,7 +78,7 @@ function g(
 ) {
   [1] Const mutate $6:TPrimitive = 1
   [2] Const mutate $7:TPrimitive = Binary read a$5_@0.b.c + read $6:TPrimitive
-  [3] Reassign read a$5_@0.b.c[0:6] = read $7:TPrimitive
+  [3] Reassign store a$5_@0.b.c[0:6] = read $7:TPrimitive
   [4] Const mutate $8:TPrimitive = 2
   [5] Reassign mutate a$5_@0.b.c[0:6] = Binary read a$5_@0.b.c * read $8:TPrimitive
   return

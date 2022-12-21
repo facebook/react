@@ -18,7 +18,7 @@ function foo(a, b, c) {
 bb0:
   [1] Const mutate x$9_@0:TObject[1:4] = Object { a: read a$6 }
   [2] Const mutate t6$10_@1 = Array [read b$7, read c$8]
-  [3] Reassign mutate x$9_@0.y[1:4] = read t6$10_@1
+  [3] Reassign store x$9_@0.y[1:4] = read t6$10_@1
   [4] Return freeze x$9_@0:TObject
 ```
 
@@ -35,7 +35,7 @@ function foo(
     scope @1 [2:3] deps=[read b$7, read c$8] out=[$10_@1] {
       [2] Const mutate $10_@1 = Array [read b$7, read c$8]
     }
-    [3] Reassign mutate x$9_@0.y[1:4] = read $10_@1
+    [3] Reassign store x$9_@0.y[1:4] = read $10_@1
   }
   return freeze x$9_@0:TObject
 }

@@ -22,7 +22,7 @@ bb0:
   [1] Const mutate a$5_@0:TObject[1:6] = Object {  }
   [2] Const mutate y$6_@0:TObject[1:6] = read a$5_@0:TObject
   [3] Const mutate x$7_@0[1:6] = Array []
-  [4] Reassign mutate y$6_@0.x[1:6] = read x$7_@0
+  [4] Reassign store y$6_@0.x[1:6] = read x$7_@0
   [5] Call mutate mutate$4:TFunction(mutate a$5_@0:TObject)
   [6] Return freeze y$6_@0:TObject
 ```
@@ -36,7 +36,7 @@ function foo(
     [1] Const mutate a$5_@0:TObject[1:6] = Object {  }
     [2] Const mutate y$6_@0:TObject[1:6] = read a$5_@0:TObject
     [3] Const mutate x$7_@0[1:6] = Array []
-    [4] Reassign mutate y$6_@0.x[1:6] = read x$7_@0
+    [4] Reassign store y$6_@0.x[1:6] = read x$7_@0
     [5] Call mutate mutate$4:TFunction(mutate a$5_@0:TObject)
   }
   return freeze y$6_@0:TObject

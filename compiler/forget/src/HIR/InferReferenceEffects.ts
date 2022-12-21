@@ -270,6 +270,18 @@ class Environment {
         }
         break;
       }
+      case Effect.Store: {
+        // TODO(gsn): Uncomment the invariant once
+        // https://github.com/facebook/react-forget/pull/908#discussion_r1054294337
+        // is fixed.
+        //
+        // invariant(
+        //   valueKind === ValueKind.Mutable,
+        //   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
+        // );
+        effect = Effect.Store;
+        break;
+      }
       case Effect.Read: {
         effect = Effect.Read;
         break;
@@ -575,10 +587,10 @@ function inferBlock(env: Environment, block: BasicBlock) {
             env.define(lvalue.place, instrValue);
           } else if (instrValue.memberPath === null) {
             // no-op: `a.b.c = d`
-            env.reference(lvalue.place, Effect.Mutate);
+            env.reference(lvalue.place, Effect.Store);
           } else {
             // no-op: `a.b.c = d.e.f`
-            env.reference(lvalue.place, Effect.Mutate);
+            env.reference(lvalue.place, Effect.Store);
           }
         }
         continue;

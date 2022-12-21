@@ -72,6 +72,7 @@ function inferPlace(place: Place, instr: Instruction) {
     case Effect.Read:
     case Effect.Freeze:
       return;
+    case Effect.Store:
     case Effect.Mutate: {
       place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
       return;

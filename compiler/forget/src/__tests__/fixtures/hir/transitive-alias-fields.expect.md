@@ -25,9 +25,9 @@ bb0:
   [2] Const mutate p$7_@0:TObject[1:9] = Object {  }
   [3] Const mutate q$8_@0:TObject[1:9] = Object {  }
   [4] Const mutate y$9_@0:TObject[1:9] = Object {  }
-  [5] Reassign mutate x$6_@0.y[1:9] = read y$9_@0:TObject
-  [6] Reassign mutate p$7_@0.y[1:9] = read x$6_@0.y
-  [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
+  [5] Reassign store x$6_@0.y[1:9] = read y$9_@0:TObject
+  [6] Reassign store p$7_@0.y[1:9] = read x$6_@0.y
+  [7] Reassign store q$8_@0.y[1:9] = read p$7_@0.y
   [8] Call mutate mutate$5:TFunction(mutate q$8_@0:TObject)
   [9] Return
 ```
@@ -41,9 +41,9 @@ function component(
   [2] Const mutate p$7_@0:TObject[1:9] = Object {  }
   [3] Const mutate q$8_@0:TObject[1:9] = Object {  }
   [4] Const mutate y$9_@0:TObject[1:9] = Object {  }
-  [5] Reassign mutate x$6_@0.y[1:9] = read y$9_@0:TObject
-  [6] Reassign mutate p$7_@0.y[1:9] = read x$6_@0.y
-  [7] Reassign mutate q$8_@0.y[1:9] = read p$7_@0.y
+  [5] Reassign store x$6_@0.y[1:9] = read y$9_@0:TObject
+  [6] Reassign store p$7_@0.y[1:9] = read x$6_@0.y
+  [7] Reassign store q$8_@0.y[1:9] = read p$7_@0.y
   [8] Call mutate mutate$5:TFunction(mutate q$8_@0:TObject)
   return
 }

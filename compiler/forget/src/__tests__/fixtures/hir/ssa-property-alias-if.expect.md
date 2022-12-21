@@ -25,12 +25,12 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [3] Const mutate y$7_@1:TObject = Object {  }
-  [4] Reassign mutate x$6_@0.y[1:9] = read y$7_@1:TObject
+  [4] Reassign store x$6_@0.y[1:9] = read y$7_@1:TObject
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
   [6] Const mutate z$8_@2:TObject = Object {  }
-  [7] Reassign mutate x$6_@0.z[1:9] = read z$8_@2:TObject
+  [7] Reassign store x$6_@0.z[1:9] = read z$8_@2:TObject
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -49,12 +49,12 @@ function foo(
       scope @1 [3:4] deps=[] out=[y$7_@1] {
         [3] Const mutate y$7_@1:TObject = Object {  }
       }
-      [4] Reassign mutate x$6_@0.y[1:9] = read y$7_@1:TObject
+      [4] Reassign store x$6_@0.y[1:9] = read y$7_@1:TObject
     } else {
       scope @2 [6:7] deps=[] out=[z$8_@2] {
         [6] Const mutate z$8_@2:TObject = Object {  }
       }
-      [7] Reassign mutate x$6_@0.z[1:9] = read z$8_@2:TObject
+      [7] Reassign store x$6_@0.z[1:9] = read z$8_@2:TObject
     }
   }
   return freeze x$6_@0:TObject
