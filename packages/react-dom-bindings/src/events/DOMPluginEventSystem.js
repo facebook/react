@@ -648,9 +648,10 @@ export function dispatchEventForPluginEventSystem(
       // Special case: Flush continuous updates before the capture phase of a discrete event.
       if (
         eventSystemFlags & IS_CAPTURE_PHASE &&
+        node !== null &&
         getCurrentUpdatePriority() === DiscreteEventPriority
       ) {
-        const root: ?FiberRoot = node?.stateNode;
+        const root: ?FiberRoot = node.stateNode;
         if (root != null) {
           flushPendingContinuousUpdates(root);
         }

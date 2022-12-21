@@ -139,6 +139,7 @@ import {
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
+  includesSomeLane,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
