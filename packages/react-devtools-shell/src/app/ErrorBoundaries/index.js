@@ -49,6 +49,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function Component({label}) {
   return <div>{label}</div>;
 }

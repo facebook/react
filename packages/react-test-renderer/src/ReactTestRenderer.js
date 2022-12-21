@@ -133,6 +133,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function childrenToTree(node) {
   if (!node) {
     return null;
@@ -146,6 +147,7 @@ function childrenToTree(node) {
   return flatten(children.map(toTree));
 }
 
+// $FlowFixMe[missing-local-annot]
 function nodeAndSiblingsArray(nodeWithSibling) {
   const array = [];
   let node = nodeWithSibling;
@@ -156,6 +158,7 @@ function nodeAndSiblingsArray(nodeWithSibling) {
   return array;
 }
 
+// $FlowFixMe[missing-local-annot]
 function flatten(arr) {
   const result = [];
   const stack = [{i: 0, array: arr}];
@@ -449,6 +452,7 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
+// $FlowFixMe[missing-local-annot]
 function onRecoverableError(error) {
   // TODO: Expose onRecoverableError option to userspace
   // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args

@@ -115,6 +115,7 @@ class LegacyContextProviderWithUpdates extends Component<any> {
     return {type: this.state.type};
   }
 
+  // $FlowFixMe[missing-local-annot]
   handleChange = event => {
     this.setState({type: event.target.value});
   };
@@ -135,6 +136,7 @@ LegacyContextProviderWithUpdates.childContextTypes = {
   type: PropTypes.string,
 };
 
+// $FlowFixMe[missing-local-annot]
 function LegacyFunctionalContextConsumer(props: any, context) {
   return formatContextForDisplay('LegacyFunctionContextConsumer', context.type);
 }
@@ -203,7 +205,9 @@ function FunctionalContextConsumerWithContextUpdates() {
   const {string2, setString2} = useContext(StringContextWithUpdates2);
   const [state, setState] = useState('state');
 
+  // $FlowFixMe[missing-local-annot]
   const handleChange = e => setString(e.target.value);
+  // $FlowFixMe[missing-local-annot]
   const handleChange2 = e => setString2(e.target.value);
 
   return (

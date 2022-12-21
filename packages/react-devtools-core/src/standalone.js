@@ -167,6 +167,7 @@ function onDisconnected() {
   disconnectedCallback();
 }
 
+// $FlowFixMe[missing-local-annot]
 function onError({code, message}) {
   safeUnmount();
 

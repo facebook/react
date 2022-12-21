@@ -1301,6 +1301,7 @@ function renderElement(
   );
 }
 
+// $FlowFixMe[missing-local-annot]
 function validateIterable(iterable, iteratorFn: Function): void {
   if (__DEV__) {
     // We don't support rendering Generators because it's a mutation.

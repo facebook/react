@@ -54,6 +54,7 @@ module.exports = function register() {
             // If this module is expected to return a Promise (such as an AsyncModule) then
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
+            // $FlowFixMe[missing-local-annot]
             const then = function then(resolve, reject: any) {
               const moduleReference: {[string]: any, ...} = {
                 $$typeof: MODULE_REFERENCE,

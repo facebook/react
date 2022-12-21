@@ -42,6 +42,7 @@ export default function NewKeyValue({
   const [newPropKey, setNewPropKey] = useState<number>(0);
   const [newPropName, setNewPropName] = useState<string>('');
 
+  // $FlowFixMe[missing-local-annot]
   const overrideNewEntryName = (oldPath: any, newPath) => {
     setNewPropName(newPath[newPath.length - 1]);
   };

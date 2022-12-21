@@ -46,6 +46,7 @@ export default function NewArrayValue({
 
   // This is a bit of an unusual usage of the EditableName component,
   // but otherwise it acts the way we want for a new Array entry.
+  // $FlowFixMe[missing-local-annot]
   const overrideName = (oldPath: any, newPath) => {
     const value = newPath[newPath.length - 1];
 

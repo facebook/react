@@ -480,7 +480,9 @@ export default function KeyValue({
   return children;
 }
 
+// $FlowFixMe[missing-local-annot]
 function DeleteToggle({deletePath, name, path}) {
+  // $FlowFixMe[missing-local-annot]
   const handleClick = event => {
     event.stopPropagation();
     deletePath(path);

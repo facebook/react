@@ -81,6 +81,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
     get: function(this: any) {
       return get.call(this);
     },
+    // $FlowFixMe[missing-local-annot]
     set: function(this: any, value) {
       if (__DEV__) {
         checkFormFieldValueStringCoercion(value);

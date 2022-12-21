@@ -194,6 +194,7 @@ function applyDerivedStateFromProps(
 
 const classComponentUpdater = {
   isMounted,
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
@@ -262,6 +263,7 @@ const classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();

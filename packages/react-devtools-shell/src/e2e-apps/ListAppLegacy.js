@@ -50,6 +50,7 @@ class List extends React.Component {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function ListItem({label}) {
   return <li data-testname="ListItem">{label}</li>;
 }

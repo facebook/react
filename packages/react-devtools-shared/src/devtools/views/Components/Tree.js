@@ -540,6 +540,7 @@ function updateIndentationSizeVar(
   list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
+// $FlowFixMe[missing-local-annot]
 function InnerElementType({children, style, ...rest}) {
   const {ownerID} = useContext(TreeStateContext);
 

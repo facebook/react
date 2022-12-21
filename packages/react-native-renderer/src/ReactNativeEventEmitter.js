@@ -43,6 +43,7 @@ const EMPTY_NATIVE_EVENT = (({}: any): AnyNativeEvent);
  * @param {Array<number>} indices Indices by which to pull subsequence.
  * @return {Array<Touch>} Subsequence of touch objects.
  */
+// $FlowFixMe[missing-local-annot]
 const touchSubsequence = function(touches, indices) {
   const ret = [];
   for (let i = 0; i < indices.length; i++) {

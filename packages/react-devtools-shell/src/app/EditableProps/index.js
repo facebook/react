@@ -24,6 +24,7 @@ import {
 
 const initialData = {foo: 'FOO', bar: 'BAR'};
 
+// $FlowFixMe[missing-local-annot]
 function reducer(state, action: {type: string}) {
   switch (action.type) {
     case 'swap':
@@ -80,6 +81,7 @@ class StatefulClass extends Component<Props, State> {
     state: 'California',
   };
 
+  // $FlowFixMe[missing-local-annot]
   handleChange = ({target}): any =>
     this.setState({
       state: target.value,

@@ -104,6 +104,7 @@ export default function ContextMenu({children, id}: Props): React.Node {
     const menu = ((menuRef.current: any): HTMLElement);
     const container = containerRef.current;
     if (container !== null) {
+      // $FlowFixMe[missing-local-annot]
       const hideUnlessContains = event => {
         if (!menu.contains(event.target)) {
           hideMenu();

@@ -51,6 +51,7 @@ function registerEvents() {
 }
 
 function createAndAccumulateChangeEvent(
+  // $FlowFixMe[missing-local-annot]
   dispatchQueue,
   inst: null | Fiber,
   nativeEvent: AnyNativeEvent,
@@ -173,6 +174,7 @@ function stopWatchingForValueChange() {
  * (For IE <=9) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
+// $FlowFixMe[missing-local-annot]
 function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;

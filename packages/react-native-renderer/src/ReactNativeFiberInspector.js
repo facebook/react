@@ -39,6 +39,7 @@ let getOwnerHierarchy;
 let traverseOwnerTreeUp;
 
 if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
+  // $FlowFixMe[missing-local-annot]
   createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentNameFromType(fiber.type),
@@ -68,6 +69,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     }));
   };
 
+  // $FlowFixMe[missing-local-annot]
   getHostNode = function(fiber: Fiber | null, findNodeHandle) {
     let hostNode;
     // look for children first for the hostNode
@@ -84,6 +86,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return null;
   };
 
+  // $FlowFixMe[missing-local-annot]
   getHostProps = function(fiber) {
     const host = findCurrentHostFiber(fiber);
     if (host) {
@@ -128,6 +131,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return hierarchy;
   };
 
+  // $FlowFixMe[missing-local-annot]
   lastNonHostInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
@@ -139,6 +143,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return hierarchy[0];
   };
 
+  // $FlowFixMe[missing-local-annot]
   traverseOwnerTreeUp = function(hierarchy, instance: any) {
     if (instance) {
       hierarchy.unshift(instance);

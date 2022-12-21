@@ -62,6 +62,7 @@ function readContext(Context: ReactContext<mixed>) {
   return dispatcher.readContext(Context);
 }
 
+// $FlowFixMe[missing-local-annot]
 function identityHashFn(input) {
   if (__DEV__) {
     if (

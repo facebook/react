@@ -29,6 +29,7 @@ function EmptySuspense() {
   return <Suspense />;
 }
 
+// $FlowFixMe[missing-local-annot]
 function PrimaryFallbackTest({initialSuspend}) {
   const [suspend, setSuspend] = useState(initialSuspend);
   const fallbackStep = useTestSequence('fallback', Fallback1, Fallback2);

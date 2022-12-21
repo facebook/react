@@ -47,6 +47,7 @@ export type RootState = {
 function FiberRootNode(
   this: $FlowFixMe,
   containerInfo: any,
+  // $FlowFixMe[missing-local-annot]
   tag,
   hydrate: any,
   identifierPrefix: any,

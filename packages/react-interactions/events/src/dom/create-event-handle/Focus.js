@@ -125,6 +125,7 @@ function isRelatedTargetWithin(
 }
 
 function setFocusVisibleListeners(
+  // $FlowFixMe[missing-local-annot]
   focusVisibleHandles,
   focusTarget: EventTarget,
   callback: boolean => void,

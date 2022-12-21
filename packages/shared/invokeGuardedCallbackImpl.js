@@ -156,6 +156,7 @@ if (__DEV__) {
       let didSetError = false;
       let isCrossOriginError = false;
 
+      // $FlowFixMe[missing-local-annot]
       function handleWindowError(event) {
         error = event.error;
         didSetError = true;

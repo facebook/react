@@ -19,6 +19,7 @@ export default function Iframe(): React.Node {
 
 const iframeStyle = {border: '2px solid #eee', height: 80};
 
+// $FlowFixMe[missing-local-annot]
 function Frame(props) {
   const [element, setElement] = React.useState(null);
 

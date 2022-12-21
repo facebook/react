@@ -2769,6 +2769,7 @@ export function writeInitialResources(
     const {src, integrity} = responseState.externalRuntimeConfig;
     preinitImpl(resources, src, {as: 'script', integrity});
   }
+  // $FlowFixMe[missing-local-annot]
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -2893,6 +2894,7 @@ export function writeImmediateResources(
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
+  // $FlowFixMe[missing-local-annot]
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);

@@ -191,6 +191,7 @@ export function useLocalStorage<T>(
   // Listen for changes to this local storage value made from other windows.
   // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
   useLayoutEffect(() => {
+    // $FlowFixMe[missing-local-annot]
     const onStorage = event => {
       const newValue = getValueFromLocalStorage();
       if (key === event.key && storedValue !== newValue) {

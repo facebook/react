@@ -423,6 +423,7 @@ const modifierKeyToProp = {
 // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
 // getModifierState. If getModifierState is not supported, we map it to a set of
 // modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
 function modifierStateGetter(this: any, keyArg) {
   const syntheticEvent = this;
   const nativeEvent = syntheticEvent.nativeEvent;

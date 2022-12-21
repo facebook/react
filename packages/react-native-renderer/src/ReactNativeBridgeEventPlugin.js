@@ -31,12 +31,14 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
+// $FlowFixMe[missing-local-annot]
 function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListeners(inst, registrationName, propagationPhase, true);
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateListenersAndInstances(inst, event, listeners) {
   const listenersLength = listeners
     ? isArray(listeners)
@@ -64,6 +66,7 @@ function accumulateListenersAndInstances(inst, event, listeners) {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     if (!inst) {
@@ -74,6 +77,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   accumulateListenersAndInstances(inst, event, listeners);
 }
 
+// $FlowFixMe[missing-local-annot]
 function getParent(inst) {
   do {
     inst = inst.return;
@@ -117,6 +121,7 @@ export function traverseTwoPhase(
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     traverseTwoPhase(
@@ -128,10 +133,12 @@ function accumulateTwoPhaseDispatchesSingle(event) {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateCapturePhaseDispatches(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     traverseTwoPhase(

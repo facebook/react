@@ -8,6 +8,7 @@
 
 let welcomeHasInitialized = false;
 
+// $FlowFixMe[missing-local-annot]
 function welcome(event) {
   if (
     event.source !== window ||
@@ -55,6 +56,7 @@ function setup(hook: any) {
 
   const bridge = new Bridge({
     listen(fn) {
+      // $FlowFixMe[missing-local-annot]
       const listener = event => {
         if (
           event.source !== window ||

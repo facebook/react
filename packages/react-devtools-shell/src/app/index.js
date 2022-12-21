@@ -52,6 +52,7 @@ function mountApp(App: () => React$Node) {
   unmountFunctions.push(() => root.unmount());
 }
 
+// $FlowFixMe[missing-local-annot]
 function mountStrictApp(App) {
   function StrictRoot() {
     return createElement(App);

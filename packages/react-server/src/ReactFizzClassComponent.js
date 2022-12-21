@@ -109,6 +109,7 @@ const classComponentUpdater = {
   isMounted(inst: any) {
     return false;
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const internals: InternalInstance = getInstance(inst);
     if (internals.queue === null) {
@@ -132,6 +133,7 @@ const classComponentUpdater = {
       }
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const internals: InternalInstance = getInstance(inst);
     if (internals.queue === null) {
