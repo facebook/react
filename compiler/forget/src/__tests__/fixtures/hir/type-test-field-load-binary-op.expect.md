@@ -19,17 +19,17 @@ function component() {
 
 ```
 bb0:
-  [1] Const mutate t0$10_@0:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
-  [2] Const mutate t1$11_@1:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
-  [3] Const mutate x$12_@2:TObject = Object { u: read t0$10_@0:TPrimitive, v: read t1$11_@1:TPrimitive }
+  [1] Const mutate t0$10_@0 = Call mutate makeSomePrimitive$1:TFunction()
+  [2] Const mutate t1$11_@1 = Call mutate makeSomePrimitive$1:TFunction()
+  [3] Const mutate x$12_@2:TObject = Object { u: read t0$10_@0, v: read t1$11_@1 }
   [4] Const mutate u$13:TPrimitive = read x$12_@2.u
   [5] Const mutate v$14:TPrimitive = read x$12_@2.v
   [6] Const mutate $15:TPrimitive = Binary read u$13:TPrimitive > read v$14:TPrimitive
   [7] If (read $15:TPrimitive) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
-  [8] Const mutate y$16:TPrimitive = read x$12_@2.u
-  [9] Const mutate z$17:TPrimitive = read x$12_@2.v
+  [8] Const mutate y$16 = read x$12_@2.u
+  [9] Const mutate z$17 = read x$12_@2.v
   [10] Return
 ```
 
@@ -39,21 +39,21 @@ bb1:
 function component(
 ) {
   scope @0 [1:2] deps=[] out=[$10_@0] {
-    [1] Const mutate $10_@0:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
+    [1] Const mutate $10_@0 = Call mutate makeSomePrimitive$1:TFunction()
   }
   scope @1 [2:3] deps=[] out=[$11_@1] {
-    [2] Const mutate $11_@1:TPrimitive = Call mutate makeSomePrimitive$1:TFunction()
+    [2] Const mutate $11_@1 = Call mutate makeSomePrimitive$1:TFunction()
   }
-  scope @2 [3:4] deps=[read $10_@0:TPrimitive, read $11_@1:TPrimitive] out=[x$12_@2] {
-    [3] Const mutate x$12_@2:TObject = Object { u: read $10_@0:TPrimitive, v: read $11_@1:TPrimitive }
+  scope @2 [3:4] deps=[read $10_@0, read $11_@1] out=[x$12_@2] {
+    [3] Const mutate x$12_@2:TObject = Object { u: read $10_@0, v: read $11_@1 }
   }
   [4] Const mutate u$13:TPrimitive = read x$12_@2.u
   [5] Const mutate v$14:TPrimitive = read x$12_@2.v
   [6] Const mutate $15:TPrimitive = Binary read u$13:TPrimitive > read v$14:TPrimitive
   if (read $15:TPrimitive) {
   }
-  [8] Const mutate y$16:TPrimitive = read x$12_@2.u
-  [9] Const mutate z$17:TPrimitive = read x$12_@2.v
+  [8] Const mutate y$16 = read x$12_@2.u
+  [9] Const mutate z$17 = read x$12_@2.v
   return
 }
 

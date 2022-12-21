@@ -35,12 +35,12 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate items$30:TProp = read props$29.items
-  [2] Const mutate maxItems$31:TProp = read props$29.maxItems
-  [3] Const mutate renderedItems$32_@0:TPrimitive[3:33] = Array []
+  [1] Const mutate items$30 = read props$29.items
+  [2] Const mutate maxItems$31 = read props$29.maxItems
+  [3] Const mutate renderedItems$32_@0[3:33] = Array []
   [4] Const mutate seen$33_@0[3:33] = New mutate Set$5()
   [5] Const mutate $34:TPrimitive = 0
-  [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31:TProp)
+  [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31)
   [7] For init=bb3 test=bb1 loop=bb5 update=bb4 fallthrough=bb2
 bb3:
   predecessor blocks: bb0
@@ -92,15 +92,15 @@ bb4:
   [32] Goto bb1
 bb2:
   predecessor blocks: bb6 bb1
-  [33] Const mutate count$66:TProp = read renderedItems$32_@0.length
+  [33] Const mutate count$66 = read renderedItems$32_@0.length
   [34] Const mutate $67:TPrimitive = "div"
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  [38] Const mutate t7$71_@5 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  [38] Const mutate t7$71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70}</read $69:TPrimitive>
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  [41] Const mutate t10$74_@6 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@5}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
+  [41] Const mutate t10$74_@6 = JSX <read $67:TPrimitive>{read $68}{read t7$71_@5}{read $72}{freeze renderedItems$32_@0}{read $73}</read $67:TPrimitive>
   [42] Return read t10$74_@6
 ```
 
@@ -110,14 +110,14 @@ bb2:
 function Component(
   props,
 ) {
-  [1] Const mutate items$30:TProp = read props$29.items
-  [2] Const mutate maxItems$31:TProp = read props$29.maxItems
-  scope @0 [3:33] deps=[read maxItems$31:TProp, read items$30.length, read items$30] out=[renderedItems$32_@0] {
-    [3] Const mutate renderedItems$32_@0:TPrimitive[3:33] = Array []
+  [1] Const mutate items$30 = read props$29.items
+  [2] Const mutate maxItems$31 = read props$29.maxItems
+  scope @0 [3:33] deps=[read maxItems$31, read items$30.length, read items$30] out=[renderedItems$32_@0] {
+    [3] Const mutate renderedItems$32_@0[3:33] = Array []
     [4] Const mutate seen$33_@0[3:33] = New mutate Set$5()
     [5] Const mutate $34:TPrimitive = 0
-    scope @2 [6:7] deps=[read maxItems$31:TProp] out=[max$35_@2] {
-      [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31:TProp)
+    scope @2 [6:7] deps=[read maxItems$31] out=[max$35_@2] {
+      [6] Const mutate max$35_@2:TPrimitive = Call mutate Math$7.max(read $34:TPrimitive, read maxItems$31)
     }
     for (
       [8] Let mutate i$36_@0:TPrimitive[3:33] = 0
@@ -153,18 +153,18 @@ function Component(
       }
     }
   }
-  [33] Const mutate count$66:TProp = read renderedItems$32_@0.length
+  [33] Const mutate count$66 = read renderedItems$32_@0.length
   [34] Const mutate $67:TPrimitive = "div"
   [35] Const mutate $68 = "\n      "
   [36] Const mutate $69:TPrimitive = "h1"
   [37] Const mutate $70 = " Items"
-  scope @5 [38:39] deps=[freeze count$66:TProp] out=[$71_@5] {
-    [38] Const mutate $71_@5 = JSX <read $69:TPrimitive>{freeze count$66:TProp}{read $70}</read $69:TPrimitive>
+  scope @5 [38:39] deps=[freeze count$66] out=[$71_@5] {
+    [38] Const mutate $71_@5 = JSX <read $69:TPrimitive>{freeze count$66}{read $70}</read $69:TPrimitive>
   }
   [39] Const mutate $72 = "\n      "
   [40] Const mutate $73 = "\n    "
-  scope @6 [41:42] deps=[read $71_@5, freeze renderedItems$32_@0:TPrimitive] out=[$74_@6] {
-    [41] Const mutate $74_@6 = JSX <read $67:TPrimitive>{read $68}{read $71_@5}{read $72}{freeze renderedItems$32_@0:TPrimitive}{read $73}</read $67:TPrimitive>
+  scope @6 [41:42] deps=[read $71_@5, freeze renderedItems$32_@0] out=[$74_@6] {
+    [41] Const mutate $74_@6 = JSX <read $67:TPrimitive>{read $68}{read $71_@5}{read $72}{freeze renderedItems$32_@0}{read $73}</read $67:TPrimitive>
   }
   return read $74_@6
 }

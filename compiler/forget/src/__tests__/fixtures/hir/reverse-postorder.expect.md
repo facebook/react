@@ -52,31 +52,31 @@ bb2:
     Fallthrough: bb1
 bb8:
   predecessor blocks: bb2
-  [7] Const mutate x$11:TProp = read props$6.v0
-  [8] Reassign mutate x$16_@0[2:18] = read x$11:TProp
+  [7] Const mutate x$11 = read props$6.v0
+  [8] Reassign mutate x$16_@0[2:18] = read x$11
   [8] Goto bb1
 bb6:
   predecessor blocks: bb2
-  [9] Const mutate x$12:TProp = read props$6.v1
-  [10] Reassign mutate x$16_@0[2:18] = read x$12:TProp
+  [9] Const mutate x$12 = read props$6.v1
+  [10] Reassign mutate x$16_@0[2:18] = read x$12
   [10] Goto bb1
 bb4:
   predecessor blocks: bb2
-  [11] Const mutate x$13:TProp = read props$6.v2
-  [12] Reassign mutate x$16_@0[2:18] = read x$13:TProp
+  [11] Const mutate x$13 = read props$6.v2
+  [12] Reassign mutate x$16_@0[2:18] = read x$13
   [12] Goto bb1
 bb10:
   predecessor blocks: bb0
   [13] If (read props$6.cond2) then:bb12 else:bb13 fallthrough=bb1
 bb12:
   predecessor blocks: bb10
-  [14] Const mutate x$14:TProp = read props$6.b
-  [15] Reassign mutate x$16_@0[2:18] = read x$14:TProp
+  [14] Const mutate x$14 = read props$6.b
+  [15] Reassign mutate x$16_@0[2:18] = read x$14
   [15] Goto bb1
 bb13:
   predecessor blocks: bb10
-  [16] Const mutate x$15:TProp = read props$6.c
-  [17] Reassign mutate x$16_@0[2:18] = read x$15:TProp
+  [16] Const mutate x$15 = read props$6.c
+  [17] Reassign mutate x$16_@0[2:18] = read x$15
   [17] Goto bb1
 bb1:
   predecessor blocks: bb8 bb6 bb4 bb12 bb13
@@ -99,29 +99,29 @@ function Component(
       [5] Const mutate $10:TPrimitive = 0
       switch (read props$6.test) {
         case read $10:TPrimitive: {
-            [7] Const mutate x$11:TProp = read props$6.v0
-            [8] Reassign mutate x$16_@0[2:18] = read x$11:TProp
+            [7] Const mutate x$11 = read props$6.v0
+            [8] Reassign mutate x$16_@0[2:18] = read x$11
             break bb1
         }
         case read $9:TPrimitive: {
-            [9] Const mutate x$12:TProp = read props$6.v1
-            [10] Reassign mutate x$16_@0[2:18] = read x$12:TProp
+            [9] Const mutate x$12 = read props$6.v1
+            [10] Reassign mutate x$16_@0[2:18] = read x$12
             break bb1
         }
         case read $8:TPrimitive: {
         }
         default: {
-            [11] Const mutate x$13:TProp = read props$6.v2
-            [12] Reassign mutate x$16_@0[2:18] = read x$13:TProp
+            [11] Const mutate x$13 = read props$6.v2
+            [12] Reassign mutate x$16_@0[2:18] = read x$13
         }
       }
     } else {
       if (read props$6.cond2) {
-        [14] Const mutate x$14:TProp = read props$6.b
-        [15] Reassign mutate x$16_@0[2:18] = read x$14:TProp
+        [14] Const mutate x$14 = read props$6.b
+        [15] Reassign mutate x$16_@0[2:18] = read x$14
       } else {
-        [16] Const mutate x$15:TProp = read props$6.c
-        [17] Reassign mutate x$16_@0[2:18] = read x$15:TProp
+        [16] Const mutate x$15 = read props$6.c
+        [17] Reassign mutate x$16_@0[2:18] = read x$15
       }
     }
   }

@@ -3,10 +3,7 @@ import invariant from "invariant";
 import {
   HIRFunction,
   Instruction,
-  LValue,
-  makeType,
   Place,
-  PropType,
   Type,
   typeEquals,
   TypeId,
@@ -85,130 +82,60 @@ function generateTypeEquation(
   unifier: Unifier
 ): Array<TypeEquation> {
   const equations: Array<TypeEquation> = [];
+
+  function add(left: Type | null, right: Type | null) {
+    if (left === null || right === null) return;
+    equations.push({
+      left,
+      right,
+    });
+  }
+
   const { lvalue, value } = instr;
-  const left: Type | null = assignTypeForLvalue(lvalue, equations, unifier);
+  const left = assignType(lvalue?.place);
 
   switch (value.kind) {
     case "Primitive": {
-      if (left !== null) {
-        equations.push({
-          left,
-          right: { kind: "Primitive" },
-        });
-      }
+      add(left, { kind: "Primitive" });
       break;
     }
 
     case "Identifier": {
-      if (left !== null) {
-        let right: Type = assignTypeForPlace(value, equations);
-        equations.push({
-          left,
-          right,
-        });
-      }
-
+      add(left, assignType(value));
       break;
     }
 
     case "BinaryExpression": {
       if (isPrimitiveBinaryOp(value.operator)) {
-        equations.push({
-          left: value.left.identifier.type,
-          right: { kind: "Primitive" },
-        });
-        equations.push({
-          left: value.right.identifier.type,
-          right: { kind: "Primitive" },
-        });
+        add(assignType(value.left), { kind: "Primitive" });
+        add(assignType(value.right), { kind: "Primitive" });
       }
-
-      if (left !== null) {
-        equations.push({
-          left,
-          right: { kind: "Primitive" },
-        });
-      }
-
+      add(left, { kind: "Primitive" });
       break;
     }
 
     case "CallExpression": {
-      const argTypes = value.args.map((a) => a.identifier.type);
-
-      // TODO(gsn): Handle method calls separately
-      if (value.callee.memberPath !== null) {
-        break;
-      }
-
-      equations.push({
-        left: value.callee.identifier.type,
-        right: { kind: "Function" },
-      });
-
+      add(assignType(value.callee), { kind: "Function" });
       break;
     }
 
     case "ObjectExpression": {
       invariant(left !== null, "invald object expression");
-      const properties = new Map(
-        [...(value.properties?.entries() ?? [])].map(([prop, place]) => [
-          prop,
-          place.identifier.type,
-        ])
-      );
-
-      equations.push({
-        left,
-        right: {
-          kind: "Object",
-          properties,
-        },
-      });
+      add(left, { kind: "Object" });
       break;
     }
   }
   return equations;
 }
 
-function assignTypeForPlace(
-  value: Place,
-  equations: Array<TypeEquation>
-): Type {
-  if (value.memberPath === null) {
-    return value.identifier.type;
+function assignType(place: Place | undefined): Type | null {
+  // We type only top level identifiers. Typing objects is not very useful
+  // when we have to be so conservative.
+  if (place?.memberPath !== null) {
+    return null;
   }
 
-  if (value.memberPath.length > 1) {
-    // TODO(gsn): Lower nested memberPaths in HIR
-    return makeType();
-  }
-
-  const propName = value.memberPath[0];
-  const propType = makeType();
-  equations.push({
-    left: propType,
-    right: {
-      kind: "Prop",
-      objectType: value.identifier.type,
-      name: propName,
-    },
-  });
-
-  return propType;
-}
-
-function assignTypeForLvalue(
-  lvalue: LValue | null,
-  equations: Array<TypeEquation>,
-  unifier: Unifier
-): Type | null {
-  if (lvalue === null) return null;
-
-  return (
-    unifier.generalize(lvalue.place.identifier.type, lvalue.place.memberPath) ??
-    assignTypeForPlace(lvalue.place, equations)
-  );
+  return place.identifier.type;
 }
 
 type Substitution = Map<TypeId, Type>;
@@ -242,36 +169,11 @@ class Unifier {
       return;
     }
 
-    if (type.kind === "Prop") {
-      this.bindToProp(v, type);
-      return;
-    }
-
     if (this.occursCheck(v, type)) {
       throw new Error("cycle detected");
     }
 
     this.substitutions.set(v.id, type);
-  }
-
-  bindToProp(type: TypeVar, prop: PropType) {
-    let object = prop.objectType;
-
-    if (object.kind === "Type" && this.substitutions.has(object.id)) {
-      object = this.substitutions.get(object.id)!;
-    }
-
-    if (object.kind === "Object") {
-      if (!object.properties.has(prop.name)) {
-        object.properties.set(prop.name, type);
-        return;
-      }
-
-      this.unify(object.properties.get(prop.name)!, type);
-      return;
-    }
-
-    this.substitutions.set(type.id, prop);
   }
 
   occursCheck(v: TypeVar, type: Type): boolean {
@@ -281,22 +183,10 @@ class Unifier {
       return this.occursCheck(v, this.substitutions.get(type.id)!);
     }
 
-    if (type.kind === "Object") {
-      return [...type.properties.values()].some((p) => this.occursCheck(v, p));
-    }
-
-    if (type.kind === "Prop") {
-      return this.occursCheck(v, type.objectType);
-    }
-
     return false;
   }
 
   get(type: Type): Type {
-    if (type.kind === "Primitive") {
-      return type;
-    }
-
     if (type.kind === "Type") {
       if (this.substitutions.has(type.id)) {
         return this.get(this.substitutions.get(type.id)!);
@@ -306,29 +196,5 @@ class Unifier {
     }
 
     return type;
-  }
-
-  generalize(objectType: Type, name: Array<string> | null): Type | null {
-    if (objectType.kind === "Type" && this.substitutions.has(objectType.id)) {
-      objectType = this.substitutions.get(objectType.id)!;
-    }
-
-    if (
-      name !== null &&
-      objectType.kind === "Object" &&
-      objectType.properties.has(name[0])
-    ) {
-      let type = objectType.properties.get(name[0])!;
-      if (type.kind === "Poly") {
-        return type;
-      }
-
-      type = { kind: "Poly" };
-
-      objectType.properties.set(name[0], type);
-      return type;
-    }
-
-    return null;
   }
 }

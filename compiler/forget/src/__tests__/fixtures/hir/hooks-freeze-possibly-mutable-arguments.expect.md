@@ -26,15 +26,15 @@ function call(x) {}
 
 ```
 bb0:
-  [1] Const mutate cond$8:TProp = read props$7.cond
-  [2] Const mutate x$9:TProp = read props$7.x
+  [1] Const mutate cond$8 = read props$7.cond
+  [2] Const mutate x$9 = read props$7.x
   [3] Const mutate a$10:TPrimitive = undefined
   [4] Let mutate a$14_@0[4:9] = undefined
-  [4] If (read cond$8:TProp) then:bb2 else:bb3 fallthrough=bb1
+  [4] If (read cond$8) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate a$11:TProp = read x$9:TProp
-  [6] Reassign mutate a$14_@0[4:9] = read a$11:TProp
+  [5] Const mutate a$11 = read x$9
+  [6] Reassign mutate a$14_@0[4:9] = read a$11
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -55,14 +55,14 @@ bb1:
 function Component(
   props,
 ) {
-  [1] Const mutate cond$8:TProp = read props$7.cond
-  [2] Const mutate x$9:TProp = read props$7.x
+  [1] Const mutate cond$8 = read props$7.cond
+  [2] Const mutate x$9 = read props$7.x
   [3] Const mutate a$10:TPrimitive = undefined
-  scope @0 [4:9] deps=[read cond$8:TProp, read x$9:TProp] out=[a$14_@0] {
+  scope @0 [4:9] deps=[read cond$8, read x$9] out=[a$14_@0] {
     [4] Let mutate a$14_@0[4:9] = undefined
-    if (read cond$8:TProp) {
-      [5] Const mutate a$11:TProp = read x$9:TProp
-      [6] Reassign mutate a$14_@0[4:9] = read a$11:TProp
+    if (read cond$8) {
+      [5] Const mutate a$11 = read x$9
+      [6] Reassign mutate a$14_@0[4:9] = read a$11
     } else {
       scope @1 [7:8] deps=[] out=[a$12_@1] {
         [7] Const mutate a$12_@1 = Array []

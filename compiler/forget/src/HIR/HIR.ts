@@ -451,15 +451,13 @@ export type Type =
   | PrimitiveType
   | FunctionType
   | ObjectType
-  | PropType
   | PolyType
   | TypeVar;
 export type PrimitiveType = { kind: "Primitive" };
 export type FunctionType = {
   kind: "Function";
 };
-export type ObjectType = { kind: "Object"; properties: Map<string, Type> };
-export type PropType = { kind: "Prop"; objectType: Type; name: string };
+export type ObjectType = { kind: "Object" };
 export type TypeVar = {
   kind: "Type";
   id: TypeId;
@@ -497,7 +495,6 @@ export function typeEquals(tA: Type, tB: Type): boolean {
     typeVarEquals(tA, tB) ||
     funcTypeEquals(tA, tB) ||
     objectTypeEquals(tA, tB) ||
-    propTypeEquals(tA, tB) ||
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB)
   );
@@ -519,32 +516,7 @@ function polyTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function objectTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Object" && tB.kind === "Object") {
-    if (tA.properties.size !== tB.properties.size) {
-      return false;
-    }
-
-    for (const key of tA.properties.keys()) {
-      if (!typeEquals(tA.properties.get(key)!, tB.properties.get(key)!)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-function propTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Prop" && tB.kind === "Prop") {
-    if (tA.name !== tB.name) {
-      return false;
-    }
-    return objectTypeEquals(tA.objectType, tB.objectType);
-  }
-
-  return false;
+  return tA.kind === "Object" && tB.kind === "Object";
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
