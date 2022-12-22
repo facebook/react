@@ -1306,8 +1306,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
             // suspended level. Ping the last suspended level to try
             // rendering it again.
             // FIXME: What if the suspended lanes are Idle? Should not restart.
-            const eventTime = requestEventTime();
-            markRootPinged(root, suspendedLanes, eventTime);
+            markRootPinged(root, suspendedLanes);
             break;
           }
 
@@ -3379,7 +3378,7 @@ function pingSuspendedRoot(
   }
 
   const eventTime = requestEventTime();
-  markRootPinged(root, pingedLanes, eventTime);
+  markRootPinged(root, pingedLanes);
 
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 

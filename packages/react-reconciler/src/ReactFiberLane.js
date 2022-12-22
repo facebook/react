@@ -638,11 +638,7 @@ export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   }
 }
 
-export function markRootPinged(
-  root: FiberRoot,
-  pingedLanes: Lanes,
-  eventTime: number,
-) {
+export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
