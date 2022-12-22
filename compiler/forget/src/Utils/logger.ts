@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIR, HIRFunction } from "../HIR/HIR";
+import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
 import printHIR, { printFunction } from "../HIR/PrintHIR";
+import { printReactiveFunction } from "../ReactiveScopes";
 
 let ENABLED: boolean = false;
 
@@ -20,6 +21,10 @@ export function logHIR(step: string, ir: HIR): void {
 
 export function logHIRFunction(step: string, fn: HIRFunction): void {
   log(() => `${step}:\n${printFunction(fn)}`);
+}
+
+export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
+  log(() => `${step}:\n${printReactiveFunction(fn)}`);
 }
 
 export function log(fn: () => string) {

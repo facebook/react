@@ -265,6 +265,12 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       value = printPlace(instrValue);
       break;
     }
+    case "PropertyLoad": {
+      value = `PropertyLoad ${printPlace(instrValue.object)}.${
+        instrValue.property
+      }`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,
@@ -291,7 +297,6 @@ function printMutableRange(identifier: Identifier): string {
 
 export function printLValue(lval: LValue): string {
   let place = printPlace(lval.place);
-  place += printMutableRange(lval.place.identifier);
   switch (lval.kind) {
     case InstructionKind.Let: {
       return `Let ${place}`;

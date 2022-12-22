@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { HIRFunction } from "./HIR";
 import { inferAliases } from "./InferAlias";
 import { inferAliasForStores } from "./InferAliasForStores";
@@ -11,6 +18,9 @@ export function inferMutableRanges(ir: HIRFunction) {
   // Calculate aliases
   const aliases = inferAliases(ir);
   let size = aliases.size;
+  // Eagerly canonicalize so that if nothing changes we can bail out
+  // after a single iteration
+  aliases.canonicalize();
   do {
     size = aliases.size;
     // Infer mutable ranges for aliases that are not fields
@@ -18,7 +28,7 @@ export function inferMutableRanges(ir: HIRFunction) {
 
     // Update aliasing information of fields
     inferAliasForStores(ir, aliases);
-  } while (aliases.size > size);
+  } while (aliases.size > size || !aliases.canonicalize());
 
   // Re-infer mutable ranges for all values
   inferMutableLifetimes(ir, true);

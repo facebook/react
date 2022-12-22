@@ -981,11 +981,17 @@ function lowerExpression(
         `Unhandled assignment operator '${operator}'`
       );
 
-      const left = lowerLVal(builder, expr.get("left"));
+      const lvalue = lowerLVal(builder, expr.get("left"));
+      const leftPath = expr.get("left");
+      invariant(
+        leftPath.isIdentifier() || leftPath.isMemberExpression(),
+        "Expected assignment expression lvalue to be an identifier or member expression"
+      );
+      const left = lowerExpressionToPlace(builder, leftPath);
       const right = lowerExpressionToPlace(builder, expr.get("right"));
       builder.push({
         id: makeInstructionId(0),
-        lvalue: { place: left, kind: InstructionKind.Reassign },
+        lvalue: { place: lvalue, kind: InstructionKind.Reassign },
         value: {
           kind: "BinaryExpression",
           operator: binaryOperator,
@@ -995,7 +1001,7 @@ function lowerExpression(
         },
         loc: exprLoc,
       });
-      return left;
+      return lvalue;
     }
     case "MemberExpression": {
       const expr = exprPath as NodePath<t.MemberExpression>;
@@ -1006,13 +1012,25 @@ function lowerExpression(
         property.isIdentifier(),
         "Handle non-identifier properties"
       );
-      const place: Place = {
-        kind: "Identifier",
-        identifier: object.identifier,
-        memberPath: [...(object.memberPath ?? []), property.node.name],
-        effect: Effect.Unknown,
+      const value: InstructionValue = {
+        kind: "PropertyLoad",
+        object,
+        property: property.node.name,
         loc: exprLoc,
       };
+      const place: Place = {
+        kind: "Identifier",
+        identifier: builder.makeTemporary(),
+        memberPath: null,
+        effect: Effect.Read,
+        loc: exprLoc,
+      };
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...place }, kind: InstructionKind.Const },
+        value,
+        loc: exprLoc,
+      });
       return place;
     }
     case "JSXElement": {

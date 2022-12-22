@@ -61,16 +61,33 @@ export default class DisjointSet<T> {
     if (!this.#entries.has(item)) {
       return null;
     }
-    let current = item;
-    let parent = this.#entries.get(current)!;
-    while (current !== parent) {
-      current = parent;
-      parent = this.#entries.get(current)!;
+    const parent = this.#entries.get(item)!;
+    if (parent === item) {
+      // this is the root element
+      return item;
     }
-    if (item !== current) {
-      this.#entries.set(item, current);
+    // Recurse to find the root (caching all elements along the path to the root)
+    const root = this.find(parent)!;
+    // Cache the element itself
+    this.#entries.set(item, root);
+    return root;
+  }
+
+  /**
+   * Forces the set into canonical form, ie with all items pointing directly to
+   * their root. Returns true if the set was already in canonical form, false
+   * otherwise.
+   */
+  canonicalize(): boolean {
+    let isCanonical = true;
+    for (const item of this.#entries.keys()) {
+      const parent = this.#entries.get(item)!;
+      const root = this.find(item);
+      if (parent !== root) {
+        isCanonical = false;
+      }
     }
-    return current;
+    return isCanonical;
   }
 
   /**

@@ -11,6 +11,7 @@ import {
   InstructionId,
   InstructionKind,
   InstructionValue,
+  LValue,
   makeInstructionId,
   Place,
   ReactiveBlock,
@@ -19,6 +20,7 @@ import {
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
+import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -28,18 +30,17 @@ import { assertExhaustive } from "../Utils/utils";
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
-  const dependencies: Set<Place> = new Set();
-  const declarations: DeclMap = new Map();
+  const context = new Context();
   if (fn.id !== null) {
-    declarations.set(fn.id, { kind: DeclKind.Const, id: makeInstructionId(0) });
+    context.declare(fn.id, { kind: DeclKind.Const, id: makeInstructionId(0) });
   }
   for (const param of fn.params) {
-    declarations.set(param.identifier, {
+    context.declare(param.identifier, {
       kind: DeclKind.Dynamic,
       id: makeInstructionId(0),
     });
   }
-  visit(fn.body, dependencies, declarations, []);
+  visit(context, fn.body);
 }
 
 enum DeclKind {
@@ -47,40 +48,151 @@ enum DeclKind {
   Dynamic = "Dynamic",
 }
 
-type DeclMap = Map<Identifier, { kind: DeclKind; id: InstructionId }>;
+type DeclMap = Map<Identifier, Decl>;
+type Decl = { kind: DeclKind; id: InstructionId };
 
 type Scopes = Array<ReactiveScope>;
 
-function visit(
-  block: ReactiveBlock,
-  dependencies: Set<Place>,
-  declarations: DeclMap,
-  scopes: Scopes
-): void {
+class Context {
+  #declarations: DeclMap = new Map();
+  #dependencies: Set<Place> = new Set();
+  #properties: Map<Identifier, Place> = new Map();
+  #scopes: Scopes = [];
+
+  enter(scope: ReactiveScope, fn: () => void): Set<Place> {
+    const previousDependencies = this.#dependencies;
+    const scopedDependencies = new Set<Place>();
+    this.#dependencies = scopedDependencies;
+    this.#scopes.push(scope);
+    fn();
+    this.#scopes.pop();
+    this.#dependencies = previousDependencies;
+    return scopedDependencies;
+  }
+
+  declare(identifier: Identifier, decl: Decl): void {
+    this.#declarations.set(identifier, decl);
+  }
+
+  declareProperty(lvalue: Place, object: Place, property: string): void {
+    invariant(
+      lvalue.memberPath === null,
+      "Expected property loads to be stored to a temporary (no member path)"
+    );
+    invariant(
+      object.memberPath === null,
+      "Expected operands to have null memberPath"
+    );
+    const objectPlace = this.#properties.get(object.identifier);
+    let place: Place;
+    if (objectPlace === undefined) {
+      place = { ...object, memberPath: [property] };
+    } else {
+      place = {
+        ...objectPlace,
+        memberPath: [...(objectPlace.memberPath ?? []), property],
+      };
+    }
+    this.#properties.set(lvalue.identifier, place);
+  }
+
+  #isScopeActive(scope: ReactiveScope): boolean {
+    return this.#scopes.indexOf(scope) !== -1;
+  }
+
+  get #currentScope(): ReactiveScope {
+    return this.#scopes.at(-1)!;
+  }
+
+  visitOperand(operand: Place): void {
+    let maybeDependency: Place;
+    if (operand.memberPath !== null) {
+      // Operands may have memberPaths when propagating depenencies of an inner scope upward
+      // In this case we use the dependency as-is
+      maybeDependency = operand;
+    } else {
+      // Otherwise if this operand is a temporary created for a property load, resolve it to
+      // the expanded Place. Fall back to using the operand as-is.
+      maybeDependency = this.#properties.get(operand.identifier) ?? operand;
+    }
+
+    const decl = this.#declarations.get(maybeDependency.identifier);
+
+    // Any value used after its defining scope has concluded must be added as an
+    // output of its defining scope. Regardless of whether its a const or not,
+    // some later code needs access to the value.
+    if (decl !== undefined) {
+      const operandScope = maybeDependency.identifier.scope;
+      if (operandScope !== null && !this.#isScopeActive(operandScope)) {
+        operandScope.outputs.add(maybeDependency.identifier);
+      }
+    }
+
+    // If this operand is used in a scope, has a dynamic value, and was defined
+    // before this scope, then its a dependency of the scope.
+    const currentScope = this.#currentScope;
+    if (
+      decl !== undefined &&
+      decl.kind !== DeclKind.Const &&
+      currentScope !== undefined &&
+      decl.id < currentScope.range.start
+    ) {
+      // Check if there is an existing dependency that describes this operand
+      for (const dep of this.#dependencies) {
+        // not the same identifier
+        if (dep.identifier !== maybeDependency.identifier) {
+          continue;
+        }
+        const depPath = dep.memberPath;
+        // existing dep covers all paths
+        if (depPath === null) {
+          return;
+        }
+        const operandPath = maybeDependency.memberPath;
+        // existing dep is for a path, this operand covers all paths so swap them
+        if (operandPath === null) {
+          this.#dependencies.delete(dep);
+          this.#dependencies.add(maybeDependency);
+          return;
+        }
+        // both the operand and dep have paths, determine if the existing path
+        // is a subset of the new path
+        let commonPathIndex = 0;
+        while (
+          commonPathIndex < operandPath.length &&
+          commonPathIndex < depPath.length &&
+          operandPath[commonPathIndex] === depPath[commonPathIndex]
+        ) {
+          commonPathIndex++;
+        }
+        if (commonPathIndex === depPath.length) {
+          return;
+        }
+      }
+      this.#dependencies.add(maybeDependency);
+    }
+  }
+}
+
+function visit(context: Context, block: ReactiveBlock): void {
   for (const item of block) {
     switch (item.kind) {
       case "scope": {
-        const scopeDependencies: Set<Place> = new Set();
-        // TODO: it would be sufficient to use a single mapping of declarations
-        const scopeDeclarations: DeclMap = new Map(declarations);
-        scopes.push(item.scope);
-        visit(item.instructions, scopeDependencies, scopeDeclarations, scopes);
-        scopes.pop();
+        const scopeDependencies = context.enter(item.scope, () => {
+          visit(context, item.instructions);
+        });
         item.scope.dependencies = scopeDependencies;
         for (const dep of scopeDependencies) {
           // propagate dependencies upward using the same rules as
           // normal dependency collection. child scopes may have dependencies
           // on values created within the outer scope, which necessarily cannot
           // be dependencies of the outer scope
-          visitOperand(dep, dependencies, declarations, scopes);
-        }
-        for (const [ident, kind] of scopeDeclarations) {
-          declarations.set(ident, kind);
+          context.visitOperand(dep);
         }
         break;
       }
       case "instruction": {
-        visitInstruction(item.instruction, dependencies, declarations, scopes);
+        visitInstruction(context, item.instruction);
         break;
       }
       case "terminal": {
@@ -92,44 +204,39 @@ function visit(
           }
           case "return": {
             if (terminal.value !== null) {
-              visitOperand(terminal.value, dependencies, declarations, scopes);
+              context.visitOperand(terminal.value);
             }
             break;
           }
           case "throw": {
-            visitOperand(terminal.value, dependencies, declarations, scopes);
+            context.visitOperand(terminal.value);
             break;
           }
           case "for": {
-            visitValueBlock(terminal.init, dependencies, declarations, scopes);
-            visitValueBlock(terminal.test, dependencies, declarations, scopes);
-            visitValueBlock(
-              terminal.update,
-              dependencies,
-              declarations,
-              scopes
-            );
-            visit(terminal.loop, dependencies, declarations, scopes);
+            visitValueBlock(context, terminal.init);
+            visitValueBlock(context, terminal.test);
+            visitValueBlock(context, terminal.update);
+            visit(context, terminal.loop);
             break;
           }
           case "while": {
-            visitValueBlock(terminal.test, dependencies, declarations, scopes);
-            visit(terminal.loop, dependencies, declarations, scopes);
+            visitValueBlock(context, terminal.test);
+            visit(context, terminal.loop);
             break;
           }
           case "if": {
-            visitOperand(terminal.test, dependencies, declarations, scopes);
-            visit(terminal.consequent, dependencies, declarations, scopes);
+            context.visitOperand(terminal.test);
+            visit(context, terminal.consequent);
             if (terminal.alternate !== null) {
-              visit(terminal.alternate, dependencies, declarations, scopes);
+              visit(context, terminal.alternate);
             }
             break;
           }
           case "switch": {
-            visitOperand(terminal.test, dependencies, declarations, scopes);
+            context.visitOperand(terminal.test);
             for (const case_ of terminal.cases) {
               if (case_.block !== undefined) {
-                visit(case_.block, dependencies, declarations, scopes);
+                visit(context, case_.block);
               }
             }
             break;
@@ -150,95 +257,21 @@ function visit(
   }
 }
 
-function visitValueBlock(
-  block: ReactiveValueBlock,
-  dependencies: Set<Place>,
-  declarations: DeclMap,
-  scopes: Scopes
-): void {
+function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
   for (const initItem of block.instructions) {
     if (initItem.kind === "instruction") {
-      visitInstruction(
-        initItem.instruction,
-        dependencies,
-        declarations,
-        scopes
-      );
+      visitInstruction(context, initItem.instruction);
     }
   }
   if (block.value !== null) {
-    visitInstructionValue(block.value, dependencies, declarations, scopes);
-  }
-}
-
-function visitOperand(
-  maybeDependency: Place,
-  dependencies: Set<Place>,
-  declarations: DeclMap,
-  scopes: Scopes
-): void {
-  const decl = declarations.get(maybeDependency.identifier);
-
-  // Any value used after its defining scope has concluded must be added as an
-  // output of its defining scope. Regardless of whether its a const or not,
-  // some later code needs access to the value.
-  if (decl !== undefined) {
-    const operandScope = maybeDependency.identifier.scope;
-    if (operandScope !== null && scopes.indexOf(operandScope) === -1) {
-      operandScope.outputs.add(maybeDependency.identifier);
-    }
-  }
-
-  // If this operand is used in a scope, has a dynamic value, and was defined
-  // before this scope, then its a dependency of the scope.
-  const currentScope = scopes.at(-1);
-  if (
-    decl !== undefined &&
-    decl.kind !== DeclKind.Const &&
-    currentScope !== undefined &&
-    decl.id < currentScope.range.start
-  ) {
-    // Check if there is an existing dependency that describes this operand
-    for (const dep of dependencies) {
-      // not the same identifier
-      if (dep.identifier !== maybeDependency.identifier) {
-        continue;
-      }
-      const depPath = dep.memberPath;
-      // existing dep covers all paths
-      if (depPath === null) {
-        return;
-      }
-      const operandPath = maybeDependency.memberPath;
-      // existing dep is for a path, this operand covers all paths so swap them
-      if (operandPath === null) {
-        dependencies.delete(dep);
-        dependencies.add(maybeDependency);
-        return;
-      }
-      // both the operand and dep have paths, determine if the existing path
-      // is a subset of the new path
-      let commonPathIndex = 0;
-      while (
-        commonPathIndex < operandPath.length &&
-        commonPathIndex < depPath.length &&
-        operandPath[commonPathIndex] === depPath[commonPathIndex]
-      ) {
-        commonPathIndex++;
-      }
-      if (commonPathIndex === depPath.length) {
-        return;
-      }
-    }
-    dependencies.add(maybeDependency);
+    visitInstructionValue(context, block.value, null);
   }
 }
 
 function visitInstructionValue(
+  context: Context,
   value: InstructionValue,
-  dependencies: Set<Place>,
-  declarations: DeclMap,
-  scopes: Scopes
+  lvalue: LValue | null
 ): void {
   for (const operand of eachInstructionValueOperand(value)) {
     // check for method invocation, we want to depend on the callee, not the method
@@ -251,21 +284,18 @@ function visitInstructionValue(
         ...operand,
         memberPath: operand.memberPath.slice(0, -1),
       };
-      visitOperand(callee, dependencies, declarations, scopes);
+      context.visitOperand(callee);
+    } else if (value.kind === "PropertyLoad" && lvalue !== null) {
+      context.declareProperty(lvalue.place, value.object, value.property);
     } else {
-      visitOperand(operand, dependencies, declarations, scopes);
+      context.visitOperand(operand);
     }
   }
 }
 
-function visitInstruction(
-  instr: Instruction,
-  dependencies: Set<Place>,
-  declarations: DeclMap,
-  scopes: Scopes
-): void {
-  visitInstructionValue(instr.value, dependencies, declarations, scopes);
+function visitInstruction(context: Context, instr: Instruction): void {
   const { lvalue } = instr;
+  visitInstructionValue(context, instr.value, lvalue);
   if (
     lvalue !== null &&
     lvalue.kind !== InstructionKind.Reassign &&
@@ -275,7 +305,10 @@ function visitInstruction(
     // TODO: only assign Const if the value is never reassigned
     const kind =
       range.end === range.start + 1 ? valueKind(instr.value) : DeclKind.Dynamic;
-    declarations.set(lvalue.place.identifier, { kind, id: instr.id });
+    context.declare(lvalue.place.identifier, {
+      kind,
+      id: lvalue.place.identifier.mutableRange.start,
+    });
   }
 }
 
@@ -286,6 +319,7 @@ function valueKind(value: InstructionValue): DeclKind {
     case "Primitive": {
       return DeclKind.Const;
     }
+    case "PropertyLoad":
     case "Identifier":
     case "ArrayExpression":
     case "CallExpression":

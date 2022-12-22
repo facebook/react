@@ -35,6 +35,10 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
       alias = instrValue;
       break;
     }
+    case "PropertyLoad": {
+      alias = instrValue.object;
+      break;
+    }
     default:
       return;
   }

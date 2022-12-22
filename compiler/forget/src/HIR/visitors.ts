@@ -41,6 +41,10 @@ export function* eachInstructionValueOperand(
       yield instrValue;
       break;
     }
+    case "PropertyLoad": {
+      yield instrValue.object;
+      break;
+    }
     case "UnaryExpression": {
       yield instrValue.value;
       break;
@@ -90,6 +94,10 @@ export function mapInstructionOperands(
     case "BinaryExpression": {
       instrValue.left = fn(instrValue.left);
       instrValue.right = fn(instrValue.right);
+      break;
+    }
+    case "PropertyLoad": {
+      instrValue.object = fn(instrValue.object);
       break;
     }
     case "Identifier": {

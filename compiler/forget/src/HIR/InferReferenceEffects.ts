@@ -229,6 +229,10 @@ class Environment {
     this.#variables.set(place.identifier.id, new Set([value]));
   }
 
+  isDefined(place: Place): boolean {
+    return this.#variables.has(place.identifier.id);
+  }
+
   /**
    * Records that a given Place was accessed with the given kind and:
    * - Updates the effect of @param place based on the kind of value
@@ -571,7 +575,35 @@ function inferBlock(env: Environment, block: BasicBlock) {
         valueKind = ValueKind.Immutable;
         break;
       }
+      case "PropertyLoad": {
+        if (!env.isDefined(instrValue.object)) {
+          // TODO @josephsavona: improve handling of globals
+          const value: InstructionValue = {
+            kind: "Primitive",
+            loc: instrValue.loc,
+            value: undefined,
+          };
+          env.initialize(value, ValueKind.Frozen);
+          env.define(instrValue.object, value);
+        }
+
+        env.reference(instrValue.object, Effect.Read);
+        const lvalue = instr.lvalue;
+        if (lvalue !== null) {
+          invariant(
+            lvalue.place.memberPath === null,
+            "PropertyLoad must always be saved to a temporary"
+          );
+          env.initialize(instrValue, env.kind(instrValue.object));
+          env.define(lvalue.place, instrValue);
+        }
+        continue;
+      }
       case "Identifier": {
+        invariant(
+          instrValue.memberPath === null,
+          "Expected RHS memberPath to be lowered to PropertyLoad"
+        );
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
@@ -582,14 +614,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
           ) {
             // direct aliasing: `a = b`;
             env.alias(lvalue.place, instrValue);
-          } else if (lvalue.place.memberPath === null) {
-            // redefine lvalue: `a = b.c.d`
-            env.initialize(instrValue, env.kind(instrValue));
-            env.define(lvalue.place, instrValue);
           } else {
             // no-op: `a.b.c = d`
-            // or
-            // no-op: `a.b.c = d.e.f`
             const effect = isObjectType(lvalue.place.identifier)
               ? Effect.Store
               : Effect.Mutate;

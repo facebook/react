@@ -293,6 +293,11 @@ export type InstructionData =
   | { kind: "ArrayExpression"; elements: Array<Place> }
   | { kind: "JsxFragment"; children: Array<Place> }
 
+  // store `object.property = value`
+  // | { kind: "PropertyStore"; object: Place; property: string; value: Place }
+  // load `object.property`
+  | { kind: "PropertyLoad"; object: Place; property: string }
+
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow

@@ -40,7 +40,7 @@ function Component(props) {
   const maxItems = props.maxItems;
   const c_0 = $[0] !== maxItems;
   const c_1 = $[1] !== items.length;
-  const c_2 = $[2] !== items;
+  const c_2 = $[2] !== items.at;
   let renderedItems;
   if (c_0 || c_1 || c_2) {
     renderedItems = [];
@@ -77,7 +77,7 @@ function Component(props) {
 
     $[0] = maxItems;
     $[1] = items.length;
-    $[2] = items;
+    $[2] = items.at;
     $[3] = renderedItems;
   } else {
     renderedItems = $[3];

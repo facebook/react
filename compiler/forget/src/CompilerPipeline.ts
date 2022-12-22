@@ -27,7 +27,7 @@ import {
   renameVariables,
 } from "./ReactiveScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
-import { logHIRFunction } from "./Utils/logger";
+import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
 
 export type CompilerResult = {
   ast: t.Function;
@@ -68,11 +68,23 @@ export default function (
   logHIRFunction("inferReactiveScopes", ir);
 
   const reactiveFunction = buildReactiveFunction(ir);
+  logReactiveFunction("buildReactiveFunction", reactiveFunction);
+
   pruneUnusedLabels(reactiveFunction);
+  logReactiveFunction("pruneUnusedLabels", reactiveFunction);
+
   flattenReactiveLoops(reactiveFunction);
+  logReactiveFunction("flattenReactiveLoops", reactiveFunction);
+
   propagateScopeDependencies(reactiveFunction);
+  logReactiveFunction("propagateScopeDependencies", reactiveFunction);
+
   pruneUnusedScopes(reactiveFunction);
+  logReactiveFunction("pruneUnusedScopes", reactiveFunction);
+
   renameVariables(reactiveFunction);
+  logReactiveFunction("renameVariables", reactiveFunction);
+
   const ast = codegenReactiveFunction(reactiveFunction);
 
   return {

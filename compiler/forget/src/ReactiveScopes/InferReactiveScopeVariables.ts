@@ -164,6 +164,7 @@ function mayAllocate(value: InstructionValue): boolean {
   switch (value.kind) {
     case "BinaryExpression":
     case "Identifier":
+    case "PropertyLoad":
     case "JSXText":
     case "Primitive": {
       return false;
