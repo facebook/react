@@ -15,7 +15,10 @@ module.exports = (test) => {
       throw new Error("Codegen returned an empty string");
     }
   } catch (error) {
-    error.message = error.message.replace(/ \(\d+:\d+\)/, "");
+    // We use the `stderr` output to group errors so we can count them, so we need to dedupe errors
+    // that are the same but differ slightly
+    error.message = error.message.replace(/ \(\d+:\d+\)/, ""); // some errors report line numbers
+    error.message = error.message.replace(/\/.*\.js:\s/, ""); // babel seems to output filenames
     test.result = {
       stderr: `${error.name}: ${error.message}\n`,
       stdout: "",
