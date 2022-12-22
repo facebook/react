@@ -49,6 +49,11 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
+const {
+  sendAccessibilityEvent: fabricSendAccessibilityEvent,
+  dispatchCommand: fabricDispatchCommand,
+} = nativeFabricUIManager;
+
 function findHostInstance_DEPRECATED(
   componentOrHandle: any,
 ): ?React$ElementRef<HostComponent<mixed>> {
@@ -165,7 +170,7 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+      fabricDispatchCommand(stateNode.node, command, args);
     }
   } else {
     UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
@@ -186,7 +191,7 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+      fabricSendAccessibilityEvent(stateNode.node, eventType);
     }
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);

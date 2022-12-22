@@ -44,7 +44,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
-export const enableUseEventHook = false;
+export const enableUseEffectEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = false;
@@ -54,7 +54,6 @@ export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
 export const deletedTreeCleanUpLevel = 3;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const createRootStrictEffectsByDefault = false;

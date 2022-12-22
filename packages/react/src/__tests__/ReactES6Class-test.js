@@ -149,7 +149,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      act(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -164,7 +166,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      act(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -177,7 +181,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      act(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
     );
@@ -195,7 +201,9 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      act(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +

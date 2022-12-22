@@ -587,17 +587,27 @@ export function getResource(
       return null;
     }
     case 'title': {
-      let child = pendingProps.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      const children = pendingProps.children;
+      let child;
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
+      if (
+        typeof child !== 'function' &&
+        typeof child !== 'symbol' &&
+        child !== null &&
+        child !== undefined
+      ) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        const childString = '' + (child: any);
         const headRoot: Document = getDocumentFromRoot(resourceRoot);
         const headResources = getResourcesFromRoot(headRoot).head;
-        const key = getTitleKey(child);
+        const key = getTitleKey(childString);
         let resource = headResources.get(key);
         if (!resource) {
-          const titleProps = titlePropsFromRawProps(child, pendingProps);
+          const titleProps = titlePropsFromRawProps(childString, pendingProps);
           resource = {
             type: 'title',
             props: titleProps,

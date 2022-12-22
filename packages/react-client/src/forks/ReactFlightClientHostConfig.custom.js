@@ -26,14 +26,14 @@
 declare var $$$hostConfig: any;
 
 export type Response = any;
-export opaque type BundlerConfig = mixed; // eslint-disable-line no-undef
-export opaque type ModuleMetaData = mixed; // eslint-disable-line no-undef
-export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-undef
+export opaque type BundlerConfig = mixed;
+export opaque type ModuleMetaData = mixed;
+export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-unused-vars
 export const resolveModuleReference = $$$hostConfig.resolveModuleReference;
 export const preloadModule = $$$hostConfig.preloadModule;
 export const requireModule = $$$hostConfig.requireModule;
 
-export opaque type Source = mixed; // eslint-disable-line no-undef
+export opaque type Source = mixed;
 
 export type UninitializedModel = string;
 export const parseModel = $$$hostConfig.parseModel;

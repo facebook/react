@@ -1050,9 +1050,9 @@ if (__EXPERIMENTAL__) {
     ...tests.valid,
     {
       code: normalizeIndent`
-        // Valid because functions created with useEvent can be called in a useEffect.
+        // Valid because functions created with useEffectEvent can be called in a useEffect.
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           useEffect(() => {
@@ -1063,9 +1063,9 @@ if (__EXPERIMENTAL__) {
     },
     {
       code: normalizeIndent`
-        // Valid because functions created with useEvent can be called in closures.
+        // Valid because functions created with useEffectEvent can be called in closures.
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           return <Child onClick={() => onClick()}></Child>;
@@ -1074,9 +1074,9 @@ if (__EXPERIMENTAL__) {
     },
     {
       code: normalizeIndent`
-        // Valid because functions created with useEvent can be called in closures.
+        // Valid because functions created with useEffectEvent can be called in closures.
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           const onClick2 = () => { onClick() };
@@ -1090,13 +1090,13 @@ if (__EXPERIMENTAL__) {
     },
     {
       code: normalizeIndent`
-        // Valid because functions created with useEvent can be passed by reference in useEffect
-        // and useEvent.
+        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
+        // and useEffectEvent.
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
-          const onClick2 = useEvent(() => {
+          const onClick2 = useEffectEvent(() => {
             debounce(onClick);
           });
           useEffect(() => {
@@ -1110,7 +1110,7 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         const MyComponent = ({theme}) => {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           return <Child onClick={() => onClick()}></Child>;
@@ -1121,10 +1121,10 @@ if (__EXPERIMENTAL__) {
       code: normalizeIndent`
         function MyComponent({ theme }) {
           const notificationService = useNotifications();
-          const showNotification = useEvent((text) => {
+          const showNotification = useEffectEvent((text) => {
             notificationService.notify(theme, text);
           });
-          const onClick = useEvent((text) => {
+          const onClick = useEffectEvent((text) => {
             showNotification(text);
           });
           return <Child onClick={(text) => onClick(text)} />
@@ -1137,7 +1137,7 @@ if (__EXPERIMENTAL__) {
           useEffect(() => {
             onClick();
           });
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
         }
@@ -1188,64 +1188,64 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEventError('onClick')],
+      errors: [useEffectEventError('onClick')],
     },
     {
       code: normalizeIndent`
         // This should error even though it shares an identifier name with the below
         function MyComponent({theme}) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme)
           });
           return <Child onClick={onClick} />
         }
 
-        // The useEvent function shares an identifier name with the above
+        // The useEffectEvent function shares an identifier name with the above
         function MyOtherComponent({theme}) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme)
           });
           return <Child onClick={() => onClick()} />
         }
       `,
-      errors: [{...useEventError('onClick'), line: 7}],
+      errors: [{...useEffectEventError('onClick'), line: 7}],
     },
     {
       code: normalizeIndent`
         const MyComponent = ({ theme }) => {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           return <Child onClick={onClick}></Child>;
         }
       `,
-      errors: [useEventError('onClick')],
+      errors: [useEffectEventError('onClick')],
     },
     {
       code: normalizeIndent`
         // Invalid because onClick is being aliased to foo but not invoked
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
           let foo = onClick;
           return <Bar onClick={foo} />
         }
       `,
-      errors: [{...useEventError('onClick'), line: 7}],
+      errors: [{...useEffectEventError('onClick'), line: 7}],
     },
     {
       code: normalizeIndent`
         // Should error because it's being passed down to JSX, although it's been referenced once
         // in an effect
         function MyComponent({ theme }) {
-          const onClick = useEvent(() => {
+          const onClick = useEffectEvent(() => {
             showNotification(them);
           });
           useEffect(() => {
@@ -1254,7 +1254,7 @@ if (__EXPERIMENTAL__) {
           return <Child onClick={onClick} />
         }
       `,
-      errors: [useEventError('onClick')],
+      errors: [useEffectEventError('onClick')],
     },
     {
       code: normalizeIndent`
@@ -1360,10 +1360,10 @@ function classError(hook) {
   };
 }
 
-function useEventError(fn) {
+function useEffectEventError(fn) {
   return {
     message:
-      `\`${fn}\` is a function created with React Hook "useEvent", and can only be called from ` +
+      `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
       'the same component. They cannot be assigned to variables or passed down.',
   };
 }
