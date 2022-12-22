@@ -19,58 +19,6 @@ function Component(props) {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate x$7_@0[1:3] = Array []
-  [2] Call mutate x$7_@0.push(read props$6.p0)
-  [3] Const mutate y$8 = read x$7_@0
-  [4] Let mutate x$0$11_@1[1:7] = read x$7_@0
-  [4] If (read props$6.p1) then:bb2 else:bb1 fallthrough=bb1
-bb2:
-  predecessor blocks: bb0
-  [5] Const mutate x$1$9_@2 = Array []
-  [6] Reassign mutate x$0$11_@1[1:7] = read x$1$9_@2
-  [6] Goto bb1
-bb1:
-  predecessor blocks: bb2 bb0
-  [7] Const mutate _$12_@3 = JSX <read Component$0 x={freeze x$0$11_@1} ></read Component$0>
-  [8] Call read y$8.push(read props$6.p2)
-  [9] Const mutate t7$15_@4 = JSX <read Component$0 x={read x$0$11_@1} y={read y$8} ></read Component$0>
-  [10] Return read t7$15_@4
-```
-
-## Reactive Scopes
-
-```
-function Component(
-  props,
-) {
-  scope @0 [1:3] deps=[read props$6.p0] out=[x$7_@0] {
-    [1] Const mutate x$7_@0[1:3] = Array []
-    [2] Call mutate x$7_@0.push(read props$6.p0)
-  }
-  [3] Const mutate y$8 = read x$7_@0
-  scope @1 [1:7] deps=[read props$6.p1] out=[x$0$11_@1] {
-    [4] Let mutate x$0$11_@1[1:7] = read x$7_@0
-    if (read props$6.p1) {
-      scope @2 [5:6] deps=[] out=[x$1$9_@2] {
-        [5] Const mutate x$1$9_@2 = Array []
-      }
-      [6] Reassign mutate x$0$11_@1[1:7] = read x$1$9_@2
-    }
-  }
-  [7] Const mutate _$12_@3 = JSX <read Component$0 x={freeze x$0$11_@1} ></read Component$0>
-  [8] Call read y$8.push(read props$6.p2)
-  scope @4 [9:10] deps=[read x$0$11_@1, read y$8] out=[$15_@4] {
-    [9] Const mutate $15_@4 = JSX <read Component$0 x={read x$0$11_@1} y={read y$8} ></read Component$0>
-  }
-  return read $15_@4
-}
-
-```
-
 ## Code
 
 ```javascript

@@ -16,62 +16,12 @@ function foo() {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Return
-```
-
-## Reactive Scopes
-
-```
-function mutate(
-) {
-  return
-}
-
-```
-
 ## Code
 
 ```javascript
 function mutate() {}
 
 ```
-## HIR
-
-```
-bb0:
-  [1] Const mutate a$5_@0:TObject = Object {  }
-  [2] Const mutate b$6_@1:TObject[2:8] = Object {  }
-  [3] Const mutate c$7_@1:TObject[2:8] = Object {  }
-  [4] Const mutate a$0$8_@1:TObject[2:8] = read b$6_@1:TObject
-  [5] Const mutate b$1$9_@1:TObject[2:8] = read c$7_@1:TObject
-  [6] Const mutate c$2$10_@1:TObject[2:8] = read a$0$8_@1:TObject
-  [7] Call mutate mutate$4:TFunction(mutate a$0$8_@1:TObject, mutate b$1$9_@1:TObject)
-  [8] Return freeze c$2$10_@1:TObject
-```
-
-## Reactive Scopes
-
-```
-function foo(
-) {
-  [1] Const mutate a$5_@0:TObject = Object {  }
-  scope @1 [2:8] deps=[] out=[c$2$10_@1] {
-    [2] Const mutate b$6_@1:TObject[2:8] = Object {  }
-    [3] Const mutate c$7_@1:TObject[2:8] = Object {  }
-    [4] Const mutate a$0$8_@1:TObject[2:8] = read b$6_@1:TObject
-    [5] Const mutate b$1$9_@1:TObject[2:8] = read c$7_@1:TObject
-    [6] Const mutate c$2$10_@1:TObject[2:8] = read a$0$8_@1:TObject
-    [7] Call mutate mutate$4:TFunction(mutate a$0$8_@1:TObject, mutate b$1$9_@1:TObject)
-  }
-  return freeze c$2$10_@1:TObject
-}
-
-```
-
 ## Code
 
 ```javascript

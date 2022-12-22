@@ -13,35 +13,6 @@ function component() {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate z$5_@0[1:7] = Array []
-  [2] Const mutate y$6_@0:TObject[1:7] = Object {  }
-  [3] Reassign store y$6_@0.z[1:7] = read z$5_@0
-  [4] Const mutate x$7_@0:TObject[1:7] = Object {  }
-  [5] Reassign store x$7_@0.y[1:7] = read y$6_@0:TObject
-  [6] Call mutate mutate$4:TFunction(mutate x$7_@0.y.z)
-  [7] Return
-```
-
-## Reactive Scopes
-
-```
-function component(
-) {
-  [1] Const mutate z$5_@0[1:7] = Array []
-  [2] Const mutate y$6_@0:TObject[1:7] = Object {  }
-  [3] Reassign store y$6_@0.z[1:7] = read z$5_@0
-  [4] Const mutate x$7_@0:TObject[1:7] = Object {  }
-  [5] Reassign store x$7_@0.y[1:7] = read y$6_@0:TObject
-  [6] Call mutate mutate$4:TFunction(mutate x$7_@0.y.z)
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

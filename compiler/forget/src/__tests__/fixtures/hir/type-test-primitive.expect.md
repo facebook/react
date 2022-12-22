@@ -9,27 +9,6 @@ function component() {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate x$3:TPrimitive = 1
-  [2] Const mutate y$4:TPrimitive = 2
-  [3] Return
-```
-
-## Reactive Scopes
-
-```
-function component(
-) {
-  [1] Const mutate x$3:TPrimitive = 1
-  [2] Const mutate y$4:TPrimitive = 2
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

@@ -11,11 +11,9 @@ import generate from "@babel/generator";
 import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
 import { wasmFolder } from "@hpcc-js/wasm";
-import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
 import run from "../CompilerPipeline";
-import { printFunction } from "../HIR";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -101,16 +99,8 @@ ${wrapWithTripleBackticks(error.message)}
 }
 
 function formatOutput(items: Array<TestOutput>): Array<string> {
-  return items.map(({ ir, js, scopes }) => {
+  return items.map(({ js }) => {
     return `
-## HIR
-
-${wrapWithTripleBackticks(ir)}
-
-## Reactive Scopes
-
-${wrapWithTripleBackticks(scopes)}
-
 ## Code
 
 ${wrapWithTripleBackticks(js, "javascript")}
@@ -119,9 +109,7 @@ ${wrapWithTripleBackticks(js, "javascript")}
 }
 
 type TestOutput = {
-  ir: string;
   js: string;
-  scopes: string;
 };
 
 function transform(text: string, file: string): Array<TestOutput> {
@@ -133,16 +121,13 @@ function transform(text: string, file: string): Array<TestOutput> {
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
-        const { ir, scopes, ast } = run(nodePath);
+        const { ast } = run(nodePath);
 
-        const textHIR = printFunction(ir);
-        invariant(ast, "Expected an ast");
-        invariant(scopes, "Expected printed scope data");
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
           semi: true,
           parser: "babel-ts",
         });
-        items.push({ ir: textHIR, js: text, scopes });
+        items.push({ js: text });
       },
     },
   });

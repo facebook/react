@@ -14,13 +14,13 @@ import {
   inferTypes,
   lower,
 } from "./HIR";
+import { ReactiveFunction } from "./HIR/HIR";
 import {
   buildReactiveFunction,
   codegenReactiveFunction,
   flattenReactiveLoops,
   inferReactiveScopes,
   inferReactiveScopeVariables,
-  printReactiveFunction,
   propagateScopeDependencies,
   pruneUnusedLabels,
   pruneUnusedScopes,
@@ -30,9 +30,9 @@ import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { logHIRFunction } from "./Utils/logger";
 
 export type CompilerResult = {
-  ir: HIRFunction;
   ast: t.Function;
-  scopes: string;
+  ir: HIRFunction;
+  reactiveFunction: ReactiveFunction;
 };
 
 export default function (
@@ -73,12 +73,11 @@ export default function (
   propagateScopeDependencies(reactiveFunction);
   pruneUnusedScopes(reactiveFunction);
   renameVariables(reactiveFunction);
-  const scopes = printReactiveFunction(reactiveFunction);
   const ast = codegenReactiveFunction(reactiveFunction);
 
   return {
     ast,
     ir,
-    scopes,
+    reactiveFunction,
   };
 }

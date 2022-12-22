@@ -14,43 +14,6 @@ function foo(a, b, c) {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate y$8_@0[1:6] = Array []
-  [2] If (read a$5) then:bb3 else:bb1 fallthrough=bb1
-bb3:
-  predecessor blocks: bb0
-  [3] If (read b$6) then:bb5 else:bb1 fallthrough=bb1
-bb5:
-  predecessor blocks: bb3
-  [4] Call mutate y$8_@0.push(read c$7)
-  [5] Goto bb1
-bb1:
-  predecessor blocks: bb5 bb3 bb0
-  [6] Return
-```
-
-## Reactive Scopes
-
-```
-function foo(
-  a,
-  b,
-  c,
-) {
-  [1] Const mutate y$8_@0[1:6] = Array []
-  if (read a$5) {
-    if (read b$6) {
-      [4] Call mutate y$8_@0.push(read c$7)
-    }
-  }
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

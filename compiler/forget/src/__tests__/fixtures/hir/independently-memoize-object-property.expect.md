@@ -12,36 +12,6 @@ function foo(a, b, c) {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate x$9_@0:TObject[1:4] = Object { a: read a$6 }
-  [2] Const mutate t6$10_@1 = Array [read b$7, read c$8]
-  [3] Reassign store x$9_@0.y[1:4] = read t6$10_@1
-  [4] Return freeze x$9_@0:TObject
-```
-
-## Reactive Scopes
-
-```
-function foo(
-  a,
-  b,
-  c,
-) {
-  scope @0 [1:4] deps=[read a$6, read b$7, read c$8] out=[x$9_@0] {
-    [1] Const mutate x$9_@0:TObject[1:4] = Object { a: read a$6 }
-    scope @1 [2:3] deps=[read b$7, read c$8] out=[$10_@1] {
-      [2] Const mutate $10_@1 = Array [read b$7, read c$8]
-    }
-    [3] Reassign store x$9_@0.y[1:4] = read $10_@1
-  }
-  return freeze x$9_@0:TObject
-}
-
-```
-
 ## Code
 
 ```javascript

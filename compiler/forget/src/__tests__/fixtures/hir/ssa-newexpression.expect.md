@@ -13,55 +13,12 @@ function Component(props) {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Return
-```
-
-## Reactive Scopes
-
-```
-function Foo(
-) {
-  return
-}
-
-```
-
 ## Code
 
 ```javascript
 function Foo() {}
 
 ```
-## HIR
-
-```
-bb0:
-  [1] Const mutate a$7_@0[1:4] = Array []
-  [2] Const mutate b$8_@0:TObject[1:4] = Object {  }
-  [3] Const mutate c$9_@0[1:4] = New mutate Foo$4(mutate a$7_@0, mutate b$8_@0:TObject)
-  [4] Return freeze c$9_@0
-```
-
-## Reactive Scopes
-
-```
-function Component(
-  props,
-) {
-  scope @0 [1:4] deps=[] out=[c$9_@0] {
-    [1] Const mutate a$7_@0[1:4] = Array []
-    [2] Const mutate b$8_@0:TObject[1:4] = Object {  }
-    [3] Const mutate c$9_@0[1:4] = New mutate Foo$4(mutate a$7_@0, mutate b$8_@0:TObject)
-  }
-  return freeze c$9_@0
-}
-
-```
-
 ## Code
 
 ```javascript

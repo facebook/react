@@ -18,45 +18,6 @@ function component() {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$1:TFunction()
-  [2] Binary read p$7_@0:TPrimitive + read p$7_@0:TPrimitive
-  [3] Const mutate o$8_@1:TObject = Object {  }
-  [4] Const mutate x$9_@2:TObject[4:8] = Object {  }
-  [5] Reassign store x$9_@2.t[4:8] = read p$7_@0:TPrimitive
-  [6] Const mutate z$10_@2[4:8] = read x$9_@2.t
-  [7] Reassign store x$9_@2.t[4:8] = read o$8_@1:TObject
-  [8] Const mutate y$11 = read x$9_@2.t
-  [9] Return
-```
-
-## Reactive Scopes
-
-```
-function component(
-) {
-  scope @0 [1:2] deps=[] out=[p$7_@0] {
-    [1] Const mutate p$7_@0:TPrimitive = Call mutate makePrimitive$1:TFunction()
-  }
-  [2] Binary read p$7_@0:TPrimitive + read p$7_@0:TPrimitive
-  scope @1 [3:4] deps=[] out=[o$8_@1] {
-    [3] Const mutate o$8_@1:TObject = Object {  }
-  }
-  scope @2 [4:8] deps=[read p$7_@0:TPrimitive, read o$8_@1:TObject] out=[x$9_@2] {
-    [4] Const mutate x$9_@2:TObject[4:8] = Object {  }
-    [5] Reassign store x$9_@2.t[4:8] = read p$7_@0:TPrimitive
-    [6] Const mutate z$10_@2[4:8] = read x$9_@2.t
-    [7] Reassign store x$9_@2.t[4:8] = read o$8_@1:TObject
-  }
-  [8] Const mutate y$11 = read x$9_@2.t
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

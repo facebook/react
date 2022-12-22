@@ -24,36 +24,6 @@ function Foo() {}
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate a$8_@0 = Call mutate compute$2:TFunction(read props$7.a)
-  [2] Const mutate b$9_@1 = Call mutate compute$2:TFunction(read props$7.b)
-  [3] Const mutate t6$10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
-  [4] Return read t6$10_@2
-```
-
-## Reactive Scopes
-
-```
-function Component(
-  props,
-) {
-  scope @0 [1:2] deps=[read props$7.a] out=[a$8_@0] {
-    [1] Const mutate a$8_@0 = Call mutate compute$2:TFunction(read props$7.a)
-  }
-  scope @1 [2:3] deps=[read props$7.b] out=[b$9_@1] {
-    [2] Const mutate b$9_@1 = Call mutate compute$2:TFunction(read props$7.b)
-  }
-  scope @2 [3:4] deps=[freeze a$8_@0, freeze b$9_@1] out=[$10_@2] {
-    [3] Const mutate $10_@2 = JSX <read Foo$5 a={freeze a$8_@0} b={freeze b$9_@1} ></read Foo$5>
-  }
-  return read $10_@2
-}
-
-```
-
 ## Code
 
 ```javascript
@@ -97,69 +67,18 @@ function Component(props) {
 }
 
 ```
-## HIR
-
-```
-bb0:
-  [1] Return
-```
-
-## Reactive Scopes
-
-```
-function compute(
-) {
-  return
-}
-
-```
-
 ## Code
 
 ```javascript
 function compute() {}
 
 ```
-## HIR
-
-```
-bb0:
-  [1] Return
-```
-
-## Reactive Scopes
-
-```
-function foo(
-) {
-  return
-}
-
-```
-
 ## Code
 
 ```javascript
 function foo() {}
 
 ```
-## HIR
-
-```
-bb0:
-  [1] Return
-```
-
-## Reactive Scopes
-
-```
-function Foo(
-) {
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

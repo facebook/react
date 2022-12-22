@@ -11,34 +11,6 @@ function Component(c) {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
-  [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
-  [3] Const mutate a$8:TObject = read x$7_@0:TObject
-  [4] Const mutate b$9:TObject = read a$8:TObject
-  [5] Return
-```
-
-## Reactive Scopes
-
-```
-function Component(
-  c,
-) {
-  scope @0 [1:3] deps=[read c$6] out=[x$7_@0] {
-    [1] Const mutate x$7_@0:TObject[1:3] = Object { c: read c$6 }
-    [2] Call mutate mutate$3:TFunction(mutate x$7_@0:TObject)
-  }
-  [3] Const mutate a$8:TObject = read x$7_@0:TObject
-  [4] Const mutate b$9:TObject = read a$8:TObject
-  return
-}
-
-```
-
 ## Code
 
 ```javascript

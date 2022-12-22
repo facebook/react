@@ -15,43 +15,6 @@ function foo() {
 
 ```
 
-## HIR
-
-```
-bb0:
-  [1] Const mutate x$5:TPrimitive = 1
-  [2] Const mutate y$6:TPrimitive = 2
-  [3] If (read y$6:TPrimitive) then:bb2 else:bb3 fallthrough=bb1
-bb2:
-  predecessor blocks: bb0
-  [4] Const mutate z$7:TPrimitive = Binary read x$5:TPrimitive + read y$6:TPrimitive
-  [5] Goto bb1
-bb3:
-  predecessor blocks: bb0
-  [6] Const mutate z$8:TPrimitive = read x$5:TPrimitive
-  [7] Goto bb1
-bb1:
-  predecessor blocks: bb2 bb3
-  [8] Return
-```
-
-## Reactive Scopes
-
-```
-function foo(
-) {
-  [1] Const mutate x$5:TPrimitive = 1
-  [2] Const mutate y$6:TPrimitive = 2
-  if (read y$6:TPrimitive) {
-    [4] Const mutate z$7:TPrimitive = Binary read x$5:TPrimitive + read y$6:TPrimitive
-  } else {
-    [6] Const mutate z$8:TPrimitive = read x$5:TPrimitive
-  }
-  return
-}
-
-```
-
 ## Code
 
 ```javascript
