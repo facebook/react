@@ -8596,7 +8596,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
       500 > now() - globalMostRecentFallbackTime)
-      ? prepareFreshStack(root, 0)
+      ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root, wakeable);
 }
@@ -9494,7 +9494,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-2b1fb91a5-20221220",
+    version: "18.3.0-www-modern-5fcf1a4b4-20221221",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1329 = {
@@ -9525,7 +9525,7 @@ var internals$jscomp$inline_1329 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2b1fb91a5-20221220"
+  reconcilerVersion: "18.3.0-next-5fcf1a4b4-20221221"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1330 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

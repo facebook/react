@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-2b1fb91a5-20221220";
+var ReactVersion = "18.3.0-www-classic-5fcf1a4b4-20221221";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -25766,8 +25766,11 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
         includesOnlyRetries(workInProgressRootRenderLanes) &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
-      // Restart from the root.
-      prepareFreshStack(root, NoLanes);
+      // Force a restart from the root by unwinding the stack. Unless this is
+      // being called from the render phase, because that would cause a crash.
+      if ((executionContext & RenderContext) === NoContext) {
+        prepareFreshStack(root, NoLanes);
+      }
     } else {
       // Even though we can't restart right now, we might get an
       // opportunity later. So we mark this render as having a ping.

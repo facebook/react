@@ -10053,7 +10053,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
       500 > now() - globalMostRecentFallbackTime)
-      ? prepareFreshStack(root, 0)
+      ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root, wakeable);
 }
@@ -11364,7 +11364,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1538 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-2b1fb91a5-20221220",
+  version: "18.3.0-www-classic-5fcf1a4b4-20221221",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2070 = {
@@ -11394,7 +11394,7 @@ var internals$jscomp$inline_2070 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2b1fb91a5-20221220"
+  reconcilerVersion: "18.3.0-next-5fcf1a4b4-20221221"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2071 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14883,4 +14883,4 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-2b1fb91a5-20221220";
+exports.version = "18.3.0-next-5fcf1a4b4-20221221";

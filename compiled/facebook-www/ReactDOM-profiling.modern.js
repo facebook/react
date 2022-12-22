@@ -14726,7 +14726,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
       500 > now() - globalMostRecentFallbackTime)
-      ? prepareFreshStack(root, 0)
+      ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root, wakeable);
 }
@@ -15903,7 +15903,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1812 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-2b1fb91a5-20221220",
+  version: "18.3.0-www-modern-5fcf1a4b4-20221221",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -15948,7 +15948,7 @@ var devToolsConfig$jscomp$inline_1812 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2b1fb91a5-20221220"
+  reconcilerVersion: "18.3.0-next-5fcf1a4b4-20221221"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function(children, container) {
@@ -16123,7 +16123,7 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-2b1fb91a5-20221220";
+exports.version = "18.3.0-next-5fcf1a4b4-20221221";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
