@@ -74,57 +74,57 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$8, b$9, c$10) {
+function foo(a, b, c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$8;
-  const c_1 = $[1] !== b$9;
-  const c_2 = $[2] !== c$10;
-  let x$11;
+  const c_0 = $[0] !== a;
+  const c_1 = $[1] !== b;
+  const c_2 = $[2] !== c;
+  let x;
   if (c_0 || c_1 || c_2) {
-    x$11 = [];
+    x = [];
 
-    if (a$8) {
-      const c_4 = $[4] !== b$9;
-      const c_5 = $[5] !== c$10;
-      let y$12;
+    if (a) {
+      const c_4 = $[4] !== b;
+      const c_5 = $[5] !== c;
+      let y;
 
       if (c_4 || c_5) {
-        y$12 = [];
+        y = [];
 
-        if (b$9) {
-          y$12.push(c$10);
+        if (b) {
+          y.push(c);
         }
 
-        $[4] = b$9;
-        $[5] = c$10;
-        $[6] = y$12;
+        $[4] = b;
+        $[5] = c;
+        $[6] = y;
       } else {
-        y$12 = $[6];
+        y = $[6];
       }
 
-      const c_7 = $[7] !== y$12;
-      let t8$15;
+      const c_7 = $[7] !== y;
+      let t8;
 
       if (c_7) {
-        t8$15 = <div>{y$12}</div>;
-        $[7] = y$12;
-        $[8] = t8$15;
+        t8 = <div>{y}</div>;
+        $[7] = y;
+        $[8] = t8;
       } else {
-        t8$15 = $[8];
+        t8 = $[8];
       }
 
-      x$11.push(t8$15);
+      x.push(t8);
     }
 
-    $[0] = a$8;
-    $[1] = b$9;
-    $[2] = c$10;
-    $[3] = x$11;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = x;
   } else {
-    x$11 = $[3];
+    x = $[3];
   }
 
-  return x$11;
+  return x;
 }
 
 ```

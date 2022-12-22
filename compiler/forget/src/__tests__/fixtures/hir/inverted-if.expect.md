@@ -54,11 +54,11 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$5, b$6, c$7) {
-  const y$8 = [];
-  if (a$5) {
-    if (b$6) {
-      y$8.push(c$7);
+function foo(a, b, c) {
+  const y = [];
+  if (a) {
+    if (b) {
+      y.push(c);
     }
   }
 }

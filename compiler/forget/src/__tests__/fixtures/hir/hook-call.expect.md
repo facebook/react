@@ -39,7 +39,7 @@ function useFreeze(
 ## Code
 
 ```javascript
-function useFreeze$0() {}
+function useFreeze() {}
 
 ```
 ## HIR
@@ -62,7 +62,7 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {}
+function foo() {}
 
 ```
 ## HIR
@@ -106,47 +106,47 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$10) {
+function Component(props) {
   const $ = React.useMemoCache();
-  let x$11;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$11 = [];
-    $[0] = x$11;
+    x = [];
+    $[0] = x;
   } else {
-    x$11 = $[0];
+    x = $[0];
   }
 
-  const c_1 = $[1] !== x$11;
-  let y$12;
+  const c_1 = $[1] !== x;
+  let y;
 
   if (c_1) {
-    y$12 = useFreeze$3(x$11);
-    $[1] = x$11;
-    $[2] = y$12;
+    y = useFreeze(x);
+    $[1] = x;
+    $[2] = y;
   } else {
-    y$12 = $[2];
+    y = $[2];
   }
 
-  foo$5(y$12, x$11);
-  const c_3 = $[3] !== x$11;
-  const c_4 = $[4] !== y$12;
-  let t5$16;
+  foo(y, x);
+  const c_3 = $[3] !== x;
+  const c_4 = $[4] !== y;
+  let t5;
 
   if (c_3 || c_4) {
-    t5$16 = (
-      <Component$0>
-        {x$11}
-        {y$12}
-      </Component$0>
+    t5 = (
+      <Component>
+        {x}
+        {y}
+      </Component>
     );
-    $[3] = x$11;
-    $[4] = y$12;
-    $[5] = t5$16;
+    $[3] = x;
+    $[4] = y;
+    $[5] = t5;
   } else {
-    t5$16 = $[5];
+    t5 = $[5];
   }
 
-  return t5$16;
+  return t5;
 }
 
 ```

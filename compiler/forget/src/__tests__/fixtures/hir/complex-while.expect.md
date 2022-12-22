@@ -61,10 +61,10 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$4, b$5, c$6) {
-  if (a$4) {
-    while (b$5) {
-      if (c$6) {
+function foo(a, b, c) {
+  if (a) {
+    while (b) {
+      if (c) {
         break;
       }
     }

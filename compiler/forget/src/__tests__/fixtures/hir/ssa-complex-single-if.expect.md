@@ -22,16 +22,16 @@ bb0:
   [2] Const mutate y$6:TPrimitive = 2
   [3] Const mutate $7:TPrimitive = 2
   [4] Const mutate $8:TPrimitive = Binary read y$6:TPrimitive === read $7:TPrimitive
-  [5] Let mutate x$10_@0[1:8] = read x$5:TPrimitive
+  [5] Let mutate x$0$10_@0[1:8] = read x$5:TPrimitive
   [5] If (read $8:TPrimitive) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [6] Const mutate x$9:TPrimitive = 3
-  [7] Reassign mutate x$10_@0[1:8] = read x$9:TPrimitive
+  [6] Const mutate x$1$9:TPrimitive = 3
+  [7] Reassign mutate x$0$10_@0[1:8] = read x$1$9:TPrimitive
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [8] Const mutate y$11 = read x$10_@0
+  [8] Const mutate y$2$11 = read x$0$10_@0
   [9] Return
 ```
 
@@ -44,14 +44,14 @@ function foo(
   [2] Const mutate y$6:TPrimitive = 2
   [3] Const mutate $7:TPrimitive = 2
   [4] Const mutate $8:TPrimitive = Binary read y$6:TPrimitive === read $7:TPrimitive
-  scope @0 [1:8] deps=[] out=[x$10_@0] {
-    [5] Let mutate x$10_@0[1:8] = read x$5:TPrimitive
+  scope @0 [1:8] deps=[] out=[x$0$10_@0] {
+    [5] Let mutate x$0$10_@0[1:8] = read x$5:TPrimitive
     if (read $8:TPrimitive) {
-      [6] Const mutate x$9:TPrimitive = 3
-      [7] Reassign mutate x$10_@0[1:8] = read x$9:TPrimitive
+      [6] Const mutate x$1$9:TPrimitive = 3
+      [7] Reassign mutate x$0$10_@0[1:8] = read x$1$9:TPrimitive
     }
   }
-  [8] Const mutate y$11 = read x$10_@0
+  [8] Const mutate y$2$11 = read x$0$10_@0
   return
 }
 
@@ -60,25 +60,25 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  const x$5 = 1;
-  const y$6 = 2;
-  let x$10;
+  const x = 1;
+  const y = 2;
+  let x$0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$10 = x$5;
+    x$0 = x;
 
-    if (y$6 === 2) {
-      const x$9 = 3;
-      x$10 = x$9;
+    if (y === 2) {
+      const x$1 = 3;
+      x$0 = x$1;
     }
 
-    $[0] = x$10;
+    $[0] = x$0;
   } else {
-    x$10 = $[0];
+    x$0 = $[0];
   }
 
-  const y$11 = x$10;
+  const y$2 = x$0;
 }
 
 ```

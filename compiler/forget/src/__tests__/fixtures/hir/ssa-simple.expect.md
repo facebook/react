@@ -33,9 +33,9 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
-  const x$3 = 1;
-  const y$4 = 2;
+function foo() {
+  const x = 1;
+  const y = 2;
 }
 
 ```

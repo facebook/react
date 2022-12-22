@@ -53,15 +53,15 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
-  const x$6 = {};
-  const p$7 = {};
-  const q$8 = {};
-  const y$9 = {};
-  x$6.y = y$9;
-  p$7.y = x$6.y;
-  q$8.y = p$7.y;
-  mutate$5(q$8);
+function component() {
+  const x = {};
+  const p = {};
+  const q = {};
+  const y = {};
+  x.y = y;
+  p.y = x.y;
+  q.y = p.y;
+  mutate(q);
 }
 
 ```

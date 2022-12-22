@@ -16,9 +16,9 @@ function f() {
 ```
 bb0:
   [1] Const mutate x$4:TPrimitive = 1
-  [2] Const mutate x$5:TPrimitive = 2
-  [3] Const mutate $6:TPrimitive = Binary read x$5:TPrimitive + read x$5:TPrimitive
-  [4] Const mutate $7:TPrimitive = Binary read $6:TPrimitive + read x$5:TPrimitive
+  [2] Const mutate x$0$5:TPrimitive = 2
+  [3] Const mutate $6:TPrimitive = Binary read x$0$5:TPrimitive + read x$0$5:TPrimitive
+  [4] Const mutate $7:TPrimitive = Binary read $6:TPrimitive + read x$0$5:TPrimitive
   [5] Return read $7:TPrimitive
 ```
 
@@ -28,9 +28,9 @@ bb0:
 function f(
 ) {
   [1] Const mutate x$4:TPrimitive = 1
-  [2] Const mutate x$5:TPrimitive = 2
-  [3] Const mutate $6:TPrimitive = Binary read x$5:TPrimitive + read x$5:TPrimitive
-  [4] Const mutate $7:TPrimitive = Binary read $6:TPrimitive + read x$5:TPrimitive
+  [2] Const mutate x$0$5:TPrimitive = 2
+  [3] Const mutate $6:TPrimitive = Binary read x$0$5:TPrimitive + read x$0$5:TPrimitive
+  [4] Const mutate $7:TPrimitive = Binary read $6:TPrimitive + read x$0$5:TPrimitive
   return read $7:TPrimitive
 }
 
@@ -39,10 +39,10 @@ function f(
 ## Code
 
 ```javascript
-function f$0() {
-  const x$4 = 1;
-  const x$5 = 2;
-  return x$5 + x$5 + x$5;
+function f() {
+  const x = 1;
+  const x$0 = 2;
+  return x$0 + x$0 + x$0;
 }
 
 ```

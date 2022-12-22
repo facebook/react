@@ -66,34 +66,34 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$6, b$7, c$8) {
+function foo(a, b, c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$6;
-  const c_1 = $[1] !== b$7;
-  const c_2 = $[2] !== c$8;
-  let x$9;
+  const c_0 = $[0] !== a;
+  const c_1 = $[1] !== b;
+  const c_2 = $[2] !== c;
+  let x;
   if (c_0 || c_1 || c_2) {
-    x$9 = [];
+    x = [];
 
-    if (a$6) {
-      const y$10 = [];
+    if (a) {
+      const y = [];
 
-      if (b$7) {
-        y$10.push(c$8);
+      if (b) {
+        y.push(c);
       }
 
-      x$9.push(y$10);
+      x.push(y);
     }
 
-    $[0] = a$6;
-    $[1] = b$7;
-    $[2] = c$8;
-    $[3] = x$9;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = x;
   } else {
-    x$9 = $[3];
+    x = $[3];
   }
 
-  return x$9;
+  return x;
 }
 
 ```

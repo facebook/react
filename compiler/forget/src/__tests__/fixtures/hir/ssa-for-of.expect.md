@@ -54,8 +54,8 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(cond$4) {
-  const items$5 = [];
+function foo(cond) {
+  const items = [];
 }
 
 ```

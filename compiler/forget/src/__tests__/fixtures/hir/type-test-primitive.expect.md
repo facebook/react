@@ -33,9 +33,9 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
-  const x$3 = 1;
-  const y$4 = 2;
+function component() {
+  const x = 1;
+  const y = 2;
 }
 
 ```

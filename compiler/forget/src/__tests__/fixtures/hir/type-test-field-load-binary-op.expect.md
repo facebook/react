@@ -62,49 +62,49 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let t0$10;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$10 = makeSomePrimitive$1();
-    $[0] = t0$10;
+    t0 = makeSomePrimitive();
+    $[0] = t0;
   } else {
-    t0$10 = $[0];
+    t0 = $[0];
   }
 
-  let t1$11;
+  let t1;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1$11 = makeSomePrimitive$1();
-    $[1] = t1$11;
+    t1 = makeSomePrimitive();
+    $[1] = t1;
   } else {
-    t1$11 = $[1];
+    t1 = $[1];
   }
 
-  const c_2 = $[2] !== t0$10;
-  const c_3 = $[3] !== t1$11;
-  let x$12;
+  const c_2 = $[2] !== t0;
+  const c_3 = $[3] !== t1;
+  let x;
 
   if (c_2 || c_3) {
-    x$12 = {
-      u: t0$10,
-      v: t1$11,
+    x = {
+      u: t0,
+      v: t1,
     };
-    $[2] = t0$10;
-    $[3] = t1$11;
-    $[4] = x$12;
+    $[2] = t0;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x$12 = $[4];
+    x = $[4];
   }
 
-  const u$13 = x$12.u;
-  const v$14 = x$12.v;
+  const u = x.u;
+  const v = x.v;
 
-  if (u$13 > v$14) {
+  if (u > v) {
   }
 
-  const y$16 = x$12.u;
-  const z$17 = x$12.v;
+  const y = x.u;
+  const z = x.v;
 }
 
 ```

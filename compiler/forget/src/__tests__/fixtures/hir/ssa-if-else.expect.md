@@ -55,13 +55,13 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
-  const x$5 = 1;
-  const y$6 = 2;
-  if (y$6) {
-    const z$7 = x$5 + y$6;
+function foo() {
+  const x = 1;
+  const y = 2;
+  if (y) {
+    const z = x + y;
   } else {
-    const z$8 = x$5;
+    const z = x;
   }
 }
 

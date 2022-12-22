@@ -60,43 +60,43 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let p$7;
+  let p;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    p$7 = makePrimitive$1();
-    $[0] = p$7;
+    p = makePrimitive();
+    $[0] = p;
   } else {
-    p$7 = $[0];
+    p = $[0];
   }
 
-  p$7 + p$7;
-  let o$8;
+  p + p;
+  let o;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    o$8 = {};
-    $[1] = o$8;
+    o = {};
+    $[1] = o;
   } else {
-    o$8 = $[1];
+    o = $[1];
   }
 
-  const c_2 = $[2] !== p$7;
-  const c_3 = $[3] !== o$8;
-  let x$9;
+  const c_2 = $[2] !== p;
+  const c_3 = $[3] !== o;
+  let x;
 
   if (c_2 || c_3) {
-    x$9 = {};
-    x$9.t = p$7;
-    const z$10 = x$9.t;
-    x$9.t = o$8;
-    $[2] = p$7;
-    $[3] = o$8;
-    $[4] = x$9;
+    x = {};
+    x.t = p;
+    const z = x.t;
+    x.t = o;
+    $[2] = p;
+    $[3] = o;
+    $[4] = x;
   } else {
-    x$9 = $[4];
+    x = $[4];
   }
 
-  const y$11 = x$9.t;
+  const y = x.t;
 }
 
 ```

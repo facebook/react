@@ -71,32 +71,32 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(x$6, y$7, z$8) {
+function foo(x, y, z) {
   const $ = React.useMemoCache();
-  const items$9 = [z$8];
-  items$9.push(x$6);
-  const c_0 = $[0] !== x$6;
-  const c_1 = $[1] !== y$7;
-  let items2$10;
+  const items = [z];
+  items.push(x);
+  const c_0 = $[0] !== x;
+  const c_1 = $[1] !== y;
+  let items2;
   if (c_0 || c_1) {
-    items2$10 = [];
+    items2 = [];
 
-    if (x$6) {
-      items2$10.push(y$7);
+    if (x) {
+      items2.push(y);
     }
 
-    $[0] = x$6;
-    $[1] = y$7;
-    $[2] = items2$10;
+    $[0] = x;
+    $[1] = y;
+    $[2] = items2;
   } else {
-    items2$10 = $[2];
+    items2 = $[2];
   }
 
-  if (y$7) {
-    items$9.push(x$6);
+  if (y) {
+    items.push(x);
   }
 
-  return items2$10;
+  return items2;
 }
 
 ```

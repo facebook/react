@@ -45,39 +45,39 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$6, b$7, c$8) {
+function foo(a, b, c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$6;
-  const c_1 = $[1] !== b$7;
-  const c_2 = $[2] !== c$8;
-  let x$9;
+  const c_0 = $[0] !== a;
+  const c_1 = $[1] !== b;
+  const c_2 = $[2] !== c;
+  let x;
   if (c_0 || c_1 || c_2) {
-    x$9 = {
-      a: a$6,
+    x = {
+      a: a,
     };
-    const c_4 = $[4] !== b$7;
-    const c_5 = $[5] !== c$8;
-    let t6$10;
+    const c_4 = $[4] !== b;
+    const c_5 = $[5] !== c;
+    let t6;
 
     if (c_4 || c_5) {
-      t6$10 = [b$7, c$8];
-      $[4] = b$7;
-      $[5] = c$8;
-      $[6] = t6$10;
+      t6 = [b, c];
+      $[4] = b;
+      $[5] = c;
+      $[6] = t6;
     } else {
-      t6$10 = $[6];
+      t6 = $[6];
     }
 
-    x$9.y = t6$10;
-    $[0] = a$6;
-    $[1] = b$7;
-    $[2] = c$8;
-    $[3] = x$9;
+    x.y = t6;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = x;
   } else {
-    x$9 = $[3];
+    x = $[3];
   }
 
-  return x$9;
+  return x;
 }
 
 ```

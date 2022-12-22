@@ -43,31 +43,31 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let x$4;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$4 = [];
-    $[0] = x$4;
+    x = [];
+    $[0] = x;
   } else {
-    x$4 = $[0];
+    x = $[0];
   }
 
-  const c_1 = $[1] !== x$4;
-  let y$5;
+  const c_1 = $[1] !== x;
+  let y;
 
   if (c_1) {
-    y$5 = {
-      x: x$4,
+    y = {
+      x: x,
     };
-    y$5.x.push([]);
-    $[1] = x$4;
-    $[2] = y$5;
+    y.x.push([]);
+    $[1] = x;
+    $[2] = y;
   } else {
-    y$5 = $[2];
+    y = $[2];
   }
 
-  return y$5;
+  return y;
 }
 
 ```

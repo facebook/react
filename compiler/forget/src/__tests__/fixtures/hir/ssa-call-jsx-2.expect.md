@@ -38,7 +38,7 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {}
+function foo() {}
 
 ```
 ## HIR
@@ -94,49 +94,49 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$10) {
+function Component(props) {
   const $ = React.useMemoCache();
-  let a$11;
-  let b$12;
+  let a;
+  let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a$11 = [];
-    b$12 = {};
-    foo$4(a$11, b$12);
-    let t2$13;
+    a = [];
+    b = {};
+    foo(a, b);
+    let t2;
 
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t2$13 = foo$4();
-      $[2] = t2$13;
+      t2 = foo();
+      $[2] = t2;
     } else {
-      t2$13 = $[2];
+      t2 = $[2];
     }
 
-    if (t2$13) {
-      const _$15 = <div a={a$11}></div>;
+    if (t2) {
+      const _ = <div a={a}></div>;
     }
 
-    foo$4(a$11, b$12);
-    $[0] = a$11;
-    $[1] = b$12;
+    foo(a, b);
+    $[0] = a;
+    $[1] = b;
   } else {
-    a$11 = $[0];
-    b$12 = $[1];
+    a = $[0];
+    b = $[1];
   }
 
-  const c_3 = $[3] !== a$11;
-  const c_4 = $[4] !== b$12;
-  let t5$20;
+  const c_3 = $[3] !== a;
+  const c_4 = $[4] !== b;
+  let t5;
 
   if (c_3 || c_4) {
-    t5$20 = <div a={a$11} b={b$12}></div>;
-    $[3] = a$11;
-    $[4] = b$12;
-    $[5] = t5$20;
+    t5 = <div a={a} b={b}></div>;
+    $[3] = a;
+    $[4] = b;
+    $[5] = t5;
   } else {
-    t5$20 = $[5];
+    t5 = $[5];
   }
 
-  return t5$20;
+  return t5;
 }
 
 ```

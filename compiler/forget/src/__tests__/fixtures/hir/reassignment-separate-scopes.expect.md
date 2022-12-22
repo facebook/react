@@ -45,22 +45,22 @@ bb1:
   [5] Const mutate $17:TPrimitive = "div"
   [6] Const mutate y$19_@1 = JSX <read $17:TPrimitive>{freeze x$16_@0}</read $17:TPrimitive>
   [7] Const mutate $20:TPrimitive = 0
-  [8] Let mutate x$30_@2[8:15] = undefined
+  [8] Let mutate x$0$30_@2[8:15] = undefined
   [8] Switch (read b$14)
     Case read $20:TPrimitive: bb5
     Default: bb4
     Fallthrough: bb3
 bb5:
   predecessor blocks: bb1
-  [9] Const mutate x$22_@3[9:11] = Array []
-  [10] Call mutate x$22_@3.push(read b$14)
-  [11] Reassign mutate x$30_@2[8:15] = read x$22_@3
+  [9] Const mutate x$1$22_@3[9:11] = Array []
+  [10] Call mutate x$1$22_@3.push(read b$14)
+  [11] Reassign mutate x$0$30_@2[8:15] = read x$1$22_@3
   [11] Goto bb3
 bb4:
   predecessor blocks: bb1
-  [12] Const mutate x$23_@4[12:14] = Array []
-  [13] Call mutate x$23_@4.push(read c$15)
-  [14] Reassign mutate x$30_@2[8:15] = read x$23_@4
+  [12] Const mutate x$2$23_@4[12:14] = Array []
+  [13] Call mutate x$2$23_@4.push(read c$15)
+  [14] Reassign mutate x$0$30_@2[8:15] = read x$2$23_@4
   [14] Goto bb3
 bb3:
   predecessor blocks: bb5 bb4
@@ -68,7 +68,7 @@ bb3:
   [16] Const mutate $26:TPrimitive = "\n      "
   [17] Const mutate $27:TPrimitive = "\n      "
   [18] Const mutate $28:TPrimitive = "\n    "
-  [19] Const mutate t13$31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
+  [19] Const mutate t13$31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$0$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
   [20] Return read t13$31_@5
 ```
 
@@ -91,23 +91,23 @@ function foo(
     [6] Const mutate y$19_@1 = JSX <read $17:TPrimitive>{freeze x$16_@0}</read $17:TPrimitive>
   }
   [7] Const mutate $20:TPrimitive = 0
-  scope @2 [8:15] deps=[read b$14, read c$15] out=[x$30_@2] {
-    [8] Let mutate x$30_@2[8:15] = undefined
+  scope @2 [8:15] deps=[read b$14, read c$15] out=[x$0$30_@2] {
+    [8] Let mutate x$0$30_@2[8:15] = undefined
     switch (read b$14) {
       case read $20:TPrimitive: {
-          scope @3 [9:11] deps=[read b$14] out=[x$22_@3] {
-            [9] Const mutate x$22_@3[9:11] = Array []
-            [10] Call mutate x$22_@3.push(read b$14)
+          scope @3 [9:11] deps=[read b$14] out=[x$1$22_@3] {
+            [9] Const mutate x$1$22_@3[9:11] = Array []
+            [10] Call mutate x$1$22_@3.push(read b$14)
           }
-          [11] Reassign mutate x$30_@2[8:15] = read x$22_@3
+          [11] Reassign mutate x$0$30_@2[8:15] = read x$1$22_@3
           break bb3
       }
       default: {
-          scope @4 [12:14] deps=[read c$15] out=[x$23_@4] {
-            [12] Const mutate x$23_@4[12:14] = Array []
-            [13] Call mutate x$23_@4.push(read c$15)
+          scope @4 [12:14] deps=[read c$15] out=[x$2$23_@4] {
+            [12] Const mutate x$2$23_@4[12:14] = Array []
+            [13] Call mutate x$2$23_@4.push(read c$15)
           }
-          [14] Reassign mutate x$30_@2[8:15] = read x$23_@4
+          [14] Reassign mutate x$0$30_@2[8:15] = read x$2$23_@4
       }
     }
   }
@@ -115,8 +115,8 @@ function foo(
   [16] Const mutate $26:TPrimitive = "\n      "
   [17] Const mutate $27:TPrimitive = "\n      "
   [18] Const mutate $28:TPrimitive = "\n    "
-  scope @5 [19:20] deps=[read y$19_@1, freeze x$30_@2] out=[$31_@5] {
-    [19] Const mutate $31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
+  scope @5 [19:20] deps=[read y$19_@1, freeze x$0$30_@2] out=[$31_@5] {
+    [19] Const mutate $31_@5 = JSX <read $25:TPrimitive>{read $26:TPrimitive}{read y$19_@1}{read $27:TPrimitive}{freeze x$0$30_@2}{read $28:TPrimitive}</read $25:TPrimitive>
   }
   return read $31_@5
 }
@@ -126,102 +126,102 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$13, b$14, c$15) {
+function foo(a, b, c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$13;
-  let x$16;
+  const c_0 = $[0] !== a;
+  let x;
   if (c_0) {
-    x$16 = [];
+    x = [];
 
-    if (a$13) {
-      x$16.push(a$13);
+    if (a) {
+      x.push(a);
     }
 
-    $[0] = a$13;
-    $[1] = x$16;
+    $[0] = a;
+    $[1] = x;
   } else {
-    x$16 = $[1];
+    x = $[1];
   }
 
-  const c_2 = $[2] !== x$16;
-  let y$19;
+  const c_2 = $[2] !== x;
+  let y;
 
   if (c_2) {
-    y$19 = <div>{x$16}</div>;
-    $[2] = x$16;
-    $[3] = y$19;
+    y = <div>{x}</div>;
+    $[2] = x;
+    $[3] = y;
   } else {
-    y$19 = $[3];
+    y = $[3];
   }
 
-  const c_4 = $[4] !== b$14;
-  const c_5 = $[5] !== c$15;
-  let x$30;
+  const c_4 = $[4] !== b;
+  const c_5 = $[5] !== c;
+  let x$0;
 
   if (c_4 || c_5) {
-    x$30 = undefined;
+    x$0 = undefined;
 
-    bb3: switch (b$14) {
+    bb3: switch (b) {
       case 0: {
-        const c_7 = $[7] !== b$14;
-        let x$22;
+        const c_7 = $[7] !== b;
+        let x$1;
 
         if (c_7) {
-          x$22 = [];
-          x$22.push(b$14);
-          $[7] = b$14;
-          $[8] = x$22;
+          x$1 = [];
+          x$1.push(b);
+          $[7] = b;
+          $[8] = x$1;
         } else {
-          x$22 = $[8];
+          x$1 = $[8];
         }
 
-        x$30 = x$22;
+        x$0 = x$1;
         break bb3;
       }
 
       default: {
-        const c_9 = $[9] !== c$15;
-        let x$23;
+        const c_9 = $[9] !== c;
+        let x$2;
 
         if (c_9) {
-          x$23 = [];
-          x$23.push(c$15);
-          $[9] = c$15;
-          $[10] = x$23;
+          x$2 = [];
+          x$2.push(c);
+          $[9] = c;
+          $[10] = x$2;
         } else {
-          x$23 = $[10];
+          x$2 = $[10];
         }
 
-        x$30 = x$23;
+        x$0 = x$2;
       }
     }
 
-    $[4] = b$14;
-    $[5] = c$15;
-    $[6] = x$30;
+    $[4] = b;
+    $[5] = c;
+    $[6] = x$0;
   } else {
-    x$30 = $[6];
+    x$0 = $[6];
   }
 
-  const c_11 = $[11] !== y$19;
-  const c_12 = $[12] !== x$30;
-  let t13$31;
+  const c_11 = $[11] !== y;
+  const c_12 = $[12] !== x$0;
+  let t13;
 
   if (c_11 || c_12) {
-    t13$31 = (
+    t13 = (
       <div>
-        {y$19}
-        {x$30}
+        {y}
+        {x$0}
       </div>
     );
-    $[11] = y$19;
-    $[12] = x$30;
-    $[13] = t13$31;
+    $[11] = y;
+    $[12] = x$0;
+    $[13] = t13;
   } else {
-    t13$31 = $[13];
+    t13 = $[13];
   }
 
-  return t13$31;
+  return t13;
 }
 
 ```

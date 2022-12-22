@@ -33,7 +33,7 @@ function Foo(
 ## Code
 
 ```javascript
-function Foo$0() {}
+function Foo() {}
 
 ```
 ## HIR
@@ -65,19 +65,19 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$6) {
+function Component(props) {
   const $ = React.useMemoCache();
-  let c$9;
+  let c;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const a$7 = [];
-    const b$8 = {};
-    c$9 = new Foo$4(a$7, b$8);
-    $[0] = c$9;
+    const a = [];
+    const b = {};
+    c = new Foo(a, b);
+    $[0] = c;
   } else {
-    c$9 = $[0];
+    c = $[0];
   }
 
-  return c$9;
+  return c;
 }
 
 ```

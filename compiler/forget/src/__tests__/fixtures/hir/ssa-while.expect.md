@@ -58,22 +58,22 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let x$5;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$5 = 1;
+    x = 1;
 
-    while (x$5 < 10) {
-      x$5 = x$5 + 1;
+    while (x < 10) {
+      x = x + 1;
     }
 
-    $[0] = x$5;
+    $[0] = x;
   } else {
-    x$5 = $[0];
+    x = $[0];
   }
 
-  return x$5;
+  return x;
 }
 
 ```

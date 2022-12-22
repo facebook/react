@@ -56,30 +56,30 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let x$7;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$7 = foo$1();
-    $[0] = x$7;
+    x = foo();
+    $[0] = x;
   } else {
-    x$7 = $[0];
+    x = $[0];
   }
 
-  let y$8;
+  let y;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    y$8 = foo$1();
-    $[1] = y$8;
+    y = foo();
+    $[1] = y;
   } else {
-    y$8 = $[1];
+    y = $[1];
   }
 
-  if (x$7 > y$8) {
-    const z$10 = {};
+  if (x > y) {
+    const z = {};
   }
 
-  const z$12 = foo$1();
+  const z = foo();
 }
 
 ```

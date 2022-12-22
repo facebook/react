@@ -47,11 +47,11 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
-  const x$4 = 1;
-  const y$5 = 2;
-  if (y$5) {
-    const z$6 = x$4 + y$5;
+function foo() {
+  const x = 1;
+  const y = 2;
+  if (y) {
+    const z = x + y;
   }
 }
 

@@ -77,18 +77,18 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$7, b$8, c$9) {
-  const x$10 = [];
-  if (a$7) {
-    if (b$8) {
-      if (c$9) {
-        x$10.push(0);
+function foo(a, b, c) {
+  const x = [];
+  if (a) {
+    if (b) {
+      if (c) {
+        x.push(0);
       }
     }
   }
 
-  if (a$7.length) {
-    return a$7;
+  if (a.length) {
+    return a;
   }
 
   return null;

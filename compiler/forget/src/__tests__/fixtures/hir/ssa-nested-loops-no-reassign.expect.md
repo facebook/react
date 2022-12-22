@@ -85,17 +85,17 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$6, b$7, c$8) {
-  const x$9 = 0;
-  while (a$6) {
-    while (b$7) {
-      while (c$8) {
-        x$9 + 1;
+function foo(a, b, c) {
+  const x = 0;
+  while (a) {
+    while (b) {
+      while (c) {
+        x + 1;
       }
     }
   }
 
-  return x$9;
+  return x;
 }
 
 ```

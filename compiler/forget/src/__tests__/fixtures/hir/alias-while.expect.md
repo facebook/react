@@ -81,39 +81,39 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(cond$7) {
+function foo(cond) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== cond$7;
-  let a$8;
-  let b$9;
-  let c$10;
+  const c_0 = $[0] !== cond;
+  let a;
+  let b;
+  let c;
   if (c_0) {
-    a$8 = {};
-    b$9 = {};
-    c$10 = {};
+    a = {};
+    b = {};
+    c = {};
 
-    while (cond$7) {
-      const z$13 = a$8;
-      a$8 = b$9;
-      b$9 = c$10;
-      c$10 = z$13;
-      mutate$6(a$8, b$9);
+    while (cond) {
+      const z = a;
+      a = b;
+      b = c;
+      c = z;
+      mutate(a, b);
     }
 
-    $[0] = cond$7;
-    $[1] = a$8;
-    $[2] = b$9;
-    $[3] = c$10;
+    $[0] = cond;
+    $[1] = a;
+    $[2] = b;
+    $[3] = c;
   } else {
-    a$8 = $[1];
-    b$9 = $[2];
-    c$10 = $[3];
+    a = $[1];
+    b = $[2];
+    c = $[3];
   }
 
-  a$8;
-  b$9;
-  c$10;
-  return a$8;
+  a;
+  b;
+  c;
+  return a;
 }
 
 ```
@@ -139,7 +139,7 @@ function mutate(
 ## Code
 
 ```javascript
-function mutate$0(x$3, y$4) {}
+function mutate(x, y) {}
 
 ```
       

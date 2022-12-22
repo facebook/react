@@ -56,13 +56,13 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
-  const x$5 = 1;
-  while (x$5 < 10) {
-    x$5 + 1;
+function foo() {
+  const x = 1;
+  while (x < 10) {
+    x + 1;
   }
 
-  return x$5;
+  return x;
 }
 
 ```

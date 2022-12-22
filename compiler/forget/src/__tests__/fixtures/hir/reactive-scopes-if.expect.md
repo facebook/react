@@ -71,53 +71,53 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$8, b$9, c$10) {
+function foo(a, b, c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$8;
-  const c_1 = $[1] !== b$9;
-  const c_2 = $[2] !== c$10;
-  let x$11;
+  const c_0 = $[0] !== a;
+  const c_1 = $[1] !== b;
+  const c_2 = $[2] !== c;
+  let x;
   if (c_0 || c_1 || c_2) {
-    x$11 = [];
+    x = [];
 
-    if (a$8) {
-      const c_4 = $[4] !== b$9;
-      let y$12;
+    if (a) {
+      const c_4 = $[4] !== b;
+      let y;
 
       if (c_4) {
-        y$12 = [];
-        y$12.push(b$9);
-        $[4] = b$9;
-        $[5] = y$12;
+        y = [];
+        y.push(b);
+        $[4] = b;
+        $[5] = y;
       } else {
-        y$12 = $[5];
+        y = $[5];
       }
 
-      const c_6 = $[6] !== y$12;
-      let t7$14;
+      const c_6 = $[6] !== y;
+      let t7;
 
       if (c_6) {
-        t7$14 = <div>{y$12}</div>;
-        $[6] = y$12;
-        $[7] = t7$14;
+        t7 = <div>{y}</div>;
+        $[6] = y;
+        $[7] = t7;
       } else {
-        t7$14 = $[7];
+        t7 = $[7];
       }
 
-      x$11.push(t7$14);
+      x.push(t7);
     } else {
-      x$11.push(c$10);
+      x.push(c);
     }
 
-    $[0] = a$8;
-    $[1] = b$9;
-    $[2] = c$10;
-    $[3] = x$11;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = x;
   } else {
-    x$11 = $[3];
+    x = $[3];
   }
 
-  return x$11;
+  return x;
 }
 
 ```

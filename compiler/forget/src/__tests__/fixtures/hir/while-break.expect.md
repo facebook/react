@@ -44,11 +44,11 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$3, b$4) {
-  while (a$3) {
+function foo(a, b) {
+  while (a) {
     break;
   }
-  return b$4;
+  return b;
 }
 
 ```

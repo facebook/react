@@ -69,44 +69,44 @@ function And(
 ## Code
 
 ```javascript
-function And$0() {
+function And() {
   const $ = React.useMemoCache();
-  let t0$5;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$5 = f$1();
-    $[0] = t0$5;
+    t0 = f();
+    $[0] = t0;
   } else {
-    t0$5 = $[0];
+    t0 = $[0];
   }
 
-  const c_1 = $[1] !== t0$5;
-  let t2$8;
+  const c_1 = $[1] !== t0;
+  let t2;
 
   if (c_1) {
-    t2$8 = undefined;
+    t2 = undefined;
 
-    if (t0$5) {
-      let t3$6;
+    if (t0) {
+      let t3;
 
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t3$6 = g$4();
-        $[3] = t3$6;
+        t3 = g();
+        $[3] = t3;
       } else {
-        t3$6 = $[3];
+        t3 = $[3];
       }
 
-      t2$8 = t3$6;
+      t2 = t3;
     } else {
-      t2$8 = t0$5;
+      t2 = t0;
     }
 
-    $[1] = t0$5;
-    $[2] = t2$8;
+    $[1] = t0;
+    $[2] = t2;
   } else {
-    t2$8 = $[2];
+    t2 = $[2];
   }
 
-  return t2$8;
+  return t2;
 }
 
 ```
@@ -160,44 +160,44 @@ function Or(
 ## Code
 
 ```javascript
-function Or$0() {
+function Or() {
   const $ = React.useMemoCache();
-  let t0$5;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$5 = f$1();
-    $[0] = t0$5;
+    t0 = f();
+    $[0] = t0;
   } else {
-    t0$5 = $[0];
+    t0 = $[0];
   }
 
-  const c_1 = $[1] !== t0$5;
-  let t2$8;
+  const c_1 = $[1] !== t0;
+  let t2;
 
   if (c_1) {
-    t2$8 = undefined;
+    t2 = undefined;
 
-    if (t0$5) {
-      t2$8 = t0$5;
+    if (t0) {
+      t2 = t0;
     } else {
-      let t3$7;
+      let t3;
 
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t3$7 = g$4();
-        $[3] = t3$7;
+        t3 = g();
+        $[3] = t3;
       } else {
-        t3$7 = $[3];
+        t3 = $[3];
       }
 
-      t2$8 = t3$7;
+      t2 = t3;
     }
 
-    $[1] = t0$5;
-    $[2] = t2$8;
+    $[1] = t0;
+    $[2] = t2;
   } else {
-    t2$8 = $[2];
+    t2 = $[2];
   }
 
-  return t2$8;
+  return t2;
 }
 
 ```
@@ -256,44 +256,44 @@ function QuestionQuestion(
 ## Code
 
 ```javascript
-function QuestionQuestion$0(props$8) {
+function QuestionQuestion(props) {
   const $ = React.useMemoCache();
-  let t0$9;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$9 = f$2();
-    $[0] = t0$9;
+    t0 = f();
+    $[0] = t0;
   } else {
-    t0$9 = $[0];
+    t0 = $[0];
   }
 
-  const c_1 = $[1] !== t0$9;
-  let t2$14;
+  const c_1 = $[1] !== t0;
+  let t2;
 
   if (c_1) {
-    t2$14 = undefined;
+    t2 = undefined;
 
-    if (t0$9 != null) {
-      t2$14 = t0$9;
+    if (t0 != null) {
+      t2 = t0;
     } else {
-      let t3$13;
+      let t3;
 
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t3$13 = g$7();
-        $[3] = t3$13;
+        t3 = g();
+        $[3] = t3;
       } else {
-        t3$13 = $[3];
+        t3 = $[3];
       }
 
-      t2$14 = t3$13;
+      t2 = t3;
     }
 
-    $[1] = t0$9;
-    $[2] = t2$14;
+    $[1] = t0;
+    $[2] = t2;
   } else {
-    t2$14 = $[2];
+    t2 = $[2];
   }
 
-  return t2$14;
+  return t2;
 }
 
 ```
@@ -317,7 +317,7 @@ function f(
 ## Code
 
 ```javascript
-function f$0() {}
+function f() {}
 
 ```
 ## HIR
@@ -340,7 +340,7 @@ function g(
 ## Code
 
 ```javascript
-function g$0() {}
+function g() {}
 
 ```
       

@@ -41,11 +41,11 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$5, b$6) {
-  const x$7 = [];
-  const y$8 = [];
-  y$8.push(b$6);
-  x$7.push(a$5);
+function foo(a, b) {
+  const x = [];
+  const y = [];
+  y.push(b);
+  x.push(a);
 }
 
 ```

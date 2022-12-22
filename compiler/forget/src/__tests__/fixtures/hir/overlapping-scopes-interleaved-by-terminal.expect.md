@@ -51,14 +51,14 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$6, b$7, c$8) {
-  const x$9 = [];
-  const y$10 = [];
-  if (x$9) {
+function foo(a, b, c) {
+  const x = [];
+  const y = [];
+  if (x) {
   }
 
-  y$10.push(a$6);
-  x$9.push(b$7);
+  y.push(a);
+  x.push(b);
 }
 
 ```

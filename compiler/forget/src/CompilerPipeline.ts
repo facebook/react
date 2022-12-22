@@ -24,6 +24,7 @@ import {
   propagateScopeDependencies,
   pruneUnusedLabels,
   pruneUnusedScopes,
+  renameVariables,
 } from "./ReactiveScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { logHIRFunction } from "./Utils/logger";
@@ -71,6 +72,7 @@ export default function (
   flattenReactiveLoops(reactiveFunction);
   propagateScopeDependencies(reactiveFunction);
   pruneUnusedScopes(reactiveFunction);
+  renameVariables(reactiveFunction);
   const scopes = printReactiveFunction(reactiveFunction);
   const ast = codegenReactiveFunction(reactiveFunction);
 

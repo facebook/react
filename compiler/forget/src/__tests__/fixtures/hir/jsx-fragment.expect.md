@@ -64,46 +64,46 @@ function Foo(
 ## Code
 
 ```javascript
-function Foo$0(props$13) {
+function Foo(props) {
   const $ = React.useMemoCache();
-  let t0$20;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0$20 = <>Text</>;
-    $[0] = t0$20;
+    t0 = <>Text</>;
+    $[0] = t0;
   } else {
-    t0$20 = $[0];
+    t0 = $[0];
   }
 
-  const c_1 = $[1] !== t0$20;
-  let t2$22;
+  const c_1 = $[1] !== t0;
+  let t2;
 
   if (c_1) {
-    t2$22 = <div>{t0$20}</div>;
-    $[1] = t0$20;
-    $[2] = t2$22;
+    t2 = <div>{t0}</div>;
+    $[1] = t0;
+    $[2] = t2;
   } else {
-    t2$22 = $[2];
+    t2 = $[2];
   }
 
-  const c_3 = $[3] !== props$13.greeting;
-  const c_4 = $[4] !== t2$22;
-  let t5$24;
+  const c_3 = $[3] !== props.greeting;
+  const c_4 = $[4] !== t2;
+  let t5;
 
   if (c_3 || c_4) {
-    t5$24 = (
+    t5 = (
       <>
-        Hello {props$13.greeting}
-        {t2$22}
+        Hello {props.greeting}
+        {t2}
       </>
     );
-    $[3] = props$13.greeting;
-    $[4] = t2$22;
-    $[5] = t5$24;
+    $[3] = props.greeting;
+    $[4] = t2;
+    $[5] = t5;
   } else {
-    t5$24 = $[5];
+    t5 = $[5];
   }
 
-  return t5$24;
+  return t5;
 }
 
 ```

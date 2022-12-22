@@ -40,22 +40,22 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$5) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const a$6 = 1;
-  const b$7 = 2;
-  let x$8;
+  const a = 1;
+  const b = 2;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$8 = {
-      a: a$6,
-      b: b$7,
+    x = {
+      a: a,
+      b: b,
     };
-    $[0] = x$8;
+    $[0] = x;
   } else {
-    x$8 = $[0];
+    x = $[0];
   }
 
-  return x$8;
+  return x;
 }
 
 ```

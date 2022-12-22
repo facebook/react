@@ -45,20 +45,20 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0() {
+function Component() {
   const $ = React.useMemoCache();
-  let a$4;
+  let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a$4 = [];
-    $[0] = a$4;
+    a = [];
+    $[0] = a;
   } else {
-    a$4 = $[0];
+    a = $[0];
   }
 
-  useFreeze$2(a$4);
-  useFreeze$2(a$4);
-  call$3(a$4);
-  return a$4;
+  useFreeze(a);
+  useFreeze(a);
+  call(a);
+  return a;
 }
 
 ```
@@ -83,7 +83,7 @@ function useFreeze(
 ## Code
 
 ```javascript
-function useFreeze$0(x$2) {}
+function useFreeze(x) {}
 
 ```
 ## HIR
@@ -107,7 +107,7 @@ function call(
 ## Code
 
 ```javascript
-function call$0(x$2) {}
+function call(x) {}
 
 ```
       

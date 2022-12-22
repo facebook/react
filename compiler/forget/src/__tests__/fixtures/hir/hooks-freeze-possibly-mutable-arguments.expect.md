@@ -29,24 +29,24 @@ bb0:
   [1] Const mutate cond$8 = read props$7.cond
   [2] Const mutate x$9 = read props$7.x
   [3] Const mutate a$10:TPrimitive = undefined
-  [4] Let mutate a$14_@0[4:9] = undefined
+  [4] Let mutate a$0$14_@0[4:9] = undefined
   [4] If (read cond$8) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate a$11 = read x$9
-  [6] Reassign mutate a$14_@0[4:9] = read a$11
+  [5] Const mutate a$1$11 = read x$9
+  [6] Reassign mutate a$0$14_@0[4:9] = read a$1$11
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Const mutate a$12_@1 = Array []
-  [8] Reassign mutate a$14_@0[4:9] = read a$12_@1
+  [7] Const mutate a$2$12_@1 = Array []
+  [8] Reassign mutate a$0$14_@0[4:9] = read a$2$12_@1
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [9] Call read useFreeze$5:TFunction(freeze a$14_@0)
-  [10] Call read useFreeze$5:TFunction(read a$14_@0)
-  [11] Call mutate call$6:TFunction(read a$14_@0)
-  [12] Return read a$14_@0
+  [9] Call read useFreeze$5:TFunction(freeze a$0$14_@0)
+  [10] Call read useFreeze$5:TFunction(read a$0$14_@0)
+  [11] Call mutate call$6:TFunction(read a$0$14_@0)
+  [12] Return read a$0$14_@0
 ```
 
 ## Reactive Scopes
@@ -58,22 +58,22 @@ function Component(
   [1] Const mutate cond$8 = read props$7.cond
   [2] Const mutate x$9 = read props$7.x
   [3] Const mutate a$10:TPrimitive = undefined
-  scope @0 [4:9] deps=[read cond$8, read x$9] out=[a$14_@0] {
-    [4] Let mutate a$14_@0[4:9] = undefined
+  scope @0 [4:9] deps=[read cond$8, read x$9] out=[a$0$14_@0] {
+    [4] Let mutate a$0$14_@0[4:9] = undefined
     if (read cond$8) {
-      [5] Const mutate a$11 = read x$9
-      [6] Reassign mutate a$14_@0[4:9] = read a$11
+      [5] Const mutate a$1$11 = read x$9
+      [6] Reassign mutate a$0$14_@0[4:9] = read a$1$11
     } else {
-      scope @1 [7:8] deps=[] out=[a$12_@1] {
-        [7] Const mutate a$12_@1 = Array []
+      scope @1 [7:8] deps=[] out=[a$2$12_@1] {
+        [7] Const mutate a$2$12_@1 = Array []
       }
-      [8] Reassign mutate a$14_@0[4:9] = read a$12_@1
+      [8] Reassign mutate a$0$14_@0[4:9] = read a$2$12_@1
     }
   }
-  [9] Call read useFreeze$5:TFunction(freeze a$14_@0)
-  [10] Call read useFreeze$5:TFunction(read a$14_@0)
-  [11] Call mutate call$6:TFunction(read a$14_@0)
-  return read a$14_@0
+  [9] Call read useFreeze$5:TFunction(freeze a$0$14_@0)
+  [10] Call read useFreeze$5:TFunction(read a$0$14_@0)
+  [11] Call mutate call$6:TFunction(read a$0$14_@0)
+  return read a$0$14_@0
 }
 
 ```
@@ -81,44 +81,44 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$7) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const cond$8 = props$7.cond;
-  const x$9 = props$7.x;
-  const a$10 = undefined;
-  const c_0 = $[0] !== cond$8;
-  const c_1 = $[1] !== x$9;
-  let a$14;
+  const cond = props.cond;
+  const x = props.x;
+  const a = undefined;
+  const c_0 = $[0] !== cond;
+  const c_1 = $[1] !== x;
+  let a$0;
   if (c_0 || c_1) {
-    a$14 = undefined;
+    a$0 = undefined;
 
-    if (cond$8) {
-      const a$11 = x$9;
-      a$14 = a$11;
+    if (cond) {
+      const a$1 = x;
+      a$0 = a$1;
     } else {
-      let a$12;
+      let a$2;
 
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        a$12 = [];
-        $[3] = a$12;
+        a$2 = [];
+        $[3] = a$2;
       } else {
-        a$12 = $[3];
+        a$2 = $[3];
       }
 
-      a$14 = a$12;
+      a$0 = a$2;
     }
 
-    $[0] = cond$8;
-    $[1] = x$9;
-    $[2] = a$14;
+    $[0] = cond;
+    $[1] = x;
+    $[2] = a$0;
   } else {
-    a$14 = $[2];
+    a$0 = $[2];
   }
 
-  useFreeze$5(a$14);
-  useFreeze$5(a$14);
-  call$6(a$14);
-  return a$14;
+  useFreeze(a$0);
+  useFreeze(a$0);
+  call(a$0);
+  return a$0;
 }
 
 ```
@@ -143,7 +143,7 @@ function useFreeze(
 ## Code
 
 ```javascript
-function useFreeze$0(x$2) {}
+function useFreeze(x) {}
 
 ```
 ## HIR
@@ -167,7 +167,7 @@ function call(
 ## Code
 
 ```javascript
-function call$0(x$2) {}
+function call(x) {}
 
 ```
       

@@ -52,27 +52,27 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let a$7;
+  let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a$7 = some$1();
-    $[0] = a$7;
+    a = some();
+    $[0] = a;
   } else {
-    a$7 = $[0];
+    a = $[0];
   }
 
-  let b$8;
+  let b;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    b$8 = someOther$3();
-    $[1] = b$8;
+    b = someOther();
+    $[1] = b;
   } else {
-    b$8 = $[1];
+    b = $[1];
   }
 
-  if (a$7 > b$8) {
-    const m$10 = {};
+  if (a > b) {
+    const m = {};
   }
 }
 

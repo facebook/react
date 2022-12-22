@@ -47,21 +47,21 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let y$7;
+  let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const a$5 = {};
-    const x$6 = a$5;
-    y$7 = {};
-    y$7.x = x$6;
-    mutate$4(a$5);
-    $[0] = y$7;
+    const a = {};
+    const x = a;
+    y = {};
+    y.x = x;
+    mutate(a);
+    $[0] = y;
   } else {
-    y$7 = $[0];
+    y = $[0];
   }
 
-  return y$7;
+  return y;
 }
 
 ```

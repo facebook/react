@@ -42,20 +42,20 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let y$5;
+  let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x$4 = [];
-    y$5 = {};
-    y$5.x = x$4;
-    mutate$3(y$5);
-    $[0] = y$5;
+    const x = [];
+    y = {};
+    y.x = x;
+    mutate(y);
+    $[0] = y;
   } else {
-    y$5 = $[0];
+    y = $[0];
   }
 
-  return y$5;
+  return y;
 }
 
 ```

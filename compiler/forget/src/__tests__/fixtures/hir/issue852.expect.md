@@ -42,23 +42,23 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(c$6) {
+function Component(c) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== c$6;
-  let x$7;
+  const c_0 = $[0] !== c;
+  let x;
   if (c_0) {
-    x$7 = {
-      c: c$6,
+    x = {
+      c: c,
     };
-    mutate$3(x$7);
-    $[0] = c$6;
-    $[1] = x$7;
+    mutate(x);
+    $[0] = c;
+    $[1] = x;
   } else {
-    x$7 = $[1];
+    x = $[1];
   }
 
-  const a$8 = x$7;
-  const b$9 = a$8;
+  const a = x;
+  const b = a;
 }
 
 ```

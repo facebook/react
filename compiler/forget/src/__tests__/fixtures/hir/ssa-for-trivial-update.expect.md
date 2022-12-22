@@ -69,22 +69,22 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let x$6;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$6 = 1;
+    x = 1;
 
-    for (const i$7 = 0; i$7 < 10; i$7) {
-      x$6 = x$6 + 1;
+    for (const i = 0; i < 10; i) {
+      x = x + 1;
     }
 
-    $[0] = x$6;
+    $[0] = x;
   } else {
-    x$6 = $[0];
+    x = $[0];
   }
 
-  return x$6;
+  return x;
 }
 
 ```

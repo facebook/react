@@ -54,27 +54,27 @@ bb0:
     Fallthrough: bb1
 bb10:
   predecessor blocks: bb0
-  [9] Const mutate y$17:TPrimitive = 0
+  [9] Const mutate y$0$17:TPrimitive = 0
   [10] Goto bb9
 bb9:
   predecessor blocks: bb10 bb0
-  [11] Const mutate y$18:TPrimitive = 1
+  [11] Const mutate y$1$18:TPrimitive = 1
   [12] Goto bb1
 bb5:
   predecessor blocks: bb0
-  [13] Const mutate y$19:TPrimitive = 3
+  [13] Const mutate y$2$19:TPrimitive = 3
   [14] Goto bb1
 bb4:
   predecessor blocks: bb0
-  [15] Const mutate y$20:TPrimitive = 4
+  [15] Const mutate y$3$20:TPrimitive = 4
   [16] Goto bb3
 bb3:
   predecessor blocks: bb4 bb0
-  [17] Const mutate y$21:TPrimitive = 5
+  [17] Const mutate y$4$21:TPrimitive = 5
   [18] Goto bb2
 bb2:
   predecessor blocks: bb3 bb0
-  [19] Const mutate y$22:TPrimitive = 0
+  [19] Const mutate y$5$22:TPrimitive = 0
   [20] Goto bb1
 bb1:
   predecessor blocks: bb9 bb0 bb5 bb2
@@ -96,27 +96,27 @@ function foo(
   [7] Const mutate $16:TPrimitive = 0
   switch (read x$9) {
     case read $16:TPrimitive: {
-        [9] Const mutate y$17:TPrimitive = 0
+        [9] Const mutate y$0$17:TPrimitive = 0
     }
     case read $15:TPrimitive: {
-        [11] Const mutate y$18:TPrimitive = 1
+        [11] Const mutate y$1$18:TPrimitive = 1
         break bb1
     }
     case read $14:TPrimitive: {
         break bb1
     }
     case read $13:TPrimitive: {
-        [13] Const mutate y$19:TPrimitive = 3
+        [13] Const mutate y$2$19:TPrimitive = 3
         break bb1
     }
     case read $12:TPrimitive: {
-        [15] Const mutate y$20:TPrimitive = 4
+        [15] Const mutate y$3$20:TPrimitive = 4
     }
     case read $11:TPrimitive: {
-        [17] Const mutate y$21:TPrimitive = 5
+        [17] Const mutate y$4$21:TPrimitive = 5
     }
     default: {
-        [19] Const mutate y$22:TPrimitive = 0
+        [19] Const mutate y$5$22:TPrimitive = 0
     }
   }
   return
@@ -127,15 +127,15 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(x$9) {
-  const y$10 = undefined;
-  bb1: switch (x$9) {
+function foo(x) {
+  const y = undefined;
+  bb1: switch (x) {
     case 0: {
-      const y$17 = 0;
+      const y$0 = 0;
     }
 
     case 1: {
-      const y$18 = 1;
+      const y$1 = 1;
       break bb1;
     }
 
@@ -144,20 +144,20 @@ function foo$0(x$9) {
     }
 
     case 3: {
-      const y$19 = 3;
+      const y$2 = 3;
       break bb1;
     }
 
     case 4: {
-      const y$20 = 4;
+      const y$3 = 4;
     }
 
     case 5: {
-      const y$21 = 5;
+      const y$4 = 5;
     }
 
     default: {
-      const y$22 = 0;
+      const y$5 = 0;
     }
   }
 }

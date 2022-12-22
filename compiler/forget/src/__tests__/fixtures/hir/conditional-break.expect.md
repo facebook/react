@@ -114,30 +114,30 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$4) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$4.a;
-  const c_1 = $[1] !== props$4.b;
-  const c_2 = $[2] !== props$4.d;
-  let a_DEBUG$5;
+  const c_0 = $[0] !== props.a;
+  const c_1 = $[1] !== props.b;
+  const c_2 = $[2] !== props.d;
+  let a_DEBUG;
   if (c_0 || c_1 || c_2) {
-    a_DEBUG$5 = [];
-    a_DEBUG$5.push(props$4.a);
+    a_DEBUG = [];
+    a_DEBUG.push(props.a);
 
-    if (props$4.b) {
+    if (props.b) {
       return null;
     }
 
-    a_DEBUG$5.push(props$4.d);
-    $[0] = props$4.a;
-    $[1] = props$4.b;
-    $[2] = props$4.d;
-    $[3] = a_DEBUG$5;
+    a_DEBUG.push(props.d);
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.d;
+    $[3] = a_DEBUG;
   } else {
-    a_DEBUG$5 = $[3];
+    a_DEBUG = $[3];
   }
 
-  return a_DEBUG$5;
+  return a_DEBUG;
 }
 
 ```
@@ -180,32 +180,32 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$3) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$3.a;
-  const c_1 = $[1] !== props$3.b;
-  const c_2 = $[2] !== props$3.c;
-  const c_3 = $[3] !== props$3.d;
-  let a$4;
+  const c_0 = $[0] !== props.a;
+  const c_1 = $[1] !== props.b;
+  const c_2 = $[2] !== props.c;
+  const c_3 = $[3] !== props.d;
+  let a;
   if (c_0 || c_1 || c_2 || c_3) {
-    a$4 = [];
-    a$4.push(props$3.a);
+    a = [];
+    a.push(props.a);
 
-    if (props$3.b) {
-      a$4.push(props$3.c);
+    if (props.b) {
+      a.push(props.c);
     }
 
-    a$4.push(props$3.d);
-    $[0] = props$3.a;
-    $[1] = props$3.b;
-    $[2] = props$3.c;
-    $[3] = props$3.d;
-    $[4] = a$4;
+    a.push(props.d);
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
   } else {
-    a$4 = $[4];
+    a = $[4];
   }
 
-  return a$4;
+  return a;
 }
 
 ```
@@ -251,33 +251,33 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$4) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$4.a;
-  const c_1 = $[1] !== props$4.b;
-  const c_2 = $[2] !== props$4.c;
-  const c_3 = $[3] !== props$4.d;
-  let a$5;
+  const c_0 = $[0] !== props.a;
+  const c_1 = $[1] !== props.b;
+  const c_2 = $[2] !== props.c;
+  const c_3 = $[3] !== props.d;
+  let a;
   if (c_0 || c_1 || c_2 || c_3) {
-    a$5 = [];
-    a$5.push(props$4.a);
+    a = [];
+    a.push(props.a);
 
-    if (props$4.b) {
-      a$5.push(props$4.c);
+    if (props.b) {
+      a.push(props.c);
       return null;
     }
 
-    a$5.push(props$4.d);
-    $[0] = props$4.a;
-    $[1] = props$4.b;
-    $[2] = props$4.c;
-    $[3] = props$4.d;
-    $[4] = a$5;
+    a.push(props.d);
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
   } else {
-    a$5 = $[4];
+    a = $[4];
   }
 
-  return a$5;
+  return a;
 }
 
 ```
@@ -321,33 +321,33 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$3) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$3.a;
-  const c_1 = $[1] !== props$3.b;
-  const c_2 = $[2] !== props$3.c;
-  const c_3 = $[3] !== props$3.d;
-  let a$4;
+  const c_0 = $[0] !== props.a;
+  const c_1 = $[1] !== props.b;
+  const c_2 = $[2] !== props.c;
+  const c_3 = $[3] !== props.d;
+  let a;
   if (c_0 || c_1 || c_2 || c_3) {
-    a$4 = [];
-    a$4.push(props$3.a);
+    a = [];
+    a.push(props.a);
 
-    if (props$3.b) {
-      a$4.push(props$3.c);
-      return a$4;
+    if (props.b) {
+      a.push(props.c);
+      return a;
     }
 
-    a$4.push(props$3.d);
-    $[0] = props$3.a;
-    $[1] = props$3.b;
-    $[2] = props$3.c;
-    $[3] = props$3.d;
-    $[4] = a$4;
+    a.push(props.d);
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
   } else {
-    a$4 = $[4];
+    a = $[4];
   }
 
-  return a$4;
+  return a;
 }
 
 ```
@@ -388,15 +388,15 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$3) {
-  const a$4 = [];
-  a$4.push(props$3.a);
-  if (props$3.b) {
-    a$4.push(props$3.d);
-    return a$4;
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  if (props.b) {
+    a.push(props.d);
+    return a;
   }
 
-  a$4.push(props$3.c);
+  a.push(props.c);
 }
 
 ```

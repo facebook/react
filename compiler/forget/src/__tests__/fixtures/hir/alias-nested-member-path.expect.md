@@ -49,41 +49,41 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let z$4;
+  let z;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    z$4 = [];
-    $[0] = z$4;
+    z = [];
+    $[0] = z;
   } else {
-    z$4 = $[0];
+    z = $[0];
   }
 
-  const c_1 = $[1] !== z$4;
-  let y$5;
+  const c_1 = $[1] !== z;
+  let y;
 
   if (c_1) {
-    y$5 = {};
-    y$5.z = z$4;
-    $[1] = z$4;
-    $[2] = y$5;
+    y = {};
+    y.z = z;
+    $[1] = z;
+    $[2] = y;
   } else {
-    y$5 = $[2];
+    y = $[2];
   }
 
-  const c_3 = $[3] !== y$5;
-  let x$6;
+  const c_3 = $[3] !== y;
+  let x;
 
   if (c_3) {
-    x$6 = {};
-    x$6.y = y$5;
-    $[3] = y$5;
-    $[4] = x$6;
+    x = {};
+    x.y = y;
+    $[3] = y;
+    $[4] = x;
   } else {
-    x$6 = $[4];
+    x = $[4];
   }
 
-  return x$6;
+  return x;
 }
 
 ```

@@ -50,39 +50,39 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$6) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$6.p0;
-  let x$7;
-  let child$9;
+  const c_0 = $[0] !== props.p0;
+  let x;
+  let child;
   if (c_0) {
-    x$7 = {};
-    const y$8 = [];
-    x$7.y = y$8;
-    child$9 = <Component$0 data={y$8}></Component$0>;
-    x$7.y.push(props$6.p0);
-    $[0] = props$6.p0;
-    $[1] = x$7;
-    $[2] = child$9;
+    x = {};
+    const y = [];
+    x.y = y;
+    child = <Component data={y}></Component>;
+    x.y.push(props.p0);
+    $[0] = props.p0;
+    $[1] = x;
+    $[2] = child;
   } else {
-    x$7 = $[1];
-    child$9 = $[2];
+    x = $[1];
+    child = $[2];
   }
 
-  const c_3 = $[3] !== x$7;
-  const c_4 = $[4] !== child$9;
-  let t5$10;
+  const c_3 = $[3] !== x;
+  const c_4 = $[4] !== child;
+  let t5;
 
   if (c_3 || c_4) {
-    t5$10 = <Component$0 data={x$7}>{child$9}</Component$0>;
-    $[3] = x$7;
-    $[4] = child$9;
-    $[5] = t5$10;
+    t5 = <Component data={x}>{child}</Component>;
+    $[3] = x;
+    $[4] = child;
+    $[5] = t5;
   } else {
-    t5$10 = $[5];
+    t5 = $[5];
   }
 
-  return t5$10;
+  return t5;
 }
 
 ```

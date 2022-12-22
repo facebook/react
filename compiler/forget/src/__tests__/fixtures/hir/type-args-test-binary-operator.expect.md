@@ -44,9 +44,9 @@ function component(
 ## Code
 
 ```javascript
-function component$0(a$5, b$6) {
-  if (a$5 > b$6) {
-    const m$8 = {};
+function component(a, b) {
+  if (a > b) {
+    const m = {};
   }
 }
 

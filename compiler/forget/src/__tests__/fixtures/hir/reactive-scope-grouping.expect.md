@@ -48,29 +48,29 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {
+function foo() {
   const $ = React.useMemoCache();
-  let x$4;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$4 = {};
-    let y$5;
+    x = {};
+    let y;
 
     if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      y$5 = [];
-      const z$6 = {};
-      y$5.push(z$6);
-      $[1] = y$5;
+      y = [];
+      const z = {};
+      y.push(z);
+      $[1] = y;
     } else {
-      y$5 = $[1];
+      y = $[1];
     }
 
-    x$4.y = y$5;
-    $[0] = x$4;
+    x.y = y;
+    $[0] = x;
   } else {
-    x$4 = $[0];
+    x = $[0];
   }
 
-  return x$4;
+  return x;
 }
 
 ```

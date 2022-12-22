@@ -57,15 +57,15 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$3) {
-  const a$4 = [];
-  a$4.push(props$3.a);
-  if (props$3.b) {
-    a$4.push(props$3.d);
-    return a$4;
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  if (props.b) {
+    a.push(props.d);
+    return a;
   }
 
-  a$4.push(props$3.c);
+  a.push(props.c);
 }
 
 ```

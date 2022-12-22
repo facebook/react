@@ -66,39 +66,39 @@ function f(
 ## Code
 
 ```javascript
-function f$0(a$8, b$9) {
+function f(a, b) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$8.length;
-  const c_1 = $[1] !== b$9;
-  let x$10;
+  const c_0 = $[0] !== a.length;
+  const c_1 = $[1] !== b;
+  let x;
   if (c_0 || c_1) {
-    x$10 = [];
+    x = [];
 
-    if (a$8.length === 1) {
-      if (b$9) {
-        x$10.push(b$9);
+    if (a.length === 1) {
+      if (b) {
+        x.push(b);
       }
     }
 
-    $[0] = a$8.length;
-    $[1] = b$9;
-    $[2] = x$10;
+    $[0] = a.length;
+    $[1] = b;
+    $[2] = x;
   } else {
-    x$10 = $[2];
+    x = $[2];
   }
 
-  const c_3 = $[3] !== x$10;
-  let t4$15;
+  const c_3 = $[3] !== x;
+  let t4;
 
   if (c_3) {
-    t4$15 = <div>{x$10}</div>;
-    $[3] = x$10;
-    $[4] = t4$15;
+    t4 = <div>{x}</div>;
+    $[3] = x;
+    $[4] = t4;
   } else {
-    t4$15 = $[4];
+    t4 = $[4];
   }
 
-  return t4$15;
+  return t4;
 }
 
 ```

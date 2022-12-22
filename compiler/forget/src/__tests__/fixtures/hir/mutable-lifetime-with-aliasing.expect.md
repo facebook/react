@@ -57,7 +57,7 @@ function mutate(
 ## Code
 
 ```javascript
-function mutate$0(x$3, y$4) {}
+function mutate(x, y) {}
 
 ```
 ## HIR
@@ -128,49 +128,49 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$10) {
+function Component(props) {
   const $ = React.useMemoCache();
-  let a$11;
+  let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a$11 = {};
-    $[0] = a$11;
+    a = {};
+    $[0] = a;
   } else {
-    a$11 = $[0];
+    a = $[0];
   }
 
-  const b$12 = [a$11];
-  let c$13;
+  const b = [a];
+  let c;
 
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    c$13 = {};
-    $[1] = c$13;
+    c = {};
+    $[1] = c;
   } else {
-    c$13 = $[1];
+    c = $[1];
   }
 
-  const d$14 = {
-    c: c$13,
+  const d = {
+    c: c,
   };
-  const x$15 = {};
-  x$15.b = b$12;
-  const y$16 = mutate$7(x$15, d$14);
+  const x = {};
+  x.b = b;
+  const y = mutate(x, d);
 
-  if (a$11) {
+  if (a) {
   }
 
-  if (b$12) {
+  if (b) {
   }
 
-  if (c$13) {
+  if (c) {
   }
 
-  if (d$14) {
+  if (d) {
   }
 
-  if (y$16) {
+  if (y) {
   }
 
-  mutate$7(x$15, null);
+  mutate(x, null);
 }
 
 ```

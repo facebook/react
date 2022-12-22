@@ -65,15 +65,15 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$5, b$6, c$7, d$8) {
-  while (a$5) {
-    if (b$6) {
+function foo(a, b, c, d) {
+  while (a) {
+    if (b) {
       continue;
     }
-    c$7();
+    c();
   }
 
-  d$8();
+  d();
 }
 
 ```

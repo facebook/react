@@ -542,7 +542,7 @@ export function codegenPlace(temp: Temporaries, place: Place): t.Expression {
 
 export function convertIdentifier(identifier: Identifier): t.Identifier {
   if (identifier.name !== null) {
-    return t.identifier(`${identifier.name}$${identifier.id}`);
+    return t.identifier(`${identifier.name}`);
   }
   return t.identifier(`t${identifier.id}`);
 }

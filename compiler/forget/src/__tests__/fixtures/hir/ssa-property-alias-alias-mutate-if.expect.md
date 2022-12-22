@@ -67,30 +67,30 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0(a$7) {
+function foo(a) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== a$7;
-  let x$9;
+  const c_0 = $[0] !== a;
+  let x;
   if (c_0) {
-    const b$8 = {};
-    x$9 = b$8;
+    const b = {};
+    x = b;
 
-    if (a$7) {
-      const y$10 = {};
-      x$9.y = y$10;
+    if (a) {
+      const y = {};
+      x.y = y;
     } else {
-      const z$11 = {};
-      x$9.z = z$11;
+      const z = {};
+      x.z = z;
     }
 
-    mutate$6(b$8);
-    $[0] = a$7;
-    $[1] = x$9;
+    mutate(b);
+    $[0] = a;
+    $[1] = x;
   } else {
-    x$9 = $[1];
+    x = $[1];
   }
 
-  return x$9;
+  return x;
 }
 
 ```

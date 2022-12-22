@@ -45,13 +45,13 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
-  const z$5 = [];
-  const y$6 = {};
-  y$6.z = z$5;
-  const x$7 = {};
-  x$7.y = y$6;
-  mutate$4(x$7.y.z);
+function component() {
+  const z = [];
+  const y = {};
+  y.z = z;
+  const x = {};
+  x.y = y;
+  mutate(x.y.z);
 }
 
 ```

@@ -37,7 +37,7 @@ function log(
 ## Code
 
 ```javascript
-function log$0() {}
+function log() {}
 
 ```
 ## HIR
@@ -45,21 +45,21 @@ function log$0() {}
 ```
 bb0:
   [1] Const mutate str$6:TPrimitive = ""
-  [2] Let mutate str$10_@0[1:8] = read str$6:TPrimitive
+  [2] Let mutate str$0$10_@0[1:8] = read str$6:TPrimitive
   [2] If (read cond$5) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate str$7:TPrimitive = "other test"
-  [4] Call mutate log$4:TFunction(read str$7:TPrimitive)
+  [3] Const mutate str$1$7:TPrimitive = "other test"
+  [4] Call mutate log$4:TFunction(read str$1$7:TPrimitive)
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Const mutate str$8:TPrimitive = "fallthrough test"
-  [7] Reassign mutate str$10_@0[1:8] = read str$8:TPrimitive
+  [6] Const mutate str$2$8:TPrimitive = "fallthrough test"
+  [7] Reassign mutate str$0$10_@0[1:8] = read str$2$8:TPrimitive
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [8] Call mutate log$4:TFunction(read str$10_@0)
+  [8] Call mutate log$4:TFunction(read str$0$10_@0)
   [9] Return
 ```
 
@@ -70,17 +70,17 @@ function Foo(
   cond,
 ) {
   [1] Const mutate str$6:TPrimitive = ""
-  scope @0 [1:8] deps=[read cond$5] out=[str$10_@0] {
-    [2] Let mutate str$10_@0[1:8] = read str$6:TPrimitive
+  scope @0 [1:8] deps=[read cond$5] out=[str$0$10_@0] {
+    [2] Let mutate str$0$10_@0[1:8] = read str$6:TPrimitive
     if (read cond$5) {
-      [3] Const mutate str$7:TPrimitive = "other test"
-      [4] Call mutate log$4:TFunction(read str$7:TPrimitive)
+      [3] Const mutate str$1$7:TPrimitive = "other test"
+      [4] Call mutate log$4:TFunction(read str$1$7:TPrimitive)
     } else {
-      [6] Const mutate str$8:TPrimitive = "fallthrough test"
-      [7] Reassign mutate str$10_@0[1:8] = read str$8:TPrimitive
+      [6] Const mutate str$2$8:TPrimitive = "fallthrough test"
+      [7] Reassign mutate str$0$10_@0[1:8] = read str$2$8:TPrimitive
     }
   }
-  [8] Call mutate log$4:TFunction(read str$10_@0)
+  [8] Call mutate log$4:TFunction(read str$0$10_@0)
   return
 }
 
@@ -89,29 +89,29 @@ function Foo(
 ## Code
 
 ```javascript
-function Foo$0(cond$5) {
+function Foo(cond) {
   const $ = React.useMemoCache();
-  const str$6 = "";
-  const c_0 = $[0] !== cond$5;
-  let str$10;
+  const str = "";
+  const c_0 = $[0] !== cond;
+  let str$0;
   if (c_0) {
-    str$10 = str$6;
+    str$0 = str;
 
-    if (cond$5) {
-      const str$7 = "other test";
-      log$4(str$7);
+    if (cond) {
+      const str$1 = "other test";
+      log(str$1);
     } else {
-      const str$8 = "fallthrough test";
-      str$10 = str$8;
+      const str$2 = "fallthrough test";
+      str$0 = str$2;
     }
 
-    $[0] = cond$5;
-    $[1] = str$10;
+    $[0] = cond;
+    $[1] = str$0;
   } else {
-    str$10 = $[1];
+    str$0 = $[1];
   }
 
-  log$4(str$10);
+  log(str$0);
 }
 
 ```

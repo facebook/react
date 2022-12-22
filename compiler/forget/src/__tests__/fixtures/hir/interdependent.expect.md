@@ -57,39 +57,39 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$8) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props$8.a;
-  const c_1 = $[1] !== props$8.b;
-  let a$9;
-  let b$10;
+  const c_0 = $[0] !== props.a;
+  const c_1 = $[1] !== props.b;
+  let a;
+  let b;
   if (c_0 || c_1) {
-    a$9 = compute$2(props$8.a);
-    b$10 = compute$2(props$8.b);
-    foo$5(a$9, b$10);
-    $[0] = props$8.a;
-    $[1] = props$8.b;
-    $[2] = a$9;
-    $[3] = b$10;
+    a = compute(props.a);
+    b = compute(props.b);
+    foo(a, b);
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = a;
+    $[3] = b;
   } else {
-    a$9 = $[2];
-    b$10 = $[3];
+    a = $[2];
+    b = $[3];
   }
 
-  const c_4 = $[4] !== a$9;
-  const c_5 = $[5] !== b$10;
-  let t6$11;
+  const c_4 = $[4] !== a;
+  const c_5 = $[5] !== b;
+  let t6;
 
   if (c_4 || c_5) {
-    t6$11 = <Foo$6 a={a$9} b={b$10}></Foo$6>;
-    $[4] = a$9;
-    $[5] = b$10;
-    $[6] = t6$11;
+    t6 = <Foo a={a} b={b}></Foo>;
+    $[4] = a;
+    $[5] = b;
+    $[6] = t6;
   } else {
-    t6$11 = $[6];
+    t6 = $[6];
   }
 
-  return t6$11;
+  return t6;
 }
 
 ```
@@ -113,7 +113,7 @@ function compute(
 ## Code
 
 ```javascript
-function compute$0() {}
+function compute() {}
 
 ```
 ## HIR
@@ -136,7 +136,7 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {}
+function foo() {}
 
 ```
 ## HIR
@@ -159,7 +159,7 @@ function Foo(
 ## Code
 
 ```javascript
-function Foo$0() {}
+function Foo() {}
 
 ```
       

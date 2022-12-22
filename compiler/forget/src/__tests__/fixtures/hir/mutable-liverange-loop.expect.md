@@ -54,7 +54,7 @@ function mutate(
 ## Code
 
 ```javascript
-function mutate$0() {}
+function mutate() {}
 
 ```
 ## HIR
@@ -77,7 +77,7 @@ function cond(
 ## Code
 
 ```javascript
-function cond$0() {}
+function cond() {}
 
 ```
 ## HIR
@@ -160,41 +160,41 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$11) {
+function Component(props) {
   const $ = React.useMemoCache();
-  const a$12 = {};
-  const b$13 = {};
-  let c$14;
+  const a = {};
+  const b = {};
+  let c;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    c$14 = {};
-    $[0] = c$14;
+    c = {};
+    $[0] = c;
   } else {
-    c$14 = $[0];
+    c = $[0];
   }
 
-  const d$15 = {};
+  const d = {};
 
   while (true) {
-    mutate$6(a$12, b$13);
+    mutate(a, b);
 
-    if (cond$7(a$12)) {
+    if (cond(a)) {
       break;
     }
   }
 
-  if (a$12) {
+  if (a) {
   }
 
-  if (b$13) {
+  if (b) {
   }
 
-  if (c$14) {
+  if (c) {
   }
 
-  if (d$15) {
+  if (d) {
   }
 
-  mutate$6(d$15, null);
+  mutate(d, null);
 }
 
 ```

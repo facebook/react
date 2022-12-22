@@ -37,19 +37,19 @@ function component(
 ## Code
 
 ```javascript
-function component$0() {
+function component() {
   const $ = React.useMemoCache();
-  let x$5;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$5 = {
+    x = {
       t: 1,
     };
-    $[0] = x$5;
+    $[0] = x;
   } else {
-    x$5 = $[0];
+    x = $[0];
   }
 
-  const p$6 = x$5.t;
+  const p = x.t;
 }
 
 ```

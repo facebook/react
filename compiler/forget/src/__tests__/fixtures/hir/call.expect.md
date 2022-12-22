@@ -35,7 +35,7 @@ function foo(
 ## Code
 
 ```javascript
-function foo$0() {}
+function foo() {}
 
 ```
 ## HIR
@@ -79,39 +79,39 @@ function Component(
 ## Code
 
 ```javascript
-function Component$0(props$9) {
+function Component(props) {
   const $ = React.useMemoCache();
-  let a$10;
-  let b$11;
+  let a;
+  let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a$10 = [];
-    b$11 = {};
-    foo$4(a$10, b$11);
+    a = [];
+    b = {};
+    foo(a, b);
 
-    const _$13 = <div a={a$10}></div>;
+    const _ = <div a={a}></div>;
 
-    foo$4(b$11);
-    $[0] = a$10;
-    $[1] = b$11;
+    foo(b);
+    $[0] = a;
+    $[1] = b;
   } else {
-    a$10 = $[0];
-    b$11 = $[1];
+    a = $[0];
+    b = $[1];
   }
 
-  const c_2 = $[2] !== a$10;
-  const c_3 = $[3] !== b$11;
-  let t4$15;
+  const c_2 = $[2] !== a;
+  const c_3 = $[3] !== b;
+  let t4;
 
   if (c_2 || c_3) {
-    t4$15 = <div a={a$10} b={b$11}></div>;
-    $[2] = a$10;
-    $[3] = b$11;
-    $[4] = t4$15;
+    t4 = <div a={a} b={b}></div>;
+    $[2] = a;
+    $[3] = b;
+    $[4] = t4;
   } else {
-    t4$15 = $[4];
+    t4 = $[4];
   }
 
-  return t4$15;
+  return t4;
 }
 
 ```
