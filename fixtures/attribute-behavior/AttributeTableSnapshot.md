@@ -3348,6 +3348,56 @@
 | `externalResourcesRequired=(null)`| (initial)| `<null>` |
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
 
+## `fetchPriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"a string"` |
+| `fetchPriority=(empty string)`| (initial)| `<empty string>` |
+| `fetchPriority=(array with string)`| (changed)| `"string"` |
+| `fetchPriority=(empty array)`| (initial)| `<empty string>` |
+| `fetchPriority=(object)`| (changed)| `"result of toString()"` |
+| `fetchPriority=(numeric string)`| (changed)| `"42"` |
+| `fetchPriority=(-1)`| (changed)| `"-1"` |
+| `fetchPriority=(0)`| (changed)| `"0"` |
+| `fetchPriority=(integer)`| (changed)| `"1"` |
+| `fetchPriority=(NaN)`| (changed, warning)| `"NaN"` |
+| `fetchPriority=(float)`| (changed)| `"99.99"` |
+| `fetchPriority=(true)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(false)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(string 'true')`| (changed)| `"true"` |
+| `fetchPriority=(string 'false')`| (changed)| `"false"` |
+| `fetchPriority=(string 'on')`| (changed)| `"on"` |
+| `fetchPriority=(string 'off')`| (changed)| `"off"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(function)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(null)`| (initial)| `<empty string>` |
+| `fetchPriority=(undefined)`| (initial)| `<empty string>` |
+
+## `fetchPriority` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"a string"` |
+| `fetchPriority=(empty string)`| (initial)| `<empty string>` |
+| `fetchPriority=(array with string)`| (changed)| `"string"` |
+| `fetchPriority=(empty array)`| (initial)| `<empty string>` |
+| `fetchPriority=(object)`| (changed)| `"result of toString()"` |
+| `fetchPriority=(numeric string)`| (changed)| `"42"` |
+| `fetchPriority=(-1)`| (changed)| `"-1"` |
+| `fetchPriority=(0)`| (changed)| `"0"` |
+| `fetchPriority=(integer)`| (changed)| `"1"` |
+| `fetchPriority=(NaN)`| (changed, warning)| `"NaN"` |
+| `fetchPriority=(float)`| (changed)| `"99.99"` |
+| `fetchPriority=(true)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(false)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(string 'true')`| (changed)| `"true"` |
+| `fetchPriority=(string 'false')`| (changed)| `"false"` |
+| `fetchPriority=(string 'on')`| (changed)| `"on"` |
+| `fetchPriority=(string 'off')`| (changed)| `"off"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(function)`| (initial, warning)| `<empty string>` |
+| `fetchPriority=(null)`| (initial)| `<empty string>` |
+| `fetchPriority=(undefined)`| (initial)| `<empty string>` |
+
 ## `fill` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
