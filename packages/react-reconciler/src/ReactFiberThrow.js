@@ -13,7 +13,6 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -40,7 +39,6 @@ import {
   enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
-  enableSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -51,7 +49,10 @@ import {
   enqueueUpdate,
 } from './ReactFiberClassUpdateQueue';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
-import {getSuspenseHandler} from './ReactFiberSuspenseContext';
+import {
+  getShellBoundary,
+  getSuspenseHandler,
+} from './ReactFiberSuspenseContext';
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
@@ -368,40 +369,26 @@ function throwException(
           // to unify with `use` which needs to perform this logic even sooner,
           // before `throwException` is called.
           if (sourceFiber.mode & ConcurrentMode) {
-            if (getIsHydrating()) {
-              // A dehydrated boundary is considered a fallback state. We don't
-              // have to suspend.
+            if (getShellBoundary() === null) {
+              // Suspended in the "shell" of the app. This is an undesirable
+              // loading state. We should avoid committing this tree.
+              renderDidSuspendDelayIfPossible();
             } else {
+              // If we suspended deeper than the shell, we don't need to delay
+              // the commmit. However, we still call renderDidSuspend if this is
+              // a new boundary, to tell the work loop that a new fallback has
+              // appeared during this render.
+              // TODO: Theoretically we should be able to delete this branch.
+              // It's currently used for two things: 1) to throttle the
+              // appearance of successive loading states, and 2) in
+              // SuspenseList, to determine whether the children include any
+              // pending fallbacks. For 1, we should apply throttling to all
+              // retries, not just ones that render an additional fallback. For
+              // 2, we should check subtreeFlags instead. Then we can delete
+              // this branch.
               const current = suspenseBoundary.alternate;
               if (current === null) {
-                // This is a new mount. Unless this is an "avoided" fallback
-                // (experimental feature) this should not delay the tree
-                // from appearing.
-                const nextProps = suspenseBoundary.pendingProps;
-                if (
-                  enableSuspenseAvoidThisFallback &&
-                  nextProps.unstable_avoidThisFallback === true
-                ) {
-                  // Experimental feature: Some fallbacks are always bad
-                  renderDidSuspendDelayIfPossible();
-                } else {
-                  // Show a fallback without delaying. The only reason we mark
-                  // this case at all is so we can throttle the appearance of
-                  // new fallbacks. If we did nothing here, all other behavior
-                  // would be the same, except it wouldn't throttle.
-                  renderDidSuspend();
-                }
-              } else {
-                const prevState: SuspenseState = current.memoizedState;
-                if (prevState !== null) {
-                  // This boundary is currently showing a fallback. Don't need
-                  // to suspend.
-                } else {
-                  // This boundary is currently showing content. Switching to a
-                  // fallback will cause that content to disappear. Tell the
-                  // work loop to delay the commit, if possible.
-                  renderDidSuspendDelayIfPossible();
-                }
+                renderDidSuspend();
               }
             }
           }
