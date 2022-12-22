@@ -628,6 +628,10 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
+          invariant(
+            lvalue.place.memberPath === null,
+            "Expected lvalue member path to be null"
+          );
           lvalue.place.effect = Effect.Mutate;
           // direct aliasing: `a = b`;
           env.alias(lvalue.place, instrValue);
@@ -650,11 +654,11 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
     env.initialize(instrValue, valueKind);
     if (instr.lvalue !== null) {
-      if (instr.lvalue.place.memberPath === null) {
-        env.define(instr.lvalue.place, instrValue);
-      } else {
-        env.reference(instr.lvalue.place, Effect.Mutate);
-      }
+      invariant(
+        instr.lvalue.place.memberPath === null,
+        "Expected lvalue member path to be null"
+      );
+      env.define(instr.lvalue.place, instrValue);
       instr.lvalue.place.effect = lvalueEffect;
     }
   }

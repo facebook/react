@@ -28,26 +28,10 @@ function foo(a) {
     x = {};
 
     if (a) {
-      let y;
-
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        y = {};
-        $[2] = y;
-      } else {
-        y = $[2];
-      }
-
+      const y = {};
       x.y = y;
     } else {
-      let z;
-
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        z = {};
-        $[3] = z;
-      } else {
-        z = $[3];
-      }
-
+      const z = {};
       x.z = z;
     }
 

@@ -947,18 +947,57 @@ function lowerExpression(
 
       if (operator === "=") {
         const left = expr.get("left");
-        // const left = lowerLVal(builder, expr.get("left"));
-        const right =
-          left.node.type === "Identifier"
-            ? lowerExpression(builder, expr.get("right"))
-            : lowerExpressionToPlace(builder, expr.get("right"));
-        return lowerAssignment(
-          builder,
-          expr.node.loc ?? GeneratedSource,
-          InstructionKind.Reassign,
-          left,
-          right
-        );
+        const leftNode = left.node;
+        switch (leftNode.type) {
+          case "Identifier": {
+            return lowerAssignment(
+              builder,
+              leftNode.loc ?? GeneratedSource,
+              InstructionKind.Reassign,
+              left,
+              lowerExpression(builder, expr.get("right"))
+            );
+          }
+          case "MemberExpression": {
+            const leftExpr = left as NodePath<t.MemberExpression>;
+            const object = lowerExpressionToPlace(
+              builder,
+              leftExpr.get("object")
+            );
+            const property = leftExpr.get("property");
+            invariant(
+              property.isIdentifier(),
+              "Assignment expression to dynamic properties is not yet supported"
+            );
+            const right = lowerExpressionToPlace(builder, expr.get("right"));
+            const place: Place = {
+              kind: "Identifier",
+              identifier: builder.makeTemporary(),
+              memberPath: null,
+              effect: Effect.Read,
+              loc: exprLoc,
+            };
+            builder.push({
+              id: makeInstructionId(0),
+              lvalue: { place: { ...place }, kind: InstructionKind.Const },
+              value: {
+                kind: "PropertyStore",
+                object,
+                property: property.node.name,
+                value: right,
+                loc: leftNode.loc ?? GeneratedSource,
+              },
+              loc: exprLoc,
+            });
+            return place;
+          }
+          default: {
+            todoInvariant(
+              false,
+              "Support lvalues other than identifier and member expression"
+            );
+          }
+        }
       }
 
       const operators: { [key: string]: t.BinaryExpression["operator"] } = {
@@ -981,27 +1020,119 @@ function lowerExpression(
         `Unhandled assignment operator '${operator}'`
       );
 
-      const lvalue = lowerLVal(builder, expr.get("left"));
-      const leftPath = expr.get("left");
-      invariant(
-        leftPath.isIdentifier() || leftPath.isMemberExpression(),
-        "Expected assignment expression lvalue to be an identifier or member expression"
-      );
-      const left = lowerExpressionToPlace(builder, leftPath);
-      const right = lowerExpressionToPlace(builder, expr.get("right"));
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { place: lvalue, kind: InstructionKind.Reassign },
-        value: {
-          kind: "BinaryExpression",
-          operator: binaryOperator,
-          left,
-          right,
-          loc: exprLoc,
-        },
-        loc: exprLoc,
-      });
-      return lvalue;
+      const left = expr.get("left");
+      const leftNode = left.node;
+      switch (leftNode.type) {
+        case "Identifier": {
+          const leftExpr = left as NodePath<t.Identifier>;
+          const place = lowerExpressionToPlace(builder, leftExpr);
+          const right = lowerExpressionToPlace(builder, expr.get("right"));
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: { place: { ...place }, kind: InstructionKind.Reassign },
+            value: {
+              kind: "BinaryExpression",
+              operator: binaryOperator,
+              left: { ...place },
+              right,
+              loc: exprLoc,
+            },
+            loc: exprLoc,
+          });
+          return place;
+        }
+        case "MemberExpression": {
+          // a.b.c += <right>
+          const leftExpr = left as NodePath<t.MemberExpression>;
+          // Lower everything up to the final property to a temporary, eg `a.b`
+          const object = lowerExpressionToPlace(
+            builder,
+            leftExpr.get("object")
+          );
+          // Extract the final property to be read from and re-assigned, eg 'c'
+          const property = leftExpr.get("property");
+          invariant(
+            property.isIdentifier(),
+            "Assignment expression to dynamic properties is not yet supported"
+          );
+          // Store the previous value to a temporary
+          const previousValuePlace: Place = {
+            kind: "Identifier",
+            identifier: builder.makeTemporary(),
+            memberPath: null,
+            effect: Effect.Read,
+            loc: exprLoc,
+          };
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: {
+              place: { ...previousValuePlace },
+              kind: InstructionKind.Const,
+            },
+            value: {
+              kind: "PropertyLoad",
+              object: { ...object },
+              property: property.node.name,
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            },
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+          // Store the new value to a temporary
+          const newValuePlace: Place = {
+            kind: "Identifier",
+            identifier: builder.makeTemporary(),
+            memberPath: null,
+            effect: Effect.Read,
+            loc: exprLoc,
+          };
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: {
+              place: { ...newValuePlace },
+              kind: InstructionKind.Const,
+            },
+            value: {
+              kind: "BinaryExpression",
+              operator: binaryOperator,
+              left: { ...previousValuePlace },
+              right: lowerExpressionToPlace(builder, expr.get("right")),
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            },
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+
+          // Save the result back to the property
+          const place: Place = {
+            kind: "Identifier",
+            identifier: builder.makeTemporary(),
+            memberPath: null,
+            effect: Effect.Read,
+            loc: exprLoc,
+          };
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: {
+              place: { ...place },
+              kind: InstructionKind.Const,
+            },
+            value: {
+              kind: "PropertyStore",
+              object: { ...object },
+              property: property.node.name,
+              value: { ...newValuePlace },
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            },
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+          return place;
+        }
+        default: {
+          invariant(
+            false,
+            "Assignment update expressions require the lvalue to be an identifier or member expression"
+          );
+        }
+      }
     }
     case "MemberExpression": {
       const expr = exprPath as NodePath<t.MemberExpression>;

@@ -24,15 +24,7 @@ function foo() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = {};
     y = a;
-    let x;
-
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      x = [];
-      $[1] = x;
-    } else {
-      x = $[1];
-    }
-
+    const x = [];
     y.x = x;
     mutate(a);
     $[0] = y;

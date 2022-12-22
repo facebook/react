@@ -23,8 +23,8 @@ function g() {
         z: 1,
       },
     };
-    x.z.y = x.y.z + 1;
-    x.z.y = x.y.z * 2;
+    x.y.z = x.y.z + 1;
+    x.y.z = x.y.z * 2;
     $[0] = x;
   } else {
     x = $[0];

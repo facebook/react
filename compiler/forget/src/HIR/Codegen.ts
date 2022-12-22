@@ -302,7 +302,14 @@ export function codegenInstruction(
   if (instr.lvalue === null) {
     return t.expressionStatement(value);
   }
-  if (
+  if (instr.value.kind === "PropertyStore") {
+    invariant(
+      instr.lvalue.place.identifier.name === null,
+      "Expected property stores to be lowered to a temporary"
+    );
+    temp.set(instr.lvalue.place.identifier.id, value);
+    return t.expressionStatement(value);
+  } else if (
     instr.lvalue.place.memberPath === null &&
     instr.lvalue.place.identifier.name === null
   ) {
