@@ -24,7 +24,7 @@ export default class DisjointSet<T> {
     // determine an arbitrary "root" for this set: if the first
     // item already has a root then use that, otherwise the first item
     // will be the new root.
-    let root = this.#entries.get(first);
+    let root = this.find(first);
     if (root == null) {
       root = first;
       this.#entries.set(first, first);

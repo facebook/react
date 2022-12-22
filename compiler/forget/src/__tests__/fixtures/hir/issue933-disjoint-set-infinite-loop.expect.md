@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// This causes an infinite loop in the compiler
+// This caused an infinite loop in the compiler
 function MyApp(props) {
   const y = makeObj();
   const tmp = y.a;
