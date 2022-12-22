@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-function g() {
-  const x = { y: { z: 1 } };
-  x.y.z = x.y.z + 1;
-  x.y.z *= 2;
+function Foo() {
+  const x = {};
+  const y = new Foo(x);
+  y.mutate();
   return x;
 }
 
@@ -14,17 +14,13 @@ function g() {
 ## Code
 
 ```javascript
-function g() {
+function Foo() {
   const $ = React.useMemoCache();
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {
-      y: {
-        z: 1,
-      },
-    };
-    x.z.y = x.y.z + 1;
-    x.z.y = x.y.z * 2;
+    x = {};
+    const y = new Foo(x);
+    y.mutate();
     $[0] = x;
   } else {
     x = $[0];

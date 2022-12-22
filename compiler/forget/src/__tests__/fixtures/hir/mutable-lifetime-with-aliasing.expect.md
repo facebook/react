@@ -45,32 +45,15 @@ function mutate(x, y) {}
 
 ```javascript
 function Component(props) {
-  const $ = React.useMemoCache();
-  let a;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = {};
-    $[0] = a;
-  } else {
-    a = $[0];
-  }
-
+  const a = {};
   const b = [a];
-  let c;
-
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    c = {};
-    $[1] = c;
-  } else {
-    c = $[1];
-  }
-
+  const c = {};
   const d = {
     c: c,
   };
   const x = {};
   x.b = b;
   const y = mutate(x, d);
-
   if (a) {
   }
 

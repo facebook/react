@@ -3,10 +3,10 @@
 
 ```javascript
 function foo() {
-  const x = [];
-  const y = { x: x };
-  y.x.push([]);
-  return y;
+  const a = [[1]];
+  const first = a.at(0);
+  first.set(0, 2);
+  return a;
 }
 
 ```
@@ -16,19 +16,17 @@ function foo() {
 ```javascript
 function foo() {
   const $ = React.useMemoCache();
-  let y;
+  let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [];
-    y = {
-      x: x,
-    };
-    y.x.push([]);
-    $[0] = y;
+    a = [[1]];
+    const first = a.at(0);
+    first.set(0, 2);
+    $[0] = a;
   } else {
-    y = $[0];
+    a = $[0];
   }
 
-  return y;
+  return a;
 }
 
 ```

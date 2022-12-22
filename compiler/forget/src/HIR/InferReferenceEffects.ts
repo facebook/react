@@ -516,6 +516,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
   for (const instr of block.instructions) {
     const instrValue = instr.value;
     let effectKind: Effect | null = null;
+    let lvalueEffect = Effect.Mutate;
     let valueKind: ValueKind;
     switch (instrValue.kind) {
       case "BinaryExpression": {
@@ -526,6 +527,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       case "ArrayExpression": {
         valueKind = ValueKind.Mutable;
         effectKind = Effect.Read;
+        lvalueEffect = Effect.Store;
         break;
       }
       case "NewExpression": {
@@ -547,6 +549,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         valueKind = ValueKind.Mutable;
         // Object construction captures but does not modify the key/property values
         effectKind = Effect.Read;
+        lvalueEffect = Effect.Store;
         break;
       }
       case "UnaryExpression": {
@@ -645,7 +648,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       } else {
         env.reference(instr.lvalue.place, Effect.Mutate);
       }
-      instr.lvalue.place.effect = Effect.Mutate;
+      instr.lvalue.place.effect = lvalueEffect;
     }
   }
 
