@@ -450,6 +450,7 @@ export function preparePortalMount(portalInstance: any): void {
   // noop
 }
 
+// eslint-disable-next-line no-undef
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
@@ -458,6 +459,7 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
 }
 
+// eslint-disable-next-line no-undef
 export function prepareRendererToRender(container: Container): void {
   // noop
 }

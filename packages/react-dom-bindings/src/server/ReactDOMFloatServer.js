@@ -202,7 +202,7 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources.boundaryResources = boundaryResources;
 }
 
-export const ReactDOMServerDispatcher = {
+export const ReactDOMServerFloatDispatcher = {
   preload,
   preinit,
 };
@@ -275,7 +275,7 @@ type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
 };
-function preinit(href: string, options: PreinitOptions) {
+function preinit(href: string, options: PreinitOptions): void {
   if (!currentResources) {
     // While we expect that preinit calls are primarily going to be observed
     // during render because effects and events don't run on the server it is
@@ -285,7 +285,17 @@ function preinit(href: string, options: PreinitOptions) {
     // simply return and do not warn.
     return;
   }
-  const resources = currentResources;
+  preinitImpl(currentResources, href, options);
+}
+
+// On the server, preinit may be called outside of render when sending an
+// external SSR runtime as part of the initial resources payload. Since this
+// is an internal React call, we do not need to use the resources stack.
+export function preinitImpl(
+  resources: Resources,
+  href: string,
+  options: PreinitOptions,
+): void {
   if (__DEV__) {
     validatePreinitArguments(href, options);
   }
@@ -642,17 +652,27 @@ export function resourcesFromElement(type: string, props: Props): boolean {
   const resources = currentResources;
   switch (type) {
     case 'title': {
-      let child = props.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      const children = props.children;
+      let child;
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        const key = 'title::' + child;
+      if (
+        typeof child !== 'function' &&
+        typeof child !== 'symbol' &&
+        child !== null &&
+        child !== undefined
+      ) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        const childString = '' + (child: any);
+        const key = 'title::' + childString;
         let resource = resources.headsMap.get(key);
         if (!resource) {
           resource = {
             type: 'title',
-            props: titlePropsFromRawProps(child, props),
+            props: titlePropsFromRawProps(childString, props),
             flushed: false,
           };
           resources.headsMap.set(key, resource);

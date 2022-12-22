@@ -51,7 +51,6 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   getClosestInstanceFromNode,
@@ -256,5 +255,3 @@ if (__DEV__) {
     }
   }
 }
-
-export const unstable_isNewReconciler = enableNewReconciler;

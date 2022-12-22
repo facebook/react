@@ -7636,7 +7636,7 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
-          const onStuff = useEvent(() => {
+          const onStuff = useEffectEvent(() => {
             showNotification(theme);
           });
           useEffect(() => {
@@ -7652,7 +7652,7 @@ if (__EXPERIMENTAL__) {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
-          const onStuff = useEvent(() => {
+          const onStuff = useEffectEvent(() => {
             showNotification(theme);
           });
           useEffect(() => {
@@ -7663,14 +7663,14 @@ if (__EXPERIMENTAL__) {
       errors: [
         {
           message:
-            'Functions returned from `useEvent` must not be included in the dependency array. ' +
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
             'Remove `onStuff` from the list.',
           suggestions: [
             {
               desc: 'Remove the dependency `onStuff`',
               output: normalizeIndent`
                 function MyComponent({ theme }) {
-                  const onStuff = useEvent(() => {
+                  const onStuff = useEffectEvent(() => {
                     showNotification(theme);
                   });
                   useEffect(() => {

@@ -31,10 +31,10 @@ export function getOffsets(outerNode) {
   // catch any error that may otherwise arise. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
   try {
-    /* eslint-disable no-unused-expressions */
+    /* eslint-disable ft-flow/no-unused-expressions */
     anchorNode.nodeType;
     focusNode.nodeType;
-    /* eslint-enable no-unused-expressions */
+    /* eslint-enable ft-flow/no-unused-expressions */
   } catch (e) {
     return null;
   }

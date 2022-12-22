@@ -46,7 +46,6 @@ const CRITICAL_ARTIFACT_PATHS = new Set([
   'oss-experimental/react-dom/cjs/react-dom.production.min.js',
   'facebook-www/ReactDOM-prod.classic.js',
   'facebook-www/ReactDOM-prod.modern.js',
-  'facebook-www/ReactDOMForked-prod.classic.js',
 ]);
 
 const kilobyteFormatter = new Intl.NumberFormat('en', {

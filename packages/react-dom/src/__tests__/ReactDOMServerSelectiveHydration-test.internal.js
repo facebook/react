@@ -21,6 +21,7 @@ let Suspense;
 let act;
 
 let IdleEventPriority;
+let ContinuousEventPriority;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -110,6 +111,18 @@ function TODO_scheduleIdleDOMSchedulerTask(fn) {
   });
 }
 
+function TODO_scheduleContinuousSchedulerTask(fn) {
+  ReactDOM.unstable_runWithPriority(ContinuousEventPriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
+}
+
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -125,6 +138,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     Suspense = React.Suspense;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
   });
 
   it('hydrates the target boundary synchronously during a click', async () => {
@@ -1496,12 +1511,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
       expect(Scheduler).toFlushAndYieldThrough([
-        // An update was scheduled to force hydrate the boundary, but React will
-        // continue rendering at Idle until the next time React yields. This is
-        // fine though because it will switch to the hydration level when it
-        // re-enters the work loop.
         'App',
-        'AA',
+
+        // Start hydrating A
+        'A',
       ]);
 
       // Hover over A which (could) schedule at one higher pri than Idle.
@@ -1771,5 +1784,235 @@ describe('ReactDOMServerSelectiveHydration', () => {
     }
 
     document.body.removeChild(container);
+  });
+
+  it('can force hydration in response to sync update', () => {
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(`Child ${text}`);
+      return <span ref={ref => (spanRef = ref)}>{text}</span>;
+    }
+    function App({text}) {
+      Scheduler.unstable_yieldValue(`App ${text}`);
+      return (
+        <div>
+          <Suspense fallback={null}>
+            <Child text={text} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let spanRef;
+    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
+    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+    const initialSpan = container.getElementsByTagName('span')[0];
+    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
+    expect(Scheduler).toFlushUntilNextPaint(['App A']);
+
+    ReactDOM.flushSync(() => {
+      root.render(<App text="B" />);
+    });
+    expect(Scheduler).toHaveYielded(['App B', 'Child A', 'App B', 'Child B']);
+    expect(initialSpan).toBe(spanRef);
+  });
+
+  // @gate experimental || www
+  it('can force hydration in response to continuous update', () => {
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(`Child ${text}`);
+      return <span ref={ref => (spanRef = ref)}>{text}</span>;
+    }
+    function App({text}) {
+      Scheduler.unstable_yieldValue(`App ${text}`);
+      return (
+        <div>
+          <Suspense fallback={null}>
+            <Child text={text} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let spanRef;
+    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
+    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+    const initialSpan = container.getElementsByTagName('span')[0];
+    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
+    expect(Scheduler).toFlushUntilNextPaint(['App A']);
+
+    TODO_scheduleContinuousSchedulerTask(() => {
+      root.render(<App text="B" />);
+    });
+    expect(Scheduler).toFlushAndYield(['App B', 'Child A', 'App B', 'Child B']);
+    expect(initialSpan).toBe(spanRef);
+  });
+
+  it('can force hydration in response to default update', () => {
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(`Child ${text}`);
+      return <span ref={ref => (spanRef = ref)}>{text}</span>;
+    }
+    function App({text}) {
+      Scheduler.unstable_yieldValue(`App ${text}`);
+      return (
+        <div>
+          <Suspense fallback={null}>
+            <Child text={text} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let spanRef;
+    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
+    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+    const initialSpan = container.getElementsByTagName('span')[0];
+    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
+    expect(Scheduler).toFlushUntilNextPaint(['App A']);
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      root.render(<App text="B" />);
+    });
+    expect(Scheduler).toFlushAndYield(['App B', 'Child A', 'App B', 'Child B']);
+    expect(initialSpan).toBe(spanRef);
+  });
+
+  // @gate experimental || www
+  it('regression test: can unwind context on selective hydration interruption', async () => {
+    const Context = React.createContext('DefaultContext');
+
+    function ContextReader(props) {
+      const value = React.useContext(Context);
+      Scheduler.unstable_yieldValue(value);
+      return null;
+    }
+
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return <span>{text}</span>;
+    }
+    const ChildWithBoundary = React.memo(function({text}) {
+      return (
+        <Suspense fallback="Loading...">
+          <Child text={text} />
+        </Suspense>
+      );
+    });
+
+    function App({a}) {
+      Scheduler.unstable_yieldValue('App');
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <Context.Provider value="SiblingContext">
+            <ChildWithBoundary text={a} />
+          </Context.Provider>
+          <ContextReader />
+        </>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App a="A" />);
+    expect(Scheduler).toHaveYielded(['App', 'A', 'DefaultContext']);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    document.body.appendChild(container);
+
+    const spanA = container.getElementsByTagName('span')[0];
+
+    await act(async () => {
+      const root = ReactDOMClient.hydrateRoot(container, <App a="A" />);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'App',
+        'DefaultContext',
+        'Commit',
+      ]);
+
+      TODO_scheduleIdleDOMSchedulerTask(() => {
+        root.render(<App a="AA" />);
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['App', 'A']);
+
+      dispatchClickEvent(spanA);
+      expect(Scheduler).toHaveYielded(['A']);
+      expect(Scheduler).toFlushAndYield([
+        'App',
+        'AA',
+        'DefaultContext',
+        'Commit',
+      ]);
+    });
+  });
+
+  it('regression test: can unwind context on selective hydration interruption for sync updates', async () => {
+    const Context = React.createContext('DefaultContext');
+
+    function ContextReader(props) {
+      const value = React.useContext(Context);
+      Scheduler.unstable_yieldValue(value);
+      return null;
+    }
+
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return <span>{text}</span>;
+    }
+    const ChildWithBoundary = React.memo(function({text}) {
+      return (
+        <Suspense fallback="Loading...">
+          <Child text={text} />
+        </Suspense>
+      );
+    });
+
+    function App({a}) {
+      Scheduler.unstable_yieldValue('App');
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <Context.Provider value="SiblingContext">
+            <ChildWithBoundary text={a} />
+          </Context.Provider>
+          <ContextReader />
+        </>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App a="A" />);
+    expect(Scheduler).toHaveYielded(['App', 'A', 'DefaultContext']);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    await act(async () => {
+      const root = ReactDOMClient.hydrateRoot(container, <App a="A" />);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'App',
+        'DefaultContext',
+        'Commit',
+      ]);
+
+      ReactDOM.flushSync(() => {
+        root.render(<App a="AA" />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'App',
+        'A',
+        'App',
+        'AA',
+        'DefaultContext',
+        'Commit',
+      ]);
+    });
   });
 });

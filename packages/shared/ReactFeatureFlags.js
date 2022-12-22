@@ -68,10 +68,6 @@ export const enableScopeAPI = false;
 // Experimental Create Event Handle API.
 export const enableCreateEventHandleAPI = false;
 
-// This controls whether you get the `.old` modules or the `.new` modules in
-// the react-reconciler package.
-export const enableNewReconciler = false;
-
 // Support legacy Primer support on internal FB www
 export const enableLegacyFBSupport = false;
 
@@ -125,7 +121,7 @@ export const enableUseHook = true;
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
-export const enableUseEventHook = __EXPERIMENTAL__;
+export const enableUseEffectEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
@@ -213,7 +209,7 @@ export const disableTextareaChildren = false;
 // Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate later, not 18.0
+export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
 
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future

@@ -24,6 +24,8 @@ const {
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -49,6 +51,9 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
       return `build/node_modules/${packageName}/cjs/${filename}`;
     case NODE_ESM:
       return `build/node_modules/${packageName}/esm/${filename}`;
+    case BUN_DEV:
+    case BUN_PROD:
+      return `build/node_modules/${packageName}/cjs/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:

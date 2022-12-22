@@ -401,35 +401,6 @@ describe('ref swapping', () => {
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
   });
-
-  it('should warn about callback refs returning a function', () => {
-    const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<div ref={() => () => {}} />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div');
-
-    // Cleanup should warn, too.
-    expect(() => {
-      ReactDOM.render(<span />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div', {
-      withoutStack: true,
-    });
-
-    // No warning when returning non-functions.
-    ReactDOM.render(<p ref={() => ({})} />, container);
-    ReactDOM.render(<p ref={() => null} />, container);
-    ReactDOM.render(<p ref={() => undefined} />, container);
-
-    // Still warns on functions (not deduped).
-    expect(() => {
-      ReactDOM.render(<div ref={() => () => {}} />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div');
-    expect(() => {
-      ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev('Unexpected return value from a callback ref in div', {
-      withoutStack: true,
-    });
-  });
 });
 
 describe('root level refs', () => {
@@ -610,5 +581,138 @@ describe('strings refs across renderers', () => {
     expect(inst.refs.child1).toBe(div1.firstChild);
     expect(inst.refs.child2.tagName).toBe('DIV');
     expect(inst.refs.child2).toBe(div2.firstChild);
+  });
+});
+
+describe('refs return clean up function', () => {
+  it('calls clean up function if it exists', () => {
+    const container = document.createElement('div');
+    let cleanUp = jest.fn();
+    let setup = jest.fn();
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(2);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    expect(cleanUp.mock.calls[0][0]).toBe(undefined);
+
+    ReactDOM.render(<div ref={_ref => {}} />, container);
+
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    expect(setup).toHaveBeenCalledTimes(3);
+    expect(setup.mock.calls[2][0]).toBe(null);
+
+    cleanUp = jest.fn();
+    setup = jest.fn();
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(2);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles ref functions with stable identity', () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+
+    function _onRefChange(_ref) {
+      setup(_ref);
+      return cleanUp;
+    }
+
+    ReactDOM.render(<div ref={_onRefChange} />, container);
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(
+      <div className="niceClassName" ref={_onRefChange} />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(<div />, container);
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns if clean up function is returned when called with null', () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    let returnCleanUp = false;
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          if (returnCleanUp) {
+            return cleanUp;
+          }
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    returnCleanUp = true;
+
+    expect(() => {
+      ReactDOM.render(
+        <div
+          ref={_ref => {
+            setup(_ref);
+            if (returnCleanUp) {
+              return cleanUp;
+            }
+          }}
+        />,
+        container,
+      );
+    }).toErrorDev('Unexpected return value from a callback ref in div');
   });
 });

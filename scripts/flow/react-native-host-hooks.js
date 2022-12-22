@@ -186,7 +186,7 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
-
+  setNativeProps: (node: Object, nativeProps: Object) => Object,
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
   sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 

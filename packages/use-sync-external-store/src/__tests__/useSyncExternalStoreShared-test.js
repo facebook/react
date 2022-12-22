@@ -14,6 +14,7 @@ let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let ReactFeatureFlags;
 let Scheduler;
 let act;
 let useState;
@@ -48,6 +49,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
@@ -882,8 +884,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
   describe('selector and isEqual error handling in extra', () => {
     let ErrorBoundary;
-    beforeAll(() => {
-      spyOnDev(console, 'warn');
+    beforeEach(() => {
       ErrorBoundary = class extends React.Component {
         state = {error: null};
         static getDerivedStateFromError(error) {
@@ -929,9 +930,15 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       expect(container.textContent).toEqual('A');
 
-      await act(() => {
-        store.set({});
-      });
+      await expect(async () => {
+        await act(async () => {
+          store.set({});
+        });
+      }).toWarnDev(
+        ReactFeatureFlags.enableUseRefAccessWarning
+          ? ['Warning: App: Unsafe read of a mutable value during render.']
+          : [],
+      );
       expect(container.textContent).toEqual('Malformed state');
     });
 
@@ -968,9 +975,15 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       expect(container.textContent).toEqual('A');
 
-      await act(() => {
-        store.set({});
-      });
+      await expect(async () => {
+        await act(() => {
+          store.set({});
+        });
+      }).toWarnDev(
+        ReactFeatureFlags.enableUseRefAccessWarning
+          ? ['Warning: App: Unsafe read of a mutable value during render.']
+          : [],
+      );
       expect(container.textContent).toEqual('Malformed state');
     });
   });
