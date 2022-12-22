@@ -16,13 +16,19 @@ module.exports = (test) => {
     }
   } catch (error) {
     // We use the `stderr` output to group errors so we can count them, so we need to dedupe errors
-    // that are the same but differ slightly
-    error.message = error.message.replace(/ \(\d+:\d+\)/, ""); // some errors report line numbers
-    error.message = error.message.replace(/\/.*\.js:\s/, ""); // babel seems to output filenames
+    // that are the same but differ slightly.
+    let { name, message } = error;
+    message = message.replace(/\/.*\.js:\s/, ""); // babel seems to output filenames
+    message = message.split(/\(\d+:\d+\)/)[0]; // some errors report line numbers and codeframes
+    message = message.trim();
+
+    // For unknown reasons I don't have the energy to dig into some Babel error instances can't be
+    // written to, so we construct a psedudo object here so the correctly formatted error messages
+    // are emitted
     test.result = {
-      stderr: `${error.name}: ${error.message}\n`,
+      stderr: `${name}: ${message}\n`,
       stdout: "",
-      error,
+      error: { name, message },
     };
   }
 
