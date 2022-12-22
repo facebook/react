@@ -45,6 +45,11 @@ export function* eachInstructionValueOperand(
       yield instrValue.object;
       break;
     }
+    case "PropertyStore": {
+      yield instrValue.object;
+      yield instrValue.value;
+      break;
+    }
     case "UnaryExpression": {
       yield instrValue.value;
       break;
@@ -98,6 +103,11 @@ export function mapInstructionOperands(
     }
     case "PropertyLoad": {
       instrValue.object = fn(instrValue.object);
+      break;
+    }
+    case "PropertyStore": {
+      instrValue.object = fn(instrValue.object);
+      instrValue.value = fn(instrValue.value);
       break;
     }
     case "Identifier": {

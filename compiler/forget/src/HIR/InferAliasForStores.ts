@@ -36,6 +36,10 @@ export function inferAliasForStores(
           }
           break;
         }
+        case "PropertyStore": {
+          maybeAlias(aliases, value.object, value.value, instr.id);
+          break;
+        }
       }
     }
   }

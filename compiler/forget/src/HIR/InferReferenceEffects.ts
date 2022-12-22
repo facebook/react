@@ -578,6 +578,24 @@ function inferBlock(env: Environment, block: BasicBlock) {
         valueKind = ValueKind.Immutable;
         break;
       }
+      case "PropertyStore": {
+        const effect = isObjectType(instrValue.object.identifier)
+          ? Effect.Store
+          : Effect.Mutate;
+        env.reference(instrValue.value, Effect.Read);
+        env.reference(instrValue.object, effect);
+
+        const lvalue = instr.lvalue;
+        if (lvalue !== null) {
+          invariant(
+            lvalue.place.memberPath === null,
+            "PropertyLoad must always be saved to a temporary"
+          );
+          env.alias(lvalue.place, instrValue.value);
+          lvalue.place.effect = Effect.Store;
+        }
+        continue;
+      }
       case "PropertyLoad": {
         if (!env.isDefined(instrValue.object)) {
           // TODO @josephsavona: improve handling of globals
@@ -611,19 +629,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
           lvalue.place.effect = Effect.Mutate;
-          if (
-            lvalue.place.memberPath === null &&
-            instrValue.memberPath === null
-          ) {
-            // direct aliasing: `a = b`;
-            env.alias(lvalue.place, instrValue);
-          } else {
-            // no-op: `a.b.c = d`
-            const effect = isObjectType(lvalue.place.identifier)
-              ? Effect.Store
-              : Effect.Mutate;
-            env.reference(lvalue.place, effect);
-          }
+          // direct aliasing: `a = b`;
+          env.alias(lvalue.place, instrValue);
         }
         continue;
       }

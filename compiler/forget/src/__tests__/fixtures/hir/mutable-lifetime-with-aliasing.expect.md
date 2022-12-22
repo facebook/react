@@ -45,8 +45,26 @@ function mutate(x, y) {}
 
 ```javascript
 function Component(props) {
-  const a = {};
-  const b = [a];
+  const $ = React.useMemoCache();
+  let a;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    a = {};
+    $[0] = a;
+  } else {
+    a = $[0];
+  }
+
+  const c_1 = $[1] !== a;
+  let b;
+
+  if (c_1) {
+    b = [a];
+    $[1] = a;
+    $[2] = b;
+  } else {
+    b = $[2];
+  }
+
   const c = {};
   const d = {
     c: c,
@@ -54,6 +72,7 @@ function Component(props) {
   const x = {};
   x.b = b;
   const y = mutate(x, d);
+
   if (a) {
   }
 

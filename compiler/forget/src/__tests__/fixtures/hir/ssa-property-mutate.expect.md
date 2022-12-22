@@ -17,15 +17,25 @@ function foo() {
 ```javascript
 function foo() {
   const $ = React.useMemoCache();
-  let y;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [];
+    x = [];
+    $[0] = x;
+  } else {
+    x = $[0];
+  }
+
+  const c_1 = $[1] !== x;
+  let y;
+
+  if (c_1) {
     y = {};
     y.x = x;
     mutate(y);
-    $[0] = y;
+    $[1] = x;
+    $[2] = y;
   } else {
-    y = $[0];
+    y = $[2];
   }
 
   return y;

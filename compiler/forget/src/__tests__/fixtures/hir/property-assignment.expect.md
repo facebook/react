@@ -18,37 +18,50 @@ function Component(props) {
 ```javascript
 function Component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props.p0;
   let x;
-  let child;
-  if (c_0) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
-    const y = [];
+    let y;
+
+    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+      y = [];
+      $[1] = y;
+    } else {
+      y = $[1];
+    }
+
     x.y = y;
+    $[0] = x;
+  } else {
+    x = $[0];
+  }
+
+  const c_2 = $[2] !== y;
+  let child;
+
+  if (c_2) {
     child = <Component data={y}></Component>;
-    x.y.push(props.p0);
-    $[0] = props.p0;
-    $[1] = x;
-    $[2] = child;
+    $[2] = y;
+    $[3] = child;
   } else {
-    x = $[1];
-    child = $[2];
+    child = $[3];
   }
 
-  const c_3 = $[3] !== x;
-  const c_4 = $[4] !== child;
-  let t5;
+  x.y.push(props.p0);
+  const c_4 = $[4] !== x;
+  const c_5 = $[5] !== child;
+  let t6;
 
-  if (c_3 || c_4) {
-    t5 = <Component data={x}>{child}</Component>;
-    $[3] = x;
-    $[4] = child;
-    $[5] = t5;
+  if (c_4 || c_5) {
+    t6 = <Component data={x}>{child}</Component>;
+    $[4] = x;
+    $[5] = child;
+    $[6] = t6;
   } else {
-    t5 = $[5];
+    t6 = $[6];
   }
 
-  return t5;
+  return t6;
 }
 
 ```

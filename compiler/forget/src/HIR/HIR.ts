@@ -294,7 +294,7 @@ export type InstructionData =
   | { kind: "JsxFragment"; children: Array<Place> }
 
   // store `object.property = value`
-  // | { kind: "PropertyStore"; object: Place; property: string; value: Place }
+  | { kind: "PropertyStore"; object: Place; property: string; value: Place }
   // load `object.property`
   | { kind: "PropertyLoad"; object: Place; property: string }
 

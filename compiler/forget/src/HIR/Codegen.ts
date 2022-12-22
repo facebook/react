@@ -458,6 +458,17 @@ export function codegenInstructionValue(
       value = node;
       break;
     }
+    case "PropertyStore": {
+      value = t.assignmentExpression(
+        "=",
+        t.memberExpression(
+          codegenPlace(temp, instrValue.object),
+          t.identifier(instrValue.property)
+        ),
+        codegenPlace(temp, instrValue.value)
+      );
+      break;
+    }
     case "PropertyLoad": {
       value = t.memberExpression(
         codegenPlace(temp, instrValue.object),

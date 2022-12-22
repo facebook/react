@@ -319,6 +319,7 @@ function valueKind(value: InstructionValue): DeclKind {
     case "Primitive": {
       return DeclKind.Const;
     }
+    case "PropertyStore":
     case "PropertyLoad":
     case "Identifier":
     case "ArrayExpression":

@@ -271,6 +271,12 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       }`;
       break;
     }
+    case "PropertyStore": {
+      value = `PropertyStore ${printPlace(instrValue.object)}.${
+        instrValue.property
+      } = ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,
