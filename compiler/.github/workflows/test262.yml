@@ -3,7 +3,6 @@ name: test262
 on:
   push:
     branches: [main]
-  pull_request:
 
 jobs:
   test262:
