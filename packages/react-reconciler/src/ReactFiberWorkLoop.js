@@ -3401,8 +3401,16 @@ function pingSuspendedRoot(
         includesOnlyRetries(workInProgressRootRenderLanes) &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
-      // Restart from the root.
-      prepareFreshStack(root, NoLanes);
+      // Force a restart from the root by unwinding the stack. Unless this is
+      // being called from the render phase, because that would cause a crash.
+      if ((executionContext & RenderContext) === NoContext) {
+        prepareFreshStack(root, NoLanes);
+      } else {
+        // TODO: If this does happen during the render phase, we should throw
+        // the special internal exception that we use to interrupt the stack for
+        // selective hydration. That was temporarily reverted but we once we add
+        // it back we can use it here.
+      }
     } else {
       // Even though we can't restart right now, we might get an
       // opportunity later. So we mark this render as having a ping.
