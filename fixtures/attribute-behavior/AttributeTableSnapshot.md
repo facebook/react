@@ -3351,52 +3351,77 @@
 ## `fetchPriority` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `fetchPriority=(string)`| (changed)| `"a string"` |
-| `fetchPriority=(empty string)`| (initial)| `<empty string>` |
-| `fetchPriority=(array with string)`| (changed)| `"string"` |
-| `fetchPriority=(empty array)`| (initial)| `<empty string>` |
-| `fetchPriority=(object)`| (changed)| `"result of toString()"` |
-| `fetchPriority=(numeric string)`| (changed)| `"42"` |
-| `fetchPriority=(-1)`| (changed)| `"-1"` |
-| `fetchPriority=(0)`| (changed)| `"0"` |
-| `fetchPriority=(integer)`| (changed)| `"1"` |
-| `fetchPriority=(NaN)`| (changed, warning)| `"NaN"` |
-| `fetchPriority=(float)`| (changed)| `"99.99"` |
-| `fetchPriority=(true)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(false)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(string 'true')`| (changed)| `"true"` |
-| `fetchPriority=(string 'false')`| (changed)| `"false"` |
-| `fetchPriority=(string 'on')`| (changed)| `"on"` |
-| `fetchPriority=(string 'off')`| (changed)| `"off"` |
-| `fetchPriority=(symbol)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(function)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(null)`| (initial)| `<empty string>` |
-| `fetchPriority=(undefined)`| (initial)| `<empty string>` |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
+
+## `fetchpriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchpriority=(string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(array with string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty array)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(object)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(numeric string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(-1)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(0)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(integer)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(float)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'true')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'false')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'on')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'off')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(null)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(undefined)`| (initial, warning)| `"auto"` |
 
 ## `fetchPriority` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `fetchPriority=(string)`| (changed)| `"a string"` |
-| `fetchPriority=(empty string)`| (initial)| `<empty string>` |
-| `fetchPriority=(array with string)`| (changed)| `"string"` |
-| `fetchPriority=(empty array)`| (initial)| `<empty string>` |
-| `fetchPriority=(object)`| (changed)| `"result of toString()"` |
-| `fetchPriority=(numeric string)`| (changed)| `"42"` |
-| `fetchPriority=(-1)`| (changed)| `"-1"` |
-| `fetchPriority=(0)`| (changed)| `"0"` |
-| `fetchPriority=(integer)`| (changed)| `"1"` |
-| `fetchPriority=(NaN)`| (changed, warning)| `"NaN"` |
-| `fetchPriority=(float)`| (changed)| `"99.99"` |
-| `fetchPriority=(true)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(false)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(string 'true')`| (changed)| `"true"` |
-| `fetchPriority=(string 'false')`| (changed)| `"false"` |
-| `fetchPriority=(string 'on')`| (changed)| `"on"` |
-| `fetchPriority=(string 'off')`| (changed)| `"off"` |
-| `fetchPriority=(symbol)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(function)`| (initial, warning)| `<empty string>` |
-| `fetchPriority=(null)`| (initial)| `<empty string>` |
-| `fetchPriority=(undefined)`| (initial)| `<empty string>` |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
 
 ## `fill` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
