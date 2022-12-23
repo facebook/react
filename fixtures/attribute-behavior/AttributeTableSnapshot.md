@@ -3348,6 +3348,81 @@
 | `externalResourcesRequired=(null)`| (initial)| `<null>` |
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
 
+## `fetchPriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
+
+## `fetchpriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchpriority=(string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(array with string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty array)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(object)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(numeric string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(-1)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(0)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(integer)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(float)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'true')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'false')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'on')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'off')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(null)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(undefined)`| (initial, warning)| `"auto"` |
+
+## `fetchPriority` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
+
 ## `fill` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
