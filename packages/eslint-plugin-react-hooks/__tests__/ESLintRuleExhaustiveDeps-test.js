@@ -3830,7 +3830,7 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+            "React Hook useEffect has unnecessary dependencies: 'ref1?.current' and 'ref2?.current'. " +
             'Either exclude them or remove the dependency array. ' +
             "Mutable values like 'ref1.current' aren't valid dependencies " +
             "because mutating them doesn't re-render the component.",
@@ -4902,7 +4902,7 @@ const tests = {
         {
           message:
             'React Hook useCallback has unnecessary dependencies: ' +
-            "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
+            "'MutableStore?.hello?.world', 'global?.stuff', 'props.foo', 'x', 'y', and 'z'. " +
             'Either exclude them or remove the dependency array. ' +
             "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
             "because mutating them doesn't re-render the component.",
@@ -7566,6 +7566,41 @@ const tests = {
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo({ prop, otherProp }) {
+          useEffect(() => {
+            if (!prop) {
+              return;
+            }
+            console.log(otherProp);
+          }, [prop, prop?.a]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'otherProp'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [otherProp, prop, prop?.a]',
+              output: normalizeIndent`
+                function Foo({ prop, otherProp }) {
+                  useEffect(() => {
+                    if (!prop) {
+                      return;
+                    }
+                    console.log(otherProp);
+                  }, [otherProp, prop, prop?.a]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },

@@ -633,7 +633,7 @@ export default {
           try {
             declaredDependency = analyzePropertyChain(
               declaredDependencyNode,
-              null,
+              optionalChains,
             );
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
