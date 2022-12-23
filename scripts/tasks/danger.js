@@ -13,7 +13,7 @@ const spawn = require('child_process').spawn;
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
 // sizebot public_repo token (this is publicly visible on purpose)
-const token = '0a7d5c3cad9a6dbec2d9' + '9a5222cf49062a4c1ef7';
+const token = 'gh' + 'p_KoQMH31rEIfUFKsDWt' + 'Pj6I1lTprGyD11vKFT';
 spawn(
   path.join('node_modules', '.bin', 'danger-ci' + extension),
   [
