@@ -1157,6 +1157,7 @@ var possibleStandardNames = {
   draggable: "draggable",
   enctype: "encType",
   enterkeyhint: "enterKeyHint",
+  fetchpriority: "fetchPriority",
   for: "htmlFor",
   form: "form",
   formmethod: "formMethod",

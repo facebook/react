@@ -4390,6 +4390,7 @@ var possibleStandardNames = {
   draggable: "draggable",
   enctype: "encType",
   enterkeyhint: "enterKeyHint",
+  fetchpriority: "fetchPriority",
   for: "htmlFor",
   form: "form",
   formmethod: "formMethod",
@@ -42646,7 +42647,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-81d4ee9ca-20221223";
+var ReactVersion = "18.3.0-www-classic-de7d1c907-20221223";
 
 function createPortal(
   children,

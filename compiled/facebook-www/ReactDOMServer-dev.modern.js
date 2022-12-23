@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-81d4ee9ca-20221223";
+var ReactVersion = "18.3.0-www-modern-de7d1c907-20221223";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -1160,6 +1160,7 @@ var possibleStandardNames = {
   draggable: "draggable",
   enctype: "encType",
   enterkeyhint: "enterKeyHint",
+  fetchpriority: "fetchPriority",
   for: "htmlFor",
   form: "form",
   formmethod: "formMethod",
