@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* eslint-disable no-unused-vars */
+
 declare var __EXTENSION__: boolean;
 declare var __TEST__: boolean;
 

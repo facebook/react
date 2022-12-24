@@ -1402,7 +1402,6 @@ describe('ResponderEventPlugin', () => {
     class ParentComponent extends React.Component {
       pRef = React.createRef();
       p_P1Ref = React.createRef();
-      p_P1Ref = React.createRef();
       p_P1_C1Ref = React.createRef();
       p_P1_C2Ref = React.createRef();
       p_OneOffRef = React.createRef();

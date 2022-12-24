@@ -10,7 +10,7 @@
 describe('Profiler change descriptions', () => {
   let React;
   let legacyRender;
-  let store: Store;
+  let store;
   let utils;
 
   beforeEach(() => {

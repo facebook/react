@@ -403,10 +403,10 @@ export type Dispatcher = {
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
   ],
-  useMutableSource<Source, Snapshot>(
-    source: MutableSource<Source>,
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  useMutableSource<TSource, Snapshot>(
+    source: MutableSource<TSource>,
+    getSnapshot: MutableSourceGetSnapshotFn<TSource, Snapshot>,
+    subscribe: MutableSourceSubscribeFn<TSource, Snapshot>,
   ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,

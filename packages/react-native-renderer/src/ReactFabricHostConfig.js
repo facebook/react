@@ -321,7 +321,6 @@ class ReactFabricHostComponent {
   }
 }
 
-// eslint-disable-next-line no-unused-expressions
 // $FlowFixMe[class-object-subtyping] found when upgrading Flow
 // $FlowFixMe[method-unbinding] found when upgrading Flow
 (ReactFabricHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
