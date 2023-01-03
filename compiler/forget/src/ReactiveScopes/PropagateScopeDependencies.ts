@@ -17,6 +17,7 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScope,
+  ReactiveScopeDependency,
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
@@ -55,13 +56,13 @@ type Scopes = Array<ReactiveScope>;
 
 class Context {
   #declarations: DeclMap = new Map();
-  #dependencies: Set<Place> = new Set();
-  #properties: Map<Identifier, Place> = new Map();
+  #dependencies: Set<ReactiveScopeDependency> = new Set();
+  #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
   #scopes: Scopes = [];
 
-  enter(scope: ReactiveScope, fn: () => void): Set<Place> {
+  enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
     const previousDependencies = this.#dependencies;
-    const scopedDependencies = new Set<Place>();
+    const scopedDependencies = new Set<ReactiveScopeDependency>();
     this.#dependencies = scopedDependencies;
     this.#scopes.push(scope);
     fn();
@@ -83,17 +84,17 @@ class Context {
       object.memberPath === null,
       "Expected operands to have null memberPath"
     );
-    const objectPlace = this.#properties.get(object.identifier);
-    let place: Place;
-    if (objectPlace === undefined) {
-      place = { ...object, memberPath: [property] };
+    const objectDependency = this.#properties.get(object.identifier);
+    let nextDependency: ReactiveScopeDependency;
+    if (objectDependency === undefined) {
+      nextDependency = { place: object, path: [property] };
     } else {
-      place = {
-        ...objectPlace,
-        memberPath: [...(objectPlace.memberPath ?? []), property],
+      nextDependency = {
+        place: objectDependency.place,
+        path: [...(objectDependency.path ?? []), property],
       };
     }
-    this.#properties.set(lvalue.identifier, place);
+    this.#properties.set(lvalue.identifier, nextDependency);
   }
 
   #isScopeActive(scope: ReactiveScope): boolean {
@@ -104,27 +105,32 @@ class Context {
     return this.#scopes.at(-1)!;
   }
 
-  visitOperand(operand: Place): void {
-    let maybeDependency: Place;
-    if (operand.memberPath !== null) {
+  visitOperand(place: Place): void {
+    this.visitDependency({ place, path: null });
+  }
+
+  visitDependency(dependency: ReactiveScopeDependency): void {
+    let maybeDependency: ReactiveScopeDependency;
+    if (dependency.path !== null) {
       // Operands may have memberPaths when propagating depenencies of an inner scope upward
       // In this case we use the dependency as-is
-      maybeDependency = operand;
+      maybeDependency = dependency;
     } else {
       // Otherwise if this operand is a temporary created for a property load, resolve it to
       // the expanded Place. Fall back to using the operand as-is.
-      maybeDependency = this.#properties.get(operand.identifier) ?? operand;
+      maybeDependency =
+        this.#properties.get(dependency.place.identifier) ?? dependency;
     }
 
-    const decl = this.#declarations.get(maybeDependency.identifier);
+    const decl = this.#declarations.get(maybeDependency.place.identifier);
 
     // Any value used after its defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
     // some later code needs access to the value.
     if (decl !== undefined) {
-      const operandScope = maybeDependency.identifier.scope;
+      const operandScope = maybeDependency.place.identifier.scope;
       if (operandScope !== null && !this.#isScopeActive(operandScope)) {
-        operandScope.outputs.add(maybeDependency.identifier);
+        operandScope.outputs.add(maybeDependency.place.identifier);
       }
     }
 
@@ -140,15 +146,15 @@ class Context {
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
         // not the same identifier
-        if (dep.identifier !== maybeDependency.identifier) {
+        if (dep.place.identifier !== maybeDependency.place.identifier) {
           continue;
         }
-        const depPath = dep.memberPath;
+        const depPath = dep.path;
         // existing dep covers all paths
         if (depPath === null) {
           return;
         }
-        const operandPath = maybeDependency.memberPath;
+        const operandPath = maybeDependency.path;
         // existing dep is for a path, this operand covers all paths so swap them
         if (operandPath === null) {
           this.#dependencies.delete(dep);
@@ -187,7 +193,7 @@ function visit(context: Context, block: ReactiveBlock): void {
           // normal dependency collection. child scopes may have dependencies
           // on values created within the outer scope, which necessarily cannot
           // be dependencies of the outer scope
-          context.visitOperand(dep);
+          context.visitDependency(dep);
         }
         break;
       }

@@ -23,6 +23,7 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScope,
+  ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValueBlock,
 } from "../HIR/HIR";
@@ -137,7 +138,7 @@ function codegenReactiveScope(
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
     const changeIdentifier = t.identifier(`c_${index}`);
-    const depValue = codegenPlace(cx.temp, dep);
+    const depValue = codegenDependency(cx, dep);
 
     changeIdentifiers.push(changeIdentifier);
     statements.push(
@@ -379,4 +380,17 @@ function codegenValueBlock(
   } else {
     return t.sequenceExpression(expressions);
   }
+}
+
+function codegenDependency(
+  cx: Context,
+  dependency: ReactiveScopeDependency
+): t.Expression {
+  let object: t.Expression = convertIdentifier(dependency.place.identifier);
+  if (dependency.path !== null) {
+    for (const path of dependency.path) {
+      object = t.memberExpression(object, t.identifier(path));
+    }
+  }
+  return object;
 }

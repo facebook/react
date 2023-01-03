@@ -388,8 +388,13 @@ export enum Effect {
 export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
-  dependencies: Set<Place>;
+  dependencies: Set<ReactiveScopeDependency>;
   outputs: Set<Identifier>;
+};
+
+export type ReactiveScopeDependency = {
+  place: Place;
+  path: Array<string> | null;
 };
 
 /**

@@ -9,6 +9,7 @@ import invariant from "invariant";
 import {
   ReactiveFunction,
   ReactiveScopeBlock,
+  ReactiveScopeDependency,
   ReactiveStatement,
   ReactiveTerminal,
   ReactiveValueBlock,
@@ -43,13 +44,22 @@ export function printReactiveBlock(
     `scope @${block.scope.id} [${block.scope.range.start}:${
       block.scope.range.end
     }] deps=[${Array.from(block.scope.dependencies)
-      .map((dep) => printPlace(dep))
+      .map((dep) => printDependency(dep))
       .join(", ")}] out=[${Array.from(block.scope.outputs)
       .map((out) => printIdentifier(out))
       .join(", ")}] {`
   );
   printReactiveInstructions(writer, block.instructions);
   writer.writeLine("}");
+}
+
+function printDependency(dependency: ReactiveScopeDependency): string {
+  const place = printPlace(dependency.place);
+  if (dependency.path === null) {
+    return place;
+  } else {
+    return `${place}${dependency.path.map((prop) => `.${prop}`).join("")}`;
+  }
 }
 
 export function printReactiveInstructions(
