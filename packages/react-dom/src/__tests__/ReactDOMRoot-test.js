@@ -471,6 +471,27 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  it('return ReactDOMRoot if container is element', () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    expect(root._internalRoot.containerInfo.constructor.name).toEqual(
+      'HTMLDivElement',
+    );
+  });
+
+  it('return ReactDOMRoot if container is document', () => {
+    const root = ReactDOMClient.createRoot(new Document());
+    expect(root._internalRoot.containerInfo.constructor.name).toEqual(
+      'Document',
+    );
+  });
+
+  it('return ReactDOMRoot if container is documentFragment', () => {
+    const root = ReactDOMClient.createRoot(new DocumentFragment());
+    expect(root._internalRoot.containerInfo.constructor.name).toEqual(
+      'DocumentFragment',
+    );
+  });
+
   // @gate disableCommentsAsDOMContainers
   it('errors if container is a comment node', () => {
     // This is an old feature used by www. Disabled in the open source build.
