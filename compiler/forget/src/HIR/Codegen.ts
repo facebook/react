@@ -302,10 +302,7 @@ export function codegenInstruction(
   if (instr.lvalue === null) {
     return t.expressionStatement(value);
   }
-  if (
-    instr.lvalue.place.memberPath === null &&
-    instr.lvalue.place.identifier.name === null
-  ) {
+  if (instr.lvalue.place.identifier.name === null) {
     // temporary
     temp.set(instr.lvalue.place.identifier.id, value);
     return t.emptyStatement();
@@ -511,15 +508,7 @@ function codegenJsxElement(
 }
 
 export function codegenLVal(lval: LValue): t.LVal {
-  const expr = convertIdentifier(lval.place.identifier);
-  const memberPath = lval.place.memberPath;
-  return memberPath == null
-    ? expr
-    : memberPath.reduceRight(
-        (path: t.Identifier | t.MemberExpression, member) =>
-          t.memberExpression(path, t.identifier(member)),
-        expr
-      );
+  return convertIdentifier(lval.place.identifier);
 }
 
 function codegenValue(
@@ -543,19 +532,11 @@ function codegenValue(
 
 export function codegenPlace(temp: Temporaries, place: Place): t.Expression {
   todoInvariant(place.kind === "Identifier", "support scope values");
-  if (place.memberPath === null) {
-    let tmp = temp.get(place.identifier.id);
-    if (tmp != null) {
-      return tmp;
-    }
-    return convertIdentifier(place.identifier);
-  } else {
-    let object: t.Expression = convertIdentifier(place.identifier);
-    for (const path of place.memberPath) {
-      object = t.memberExpression(object, t.identifier(path));
-    }
-    return object;
+  let tmp = temp.get(place.identifier.id);
+  if (tmp != null) {
+    return tmp;
   }
+  return convertIdentifier(place.identifier);
 }
 
 export function convertIdentifier(identifier: Identifier): t.Identifier {

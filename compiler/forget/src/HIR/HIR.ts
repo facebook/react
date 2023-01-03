@@ -316,7 +316,6 @@ export type InstructionData =
 export type Place = {
   kind: "Identifier";
   identifier: Identifier;
-  memberPath: Array<string> | null;
   effect: Effect;
   loc: SourceLocation;
 };

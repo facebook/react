@@ -74,7 +74,6 @@ export default function inferReferenceEffects(fn: HIRFunction) {
   const initialEnvironment = Environment.empty();
   const id: Place = {
     kind: "Identifier",
-    memberPath: null,
     identifier: fn.id as any,
     loc: fn.loc,
     effect: Effect.Freeze,
@@ -172,7 +171,7 @@ class Environment {
    */
   initialize(value: InstructionValue, kind: ValueKind) {
     invariant(
-      value.kind !== "Identifier" || value.memberPath !== null,
+      value.kind !== "Identifier",
       "Expected all top-level identifiers to be defined as variables, not values"
     );
     this.#values.set(value, kind);
@@ -218,10 +217,6 @@ class Environment {
    * Defines (initializing or updating) a variable with a specific kind of value.
    */
   define(place: Place, value: InstructionValue) {
-    invariant(
-      place.memberPath === null,
-      "Expected a top-level identifier, not a member path"
-    );
     invariant(
       this.#values.has(value),
       `Expected value to be initialized at '${printSourceLocation(value.loc)}'`
@@ -587,10 +582,6 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
-          invariant(
-            lvalue.place.memberPath === null,
-            "PropertyLoad must always be saved to a temporary"
-          );
           env.alias(lvalue.place, instrValue.value);
           lvalue.place.effect = Effect.Store;
         }
@@ -611,27 +602,15 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
-          invariant(
-            lvalue.place.memberPath === null,
-            "PropertyLoad must always be saved to a temporary"
-          );
           env.initialize(instrValue, env.kind(instrValue.object));
           env.define(lvalue.place, instrValue);
         }
         continue;
       }
       case "Identifier": {
-        invariant(
-          instrValue.memberPath === null,
-          "Expected RHS memberPath to be lowered to PropertyLoad"
-        );
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
-          invariant(
-            lvalue.place.memberPath === null,
-            "Expected lvalue member path to be null"
-          );
           lvalue.place.effect = Effect.Mutate;
           // direct aliasing: `a = b`;
           env.alias(lvalue.place, instrValue);
@@ -654,10 +633,6 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
     env.initialize(instrValue, valueKind);
     if (instr.lvalue !== null) {
-      invariant(
-        instr.lvalue.place.memberPath === null,
-        "Expected lvalue member path to be null"
-      );
       env.define(instr.lvalue.place, instrValue);
       instr.lvalue.place.effect = lvalueEffect;
     }
@@ -695,10 +670,6 @@ type HookKind = { kind: "State" } | { kind: "Ref" } | { kind: "Custom" };
 type Hook = HookKind & { effectKind: Effect; valueKind: ValueKind };
 
 function parseHookCall(place: Place): Hook | null {
-  if (place.memberPath !== null) {
-    // Hook calls must be statically resolved
-    return null;
-  }
   const name = place.identifier.name;
   if (name === null || !name.match(/^_?use/)) {
     return null;

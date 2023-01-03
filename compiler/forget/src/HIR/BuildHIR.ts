@@ -79,7 +79,6 @@ export function lower(
     const place: Place = {
       kind: "Identifier",
       identifier,
-      memberPath: null,
       effect: Effect.Unknown,
       loc: param.loc ?? GeneratedSource,
     };
@@ -624,6 +623,10 @@ function lowerStatement(
         nodeKind === "let" ? InstructionKind.Let : InstructionKind.Const;
       for (const declaration of stmt.get("declarations")) {
         const id = declaration.get("id");
+        invariant(
+          id.isIdentifier(),
+          "Support non-identifier variable declarations"
+        );
         const init = declaration.get("init");
         let value: InstructionValue;
         if (init.hasNode()) {
@@ -942,11 +945,12 @@ function lowerExpression(
         const leftNode = left.node;
         switch (leftNode.type) {
           case "Identifier": {
+            const lvalue = left as NodePath<t.Identifier>;
             return lowerAssignment(
               builder,
               leftNode.loc ?? GeneratedSource,
               InstructionKind.Reassign,
-              left,
+              lvalue,
               lowerExpression(builder, expr.get("right"))
             );
           }
@@ -1247,7 +1251,6 @@ function lowerJsxElementName(
     const place: Place = {
       kind: "Identifier",
       identifier: identifier,
-      memberPath: null,
       effect: Effect.Unknown,
       loc: exprLoc,
     };
@@ -1373,45 +1376,10 @@ function lowerIdentifier(
   const place: Place = {
     kind: "Identifier",
     identifier: identifier,
-    memberPath: null,
     effect: Effect.Unknown,
     loc: exprLoc,
   };
   return place;
-}
-
-function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
-  const exprNode = exprPath.node;
-  const exprLoc = exprNode.loc ?? GeneratedSource;
-  switch (exprNode.type) {
-    case "Identifier": {
-      const expr = exprPath as NodePath<t.Identifier>;
-      return lowerIdentifier(builder, expr);
-    }
-    case "MemberExpression": {
-      const expr = exprPath as NodePath<t.MemberExpression>;
-      const objectPath = expr.get("object");
-      todoInvariant(objectPath.isLVal(), "Support complex object assignment");
-      const object = lowerLVal(builder, objectPath);
-      const propertyPath = expr.get("property");
-      todoInvariant(
-        propertyPath.isIdentifier(),
-        "Support non-identifier properties"
-      );
-      const place: Place = {
-        kind: "Identifier",
-        identifier: object.identifier,
-        memberPath: [...(object.memberPath ?? []), propertyPath.node.name],
-        effect: Effect.Unknown,
-        loc: exprLoc,
-      };
-      return place;
-    }
-    default: {
-      todo(`lowerLVal(${exprNode.type})`);
-      //   assertExhaustive(exprNode, "Unexpected lval kind");
-    }
-  }
 }
 
 /**
@@ -1421,7 +1389,6 @@ function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   const place: Place = {
     kind: "Identifier",
     identifier: builder.makeTemporary(),
-    memberPath: null,
     effect: Effect.Unknown,
     loc,
   };
@@ -1432,10 +1399,10 @@ function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
   kind: InstructionKind,
-  lvalue: NodePath<t.LVal>,
+  lvalue: NodePath<t.Identifier>,
   value: InstructionValue
 ): InstructionValue {
-  const id = lowerLVal(builder, lvalue);
+  const id = lowerIdentifier(builder, lvalue);
   builder.push({
     id: makeInstructionId(0),
     lvalue: { place: id, kind },

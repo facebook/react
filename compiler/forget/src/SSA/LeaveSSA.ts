@@ -136,13 +136,6 @@ export function leaveSSA(fn: HIRFunction) {
       const update = fn.body.blocks.get(terminal.update)!;
       rewritePhis.push(...update.phis);
       update.phis.clear();
-
-      // find declarations in the for init
-      for (const instr of init.instructions) {
-        if (instr.lvalue !== null && instr.lvalue.place.memberPath === null) {
-          // hasDeclaration.add(instr.lvalue.place.identifier);
-        }
-      }
     }
 
     for (const phi of reassignmentPhis) {
@@ -197,7 +190,6 @@ export function leaveSSA(fn: HIRFunction) {
           lvalue: {
             place: {
               kind: "Identifier",
-              memberPath: null,
               identifier: canonicalId,
               effect: Effect.Mutate,
               loc: GeneratedSource,
@@ -208,7 +200,6 @@ export function leaveSSA(fn: HIRFunction) {
             initOperand !== null
               ? {
                   kind: "Identifier",
-                  memberPath: null,
                   identifier: initOperand,
                   effect: Effect.Read,
                   loc: GeneratedSource,
@@ -234,7 +225,6 @@ export function leaveSSA(fn: HIRFunction) {
           lvalue: {
             place: {
               kind: "Identifier",
-              memberPath: null,
               identifier: canonicalId,
               effect: Effect.Mutate,
               loc: GeneratedSource,
@@ -243,7 +233,6 @@ export function leaveSSA(fn: HIRFunction) {
           },
           value: {
             kind: "Identifier",
-            memberPath: null,
             identifier: operand,
             effect: Effect.Read,
             loc: GeneratedSource,
@@ -295,7 +284,6 @@ export function leaveSSA(fn: HIRFunction) {
       if (lvalue !== null) {
         if (
           lvalue.kind === InstructionKind.Const &&
-          lvalue.place.memberPath === null &&
           rewrites.has(lvalue.place.identifier)
         ) {
           // For rewrites, the declaration of the canonical identifier has to be `let`,

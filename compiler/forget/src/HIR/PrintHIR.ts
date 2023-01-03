@@ -321,14 +321,7 @@ export function printLValue(lval: LValue): string {
 
 export function printPlace(place: Place): string {
   const items = [place.effect, " ", printIdentifier(place.identifier)];
-  if (place.memberPath !== null) {
-    for (const path of place.memberPath) {
-      items.push(".");
-      items.push(path);
-    }
-  } else {
-    items.push(printType(place.identifier.type));
-  }
+  items.push(printType(place.identifier.type));
   return items.filter((x) => x != null).join("");
 }
 

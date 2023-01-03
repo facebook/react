@@ -132,7 +132,7 @@ function generateTypeEquation(
 function assignType(place: Place | undefined): Type | null {
   // We type only top level identifiers. Typing objects is not very useful
   // when we have to be so conservative.
-  if (place?.memberPath !== null) {
+  if (place === undefined) {
     return null;
   }
 

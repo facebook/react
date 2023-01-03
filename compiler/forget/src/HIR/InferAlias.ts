@@ -7,11 +7,6 @@ class AliasAnalyser {
   aliases = new DisjointSet<Identifier>();
 
   alias(lvalue: LValue, alias: Place) {
-    // This is handled by InferAliasForStores.
-    if (lvalue.place.memberPath !== null) {
-      return;
-    }
-
     this.aliases.union([lvalue.place.identifier, alias.identifier]);
   }
 }

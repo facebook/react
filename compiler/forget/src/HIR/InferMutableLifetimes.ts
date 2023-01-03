@@ -122,19 +122,15 @@ export function inferMutableLifetimes(
       }
 
       if (instr.lvalue !== null) {
-        if (instr.lvalue.place.memberPath === null) {
-          const lvalueId = instr.lvalue.place.identifier;
+        const lvalueId = instr.lvalue.place.identifier;
 
-          // lvalue start being mutable when they're initially assigned a
-          // value.
-          lvalueId.mutableRange.start = instr.id;
+        // lvalue start being mutable when they're initially assigned a
+        // value.
+        lvalueId.mutableRange.start = instr.id;
 
-          // Let's be optimistic and assume this lvalue is not mutable by
-          // default.
-          lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
-        } else {
-          inferPlace(instr.lvalue.place, instr, inferMutableRangeForStores);
-        }
+        // Let's be optimistic and assume this lvalue is not mutable by
+        // default.
+        lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
       }
     }
   }

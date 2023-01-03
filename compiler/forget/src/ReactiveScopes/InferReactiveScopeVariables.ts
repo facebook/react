@@ -80,11 +80,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
       const operands: Array<Identifier> = [];
       if (instr.lvalue !== null) {
         const range = instr.lvalue.place.identifier.mutableRange;
-        if (
-          instr.lvalue.place.memberPath !== null ||
-          range.end > range.start + 1 ||
-          mayAllocate(instr.value)
-        ) {
+        if (range.end > range.start + 1 || mayAllocate(instr.value)) {
           operands.push(instr.lvalue!.place.identifier);
         }
       }

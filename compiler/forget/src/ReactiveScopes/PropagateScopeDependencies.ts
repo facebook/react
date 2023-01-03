@@ -21,7 +21,6 @@ import {
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -76,14 +75,6 @@ class Context {
   }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
-    invariant(
-      lvalue.memberPath === null,
-      "Expected property loads to be stored to a temporary (no member path)"
-    );
-    invariant(
-      object.memberPath === null,
-      "Expected operands to have null memberPath"
-    );
     const objectDependency = this.#properties.get(object.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
@@ -281,17 +272,7 @@ function visitInstructionValue(
 ): void {
   for (const operand of eachInstructionValueOperand(value)) {
     // check for method invocation, we want to depend on the callee, not the method
-    if (
-      value.kind === "CallExpression" &&
-      operand === value.callee &&
-      operand.memberPath !== null
-    ) {
-      const callee = {
-        ...operand,
-        memberPath: operand.memberPath.slice(0, -1),
-      };
-      context.visitOperand(callee);
-    } else if (value.kind === "PropertyLoad" && lvalue !== null) {
+    if (value.kind === "PropertyLoad" && lvalue !== null) {
       context.declareProperty(lvalue.place, value.object, value.property);
     } else {
       context.visitOperand(operand);
@@ -302,11 +283,7 @@ function visitInstructionValue(
 function visitInstruction(context: Context, instr: Instruction): void {
   const { lvalue } = instr;
   visitInstructionValue(context, instr.value, lvalue);
-  if (
-    lvalue !== null &&
-    lvalue.kind !== InstructionKind.Reassign &&
-    lvalue.place.memberPath === null
-  ) {
+  if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {
     const range = lvalue.place.identifier.mutableRange;
     // TODO: only assign Const if the value is never reassigned
     const kind =

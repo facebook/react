@@ -305,11 +305,7 @@ export function codegenInstructionNullable(
   value: t.Expression
 ): t.Statement | null {
   let statement;
-  if (
-    instr.lvalue !== null &&
-    instr.lvalue.place.memberPath === null &&
-    cx.declared(instr.lvalue.place.identifier)
-  ) {
+  if (instr.lvalue !== null && cx.declared(instr.lvalue.place.identifier)) {
     statement = codegenInstruction(
       cx.temp,
       {

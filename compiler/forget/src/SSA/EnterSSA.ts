@@ -199,12 +199,8 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
       if (instr.lvalue != null) {
         const oldPlace = instr.lvalue.place;
         let newPlace: Place;
-        if (oldPlace.memberPath !== null) {
-          newPlace = builder.getPlace(oldPlace);
-        } else {
-          newPlace = builder.definePlace(oldPlace);
-          instr.lvalue.kind = InstructionKind.Const;
-        }
+        newPlace = builder.definePlace(oldPlace);
+        instr.lvalue.kind = InstructionKind.Const;
         instr.lvalue.place = newPlace;
       }
     }
