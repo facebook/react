@@ -649,13 +649,17 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.ExpressionStatement>;
       const expression = stmt.get("expression");
       const value = lowerExpression(builder, expression);
-      if (expression.isAssignmentExpression()) {
-        // instruction already emitted via lowerExpression()
+      if (expression.isAssignmentExpression() && value.kind === "Identifier") {
+        // already lowered to a place
         return;
       }
+      const place = buildTemporaryPlace(
+        builder,
+        stmt.node.loc ?? GeneratedSource
+      );
       builder.push({
         id: makeInstructionId(0),
-        lvalue: null,
+        lvalue: { kind: InstructionKind.Const, place },
         value,
         loc: stmt.node.loc ?? GeneratedSource,
       });
@@ -885,13 +889,7 @@ function lowerExpression(
           //   tmp != null ? tmp : <right>
           const left = lowerExpressionToPlace(builder, leftPath);
 
-          const nullPlace: Place = {
-            kind: "Identifier",
-            identifier: builder.makeTemporary(),
-            memberPath: null,
-            effect: Effect.Unknown,
-            loc: left.loc,
-          };
+          const nullPlace: Place = buildTemporaryPlace(builder, left.loc);
           builder.push({
             id: makeInstructionId(0),
             value: {
@@ -903,13 +901,7 @@ function lowerExpression(
             lvalue: { place: { ...nullPlace }, kind: InstructionKind.Const },
           });
 
-          const condPlace: Place = {
-            kind: "Identifier",
-            identifier: builder.makeTemporary(),
-            memberPath: null,
-            effect: Effect.Unknown,
-            loc: left.loc,
-          };
+          const condPlace: Place = buildTemporaryPlace(builder, left.loc);
           builder.push({
             id: makeInstructionId(0),
             lvalue: {
@@ -960,36 +952,23 @@ function lowerExpression(
           }
           case "MemberExpression": {
             const leftExpr = left as NodePath<t.MemberExpression>;
-            const object = lowerExpressionToPlace(
-              builder,
-              leftExpr.get("object")
-            );
             const property = leftExpr.get("property");
             invariant(
               property.isIdentifier(),
               "Assignment expression to dynamic properties is not yet supported"
             );
             const right = lowerExpressionToPlace(builder, expr.get("right"));
-            const place: Place = {
-              kind: "Identifier",
-              identifier: builder.makeTemporary(),
-              memberPath: null,
-              effect: Effect.Read,
-              loc: exprLoc,
+            const object = lowerExpressionToPlace(
+              builder,
+              leftExpr.get("object")
+            );
+            return {
+              kind: "PropertyStore",
+              object,
+              property: property.node.name,
+              value: right,
+              loc: leftNode.loc ?? GeneratedSource,
             };
-            builder.push({
-              id: makeInstructionId(0),
-              lvalue: { place: { ...place }, kind: InstructionKind.Const },
-              value: {
-                kind: "PropertyStore",
-                object,
-                property: property.node.name,
-                value: right,
-                loc: leftNode.loc ?? GeneratedSource,
-              },
-              loc: exprLoc,
-            });
-            return place;
           }
           default: {
             todoInvariant(
@@ -1056,13 +1035,10 @@ function lowerExpression(
             "Assignment expression to dynamic properties is not yet supported"
           );
           // Store the previous value to a temporary
-          const previousValuePlace: Place = {
-            kind: "Identifier",
-            identifier: builder.makeTemporary(),
-            memberPath: null,
-            effect: Effect.Read,
-            loc: exprLoc,
-          };
+          const previousValuePlace: Place = buildTemporaryPlace(
+            builder,
+            exprLoc
+          );
           builder.push({
             id: makeInstructionId(0),
             lvalue: {
@@ -1078,13 +1054,7 @@ function lowerExpression(
             loc: leftExpr.node.loc ?? GeneratedSource,
           });
           // Store the new value to a temporary
-          const newValuePlace: Place = {
-            kind: "Identifier",
-            identifier: builder.makeTemporary(),
-            memberPath: null,
-            effect: Effect.Read,
-            loc: exprLoc,
-          };
+          const newValuePlace: Place = buildTemporaryPlace(builder, exprLoc);
           builder.push({
             id: makeInstructionId(0),
             lvalue: {
@@ -1102,29 +1072,13 @@ function lowerExpression(
           });
 
           // Save the result back to the property
-          const place: Place = {
-            kind: "Identifier",
-            identifier: builder.makeTemporary(),
-            memberPath: null,
-            effect: Effect.Read,
-            loc: exprLoc,
-          };
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: {
-              place: { ...place },
-              kind: InstructionKind.Const,
-            },
-            value: {
-              kind: "PropertyStore",
-              object: { ...object },
-              property: property.node.name,
-              value: { ...newValuePlace },
-              loc: leftExpr.node.loc ?? GeneratedSource,
-            },
+          return {
+            kind: "PropertyStore",
+            object: { ...object },
+            property: property.node.name,
+            value: { ...newValuePlace },
             loc: leftExpr.node.loc ?? GeneratedSource,
-          });
-          return place;
+          };
         }
         default: {
           invariant(
@@ -1149,13 +1103,7 @@ function lowerExpression(
         property: property.node.name,
         loc: exprLoc,
       };
-      const place: Place = {
-        kind: "Identifier",
-        identifier: builder.makeTemporary(),
-        memberPath: null,
-        effect: Effect.Read,
-        loc: exprLoc,
-      };
+      const place: Place = buildTemporaryPlace(builder, exprLoc);
       builder.push({
         id: makeInstructionId(0),
         lvalue: { place: { ...place }, kind: InstructionKind.Const },
@@ -1231,13 +1179,7 @@ function lowerConditional(
   consequent: () => InstructionValue,
   alternate: () => InstructionValue
 ): Place {
-  const place: Place = {
-    kind: "Identifier",
-    identifier: builder.makeTemporary(),
-    memberPath: null,
-    effect: Effect.Read,
-    loc,
-  };
+  const place: Place = buildTemporaryPlace(builder, loc);
   //  Block for code following the if
   const continuationBlock = builder.reserve();
   //  Block for the consequent (if the test is truthy)
@@ -1311,13 +1253,7 @@ function lowerJsxElementName(
     };
     return place;
   } else {
-    const place: Place = {
-      kind: "Identifier",
-      identifier: builder.makeTemporary(),
-      memberPath: null,
-      effect: Effect.Unknown,
-      loc: exprLoc,
-    };
+    const place: Place = buildTemporaryPlace(builder, exprLoc);
     builder.push({
       id: makeInstructionId(0),
       value: {
@@ -1351,13 +1287,7 @@ function lowerJsxElement(
     todoInvariant(expression.isExpression(), "handle empty expressions");
     return lowerExpressionToPlace(builder, expression);
   } else if (exprPath.isJSXText()) {
-    const place: Place = {
-      kind: "Identifier",
-      identifier: builder.makeTemporary(),
-      memberPath: null,
-      effect: Effect.Unknown,
-      loc: exprLoc,
-    };
+    const place: Place = buildTemporaryPlace(builder, exprLoc);
     builder.push({
       id: makeInstructionId(0),
       value: {
@@ -1374,13 +1304,7 @@ function lowerJsxElement(
       t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode),
       "Expected refinement to work"
     );
-    const place: Place = {
-      kind: "Identifier",
-      identifier: builder.makeTemporary(),
-      memberPath: null,
-      effect: Effect.Unknown,
-      loc: exprLoc,
-    };
+    const place: Place = buildTemporaryPlace(builder, exprLoc);
     builder.push({
       id: makeInstructionId(0),
       value: {
@@ -1404,13 +1328,7 @@ function lowerExpressionToPlace(
     return instr;
   }
   const exprLoc = exprPath.node.loc ?? GeneratedSource;
-  const place: Place = {
-    kind: "Identifier",
-    identifier: builder.makeTemporary(),
-    memberPath: null,
-    effect: Effect.Unknown,
-    loc: exprLoc,
-  };
+  const place: Place = buildTemporaryPlace(builder, exprLoc);
   builder.push({
     id: makeInstructionId(0),
     value: instr,
@@ -1494,6 +1412,20 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
       //   assertExhaustive(exprNode, "Unexpected lval kind");
     }
   }
+}
+
+/**
+ * Creates a temporary Identifier and Place referencing that identifier.
+ */
+function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
+  const place: Place = {
+    kind: "Identifier",
+    identifier: builder.makeTemporary(),
+    memberPath: null,
+    effect: Effect.Unknown,
+    loc,
+  };
+  return place;
 }
 
 function lowerAssignment(

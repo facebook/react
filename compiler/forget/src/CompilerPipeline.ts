@@ -23,6 +23,7 @@ import {
   inferReactiveScopeVariables,
   propagateScopeDependencies,
   pruneUnusedLabels,
+  pruneUnusedLValues,
   pruneUnusedScopes,
   renameVariables,
 } from "./ReactiveScopes";
@@ -81,6 +82,9 @@ export default function (
 
   pruneUnusedScopes(reactiveFunction);
   logReactiveFunction("pruneUnusedScopes", reactiveFunction);
+
+  pruneUnusedLValues(reactiveFunction);
+  logReactiveFunction("pruneUnusedLValues", reactiveFunction);
 
   renameVariables(reactiveFunction);
   logReactiveFunction("renameVariables", reactiveFunction);
