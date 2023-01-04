@@ -11,7 +11,6 @@ import {
   HIRFunction,
   inferMutableRanges,
   inferReferenceEffects,
-  inferTypes,
   lower,
 } from "./HIR";
 import { ReactiveFunction } from "./HIR/HIR";
@@ -28,6 +27,7 @@ import {
   renameVariables,
 } from "./ReactiveScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
+import { inferTypes } from "./TypeInference";
 import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
 
 export type CompilerResult = {

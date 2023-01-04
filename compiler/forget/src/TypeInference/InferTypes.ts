@@ -8,8 +8,8 @@ import {
   typeEquals,
   TypeId,
   TypeVar,
-} from "./HIR";
-import { eachInstructionOperand } from "./visitors";
+} from "../HIR/HIR";
+import { eachInstructionOperand } from "../HIR/visitors";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   switch (op) {
@@ -36,7 +36,7 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   }
 }
 
-export function inferTypes(func: HIRFunction) {
+export default function (func: HIRFunction) {
   const unifier = new Unifier();
   for (const e of generate(func, unifier)) {
     unifier.unify(e.left, e.right);

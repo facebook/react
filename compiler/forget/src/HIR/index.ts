@@ -10,5 +10,4 @@ export { HIRFunction } from "./HIR";
 export { Environment } from "./HIRBuilder";
 export { inferMutableRanges } from "./InferMutableRanges";
 export { default as inferReferenceEffects } from "./InferReferenceEffects";
-export { inferTypes } from "./InferTypes";
 export { printFunction } from "./PrintHIR";
