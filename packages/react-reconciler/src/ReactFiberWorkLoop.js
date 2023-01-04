@@ -12,7 +12,7 @@ import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {SuspenseProps, SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {EventPriority} from './ReactEventPriorities';
 import type {
@@ -276,7 +276,7 @@ import {
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 import {
   getSuspenseHandler,
-  isBadSuspenseFallback,
+  getShellBoundary,
 } from './ReactFiberSuspenseContext';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 
@@ -1859,18 +1859,11 @@ function handleThrow(root, thrownValue): void {
 }
 
 function shouldAttemptToSuspendUntilDataResolves() {
-  // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
-  // instead of repeating it in the complete phase. Or something to that effect.
-
-  if (includesOnlyRetries(workInProgressRootRenderLanes)) {
-    // We can always wait during a retry.
-    return true;
-  }
-
   // Check if there are other pending updates that might possibly unblock this
   // component from suspending. This mirrors the check in
   // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
+  // TODO: Consider unwinding immediately, using the
+  // SuspendedOnHydration mechanism.
   if (
     includesNonIdleWork(workInProgressRootSkippedLanes) ||
     includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
@@ -1883,27 +1876,24 @@ function shouldAttemptToSuspendUntilDataResolves() {
   // TODO: We should be able to remove the equivalent check in
   // finishConcurrentRender, and rely just on this one.
   if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
-    const suspenseHandler = getSuspenseHandler();
-    if (suspenseHandler !== null && suspenseHandler.tag === SuspenseComponent) {
-      const currentSuspenseHandler = suspenseHandler.alternate;
-      const nextProps: SuspenseProps = suspenseHandler.memoizedProps;
-      if (isBadSuspenseFallback(currentSuspenseHandler, nextProps)) {
-        // The nearest Suspense boundary is already showing content. We should
-        // avoid replacing it with a fallback, and instead wait until the
-        // data finishes loading.
-        return true;
-      } else {
-        // This is not a bad fallback condition. We should show a fallback
-        // immediately instead of waiting for the data to resolve. This includes
-        // when suspending inside new trees.
-        return false;
-      }
-    }
+    // If we're rendering inside the "shell" of the app, it's better to suspend
+    // rendering and wait for the data to resolve. Otherwise, we should switch
+    // to a fallback and continue rendering.
+    return getShellBoundary() === null;
+  }
 
-    // During a transition, if there is no Suspense boundary (i.e. suspending in
-    // the "shell" of an application), or if we're inside a hidden tree, then
-    // we should wait until the data finishes loading.
-    return true;
+  const handler = getSuspenseHandler();
+  if (handler === null) {
+    // TODO: We should support suspending in the case where there's no
+    // parent Suspense boundary, even outside a transition. Somehow. Otherwise,
+    // an uncached promise can fall into an infinite loop.
+  } else {
+    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+      // During a retry, we can suspend rendering if the nearest Suspense boundary
+      // is the boundary of the "shell", because we're guaranteed not to block
+      // any new content from appearing.
+      return handler === getShellBoundary();
+    }
   }
 
   // For all other Lanes besides Transitions and Retries, we should not wait
@@ -1981,6 +1971,8 @@ export function renderDidSuspendDelayIfPossible(): void {
     // (inside this function), since by suspending at the end of the render
     // phase introduces a potential mistake where we suspend lanes that were
     // pinged or updated while we were rendering.
+    // TODO: Consider unwinding immediately, using the
+    // SuspendedOnHydration mechanism.
     markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -2198,6 +2190,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             }
             // The work loop is suspended on data. We should wait for it to
             // resolve before continuing to render.
+            // TODO: Handle the case where the promise resolves synchronously.
+            // Usually this is handled when we instrument the promise to add a
+            // `status` field, but if the promise already has a status, we won't
+            // have added a listener until right here.
             const onResolution = () => {
               ensureRootIsScheduled(root, now());
             };

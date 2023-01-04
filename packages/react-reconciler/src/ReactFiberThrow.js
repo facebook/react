@@ -49,7 +49,10 @@ import {
   enqueueUpdate,
 } from './ReactFiberClassUpdateQueue';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
-import {getSuspenseHandler} from './ReactFiberSuspenseContext';
+import {
+  getShellBoundary,
+  getSuspenseHandler,
+} from './ReactFiberSuspenseContext';
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
@@ -58,6 +61,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
   restorePendingUpdaters,
+  renderDidSuspend,
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
 import {logCapturedError} from './ReactFiberErrorLogger';
@@ -349,11 +353,46 @@ function throwException(
       }
     }
 
-    // Schedule the nearest Suspense to re-render the timed out view.
+    // Mark the nearest Suspense boundary to switch to rendering a fallback.
     const suspenseBoundary = getSuspenseHandler();
     if (suspenseBoundary !== null) {
       switch (suspenseBoundary.tag) {
         case SuspenseComponent: {
+          // If this suspense boundary is not already showing a fallback, mark
+          // the in-progress render as suspended. We try to perform this logic
+          // as soon as soon as possible during the render phase, so the work
+          // loop can know things like whether it's OK to switch to other tasks,
+          // or whether it can wait for data to resolve before continuing.
+          // TODO: Most of these checks are already performed when entering a
+          // Suspense boundary. We should track the information on the stack so
+          // we don't have to recompute it on demand. This would also allow us
+          // to unify with `use` which needs to perform this logic even sooner,
+          // before `throwException` is called.
+          if (sourceFiber.mode & ConcurrentMode) {
+            if (getShellBoundary() === null) {
+              // Suspended in the "shell" of the app. This is an undesirable
+              // loading state. We should avoid committing this tree.
+              renderDidSuspendDelayIfPossible();
+            } else {
+              // If we suspended deeper than the shell, we don't need to delay
+              // the commmit. However, we still call renderDidSuspend if this is
+              // a new boundary, to tell the work loop that a new fallback has
+              // appeared during this render.
+              // TODO: Theoretically we should be able to delete this branch.
+              // It's currently used for two things: 1) to throttle the
+              // appearance of successive loading states, and 2) in
+              // SuspenseList, to determine whether the children include any
+              // pending fallbacks. For 1, we should apply throttling to all
+              // retries, not just ones that render an additional fallback. For
+              // 2, we should check subtreeFlags instead. Then we can delete
+              // this branch.
+              const current = suspenseBoundary.alternate;
+              if (current === null) {
+                renderDidSuspend();
+              }
+            }
+          }
+
           suspenseBoundary.flags &= ~ForceClientRender;
           markSuspenseBoundaryShouldCapture(
             suspenseBoundary,

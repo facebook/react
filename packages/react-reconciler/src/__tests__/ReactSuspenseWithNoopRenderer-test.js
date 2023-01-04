@@ -995,14 +995,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYieldThrough(['Suspend! [Async]', 'Sibling']);
 
     await resolveText('Async');
-    expect(Scheduler).toFlushAndYield([
-      // We've now pinged the boundary but we don't know if we should restart yet,
-      // because we haven't completed the suspense boundary.
-      'Loading...',
-      // Once we've completed the boundary we restarted.
-      'Async',
-      'Sibling',
-    ]);
+
+    // Because we're already showing a fallback, interrupt the current render
+    // and restart immediately.
+    expect(Scheduler).toFlushAndYield(['Async', 'Sibling']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Async" />
