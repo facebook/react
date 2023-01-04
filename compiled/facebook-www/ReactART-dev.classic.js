@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-48274a43a-20230104";
+var ReactVersion = "18.3.0-www-classic-c2d655207-20230104";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -6864,71 +6864,68 @@ function isCurrentTreeHidden() {
 
 // suspends, i.e. it's the nearest `catch` block on the stack.
 
-var suspenseHandlerStackCursor = createCursor(null);
+var suspenseHandlerStackCursor = createCursor(null); // Represents the outermost boundary that is not visible in the current tree.
+// Everything above this is the "shell". When this is null, it means we're
+// rendering in the shell of the app. If it's non-null, it means we're rendering
+// deeper than the shell, inside a new tree that wasn't already visible.
+//
+// The main way we use this concept is to determine whether showing a fallback
+// would result in a desirable or undesirable loading state. Activing a fallback
+// in the shell is considered an undersirable loading state, because it would
+// mean hiding visible (albeit stale) content in the current tree — we prefer to
+// show the stale content, rather than switch to a fallback. But showing a
+// fallback in a new tree is fine, because there's no stale content to
+// prefer instead.
 
-function shouldAvoidedBoundaryCapture(workInProgress, handlerOnStack, props) {
-  {
-    // If the parent is already showing content, and we're not inside a hidden
-    // tree, then we should show the avoided fallback.
-    if (handlerOnStack.alternate !== null && !isCurrentTreeHidden()) {
-      return true;
-    } // If the handler on the stack is also an avoided boundary, then we should
-    // favor this inner one.
-
-    if (
-      handlerOnStack.tag === SuspenseComponent &&
-      handlerOnStack.memoizedProps.unstable_avoidThisFallback === true
-    ) {
-      return true;
-    } // If this avoided boundary is dehydrated, then it should capture.
-
-    var suspenseState = workInProgress.memoizedState;
-
-    if (suspenseState !== null && suspenseState.dehydrated !== null) {
-      return true;
-    }
-  } // If none of those cases apply, then we should avoid this fallback and show
-  // the outer one instead.
-
-  return false;
-}
-
-function isBadSuspenseFallback(current, nextProps) {
-  // Check if this is a "bad" fallback state or a good one. A bad fallback state
-  // is one that we only show as a last resort; if this is a transition, we'll
-  // block it from displaying, and wait for more data to arrive.
-  if (current !== null) {
-    var prevState = current.memoizedState;
-    var isShowingFallback = prevState !== null;
-
-    if (!isShowingFallback && !isCurrentTreeHidden()) {
-      // It's bad to switch to a fallback if content is already visible
-      return true;
-    }
-  }
-
-  if (nextProps.unstable_avoidThisFallback === true) {
-    // Experimental: Some fallbacks are always bad
-    return true;
-  }
-
-  return false;
+var shellBoundary = null;
+function getShellBoundary() {
+  return shellBoundary;
 }
 function pushPrimaryTreeSuspenseHandler(handler) {
-  var props = handler.pendingProps;
-  var handlerOnStack = suspenseHandlerStackCursor.current;
+  // TODO: Pass as argument
+  var current = handler.alternate;
+  var props = handler.pendingProps; // Experimental feature: Some Suspense boundaries are marked as having an
+  // undesirable fallback state. These have special behavior where we only
+  // activate the fallback if there's no other boundary on the stack that we can
+  // use instead.
 
   if (
-    props.unstable_avoidThisFallback === true &&
-    handlerOnStack !== null &&
-    !shouldAvoidedBoundaryCapture(handler, handlerOnStack)
+    props.unstable_avoidThisFallback === true && // If an avoided boundary is already visible, it behaves identically to
+    // a regular Suspense boundary.
+    (current === null || isCurrentTreeHidden())
   ) {
-    // This boundary should not capture if something suspends. Reuse the
-    // existing handler on the stack.
-    push(suspenseHandlerStackCursor, handlerOnStack, handler);
-  } else {
-    // Push this handler onto the stack.
-    push(suspenseHandlerStackCursor, handler, handler);
+    if (shellBoundary === null) {
+      // We're rendering in the shell. There's no parent Suspense boundary that
+      // can provide a desirable fallback state. We'll use this boundary.
+      push(suspenseHandlerStackCursor, handler, handler); // However, because this is not a desirable fallback, the children are
+      // still considered part of the shell. So we intentionally don't assign
+      // to `shellBoundary`.
+    } else {
+      // There's already a parent Suspense boundary that can provide a desirable
+      // fallback state. Prefer that one.
+      var handlerOnStack = suspenseHandlerStackCursor.current;
+      push(suspenseHandlerStackCursor, handlerOnStack, handler);
+    }
+
+    return;
+  } // TODO: If the parent Suspense handler already suspended, there's no reason
+  // to push a nested Suspense handler, because it will get replaced by the
+  // outer fallback, anyway. Consider this as a future optimization.
+
+  push(suspenseHandlerStackCursor, handler, handler);
+
+  if (shellBoundary === null) {
+    if (current === null || isCurrentTreeHidden()) {
+      // This boundary is not visible in the current UI.
+      shellBoundary = handler;
+    } else {
+      var prevState = current.memoizedState;
+
+      if (prevState !== null) {
+        // This boundary is showing a fallback in the current UI.
+        shellBoundary = handler;
+      }
+    }
   }
 }
 function pushFallbackTreeSuspenseHandler(fiber) {
@@ -6940,6 +6937,21 @@ function pushFallbackTreeSuspenseHandler(fiber) {
 function pushOffscreenSuspenseHandler(fiber) {
   if (fiber.tag === OffscreenComponent) {
     push(suspenseHandlerStackCursor, fiber, fiber);
+
+    if (shellBoundary !== null);
+    else {
+      var current = fiber.alternate;
+
+      if (current !== null) {
+        var prevState = current.memoizedState;
+
+        if (prevState !== null) {
+          // This is the first boundary in the stack that's already showing
+          // a fallback. So everything outside is considered the shell.
+          shellBoundary = fiber;
+        }
+      }
+    }
   } else {
     // This is a LegacyHidden component.
     reuseSuspenseHandlerOnStack(fiber);
@@ -6953,6 +6965,11 @@ function getSuspenseHandler() {
 }
 function popSuspenseHandler(fiber) {
   pop(suspenseHandlerStackCursor, fiber);
+
+  if (shellBoundary === fiber) {
+    // Popping back into the shell.
+    shellBoundary = null;
+  }
 } // SuspenseList context
 // TODO: Move to a separate module? We may change the SuspenseList
 // implementation to hide/show in the commit phase, anyway.
@@ -12368,13 +12385,49 @@ function throwException(
           logComponentSuspended(name, wakeable);
         }
       }
-    } // Schedule the nearest Suspense to re-render the timed out view.
+    } // Mark the nearest Suspense boundary to switch to rendering a fallback.
 
     var suspenseBoundary = getSuspenseHandler();
 
     if (suspenseBoundary !== null) {
       switch (suspenseBoundary.tag) {
         case SuspenseComponent: {
+          // If this suspense boundary is not already showing a fallback, mark
+          // the in-progress render as suspended. We try to perform this logic
+          // as soon as soon as possible during the render phase, so the work
+          // loop can know things like whether it's OK to switch to other tasks,
+          // or whether it can wait for data to resolve before continuing.
+          // TODO: Most of these checks are already performed when entering a
+          // Suspense boundary. We should track the information on the stack so
+          // we don't have to recompute it on demand. This would also allow us
+          // to unify with `use` which needs to perform this logic even sooner,
+          // before `throwException` is called.
+          if (sourceFiber.mode & ConcurrentMode) {
+            if (getShellBoundary() === null) {
+              // Suspended in the "shell" of the app. This is an undesirable
+              // loading state. We should avoid committing this tree.
+              renderDidSuspendDelayIfPossible();
+            } else {
+              // If we suspended deeper than the shell, we don't need to delay
+              // the commmit. However, we still call renderDidSuspend if this is
+              // a new boundary, to tell the work loop that a new fallback has
+              // appeared during this render.
+              // TODO: Theoretically we should be able to delete this branch.
+              // It's currently used for two things: 1) to throttle the
+              // appearance of successive loading states, and 2) in
+              // SuspenseList, to determine whether the children include any
+              // pending fallbacks. For 1, we should apply throttling to all
+              // retries, not just ones that render an additional fallback. For
+              // 2, we should check subtreeFlags instead. Then we can delete
+              // this branch.
+              var current = suspenseBoundary.alternate;
+
+              if (current === null) {
+                renderDidSuspend();
+              }
+            }
+          }
+
           suspenseBoundary.flags &= ~ForceClientRender;
           markSuspenseBoundaryShouldCapture(
             suspenseBoundary,
@@ -18001,24 +18054,7 @@ function completeWork(current, workInProgress, renderLanes) {
 
         if (nextDidTimeout) {
           var _offscreenFiber2 = workInProgress.child;
-          _offscreenFiber2.flags |= Visibility; // TODO: This will still suspend a synchronous tree if anything
-          // in the concurrent tree already suspended during this render.
-          // This is a known bug.
-
-          if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
-            // TODO: Move this back to throwException because this is too late
-            // if this is a large tree which is common for initial loads. We
-            // don't know if we should restart a render or not until we get
-            // this marker, and this is too late.
-            // If this render already had a ping or lower pri updates,
-            // and this is the first time we know we're going to suspend we
-            // should be able to immediately restart from within throwException.
-            if (isBadSuspenseFallback(current, newProps)) {
-              renderDidSuspendDelayIfPossible();
-            } else {
-              renderDidSuspend();
-            }
-          }
+          _offscreenFiber2.flags |= Visibility;
         }
       }
 
@@ -24294,16 +24330,11 @@ function handleThrow(root, thrownValue) {
 }
 
 function shouldAttemptToSuspendUntilDataResolves() {
-  // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
-  // instead of repeating it in the complete phase. Or something to that effect.
-  if (includesOnlyRetries(workInProgressRootRenderLanes)) {
-    // We can always wait during a retry.
-    return true;
-  } // Check if there are other pending updates that might possibly unblock this
+  // Check if there are other pending updates that might possibly unblock this
   // component from suspending. This mirrors the check in
   // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
-
+  // TODO: Consider unwinding immediately, using the
+  // SuspendedOnHydration mechanism.
   if (
     includesNonIdleWork(workInProgressRootSkippedLanes) ||
     includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
@@ -24315,28 +24346,22 @@ function shouldAttemptToSuspendUntilDataResolves() {
   // finishConcurrentRender, and rely just on this one.
 
   if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
-    var suspenseHandler = getSuspenseHandler();
+    // If we're rendering inside the "shell" of the app, it's better to suspend
+    // rendering and wait for the data to resolve. Otherwise, we should switch
+    // to a fallback and continue rendering.
+    return getShellBoundary() === null;
+  }
 
-    if (suspenseHandler !== null && suspenseHandler.tag === SuspenseComponent) {
-      var currentSuspenseHandler = suspenseHandler.alternate;
-      var nextProps = suspenseHandler.memoizedProps;
+  var handler = getSuspenseHandler();
 
-      if (isBadSuspenseFallback(currentSuspenseHandler, nextProps)) {
-        // The nearest Suspense boundary is already showing content. We should
-        // avoid replacing it with a fallback, and instead wait until the
-        // data finishes loading.
-        return true;
-      } else {
-        // This is not a bad fallback condition. We should show a fallback
-        // immediately instead of waiting for the data to resolve. This includes
-        // when suspending inside new trees.
-        return false;
-      }
-    } // During a transition, if there is no Suspense boundary (i.e. suspending in
-    // the "shell" of an application), or if we're inside a hidden tree, then
-    // we should wait until the data finishes loading.
-
-    return true;
+  if (handler === null);
+  else {
+    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+      // During a retry, we can suspend rendering if the nearest Suspense boundary
+      // is the boundary of the "shell", because we're guaranteed not to block
+      // any new content from appearing.
+      return handler === getShellBoundary();
+    }
   } // For all other Lanes besides Transitions and Retries, we should not wait
   // for the data to load.
   // TODO: We should wait during Offscreen prerendering, too.
@@ -24406,6 +24431,8 @@ function renderDidSuspendDelayIfPossible() {
     // (inside this function), since by suspending at the end of the render
     // phase introduces a potential mistake where we suspend lanes that were
     // pinged or updated while we were rendering.
+    // TODO: Consider unwinding immediately, using the
+    // SuspendedOnHydration mechanism.
     markRootSuspended$1(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -24621,6 +24648,10 @@ function renderRootConcurrent(root, lanes) {
               break;
             } // The work loop is suspended on data. We should wait for it to
             // resolve before continuing to render.
+            // TODO: Handle the case where the promise resolves synchronously.
+            // Usually this is handled when we instrument the promise to add a
+            // `status` field, but if the promise already has a status, we won't
+            // have added a listener until right here.
 
             var onResolution = function() {
               ensureRootIsScheduled(root, now());

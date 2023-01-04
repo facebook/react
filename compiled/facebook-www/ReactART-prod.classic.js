@@ -2106,46 +2106,37 @@ function popHiddenContext() {
   pop(currentTreeHiddenStackCursor);
   pop(prevRenderLanesStackCursor);
 }
-var suspenseHandlerStackCursor = createCursor(null);
-function isBadSuspenseFallback(current, nextProps) {
-  return (null !== current &&
-    null === current.memoizedState &&
-    null === currentTreeHiddenStackCursor.current) ||
-    !0 === nextProps.unstable_avoidThisFallback
-    ? !0
-    : !1;
-}
+var suspenseHandlerStackCursor = createCursor(null),
+  shellBoundary = null;
 function pushPrimaryTreeSuspenseHandler(handler) {
-  var handlerOnStack = suspenseHandlerStackCursor.current,
-    JSCompiler_temp;
-  if (
-    (JSCompiler_temp =
-      !0 === handler.pendingProps.unstable_avoidThisFallback &&
-      null !== handlerOnStack)
-  )
-    null === handlerOnStack.alternate ||
-    null !== currentTreeHiddenStackCursor.current
-      ? 13 === handlerOnStack.tag &&
-        !0 === handlerOnStack.memoizedProps.unstable_avoidThisFallback
-        ? (JSCompiler_temp = !0)
-        : ((JSCompiler_temp = handler.memoizedState),
-          (JSCompiler_temp =
-            null !== JSCompiler_temp && null !== JSCompiler_temp.dehydrated
-              ? !0
-              : !1))
-      : (JSCompiler_temp = !0),
-      (JSCompiler_temp = !JSCompiler_temp);
-  JSCompiler_temp
-    ? push(suspenseHandlerStackCursor, handlerOnStack)
-    : push(suspenseHandlerStackCursor, handler);
+  var current = handler.alternate;
+  !0 !== handler.pendingProps.unstable_avoidThisFallback ||
+  (null !== current && null === currentTreeHiddenStackCursor.current)
+    ? (push(suspenseHandlerStackCursor, handler),
+      null === shellBoundary &&
+        (null === current || null !== currentTreeHiddenStackCursor.current
+          ? (shellBoundary = handler)
+          : null !== current.memoizedState && (shellBoundary = handler)))
+    : null === shellBoundary
+    ? push(suspenseHandlerStackCursor, handler)
+    : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function pushOffscreenSuspenseHandler(fiber) {
-  22 === fiber.tag
-    ? push(suspenseHandlerStackCursor, fiber)
-    : reuseSuspenseHandlerOnStack();
+  if (22 === fiber.tag) {
+    if ((push(suspenseHandlerStackCursor, fiber), null === shellBoundary)) {
+      var current = fiber.alternate;
+      null !== current &&
+        null !== current.memoizedState &&
+        (shellBoundary = fiber);
+    }
+  } else reuseSuspenseHandlerOnStack();
 }
 function reuseSuspenseHandlerOnStack() {
   push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
+}
+function popSuspenseHandler(fiber) {
+  pop(suspenseHandlerStackCursor);
+  shellBoundary === fiber && (shellBoundary = null);
 }
 var suspenseStackCursor = createCursor(0);
 function findFirstSuspended(row) {
@@ -5409,14 +5400,14 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 13:
-      pop(suspenseHandlerStackCursor);
-      instance = workInProgress.memoizedState;
+      popSuspenseHandler(workInProgress);
+      newProps = workInProgress.memoizedState;
       if (
         null === current ||
         (null !== current.memoizedState &&
           null !== current.memoizedState.dehydrated)
       ) {
-        if (null !== instance && null !== instance.dehydrated) {
+        if (null !== newProps && null !== newProps.dehydrated) {
           if (null === current) {
             throw Error(formatProdErrorMessage(318));
             throw Error(formatProdErrorMessage(344));
@@ -5425,42 +5416,34 @@ function completeWork(current, workInProgress, renderLanes) {
             (workInProgress.memoizedState = null);
           workInProgress.flags |= 4;
           bubbleProperties(workInProgress);
-          var JSCompiler_inline_result = !1;
+          instance = !1;
         } else
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
-            (JSCompiler_inline_result = !0);
-        if (!JSCompiler_inline_result)
+            (instance = !0);
+        if (!instance)
           return workInProgress.flags & 65536 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
         return (workInProgress.lanes = renderLanes), workInProgress;
-      renderLanes = null !== instance;
-      instance = null !== current && null !== current.memoizedState;
+      renderLanes = null !== newProps;
+      current = null !== current && null !== current.memoizedState;
       if (renderLanes) {
-        JSCompiler_inline_result = workInProgress.child;
-        var previousCache$77 = null;
-        null !== JSCompiler_inline_result.alternate &&
-          null !== JSCompiler_inline_result.alternate.memoizedState &&
-          null !== JSCompiler_inline_result.alternate.memoizedState.cachePool &&
-          (previousCache$77 =
-            JSCompiler_inline_result.alternate.memoizedState.cachePool.pool);
+        newProps = workInProgress.child;
+        instance = null;
+        null !== newProps.alternate &&
+          null !== newProps.alternate.memoizedState &&
+          null !== newProps.alternate.memoizedState.cachePool &&
+          (instance = newProps.alternate.memoizedState.cachePool.pool);
         var cache$78 = null;
-        null !== JSCompiler_inline_result.memoizedState &&
-          null !== JSCompiler_inline_result.memoizedState.cachePool &&
-          (cache$78 = JSCompiler_inline_result.memoizedState.cachePool.pool);
-        cache$78 !== previousCache$77 &&
-          (JSCompiler_inline_result.flags |= 2048);
+        null !== newProps.memoizedState &&
+          null !== newProps.memoizedState.cachePool &&
+          (cache$78 = newProps.memoizedState.cachePool.pool);
+        cache$78 !== instance && (newProps.flags |= 2048);
       }
-      renderLanes !== instance &&
+      renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
-        renderLanes &&
-          ((workInProgress.child.flags |= 8192),
-          0 !== (workInProgress.mode & 1) &&
-            (isBadSuspenseFallback(current, newProps)
-              ? renderDidSuspendDelayIfPossible()
-              : 0 === workInProgressRootExitStatus &&
-                (workInProgressRootExitStatus = 3))));
+        renderLanes && (workInProgress.child.flags |= 8192));
       null !== workInProgress.updateQueue && (workInProgress.flags |= 4);
       null !== workInProgress.updateQueue &&
         null != workInProgress.memoizedProps.suspenseCallback &&
@@ -5491,8 +5474,8 @@ function completeWork(current, workInProgress, renderLanes) {
       instance = workInProgress.memoizedState;
       if (null === instance) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      JSCompiler_inline_result = instance.rendering;
-      if (null === JSCompiler_inline_result)
+      cache$78 = instance.rendering;
+      if (null === cache$78)
         if (newProps) cutOffTailIfNeeded(instance, !1);
         else {
           if (
@@ -5500,11 +5483,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              JSCompiler_inline_result = findFirstSuspended(current);
-              if (null !== JSCompiler_inline_result) {
+              cache$78 = findFirstSuspended(current);
+              if (null !== cache$78) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(instance, !1);
-                current = JSCompiler_inline_result.updateQueue;
+                current = cache$78.updateQueue;
                 null !== current &&
                   ((workInProgress.updateQueue = current),
                   (workInProgress.flags |= 4));
@@ -5530,10 +5513,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (
-            ((current = findFirstSuspended(JSCompiler_inline_result)),
-            null !== current)
-          ) {
+          if (((current = findFirstSuspended(cache$78)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -5544,7 +5524,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !0),
               null === instance.tail &&
                 "hidden" === instance.tailMode &&
-                !JSCompiler_inline_result.alternate)
+                !cache$78.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
@@ -5556,13 +5536,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !1),
               (workInProgress.lanes = 8388608));
         instance.isBackwards
-          ? ((JSCompiler_inline_result.sibling = workInProgress.child),
-            (workInProgress.child = JSCompiler_inline_result))
+          ? ((cache$78.sibling = workInProgress.child),
+            (workInProgress.child = cache$78))
           : ((current = instance.last),
             null !== current
-              ? (current.sibling = JSCompiler_inline_result)
-              : (workInProgress.child = JSCompiler_inline_result),
-            (instance.last = JSCompiler_inline_result));
+              ? (current.sibling = cache$78)
+              : (workInProgress.child = cache$78),
+            (instance.last = cache$78));
       }
       if (null !== instance.tail)
         return (
@@ -5598,7 +5578,7 @@ function completeWork(current, workInProgress, renderLanes) {
     case 22:
     case 23:
       return (
-        pop(suspenseHandlerStackCursor),
+        popSuspenseHandler(workInProgress),
         popHiddenContext(),
         (newProps = null !== workInProgress.memoizedState),
         23 !== workInProgress.tag &&
@@ -5682,7 +5662,7 @@ function unwindWork(current, workInProgress) {
     case 5:
       return popHostContext(workInProgress), null;
     case 13:
-      pop(suspenseHandlerStackCursor);
+      popSuspenseHandler(workInProgress);
       current = workInProgress.memoizedState;
       if (
         null !== current &&
@@ -5703,7 +5683,7 @@ function unwindWork(current, workInProgress) {
     case 22:
     case 23:
       return (
-        pop(suspenseHandlerStackCursor),
+        popSuspenseHandler(workInProgress),
         popHiddenContext(),
         popTransition(workInProgress, current),
         (current = workInProgress.flags),
@@ -5752,7 +5732,7 @@ function unwindInterruptedWork(current, interruptedWork) {
       popHostContainer();
       break;
     case 13:
-      pop(suspenseHandlerStackCursor);
+      popSuspenseHandler(interruptedWork);
       break;
     case 19:
       pop(suspenseStackCursor);
@@ -5762,7 +5742,7 @@ function unwindInterruptedWork(current, interruptedWork) {
       break;
     case 22:
     case 23:
-      pop(suspenseHandlerStackCursor);
+      popSuspenseHandler(interruptedWork);
       popHiddenContext();
       popTransition(interruptedWork, current);
       break;
@@ -8185,11 +8165,6 @@ function handleThrow(root, thrownValue) {
 }
 function shouldAttemptToSuspendUntilDataResolves() {
   if (
-    (workInProgressRootRenderLanes & 125829120) ===
-    workInProgressRootRenderLanes
-  )
-    return !0;
-  if (
     0 !== (workInProgressRootSkippedLanes & 268435455) ||
     0 !== (workInProgressRootInterleavedUpdatedLanes & 268435455)
   )
@@ -8197,18 +8172,14 @@ function shouldAttemptToSuspendUntilDataResolves() {
   if (
     (workInProgressRootRenderLanes & 8388480) ===
     workInProgressRootRenderLanes
-  ) {
-    var suspenseHandler = suspenseHandlerStackCursor.current;
-    return null === suspenseHandler ||
-      13 !== suspenseHandler.tag ||
-      isBadSuspenseFallback(
-        suspenseHandler.alternate,
-        suspenseHandler.memoizedProps
-      )
-      ? !0
-      : !1;
-  }
-  return !1;
+  )
+    return null === shellBoundary;
+  var handler = suspenseHandlerStackCursor.current;
+  return null !== handler &&
+    (workInProgressRootRenderLanes & 125829120) ===
+      workInProgressRootRenderLanes
+    ? handler === shellBoundary
+    : !1;
 }
 function pushDispatcher() {
   var prevDispatcher = ReactCurrentDispatcher$2.current;
@@ -8447,6 +8418,12 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
           if (null !== suspenseBoundary) {
             switch (suspenseBoundary.tag) {
               case 13:
+                unitOfWork.mode & 1 &&
+                  (null === shellBoundary
+                    ? renderDidSuspendDelayIfPossible()
+                    : null === suspenseBoundary.alternate &&
+                      0 === workInProgressRootExitStatus &&
+                      (workInProgressRootExitStatus = 3));
                 suspenseBoundary.flags &= -257;
                 if (0 === (suspenseBoundary.mode & 1))
                   if (suspenseBoundary === returnFiber)
@@ -9814,19 +9791,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1167 = {
+  devToolsConfig$jscomp$inline_1148 = {
     findFiberByHostInstance: function() {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-48274a43a-20230104",
+    version: "18.3.0-www-classic-c2d655207-20230104",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1334 = {
-  bundleType: devToolsConfig$jscomp$inline_1167.bundleType,
-  version: devToolsConfig$jscomp$inline_1167.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1167.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1167.rendererConfig,
+var internals$jscomp$inline_1319 = {
+  bundleType: devToolsConfig$jscomp$inline_1148.bundleType,
+  version: devToolsConfig$jscomp$inline_1148.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1148.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1148.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9843,26 +9820,26 @@ var internals$jscomp$inline_1334 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1167.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1148.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-48274a43a-20230104"
+  reconcilerVersion: "18.3.0-next-c2d655207-20230104"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1335 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1320 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1335.isDisabled &&
-    hook$jscomp$inline_1335.supportsFiber
+    !hook$jscomp$inline_1320.isDisabled &&
+    hook$jscomp$inline_1320.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1335.inject(
-        internals$jscomp$inline_1334
+      (rendererID = hook$jscomp$inline_1320.inject(
+        internals$jscomp$inline_1319
       )),
-        (injectedHook = hook$jscomp$inline_1335);
+        (injectedHook = hook$jscomp$inline_1320);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
