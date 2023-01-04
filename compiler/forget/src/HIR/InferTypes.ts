@@ -25,10 +25,6 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
     case ">>":
     case "<<":
     case "^":
-    case "==":
-    case "==":
-    case "!=":
-    case "!=":
     case ">":
     case "<":
     case ">=":
