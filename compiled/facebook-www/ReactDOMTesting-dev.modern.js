@@ -35199,18 +35199,6 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           if (nextLanes !== NoLanes) {
             // There's additional work on this root.
             break;
-          }
-
-          var suspendedLanes = root.suspendedLanes;
-
-          if (!isSubsetOfLanes(suspendedLanes, lanes)) {
-            // We should prefer to render the fallback of at the last
-            // suspended level. Ping the last suspended level to try
-            // rendering it again.
-            // FIXME: What if the suspended lanes are Idle? Should not restart.
-            var eventTime = requestEventTime();
-            markRootPinged(root, suspendedLanes);
-            break;
           } // The render is suspended, it hasn't timed out, and there's no
           // lower priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
@@ -38460,7 +38448,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-de7d1c907-20221223";
+var ReactVersion = "18.3.0-www-modern-48274a43a-20230104";
 
 function createPortal(
   children,

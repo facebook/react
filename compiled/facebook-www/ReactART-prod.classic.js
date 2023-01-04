@@ -7923,17 +7923,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           markRootSuspended$1(root, lanes);
           if (
             (lanes & 125829120) === lanes &&
-            ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
-            10 < didTimeout)
+            ((lanes = globalMostRecentFallbackTime + 500 - now()), 10 < lanes)
           ) {
             if (0 !== getNextLanes(root, 0)) break;
-            originallyAttemptedLanes = root.suspendedLanes;
-            if ((originallyAttemptedLanes & lanes) !== lanes) {
-              requestEventTime();
-              root.pingedLanes |=
-                root.suspendedLanes & originallyAttemptedLanes;
-              break;
-            }
             root.timeoutHandle = scheduleTimeout(
               commitRoot.bind(
                 null,
@@ -7941,7 +7933,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions
               ),
-              didTimeout
+              lanes
             );
             break;
           }
@@ -9822,19 +9814,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1165 = {
+  devToolsConfig$jscomp$inline_1167 = {
     findFiberByHostInstance: function() {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-de7d1c907-20221223",
+    version: "18.3.0-www-classic-48274a43a-20230104",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1338 = {
-  bundleType: devToolsConfig$jscomp$inline_1165.bundleType,
-  version: devToolsConfig$jscomp$inline_1165.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1165.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1165.rendererConfig,
+var internals$jscomp$inline_1334 = {
+  bundleType: devToolsConfig$jscomp$inline_1167.bundleType,
+  version: devToolsConfig$jscomp$inline_1167.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1167.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1167.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9851,26 +9843,26 @@ var internals$jscomp$inline_1338 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1165.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1167.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-de7d1c907-20221223"
+  reconcilerVersion: "18.3.0-next-48274a43a-20230104"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1335 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1339.isDisabled &&
-    hook$jscomp$inline_1339.supportsFiber
+    !hook$jscomp$inline_1335.isDisabled &&
+    hook$jscomp$inline_1335.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1339.inject(
-        internals$jscomp$inline_1338
+      (rendererID = hook$jscomp$inline_1335.inject(
+        internals$jscomp$inline_1334
       )),
-        (injectedHook = hook$jscomp$inline_1339);
+        (injectedHook = hook$jscomp$inline_1335);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

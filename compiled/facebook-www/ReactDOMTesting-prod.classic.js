@@ -9097,17 +9097,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           markRootSuspended$1(root, lanes);
           if (
             (lanes & 125829120) === lanes &&
-            ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
-            10 < didTimeout)
+            ((lanes = globalMostRecentFallbackTime + 500 - now()), 10 < lanes)
           ) {
             if (0 !== getNextLanes(root, 0)) break;
-            originallyAttemptedLanes = root.suspendedLanes;
-            if ((originallyAttemptedLanes & lanes) !== lanes) {
-              requestEventTime();
-              root.pingedLanes |=
-                root.suspendedLanes & originallyAttemptedLanes;
-              break;
-            }
             root.timeoutHandle = scheduleTimeout(
               commitRoot.bind(
                 null,
@@ -9115,7 +9107,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions
               ),
-              didTimeout
+              lanes
             );
             break;
           }
@@ -11361,17 +11353,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates
 ];
-var devToolsConfig$jscomp$inline_1538 = {
+var devToolsConfig$jscomp$inline_1540 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-de7d1c907-20221223",
+  version: "18.3.0-www-classic-48274a43a-20230104",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2070 = {
-  bundleType: devToolsConfig$jscomp$inline_1538.bundleType,
-  version: devToolsConfig$jscomp$inline_1538.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1538.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1538.rendererConfig,
+var internals$jscomp$inline_2066 = {
+  bundleType: devToolsConfig$jscomp$inline_1540.bundleType,
+  version: devToolsConfig$jscomp$inline_1540.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1540.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1540.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11387,26 +11379,26 @@ var internals$jscomp$inline_2070 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1538.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1540.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-de7d1c907-20221223"
+  reconcilerVersion: "18.3.0-next-48274a43a-20230104"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2071 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2067 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2071.isDisabled &&
-    hook$jscomp$inline_2071.supportsFiber
+    !hook$jscomp$inline_2067.isDisabled &&
+    hook$jscomp$inline_2067.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2071.inject(
-        internals$jscomp$inline_2070
+      (rendererID = hook$jscomp$inline_2067.inject(
+        internals$jscomp$inline_2066
       )),
-        (injectedHook = hook$jscomp$inline_2071);
+        (injectedHook = hook$jscomp$inline_2067);
     } catch (err) {}
 }
 var Dispatcher$1 = Internals.Dispatcher,
@@ -13027,14 +13019,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$307;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1637 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1637) {
-      var element$jscomp$inline_1638 = document.createElement("div");
-      element$jscomp$inline_1638.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1637 =
-        "function" === typeof element$jscomp$inline_1638.oninput;
+    var isSupported$jscomp$inline_1639 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1639) {
+      var element$jscomp$inline_1640 = document.createElement("div");
+      element$jscomp$inline_1640.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1639 =
+        "function" === typeof element$jscomp$inline_1640.oninput;
     }
-    JSCompiler_inline_result$jscomp$307 = isSupported$jscomp$inline_1637;
+    JSCompiler_inline_result$jscomp$307 = isSupported$jscomp$inline_1639;
   } else JSCompiler_inline_result$jscomp$307 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$307 &&
@@ -13174,19 +13166,19 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1650 = 0;
-  i$jscomp$inline_1650 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1650++
+  var i$jscomp$inline_1652 = 0;
+  i$jscomp$inline_1652 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1652++
 ) {
-  var eventName$jscomp$inline_1651 =
-      simpleEventPluginEvents[i$jscomp$inline_1650],
-    domEventName$jscomp$inline_1652 = eventName$jscomp$inline_1651.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1653 =
-      eventName$jscomp$inline_1651[0].toUpperCase() +
-      eventName$jscomp$inline_1651.slice(1);
+  var eventName$jscomp$inline_1653 =
+      simpleEventPluginEvents[i$jscomp$inline_1652],
+    domEventName$jscomp$inline_1654 = eventName$jscomp$inline_1653.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1655 =
+      eventName$jscomp$inline_1653[0].toUpperCase() +
+      eventName$jscomp$inline_1653.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1652,
-    "on" + capitalizedEvent$jscomp$inline_1653
+    domEventName$jscomp$inline_1654,
+    "on" + capitalizedEvent$jscomp$inline_1655
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14883,4 +14875,4 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-de7d1c907-20221223";
+exports.version = "18.3.0-next-48274a43a-20230104";
