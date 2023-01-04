@@ -13,9 +13,9 @@ import {
   Instruction,
   makeInstructionId,
   Place,
-} from "./HIR";
-import { printInstruction, printPlace } from "./PrintHIR";
-import { eachInstructionOperand } from "./visitors";
+} from "../HIR/HIR";
+import { printInstruction, printPlace } from "../HIR/PrintHIR";
+import { eachInstructionOperand } from "../HIR/visitors";
 
 /**
  * For each usage of a value in the given function, determines if the usage

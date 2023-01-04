@@ -1,5 +1,5 @@
 import DisjointSet from "../Utils/DisjointSet";
-import { Identifier, InstructionId } from "./HIR";
+import { Identifier, InstructionId } from "../HIR/HIR";
 
 export function inferMutableRangesForAlias(aliases: DisjointSet<Identifier>) {
   const aliasSets = aliases.buildSets();

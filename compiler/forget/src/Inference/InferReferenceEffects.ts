@@ -18,13 +18,17 @@ import {
   Phi,
   Place,
   ValueKind,
-} from "./HIR";
-import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
+} from "../HIR/HIR";
+import {
+  printMixedHIR,
+  printPlace,
+  printSourceLocation,
+} from "../HIR/PrintHIR";
 import {
   eachInstructionOperand,
   eachTerminalOperand,
   eachTerminalSuccessor,
-} from "./visitors";
+} from "../HIR/visitors";
 
 /**
  * For every usage of a value in the given function, infers the effect or action

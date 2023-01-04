@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 import DisjointSet from "../Utils/DisjointSet";
-import { Effect, HIRFunction, Identifier, InstructionId, Place } from "./HIR";
+import {
+  Effect,
+  HIRFunction,
+  Identifier,
+  InstructionId,
+  Place,
+} from "../HIR/HIR";
 
 export function inferAliasForStores(
   func: HIRFunction,

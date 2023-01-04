@@ -5,7 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { lower } from "./BuildHIR";
-export { HIRFunction } from "./HIR";
-export { Environment } from "./HIRBuilder";
-export { printFunction } from "./PrintHIR";
+export { inferMutableRanges } from "./InferMutableRanges";
+export { default as inferReferenceEffects } from "./InferReferenceEffects";

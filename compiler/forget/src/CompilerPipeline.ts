@@ -6,13 +6,8 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import {
-  Environment,
-  HIRFunction,
-  inferMutableRanges,
-  inferReferenceEffects,
-  lower,
-} from "./HIR";
+import { inferMutableRanges, inferReferenceEffects } from "./Inference";
+import { Environment, HIRFunction, lower } from "./HIR";
 import { ReactiveFunction } from "./HIR/HIR";
 import {
   buildReactiveFunction,

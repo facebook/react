@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction } from "./HIR";
+import { HIRFunction } from "../HIR/HIR";
 import { inferAliases } from "./InferAlias";
 import { inferAliasForStores } from "./InferAliasForStores";
 import { inferMutableLifetimes } from "./InferMutableLifetimes";

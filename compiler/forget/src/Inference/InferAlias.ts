@@ -1,5 +1,11 @@
 import DisjointSet from "../Utils/DisjointSet";
-import { HIRFunction, Identifier, Instruction, LValue, Place } from "./HIR";
+import {
+  HIRFunction,
+  Identifier,
+  Instruction,
+  LValue,
+  Place,
+} from "../HIR/HIR";
 
 export type AliasSet = Set<Identifier>;
 
