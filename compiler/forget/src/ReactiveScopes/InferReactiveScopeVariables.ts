@@ -161,13 +161,13 @@ function mayAllocate(value: InstructionValue): boolean {
     case "BinaryExpression":
     case "Identifier":
     case "PropertyLoad":
-    case "IndexLoad":
+    case "ComputedLoad":
     case "JSXText":
     case "Primitive": {
       return false;
     }
     case "PropertyStore":
-    case "IndexStore":
+    case "ComputedStore":
     case "ArrayExpression":
     case "CallExpression":
     case "JsxExpression":

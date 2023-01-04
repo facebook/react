@@ -473,7 +473,7 @@ export function codegenInstructionValue(
       );
       break;
     }
-    case "IndexStore": {
+    case "ComputedStore": {
       value = t.assignmentExpression(
         "=",
         t.memberExpression(
@@ -485,7 +485,7 @@ export function codegenInstructionValue(
       );
       break;
     }
-    case "IndexLoad": {
+    case "ComputedLoad": {
       value = t.memberExpression(
         codegenPlace(temp, instrValue.object),
         codegenPlace(temp, instrValue.property),

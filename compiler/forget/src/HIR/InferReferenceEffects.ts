@@ -607,7 +607,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         }
         continue;
       }
-      case "IndexStore": {
+      case "ComputedStore": {
         const effect = isObjectType(instrValue.object.identifier)
           ? Effect.Store
           : Effect.Mutate;
@@ -622,7 +622,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         }
         continue;
       }
-      case "IndexLoad": {
+      case "ComputedLoad": {
         if (!env.isDefined(instrValue.object)) {
           // TODO @josephsavona: improve handling of globals
           const value: InstructionValue = {

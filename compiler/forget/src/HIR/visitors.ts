@@ -50,12 +50,12 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
-    case "IndexLoad": {
+    case "ComputedLoad": {
       yield instrValue.object;
       yield instrValue.property;
       break;
     }
-    case "IndexStore": {
+    case "ComputedStore": {
       yield instrValue.object;
       yield instrValue.property;
       yield instrValue.value;
@@ -121,12 +121,12 @@ export function mapInstructionOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "IndexLoad": {
+    case "ComputedLoad": {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       break;
     }
-    case "IndexStore": {
+    case "ComputedStore": {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       instrValue.value = fn(instrValue.value);

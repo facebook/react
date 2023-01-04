@@ -299,9 +299,9 @@ export type InstructionData =
   | { kind: "PropertyLoad"; object: Place; property: string }
 
   // store `object[index] = value` - like PropertyStore but with a dynamic property
-  | { kind: "IndexStore"; object: Place; property: Place; value: Place }
+  | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
   // load `object[index]` - like PropertyLoad but with a dynamic property
-  | { kind: "IndexLoad"; object: Place; property: Place }
+  | { kind: "ComputedLoad"; object: Place; property: Place }
 
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc

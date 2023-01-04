@@ -277,14 +277,14 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       } = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "IndexLoad": {
-      value = `IndexLoad ${printPlace(instrValue.object)}[${printPlace(
+    case "ComputedLoad": {
+      value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
         instrValue.property
       )}]`;
       break;
     }
-    case "IndexStore": {
-      value = `IndexStore ${printPlace(instrValue.object)}[${printPlace(
+    case "ComputedStore": {
+      value = `ComputedStore ${printPlace(instrValue.object)}[${printPlace(
         instrValue.property
       )}] = ${printPlace(instrValue.value)}`;
       break;

@@ -1077,7 +1077,7 @@ function lowerExpression(
         );
         const propertyPlace = lowerExpressionToPlace(builder, property);
         value = {
-          kind: "IndexLoad",
+          kind: "ComputedLoad",
           object,
           property: propertyPlace,
           loc: exprLoc,
@@ -1423,7 +1423,7 @@ function lowerAssignment(
         );
         const propertyPlace = lowerExpressionToPlace(builder, property);
         return {
-          kind: "IndexStore",
+          kind: "ComputedStore",
           object,
           property: propertyPlace,
           value: valuePlace,
@@ -1465,7 +1465,7 @@ function lowerAssignment(
           loc: element.node.loc ?? GeneratedSource,
         });
         const value: InstructionValue = {
-          kind: "IndexLoad",
+          kind: "ComputedLoad",
           loc,
           object: { ...arrayPlace },
           property,
