@@ -162,13 +162,15 @@ export default class HIRBuilder {
       entry: this.#entry,
     };
     logHIR("Build (pre-shrink)", ir);
-    // First reduce indirections and prune unreachable blocks
+    // First reduce indirections
     let shrunk = shrink(ir);
     logHIR("Build (shrunk)", shrunk);
     // then convert to reverse postorder
     const rpo = reversePostorderBlocks(shrunk);
+    removeUnreachableFallthroughs(rpo);
     markInstructionIds(rpo);
     markPredecessors(rpo);
+
     return rpo;
   }
 
@@ -356,7 +358,7 @@ export default class HIRBuilder {
 }
 
 /**
- * Helper to shrink a CFG to eliminate unreachable node and eliminate jump-only blocks.
+ * Helper to shrink a CFG eliminate jump-only blocks.
  */
 function shrink(func: HIR): HIR {
   const gotos = new Map();
@@ -406,8 +408,17 @@ function shrink(func: HIR): HIR {
     });
   }
 
+  return { blocks, entry: func.entry };
+}
+
+function removeUnreachableFallthroughs(func: HIR) {
+  const visited: Set<BlockId> = new Set();
+  for (const [_, block] of func.blocks) {
+    visited.add(block.id);
+  }
+
   // Cleanup any fallthrough blocks that weren't visited
-  for (const block of blocks.values()) {
+  for (const [_, block] of func.blocks) {
     if (
       block.terminal.kind === "if" ||
       block.terminal.kind === "switch" ||
@@ -415,15 +426,13 @@ function shrink(func: HIR): HIR {
     ) {
       if (
         block.terminal.fallthrough !== null &&
-        !blocks.has(block.terminal.fallthrough)
+        !visited.has(block.terminal.fallthrough)
       ) {
         block.terminal.fallthrough = null;
       }
     }
   }
-  return { blocks, entry: func.entry };
 }
-
 /**
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
  * before successors except in the case of back links (ie loops).
