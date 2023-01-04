@@ -623,10 +623,6 @@ function lowerStatement(
         nodeKind === "let" ? InstructionKind.Let : InstructionKind.Const;
       for (const declaration of stmt.get("declarations")) {
         const id = declaration.get("id");
-        invariant(
-          id.isIdentifier(),
-          "Support non-identifier variable declarations"
-        );
         const init = declaration.get("init");
         let value: InstructionValue;
         if (init.hasNode()) {
@@ -942,45 +938,13 @@ function lowerExpression(
 
       if (operator === "=") {
         const left = expr.get("left");
-        const leftNode = left.node;
-        switch (leftNode.type) {
-          case "Identifier": {
-            const lvalue = left as NodePath<t.Identifier>;
-            return lowerAssignment(
-              builder,
-              leftNode.loc ?? GeneratedSource,
-              InstructionKind.Reassign,
-              lvalue,
-              lowerExpression(builder, expr.get("right"))
-            );
-          }
-          case "MemberExpression": {
-            const leftExpr = left as NodePath<t.MemberExpression>;
-            const property = leftExpr.get("property");
-            invariant(
-              property.isIdentifier(),
-              "Assignment expression to dynamic properties is not yet supported"
-            );
-            const right = lowerExpressionToPlace(builder, expr.get("right"));
-            const object = lowerExpressionToPlace(
-              builder,
-              leftExpr.get("object")
-            );
-            return {
-              kind: "PropertyStore",
-              object,
-              property: property.node.name,
-              value: right,
-              loc: leftNode.loc ?? GeneratedSource,
-            };
-          }
-          default: {
-            todoInvariant(
-              false,
-              "Support lvalues other than identifier and member expression"
-            );
-          }
-        }
+        return lowerAssignment(
+          builder,
+          left.node.loc ?? GeneratedSource,
+          InstructionKind.Reassign,
+          left,
+          lowerExpression(builder, expr.get("right"))
+        );
       }
 
       const operators: { [key: string]: t.BinaryExpression["operator"] } = {
@@ -1399,15 +1363,131 @@ function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
   kind: InstructionKind,
-  lvalue: NodePath<t.Identifier>,
+  lvaluePath: NodePath<t.LVal>,
   value: InstructionValue
 ): InstructionValue {
-  const id = lowerIdentifier(builder, lvalue);
-  builder.push({
-    id: makeInstructionId(0),
-    lvalue: { place: id, kind },
-    value,
-    loc,
-  });
-  return id;
+  const lvalueNode = lvaluePath.node;
+  switch (lvalueNode.type) {
+    case "Identifier": {
+      const lvalue = lvaluePath as NodePath<t.Identifier>;
+      const place = lowerIdentifier(builder, lvalue);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...place }, kind },
+        value,
+        loc,
+      });
+      return place;
+    }
+    case "MemberExpression": {
+      const leftExpr = lvaluePath as NodePath<t.MemberExpression>;
+      const property = leftExpr.get("property");
+      invariant(
+        property.isIdentifier(),
+        "Assignment expression to dynamic properties is not yet supported"
+      );
+      const object = lowerExpressionToPlace(builder, leftExpr.get("object"));
+      let valuePlace: Place;
+      if (value.kind === "Identifier") {
+        valuePlace = value;
+      } else {
+        valuePlace = buildTemporaryPlace(builder, loc);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { place: { ...valuePlace }, kind: InstructionKind.Const },
+          value,
+          loc,
+        });
+      }
+      return {
+        kind: "PropertyStore",
+        object,
+        property: property.node.name,
+        value: valuePlace,
+        loc,
+      };
+    }
+    case "ArrayPattern": {
+      const lvalue = lvaluePath as NodePath<t.ArrayPattern>;
+      const arrayPlace = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...arrayPlace }, kind: InstructionKind.Const },
+        value,
+        loc,
+      });
+      const elements = lvalue.get("elements");
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
+        if (!element.hasNode()) {
+          continue;
+        }
+        todoInvariant(
+          element.node.type !== "RestElement",
+          "Rest elements are not supported yet"
+        );
+        const property = buildTemporaryPlace(
+          builder,
+          element.node.loc ?? GeneratedSource
+        );
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { place: { ...property }, kind: InstructionKind.Const },
+          value: {
+            kind: "Primitive",
+            value: i,
+            loc: element.node.loc ?? GeneratedSource,
+          },
+          loc: element.node.loc ?? GeneratedSource,
+        });
+        const value: InstructionValue = {
+          kind: "IndexLoad",
+          loc,
+          object: { ...arrayPlace },
+          property,
+        };
+        lowerAssignment(builder, loc, kind, element, value);
+      }
+      return arrayPlace;
+    }
+    case "ObjectPattern": {
+      const lvalue = lvaluePath as NodePath<t.ObjectPattern>;
+      const objectPlace = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...objectPlace }, kind },
+        value,
+        loc,
+      });
+      const properties = lvalue.get("properties");
+      for (let i = 0; i < properties.length; i++) {
+        const property = properties[i];
+        invariant(
+          property.isObjectProperty(),
+          "Rest elements are not supported yet"
+        );
+        const key = property.get("key");
+        invariant(
+          key.isIdentifier(),
+          "TODO: support non-identifier object property keys"
+        );
+        const element = property.get("value");
+        invariant(
+          element.isLVal(),
+          "Expected object property value to be an lvalue"
+        );
+        const value: InstructionValue = {
+          kind: "PropertyLoad",
+          loc,
+          object: { ...objectPlace },
+          property: key.node.name,
+        };
+        lowerAssignment(builder, loc, kind, element, value);
+      }
+      return objectPlace;
+    }
+    default: {
+      todo("Support other lvalue types beyond identifier");
+    }
+  }
 }
