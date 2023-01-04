@@ -13,10 +13,7 @@ import {
   ReactiveTerminal,
   ReactiveValueBlock,
 } from "../HIR/HIR";
-import {
-  eachInstructionOperand,
-  eachInstructionValueOperand,
-} from "../HIR/visitors";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -49,7 +46,9 @@ function visitBlockInner(scopes: Scopes, block: ReactiveBlock): void {
   for (const stmt of block) {
     switch (stmt.kind) {
       case "instruction": {
-        for (const operand of eachInstructionOperand(stmt.instruction)) {
+        for (const operand of eachInstructionValueOperand(
+          stmt.instruction.value
+        )) {
           scopes.visit(operand.identifier);
         }
         if (stmt.instruction.lvalue !== null) {

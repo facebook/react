@@ -497,14 +497,6 @@ class Driver<
     let lastValue: { value: InstructionValue; id: InstructionId } | null = null;
     if (terminalValue != null) {
       lastValue = terminalValue;
-    } else {
-      if (
-        instructions.length &&
-        instructions[instructions.length - 1].lvalue === null
-      ) {
-        const last = instructions.pop()!;
-        lastValue = { value: last.value, id: last.id };
-      }
     }
     for (const instr of instructions) {
       const value = this.visitor.visitValue(instr.value, instr.id);

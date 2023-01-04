@@ -301,9 +301,7 @@ class ReactiveFunctionBuilder
 }
 
 function getInstructionScope(instr: Instruction): ReactiveScope | null {
-  let scope: ReactiveScope | null = null;
   if (
-    instr.lvalue !== null &&
     instr.lvalue.place.identifier.scope !== null &&
     isScopeActive(instr.lvalue.place.identifier.scope, instr.id)
   ) {

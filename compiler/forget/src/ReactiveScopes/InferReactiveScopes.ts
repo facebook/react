@@ -286,7 +286,6 @@ class MergeOverlappingReactiveScopesVisitor
   visitInstruction(instruction: Instruction, value: void): void {
     this.visitId(instruction.id);
     if (
-      instruction.lvalue !== null &&
       instruction.lvalue.place.identifier.scope !== null &&
       instruction.id >= instruction.lvalue.place.identifier.scope.range.start &&
       instruction.id < instruction.lvalue.place.identifier.scope.range.end
@@ -443,7 +442,6 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
 
 function getInstructionScope(instr: Instruction): ReactiveScope | null {
   if (
-    instr.lvalue !== null &&
     instr.lvalue.place.identifier.scope !== null &&
     isActive(instr, instr.lvalue.place.identifier.scope.range)
   ) {

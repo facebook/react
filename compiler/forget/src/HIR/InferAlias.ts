@@ -38,9 +38,5 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
       return;
   }
 
-  if (lvalue === null) {
-    return;
-  }
-
   state.alias(lvalue, alias);
 }

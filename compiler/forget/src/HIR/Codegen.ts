@@ -21,6 +21,7 @@ import {
   InstructionValue,
   LValue,
   Place,
+  ReactiveInstruction,
   SourceLocation,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
@@ -293,7 +294,7 @@ export function codegenLabel(id: BlockId): string {
 
 export function codegenInstruction(
   temp: Temporaries,
-  instr: Instruction,
+  instr: ReactiveInstruction,
   value: t.Expression
 ): t.Statement {
   if (t.isStatement(value)) {

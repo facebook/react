@@ -697,7 +697,13 @@ function lowerStatement(
     case "WithStatement": {
       builder.push({
         id: makeInstructionId(0),
-        lvalue: null,
+        lvalue: {
+          place: buildTemporaryPlace(
+            builder,
+            stmtPath.node.loc ?? GeneratedSource
+          ),
+          kind: InstructionKind.Const,
+        },
         loc: stmtPath.node.loc ?? GeneratedSource,
         value: {
           kind: "OtherStatement",
@@ -1330,7 +1336,10 @@ function lowerExpressionToVoid(
     id: makeInstructionId(0),
     value: instr,
     loc: exprLoc,
-    lvalue: null,
+    lvalue: {
+      place: buildTemporaryPlace(builder, exprLoc),
+      kind: InstructionKind.Const,
+    },
   });
 }
 

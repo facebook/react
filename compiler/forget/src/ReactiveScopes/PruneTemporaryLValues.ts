@@ -7,9 +7,9 @@
 
 import {
   Identifier,
-  Instruction,
   InstructionKind,
   ReactiveFunction,
+  ReactiveInstruction,
 } from "../HIR/HIR";
 import { visitFunction } from "./visitors";
 
@@ -18,7 +18,7 @@ import { visitFunction } from "./visitors";
  * nulls out the lvalue itself, it does not remove the corresponding instructions.
  */
 export function pruneTemporaryLValues(fn: ReactiveFunction): void {
-  const lvalues = new Map<Identifier, Instruction>();
+  const lvalues = new Map<Identifier, ReactiveInstruction>();
   visitFunction(fn, {
     visitInstruction: (instr) => {
       if (

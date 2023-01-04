@@ -6,11 +6,11 @@
  */
 
 import {
-  Instruction,
   InstructionValue,
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ReactiveTerminal,
   ReactiveValueBlock,
@@ -22,7 +22,7 @@ export function visitFunction(
   fn: ReactiveFunction,
   visitors: {
     visitValue?: (value: InstructionValue) => void;
-    visitInstruction?: (instr: Instruction) => void;
+    visitInstruction?: (instr: ReactiveInstruction) => void;
     visitTerminal?: (terminal: ReactiveTerminal) => void;
     visitScope?: (scope: ReactiveScope) => void;
   }

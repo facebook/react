@@ -581,10 +581,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue.object, effect);
 
         const lvalue = instr.lvalue;
-        if (lvalue !== null) {
-          env.alias(lvalue.place, instrValue.value);
-          lvalue.place.effect = Effect.Store;
-        }
+        env.alias(lvalue.place, instrValue.value);
+        lvalue.place.effect = Effect.Store;
         continue;
       }
       case "PropertyLoad": {
@@ -601,10 +599,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
         env.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
-        if (lvalue !== null) {
-          env.initialize(instrValue, env.kind(instrValue.object));
-          env.define(lvalue.place, instrValue);
-        }
+        env.initialize(instrValue, env.kind(instrValue.object));
+        env.define(lvalue.place, instrValue);
         continue;
       }
       case "ComputedStore": {
@@ -616,10 +612,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue.object, effect);
 
         const lvalue = instr.lvalue;
-        if (lvalue !== null) {
-          env.alias(lvalue.place, instrValue.value);
-          lvalue.place.effect = Effect.Store;
-        }
+        env.alias(lvalue.place, instrValue.value);
+        lvalue.place.effect = Effect.Store;
         continue;
       }
       case "ComputedLoad": {
@@ -637,20 +631,16 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue.object, Effect.Read);
         env.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
-        if (lvalue !== null) {
-          env.initialize(instrValue, env.kind(instrValue.object));
-          env.define(lvalue.place, instrValue);
-        }
+        env.initialize(instrValue, env.kind(instrValue.object));
+        env.define(lvalue.place, instrValue);
         continue;
       }
       case "Identifier": {
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;
-        if (lvalue !== null) {
-          lvalue.place.effect = Effect.Mutate;
-          // direct aliasing: `a = b`;
-          env.alias(lvalue.place, instrValue);
-        }
+        lvalue.place.effect = Effect.Mutate;
+        // direct aliasing: `a = b`;
+        env.alias(lvalue.place, instrValue);
         continue;
       }
       default: {
@@ -668,10 +658,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
     }
 
     env.initialize(instrValue, valueKind);
-    if (instr.lvalue !== null) {
-      env.define(instr.lvalue.place, instrValue);
-      instr.lvalue.place.effect = lvalueEffect;
-    }
+    env.define(instr.lvalue.place, instrValue);
+    instr.lvalue.place.effect = lvalueEffect;
   }
 
   const effect =

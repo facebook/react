@@ -55,11 +55,7 @@ function apply(func: HIRFunction, unifier: Unifier) {
         place.identifier.type = unifier.get(place.identifier.type);
       }
       const { lvalue } = instr;
-      if (lvalue !== null) {
-        lvalue.place.identifier.type = unifier.get(
-          lvalue.place.identifier.type
-        );
-      }
+      lvalue.place.identifier.type = unifier.get(lvalue.place.identifier.type);
     }
   }
 }

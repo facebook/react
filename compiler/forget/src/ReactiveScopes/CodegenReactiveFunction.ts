@@ -18,10 +18,10 @@ import {
 } from "../HIR/Codegen";
 import {
   Identifier,
-  Instruction,
   InstructionKind,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeDependency,
   ReactiveTerminal,
@@ -301,7 +301,7 @@ function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
 
 export function codegenInstructionNullable(
   cx: Context,
-  instr: Instruction,
+  instr: ReactiveInstruction,
   value: t.Expression
 ): t.Statement | null {
   let statement;

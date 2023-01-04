@@ -20,6 +20,7 @@ import {
   MutableRange,
   Phi,
   Place,
+  ReactiveInstruction,
   ReactiveScope,
   SourceLocation,
   Terminal,
@@ -96,7 +97,7 @@ export function printMixedHIR(
   }
 }
 
-export function printInstruction(instr: Instruction): string {
+export function printInstruction(instr: ReactiveInstruction): string {
   const id = `[${instr.id}]`;
   const value = printInstructionValue(instr.value);
 

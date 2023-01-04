@@ -7,7 +7,6 @@
 
 import {
   Identifier,
-  Instruction,
   InstructionId,
   InstructionKind,
   InstructionValue,
@@ -16,6 +15,7 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeDependency,
   ReactiveValueBlock,
@@ -280,7 +280,7 @@ function visitInstructionValue(
   }
 }
 
-function visitInstruction(context: Context, instr: Instruction): void {
+function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
   visitInstructionValue(context, instr.value, lvalue);
   if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {

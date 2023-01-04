@@ -65,9 +65,16 @@ export type ReactiveValueBlock = {
 };
 
 export type ReactiveStatement =
-  | { kind: "instruction"; instruction: Instruction }
+  | { kind: "instruction"; instruction: ReactiveInstruction }
   | { kind: "terminal"; terminal: ReactiveTerminal; label: BlockId | null }
   | ReactiveScopeBlock;
+
+export type ReactiveInstruction = {
+  id: InstructionId;
+  lvalue: LValue | null;
+  value: InstructionValue;
+  loc: SourceLocation;
+};
 
 export type ReactiveTerminal =
   | { kind: "break"; label: BlockId | null }
@@ -225,7 +232,7 @@ export type ForTerminal = {
  */
 export type Instruction = {
   id: InstructionId;
-  lvalue: LValue | null;
+  lvalue: LValue;
   value: InstructionValue;
   loc: SourceLocation;
 };

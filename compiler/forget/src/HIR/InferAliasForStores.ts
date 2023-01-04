@@ -14,7 +14,7 @@ export function inferAliasForStores(
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       const { value, lvalue } = instr;
-      if (lvalue === null || lvalue.place.effect !== Effect.Store) {
+      if (lvalue.place.effect !== Effect.Store) {
         continue;
       }
       switch (value.kind) {
