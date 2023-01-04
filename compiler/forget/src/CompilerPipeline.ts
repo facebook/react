@@ -7,8 +7,7 @@
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
-import { Environment, HIRFunction, lower } from "./HIR";
-import { ReactiveFunction } from "./HIR/HIR";
+import { Environment, HIRFunction, lower, ReactiveFunction } from "./HIR";
 import {
   buildReactiveFunction,
   codegenReactiveFunction,

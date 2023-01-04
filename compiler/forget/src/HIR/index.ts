@@ -6,6 +6,6 @@
  */
 
 export { lower } from "./BuildHIR";
-export { HIRFunction } from "./HIR";
+export { HIRFunction, ReactiveFunction } from "./HIR";
 export { Environment } from "./HIRBuilder";
 export { printFunction } from "./PrintHIR";
