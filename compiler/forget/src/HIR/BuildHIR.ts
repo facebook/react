@@ -1061,16 +1061,28 @@ function lowerExpression(
       const object = lowerExpressionToPlace(builder, expr.get("object"));
       invariant(object.kind === "Identifier", "scope cannot appear here");
       const property = expr.get("property");
-      todoInvariant(
-        property.isIdentifier(),
-        "Handle non-identifier properties"
-      );
-      const value: InstructionValue = {
-        kind: "PropertyLoad",
-        object,
-        property: property.node.name,
-        loc: exprLoc,
-      };
+      let value: InstructionValue;
+      if (!expr.node.computed) {
+        todoInvariant(property.isIdentifier(), "Support private names");
+        value = {
+          kind: "PropertyLoad",
+          object,
+          property: property.node.name,
+          loc: exprLoc,
+        };
+      } else {
+        invariant(
+          property.isExpression(),
+          "Expected private names to be non-computed"
+        );
+        const propertyPlace = lowerExpressionToPlace(builder, property);
+        value = {
+          kind: "IndexLoad",
+          object,
+          property: propertyPlace,
+          loc: exprLoc,
+        };
+      }
       const place: Place = buildTemporaryPlace(builder, exprLoc);
       builder.push({
         id: makeInstructionId(0),
@@ -1380,13 +1392,9 @@ function lowerAssignment(
       return place;
     }
     case "MemberExpression": {
-      const leftExpr = lvaluePath as NodePath<t.MemberExpression>;
-      const property = leftExpr.get("property");
-      invariant(
-        property.isIdentifier(),
-        "Assignment expression to dynamic properties is not yet supported"
-      );
-      const object = lowerExpressionToPlace(builder, leftExpr.get("object"));
+      const lvalue = lvaluePath as NodePath<t.MemberExpression>;
+      const property = lvalue.get("property");
+      const object = lowerExpressionToPlace(builder, lvalue.get("object"));
       let valuePlace: Place;
       if (value.kind === "Identifier") {
         valuePlace = value;
@@ -1399,13 +1407,29 @@ function lowerAssignment(
           loc,
         });
       }
-      return {
-        kind: "PropertyStore",
-        object,
-        property: property.node.name,
-        value: valuePlace,
-        loc,
-      };
+      if (!lvalue.node.computed) {
+        todoInvariant(property.isIdentifier(), "Support private names");
+        return {
+          kind: "PropertyStore",
+          object,
+          property: property.node.name,
+          value: valuePlace,
+          loc,
+        };
+      } else {
+        invariant(
+          property.isExpression(),
+          "Expected private name to appear as a non-computed property"
+        );
+        const propertyPlace = lowerExpressionToPlace(builder, property);
+        return {
+          kind: "IndexStore",
+          object,
+          property: propertyPlace,
+          value: valuePlace,
+          loc,
+        };
+      }
     }
     case "ArrayPattern": {
       const lvalue = lvaluePath as NodePath<t.ArrayPattern>;
