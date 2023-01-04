@@ -1300,16 +1300,6 @@ function finishConcurrentRender(root, exitStatus, lanes) {
             // There's additional work on this root.
             break;
           }
-          const suspendedLanes = root.suspendedLanes;
-          if (!isSubsetOfLanes(suspendedLanes, lanes)) {
-            // We should prefer to render the fallback of at the last
-            // suspended level. Ping the last suspended level to try
-            // rendering it again.
-            // FIXME: What if the suspended lanes are Idle? Should not restart.
-            const eventTime = requestEventTime();
-            markRootPinged(root, suspendedLanes, eventTime);
-            break;
-          }
 
           // The render is suspended, it hasn't timed out, and there's no
           // lower priority work to do. Instead of committing the fallback
