@@ -277,6 +277,18 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       } = ${printPlace(instrValue.value)}`;
       break;
     }
+    case "IndexLoad": {
+      value = `IndexLoad ${printPlace(instrValue.object)}[${printPlace(
+        instrValue.property
+      )}]`;
+      break;
+    }
+    case "IndexStore": {
+      value = `IndexStore ${printPlace(instrValue.object)}[${printPlace(
+        instrValue.property
+      )}] = ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

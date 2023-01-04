@@ -50,6 +50,17 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "IndexLoad": {
+      yield instrValue.object;
+      yield instrValue.property;
+      break;
+    }
+    case "IndexStore": {
+      yield instrValue.object;
+      yield instrValue.property;
+      yield instrValue.value;
+      break;
+    }
     case "UnaryExpression": {
       yield instrValue.value;
       break;
@@ -107,6 +118,17 @@ export function mapInstructionOperands(
     }
     case "PropertyStore": {
       instrValue.object = fn(instrValue.object);
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "IndexLoad": {
+      instrValue.object = fn(instrValue.object);
+      instrValue.property = fn(instrValue.property);
+      break;
+    }
+    case "IndexStore": {
+      instrValue.object = fn(instrValue.object);
+      instrValue.property = fn(instrValue.property);
       instrValue.value = fn(instrValue.value);
       break;
     }

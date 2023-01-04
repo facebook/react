@@ -607,6 +607,42 @@ function inferBlock(env: Environment, block: BasicBlock) {
         }
         continue;
       }
+      case "IndexStore": {
+        const effect = isObjectType(instrValue.object.identifier)
+          ? Effect.Store
+          : Effect.Mutate;
+        env.reference(instrValue.value, Effect.Read);
+        env.reference(instrValue.property, Effect.Read);
+        env.reference(instrValue.object, effect);
+
+        const lvalue = instr.lvalue;
+        if (lvalue !== null) {
+          env.alias(lvalue.place, instrValue.value);
+          lvalue.place.effect = Effect.Store;
+        }
+        continue;
+      }
+      case "IndexLoad": {
+        if (!env.isDefined(instrValue.object)) {
+          // TODO @josephsavona: improve handling of globals
+          const value: InstructionValue = {
+            kind: "Primitive",
+            loc: instrValue.loc,
+            value: undefined,
+          };
+          env.initialize(value, ValueKind.Frozen);
+          env.define(instrValue.object, value);
+        }
+
+        env.reference(instrValue.object, Effect.Read);
+        env.reference(instrValue.property, Effect.Read);
+        const lvalue = instr.lvalue;
+        if (lvalue !== null) {
+          env.initialize(instrValue, env.kind(instrValue.object));
+          env.define(lvalue.place, instrValue);
+        }
+        continue;
+      }
       case "Identifier": {
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;

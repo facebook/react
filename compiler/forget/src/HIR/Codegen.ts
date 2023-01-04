@@ -473,6 +473,26 @@ export function codegenInstructionValue(
       );
       break;
     }
+    case "IndexStore": {
+      value = t.assignmentExpression(
+        "=",
+        t.memberExpression(
+          codegenPlace(temp, instrValue.object),
+          codegenPlace(temp, instrValue.property),
+          true
+        ),
+        codegenPlace(temp, instrValue.value)
+      );
+      break;
+    }
+    case "IndexLoad": {
+      value = t.memberExpression(
+        codegenPlace(temp, instrValue.object),
+        codegenPlace(temp, instrValue.property),
+        true
+      );
+      break;
+    }
     case "Identifier": {
       value = codegenPlace(temp, instrValue);
       break;
