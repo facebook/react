@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 
-function generateArray(size) {
+function generateArray(size: number) {
   return Array.from({length: size}, () => Math.floor(Math.random() * size));
 }
 
