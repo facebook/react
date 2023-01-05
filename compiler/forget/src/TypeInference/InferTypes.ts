@@ -75,8 +75,7 @@ function generateTypeEquation(
 ): Array<TypeEquation> {
   const equations: Array<TypeEquation> = [];
 
-  function add(left: Type | null, right: Type | null) {
-    if (left === null || right === null) return;
+  function add(left: Type, right: Type) {
     equations.push({
       left,
       right,
@@ -84,7 +83,7 @@ function generateTypeEquation(
   }
 
   const { lvalue, value } = instr;
-  const left = assignType(lvalue?.place);
+  const left = lvalue.place.identifier.type;
 
   switch (value.kind) {
     case "JSXText":
@@ -94,21 +93,21 @@ function generateTypeEquation(
     }
 
     case "Identifier": {
-      add(left, assignType(value));
+      add(left, value.identifier.type);
       break;
     }
 
     case "BinaryExpression": {
       if (isPrimitiveBinaryOp(value.operator)) {
-        add(assignType(value.left), { kind: "Primitive" });
-        add(assignType(value.right), { kind: "Primitive" });
+        add(value.left.identifier.type, { kind: "Primitive" });
+        add(value.right.identifier.type, { kind: "Primitive" });
       }
       add(left, { kind: "Primitive" });
       break;
     }
 
     case "CallExpression": {
-      add(assignType(value.callee), { kind: "Function" });
+      add(value.callee.identifier.type, { kind: "Function" });
       break;
     }
 
@@ -119,16 +118,6 @@ function generateTypeEquation(
     }
   }
   return equations;
-}
-
-function assignType(place: Place | undefined): Type | null {
-  // We type only top level identifiers. Typing objects is not very useful
-  // when we have to be so conservative.
-  if (place === undefined) {
-    return null;
-  }
-
-  return place.identifier.type;
 }
 
 type Substitution = Map<TypeId, Type>;
