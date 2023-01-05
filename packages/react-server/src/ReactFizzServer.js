@@ -795,12 +795,12 @@ function renderClassComponent(
   popComponentStackInDEV(task);
 }
 
-const didWarnAboutBadClass = {};
-const didWarnAboutModulePatternComponent = {};
-const didWarnAboutContextTypeOnFunctionComponent = {};
-const didWarnAboutGetDerivedStateOnFunctionComponent = {};
+const didWarnAboutBadClass: {[string]: boolean} = {};
+const didWarnAboutModulePatternComponent: {[string]: boolean} = {};
+const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
+const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
-const didWarnAboutDefaultPropsOnFunctionComponent = {};
+const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 let hasWarnedAboutUsingContextAsConsumer = false;

@@ -7,7 +7,7 @@
  * @flow
  */
 
-const loggedTypeFailures = {};
+const loggedTypeFailures: {[string]: boolean} = {};
 
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 

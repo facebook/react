@@ -17,7 +17,7 @@
  *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
 function invertObject(targetObj /* : ErrorMap */) /* : ErrorMap */ {
-  const result = {};
+  const result: {[string]: string} = {};
   const mapKeys = Object.keys(targetObj);
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops

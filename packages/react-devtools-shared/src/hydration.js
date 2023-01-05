@@ -304,7 +304,15 @@ export function dehydrate(
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
-        const object = {};
+        const object: {
+          [string]:
+            | Dehydrated
+            | Unserializable
+            | string
+            | {[key: string]: string | Dehydrated | Unserializable}
+            | Array<Dehydrated>
+            | Array<Unserializable>,
+        } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
           object[name] = dehydrate(

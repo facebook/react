@@ -118,10 +118,11 @@ export function validatePreloadResourceDifference(
 
         if (propValue != null && propValue !== originalValue) {
           if (originalValue == null) {
-            extraProps = extraProps || {};
+            extraProps = extraProps || ({}: {[string]: any});
             extraProps[propName] = propValue;
           } else {
-            differentProps = differentProps || {};
+            differentProps =
+              differentProps || ({}: {[string]: {latest: any, original: any}});
             differentProps[propName] = {
               original: originalValue,
               latest: propValue,
@@ -177,10 +178,11 @@ export function validateStyleResourceDifference(
       if (propValue != null && propValue !== originalValue) {
         propName = propName === 'data-precedence' ? 'precedence' : propName;
         if (originalValue == null) {
-          extraProps = extraProps || {};
+          extraProps = extraProps || ({}: {[string]: any});
           extraProps[propName] = propValue;
         } else {
-          differentProps = differentProps || {};
+          differentProps =
+            differentProps || ({}: {[string]: {latest: any, original: any}});
           differentProps[propName] = {
             original: originalValue,
             latest: propValue,
@@ -229,10 +231,11 @@ export function validateScriptResourceDifference(
 
       if (propValue != null && propValue !== originalValue) {
         if (originalValue == null) {
-          extraProps = extraProps || {};
+          extraProps = extraProps || ({}: {[string]: any});
           extraProps[propName] = propValue;
         } else {
-          differentProps = differentProps || {};
+          differentProps =
+            differentProps || ({}: {[string]: {latest: any, original: any}});
           differentProps[propName] = {
             original: originalValue,
             latest: propValue,
@@ -304,13 +307,15 @@ export function validateStyleAndHintProps(
             !(preloadValue == null && styleValue == null)
           ) {
             if (styleValue == null) {
-              missingProps = missingProps || {};
+              missingProps = missingProps || ({}: {[string]: any});
               missingProps[propName] = preloadValue;
             } else if (preloadValue == null) {
-              extraProps = extraProps || {};
+              extraProps = extraProps || ({}: {[string]: any});
               extraProps[propName] = styleValue;
             } else {
-              differentProps = differentProps || {};
+              differentProps =
+                differentProps ||
+                ({}: {[string]: {latest: any, original: any}});
               differentProps[propName] = {
                 original: preloadValue,
                 latest: styleValue,
@@ -383,13 +388,15 @@ export function validateScriptAndHintProps(
             !(preloadValue == null && scriptValue == null)
           ) {
             if (scriptValue == null) {
-              missingProps = missingProps || {};
+              missingProps = missingProps || ({}: {[string]: any});
               missingProps[propName] = preloadValue;
             } else if (preloadValue == null) {
-              extraProps = extraProps || {};
+              extraProps = extraProps || ({}: {[string]: any});
               extraProps[propName] = scriptValue;
             } else {
-              differentProps = differentProps || {};
+              differentProps =
+                differentProps ||
+                ({}: {[string]: {latest: any, original: any}});
               differentProps[propName] = {
                 original: preloadValue,
                 latest: scriptValue,
@@ -510,13 +517,15 @@ export function validateURLKeyedUpdatedProps(
           !(pendingValue == null && currentValue == null)
         ) {
           if (pendingValue == null) {
-            missingProps = missingProps || {};
+            missingProps = missingProps || ({}: {[string]: mixed});
             missingProps[propName] = currentValue;
           } else if (currentValue == null) {
-            extraProps = extraProps || {};
+            extraProps = extraProps || ({}: {[string]: mixed});
             extraProps[propName] = pendingValue;
           } else {
-            differentProps = differentProps || {};
+            differentProps =
+              differentProps ||
+              ({}: {[string]: {latest: mixed, original: mixed}});
             differentProps[propName] = {
               original: currentValue,
               latest: pendingValue,

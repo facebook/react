@@ -215,7 +215,12 @@ export default class ReactFlightWebpackPlugin {
             return;
           }
 
-          const json = {};
+          const json: {
+            [string]: {
+              '': {chunks: any, id: any, name: any | string},
+              '*': {chunks: any, id: any, name: any | string},
+            },
+          } = {};
           compilation.chunkGroups.forEach(function(chunkGroup) {
             const chunkIds = chunkGroup.chunks.map(function(c) {
               return c.id;
@@ -235,7 +240,9 @@ export default class ReactFlightWebpackPlugin {
                 .getExportsInfo(module)
                 .getProvidedExports();
 
-              const moduleExports = {};
+              const moduleExports: {
+                [any | string]: {chunks: any, id: any, name: any | string},
+              } = {};
               ['', '*']
                 .concat(
                   Array.isArray(moduleProvidedExports)

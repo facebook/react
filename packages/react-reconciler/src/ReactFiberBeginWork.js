@@ -303,15 +303,15 @@ let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
 
 if (__DEV__) {
-  didWarnAboutBadClass = {};
-  didWarnAboutModulePatternComponent = {};
-  didWarnAboutContextTypeOnFunctionComponent = {};
-  didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutFunctionRefs = {};
+  didWarnAboutBadClass = ({}: {[string]: boolean});
+  didWarnAboutModulePatternComponent = ({}: {[string]: boolean});
+  didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
-  didWarnAboutRevealOrder = {};
-  didWarnAboutTailOptions = {};
-  didWarnAboutDefaultPropsOnFunctionComponent = {};
+  didWarnAboutRevealOrder = ({}: {[empty]: boolean});
+  didWarnAboutTailOptions = ({}: {[string]: boolean});
+  didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
 }
 
 export function reconcileChildren(

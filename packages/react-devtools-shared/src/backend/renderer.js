@@ -3265,7 +3265,7 @@ export function attach(
 
     let hooks = null;
     if (usesHooks) {
-      const originalConsoleMethods = {};
+      const originalConsoleMethods: {[string]: any} = {};
 
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {
