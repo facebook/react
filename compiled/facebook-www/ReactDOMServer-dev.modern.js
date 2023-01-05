@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-b83baf63f-20230105";
+var ReactVersion = "18.3.0-www-modern-5379b6123-20230105";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -241,6 +241,7 @@ var disableInputAttributeSyncing =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch =

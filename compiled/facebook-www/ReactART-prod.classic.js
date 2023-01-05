@@ -74,6 +74,7 @@ var ReactSharedInternals =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -394,6 +395,10 @@ function clz32Fallback(x) {
 var nextTransitionLane = 128,
   nextRetryLane = 8388608;
 function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & 42;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  }
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -4443,44 +4448,47 @@ function updateDehydratedSuspenseComponent(
   if (didReceiveUpdate || didSuspend) {
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
-      switch (renderLanes & -renderLanes) {
-        case 2:
-          didSuspend = 1;
-          break;
-        case 8:
-          didSuspend = 4;
-          break;
-        case 32:
-          didSuspend = 16;
-          break;
-        case 128:
-        case 256:
-        case 512:
-        case 1024:
-        case 2048:
-        case 4096:
-        case 8192:
-        case 16384:
-        case 32768:
-        case 65536:
-        case 131072:
-        case 262144:
-        case 524288:
-        case 1048576:
-        case 2097152:
-        case 4194304:
-        case 8388608:
-        case 16777216:
-        case 33554432:
-        case 67108864:
-          didSuspend = 64;
-          break;
-        case 536870912:
-          didSuspend = 268435456;
-          break;
-        default:
-          didSuspend = 0;
-      }
+      didSuspend = renderLanes & -renderLanes;
+      if (enableUnifiedSyncLane && 0 !== (didSuspend & 42)) didSuspend = 1;
+      else
+        switch (didSuspend) {
+          case 2:
+            didSuspend = 1;
+            break;
+          case 8:
+            didSuspend = 4;
+            break;
+          case 32:
+            didSuspend = 16;
+            break;
+          case 128:
+          case 256:
+          case 512:
+          case 1024:
+          case 2048:
+          case 4096:
+          case 8192:
+          case 16384:
+          case 32768:
+          case 65536:
+          case 131072:
+          case 262144:
+          case 524288:
+          case 1048576:
+          case 2097152:
+          case 4194304:
+          case 8388608:
+          case 16777216:
+          case 33554432:
+          case 67108864:
+            didSuspend = 64;
+            break;
+          case 536870912:
+            didSuspend = 268435456;
+            break;
+          default:
+            didSuspend = 0;
+        }
       didSuspend =
         0 !== (didSuspend & (nextProps.suspendedLanes | renderLanes))
           ? 0
@@ -9796,7 +9804,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-b83baf63f-20230105",
+    version: "18.3.0-www-classic-5379b6123-20230105",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1319 = {
@@ -9827,7 +9835,7 @@ var internals$jscomp$inline_1319 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-b83baf63f-20230105"
+  reconcilerVersion: "18.3.0-next-5379b6123-20230105"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1320 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

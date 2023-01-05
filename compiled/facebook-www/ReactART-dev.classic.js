@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-b83baf63f-20230105";
+var ReactVersion = "18.3.0-www-classic-5379b6123-20230105";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -191,6 +191,7 @@ var disableInputAttributeSyncing =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch =
@@ -1596,6 +1597,9 @@ var DefaultHydrationLane =
 var DefaultLane =
   /*                     */
   32;
+var SyncUpdateLanes =
+  /*                */
+  42;
 var TransitionHydrationLane =
   /*                */
   64;
@@ -1743,6 +1747,14 @@ var nextTransitionLane = TransitionLane1;
 var nextRetryLane = RetryLane1;
 
 function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
+
+    if (pendingSyncLanes !== 0) {
+      return pendingSyncLanes;
+    }
+  }
+
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
       return SyncHydrationLane;
@@ -2317,51 +2329,55 @@ function getBumpedLaneForHydration(root, renderLanes) {
   var renderLane = getHighestPriorityLane(renderLanes);
   var lane;
 
-  switch (renderLane) {
-    case SyncLane:
-      lane = SyncHydrationLane;
-      break;
+  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+    lane = SyncHydrationLane;
+  } else {
+    switch (renderLane) {
+      case SyncLane:
+        lane = SyncHydrationLane;
+        break;
 
-    case InputContinuousLane:
-      lane = InputContinuousHydrationLane;
-      break;
+      case InputContinuousLane:
+        lane = InputContinuousHydrationLane;
+        break;
 
-    case DefaultLane:
-      lane = DefaultHydrationLane;
-      break;
+      case DefaultLane:
+        lane = DefaultHydrationLane;
+        break;
 
-    case TransitionLane1:
-    case TransitionLane2:
-    case TransitionLane3:
-    case TransitionLane4:
-    case TransitionLane5:
-    case TransitionLane6:
-    case TransitionLane7:
-    case TransitionLane8:
-    case TransitionLane9:
-    case TransitionLane10:
-    case TransitionLane11:
-    case TransitionLane12:
-    case TransitionLane13:
-    case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
-    case RetryLane1:
-    case RetryLane2:
-    case RetryLane3:
-    case RetryLane4:
-      lane = TransitionHydrationLane;
-      break;
+      case TransitionLane1:
+      case TransitionLane2:
+      case TransitionLane3:
+      case TransitionLane4:
+      case TransitionLane5:
+      case TransitionLane6:
+      case TransitionLane7:
+      case TransitionLane8:
+      case TransitionLane9:
+      case TransitionLane10:
+      case TransitionLane11:
+      case TransitionLane12:
+      case TransitionLane13:
+      case TransitionLane14:
+      case TransitionLane15:
+      case TransitionLane16:
+      case RetryLane1:
+      case RetryLane2:
+      case RetryLane3:
+      case RetryLane4:
+        lane = TransitionHydrationLane;
+        break;
 
-    case IdleLane:
-      lane = IdleHydrationLane;
-      break;
+      case IdleLane:
+        lane = IdleHydrationLane;
+        break;
 
-    default:
-      // Everything else is already either a hydration lane, or shouldn't
-      // be retried at a hydration lane.
-      lane = NoLane;
-      break;
+      default:
+        // Everything else is already either a hydration lane, or shouldn't
+        // be retried at a hydration lane.
+        lane = NoLane;
+        break;
+    }
   } // Check if the lane we chose is suspended. If so, that indicates that we
   // already attempted and failed to hydrate at that level. Also check if we're
   // already rendering that lane, which is rare but could happen.

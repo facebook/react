@@ -59,6 +59,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch =
@@ -1291,6 +1292,10 @@ function clz32Fallback(x) {
 var nextTransitionLane = 128,
   nextRetryLane = 8388608;
 function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & 42;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  }
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -8883,12 +8888,14 @@ function updateDehydratedSuspenseComponent(
       return (
         pushPrimaryTreeSuspenseHandler(workInProgress),
         (workInProgress.flags &= -257),
-        (nextProps = createCapturedValue(Error(formatProdErrorMessage(422)))),
+        (suspenseState = createCapturedValue(
+          Error(formatProdErrorMessage(422))
+        )),
         retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
           renderLanes,
-          nextProps
+          suspenseState
         )
       );
     if (null !== workInProgress.memoizedState)
@@ -8935,18 +8942,18 @@ function updateDehydratedSuspenseComponent(
       null
     );
   if ("$!" === suspenseInstance.data) {
-    nextProps =
+    suspenseState =
       suspenseInstance.nextSibling && suspenseInstance.nextSibling.dataset;
-    if (nextProps) var digest = nextProps.dgst;
-    nextProps = digest;
-    suspenseState = Error(formatProdErrorMessage(419));
-    suspenseState.digest = nextProps;
-    nextProps = createCapturedValue(suspenseState, nextProps, void 0);
+    if (suspenseState) var digest = suspenseState.dgst;
+    suspenseState = digest;
+    nextProps = Error(formatProdErrorMessage(419));
+    nextProps.digest = suspenseState;
+    suspenseState = createCapturedValue(nextProps, suspenseState, void 0);
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
       renderLanes,
-      nextProps
+      suspenseState
     );
   }
   enableLazyContextPropagation &&
@@ -8956,44 +8963,48 @@ function updateDehydratedSuspenseComponent(
   if (didReceiveUpdate || digest) {
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
-      switch (renderLanes & -renderLanes) {
-        case 2:
-          suspenseInstance = 1;
-          break;
-        case 8:
-          suspenseInstance = 4;
-          break;
-        case 32:
-          suspenseInstance = 16;
-          break;
-        case 128:
-        case 256:
-        case 512:
-        case 1024:
-        case 2048:
-        case 4096:
-        case 8192:
-        case 16384:
-        case 32768:
-        case 65536:
-        case 131072:
-        case 262144:
-        case 524288:
-        case 1048576:
-        case 2097152:
-        case 4194304:
-        case 8388608:
-        case 16777216:
-        case 33554432:
-        case 67108864:
-          suspenseInstance = 64;
-          break;
-        case 536870912:
-          suspenseInstance = 268435456;
-          break;
-        default:
-          suspenseInstance = 0;
-      }
+      suspenseInstance = renderLanes & -renderLanes;
+      if (enableUnifiedSyncLane && 0 !== (suspenseInstance & 42))
+        suspenseInstance = 1;
+      else
+        switch (suspenseInstance) {
+          case 2:
+            suspenseInstance = 1;
+            break;
+          case 8:
+            suspenseInstance = 4;
+            break;
+          case 32:
+            suspenseInstance = 16;
+            break;
+          case 128:
+          case 256:
+          case 512:
+          case 1024:
+          case 2048:
+          case 4096:
+          case 8192:
+          case 16384:
+          case 32768:
+          case 65536:
+          case 131072:
+          case 262144:
+          case 524288:
+          case 1048576:
+          case 2097152:
+          case 4194304:
+          case 8388608:
+          case 16777216:
+          case 33554432:
+          case 67108864:
+            suspenseInstance = 64;
+            break;
+          case 536870912:
+            suspenseInstance = 268435456;
+            break;
+          default:
+            suspenseInstance = 0;
+        }
       suspenseInstance =
         0 !== (suspenseInstance & (nextProps.suspendedLanes | renderLanes))
           ? 0
@@ -15104,7 +15115,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1719 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-b83baf63f-20230105",
+  version: "18.3.0-www-modern-5379b6123-20230105",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2110 = {
@@ -15135,7 +15146,7 @@ var internals$jscomp$inline_2110 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-b83baf63f-20230105"
+  reconcilerVersion: "18.3.0-next-5379b6123-20230105"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2111 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15323,4 +15334,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-b83baf63f-20230105";
+exports.version = "18.3.0-next-5379b6123-20230105";

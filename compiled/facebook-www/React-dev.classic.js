@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-b83baf63f-20230105";
+var ReactVersion = "18.3.0-www-classic-5379b6123-20230105";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -502,6 +502,7 @@ var disableInputAttributeSyncing =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch =
