@@ -275,17 +275,32 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual([]);
       });
       // Only the active updates have flushed
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
 
-      instance.push('D');
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        instance.push('D');
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        instance.push('D');
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
 
       // Flush the async updates
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
-      expect(ops).toEqual(['BC', 'ABCD']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(ops).toEqual(['ABC', 'ABCD']);
+      } else {
+        expect(ops).toEqual(['BC', 'ABCD']);
+      }
     });
 
     // @gate www
