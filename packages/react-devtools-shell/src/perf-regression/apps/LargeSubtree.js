@@ -15,7 +15,7 @@ function generateArray(size) {
 
 const arr = generateArray(50000);
 
-export default function LargeSubtree() {
+export default function LargeSubtree(): React.Node {
   const [showList, setShowList] = React.useState(false);
   const toggleList = () => {
     const startTime = performance.now();
