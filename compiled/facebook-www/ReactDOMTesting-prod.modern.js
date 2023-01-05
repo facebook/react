@@ -13960,10 +13960,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1674 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-2619886ac-20230105",
+  version: "18.3.0-www-modern-b83baf63f-20230105",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2074 = {
+var internals$jscomp$inline_2073 = {
   bundleType: devToolsConfig$jscomp$inline_1674.bundleType,
   version: devToolsConfig$jscomp$inline_1674.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1674.rendererPackageName,
@@ -13991,19 +13991,19 @@ var internals$jscomp$inline_2074 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2619886ac-20230105"
+  reconcilerVersion: "18.3.0-next-b83baf63f-20230105"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2075 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2074 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2075.isDisabled &&
-    hook$jscomp$inline_2075.supportsFiber
+    !hook$jscomp$inline_2074.isDisabled &&
+    hook$jscomp$inline_2074.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2075.inject(
-        internals$jscomp$inline_2074
+      (rendererID = hook$jscomp$inline_2074.inject(
+        internals$jscomp$inline_2073
       )),
-        (injectedHook = hook$jscomp$inline_2075);
+        (injectedHook = hook$jscomp$inline_2074);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -14314,4 +14314,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-2619886ac-20230105";
+exports.version = "18.3.0-next-b83baf63f-20230105";

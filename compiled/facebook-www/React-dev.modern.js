@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-2619886ac-20230105";
+var ReactVersion = "18.3.0-www-modern-b83baf63f-20230105";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1252,7 +1252,6 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
 
   return subtreeCount;
 }
-
 /**
  * Maps children that are typically specified as `props.children`.
  *
@@ -1266,6 +1265,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
+
 function mapChildren(children, func, context) {
   if (children == null) {
     return children;
@@ -1295,7 +1295,6 @@ function countChildren(children) {
   });
   return n;
 }
-
 /**
  * Iterates through children that are typically specified as `props.children`.
  *
@@ -1308,6 +1307,7 @@ function countChildren(children) {
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
+
 function forEachChildren(children, forEachFunc, forEachContext) {
   mapChildren(
     children,

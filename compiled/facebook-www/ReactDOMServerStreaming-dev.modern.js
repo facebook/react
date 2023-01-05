@@ -252,8 +252,8 @@ var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // 
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// A reserved attribute.
 // It is handled by React separately and shouldn't be written to the DOM.
+
 var RESERVED = 0; // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
 
@@ -278,8 +278,8 @@ var NUMERIC = 5; // An attribute that must be positive numeric or parse as a pos
 // When falsy, it should be removed.
 
 var POSITIVE_NUMERIC = 6;
-
 /* eslint-disable max-len */
+
 var ATTRIBUTE_NAME_START_CHAR =
   ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
 /* eslint-enable max-len */
@@ -2752,7 +2752,6 @@ function getValueDescriptorExpectingEnumForWarning(thing) {
     : 'something with type "' + typeof thing + '"';
 }
 
-// @TODO add bootstrap script to implicit preloads
 function createResources() {
   return {
     // persistent
@@ -3660,11 +3659,10 @@ var scriptRegex = /(<\/|<)(s)(cript)/gi;
 
 var scriptReplacer = function(match, prefix, s, suffix) {
   return "" + prefix + (s === "s" ? "\\u0073" : "\\u0053") + suffix;
-};
-
-// Allows us to keep track of what we've already written so we can refer back to it.
+}; // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
+
 function createResponseState(
   identifierPrefix,
   nonce,
@@ -3785,6 +3783,7 @@ var HTML_TABLE_BODY_MODE = 5;
 var HTML_TABLE_ROW_MODE = 6;
 var HTML_COLGROUP_MODE = 7; // We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
+// Lets us keep track of contextual state and pick it back up after suspending.
 
 function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
   return {
@@ -4054,6 +4053,7 @@ var attributeEnd = stringToPrecomputedChunk('"');
 var attributeEmptyString = stringToPrecomputedChunk('=""');
 
 function pushAttribute(target, responseState, name, value) {
+  // not null or undefined
   switch (name) {
     case "style": {
       pushStyle(target, responseState, value);
@@ -6517,6 +6517,7 @@ function writeStyleResourceDependencyInJS(
 }
 
 function writeStyleResourceAttributeInJS(destination, name, value) {
+  // not null or undefined
   var attributeName = name.toLowerCase();
   var attributeValue;
 
@@ -6705,6 +6706,7 @@ function writeStyleResourceDependencyInAttr(
 }
 
 function writeStyleResourceAttributeInAttr(destination, name, value) {
+  // not null or undefined
   var attributeName = name.toLowerCase();
   var attributeValue;
 
@@ -7255,6 +7257,8 @@ var rendererSigil;
   rendererSigil = {};
 } // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
+// The structure of a context snapshot is an implementation of this file.
+// Currently, it's implemented as tracking the current active node.
 
 var rootContextSnapshot = null; // We assume that this runtime owns the "current" field on all ReactContext instances.
 // This global (actually thread local) state represents what state all those "current",
@@ -7984,9 +7988,9 @@ function checkClassInstance(instance, ctor, newProps) {
       );
     }
 
-    var _state = instance.state;
+    var state = instance.state;
 
-    if (_state && (typeof _state !== "object" || isArray(_state))) {
+    if (state && (typeof state !== "object" || isArray(state))) {
       error("%s.state: must be set to an object or null", name);
     }
 
@@ -9075,8 +9079,7 @@ var ABORTED = 3;
 var ERRORED = 4;
 var OPEN = 0;
 var CLOSING = 1;
-var CLOSED = 2;
-// This is a default heuristic for how to split up the HTML content into progressive
+var CLOSED = 2; // This is a default heuristic for how to split up the HTML content into progressive
 // loading. Our goal is to be able to display additional new content about every 500ms.
 // Faster than that is unnecessary and should be throttled on the client. It also
 // adds unnecessary overhead to do more splits. We don't know if it's a higher or lower
@@ -9091,6 +9094,7 @@ var CLOSED = 2;
 // about 12.5kb of content per 500ms. Not counting starting latency for the first
 // paint.
 // 500 * 1024 / 8 * .8 * 0.5 / 2
+
 var DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
 function defaultErrorHandler(error) {
@@ -11148,13 +11152,12 @@ function abort(request, reason) {
     var abortableTasks = request.abortableTasks;
 
     if (abortableTasks.size > 0) {
-      var _error =
+      var error =
         reason === undefined
           ? new Error("The render was aborted by the server without a reason.")
           : reason;
-
       abortableTasks.forEach(function(task) {
-        return abortTask(task, request, _error);
+        return abortTask(task, request, error);
       });
       abortableTasks.clear();
     }

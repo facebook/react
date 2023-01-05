@@ -90,8 +90,8 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
 
   try {
     currentPriorityLevel_DEPRECATED = priorityLevel;
-    var _didTimeout_DEPRECATED = false;
-    var result = callback(_didTimeout_DEPRECATED);
+    var didTimeout_DEPRECATED = false;
+    var result = callback(didTimeout_DEPRECATED);
 
     if (typeof result === "function") {
       // Assume this is a continuation

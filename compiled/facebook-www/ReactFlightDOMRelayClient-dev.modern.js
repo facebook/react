@@ -303,13 +303,13 @@ function initializeModelChunk(chunk) {
   initializingChunkBlockedModel = null;
 
   try {
-    var _value = parseModel(chunk._response, chunk.value);
+    var value = parseModel(chunk._response, chunk.value);
 
     if (
       initializingChunkBlockedModel !== null &&
       initializingChunkBlockedModel.deps > 0
     ) {
-      initializingChunkBlockedModel.value = _value; // We discovered new dependencies on modules that are not yet resolved.
+      initializingChunkBlockedModel.value = value; // We discovered new dependencies on modules that are not yet resolved.
       // We have to go the BLOCKED state until they're resolved.
 
       var blockedChunk = chunk;
@@ -319,7 +319,7 @@ function initializeModelChunk(chunk) {
     } else {
       var initializedChunk = chunk;
       initializedChunk.status = INITIALIZED;
-      initializedChunk.value = _value;
+      initializedChunk.value = value;
     }
   } catch (error) {
     var erroredChunk = chunk;
@@ -333,13 +333,10 @@ function initializeModelChunk(chunk) {
 
 function initializeModuleChunk(chunk) {
   try {
-    var _value2 = ReactFlightDOMRelayClientIntegration.requireModule(
-      chunk.value
-    );
-
+    var value = ReactFlightDOMRelayClientIntegration.requireModule(chunk.value);
     var initializedChunk = chunk;
     initializedChunk.status = INITIALIZED;
-    initializedChunk.value = _value2;
+    initializedChunk.value = value;
   } catch (error) {
     var erroredChunk = chunk;
     erroredChunk.status = ERRORED;

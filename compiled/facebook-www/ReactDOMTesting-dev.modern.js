@@ -313,9 +313,8 @@ function registerDirectEvent(registrationName, dependencies) {
   registrationNameDependencies[registrationName] = dependencies;
 
   {
-    var _lowerCasedName = registrationName.toLowerCase();
-
-    possibleRegistrationNames[_lowerCasedName] = registrationName;
+    var lowerCasedName = registrationName.toLowerCase();
+    possibleRegistrationNames[lowerCasedName] = registrationName;
 
     if (registrationName === "onDoubleClick") {
       possibleRegistrationNames.ondblclick = registrationName;
@@ -480,8 +479,8 @@ function checkFormFieldValueStringCoercion(value) {
   }
 }
 
-// A reserved attribute.
 // It is handled by React separately and shouldn't be written to the DOM.
+
 var RESERVED = 0; // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
 
@@ -506,8 +505,8 @@ var NUMERIC = 5; // An attribute that must be positive numeric or parse as a pos
 // When falsy, it should be removed.
 
 var POSITIVE_NUMERIC = 6;
-
 /* eslint-disable max-len */
+
 var ATTRIBUTE_NAME_START_CHAR =
   ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
 /* eslint-enable max-len */
@@ -1070,6 +1069,7 @@ function sanitizeURL(url) {
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
  */
+
 function getValueForProperty(node, name, expected, propertyInfo) {
   {
     if (propertyInfo.mustUseProperty) {
@@ -1971,9 +1971,9 @@ function setIsRendering(rendering) {
   }
 }
 
-// Flow does not allow string concatenation of most non-string types. To work
 // around this limitation, we use an opaque type that can only be obtained by
 // passing the value through getToStringValue first.
+
 function toString(value) {
   // The coercion safety check is performed in getToStringValue().
   // eslint-disable-next-line react-internal/safe-string-coercion
@@ -2776,7 +2776,6 @@ function restoreControlledState$1(element, props) {
 }
 
 var didWarnValDefaultVal = false;
-
 /**
  * Implements a <textarea> host component that allows setting `value`, and
  * `defaultValue`. This differs from the traditional DOM API because value is
@@ -2792,6 +2791,7 @@ var didWarnValDefaultVal = false;
  * The rendered element will be initialized with an empty value, the prop
  * `defaultValue` if specified, or the children content (deprecated).
  */
+
 function getHostProps$2(element, props) {
   var node = element;
 
@@ -4797,9 +4797,8 @@ function restoreStateOfTarget(target) {
   var stateNode = internalInstance.stateNode; // Guard against Fiber being unmounted.
 
   if (stateNode) {
-    var _props = getFiberCurrentPropsFromNode(stateNode);
-
-    restoreImpl(internalInstance.stateNode, internalInstance.type, _props);
+    var props = getFiberCurrentPropsFromNode(stateNode);
+    restoreImpl(internalInstance.stateNode, internalInstance.type, props);
   }
 }
 
@@ -5111,7 +5110,6 @@ function set(key, value) {
   key._reactInternals = value;
 }
 
-// Don't change these values. They're used by React Dev Tools.
 var NoFlags =
   /*                      */
   0;
@@ -5557,7 +5555,7 @@ var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
 var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
 var NormalPriority = Scheduler.unstable_NormalPriority;
 var LowPriority = Scheduler.unstable_LowPriority;
-var IdlePriority = Scheduler.unstable_IdlePriority;
+var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 
 var rendererID = null;
 var injectedHook = null;
@@ -6727,11 +6725,11 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
     );
 
     if (blockedOn !== null) {
-      var _fiber2 = getInstanceFromNode$1(blockedOn);
+      var fiber = getInstanceFromNode$1(blockedOn);
 
-      if (_fiber2 !== null) {
+      if (fiber !== null) {
         // Attempt to increase the priority of this target.
-        attemptContinuousHydration(_fiber2);
+        attemptContinuousHydration(fiber);
       }
     }
 
@@ -6942,10 +6940,10 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
       }
     } else {
       // We're still blocked. Try again later.
-      var _fiber3 = getInstanceFromNode$1(nextBlockedOn);
+      var fiber = getInstanceFromNode$1(nextBlockedOn);
 
-      if (_fiber3 !== null) {
-        attemptContinuousHydration(_fiber3);
+      if (fiber !== null) {
+        attemptContinuousHydration(fiber);
       }
 
       queuedEvent.blockedOn = nextBlockedOn;
@@ -7600,17 +7598,17 @@ function createSyntheticEvent(Interface) {
     this.target = nativeEventTarget;
     this.currentTarget = null;
 
-    for (var _propName in Interface) {
-      if (!Interface.hasOwnProperty(_propName)) {
+    for (var propName in Interface) {
+      if (!Interface.hasOwnProperty(propName)) {
         continue;
       }
 
-      var normalize = Interface[_propName];
+      var normalize = Interface[propName];
 
       if (normalize) {
-        this[_propName] = normalize(nativeEvent);
+        this[propName] = normalize(nativeEvent);
       } else {
-        this[_propName] = nativeEvent[_propName];
+        this[propName] = nativeEvent[propName];
       }
     }
 
@@ -10040,7 +10038,6 @@ function extractEvents$4(
   }
 }
 
-// TODO: remove top-level side effect.
 registerSimpleEvents();
 registerEvents$2();
 registerEvents$1();
@@ -13357,13 +13354,17 @@ function popHostContext(fiber) {
 
 var Dispatcher = ReactDOMSharedInternals.Dispatcher;
 // In the future this may need to change, especially when modules / scripts are supported
-
+// Brief on purpose due to insertion by script when streaming late boundaries
+// s = Status
+// l = loaded
+// e = errored
 // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
 // called when there is no rendering we track the last used document. It is not safe to insert
 // arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
 // that the resource is meant to apply too (for example stylesheets or scripts). This is only
 // appropriate for resources that don't really have a strict tie to the document itself for example
 // preloads
+
 var lastCurrentDocument = null;
 var previousDispatcher = null;
 function prepareToRenderResources(rootContainer) {
@@ -13382,8 +13383,8 @@ function cleanupAfterRenderResources() {
 var ReactDOMClientDispatcher = {
   preload: preload,
   preinit: preinit
-};
-// global maps of Resources
+}; // global maps of Resources
+
 var preloadResources = new Map(); // getRootNode is missing from IE and old jsdom versions
 
 function getRootNode(container) {
@@ -15239,10 +15240,9 @@ function isHydratable(type, props) {
 
       return false;
     } else if (type === "script") {
-      var _ref = props,
-        async = _ref.async,
-        onLoad = _ref.onLoad,
-        onError = _ref.onError;
+      var async = props.async,
+        onLoad = props.onLoad,
+        onError = props.onError;
       return !(async && (onLoad || onError));
     }
 
@@ -16591,10 +16591,10 @@ function flushSyncCallbacks() {
   return null;
 }
 
-// TODO: Use the unified fiber stack module instead of this local one?
 // Intentionally not using it yet to derisk the initial implementation, because
 // the way we push/pop these values is a bit unusual. If there's a mistake, I'd
 // rather the ids be wrong than crash the whole reconciler.
+
 var forkStack = [];
 var forkStackIndex = 0;
 var treeForkProvider = null;
@@ -17380,10 +17380,10 @@ function queueHydrationError(error) {
   }
 }
 
-// If a render is in progress, and we receive an update from a concurrent event,
 // we wait until the current render is over (either finished or interrupted)
 // before adding it to the fiber/hook queue. Push to this array so we can
 // access the queue, fiber, update, et al later.
+
 var concurrentQueues = [];
 var concurrentQueuesIndex = 0;
 var concurrentlyUpdatedLanes = NoLanes;
@@ -18715,12 +18715,11 @@ function resolveLazy(lazyType) {
   var payload = lazyType._payload;
   var init = lazyType._init;
   return init(payload);
-}
-
-// This wrapper function exists because I expect to clone the code in each path
+} // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
+
 function createChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber, childToDelete) {
     if (!shouldTrackSideEffects) {
@@ -19874,6 +19873,7 @@ function resetChildFibers(workInProgress, lanes) {
 
 // TODO: This isn't being used yet, but it's intended to replace the
 // InvisibleParentContext that is currently managed by SuspenseContext.
+
 var currentTreeHiddenStackCursor = createCursor(null);
 var prevRenderLanesStackCursor = createCursor(NoLanes);
 function pushHiddenContext(fiber, context) {
@@ -20041,6 +20041,13 @@ function popSuspenseListContext(fiber) {
   pop(suspenseStackCursor, fiber);
 }
 
+// A non-null SuspenseState means that it is blocked for one reason or another.
+// - A non-null dehydrated field means it's blocked pending hydration.
+//   - A non-null dehydrated field can use isSuspenseInstancePending or
+//     isSuspenseInstanceFallback to query the reason for being dehydrated.
+// - A null dehydrated field means it's blocked by something suspending and
+//   we're currently showing a fallback instead.
+
 function findFirstSuspended(row) {
   var node = row;
 
@@ -20179,9 +20186,9 @@ function registerMutableSourceForHydration(root, mutableSource) {
   }
 }
 
-var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
-// An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
+
 var SuspenseException = new Error(
   "Suspense Exception: This is not a real error! It's an implementation " +
     "detail of `use` to interrupt the current render. You must either " +
@@ -20339,9 +20346,8 @@ var didWarnAboutUseWrappedInTryCatch;
 {
   didWarnAboutMismatchedHooksForComponent = new Set();
   didWarnAboutUseWrappedInTryCatch = new Set();
-}
+} // These are set right before calling the component.
 
-// These are set right before calling the component.
 var renderLanes = NoLanes; // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
 
@@ -21868,10 +21874,8 @@ function updateLayoutEffect(create, deps) {
 function imperativeHandleEffect(create, ref) {
   if (typeof ref === "function") {
     var refCallback = ref;
-
-    var _inst = create();
-
-    refCallback(_inst);
+    var inst = create();
+    refCallback(inst);
     return function() {
       refCallback(null);
     };
@@ -21888,9 +21892,9 @@ function imperativeHandleEffect(create, ref) {
       }
     }
 
-    var _inst2 = create();
+    var _inst = create();
 
-    refObject.current = _inst2;
+    refObject.current = _inst;
     return function() {
       refObject.current = null;
     };
@@ -23811,9 +23815,9 @@ function checkClassInstance(workInProgress, ctor, newProps) {
       );
     }
 
-    var _state = instance.state;
+    var state = instance.state;
 
-    if (_state && (typeof _state !== "object" || isArray(_state))) {
+    if (state && (typeof state !== "object" || isArray(state))) {
       error("%s.state: must be set to an object or null", name);
     }
 
@@ -28831,9 +28835,9 @@ var AbortControllerLocal =
             return listener();
           });
         };
-      };
-// Intentionally not named imports because Rollup would
+      }; // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
+
 var scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
   NormalPriority$1 = Scheduler.unstable_NormalPriority;
 var CacheContext = {
@@ -35518,8 +35522,9 @@ function discreteUpdates(fn, a, b, c, d) {
 } // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
-
 // eslint-disable-next-line no-redeclare
+// eslint-disable-next-line no-redeclare
+
 function flushSync(fn) {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
@@ -37360,6 +37365,8 @@ function setIsRunningInsertionEffect(isRunning) {
 }
 
 /* eslint-disable react-internal/prod-error-codes */
+// Used by React Refresh runtime through DevTools Global Hook.
+
 var resolveFamily = null;
 var failedBoundaries = null;
 var setRefreshHandler = function(handler) {
@@ -37625,10 +37632,10 @@ function scheduleFibersWithFamiliesRecursively(
     }
 
     if (needsRemount || needsRender) {
-      var _root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+      var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
-      if (_root !== null) {
-        scheduleUpdateOnFiber(_root, fiber, SyncLane, NoTimestamp);
+      if (root !== null) {
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
 
@@ -38479,7 +38486,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-2619886ac-20230105";
+var ReactVersion = "18.3.0-www-modern-b83baf63f-20230105";
 
 function createPortal(
   children,
@@ -38502,6 +38509,8 @@ function createPortal(
     implementation: implementation
   };
 }
+
+// Might add PROFILE later.
 
 var didWarnAboutNestedUpdates;
 
@@ -39523,8 +39532,9 @@ function hydrateRoot$1(container, initialChildren, options) {
   return hydrateRoot(container, initialChildren, options);
 } // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
-
 // eslint-disable-next-line no-redeclare
+// eslint-disable-next-line no-redeclare
+
 function flushSync$1(fn) {
   {
     if (isAlreadyRendering()) {

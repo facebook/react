@@ -267,11 +267,10 @@ if (hasPerformanceNow) {
   };
 } else {
   var localDate = Date;
-
-  var _initialTime = localDate.now();
+  var initialTime = localDate.now();
 
   exports.unstable_now = function() {
-    return localDate.now() - _initialTime;
+    return localDate.now() - initialTime;
   };
 } // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
@@ -775,7 +774,7 @@ var performWorkUntilDeadline = function() {
     // has been blocked.
 
     startTime = currentTime;
-    var _hasTimeRemaining = true; // If a scheduler task throws, exit the current browser task so the
+    var hasTimeRemaining = true; // If a scheduler task throws, exit the current browser task so the
     // error can be observed.
     //
     // Intentionally not using a try-catch, since that makes some debugging
@@ -786,7 +785,7 @@ var performWorkUntilDeadline = function() {
 
     try {
       // $FlowFixMe[not-a-function] found when upgrading Flow
-      hasMoreWork = scheduledHostCallback(_hasTimeRemaining, currentTime);
+      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
     } finally {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end

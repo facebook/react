@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-2619886ac-20230105";
+var ReactVersion = "18.3.0-www-classic-b83baf63f-20230105";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -505,7 +505,6 @@ function getComponentNameFromFiber(fiber) {
   return null;
 }
 
-// Don't change these values. They're used by React Dev Tools.
 var NoFlags =
   /*                      */
   0;
@@ -968,9 +967,9 @@ var now = Scheduler.unstable_now;
 var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
 var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
 var NormalPriority = Scheduler.unstable_NormalPriority;
-var IdlePriority = Scheduler.unstable_IdlePriority;
-// this doesn't actually exist on the scheduler, but it *does*
+var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 // on scheduler/unstable_mock, which we'll need for internal testing
+
 var unstable_yieldValue = Scheduler.unstable_yieldValue;
 var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
 
@@ -3930,10 +3929,10 @@ function isRootDehydrated(root) {
   return currentState.isDehydrated;
 }
 
-// TODO: Use the unified fiber stack module instead of this local one?
 // Intentionally not using it yet to derisk the initial implementation, because
 // the way we push/pop these values is a bit unusual. If there's a mistake, I'd
 // rather the ids be wrong than crash the whole reconciler.
+
 var forkStack = [];
 var forkStackIndex = 0;
 var treeForkProvider = null;
@@ -4121,10 +4120,10 @@ function queueHydrationError(error) {
   }
 }
 
-// If a render is in progress, and we receive an update from a concurrent event,
 // we wait until the current render is over (either finished or interrupted)
 // before adding it to the fiber/hook queue. Push to this array so we can
 // access the queue, fiber, update, et al later.
+
 var concurrentQueues = [];
 var concurrentQueuesIndex = 0;
 var concurrentlyUpdatedLanes = NoLanes;
@@ -5700,12 +5699,11 @@ function resolveLazy(lazyType) {
   var payload = lazyType._payload;
   var init = lazyType._init;
   return init(payload);
-}
-
-// This wrapper function exists because I expect to clone the code in each path
+} // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
+
 function createChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber, childToDelete) {
     if (!shouldTrackSideEffects) {
@@ -6829,6 +6827,7 @@ function resetChildFibers(workInProgress, lanes) {
 
 // TODO: This isn't being used yet, but it's intended to replace the
 // InvisibleParentContext that is currently managed by SuspenseContext.
+
 var currentTreeHiddenStackCursor = createCursor(null);
 var prevRenderLanesStackCursor = createCursor(NoLanes);
 function pushHiddenContext(fiber, context) {
@@ -6996,6 +6995,13 @@ function popSuspenseListContext(fiber) {
   pop(suspenseStackCursor, fiber);
 }
 
+// A non-null SuspenseState means that it is blocked for one reason or another.
+// - A non-null dehydrated field means it's blocked pending hydration.
+//   - A non-null dehydrated field can use isSuspenseInstancePending or
+//     isSuspenseInstanceFallback to query the reason for being dehydrated.
+// - A null dehydrated field means it's blocked by something suspending and
+//   we're currently showing a fallback instead.
+
 function findFirstSuspended(row) {
   var node = row;
 
@@ -7119,9 +7125,9 @@ function warnAboutMultipleRenderersDEV(mutableSource) {
   }
 } // Eager reads the version of a mutable source and stores it on the root.
 
-var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
-// An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
+
 var SuspenseException = new Error(
   "Suspense Exception: This is not a real error! It's an implementation " +
     "detail of `use` to interrupt the current render. You must either " +
@@ -7279,9 +7285,8 @@ var didWarnAboutUseWrappedInTryCatch;
 {
   didWarnAboutMismatchedHooksForComponent = new Set();
   didWarnAboutUseWrappedInTryCatch = new Set();
-}
+} // These are set right before calling the component.
 
-// These are set right before calling the component.
 var renderLanes = NoLanes; // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
 
@@ -9011,10 +9016,8 @@ function updateLayoutEffect(create, deps) {
 function imperativeHandleEffect(create, ref) {
   if (typeof ref === "function") {
     var refCallback = ref;
-
-    var _inst = create();
-
-    refCallback(_inst);
+    var inst = create();
+    refCallback(inst);
     return function() {
       refCallback(null);
     };
@@ -9031,9 +9034,9 @@ function imperativeHandleEffect(create, ref) {
       }
     }
 
-    var _inst2 = create();
+    var _inst = create();
 
-    refObject.current = _inst2;
+    refObject.current = _inst;
     return function() {
       refObject.current = null;
     };
@@ -11312,9 +11315,9 @@ function checkClassInstance(workInProgress, ctor, newProps) {
       );
     }
 
-    var _state = instance.state;
+    var state = instance.state;
 
-    if (_state && (typeof _state !== "object" || isArray(_state))) {
+    if (state && (typeof state !== "object" || isArray(state))) {
       error("%s.state: must be set to an object or null", name);
     }
 
@@ -16968,9 +16971,9 @@ var AbortControllerLocal =
             return listener();
           });
         };
-      };
-// Intentionally not named imports because Rollup would
+      }; // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
+
 var scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
   NormalPriority$1 = Scheduler.unstable_NormalPriority;
 var CacheContext = {
@@ -24118,8 +24121,9 @@ function getExecutionContext() {
 }
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
-
 // eslint-disable-next-line no-redeclare
+// eslint-disable-next-line no-redeclare
+
 function flushSync(fn) {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
@@ -25534,8 +25538,8 @@ function flushPassiveEffectsImpl() {
     pendingPassiveProfilerEffects = [];
 
     for (var i = 0; i < profilerEffects.length; i++) {
-      var _fiber = profilerEffects[i];
-      commitPassiveEffectDurations(root, _fiber);
+      var fiber = profilerEffects[i];
+      commitPassiveEffectDurations(root, fiber);
     }
   }
 
@@ -26314,6 +26318,8 @@ function setIsRunningInsertionEffect(isRunning) {
 }
 
 /* eslint-disable react-internal/prod-error-codes */
+// Used by React Refresh runtime through DevTools Global Hook.
+
 var resolveFamily = null;
 var failedBoundaries = null;
 var setRefreshHandler = function(handler) {
@@ -26579,10 +26585,10 @@ function scheduleFibersWithFamiliesRecursively(
     }
 
     if (needsRemount || needsRender) {
-      var _root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+      var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
-      if (_root !== null) {
-        scheduleUpdateOnFiber(_root, fiber, SyncLane, NoTimestamp);
+      if (root !== null) {
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
 
@@ -27600,6 +27606,8 @@ function createFiberRoot(
   initializeUpdateQueue(uninitializedFiber);
   return root;
 }
+
+// Might add PROFILE later.
 
 var didWarnAboutNestedUpdates;
 

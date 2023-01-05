@@ -144,7 +144,6 @@ var HostText = 6;
 var HostResource = 26;
 var HostSingleton = 27;
 
-// Don't change these values. They're used by React Dev Tools.
 var NoFlags =
   /*                      */
   0;
@@ -435,17 +434,17 @@ function createSyntheticEvent(Interface) {
     this.target = nativeEventTarget;
     this.currentTarget = null;
 
-    for (var _propName in Interface) {
-      if (!Interface.hasOwnProperty(_propName)) {
+    for (var propName in Interface) {
+      if (!Interface.hasOwnProperty(propName)) {
         continue;
       }
 
-      var normalize = Interface[_propName];
+      var normalize = Interface[propName];
 
       if (normalize) {
-        this[_propName] = normalize(nativeEvent);
+        this[propName] = normalize(nativeEvent);
       } else {
-        this[_propName] = nativeEvent[_propName];
+        this[propName] = nativeEvent[propName];
       }
     }
 

@@ -218,8 +218,8 @@ var enableProfilerNestedUpdateScheduledHook =
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 
-// A reserved attribute.
 // It is handled by React separately and shouldn't be written to the DOM.
+
 var RESERVED = 0; // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
 
@@ -733,6 +733,8 @@ var rendererSigil;
   rendererSigil = {};
 } // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
+// The structure of a context snapshot is an implementation of this file.
+// Currently, it's implemented as tracking the current active node.
 
 var rootContextSnapshot = null; // We assume that this runtime owns the "current" field on all ReactContext instances.
 // This global (actually thread local) state represents what state all those "current",
@@ -1750,16 +1752,16 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
       var array = objectOrArray;
 
       for (var i = 0; i < array.length; i++) {
-        var _value = array[i];
+        var value = array[i];
         var substr = void 0;
 
-        if (typeof _value === "string") {
-          substr = _value;
-        } else if (typeof _value === "object" && _value !== null) {
+        if (typeof value === "string") {
+          substr = value;
+        } else if (typeof value === "object" && value !== null) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
-          substr = "{" + describeObjectForErrorMessage(_value) + "}";
+          substr = "{" + describeObjectForErrorMessage(value) + "}";
         } else {
-          substr = "{" + describeValueForErrorMessage(_value) + "}";
+          substr = "{" + describeValueForErrorMessage(value) + "}";
         }
 
         if ("" + i === expandedName) {
@@ -1784,15 +1786,15 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
           str += ", ";
         }
 
-        var _value2 = _array[_i];
+        var _value = _array[_i];
 
         var _substr = void 0;
 
-        if (typeof _value2 === "object" && _value2 !== null) {
+        if (typeof _value === "object" && _value !== null) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
-          _substr = describeObjectForErrorMessage(_value2);
+          _substr = describeObjectForErrorMessage(_value);
         } else {
-          _substr = describeValueForErrorMessage(_value2);
+          _substr = describeValueForErrorMessage(_value);
         }
 
         if ("" + _i === expandedName) {
@@ -1823,22 +1825,22 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
         str += " ";
         var name = names[_i2];
         str += describeKeyForErrorMessage(name) + "=";
-        var _value3 = object[name];
+        var _value2 = object[name];
 
         var _substr2 = void 0;
 
         if (
           name === expandedName &&
-          typeof _value3 === "object" &&
-          _value3 !== null
+          typeof _value2 === "object" &&
+          _value2 !== null
         ) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
-          _substr2 = describeObjectForErrorMessage(_value3);
+          _substr2 = describeObjectForErrorMessage(_value2);
         } else {
-          _substr2 = describeValueForErrorMessage(_value3);
+          _substr2 = describeValueForErrorMessage(_value2);
         }
 
-        if (typeof _value3 !== "string") {
+        if (typeof _value2 !== "string") {
           _substr2 = "{" + _substr2 + "}";
         }
 
@@ -1868,15 +1870,15 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
 
         var _name = _names[_i3];
         str += describeKeyForErrorMessage(_name) + ": ";
-        var _value4 = _object[_name];
+        var _value3 = _object[_name];
 
         var _substr3 = void 0;
 
-        if (typeof _value4 === "object" && _value4 !== null) {
+        if (typeof _value3 === "object" && _value3 !== null) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
-          _substr3 = describeObjectForErrorMessage(_value4);
+          _substr3 = describeObjectForErrorMessage(_value3);
         } else {
-          _substr3 = describeValueForErrorMessage(_value4);
+          _substr3 = describeValueForErrorMessage(_value3);
         }
 
         if (_name === expandedName) {
@@ -2269,23 +2271,23 @@ function retryTask(request, task) {
   switchContext(task.context);
 
   try {
-    var _value5 = task.model;
+    var value = task.model;
 
     if (
-      typeof _value5 === "object" &&
-      _value5 !== null &&
-      _value5.$$typeof === REACT_ELEMENT_TYPE
+      typeof value === "object" &&
+      value !== null &&
+      value.$$typeof === REACT_ELEMENT_TYPE
     ) {
       // TODO: Concatenate keys of parents onto children.
-      var element = _value5; // When retrying a component, reuse the thenableState from the
+      var element = value; // When retrying a component, reuse the thenableState from the
       // previous attempt.
 
       var prevThenableState = task.thenableState; // Attempt to render the Server Component.
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
 
-      task.model = _value5;
-      _value5 = attemptResolveElement(
+      task.model = value;
+      value = attemptResolveElement(
         element.type,
         element.key,
         element.ref,
@@ -2299,14 +2301,14 @@ function retryTask(request, task) {
       // until the next time something suspends and retries.
 
       while (
-        typeof _value5 === "object" &&
-        _value5 !== null &&
-        _value5.$$typeof === REACT_ELEMENT_TYPE
+        typeof value === "object" &&
+        value !== null &&
+        value.$$typeof === REACT_ELEMENT_TYPE
       ) {
         // TODO: Concatenate keys of parents onto children.
-        var nextElement = _value5;
-        task.model = _value5;
-        _value5 = attemptResolveElement(
+        var nextElement = value;
+        task.model = value;
+        value = attemptResolveElement(
           nextElement.type,
           nextElement.key,
           nextElement.ref,
@@ -2316,7 +2318,7 @@ function retryTask(request, task) {
       }
     }
 
-    var processedChunk = processModelChunk(request, task.id, _value5);
+    var processedChunk = processModelChunk(request, task.id, value);
     request.completedJSONChunks.push(processedChunk);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
@@ -2489,9 +2491,9 @@ function importServerContexts(contexts) {
     for (var i = 0; i < contexts.length; i++) {
       var _contexts$i = contexts[i],
         name = _contexts$i[0],
-        _value6 = _contexts$i[1];
+        value = _contexts$i[1];
       var context = getOrCreateServerContext(name);
-      pushProvider(context, _value6);
+      pushProvider(context, value);
     }
 
     var importedContext = getActiveContext();
