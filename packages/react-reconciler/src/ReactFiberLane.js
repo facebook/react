@@ -260,10 +260,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      // Interrupt transtion if default is batched with sync.
-      (!enableUnifiedSyncLane &&
-        nextLane === DefaultLane &&
-        (wipLane & TransitionLanes) !== NoLanes)
+      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
@@ -766,12 +763,9 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  if (enableUnifiedSyncLane) {
-    if ((renderLane & SyncUpdateLanes) !== NoLane) {
-      lane = SyncHydrationLane;
-    }
-  }
-  if (!lane) {
+  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+    lane = SyncHydrationLane;
+  } else {
     switch (renderLane) {
       case SyncLane:
         lane = SyncHydrationLane;

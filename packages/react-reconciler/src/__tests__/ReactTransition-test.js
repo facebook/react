@@ -936,9 +936,7 @@ describe('ReactTransition', () => {
 
     if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toHaveYielded([
-        // Interrupt transition.
-        'Transition pri: 0',
-        'Normal pri: 1',
+        'Normal pri: 0',
         'Commit',
 
         // Normal pri update.
