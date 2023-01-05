@@ -21,7 +21,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
