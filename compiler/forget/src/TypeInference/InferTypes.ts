@@ -38,7 +38,7 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
 
 export default function (func: HIRFunction) {
   const unifier = new Unifier();
-  for (const e of generate(func, unifier)) {
+  for (const e of generate(func)) {
     unifier.unify(e.left, e.right);
   }
   apply(func, unifier);
@@ -61,18 +61,15 @@ type TypeEquation = {
   right: Type;
 };
 
-function* generate(func: HIRFunction, unifier: Unifier) {
+function* generate(func: HIRFunction) {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
-      yield* generateTypeEquation(instr, unifier);
+      yield* generateTypeEquation(instr);
     }
   }
 }
 
-function generateTypeEquation(
-  instr: Instruction,
-  unifier: Unifier
-): Array<TypeEquation> {
+function generateTypeEquation(instr: Instruction): Array<TypeEquation> {
   const equations: Array<TypeEquation> = [];
 
   function add(left: Type, right: Type) {
