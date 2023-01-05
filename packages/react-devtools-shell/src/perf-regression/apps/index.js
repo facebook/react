@@ -10,7 +10,7 @@
 import * as React from 'react';
 import LargeSubtree from './LargeSubtree';
 
-export default function Home() {
+export default function Home(): React.Node {
   return (
     <div>
       <LargeSubtree />
