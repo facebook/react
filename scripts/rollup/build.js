@@ -326,7 +326,7 @@ function getPlugins(
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
     {
-      name: 'test-rollup',
+      name: 'rollup-plugin-flow-remove-types',
       transform(code) {
         const transformed = flowRemoveTypes(code);
         return {
