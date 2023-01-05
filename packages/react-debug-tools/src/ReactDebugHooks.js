@@ -524,7 +524,7 @@ function buildTree(
   readHookLog: Array<HookLogEntry>,
   includeHooksSource: boolean,
 ): HooksTree {
-  const rootChildren = [];
+  const rootChildren: Array<HooksNode> = [];
   let prevStack = null;
   let levelChildren = rootChildren;
   let nativeHookID = 0;
@@ -557,7 +557,7 @@ function buildTree(
       // The remaining part of the new stack are custom hooks. Push them
       // to the tree.
       for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
-        const children = [];
+        const children: Array<HooksNode> = [];
         const stackFrame = stack[j];
         const levelChild: HooksNode = {
           id: null,

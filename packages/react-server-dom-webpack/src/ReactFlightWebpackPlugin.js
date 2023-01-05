@@ -352,7 +352,7 @@ export default class ReactFlightWebpackPlugin {
         result: $ReadOnlyArray<$ReadOnlyArray<ClientReferenceDependency>>,
       ): void => {
         if (err) return callback(err);
-        const flat = [];
+        const flat: Array<any> = [];
         for (let i = 0; i < result.length; i++) {
           // $FlowFixMe[method-unbinding]
           flat.push.apply(flat, result[i]);

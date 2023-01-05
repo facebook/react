@@ -3252,7 +3252,7 @@ export function attach(
 
     let owners = null;
     if (_debugOwner) {
-      owners = [];
+      owners = ([]: Array<SerializedElement>);
       let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.push(fiberToSerializedElement(owner));

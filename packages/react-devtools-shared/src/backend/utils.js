@@ -20,8 +20,8 @@ export function cleanForBridge(
   path?: Array<string | number> = [],
 ): DehydratedData | null {
   if (data !== null) {
-    const cleanedPaths = [];
-    const unserializablePaths = [];
+    const cleanedPaths: Array<Array<string | number>> = [];
+    const unserializablePaths: Array<Array<string | number>> = [];
     const cleanedData = dehydrate(
       data,
       cleanedPaths,
