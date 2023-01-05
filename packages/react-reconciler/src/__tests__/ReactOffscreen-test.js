@@ -31,7 +31,24 @@ describe('ReactOffscreen', () => {
 
   function Text(props) {
     Scheduler.unstable_yieldValue(props.text);
-    return <span prop={props.text} />;
+    return <span prop={props.text}>{props.children}</span>;
+  }
+
+  function LoggedText({text, children}) {
+    useEffect(() => {
+      Scheduler.unstable_yieldValue(`mount ${text}`);
+      return () => {
+        Scheduler.unstable_yieldValue(`unmount ${text}`);
+      };
+    });
+
+    useLayoutEffect(() => {
+      Scheduler.unstable_yieldValue(`mount layout ${text}`);
+      return () => {
+        Scheduler.unstable_yieldValue(`unmount layout ${text}`);
+      };
+    });
+    return <Text text={text}>{children}</Text>;
   }
 
   // @gate enableLegacyHidden
@@ -1520,7 +1537,6 @@ describe('ReactOffscreen', () => {
       );
 
       expect(offscreenRef.current).not.toBeNull();
-      expect(offscreenRef.current.detach).not.toBeNull();
 
       // Offscreen is attached by default. State updates from offscreen are **not defered**.
       await act(async () => {
@@ -1538,8 +1554,9 @@ describe('ReactOffscreen', () => {
         );
       });
 
-      // detaching offscreen.
-      offscreenRef.current.detach();
+      await act(async () => {
+        offscreenRef.current.detach();
+      });
 
       // Offscreen is detached. State updates from offscreen are **defered**.
       await act(async () => {
@@ -1561,6 +1578,26 @@ describe('ReactOffscreen', () => {
           <span prop="Child 2" />
         </>,
       );
+
+      await act(async () => {
+        offscreenRef.current.attach();
+      });
+
+      // Offscreen is attached. State updates from offscreen are **not defered**.
+      await act(async () => {
+        updateChildState(3);
+        updateHighPriorityComponentState(3);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 3',
+          'Child 3',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 3" />
+            <span prop="Child 3" />
+          </>,
+        );
+      });
     });
 
     // @gate enableOffscreen
@@ -1569,6 +1606,7 @@ describe('ReactOffscreen', () => {
       let updateHighPriorityComponentState;
       let offscreenRef;
       let nextRenderTriggerDetach = false;
+      let nextRenderTriggerAttach = false;
 
       function Child() {
         const [state, _stateUpdate] = useState(0);
@@ -1583,10 +1621,15 @@ describe('ReactOffscreen', () => {
         const text = 'HighPriorityComponent ' + state;
         useLayoutEffect(() => {
           if (nextRenderTriggerDetach) {
-            offscreenRef.current.detach();
             _stateUpdate(state + 1);
             updateChildState(state + 1);
+            offscreenRef.current.detach();
             nextRenderTriggerDetach = false;
+          }
+
+          if (nextRenderTriggerAttach) {
+            offscreenRef.current.attach();
+            nextRenderTriggerAttach = false;
           }
         });
         return (
@@ -1620,8 +1663,8 @@ describe('ReactOffscreen', () => {
 
       nextRenderTriggerDetach = true;
 
-      // Offscreen is attached. State updates from offscreen are **not defered**.
-      // Offscreen is detached inside useLayoutEffect;
+      // Offscreen is attached and gets detached inside useLayoutEffect.
+      // State updates from offscreen are **defered**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1629,36 +1672,41 @@ describe('ReactOffscreen', () => {
           'HighPriorityComponent 1',
           'Child 1',
           'HighPriorityComponent 2',
-          'Child 2',
         ]);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 2" />
-            <span prop="Child 2" />
+            <span prop="Child 1" />
           </>,
         );
       });
 
+      expect(Scheduler).toHaveYielded(['Child 2']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 2" />
+          <span prop="Child 2" />
+        </>,
+      );
+
+      nextRenderTriggerAttach = true;
+
       // Offscreen is detached. State updates from offscreen are **defered**.
+      // Offscreen is attached inside useLayoutEffect;
       await act(async () => {
         updateChildState(3);
         updateHighPriorityComponentState(3);
-        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 3']);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 3',
+          'Child 3',
+        ]);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 3" />
-            <span prop="Child 2" />
+            <span prop="Child 3" />
           </>,
         );
       });
-
-      expect(Scheduler).toHaveYielded(['Child 3']);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span prop="HighPriorityComponent 3" />
-          <span prop="Child 3" />
-        </>,
-      );
     });
   });
 
@@ -1771,5 +1819,250 @@ describe('ReactOffscreen', () => {
     expect(offscreenRef.current._current === firstFiber).toBeFalsy();
   });
 
-  // TODO: When attach/detach methods are implemented. Add tests for nested Offscreen case.
+  // @gate enableOffscreen
+  it('does not mount tree until attach is called', async () => {
+    let offscreenRef;
+    let spanRef;
+
+    function Child() {
+      spanRef = useRef(null);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Child');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Child');
+        };
+      });
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Layout Child');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Layout Child');
+        };
+      });
+
+      return <span ref={spanRef}>Child</span>;
+    }
+
+    function App() {
+      return (
+        <Offscreen mode={'manual'} ref={el => (offscreenRef = el)}>
+          <Child />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    expect(offscreenRef).not.toBeNull();
+    expect(spanRef.current).not.toBeNull();
+    expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+
+    await act(async () => {
+      offscreenRef.detach();
+    });
+
+    expect(spanRef.current).toBeNull();
+    expect(Scheduler).toHaveYielded(['Unmount Layout Child', 'Unmount Child']);
+
+    // Calling attach on already attached Offscreen.
+    await act(async () => {
+      offscreenRef.detach();
+    });
+
+    expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      offscreenRef.attach();
+    });
+
+    expect(spanRef.current).not.toBeNull();
+    expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+
+    // Calling attach on already attached Offscreen
+    offscreenRef.attach();
+
+    expect(Scheduler).toHaveYielded([]);
+  });
+
+  // @gate enableOffscreen
+  it('handles nested manual offscreens', async () => {
+    let outerOffscreen;
+    let innerOffscreen;
+
+    function App() {
+      return (
+        <LoggedText text={'outer'}>
+          <Offscreen mode={'manual'} ref={el => (outerOffscreen = el)}>
+            <LoggedText text={'middle'}>
+              <Offscreen mode={'manual'} ref={el => (innerOffscreen = el)}>
+                <LoggedText text={'inner'} />
+              </Offscreen>
+            </LoggedText>
+          </Offscreen>
+        </LoggedText>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'outer',
+      'middle',
+      'inner',
+      'mount layout inner',
+      'mount layout middle',
+      'mount layout outer',
+      'mount inner',
+      'mount middle',
+      'mount outer',
+    ]);
+
+    expect(outerOffscreen).not.toBeNull();
+    expect(innerOffscreen).not.toBeNull();
+
+    await act(async () => {
+      outerOffscreen.detach();
+    });
+
+    expect(innerOffscreen).toBeNull();
+
+    expect(Scheduler).toHaveYielded([
+      'unmount layout middle',
+      'unmount layout inner',
+      'unmount middle',
+      'unmount inner',
+    ]);
+
+    await act(async () => {
+      outerOffscreen.attach();
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'mount layout inner',
+      'mount layout middle',
+      'mount inner',
+      'mount middle',
+    ]);
+
+    await act(async () => {
+      innerOffscreen.detach();
+    });
+
+    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
+
+    // Calling detach on already detached Offscreen.
+    await act(async () => {
+      innerOffscreen.detach();
+    });
+
+    expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      innerOffscreen.attach();
+    });
+
+    expect(Scheduler).toHaveYielded(['mount layout inner', 'mount inner']);
+
+    await act(async () => {
+      innerOffscreen.detach();
+      outerOffscreen.attach();
+    });
+
+    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
+  });
+
+  // @gate enableOffscreen
+  it('batches multiple attach and detach calls scheduled from an event handler', async () => {
+    function Child() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('attach child');
+        return () => {
+          Scheduler.unstable_yieldValue('detach child');
+        };
+      }, []);
+      return 'child';
+    }
+
+    const offscreen = React.createRef(null);
+    function App() {
+      return (
+        <Offscreen ref={offscreen} mode="manual">
+          <Child />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['attach child']);
+
+    await act(async () => {
+      const instance = offscreen.current;
+      // Detach then immediately attach the instance.
+      instance.detach();
+      instance.attach();
+    });
+
+    expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      const instance = offscreen.current;
+      instance.detach();
+    });
+
+    expect(Scheduler).toHaveYielded(['detach child']);
+
+    await act(async () => {
+      const instance = offscreen.current;
+      // Attach then immediately detach.
+      instance.attach();
+      instance.detach();
+    });
+
+    expect(Scheduler).toHaveYielded([]);
+  });
+
+  // @gate enableOffscreen
+  it('batches multiple attach and detach calls scheduled from an effect', async () => {
+    function Child() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('attach child');
+        return () => {
+          Scheduler.unstable_yieldValue('detach child');
+        };
+      }, []);
+      return 'child';
+    }
+
+    function App() {
+      const offscreen = useRef(null);
+      useLayoutEffect(() => {
+        const instance = offscreen.current;
+        // Detach then immediately attach the instance.
+        instance.detach();
+        instance.attach();
+      }, []);
+      return (
+        <Offscreen ref={offscreen} mode="manual">
+          <Child />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['attach child']);
+  });
 });

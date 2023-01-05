@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
  */
 
 import * as React from 'react';
@@ -390,7 +392,7 @@ function executeDispatchesInOrder(event) {
  * @param {?object} event Synthetic event to be dispatched.
  * @private
  */
-const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
+const executeDispatchesAndRelease = function(event /* ReactSyntheticEvent */) {
   if (event) {
     executeDispatchesInOrder(event);
 
@@ -470,7 +472,7 @@ function shouldPreventMouseEvent(name, type, props) {
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @return {?function} The stored callback.
  */
-function getListener(inst: Fiber, registrationName: string) {
+function getListener(inst /* Fiber */, registrationName: string) {
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
   const stateNode = inst.stateNode;

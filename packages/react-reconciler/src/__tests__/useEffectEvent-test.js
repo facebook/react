@@ -14,7 +14,7 @@
 
 import {useInsertionEffect} from 'react';
 
-describe('useEvent', () => {
+describe('useEffectEvent', () => {
   let React;
   let ReactNoop;
   let Scheduler;
@@ -22,7 +22,7 @@ describe('useEvent', () => {
   let createContext;
   let useContext;
   let useState;
-  let useEvent;
+  let useEffectEvent;
   let useEffect;
   let useLayoutEffect;
   let useMemo;
@@ -36,7 +36,7 @@ describe('useEvent', () => {
     createContext = React.createContext;
     useContext = React.useContext;
     useState = React.useState;
-    useEvent = React.experimental_useEvent;
+    useEffectEvent = React.experimental_useEffectEvent;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
     useMemo = React.useMemo;
@@ -51,7 +51,7 @@ describe('useEvent', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('memoizes basic case correctly', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -64,7 +64,7 @@ describe('useEvent', () => {
 
     function Counter({incrementBy}) {
       const [count, updateCount] = useState(0);
-      const onClick = useEvent(() => updateCount(c => c + incrementBy));
+      const onClick = useEffectEvent(() => updateCount(c => c + incrementBy));
 
       return (
         <>
@@ -117,7 +117,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('can be defined more than once', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -133,8 +133,8 @@ describe('useEvent', () => {
 
     function Counter({incrementBy}) {
       const [count, updateCount] = useState(0);
-      const onClick = useEvent(() => updateCount(c => c + incrementBy));
-      const onMouseEnter = useEvent(() => {
+      const onClick = useEffectEvent(() => updateCount(c => c + incrementBy));
+      const onMouseEnter = useEffectEvent(() => {
         updateCount(c => c * incrementBy);
       });
 
@@ -173,7 +173,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('does not preserve `this` in event functions', () => {
     class GreetButton extends React.PureComponent {
       greet = () => {
@@ -193,7 +193,7 @@ describe('useEvent', () => {
         },
       };
       const [greeting, updateGreeting] = useState('Seb says ' + hello);
-      const onClick = useEvent(person.greet);
+      const onClick = useEffectEvent(person.greet);
 
       return (
         <>
@@ -222,7 +222,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('throws when called in render', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -239,7 +239,7 @@ describe('useEvent', () => {
 
     function Counter({incrementBy}) {
       const [count, updateCount] = useState(0);
-      const onClick = useEvent(() => updateCount(c => c + incrementBy));
+      const onClick = useEffectEvent(() => updateCount(c => c + incrementBy));
 
       return (
         <>
@@ -251,7 +251,7 @@ describe('useEvent', () => {
 
     ReactNoop.render(<Counter incrementBy={1} />);
     expect(Scheduler).toFlushAndThrow(
-      "A function wrapped in useEvent can't be called during rendering.",
+      "A function wrapped in useEffectEvent can't be called during rendering.",
     );
 
     // If something throws, we try one more time synchronously in case the error was
@@ -259,7 +259,7 @@ describe('useEvent', () => {
     expect(Scheduler).toHaveYielded(['Count: 0', 'Count: 0']);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it("useLayoutEffect shouldn't re-fire when event handlers change", () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -272,7 +272,7 @@ describe('useEvent', () => {
 
     function Counter({incrementBy}) {
       const [count, updateCount] = useState(0);
-      const increment = useEvent(amount =>
+      const increment = useEffectEvent(amount =>
         updateCount(c => c + (amount || incrementBy)),
       );
 
@@ -349,7 +349,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it("useEffect shouldn't re-fire when event handlers change", () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -362,7 +362,7 @@ describe('useEvent', () => {
 
     function Counter({incrementBy}) {
       const [count, updateCount] = useState(0);
-      const increment = useEvent(amount =>
+      const increment = useEffectEvent(amount =>
         updateCount(c => c + (amount || incrementBy)),
       );
 
@@ -438,7 +438,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('is stable in a custom hook', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -451,7 +451,7 @@ describe('useEvent', () => {
 
     function useCount(incrementBy) {
       const [count, updateCount] = useState(0);
-      const increment = useEvent(amount =>
+      const increment = useEffectEvent(amount =>
         updateCount(c => c + (amount || incrementBy)),
       );
 
@@ -533,7 +533,7 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('is mutated before all other effects', () => {
     function Counter({value}) {
       useInsertionEffect(() => {
@@ -543,7 +543,7 @@ describe('useEvent', () => {
 
       // This is defined after the insertion effect, but it should
       // update the event fn _before_ the insertion effect fires.
-      const increment = useEvent(() => {
+      const increment = useEffectEvent(() => {
         Scheduler.unstable_yieldValue('Event value: ' + value);
       });
 
@@ -557,17 +557,17 @@ describe('useEvent', () => {
     expect(Scheduler).toHaveYielded(['Effect value: 2', 'Event value: 2']);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it("doesn't provide a stable identity", () => {
     function Counter({shouldRender, value}) {
-      const onClick = useEvent(() => {
+      const onClick = useEffectEvent(() => {
         Scheduler.unstable_yieldValue(
           'onClick, shouldRender=' + shouldRender + ', value=' + value,
         );
       });
 
       // onClick doesn't have a stable function identity so this effect will fire on every render.
-      // In a real app useEvent functions should *not* be passed as a dependency, this is for
+      // In a real app useEffectEvent functions should *not* be passed as a dependency, this is for
       // testing purposes only.
       useEffect(() => {
         onClick();
@@ -596,13 +596,13 @@ describe('useEvent', () => {
     ]);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('event handlers always see the latest committed value', async () => {
     let committedEventHandler = null;
 
     function App({value}) {
-      const event = useEvent(() => {
-        return 'Value seen by useEvent: ' + value;
+      const event = useEffectEvent(() => {
+        return 'Value seen by useEffectEvent: ' + value;
       });
 
       // Set up an effect that registers the event handler with an external
@@ -619,7 +619,7 @@ describe('useEvent', () => {
         },
         // Note that we've intentionally omitted the event from the dependency
         // array. But it will still be able to see the latest `value`. This is the
-        // key feature of useEvent that makes it different from a regular closure.
+        // key feature of useEffectEvent that makes it different from a regular closure.
         [],
       );
       return 'Latest rendered value ' + value;
@@ -632,7 +632,7 @@ describe('useEvent', () => {
     });
     expect(Scheduler).toHaveYielded(['Commit new event handler']);
     expect(root).toMatchRenderedOutput('Latest rendered value 1');
-    expect(committedEventHandler()).toBe('Value seen by useEvent: 1');
+    expect(committedEventHandler()).toBe('Value seen by useEffectEvent: 1');
 
     // Update
     await act(async () => {
@@ -643,10 +643,10 @@ describe('useEvent', () => {
     expect(Scheduler).toHaveYielded([]);
     // But the event handler should still be able to see the latest value.
     expect(root).toMatchRenderedOutput('Latest rendered value 2');
-    expect(committedEventHandler()).toBe('Value seen by useEvent: 2');
+    expect(committedEventHandler()).toBe('Value seen by useEffectEvent: 2');
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('integration: implements docs chat room example', () => {
     function createConnection() {
       let connectedCallback;
@@ -675,7 +675,7 @@ describe('useEvent', () => {
     }
 
     function ChatRoom({roomId, theme}) {
-      const onConnected = useEvent(() => {
+      const onConnected = useEffectEvent(() => {
         Scheduler.unstable_yieldValue('Connected! theme: ' + theme);
       });
 
@@ -735,7 +735,7 @@ describe('useEvent', () => {
     expect(Scheduler).toHaveYielded(['Connected! theme: dark']);
   });
 
-  // @gate enableUseEventHook
+  // @gate enableUseEffectEventHook
   it('integration: implements the docs logVisit example', () => {
     class AddToCartButton extends React.PureComponent {
       addToCart = () => {
@@ -760,10 +760,10 @@ describe('useEvent', () => {
 
     function Page({url}) {
       const {items, updateItems} = useContext(ShoppingCartContext);
-      const onClick = useEvent(() => updateItems([...items, 1]));
+      const onClick = useEffectEvent(() => updateItems([...items, 1]));
       const numberOfItems = items.length;
 
-      const onVisit = useEvent(visitedUrl => {
+      const onVisit = useEffectEvent(visitedUrl => {
         Scheduler.unstable_yieldValue(
           'url: ' + visitedUrl + ', numberOfItems: ' + numberOfItems,
         );

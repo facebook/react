@@ -202,7 +202,7 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources.boundaryResources = boundaryResources;
 }
 
-export const ReactDOMServerDispatcher = {
+export const ReactDOMServerFloatDispatcher = {
   preload,
   preinit,
 };

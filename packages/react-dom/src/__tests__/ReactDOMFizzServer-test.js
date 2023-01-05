@@ -5459,13 +5459,13 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  describe('useEvent', () => {
-    // @gate enableUseEventHook
-    it('can server render a component with useEvent', async () => {
+  describe('useEffectEvent', () => {
+    // @gate enableUseEffectEventHook
+    it('can server render a component with useEffectEvent', async () => {
       const ref = React.createRef();
       function App() {
         const [count, setCount] = React.useState(0);
-        const onClick = React.experimental_useEvent(() => {
+        const onClick = React.experimental_useEffectEvent(() => {
           setCount(c => c + 1);
         });
         return (
@@ -5491,11 +5491,11 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual(<button>1</button>);
     });
 
-    // @gate enableUseEventHook
-    it('throws if useEvent is called during a server render', async () => {
+    // @gate enableUseEffectEventHook
+    it('throws if useEffectEvent is called during a server render', async () => {
       const logs = [];
       function App() {
-        const onRender = React.experimental_useEvent(() => {
+        const onRender = React.experimental_useEffectEvent(() => {
           logs.push('rendered');
         });
         onRender();
@@ -5518,16 +5518,16 @@ describe('ReactDOMFizzServer', () => {
       }
       expect(logs).toEqual([]);
       expect(caughtError.message).toContain(
-        "A function wrapped in useEvent can't be called during rendering.",
+        "A function wrapped in useEffectEvent can't be called during rendering.",
       );
       expect(reportedServerErrors).toEqual([caughtError]);
     });
 
-    // @gate enableUseEventHook
-    it('does not guarantee useEvent return values during server rendering are distinct', async () => {
+    // @gate enableUseEffectEventHook
+    it('does not guarantee useEffectEvent return values during server rendering are distinct', async () => {
       function App() {
-        const onClick1 = React.experimental_useEvent(() => {});
-        const onClick2 = React.experimental_useEvent(() => {});
+        const onClick1 = React.experimental_useEffectEvent(() => {});
+        const onClick2 = React.experimental_useEffectEvent(() => {});
         if (onClick1 === onClick2) {
           return <div />;
         } else {

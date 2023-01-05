@@ -4,6 +4,13 @@
 
 ---
 
+### 4.27.1
+December 6, 2022
+
+* [bug fix] revert values in ReactFiberFlags to keep consistency for devtools ([mondaychen](https://github.com/mondaychen) in [#25832](https://github.com/facebook/react/pull/25832))
+
+---
+
 ### 4.27.0
 November 28, 2022
 

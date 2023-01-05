@@ -50,6 +50,7 @@ export const OffscreenDetached = /*                    */ 0b010;
 export const OffscreenPassiveEffectsConnected = /*     */ 0b100;
 
 export type OffscreenInstance = {
+  _pendingVisibility: OffscreenVisibility,
   _visibility: OffscreenVisibility,
   _pendingMarkers: Set<TracingMarkerInstance> | null,
   _transitions: Set<Transition> | null,
@@ -59,8 +60,7 @@ export type OffscreenInstance = {
   // Represents the current Offscreen fiber
   _current: Fiber | null,
   detach: () => void,
-
-  // TODO: attach
+  attach: () => void,
 };
 
 export function isOffscreenManual(offscreenFiber: Fiber): boolean {

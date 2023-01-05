@@ -1,14 +1,4 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- */
-
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import {
   activate as activateBackend,
@@ -26,38 +16,40 @@ function hookNamesModuleLoaderFunction() {
   return import('react-devtools-inline/hookNames');
 }
 
-function inject(contentDocument, sourcePath, callback) {
+function inject(contentDocument, sourcePath) {
   const script = contentDocument.createElement('script');
-  script.onload = callback;
   script.src = sourcePath;
 
   ((contentDocument.body: any): HTMLBodyElement).appendChild(script);
 }
 
-function init(appIframe, devtoolsContainer, appSource) {
+function init(
+  appSource: string,
+  appIframe: HTMLIFrameElement,
+  devtoolsContainer: HTMLElement,
+  loadDevToolsButton: HTMLButtonElement,
+) {
   const {contentDocument, contentWindow} = appIframe;
 
   initializeBackend(contentWindow);
 
-  const DevTools = createDevTools(contentWindow);
+  inject(contentDocument, appSource);
 
-  inject(contentDocument, appSource, () => {
-    // $FlowFixMe Flow doesn't know about createRoot() yet.
+  loadDevToolsButton.addEventListener('click', () => {
+    const DevTools = createDevTools(contentWindow);
     createRoot(devtoolsContainer).render(
       <DevTools
         hookNamesModuleLoaderFunction={hookNamesModuleLoaderFunction}
         showTabBar={true}
       />,
     );
+    activateBackend(contentWindow);
   });
-
-  activateBackend(contentWindow);
 }
 
-const iframe = document.getElementById('iframe');
-const devtoolsContainer = document.getElementById('devtools');
-
-init(iframe, devtoolsContainer, 'dist/e2e-app.js');
-
-// ReactDOM Test Selector APIs used by Playwright e2e tests
-window.parent.REACT_DOM_DEVTOOLS = ReactDOM;
+init(
+  'dist/perf-regression-app.js',
+  document.getElementById('iframe'),
+  document.getElementById('devtools'),
+  document.getElementById('load-devtools'),
+);

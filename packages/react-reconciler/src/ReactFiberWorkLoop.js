@@ -12,7 +12,7 @@ import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {SuspenseProps, SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {EventPriority} from './ReactEventPriorities';
 import type {
@@ -138,7 +138,7 @@ import {
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
-  includesSomeLane,
+  includesSyncLane,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -175,6 +175,7 @@ import {
 } from './ReactEventPriorities';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {
+  SelectiveHydrationException,
   beginWork as originalBeginWork,
   replayFunctionComponent,
 } from './ReactFiberBeginWork';
@@ -275,7 +276,7 @@ import {
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 import {
   getSuspenseHandler,
-  isBadSuspenseFallback,
+  getShellBoundary,
 } from './ReactFiberSuspenseContext';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 
@@ -316,13 +317,14 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5;
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
 const SuspendedAndReadyToUnwind: SuspendedReason = 5;
+const SuspendedOnHydration: SuspendedReason = 6;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -913,7 +915,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        !includesSyncLane(existingCallbackPriority)
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -931,7 +933,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (includesSyncLane(newCallbackPriority)) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -1298,16 +1300,6 @@ function finishConcurrentRender(root, exitStatus, lanes) {
             // There's additional work on this root.
             break;
           }
-          const suspendedLanes = root.suspendedLanes;
-          if (!isSubsetOfLanes(suspendedLanes, lanes)) {
-            // We should prefer to render the fallback of at the last
-            // suspended level. Ping the last suspended level to try
-            // rendering it again.
-            // FIXME: What if the suspended lanes are Idle? Should not restart.
-            const eventTime = requestEventTime();
-            markRootPinged(root, suspendedLanes, eventTime);
-            break;
-          }
 
           // The render is suspended, it hasn't timed out, and there's no
           // lower priority work to do. Instead of committing the fallback
@@ -1475,7 +1467,7 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
 
   let lanes = getNextLanes(root, NoLanes);
-  if (!includesSomeLane(lanes, SyncLane)) {
+  if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -1610,6 +1602,7 @@ export function discreteUpdates<A, B, C, D, R>(
 
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
+// eslint-disable-next-line no-unused-vars
 declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
 declare function flushSync(void): void;
@@ -1701,6 +1694,31 @@ export function getRenderLanes(): Lanes {
   return renderLanes;
 }
 
+function resetWorkInProgressStack() {
+  if (workInProgress === null) return;
+  let interruptedWork;
+  if (workInProgressSuspendedReason === NotSuspended) {
+    // Normal case. Work-in-progress hasn't started yet. Unwind all
+    // its parents.
+    interruptedWork = workInProgress.return;
+  } else {
+    // Work-in-progress is in suspended state. Reset the work loop and unwind
+    // both the suspended fiber and all its parents.
+    resetSuspendedWorkLoopOnUnwind();
+    interruptedWork = workInProgress;
+  }
+  while (interruptedWork !== null) {
+    const current = interruptedWork.alternate;
+    unwindInterruptedWork(
+      current,
+      interruptedWork,
+      workInProgressRootRenderLanes,
+    );
+    interruptedWork = interruptedWork.return;
+  }
+  workInProgress = null;
+}
+
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
@@ -1714,28 +1732,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     cancelTimeout(timeoutHandle);
   }
 
-  if (workInProgress !== null) {
-    let interruptedWork;
-    if (workInProgressSuspendedReason === NotSuspended) {
-      // Normal case. Work-in-progress hasn't started yet. Unwind all
-      // its parents.
-      interruptedWork = workInProgress.return;
-    } else {
-      // Work-in-progress is in suspended state. Reset the work loop and unwind
-      // both the suspended fiber and all its parents.
-      resetSuspendedWorkLoopOnUnwind();
-      interruptedWork = workInProgress;
-    }
-    while (interruptedWork !== null) {
-      const current = interruptedWork.alternate;
-      unwindInterruptedWork(
-        current,
-        interruptedWork,
-        workInProgressRootRenderLanes,
-      );
-      interruptedWork = interruptedWork.return;
-    }
-  }
+  resetWorkInProgressStack();
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
@@ -1797,6 +1794,17 @@ function handleThrow(root, thrownValue): void {
     workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
       ? SuspendedOnData
       : SuspendedOnImmediate;
+  } else if (thrownValue === SelectiveHydrationException) {
+    // An update flowed into a dehydrated boundary. Before we can apply the
+    // update, we need to finish hydrating. Interrupt the work-in-progress
+    // render so we can restart at the hydration lane.
+    //
+    // The ideal implementation would be able to switch contexts without
+    // unwinding the current stack.
+    //
+    // We could name this something more general but as of now it's the only
+    // case where we think this should happen.
+    workInProgressSuspendedReason = SuspendedOnHydration;
   } else {
     // This is a regular error.
     const isWakeable =
@@ -1851,18 +1859,11 @@ function handleThrow(root, thrownValue): void {
 }
 
 function shouldAttemptToSuspendUntilDataResolves() {
-  // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
-  // instead of repeating it in the complete phase. Or something to that effect.
-
-  if (includesOnlyRetries(workInProgressRootRenderLanes)) {
-    // We can always wait during a retry.
-    return true;
-  }
-
   // Check if there are other pending updates that might possibly unblock this
   // component from suspending. This mirrors the check in
   // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
+  // TODO: Consider unwinding immediately, using the
+  // SuspendedOnHydration mechanism.
   if (
     includesNonIdleWork(workInProgressRootSkippedLanes) ||
     includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
@@ -1875,27 +1876,24 @@ function shouldAttemptToSuspendUntilDataResolves() {
   // TODO: We should be able to remove the equivalent check in
   // finishConcurrentRender, and rely just on this one.
   if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
-    const suspenseHandler = getSuspenseHandler();
-    if (suspenseHandler !== null && suspenseHandler.tag === SuspenseComponent) {
-      const currentSuspenseHandler = suspenseHandler.alternate;
-      const nextProps: SuspenseProps = suspenseHandler.memoizedProps;
-      if (isBadSuspenseFallback(currentSuspenseHandler, nextProps)) {
-        // The nearest Suspense boundary is already showing content. We should
-        // avoid replacing it with a fallback, and instead wait until the
-        // data finishes loading.
-        return true;
-      } else {
-        // This is not a bad fallback condition. We should show a fallback
-        // immediately instead of waiting for the data to resolve. This includes
-        // when suspending inside new trees.
-        return false;
-      }
-    }
+    // If we're rendering inside the "shell" of the app, it's better to suspend
+    // rendering and wait for the data to resolve. Otherwise, we should switch
+    // to a fallback and continue rendering.
+    return getShellBoundary() === null;
+  }
 
-    // During a transition, if there is no Suspense boundary (i.e. suspending in
-    // the "shell" of an application), or if we're inside a hidden tree, then
-    // we should wait until the data finishes loading.
-    return true;
+  const handler = getSuspenseHandler();
+  if (handler === null) {
+    // TODO: We should support suspending in the case where there's no
+    // parent Suspense boundary, even outside a transition. Somehow. Otherwise,
+    // an uncached promise can fall into an infinite loop.
+  } else {
+    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+      // During a retry, we can suspend rendering if the nearest Suspense boundary
+      // is the boundary of the "shell", because we're guaranteed not to block
+      // any new content from appearing.
+      return handler === getShellBoundary();
+    }
   }
 
   // For all other Lanes besides Transitions and Retries, we should not wait
@@ -1973,6 +1971,8 @@ export function renderDidSuspendDelayIfPossible(): void {
     // (inside this function), since by suspending at the end of the render
     // phase introduces a potential mistake where we suspend lanes that were
     // pinged or updated while we were rendering.
+    // TODO: Consider unwinding immediately, using the
+    // SuspendedOnHydration mechanism.
     markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -2038,7 +2038,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     markRenderStarted(lanes);
   }
 
-  do {
+  outer: do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -2054,11 +2054,23 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         // function and fork the behavior some other way.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
-        workInProgressSuspendedReason = NotSuspended;
-        workInProgressThrownValue = null;
-        unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-
-        // Continue with the normal work loop.
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
+          }
+          default: {
+            // Continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+        }
       }
       workLoopSync();
       break;
@@ -2178,6 +2190,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             }
             // The work loop is suspended on data. We should wait for it to
             // resolve before continuing to render.
+            // TODO: Handle the case where the promise resolves synchronously.
+            // Usually this is handled when we instrument the promise to add a
+            // `status` field, but if the promise already has a status, we won't
+            // have added a listener until right here.
             const onResolution = () => {
               ensureRootIsScheduled(root, now());
             };
@@ -2215,6 +2231,14 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
+          }
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            resetWorkInProgressStack();
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
           }
           default: {
             throw new Error(
@@ -2894,16 +2918,13 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.tag !== LegacyRoot
-  ) {
+  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
     flushPassiveEffects();
   }
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+  if (includesSyncLane(remainingLanes)) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
@@ -3366,8 +3387,16 @@ function pingSuspendedRoot(
         includesOnlyRetries(workInProgressRootRenderLanes) &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
-      // Restart from the root.
-      prepareFreshStack(root, NoLanes);
+      // Force a restart from the root by unwinding the stack. Unless this is
+      // being called from the render phase, because that would cause a crash.
+      if ((executionContext & RenderContext) === NoContext) {
+        prepareFreshStack(root, NoLanes);
+      } else {
+        // TODO: If this does happen during the render phase, we should throw
+        // the special internal exception that we use to interrupt the stack for
+        // selective hydration. That was temporarily reverted but we once we add
+        // it back we can use it here.
+      }
     } else {
       // Even though we can't restart right now, we might get an
       // opportunity later. So we mark this render as having a ping.
@@ -3741,6 +3770,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       if (
         didSuspendOrErrorWhileHydratingDEV() ||
         originalError === SuspenseException ||
+        originalError === SelectiveHydrationException ||
         (originalError !== null &&
           typeof originalError === 'object' &&
           typeof originalError.then === 'function')
