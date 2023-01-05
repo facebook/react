@@ -4,6 +4,7 @@ const rollup = require('rollup');
 const babel = require('rollup-plugin-babel');
 const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
+const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
@@ -99,7 +100,6 @@ const syncWWWPath = argv['sync-www'];
 // Non-ES2015 stuff applied before closure compiler.
 const babelPlugins = [
   // These plugins filter out non-ES2015.
-  '@babel/plugin-transform-flow-strip-types',
   ['@babel/plugin-proposal-class-properties', {loose: true}],
   'syntax-trailing-function-commas',
   // These use loose mode which avoids embedding a runtime.
@@ -325,6 +325,16 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
+    {
+      name: 'rollup-plugin-flow-remove-types',
+      transform(code) {
+        const transformed = flowRemoveTypes(code);
+        return {
+          code: transformed.toString(),
+          map: transformed.generateMap(),
+        };
+      },
+    },
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.

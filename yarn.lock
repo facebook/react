@@ -7920,6 +7920,20 @@ flow-bin@^0.190.0:
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.190.0.tgz#cfc50e1474facf8150232a6c498fe66a6bb75969"
   integrity sha512-Qo3bvN3cmGFXsq63ZxcHFZXQDvgx84fCuq8cXuKk5xbvuebBGwMqS+ku/rH+gEkciRrcTYrXqoSzb9b6ShcoJg==
 
+flow-parser@^0.196.1:
+  version "0.196.1"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.196.1.tgz#3c31f102454518f0c68eeb99f57501c2a0c9bff0"
+  integrity sha512-V3yaKHyBWhl+LF6sxgbfqxMlwoFKs8UKh2DYTrGj1AHi9ST7Zyp+9ToF4l9eoL6l/DxdFwCNF3MAJ1vCVrgJmw==
+
+flow-remove-types@^2.196.1:
+  version "2.196.1"
+  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.196.1.tgz#c77ab53679beb1b1ba420c16865cea714a67defc"
+  integrity sha512-pAEe2B/fKtV96MVGWQgmjP5Z1nLeFFe++r83ql1Zj86+p+3IujsbvwxiXCiF/SS6ObbB6TmciCxxd+FsOUyY3Q==
+  dependencies:
+    flow-parser "^0.196.1"
+    pirates "^3.0.2"
+    vlq "^0.2.1"
+
 fluent-syntax@0.13.0:
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/fluent-syntax/-/fluent-syntax-0.13.0.tgz#417144d99cba94ff474c422b3e6623d5a842855a"
@@ -8749,7 +8763,7 @@ hermes-estree@0.9.0:
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.9.0.tgz#026e0abe6db1dcf50a81a79014b779a83db3b814"
   integrity sha512-5DZ7Y0CbHVk8zPqgRCvqp8iw+P05svnQDI1aJFjdqCfXJ/1CZ+8aYpGlhJ29zCG5SE5duGTzSxogAYYI4QqXqw==
 
-hermes-parser@0.9.0:
+hermes-parser@0.9.0, hermes-parser@^0.9.0:
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.9.0.tgz#ede3044d50479c61843cef5bbdcea83933d4e4ec"
   integrity sha512-IcvJIlAn+9tpHkP+HTsxWKrIdQPp0gvGrrQmxlL4XnNS+Oh6R/Fpxbcoflm2kY3zgQjEvxZxLiK/2+k3/5wsrw==
@@ -12990,6 +13004,13 @@ pinpoint@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/pinpoint/-/pinpoint-1.1.0.tgz#0cf7757a6977f1bf7f6a32207b709e377388e874"
   integrity sha1-DPd1eml38b9/ajIge3CeN3OI6HQ=
+
+pirates@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/pirates/-/pirates-3.0.2.tgz#7e6f85413fd9161ab4e12b539b06010d85954bb9"
+  integrity sha512-c5CgUJq6H2k6MJz72Ak1F5sN9n9wlSlJyEnwvpm9/y3WB4E3pHBDT2c6PEiS1vyJvq2bUxUAIu0EGf8Cx4Ic7Q==
+  dependencies:
+    node-modules-regexp "^1.0.0"
 
 pirates@^4.0.0, pirates@^4.0.1:
   version "4.0.1"

@@ -1668,7 +1668,7 @@ function erroredTask(
   }
 }
 
-function abortTaskSoft(task: Task): void {
+function abortTaskSoft(this: Request, task: Task): void {
   // This aborts task without aborting the parent boundary that it blocks.
   // It's used for when we didn't need this task to complete the tree.
   // If task was needed, then it should use abortTask instead.
