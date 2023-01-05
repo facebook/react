@@ -217,8 +217,7 @@ export default class ReactFlightWebpackPlugin {
 
           const json: {
             [string]: {
-              '': {chunks: any, id: any, name: any | string},
-              '*': {chunks: any, id: any, name: any | string},
+              [string]: {chunks: any, id: any, name: string},
             },
           } = {};
           compilation.chunkGroups.forEach(function(chunkGroup) {
@@ -241,7 +240,7 @@ export default class ReactFlightWebpackPlugin {
                 .getProvidedExports();
 
               const moduleExports: {
-                [any | string]: {chunks: any, id: any, name: any | string},
+                [string]: {chunks: any, id: any, name: string},
               } = {};
               ['', '*']
                 .concat(

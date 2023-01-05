@@ -518,7 +518,7 @@ export function installHook(target: any): DevToolsHook | null {
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots: {[RendererID]: Set<mixed>} = {};
   const rendererInterfaces = new Map();
-  const listeners: {[string]: void} = {};
+  const listeners: {[string]: Array<Handler>} = {};
   const renderers = new Map();
 
   const hook: DevToolsHook = {

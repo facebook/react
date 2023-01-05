@@ -543,16 +543,19 @@ export function validateURLKeyedUpdatedProps(
         let comparisonStatement = '';
         if (missingProps !== null && typeof missingProps === 'object') {
           for (const propName in missingProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: missing or null in latest props, "${missingProps[propName]}" in original props`;
           }
         }
         if (extraProps !== null && typeof extraProps === 'object') {
           for (const propName in extraProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: "${extraProps[propName]}" in latest props, missing or null in original props`;
           }
         }
         if (differentProps !== null && typeof differentProps === 'object') {
           for (const propName in differentProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: "${differentProps[propName].latest}" in latest props, "${differentProps[propName].original}" in original props`;
           }
         }
