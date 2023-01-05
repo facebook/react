@@ -12,7 +12,7 @@ import {
   completeBoundaryWithStyles,
   completeBoundary,
   completeSegment,
-} from './fizz-instruction-set/ReactDOMFizzInstructionSet';
+} from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
 
 if (!window.$RC) {
   // TODO: Eventually remove, we currently need to set these globals for
