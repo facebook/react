@@ -9,6 +9,17 @@
 
 import * as acorn from 'acorn';
 
+type LoadContext = {
+  format: string,
+  importAssertions: {}
+};
+
+type LoadFunction = (
+  Source,
+  LoadContext,
+  LoadFunction,
+) => { format: string, source: Source, shortCircuit?: boolean } | Promise<{ format: string, source: Source, shortCircuit?: boolean }>;
+
 type ResolveContext = {
   conditions: Array<string>,
   parentURL: string | void,
@@ -41,12 +52,62 @@ type TransformSourceFunction = (
   TransformSourceFunction,
 ) => Promise<{source: Source}>;
 
+type LoaderFnContext = { format: string, url?: string, ... }
+type LoaderFn = (Source, LoaderFnContext, LoaderFn) => Promise<{source: Source}>
+
 type Source = string | ArrayBuffer | Uint8Array;
 
 let warnedAboutConditionsFlag = false;
 
 let stashedGetSource: null | GetSourceFunction = null;
 let stashedResolve: null | ResolveFunction = null;
+
+//
+// Node version 17+
+// 
+
+export async function load(url: string, context: LoadContext, defaultLoad: LoadFunction) {
+  const transformed = await defaultLoad(
+    url,
+    context,
+    defaultLoad,
+  );
+
+  if (context.format === 'module' && url.endsWith('.client.js')) {
+    const transformedSource = transformed.source.toString();
+    if (typeof transformedSource !== 'string') {
+      throw new Error('Expected source to have been transformed to a string.');
+    }
+
+    const names = [];
+    await parseExportNamesInto(
+      transformedSource,
+      names,
+      url,
+      defaultLoad,
+    );
+
+    let newSrc =
+      "const MODULE_REFERENCE = Symbol.for('react.module.reference');\n";
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i];
+      if (name === 'default') {
+        newSrc += 'export default ';
+      } else {
+        newSrc += 'export const ' + name + ' = ';
+      }
+      newSrc += '{ $$typeof: MODULE_REFERENCE, filepath: ';
+      newSrc += JSON.stringify(url);
+      newSrc += ', name: ';
+      newSrc += JSON.stringify(name);
+      newSrc += '};\n';
+    }
+
+    return { format: 'module', source: newSrc, shortCircuit: true }
+  }
+
+  return transformed
+}
 
 export async function resolve(
   specifier: string,
@@ -89,6 +150,10 @@ export async function resolve(
   }
   return resolved;
 }
+
+//
+// Node version < 17.
+// 
 
 export async function getSource(
   url: string,
@@ -150,7 +215,7 @@ function resolveClientImport(
 
 async function loadClientImport(
   url: string,
-  defaultTransformSource: TransformSourceFunction,
+  defaultFn: LoaderFn
 ): Promise<{source: Source}> {
   if (stashedGetSource === null) {
     throw new Error(
@@ -163,18 +228,18 @@ async function loadClientImport(
     {format: 'module'},
     stashedGetSource,
   );
-  return defaultTransformSource(
+  return defaultFn(
     source,
     {format: 'module', url},
-    defaultTransformSource,
+    defaultFn,
   );
 }
 
 async function parseExportNamesInto(
-  transformedSource: string,
+  transformedSource: Source,
   names: Array<string>,
   parentURL: string,
-  defaultTransformSource,
+  loaderFn: LoaderFn
 ): Promise<void> {
   const {body} = acorn.parse(transformedSource, {
     ecmaVersion: '2019',
@@ -189,11 +254,11 @@ async function parseExportNamesInto(
           continue;
         } else {
           const {url} = await resolveClientImport(node.source.value, parentURL);
-          const {source} = await loadClientImport(url, defaultTransformSource);
+          const {source} = await loadClientImport(url, loaderFn);
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          parseExportNamesInto(source, names, url, defaultTransformSource);
+          parseExportNamesInto(source, names, url, loaderFn);
           continue;
         }
       case 'ExportDefaultDeclaration':
@@ -232,7 +297,7 @@ export async function transformSource(
     defaultTransformSource,
   );
   if (context.format === 'module' && context.url.endsWith('.client.js')) {
-    const transformedSource = transformed.source;
+    const transformedSource = transformed.source.toString();
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
     }
@@ -265,3 +330,4 @@ export async function transformSource(
   }
   return transformed;
 }
+
