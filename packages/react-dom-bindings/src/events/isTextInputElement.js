@@ -28,14 +28,14 @@ const supportedInputTypes: {[key: string]: true | void, ...} = {
   week: true,
 };
 
-function isTextInputElement(elem: ?HTMLElement): boolean {
-  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+function isTextInputElement(elem: Element | Text | null): boolean {
+  const localName = elem && elem.nodeName.toLowerCase();
 
-  if (nodeName === 'input') {
+  if (localName === 'input') {
     return !!supportedInputTypes[((elem: any): HTMLInputElement).type];
   }
 
-  if (nodeName === 'textarea') {
+  if (localName === 'textarea') {
     return true;
   }
 

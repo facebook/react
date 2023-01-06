@@ -78,8 +78,8 @@ let activeElementInst = null;
 /**
  * SECTION: handle `change` event
  */
-function shouldUseChangeEvent(elem) {
-  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+function shouldUseChangeEvent(elem: Element | Text | null) {
+  const nodeName = elem && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
     (nodeName === 'input' && (elem: any).type === 'file')
@@ -225,15 +225,14 @@ function getTargetInstForInputEventPolyfill(
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
+function shouldUseClickEvent(elem: Element | Text | null) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  const nodeName = elem.nodeName;
+  const localName = elem !== null && elem.nodeName.toLowerCase();
   return (
-    nodeName &&
-    nodeName.toLowerCase() === 'input' &&
-    (elem.type === 'checkbox' || elem.type === 'radio')
+    localName === 'input' &&
+    ((elem: any).type === 'checkbox' || (elem: any).type === 'radio')
   );
 }
 
@@ -284,12 +283,12 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: null | EventTarget,
 ) {
-  const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+  const targetNode = targetInst ? getNodeFromInstance(targetInst) : null;
 
   let getTargetInstFunc, handleEventFunc;
   if (shouldUseChangeEvent(targetNode)) {
     getTargetInstFunc = getTargetInstForChangeEvent;
-  } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
+  } else if (isTextInputElement(targetNode)) {
     if (isInputEventSupported) {
       getTargetInstFunc = getTargetInstForInputOrChangeEvent;
     } else {
@@ -324,7 +323,7 @@ function extractEvents(
   }
 
   // When blurring, set the value attribute for number inputs
-  if (domEventName === 'focusout') {
+  if (domEventName === 'focusout' && targetNode !== null) {
     handleControlledInputBlur(((targetNode: any): HTMLInputElement));
   }
 }
