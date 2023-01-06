@@ -259,6 +259,22 @@ function processDispatchQueueItemsInOrder(
   }
 }
 
+// `registerTwoPhaseEvent` create additional event by dependencies in queue.
+// Some dependencies event called `preventDefault` which should not trigger synthetic event.
+// In current check logic, we only check `click` to not to trigger `change`.
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element
+function checkEventValidation(event: ReactSyntheticEvent) {
+  if (
+    event.nativeEvent.defaultPrevented &&
+    event.type === 'change' &&
+    event.nativeEvent.type === 'click'
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 export function processDispatchQueue(
   dispatchQueue: DispatchQueue,
   eventSystemFlags: EventSystemFlags,
@@ -266,10 +282,7 @@ export function processDispatchQueue(
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   for (let i = 0; i < dispatchQueue.length; i++) {
     const {event, listeners} = dispatchQueue[i];
-    if (
-      !event.nativeEvent.defaultPrevented ||
-      event.type === event.nativeEvent.type
-    ) {
+    if (checkEventValidation(event)) {
       processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
       // event system doesn't use pooling.
     }
