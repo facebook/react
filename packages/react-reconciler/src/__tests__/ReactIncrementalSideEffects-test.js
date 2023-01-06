@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
@@ -19,6 +20,7 @@ describe('ReactIncrementalSideEffects', () => {
     jest.resetModules();
 
     React = require('react');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });
@@ -424,7 +426,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       Scheduler.unstable_yieldValue('Middle');
@@ -475,7 +477,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate www
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -555,7 +557,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate www
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -690,7 +692,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
@@ -930,7 +932,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
@@ -1306,8 +1308,19 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
-
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev(
+      ReactFeatureFlags.warnAboutStringRefs
+        ? [
+            'Warning: Component "Foo" contains the string ref "bar". ' +
+              'Support for string refs will be removed in a future major release. ' +
+              'We recommend using useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+              '    in Foo (at **)',
+          ]
+        : [],
+    );
     expect(fooInstance.refs.bar.test).toEqual('test');
   });
 });

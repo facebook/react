@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@ import {REACT_DEVTOOLS_WORKPLACE_URL} from 'react-devtools-shared/src/constants'
 import Icon from '../Icon';
 import styles from './shared.css';
 
-export default function WorkplaceGroup() {
+export default function WorkplaceGroup(): React.Node {
   if (!isInternalFacebookBuild) {
     return null;
   }

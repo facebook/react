@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {
@@ -18,22 +20,24 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {BrowserTheme} from '../DevTools';
 
 export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
-type Context = {|
+type Context = {
   displayDensity: DisplayDensity,
   setDisplayDensity(value: DisplayDensity): void,
 
@@ -51,7 +55,7 @@ type Context = {|
   setParseHookNames: (value: boolean) => void,
 
   hideConsoleLogsInStrictMode: boolean,
-  sethideConsoleLogsInStrictMode: (value: boolean) => void,
+  setHideConsoleLogsInStrictMode: (value: boolean) => void,
 
   showInlineWarningsAndErrors: boolean,
   setShowInlineWarningsAndErrors: (value: boolean) => void,
@@ -63,69 +67,96 @@ type Context = {|
 
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
-|};
+};
 
-const SettingsContext = createContext<Context>(((null: any): Context));
+const SettingsContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 SettingsContext.displayName = 'SettingsContext';
+
+function useLocalStorageWithLog<T>(
+  key: string,
+  initialValue: T | (() => T),
+): [T, (value: T | (() => T)) => void] {
+  return useLocalStorage<T>(key, initialValue, (v, k) => {
+    logEvent({
+      event_name: 'settings-changed',
+      metadata: {
+        source: 'localStorage setter',
+        key: k,
+        value: v,
+      },
+    });
+  });
+}
 
 type DocumentElements = Array<HTMLElement>;
 
-type Props = {|
+type Props = {
   browserTheme: BrowserTheme,
   children: React$Node,
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
-|};
+};
 
 function SettingsContextController({
   browserTheme,
   children,
   componentsPortalContainer,
   profilerPortalContainer,
-}: Props) {
+}: Props): React.Node {
   const bridge = useContext(BridgeContext);
 
-  const [displayDensity, setDisplayDensity] = useLocalStorage<DisplayDensity>(
+  const [
+    displayDensity,
+    setDisplayDensity,
+  ] = useLocalStorageWithLog<DisplayDensity>(
     'React::DevTools::displayDensity',
     'compact',
   );
-  const [theme, setTheme] = useLocalStorage<Theme>(
-    'React::DevTools::theme',
+  const [theme, setTheme] = useLocalStorageWithLog<Theme>(
+    LOCAL_STORAGE_BROWSER_THEME,
     'auto',
   );
   const [
     appendComponentStack,
     setAppendComponentStack,
-  ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  ] = useLocalStorageWithLog<boolean>(
+    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+    true,
+  );
   const [
     breakOnConsoleErrors,
     setBreakOnConsoleErrors,
-  ] = useLocalStorage<boolean>(
+  ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     false,
   );
-  const [parseHookNames, setParseHookNames] = useLocalStorage<boolean>(
+  const [parseHookNames, setParseHookNames] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
     false,
   );
   const [
     hideConsoleLogsInStrictMode,
-    sethideConsoleLogsInStrictMode,
-  ] = useLocalStorage<boolean>(
+    setHideConsoleLogsInStrictMode,
+  ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
     false,
   );
   const [
     showInlineWarningsAndErrors,
     setShowInlineWarningsAndErrors,
-  ] = useLocalStorage<boolean>(
+  ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
     true,
   );
   const [
     traceUpdatesEnabled,
     setTraceUpdatesEnabled,
-  ] = useLocalStorage<boolean>(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY, false);
+  ] = useLocalStorageWithLog<boolean>(
+    LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+    false,
+  );
 
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [
@@ -214,7 +245,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
@@ -233,7 +264,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,

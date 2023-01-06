@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -89,7 +89,7 @@ module.exports = function(initModules) {
         console.log(
           `We expected ${count} warning(s), but saw ${filteredWarnings.length} warning(s).`,
         );
-        if (filteredWarnings.count > 0) {
+        if (filteredWarnings.length > 0) {
           console.log(`We saw these warnings:`);
           for (let i = 0; i < filteredWarnings.length; i++) {
             console.log(...filteredWarnings[i]);
@@ -154,8 +154,11 @@ module.exports = function(initModules) {
       () =>
         new Promise((resolve, reject) => {
           const writable = new DrainWritable();
-          const s = ReactDOMServer.renderToNodeStream(reactElement);
-          s.on('error', e => reject(e));
+          const s = ReactDOMServer.renderToPipeableStream(reactElement, {
+            onShellError(e) {
+              reject(e);
+            },
+          });
           s.pipe(writable);
           writable.on('finish', () => resolve(writable.buffer));
         }),
@@ -168,7 +171,12 @@ module.exports = function(initModules) {
   // Does not render on client or perform client-side revival.
   async function streamRender(reactElement, errorCount = 0) {
     const markup = await renderIntoStream(reactElement, errorCount);
-    return getContainerFromMarkup(reactElement, markup).firstChild;
+    let firstNode = getContainerFromMarkup(reactElement, markup).firstChild;
+    if (firstNode && firstNode.nodeType === Node.DOCUMENT_TYPE_NODE) {
+      // Skip document type nodes.
+      firstNode = firstNode.nextSibling;
+    }
+    return firstNode;
   }
 
   const clientCleanRender = (element, errorCount = 0) => {

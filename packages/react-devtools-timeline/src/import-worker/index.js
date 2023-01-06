@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@
 import * as importFileModule from './importFile';
 import WorkerizedImportFile from './importFile.worker';
 
-import type {ReactProfilerData} from '../types';
+import type {TimelineData} from '../types';
 
 type ImportFileModule = typeof importFileModule;
 
@@ -22,10 +22,11 @@ const workerizedImportFile: ImportFileModule = window.Worker
   : importFileModule;
 
 export type ImportWorkerOutputData =
-  | {|status: 'SUCCESS', processedData: ReactProfilerData|}
-  | {|status: 'INVALID_PROFILE_ERROR', error: Error|}
-  | {|status: 'UNEXPECTED_ERROR', error: Error|};
+  | {status: 'SUCCESS', processedData: TimelineData}
+  | {status: 'INVALID_PROFILE_ERROR', error: Error}
+  | {status: 'UNEXPECTED_ERROR', error: Error};
 
 export type importFileFunction = (file: File) => ImportWorkerOutputData;
 
-export const importFile = (file: File) => workerizedImportFile.importFile(file);
+export const importFile = (file: File): Promise<ImportWorkerOutputData> =>
+  workerizedImportFile.importFile(file);

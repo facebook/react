@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -454,20 +454,22 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      renderer.update(<Parent observed={observableA} />);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        React.startTransition(() => {
+          renderer.update(<Parent observed={observableA} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableA} />);
+      }
 
       // Flush everything and ensure that the correct subscribable is used
-      // We expect the new subscribable to finish rendering,
-      // But then the updated values from the old subscribable should be used.
       expect(Scheduler).toFlushAndYield([
-        'Grandchild: b-0',
+        'Child: a-2',
+        'Grandchild: a-2',
         'Child: a-2',
         'Grandchild: a-2',
       ]);
-      expect(log).toEqual([
-        'Parent.componentDidUpdate:b-0',
-        'Parent.componentDidUpdate:a-2',
-      ]);
+      expect(log).toEqual(['Parent.componentDidUpdate:a-2']);
     });
 
     // Updates from the new subscribable should be ignored.
@@ -628,7 +630,10 @@ describe('useSubscription', () => {
       } else {
         mutate('C');
       }
-      expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'render:first:C',
+        'render:second:C',
+      ]);
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           mutate('D');
@@ -636,11 +641,7 @@ describe('useSubscription', () => {
       } else {
         mutate('D');
       }
-      expect(Scheduler).toFlushAndYield([
-        'render:second:C',
-        'render:first:D',
-        'render:second:D',
-      ]);
+      expect(Scheduler).toFlushAndYield(['render:first:D', 'render:second:D']);
 
       // No more pending updates
       jest.runAllTimers();

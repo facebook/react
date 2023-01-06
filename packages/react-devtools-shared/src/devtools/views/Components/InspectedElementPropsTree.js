@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,19 +23,19 @@ import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   element: Element,
   inspectedElement: InspectedElement,
   store: Store,
-|};
+};
 
 export default function InspectedElementPropsTree({
   bridge,
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
   const {
@@ -63,7 +63,9 @@ export default function InspectedElementPropsTree({
   const handleCopy = () => copy(serializeDataForCopy(((props: any): Object)));
 
   return (
-    <div className={styles.InspectedElementTree}>
+    <div
+      className={styles.InspectedElementTree}
+      data-testname="InspectedElementPropsTree">
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>props</div>
         {!isEmpty && (

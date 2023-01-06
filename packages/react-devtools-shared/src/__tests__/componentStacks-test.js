@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,21 +7,7 @@
  * @flow
  */
 
-function normalizeCodeLocInfo(str) {
-  if (typeof str !== 'string') {
-    return str;
-  }
-  // This special case exists only for the special source location in
-  // ReactElementValidator. That will go away if we remove source locations.
-  str = str.replace(/Check your code at .+?:\d+/g, 'Check your code at **');
-  // V8 format:
-  //  at Component (/path/filename.js:123:45)
-  // React format:
-  //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-    return '\n    in ' + name + ' (at **)';
-  });
-}
+import {normalizeCodeLocInfo} from './utils';
 
 describe('component stack', () => {
   let React;
@@ -49,6 +35,7 @@ describe('component stack', () => {
     React = require('react');
   });
 
+  // @reactVersion >=16.9
   it('should log the current component stack along with an error or warning', () => {
     const Grandparent = () => <Parent />;
     const Parent = () => <Child />;

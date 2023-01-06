@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,12 +12,12 @@ import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
-export type Container = {|
+export type Container = {
   children: Array<Instance | TextInstance>,
   createNodeMock: Function,
   tag: 'CONTAINER',
-|};
-export type Instance = {|
+};
+export type Instance = {
   type: string,
   props: Object,
   isHidden: boolean,
@@ -25,12 +25,12 @@ export type Instance = {|
   internalInstanceHandle: Object,
   rootContainerInstance: Container,
   tag: 'INSTANCE',
-|};
-export type TextInstance = {|
+};
+export type TextInstance = {
   text: string,
   isHidden: boolean,
   tag: 'TEXT',
-|};
+};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = Instance | TextInstance;
 export type HostContext = Object;
@@ -40,12 +40,14 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
 
-export type RendererInspectionConfig = $ReadOnly<{||}>;
+export type RendererInspectionConfig = $ReadOnly<{}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -56,7 +58,7 @@ if (__DEV__) {
   Object.freeze(UPDATE_SIGNAL);
 }
 
-export function getPublicInstance(inst: Instance | TextInstance): * {
+export function getPublicInstance(inst: Instance | TextInstance): $FlowFixMe {
   switch (inst.tag) {
     case 'INSTANCE':
       const createNodeMock = inst.rootContainerInstance.createNodeMock;
@@ -128,7 +130,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  rootContainerInstance: Container,
 ): HostContext {
   return NO_CONTEXT;
 }
@@ -283,7 +284,7 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function getInstanceFromNode(mockNode: Object) {
+export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
     return instance.internalInstanceHandle;
@@ -312,5 +313,21 @@ export function getInstanceFromScope(scopeInstance: Object): null | Object {
 }
 
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function logRecoverableError(error: mixed): void {
+  // noop
+}
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
+  // noop
+}
+
+export function prepareRendererToRender(container: Container): void {
+  // noop
+}
+
+export function resetRendererAfterRender(): void {
   // noop
 }

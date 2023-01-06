@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,9 +13,11 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let ReactTestUtils;
 let act;
+let SuspenseList;
 
 function initModules() {
   // Reset warning cache.
@@ -23,9 +25,13 @@ function initModules() {
 
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
   act = require('jest-react').act;
+  if (gate(flags => flags.enableSuspenseList)) {
+    SuspenseList = React.SuspenseList;
+  }
 
   // Make them available to the helpers.
   return {
@@ -137,16 +143,17 @@ describe('ReactDOMServerSuspense', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('server renders a SuspenseList component and its children', async () => {
     const example = (
-      <React.SuspenseList>
+      <SuspenseList>
         <React.Suspense fallback="Loading A">
           <div>A</div>
         </React.Suspense>
         <React.Suspense fallback="Loading B">
           <div>B</div>
         </React.Suspense>
-      </React.SuspenseList>
+      </SuspenseList>
     );
     const element = await serverRender(example);
     const parent = element.parentNode;
@@ -158,8 +165,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.textContent).toBe('B');
 
     act(() => {
-      const root = ReactDOM.createRoot(parent, {hydrate: true});
-      root.render(example);
+      ReactDOMClient.hydrateRoot(parent, example);
     });
 
     const parent2 = element.parentNode;
@@ -183,7 +189,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
 
     itThrowsWhenRendering(
@@ -196,7 +202,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
   }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,19 +18,22 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
+declare var globalThis: Object;
+
 declare var queueMicrotask: (fn: Function) => void;
+declare var reportError: (error: mixed) => void;
 
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }
 
-declare var trustedTypes: {|
+declare var trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
   isScriptURL: (value: any) => boolean,
   // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
   isURL?: (value: any) => boolean,
-|};
+};
 
 // ReactFeatureFlags www fork
 declare module 'ReactFeatureFlags' {
@@ -124,8 +127,51 @@ declare module 'pg' {
   };
 }
 
+declare module 'util' {
+  declare function debuglog(section: string): (data: any, ...args: any) => void;
+  declare function format(format: string, ...placeholders: any): string;
+  declare function log(string: string): void;
+  declare function inspect(object: any, options?: util$InspectOptions): string;
+  declare function isArray(object: any): boolean;
+  declare function isRegExp(object: any): boolean;
+  declare function isDate(object: any): boolean;
+  declare function isError(object: any): boolean;
+  declare function inherits(
+    constructor: Function,
+    superConstructor: Function,
+  ): void;
+  declare function deprecate(f: Function, string: string): Function;
+  declare function promisify(f: Function): Function;
+  declare function callbackify(f: Function): Function;
+  declare class TextEncoder {
+    constructor(encoding?: string): TextEncoder;
+    encode(buffer: string): Uint8Array;
+    encodeInto(
+      buffer: string,
+      dest: Uint8Array,
+    ): {read: number, written: number};
+    encoding: string;
+  }
+}
+
 declare module 'pg/lib/utils' {
   declare module.exports: {
     prepareValue(val: any): mixed,
   };
+}
+
+declare class AsyncLocalStorage<T> {
+  disable(): void;
+  getStore(): T | void;
+  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+  enterWith(store: T): void;
+}
+
+declare module 'async_hooks' {
+  declare class AsyncLocalStorage<T> {
+    disable(): void;
+    getStore(): T | void;
+    run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+    enterWith(store: T): void;
+  }
 }

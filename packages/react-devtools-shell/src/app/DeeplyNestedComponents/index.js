@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,9 +15,9 @@ function wrapWithHoc(Component, index) {
     return <Component />;
   }
 
-  // $FlowFixMe
   const displayName = Component.displayName || Component.name;
 
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   HOC.displayName = `withHoc${index}(${displayName})`;
   return HOC;
 }
@@ -36,7 +36,7 @@ function Nested() {
 
 const DeeplyNested = wrapWithNested(Nested, 100);
 
-export default function DeeplyNestedComponents() {
+export default function DeeplyNestedComponents(): React.Node {
   return (
     <Fragment>
       <h1>Deeply nested component</h1>

@@ -1,5 +1,174 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ReactARTComponents should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": 0,
+      "penX": 0,
+      "penY": 0,
+    }
+  }
+  height={40}
+  radiusTopLeft={26}
+  radiusTopRight={25}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": 0,
+      "penX": 0,
+      "penY": 0,
+    }
+  }
+  height={50}
+  radiusBottomLeft={-25}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": 0,
+      "penX": 0,
+      "penY": 0,
+    }
+  }
+  height={50}
+  radiusBottomRight={-30}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with a radius property of 0 when top left radius prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": 0,
+      "penX": 0,
+      "penY": 0,
+    }
+  }
+  height={50}
+  radiusTopLeft={-25}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with a radius property of 0 when top right radius prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": 0,
+      "penX": 0,
+      "penY": 0,
+    }
+  }
+  height={50}
+  radiusTopRight={-25}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with positive height when height prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": 0,
+      "_pivotY": -50,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": 0,
+      "penDownY": -50,
+      "penX": 0,
+      "penY": -50,
+    }
+  }
+  height={-50}
+  width={50}
+/>
+`;
+exports[`ReactARTComponents should generate a <Shape> with positive width when width prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": -50,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": -50,
+      "penDownY": 0,
+      "penX": -50,
+      "penY": 0,
+    }
+  }
+  height={50}
+  width={-50}
+/>
+`;
 exports[`ReactARTComponents should generate a <Shape> with props for drawing the Circle 1`] = `
 <Shape
   d={

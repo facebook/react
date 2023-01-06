@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,15 +23,19 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_CACHE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
-import {enableScopeAPI, enableCache} from './ReactFeatureFlags';
+import {
+  enableScopeAPI,
+  enableCacheElement,
+  enableTransitionTracing,
+  enableDebugTracing,
+  enableLegacyHidden,
+} from './ReactFeatureFlags';
 
-let REACT_MODULE_REFERENCE: number | Symbol = 0;
-if (typeof Symbol === 'function') {
-  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
-}
+const REACT_MODULE_REFERENCE: symbol = Symbol.for('react.module.reference');
 
-export default function isValidElementType(type: mixed) {
+export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
   }
@@ -40,14 +44,15 @@ export default function isValidElementType(type: mixed) {
   if (
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_PROFILER_TYPE ||
-    type === REACT_DEBUG_TRACING_MODE_TYPE ||
+    (enableDebugTracing && type === REACT_DEBUG_TRACING_MODE_TYPE) ||
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE ||
+    (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCache && type === REACT_CACHE_TYPE)
+    (enableCacheElement && type === REACT_CACHE_TYPE) ||
+    (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
   ) {
     return true;
   }

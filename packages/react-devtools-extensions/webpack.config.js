@@ -51,11 +51,12 @@ module.exports = {
   devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
   entry: {
     background: './src/background.js',
-    contentScript: './src/contentScript.js',
-    injectGlobalHook: './src/injectGlobalHook.js',
     main: './src/main.js',
     panel: './src/panel.js',
-    renderer: './src/renderer.js',
+    proxy: './src/contentScripts/proxy.js',
+    prepareInjection: './src/contentScripts/prepareInjection.js',
+    renderer: './src/contentScripts/renderer.js',
+    installHook: './src/contentScripts/installHook.js',
   },
   output: {
     path: __dirname + '/build',
@@ -76,6 +77,7 @@ module.exports = {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
+      'react-dom/client': resolve(builtModulesDir, 'react-dom/client'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),

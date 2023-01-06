@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "17.0.3",
+  "version": "18.2.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -18,27 +18,62 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1",
-    "scheduler": "^0.20.1"
+    "scheduler": "^0.23.0"
   },
   "peerDependencies": {
-    "react": "17.0.3"
+    "react": "^18.2.0"
   },
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
+    "client.js",
     "profiling.js",
     "server.js",
     "server.browser.js",
     "server.node.js",
+    "server.bun.js",
+    "static.js",
+    "static.browser.js",
+    "static.node.js",
+    "server-rendering-stub.js",
     "test-utils.js",
+    "unstable_testing.js",
+    "unstable_server-external-runtime.js",
     "cjs/",
     "umd/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./server": {
+      "bun": "./server.bun.js",
+      "deno": "./server.browser.js",
+      "worker": "./server.browser.js",
+      "browser": "./server.browser.js",
+      "default": "./server.node.js"
+    },
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
+    "./static": {
+      "deno": "./static.browser.js",
+      "worker": "./static.browser.js",
+      "browser": "./static.browser.js",
+      "default": "./static.node.js"
+    },
+    "./static.browser": "./static.browser.js",
+    "./static.node": "./static.node.js",
+    "./server-rendering-stub": "./server-rendering-stub.js",
+    "./profiling": "./profiling.js",
+    "./test-utils": "./test-utils.js",
+    "./unstable_testing": "./unstable_testing.js",
+    "./unstable_server-external-runtime": "./unstable_server-external-runtime.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
   "browser": {
-    "./server.js": "./server.browser.js"
+    "./server.js": "./server.browser.js",
+    "./static.js": "./static.browser.js"
   },
   "browserify": {
     "transform": [

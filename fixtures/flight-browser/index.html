@@ -19,7 +19,7 @@
     <script src="../../build/node_modules/react/umd/react.development.js"></script>
     <script src="../../build/node_modules/react-dom/umd/react-dom.development.js"></script>
     <script src="../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js"></script>
-    <script src="../../build/node_modules/react-server-dom-webpack/umd/react-server-dom-webpack-writer.browser.development.server.js"></script>
+    <script src="../../build/node_modules/react-server-dom-webpack/umd/react-server-dom-webpack-server.browser.development.js"></script>
     <script src="../../build/node_modules/react-server-dom-webpack/umd/react-server-dom-webpack.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
@@ -83,7 +83,7 @@
       }
 
       function Shell({ data }) {
-        let model = data.readRoot();
+        let model = React.use(data);
         return <div>
           <Suspense fallback="...">
             <h1>{model.title}</h1>
@@ -94,11 +94,12 @@
 
       function renderResult(data) {
         let container = document.getElementById('container');
-        ReactDOM.render(
+        ReactDOM.createRoot(
+          container
+        ).render(
           <Suspense fallback="Loading...">
             <Shell data={data} />
           </Suspense>,
-          container
         );
       }
     </script>

@@ -1,29 +1,45 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
-export function startTransition(scope: () => void) {
+export function startTransition(
+  scope: () => void,
+  options?: StartTransitionOptions,
+) {
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  ReactCurrentBatchConfig.transition = {};
+  const currentTransition = ReactCurrentBatchConfig.transition;
+
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
+
+  if (enableTransitionTracing) {
+    if (options !== undefined && options.name !== undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      ReactCurrentBatchConfig.transition.name = options.name;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      ReactCurrentBatchConfig.transition.startTime = -1;
+    }
+  }
+
   try {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
+
     if (__DEV__) {
-      if (
-        prevTransition !== 1 &&
-        warnOnSubscriptionInsideStartTransition &&
-        ReactCurrentBatchConfig._updatedFibers
-      ) {
-        const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
+      if (prevTransition === null && currentTransition._updatedFibers) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -31,7 +47,7 @@ export function startTransition(scope: () => void) {
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        ReactCurrentBatchConfig._updatedFibers.clear();
+        currentTransition._updatedFibers.clear();
       }
     }
   }

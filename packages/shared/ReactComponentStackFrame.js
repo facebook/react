@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -123,6 +123,7 @@ export function describeNativeComponentFrame(
         } catch (x) {
           control = x;
         }
+        // $FlowFixMe[prop-missing] found when upgrading Flow
         fn.call(Fake.prototype);
       }
     } else {
@@ -131,6 +132,9 @@ export function describeNativeComponentFrame(
       } catch (x) {
         control = x;
       }
+      // TODO(luna): This will currently only throw if the function component
+      // tries to access React/ReactDOM/props. We should probably make this throw
+      // in simple components too
       fn();
     }
   } catch (sample) {

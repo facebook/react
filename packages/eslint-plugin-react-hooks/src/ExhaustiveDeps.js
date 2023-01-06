@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -74,6 +74,7 @@ export default {
     const stateVariables = new WeakSet();
     const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
+    const useEffectEventVariables = new WeakSet();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
         if (map.has(arg)) {
@@ -157,6 +158,8 @@ export default {
       //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
+      // const onStuff = useEffectEvent(() => {})
+      //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
         if (!isArray(resolved.defs)) {
@@ -223,6 +226,17 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
+        } else if (
+          isUseEffectEventIdentifier(callee) &&
+          id.type === 'Identifier'
+        ) {
+          for (const ref of resolved.references) {
+            if (ref !== id) {
+              useEffectEventVariables.add(ref.identifier);
+            }
+          }
+          // useEffectEvent() return value is always unstable.
+          return true;
         } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple stable.
           if (
@@ -234,7 +248,14 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
+                let writeCount = 0;
                 for (let i = 0; i < references.length; i++) {
+                  if (references[i].isWrite()) {
+                    writeCount++;
+                  }
+                  if (writeCount > 1) {
+                    return false;
+                  }
                   setStateCallSites.set(
                     references[i].identifier,
                     id.elements[0],
@@ -321,7 +342,7 @@ export default {
             pureScopes.has(ref.resolved.scope) &&
             // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStablecKnownHookValue(ref.resolved)
+            !memoizedIsStableKnownHookValue(ref.resolved)
           ) {
             return false;
           }
@@ -332,7 +353,7 @@ export default {
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
+      const memoizedIsStableKnownHookValue = memoizeWithWeakMap(
         isStableKnownHookValue,
         stableKnownValueCache,
       );
@@ -345,7 +366,7 @@ export default {
       const currentRefsInEffectCleanup = new Map();
 
       // Is this reference inside a cleanup function for this effect node?
-      // We can check by traversing scopes upwards  from the reference, and checking
+      // We can check by traversing scopes upwards from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
       function isInsideEffectCleanup(reference) {
         let curScope = reference.from;
@@ -435,7 +456,7 @@ export default {
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
             const isStable =
-              memoizedIsStablecKnownHookValue(resolved) ||
+              memoizedIsStableKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStable,
@@ -626,6 +647,26 @@ export default {
                 'correct dependencies.',
             });
             return;
+          }
+          if (useEffectEventVariables.has(declaredDependencyNode)) {
+            reportProblem({
+              node: declaredDependencyNode,
+              message:
+                'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+                `Remove \`${context.getSource(
+                  declaredDependencyNode,
+                )}\` from the list.`,
+              suggest: [
+                {
+                  desc: `Remove the dependency \`${context.getSource(
+                    declaredDependencyNode,
+                  )}\``,
+                  fix(fixer) {
+                    return fixer.removeRange(declaredDependencyNode.range);
+                  },
+                },
+              ],
+            });
           }
           // Try to normalize the declared dependency. If we can't then an error
           // will be thrown. We will catch that error and report an error.
@@ -1811,4 +1852,11 @@ function isSameIdentifier(a, b) {
 
 function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
+}
+
+function isUseEffectEventIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
+  }
+  return false;
 }

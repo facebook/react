@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,6 +15,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
@@ -30,6 +31,10 @@ const ReactNoopFlightServer = ReactFlightServer({
   writeChunk(destination: Destination, chunk: string): void {
     destination.push(chunk);
   },
+  writeChunkAndReturn(destination: Destination, chunk: string): boolean {
+    destination.push(chunk);
+    return true;
+  },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
   closeWithError(destination: Destination, error: mixed): void {},
@@ -40,6 +45,9 @@ const ReactNoopFlightServer = ReactFlightServer({
   stringToPrecomputedChunk(content: string): string {
     return content;
   },
+  clonePrecomputedChunk(chunk: string): string {
+    return chunk;
+  },
   isModuleReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.module.reference');
   },
@@ -48,7 +56,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   },
   resolveModuleMetaData(
     config: void,
-    reference: {$$typeof: Symbol, value: any},
+    reference: {$$typeof: symbol, value: any},
   ) {
     return saveModule(reference.value);
   },
@@ -56,6 +64,8 @@ const ReactNoopFlightServer = ReactFlightServer({
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 function render(model: ReactModel, options?: Options): Destination {
@@ -65,6 +75,8 @@ function render(model: ReactModel, options?: Options): Destination {
     model,
     bundlerConfig,
     options ? options.onError : undefined,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

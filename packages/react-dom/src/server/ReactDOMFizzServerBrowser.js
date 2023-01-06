@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -21,65 +22,95 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
   bootstrapScriptContent?: string,
-  bootstrapScripts?: Array<string>,
-  bootstrapModules?: Array<string>,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onCompleteShell?: () => void,
-  onCompleteAll?: () => void,
-  onError?: (error: mixed) => void,
-|};
+  onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+// TODO: Move to sub-classing ReadableStream.
+type ReactDOMServerReadableStream = ReadableStream & {
+  allReady: Promise<void>,
+};
 
 function renderToReadableStream(
   children: ReactNodeList,
   options?: Options,
-): ReadableStream {
-  const request = createRequest(
-    children,
-    createResponseState(
-      options ? options.identifierPrefix : undefined,
-      options ? options.nonce : undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
-    ),
-    createRootFormatContext(options ? options.namespaceURI : undefined),
-    options ? options.progressiveChunkSize : undefined,
-    options ? options.onError : undefined,
-    options ? options.onCompleteAll : undefined,
-    options ? options.onCompleteShell : undefined,
-  );
-  if (options && options.signal) {
-    const signal = options.signal;
-    const listener = () => {
-      abort(request);
-      signal.removeEventListener('abort', listener);
-    };
-    signal.addEventListener('abort', listener);
-  }
-  const stream = new ReadableStream({
-    start(controller) {
-      startWork(request);
-    },
-    pull(controller) {
-      // Pull is called immediately even if the stream is not passed to anything.
-      // That's buffering too early. We want to start buffering once the stream
-      // is actually used by something so we can give it the best result possible
-      // at that point.
-      if (stream.locked) {
-        startFlowing(request, controller);
+): Promise<ReactDOMServerReadableStream> {
+  return new Promise((resolve, reject) => {
+    let onFatalError;
+    let onAllReady;
+    const allReady = new Promise((res, rej) => {
+      onAllReady = res;
+      onFatalError = rej;
+    });
+
+    function onShellReady() {
+      const stream: ReactDOMServerReadableStream = (new ReadableStream(
+        {
+          type: 'bytes',
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            abort(request);
+          },
+        },
+        // $FlowFixMe size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      ): any);
+      // TODO: Move to sub-classing ReadableStream.
+      stream.allReady = allReady;
+      resolve(stream);
+    }
+    function onShellError(error: mixed) {
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
+      reject(error);
+    }
+    const request = createRequest(
+      children,
+      createResponseState(
+        options ? options.identifierPrefix : undefined,
+        options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
+      ),
+      createRootFormatContext(options ? options.namespaceURI : undefined),
+      options ? options.progressiveChunkSize : undefined,
+      options ? options.onError : undefined,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
       }
-    },
-    cancel(reason) {},
+    }
+    startWork(request);
   });
-  return stream;
 }
 
 export {renderToReadableStream, ReactVersion as version};

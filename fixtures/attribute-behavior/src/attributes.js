@@ -574,6 +574,24 @@ const attributes = [
     read: getSVGAttribute('externalResourcesRequired'),
   },
   {
+    name: 'fetchPriority',
+    overrideStringValue: 'high',
+    tagName: 'img',
+    read: getProperty('fetchPriority'),
+  },
+  {
+    name: 'fetchpriority',
+    overrideStringValue: 'high',
+    tagName: 'img',
+    read: getProperty('fetchPriority'),
+  },
+  {
+    name: 'fetchPriority',
+    overrideStringValue: 'high',
+    tagName: 'link',
+    read: getProperty('fetchPriority'),
+  },
+  {
     name: 'fill',
     containerTagName: 'svg',
     tagName: 'path',
@@ -937,6 +955,8 @@ const attributes = [
     tagName: 'svg',
     read: getSVGAttribute('image-rendering'),
   },
+  {name: 'imageSizes', tagName: 'link', read: getProperty('imageSizes')},
+  {name: 'imageSrcSet', tagName: 'link', read: getProperty('imageSrcset')},
   {
     name: 'in',
     read: getSVGAttribute('in'),

@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "version": "0.11.0",
+  "version": "0.14.0",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
@@ -13,11 +13,16 @@
     "README.md",
     "babel.js",
     "runtime.js",
-    "build-info.json",
     "cjs/",
     "umd/"
   ],
   "main": "runtime.js",
+  "exports": {
+    ".": "./runtime.js",
+    "./runtime": "./runtime.js",
+    "./babel": "./babel.js",
+    "./package.json": "./package.json"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

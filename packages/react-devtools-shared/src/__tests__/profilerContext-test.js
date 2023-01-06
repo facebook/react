@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -153,7 +153,14 @@ describe('ProfilerContext', () => {
     const containerTwo = document.createElement('div');
     utils.act(() => legacyRender(<Parent />, containerOne));
     utils.act(() => legacyRender(<Parent />, containerTwo));
-    expect(store).toMatchSnapshot('mounted');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates to both roots.
     await utils.actAsync(() => store.profilerStore.startProfiling());
@@ -192,7 +199,14 @@ describe('ProfilerContext', () => {
     const containerTwo = document.createElement('div');
     utils.act(() => legacyRender(<Parent />, containerOne));
     utils.act(() => legacyRender(<Parent />, containerTwo));
-    expect(store).toMatchSnapshot('mounted');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates to only the first root.
     await utils.actAsync(() => store.profilerStore.startProfiling());
@@ -231,7 +245,14 @@ describe('ProfilerContext', () => {
     const containerB = document.createElement('div');
     utils.act(() => legacyRender(<Parent />, containerA));
     utils.act(() => legacyRender(<Parent />, containerB));
-    expect(store).toMatchSnapshot('mounted');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates.
     await utils.actAsync(() => store.profilerStore.startProfiling());
@@ -290,7 +311,12 @@ describe('ProfilerContext', () => {
     utils.act(() =>
       legacyRender(<GrandParent includeChild={true} />, container),
     );
-    expect(store).toMatchSnapshot('mounted');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <GrandParent>
+          ▾ <Parent>
+              <Child>
+    `);
 
     const parentID = ((store.getElementIDAtIndex(1): any): number);
     const childID = ((store.getElementIDAtIndex(2): any): number);
@@ -305,7 +331,11 @@ describe('ProfilerContext', () => {
     );
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
-    expect(store).toMatchSnapshot('updated');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <GrandParent>
+            <Parent>
+    `);
 
     let context: Context = ((null: any): Context);
     let selectedElementID = null;

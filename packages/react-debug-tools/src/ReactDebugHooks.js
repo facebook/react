@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -20,6 +21,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import ErrorStackParser from 'error-stack-parser';
+import assign from 'shared/assign';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   FunctionComponent,
@@ -99,10 +101,6 @@ function nextHook(): null | Hook {
   return hook;
 }
 
-function getCacheForType<T>(resourceType: () => T): T {
-  throw new Error('Not implemented.');
-}
-
 function readContext<T>(context: ReactContext<T>): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
@@ -152,7 +150,7 @@ function useReducer<S, I, A>(
   return [state, (action: A) => {}];
 }
 
-function useRef<T>(initialValue: T): {|current: T|} {
+function useRef<T>(initialValue: T): {current: T} {
   const hook = nextHook();
   const ref = hook !== null ? hook.memoizedState : {current: initialValue};
   hookLog.push({
@@ -206,7 +204,7 @@ function useEffect(
 }
 
 function useImperativeHandle<T>(
-  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
@@ -215,7 +213,7 @@ function useImperativeHandle<T>(
   // and if there is a ref callback it might not store it but if it does we
   // have no way of knowing where. So let's only enable introspection of the
   // ref itself if it is using the object form.
-  let instance = undefined;
+  let instance: ?T = undefined;
   if (ref !== null && typeof ref === 'object') {
     instance = ref.current;
   }
@@ -290,7 +288,10 @@ function useSyncExternalStore<T>(
   return value;
 }
 
-function useTransition(): [boolean, (() => void) => void] {
+function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -305,15 +306,11 @@ function useTransition(): [boolean, (() => void) => void] {
 }
 
 function useDeferredValue<T>(value: T): T {
-  // useDeferredValue() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // State
-  nextHook(); // Effect
+  const hook = nextHook();
   hookLog.push({
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value,
+    value: hook !== null ? hook.memoizedState : value,
   });
   return value;
 }
@@ -330,7 +327,6 @@ function useId(): string {
 }
 
 const Dispatcher: DispatcherType = {
-  getCacheForType,
   readContext,
   useCacheRefresh,
   useCallback,
@@ -350,6 +346,27 @@ const Dispatcher: DispatcherType = {
   useDeferredValue,
   useId,
 };
+
+// create a proxy to throw a custom error
+// in case future versions of React adds more hooks
+const DispatcherProxyHandler = {
+  get(target, prop) {
+    if (target.hasOwnProperty(prop)) {
+      return target[prop];
+    }
+    const error = new Error('Missing method in Dispatcher: ' + prop);
+    // Note: This error name needs to stay in sync with react-devtools-shared
+    // TODO: refactor this if we ever combine the devtools and debug tools packages
+    error.name = 'ReactDebugToolsUnsupportedHookError';
+    throw error;
+  },
+};
+
+// `Proxy` may not exist on some platforms
+const DispatcherProxy =
+  typeof Proxy === 'undefined'
+    ? Dispatcher
+    : new Proxy(Dispatcher, DispatcherProxyHandler);
 
 // Inspect
 
@@ -645,6 +662,31 @@ function processDebugValues(
   }
 }
 
+function handleRenderFunctionError(error: any): void {
+  // original error might be any type.
+  if (
+    error instanceof Error &&
+    error.name === 'ReactDebugToolsUnsupportedHookError'
+  ) {
+    throw error;
+  }
+  // If the error is not caused by an unsupported feature, it means
+  // that the error is caused by user's code in renderFunction.
+  // In this case, we should wrap the original error inside a custom error
+  // so that devtools can give a clear message about it.
+  // $FlowFixMe: Flow doesn't know about 2nd argument of Error constructor
+  const wrapperError = new Error('Error rendering inspected component', {
+    cause: error,
+  });
+  // Note: This error name needs to stay in sync with react-devtools-shared
+  // TODO: refactor this if we ever combine the devtools and debug tools packages
+  wrapperError.name = 'ReactDebugToolsRenderError';
+  // this stage-4 proposal is not supported by all environments yet.
+  // $FlowFixMe Flow doesn't have this type yet.
+  wrapperError.cause = error;
+  throw wrapperError;
+}
+
 export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
@@ -659,14 +701,17 @@ export function inspectHooks<Props>(
 
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
     renderFunction(props);
+  } catch (error) {
+    handleRenderFunctionError(error);
   } finally {
     readHookLog = hookLog;
     hookLog = [];
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     currentDispatcher.current = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
@@ -674,7 +719,7 @@ export function inspectHooks<Props>(
 }
 
 function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
-  let current = fiber;
+  let current: null | Fiber = fiber;
   while (current) {
     if (current.tag === ContextProvider) {
       const providerType: ReactProviderType<any> = current.type;
@@ -703,11 +748,13 @@ function inspectHooksOfForwardRef<Props, Ref>(
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
     renderFunction(props, ref);
+  } catch (error) {
+    handleRenderFunctionError(error);
   } finally {
     readHookLog = hookLog;
     hookLog = [];
@@ -720,7 +767,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
-    const props = Object.assign({}, baseProps);
+    const props = assign({}, baseProps);
     const defaultProps = Component.defaultProps;
     for (const propName in defaultProps) {
       if (props[propName] === undefined) {
@@ -736,7 +783,7 @@ export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
   includeHooksSource?: boolean = false,
-) {
+): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {

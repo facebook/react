@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-inline",
-  "version": "4.21.0",
+  "version": "4.27.1",
   "description": "Embed react-devtools within a website",
   "license": "MIT",
   "main": "./dist/backend.js",
@@ -12,14 +12,14 @@
   "files": [
     "dist",
     "backend.js",
-    "build-info.json",
     "frontend.js",
     "hookNames.js"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
     "prepublish": "yarn run build",
-    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
+    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch",
+    "test:e2e": "playwright test --config=playwright.config.js"
   },
   "dependencies": {
     "source-map-js": "^0.6.2",
@@ -33,6 +33,7 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
+    "@playwright/test": "^1.16.3",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.4",

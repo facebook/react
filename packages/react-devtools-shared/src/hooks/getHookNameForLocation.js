@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -91,7 +91,7 @@ function binSearch<T>(
     location: Position,
     items: T[],
     index: number,
-  ) => {|index: number | null, direction: number|},
+  ) => {index: number | null, direction: number},
 ): T | null {
   let count = items.length;
   let index = 0;
@@ -141,7 +141,7 @@ function compareLinePositions(
   location: Position,
   mappings: HookMapMappings,
   index: number,
-): {|index: number | null, direction: number|} {
+): {index: number | null, direction: number} {
   const startIndex = index;
   const start = mappings[startIndex];
   if (start == null) {
@@ -200,7 +200,7 @@ function compareColumnPositions(
   location: Position,
   line: HookMapLine,
   index: number,
-): {|index: number | null, direction: number|} {
+): {index: number | null, direction: number} {
   const startIndex = index;
   const start = line[index];
   if (start == null) {

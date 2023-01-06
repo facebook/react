@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,6 +19,7 @@ type Props = {
   isChecked: boolean,
   isDisabled?: boolean,
   onChange: (isChecked: boolean) => void,
+  testName?: ?string,
   title?: string,
   ...
 };
@@ -29,8 +30,9 @@ export default function Toggle({
   isDisabled = false,
   isChecked,
   onChange,
+  testName,
   title,
-}: Props) {
+}: Props): React.Node {
   let defaultClassName;
   if (isDisabled) {
     defaultClassName = styles.ToggleDisabled;
@@ -48,6 +50,7 @@ export default function Toggle({
   let toggle = (
     <button
       className={`${defaultClassName} ${className}`}
+      data-testname={testName}
       disabled={isDisabled}
       onClick={handleClick}>
       <span className={styles.ToggleContent} tabIndex={-1}>

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -17,22 +17,25 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import {
   ClassComponent,
   HostComponent,
+  HostResource,
+  HostSingleton,
   HostRoot,
   HostPortal,
   HostText,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
+import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
-  let nearestMounted = fiber;
+  let nearestMounted: null | Fiber = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    let nextNode = node;
+    let nextNode: Fiber = node;
     do {
       node = nextNode;
       if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
@@ -41,6 +44,7 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
         // if that one is still mounted.
         nearestMounted = node.return;
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       nextNode = node.return;
     } while (nextNode);
   } else {
@@ -273,7 +277,13 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  const tag = node.tag;
+  if (
+    tag === HostComponent ||
+    (enableFloat ? tag === HostResource : false) ||
+    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostText
+  ) {
     return node;
   }
 
@@ -298,7 +308,13 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  const tag = node.tag;
+  if (
+    tag === HostComponent ||
+    (enableFloat ? tag === HostResource : false) ||
+    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostText
+  ) {
     return node;
   }
 
@@ -329,7 +345,7 @@ export function doesFiberContain(
   parentFiber: Fiber,
   childFiber: Fiber,
 ): boolean {
-  let node = childFiber;
+  let node: null | Fiber = childFiber;
   const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
     if (node === parentFiber || node === parentFiberAlternate) {

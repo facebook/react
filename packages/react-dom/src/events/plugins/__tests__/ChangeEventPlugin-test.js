@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactFeatureFlags;
 let Scheduler;
 let act;
@@ -56,6 +57,7 @@ describe('ChangeEventPlugin', () => {
     };
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
     container = document.createElement('div');
@@ -519,7 +521,7 @@ describe('ChangeEventPlugin', () => {
 
   describe('concurrent mode', () => {
     it('text input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -561,7 +563,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('checkbox input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -616,7 +618,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('textarea', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let textarea;
 
       class ControlledTextarea extends React.Component {
@@ -658,7 +660,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('parent of input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -704,7 +706,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('is sync for non-input events', async () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -752,7 +754,7 @@ describe('ChangeEventPlugin', () => {
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
       const {useState} = React;
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
 
       const target = React.createRef(null);
       function Foo() {

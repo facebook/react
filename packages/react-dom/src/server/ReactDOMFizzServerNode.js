@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,6 +9,8 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -22,31 +24,38 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
-function createDrainHandler(destination, request) {
+function createDrainHandler(destination: Destination, request) {
   return () => startFlowing(request, destination);
 }
 
-type Options = {|
+function createAbortHandler(request, reason) {
+  // eslint-disable-next-line react-internal/prod-error-codes
+  return () => abort(request, new Error(reason));
+}
+
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
   bootstrapScriptContent?: string,
-  bootstrapScripts?: Array<string>,
-  bootstrapModules?: Array<string>,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
-  onCompleteShell?: () => void,
-  onCompleteAll?: () => void,
-  onError?: (error: mixed) => void,
-|};
+  onShellReady?: () => void,
+  onShellError?: (error: mixed) => void,
+  onAllReady?: () => void,
+  onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
 
-type Controls = {|
+type PipeableStream = {
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
-  abort(): void,
+  abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
-|};
+};
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(
@@ -57,19 +66,22 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
       options ? options.bootstrapScriptContent : undefined,
       options ? options.bootstrapScripts : undefined,
       options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
-    options ? options.onCompleteAll : undefined,
-    options ? options.onCompleteShell : undefined,
+    options ? options.onAllReady : undefined,
+    options ? options.onShellReady : undefined,
+    options ? options.onShellError : undefined,
+    undefined,
   );
 }
 
 function renderToPipeableStream(
   children: ReactNodeList,
   options?: Options,
-): Controls {
+): PipeableStream {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
@@ -83,10 +95,21 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createAbortHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createAbortHandler(request, 'The destination stream closed early.'),
+      );
       return destination;
     },
-    abort() {
-      abort(request);
+    abort(reason: mixed) {
+      abort(request, reason);
     },
   };
 }

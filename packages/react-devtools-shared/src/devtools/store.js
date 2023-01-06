@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,17 +10,20 @@
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
+  PROFILING_FLAG_BASIC_SUPPORT,
+  PROFILING_FLAG_TIMELINE_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {ElementTypeRoot} from '../types';
 import {
   getSavedComponentFilters,
-  saveComponentFilters,
+  setSavedComponentFilters,
   separateDisplayNameAndHOCs,
   shallowDiffers,
   utfDecodeString,
@@ -33,6 +36,7 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
+import {StrictMode} from 'react-devtools-shared/src/types';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
@@ -40,6 +44,7 @@ import type {
   FrontendBridge,
   BridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
+import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -57,9 +62,9 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
-type ErrorAndWarningTuples = Array<{|id: number, index: number|}>;
+type ErrorAndWarningTuples = Array<{id: number, index: number}>;
 
-type Config = {|
+type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
@@ -67,30 +72,38 @@ type Config = {|
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
-|};
+};
 
-export type Capabilities = {|
+export type Capabilities = {
+  supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
-  supportsProfiling: boolean,
-|};
+  supportsStrictMode: boolean,
+  supportsTimeline: boolean,
+};
 
 /**
  * The store is the single source of truth for updates from the backend.
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
-export default class Store extends EventEmitter<{|
+export default class Store extends EventEmitter<{
+  backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
   error: [Error],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
+  rootSupportsBasicProfiling: [],
+  rootSupportsTimelineProfiling: [],
   supportsNativeStyleEditor: [],
-  supportsProfiling: [],
   supportsReloadAndProfile: [],
   unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
-|}> {
+}> {
+  // If the backend version is new enough to report its (NPM) version, this is it.
+  // This version may be displayed by the frontend for debugging purposes.
+  _backendVersion: string | null = null;
+
   _bridge: FrontendBridge;
 
   // Computed whenever _errorsAndWarnings Map changes.
@@ -106,7 +119,7 @@ export default class Store extends EventEmitter<{|
   // Map of ID to number of recorded error and warning message IDs.
   _errorsAndWarnings: Map<
     number,
-    {|errorCount: number, warningCount: number|},
+    {errorCount: number, warningCount: number},
   > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
@@ -158,14 +171,18 @@ export default class Store extends EventEmitter<{|
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
-  // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
-  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
+  // These options default to false but may be updated as roots are added and removed.
+  _rootSupportsBasicProfiling: boolean = false;
+  _rootSupportsTimelineProfiling: boolean = false;
+
+  _bridgeProtocol: BridgeProtocol | null = null;
+  _unsupportedBridgeProtocolDetected: boolean = false;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -254,6 +271,9 @@ export default class Store extends EventEmitter<{|
       bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
       bridge.send('getBridgeProtocol');
     }
+
+    bridge.addListener('backendVersion', this.onBridgeBackendVersion);
+    bridge.send('getBackendVersion');
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -289,6 +309,10 @@ export default class Store extends EventEmitter<{|
         ),
       );
     }
+  }
+
+  get backendVersion(): string | null {
+    return this._backendVersion;
   }
 
   get collapseNodesByDefault(): boolean {
@@ -341,7 +365,7 @@ export default class Store extends EventEmitter<{|
     this._componentFilters = value;
 
     // Update persisted filter preferences stored in localStorage.
-    saveComponentFilters(value);
+    setSavedComponentFilters(value);
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -351,6 +375,10 @@ export default class Store extends EventEmitter<{|
     }
 
     this.emit('componentFilters');
+  }
+
+  get bridgeProtocol(): BridgeProtocol | null {
+    return this._bridgeProtocol;
   }
 
   get errorCount(): number {
@@ -399,6 +427,16 @@ export default class Store extends EventEmitter<{|
     return this._roots;
   }
 
+  // At least one of the currently mounted roots support the Legacy profiler.
+  get rootSupportsBasicProfiling(): boolean {
+    return this._rootSupportsBasicProfiling;
+  }
+
+  // At least one of the currently mounted roots support the Timeline profiler.
+  get rootSupportsTimelineProfiling(): boolean {
+    return this._rootSupportsTimelineProfiling;
+  }
+
   get supportsNativeInspection(): boolean {
     return this._supportsNativeInspection;
   }
@@ -407,6 +445,8 @@ export default class Store extends EventEmitter<{|
     return this._isNativeStyleEditorSupported;
   }
 
+  // This build of DevTools supports the legacy profiler.
+  // This is a static flag, controled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
@@ -422,6 +462,8 @@ export default class Store extends EventEmitter<{|
     );
   }
 
+  // This build of DevTools supports the Timeline profiler.
+  // This is a static flag, controled by the Store config.
   get supportsTimeline(): boolean {
     return this._supportsTimeline;
   }
@@ -430,8 +472,8 @@ export default class Store extends EventEmitter<{|
     return this._supportsTraceUpdates;
   }
 
-  get unsupportedBridgeProtocol(): BridgeProtocol | null {
-    return this._unsupportedBridgeProtocol;
+  get unsupportedBridgeProtocolDetected(): boolean {
+    return this._unsupportedBridgeProtocolDetected;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -511,7 +553,7 @@ export default class Store extends EventEmitter<{|
   }
 
   // Returns a tuple of [id, index]
-  getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
+  getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
     } else {
@@ -544,7 +586,7 @@ export default class Store extends EventEmitter<{|
 
   getErrorAndWarningCountForElementID(
     id: number,
-  ): {|errorCount: number, warningCount: number|} {
+  ): {errorCount: number, warningCount: number} {
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -639,6 +681,7 @@ export default class Store extends EventEmitter<{|
             let depth = 0;
             while (parentID > 0) {
               if (parentID === ownerID || unsortedIDs.has(parentID)) {
+                // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
                 depth = depthMap.get(parentID) + 1;
                 depthMap.set(id, depth);
                 break;
@@ -720,7 +763,7 @@ export default class Store extends EventEmitter<{|
 
           const weightDelta = 1 - element.weight;
 
-          let parentElement = ((this._idToElement.get(
+          let parentElement: void | Element = ((this._idToElement.get(
             element.parentID,
           ): any): Element);
           while (parentElement != null) {
@@ -746,7 +789,7 @@ export default class Store extends EventEmitter<{|
               : currentElement.weight;
             const weightDelta = newWeight - oldWeight;
 
-            let parentElement = ((this._idToElement.get(
+            let parentElement: void | Element = ((this._idToElement.get(
               currentElement.parentID,
             ): any): Element);
             while (parentElement != null) {
@@ -763,8 +806,10 @@ export default class Store extends EventEmitter<{|
 
           currentElement =
             currentElement.parentID !== 0
-              ? this.getElementByID(currentElement.parentID)
-              : null;
+              ? // $FlowFixMe[incompatible-type] found when upgrading Flow
+                this.getElementByID(currentElement.parentID)
+              : // $FlowFixMe[incompatible-type] found when upgrading Flow
+                null;
         }
       }
 
@@ -785,10 +830,10 @@ export default class Store extends EventEmitter<{|
     }
   }
 
-  _adjustParentTreeWeight = (
+  _adjustParentTreeWeight: (
     parentElement: Element | null,
     weightDelta: number,
-  ) => {
+  ) => void = (parentElement, weightDelta) => {
     let isInsideCollapsedSubTree = false;
 
     while (parentElement != null) {
@@ -812,20 +857,31 @@ export default class Store extends EventEmitter<{|
     }
   };
 
-  onBridgeNativeStyleEditorSupported = ({
-    isSupported,
-    validAttributes,
-  }: {|
+  _recursivelyUpdateSubtree(
+    id: number,
+    callback: (element: Element) => void,
+  ): void {
+    const element = this._idToElement.get(id);
+    if (element) {
+      callback(element);
+
+      element.children.forEach(child =>
+        this._recursivelyUpdateSubtree(child, callback),
+      );
+    }
+  }
+
+  onBridgeNativeStyleEditorSupported: ({
     isSupported: boolean,
     validAttributes: ?$ReadOnlyArray<string>,
-  |}) => {
+  }) => void = ({isSupported, validAttributes}) => {
     this._isNativeStyleEditorSupported = isSupported;
     this._nativeStyleEditorValidAttributes = validAttributes || null;
 
     this.emit('supportsNativeStyleEditor');
   };
 
-  onBridgeOperations = (operations: Array<number>) => {
+  onBridgeOperations: (operations: Array<number>) => void = operations => {
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
       debug('onBridgeOperations', operations.join(','));
@@ -883,18 +939,44 @@ export default class Store extends EventEmitter<{|
               debug('Add', `new root node ${id}`);
             }
 
-            const supportsProfiling = operations[i] > 0;
+            const isStrictModeCompliant = operations[i] > 0;
             i++;
 
-            const hasOwnerMetadata = operations[i] > 0;
+            const supportsBasicProfiling =
+              (operations[i] & PROFILING_FLAG_BASIC_SUPPORT) !== 0;
+            const supportsTimeline =
+              (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
             i++;
+
+            let supportsStrictMode = false;
+            let hasOwnerMetadata = false;
+
+            // If we don't know the bridge protocol, guess that we're dealing with the latest.
+            // If we do know it, we can take it into consideration when parsing operations.
+            if (
+              this._bridgeProtocol === null ||
+              this._bridgeProtocol.version >= 2
+            ) {
+              supportsStrictMode = operations[i] > 0;
+              i++;
+
+              hasOwnerMetadata = operations[i] > 0;
+              i++;
+            }
 
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
             this._rootIDToCapabilities.set(id, {
+              supportsBasicProfiling,
               hasOwnerMetadata,
-              supportsProfiling,
+              supportsStrictMode,
+              supportsTimeline,
             });
+
+            // Not all roots support StrictMode;
+            // don't flag a root as non-compliant unless it also supports StrictMode.
+            const isStrictModeNonCompliant =
+              !isStrictModeCompliant && supportsStrictMode;
 
             this._idToElement.set(id, {
               children: [],
@@ -903,6 +985,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
+              isStrictModeNonCompliant,
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -958,9 +1041,10 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
+              isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
               key,
               ownerID,
-              parentID: parentElement.id,
+              parentID,
               type,
               weight: 1,
             };
@@ -1050,6 +1134,7 @@ export default class Store extends EventEmitter<{|
               haveErrorsOrWarningsChanged = true;
             }
           }
+
           break;
         }
         case TREE_OPERATION_REMOVE_ROOT: {
@@ -1124,6 +1209,28 @@ export default class Store extends EventEmitter<{|
           }
           break;
         }
+        case TREE_OPERATION_SET_SUBTREE_MODE: {
+          const id = operations[i + 1];
+          const mode = operations[i + 2];
+
+          i += 3;
+
+          // If elements have already been mounted in this subtree, update them.
+          // (In practice, this likely only applies to the root element.)
+          if (mode === StrictMode) {
+            this._recursivelyUpdateSubtree(id, element => {
+              element.isStrictModeNonCompliant = false;
+            });
+          }
+
+          if (__DEBUG__) {
+            debug(
+              'Subtree mode',
+              `Subtree with root ${id} set to mode ${mode}`,
+            );
+          }
+          break;
+        }
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
           // Base duration updates are only sent while profiling is in progress.
           // We can ignore them at this point.
@@ -1146,7 +1253,9 @@ export default class Store extends EventEmitter<{|
           break;
         default:
           this._throwAndEmitError(
-            Error(`Unsupported Bridge operation "${operation}"`),
+            new UnsupportedBridgeOperationError(
+              `Unsupported Bridge operation "${operation}"`,
+            ),
           );
       }
     }
@@ -1170,25 +1279,38 @@ export default class Store extends EventEmitter<{|
     }
 
     if (haveRootsChanged) {
-      const prevSupportsProfiling = this._supportsProfiling;
+      const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
+      const prevRootSupportsTimelineProfiling = this
+        ._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
-      this._supportsProfiling = false;
+      this._rootSupportsBasicProfiling = false;
+      this._rootSupportsTimelineProfiling = false;
       this._rootIDToCapabilities.forEach(
-        ({hasOwnerMetadata, supportsProfiling}) => {
+        ({supportsBasicProfiling, hasOwnerMetadata, supportsTimeline}) => {
+          if (supportsBasicProfiling) {
+            this._rootSupportsBasicProfiling = true;
+          }
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (supportsProfiling) {
-            this._supportsProfiling = true;
+          if (supportsTimeline) {
+            this._rootSupportsTimelineProfiling = true;
           }
         },
       );
 
       this.emit('roots');
 
-      if (this._supportsProfiling !== prevSupportsProfiling) {
-        this.emit('supportsProfiling');
+      if (this._rootSupportsBasicProfiling !== prevRootSupportsProfiling) {
+        this.emit('rootSupportsBasicProfiling');
+      }
+
+      if (
+        this._rootSupportsTimelineProfiling !==
+        prevRootSupportsTimelineProfiling
+      ) {
+        this.emit('rootSupportsTimelineProfiling');
       }
     }
 
@@ -1205,15 +1327,15 @@ export default class Store extends EventEmitter<{|
   // this message enables the backend to override the frontend's current ("saved") filters.
   // This action should also override the saved filters too,
   // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters = (
+  onBridgeOverrideComponentFilters: (
     componentFilters: Array<ComponentFilter>,
-  ) => {
+  ) => void = componentFilters => {
     this._componentFilters = componentFilters;
 
-    saveComponentFilters(componentFilters);
+    setSavedComponentFilters(componentFilters);
   };
 
-  onBridgeShutdown = () => {
+  onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
@@ -1241,6 +1363,7 @@ export default class Store extends EventEmitter<{|
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
     );
+    bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
@@ -1249,46 +1372,56 @@ export default class Store extends EventEmitter<{|
     }
   };
 
-  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported: (
+    isBackendStorageAPISupported: boolean,
+  ) => void = isBackendStorageAPISupported => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
 
     this.emit('supportsReloadAndProfile');
   };
 
-  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+  onBridgeSynchronousXHRSupported: (
+    isSynchronousXHRSupported: boolean,
+  ) => void = isSynchronousXHRSupported => {
     this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
 
-  onBridgeUnsupportedRendererVersion = () => {
+  onBridgeUnsupportedRendererVersion: () => void = () => {
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
   };
 
-  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+  onBridgeBackendVersion: (backendVersion: string) => void = backendVersion => {
+    this._backendVersion = backendVersion;
+    this.emit('backendVersion');
+  };
+
+  onBridgeProtocol: (
+    bridgeProtocol: BridgeProtocol,
+  ) => void = bridgeProtocol => {
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
       this._onBridgeProtocolTimeoutID = null;
     }
 
-    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
-      this._unsupportedBridgeProtocol = bridgeProtocol;
-    } else {
-      // If we should happen to get a response after timing out...
-      this._unsupportedBridgeProtocol = null;
-    }
+    this._bridgeProtocol = bridgeProtocol;
 
-    this.emit('unsupportedBridgeProtocolDetected');
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      // Technically newer versions of the frontend can, at least for now,
+      // gracefully handle older versions of the backend protocol.
+      // So for now we don't need to display the unsupported dialog.
+    }
   };
 
-  onBridgeProtocolTimeout = () => {
+  onBridgeProtocolTimeout: () => void = () => {
     this._onBridgeProtocolTimeoutID = null;
 
     // If we timed out, that indicates the backend predates the bridge protocol,
     // so we can set a fake version (0) to trigger the downgrade message.
-    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+    this._bridgeProtocol = BRIDGE_PROTOCOL[0];
 
     this.emit('unsupportedBridgeProtocolDetected');
   };

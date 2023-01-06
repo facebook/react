@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,8 +16,9 @@ describe('DebugTracing', () => {
 
   let logs;
 
-  const DEFAULT_LANE_STRING = '0b0000000000000000000000000010000';
-  const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
+  const SYNC_LANE_STRING = '0b0000000000000000000000000000010';
+  const DEFAULT_LANE_STRING = '0b0000000000000000000000000100000';
+  const RETRY_LANE_STRING = '0b0000000100000000000000000000000';
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -45,7 +46,7 @@ describe('DebugTracing', () => {
     });
   });
 
-  // @gate experimental || www
+  // @gate enableDebugTracing
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
       <React.unstable_DebugTracingMode>
@@ -56,8 +57,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate build === 'development'
-  // @gate experimental || www
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should not log anything for concurrent render without suspends or state updates', () => {
     ReactTestRenderer.act(() =>
       ReactTestRenderer.create(
@@ -88,9 +88,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      `group: ⚛️ render (${SYNC_LANE_STRING})`,
       'log: ⚛️ Example suspended',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -99,7 +99,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log sync render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');
@@ -122,9 +122,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      `group: ⚛️ render (${SYNC_LANE_STRING})`,
       'log: <Wrapper/>',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -179,7 +179,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log concurrent render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');
@@ -238,7 +238,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
       `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
       `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
     ]);
@@ -296,7 +296,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
       `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
       `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
     ]);
@@ -376,8 +376,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate build === 'development'
-  // @gate experimental || www
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should not log anything outside of a unstable_DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);

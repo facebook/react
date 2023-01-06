@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Icon from '../Icon';
 import {ModalDialogContext} from '../ModalDialog';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
@@ -27,11 +28,11 @@ import styles from './InspectedElement.css';
 
 import type {InspectedElement} from './types';
 
-export type Props = {||};
+export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 
-export default function InspectedElementWrapper(_: Props) {
+export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
@@ -235,9 +236,25 @@ export default function InspectedElementWrapper(_: Props) {
     );
   }
 
+  let strictModeBadge = null;
+  if (element.isStrictModeNonCompliant) {
+    strictModeBadge = (
+      <a
+        className={styles.StrictModeNonCompliant}
+        href="https://fb.me/devtools-strict-mode"
+        rel="noopener noreferrer"
+        target="_blank"
+        title="This component is not running in StrictMode. Click to learn more.">
+        <Icon type="strict-mode-non-compliant" />
+      </a>
+    );
+  }
+
   return (
     <div className={styles.InspectedElement}>
-      <div className={styles.TitleRow}>
+      <div className={styles.TitleRow} data-testname="InspectedElement-Title">
+        {strictModeBadge}
+
         {element.key && (
           <>
             <div className={styles.Key} title={`key "${element.key}"`}>
@@ -248,7 +265,13 @@ export default function InspectedElementWrapper(_: Props) {
         )}
 
         <div className={styles.SelectedComponentName}>
-          <div className={styles.Component} title={element.displayName}>
+          <div
+            className={
+              element.isStrictModeNonCompliant
+                ? styles.StrictModeNonCompliantComponent
+                : styles.Component
+            }
+            title={element.displayName}>
             {element.displayName}
           </div>
         </div>

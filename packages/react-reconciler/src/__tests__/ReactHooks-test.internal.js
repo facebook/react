@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -568,9 +568,13 @@ describe('ReactHooks', () => {
       });
     };
 
-    // Update at normal priority
-    ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
-
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
+      // Update at transition priority
+      React.startTransition(() => update(n => n * 100));
+    } else {
+      // Update at normal priority
+      ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
+    }
     // The new state is eagerly computed.
     expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);
 
@@ -1071,7 +1075,9 @@ describe('ReactHooks', () => {
     expect(() => {
       expect(() => {
         ReactTestRenderer.create(<App />);
-      }).toThrow('Rendered more hooks than during the previous render.');
+      }).toThrow(
+        'Should have a queue. This is likely a bug in React. Please file an issue.',
+      );
     }).toErrorDev([
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',

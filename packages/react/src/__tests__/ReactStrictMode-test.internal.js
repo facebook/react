@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,18 +11,15 @@
 
 describe('ReactStrictMode', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
 
     act = require('jest-react').act;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
   });
 
   describe('levels', () => {
@@ -51,7 +48,7 @@ describe('ReactStrictMode', () => {
     it('should default to not strict', () => {
       act(() => {
         const container = document.createElement('div');
-        const root = ReactDOM.createRoot(container);
+        const root = ReactDOMClient.createRoot(container);
         root.render(<Component label="A" />);
       });
 
@@ -66,7 +63,7 @@ describe('ReactStrictMode', () => {
       it('should support enabling strict mode via createRoot option', () => {
         act(() => {
           const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container, {
+          const root = ReactDOMClient.createRoot(container, {
             unstable_strictMode: true,
           });
           root.render(<Component label="A" />);
@@ -87,7 +84,7 @@ describe('ReactStrictMode', () => {
       it('should include legacy + strict effects mode', () => {
         act(() => {
           const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container);
+          const root = ReactDOMClient.createRoot(container);
           root.render(
             <React.StrictMode>
               <Component label="A" />
@@ -110,7 +107,7 @@ describe('ReactStrictMode', () => {
       it('should allow level to be increased with nesting', () => {
         act(() => {
           const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container);
+          const root = ReactDOMClient.createRoot(container);
           root.render(
             <>
               <Component label="A" />

@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext, useCallback, useContext, useEffect} from 'react';
@@ -23,14 +25,16 @@ import type {Resource, Thenable} from '../../cache';
 
 type Context = (id: number) => Array<SerializedElement> | null;
 
-const OwnersListContext = createContext<Context>(((null: any): Context));
+const OwnersListContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 OwnersListContext.displayName = 'OwnersListContext';
 
 type ResolveFn = (ownersList: Array<SerializedElement> | null) => void;
-type InProgressRequest = {|
+type InProgressRequest = {
   promise: Thenable<Array<SerializedElement>>,
   resolveFn: ResolveFn,
-|};
+};
 
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
 const resource: Resource<
@@ -41,14 +45,20 @@ const resource: Resource<
   (element: Element) => {
     const request = inProgressRequests.get(element);
     if (request != null) {
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
       return request.promise;
     }
 
-    let resolveFn = ((null: any): ResolveFn);
+    let resolveFn:
+      | ResolveFn
+      | ((
+          result: Promise<Array<SerializedElement>> | Array<SerializedElement>,
+        ) => void) = ((null: any): ResolveFn);
     const promise = new Promise(resolve => {
       resolveFn = resolve;
     });
 
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     inProgressRequests.set(element, {promise, resolveFn});
 
     return promise;
@@ -57,11 +67,11 @@ const resource: Resource<
   {useWeakMap: true},
 );
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
-function OwnersListContextController({children}: Props) {
+function OwnersListContextController({children}: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {ownerID} = useContext(TreeStateContext);

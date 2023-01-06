@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,22 +18,22 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import ReactFizzServer from 'react-server';
 
-type Instance = {|
+type Instance = {
   type: string,
   children: Array<Instance | TextInstance | SuspenseInstance>,
   prop: any,
   hidden: boolean,
-|};
+};
 
-type TextInstance = {|
+type TextInstance = {
   text: string,
   hidden: boolean,
-|};
+};
 
-type SuspenseInstance = {|
+type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
-|};
+};
 
 type Placeholder = {
   parent: Instance | SuspenseInstance,
@@ -51,7 +51,27 @@ type Destination = {
   stack: Array<Segment | Instance | SuspenseInstance>,
 };
 
+type Resources = null;
+type BoundaryResources = null;
+
 const POP = Buffer.from('/', 'utf8');
+
+function write(destination: Destination, buffer: Uint8Array): void {
+  const stack = destination.stack;
+  if (buffer === POP) {
+    stack.pop();
+    return;
+  }
+  // We assume one chunk is one instance.
+  const instance = JSON.parse(Buffer.from((buffer: any)).toString('utf8'));
+  if (stack.length === 0) {
+    destination.root = instance;
+  } else {
+    const parent = stack[stack.length - 1];
+    parent.children.push(instance);
+  }
+  stack.push(instance);
+}
 
 const ReactNoopServer = ReactFizzServer({
   scheduleWork(callback: () => void) {
@@ -59,20 +79,11 @@ const ReactNoopServer = ReactFizzServer({
   },
   beginWriting(destination: Destination): void {},
   writeChunk(destination: Destination, buffer: Uint8Array): void {
-    const stack = destination.stack;
-    if (buffer === POP) {
-      stack.pop();
-      return;
-    }
-    // We assume one chunk is one instance.
-    const instance = JSON.parse(Buffer.from((buffer: any)).toString('utf8'));
-    if (stack.length === 0) {
-      destination.root = instance;
-    } else {
-      const parent = stack[stack.length - 1];
-      parent.children.push(instance);
-    }
-    stack.push(instance);
+    write(destination, buffer);
+  },
+  writeChunkAndReturn(destination: Destination, buffer: Uint8Array): boolean {
+    write(destination, buffer);
+    return true;
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
@@ -90,15 +101,22 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
 
-  pushTextInstance(target: Array<Uint8Array>, text: string): void {
+  pushTextInstance(
+    target: Array<Uint8Array>,
+    text: string,
+    responseState: ResponseState,
+    textEmbedded: boolean,
+  ): boolean {
     const textInstance: TextInstance = {
       text,
       hidden: false,
     };
     target.push(Buffer.from(JSON.stringify(textInstance), 'utf8'), POP);
+    return false;
   },
   pushStartInstance(
     target: Array<Uint8Array>,
+    preamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): ReactNodeList {
@@ -114,11 +132,20 @@ const ReactNoopServer = ReactFizzServer({
 
   pushEndInstance(
     target: Array<Uint8Array>,
+    postamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): void {
     target.push(POP);
   },
+
+  // This is a noop in ReactNoop
+  pushSegmentFinale(
+    target: Array<Uint8Array>,
+    responseState: ResponseState,
+    lastPushedText: boolean,
+    textEmbedded: boolean,
+  ): void {},
 
   writeCompletedRoot(
     destination: Destination,
@@ -239,13 +266,29 @@ const ReactNoopServer = ReactFizzServer({
   ): boolean {
     boundary.status = 'client-render';
   },
+
+  writeInitialResources() {},
+  writeImmediateResources() {},
+
+  createResources(): Resources {
+    return null;
+  },
+
+  createBoundaryResources(): BoundaryResources {
+    return null;
+  },
+
+  setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
+
+  prepareToRender() {},
+  cleanupAfterRender() {},
 });
 
 type Options = {
   progressiveChunkSize?: number,
-  onCompleteShell?: () => void,
-  onCompleteAll?: () => void,
-  onError?: (error: mixed) => void,
+  onShellReady?: () => void,
+  onAllReady?: () => void,
+  onError?: (error: mixed) => ?string,
 };
 
 function render(children: React$Element<any>, options?: Options): Destination {
@@ -264,8 +307,8 @@ function render(children: React$Element<any>, options?: Options): Destination {
     null,
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
-    options ? options.onCompleteAll : undefined,
-    options ? options.onCompleteShell : undefined,
+    options ? options.onAllReady : undefined,
+    options ? options.onShellReady : undefined,
   );
   ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request, destination);

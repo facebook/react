@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -96,4 +96,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   );
 }
 
-export default memo<Props>(SnapshotCommitListItem, areEqual);
+export default (memo(
+  SnapshotCommitListItem,
+  areEqual,
+): React.ComponentType<Props>);

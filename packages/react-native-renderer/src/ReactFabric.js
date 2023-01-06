@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
  */
 
 import type {HostComponent} from './ReactNativeTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
 
 import './ReactFabricInjection';
@@ -23,7 +23,6 @@ import {
   injectIntoDevTools,
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
@@ -39,10 +38,16 @@ import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {
   getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
+
+const {
+  dispatchCommand: fabricDispatchCommand,
+  sendAccessibilityEvent: fabricSendAccessibilityEvent,
+} = nativeFabricUIManager;
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -69,14 +74,14 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
   if (componentOrHandle == null) {
     return null;
   }
-  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
   if (componentOrHandle._nativeTag) {
-    // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
     return componentOrHandle;
   }
-  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
   if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
     return componentOrHandle.canonical;
   }
   let hostInstance;
@@ -97,6 +102,7 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
     return (hostInstance: any).canonical;
   }
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-exact]
   return hostInstance;
 }
 
@@ -167,7 +173,7 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+      fabricDispatchCommand(stateNode.node, command, args);
     }
   } else {
     UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
@@ -188,11 +194,17 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+      fabricSendAccessibilityEvent(stateNode.node, eventType);
     }
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);
   }
+}
+
+function onRecoverableError(error) {
+  // TODO: Expose onRecoverableError option to userspace
+  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+  console.error(error);
 }
 
 function render(
@@ -209,16 +221,18 @@ function render(
     root = createContainer(
       containerTag,
       concurrentRoot ? ConcurrentRoot : LegacyRoot,
-      false,
       null,
       false,
+      null,
+      '',
+      onRecoverableError,
       null,
     );
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
 
-  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
   return getPublicRootInstance(root);
 }
 
@@ -240,7 +254,7 @@ function createPortal(
   children: ReactNodeList,
   containerTag: number,
   key: ?string = null,
-) {
+): ReactPortal {
   return createPortalImpl(children, containerTag, null, key);
 }
 

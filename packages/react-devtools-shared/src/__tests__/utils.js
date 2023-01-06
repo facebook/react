@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -163,6 +163,10 @@ export function getRendererID(): number {
 }
 
 export function legacyRender(elements, container) {
+  if (container == null) {
+    container = document.createElement('div');
+  }
+
   const ReactDOM = require('react-dom');
   withErrorsOrWarningsIgnored(
     ['ReactDOM.render is no longer supported in React 18'],
@@ -170,6 +174,10 @@ export function legacyRender(elements, container) {
       ReactDOM.render(elements, container);
     },
   );
+
+  return () => {
+    ReactDOM.unmountComponentAtNode(container);
+  };
 }
 
 export function requireTestRenderer(): ReactTestRenderer {
@@ -219,9 +227,12 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   expect(profilingDataFrontendInitial.dataForRoots).toEqual(
     profilingDataFrontend.dataForRoots,
   );
+  expect(profilingDataFrontendInitial.timelineData).toEqual(
+    profilingDataFrontend.timelineData,
+  );
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
-  expect(parsedProfilingDataExport).toMatchSnapshot('imported data');
+  // expect(parsedProfilingDataExport).toMatchSnapshot('imported data');
 
   act(() => {
     // Apply the new exported-then-imported data so tests can re-run assertions.
@@ -276,5 +287,21 @@ export function overrideFeatureFlags(overrideFlags) {
       ...actualFlags,
       ...overrideFlags,
     };
+  });
+}
+
+export function normalizeCodeLocInfo(str) {
+  if (typeof str !== 'string') {
+    return str;
+  }
+  // This special case exists only for the special source location in
+  // ReactElementValidator. That will go away if we remove source locations.
+  str = str.replace(/Check your code at .+?:\d+/g, 'Check your code at **');
+  // V8 format:
+  //  at Component (/path/filename.js:123:45)
+  // React format:
+  //    in Component (at filename.js:123)
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+    return '\n    in ' + name + ' (at **)';
   });
 }

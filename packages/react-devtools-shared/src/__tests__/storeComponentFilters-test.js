@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -41,6 +41,7 @@ describe('Store component filters', () => {
     legacyRender = utils.legacyRender;
   });
 
+  // @reactVersion >= 16.0
   it('should throw if filters are updated while profiling', () => {
     act(() => store.profilerStore.startProfiling());
     expect(() => (store.componentFilters = [])).toThrow(
@@ -48,8 +49,9 @@ describe('Store component filters', () => {
     );
   });
 
+  // @reactVersion >= 16.0
   it('should support filtering by element type', () => {
-    class ClassComponent extends React.Component<{|children: React$Node|}> {
+    class ClassComponent extends React.Component<{children: React$Node}> {
       render() {
         return <div>{this.props.children}</div>;
       }
@@ -135,6 +137,7 @@ describe('Store component filters', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should ignore invalid ElementTypeRoot filter', () => {
     const Component = () => <div>Hi</div>;
 
@@ -159,6 +162,7 @@ describe('Store component filters', () => {
     `);
   });
 
+  // @reactVersion >= 16.2
   it('should filter by display name', () => {
     const Text = ({label}) => label;
     const Foo = () => <Text label="foo" />;
@@ -219,6 +223,7 @@ describe('Store component filters', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should filter by path', () => {
     const Component = () => <div>Hi</div>;
 
@@ -252,6 +257,7 @@ describe('Store component filters', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should filter HOCs', () => {
     const Component = () => <div>Hi</div>;
     const Foo = () => <Component />;
@@ -285,6 +291,7 @@ describe('Store component filters', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should not send a bridge update if the set of enabled filters has not changed', () => {
     act(() => (store.componentFilters = [utils.createHOCFilter(true)]));
 
@@ -315,6 +322,7 @@ describe('Store component filters', () => {
     );
   });
 
+  // @reactVersion >= 18.0
   it('should not break when Suspense nodes are filtered from the tree', () => {
     const promise = new Promise(() => {});
 
@@ -363,6 +371,7 @@ describe('Store component filters', () => {
   });
 
   describe('inline errors and warnings', () => {
+    // @reactVersion >= 17.0
     it('only counts for unfiltered components', () => {
       function ComponentWithWarning() {
         console.warn('test-only: render warning');

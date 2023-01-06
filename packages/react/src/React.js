@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,6 +19,7 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_SCOPE_TYPE,
   REACT_CACHE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -34,12 +35,14 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
+import {cache} from './ReactCache';
 import {
   getCacheSignal,
   getCacheForType,
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -54,21 +57,30 @@ import {
   useDeferredValue,
   useId,
   useCacheRefresh,
+  use,
+  useMemoCache,
 } from './ReactHooks';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
+import {createServerContext} from './ReactServerContext';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 
 // TODO: Move this branching into the other module instead and just re-export.
-const createElement = __DEV__ ? createElementWithValidation : createElementProd;
-const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
-const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
+const createElement: any = __DEV__
+  ? createElementWithValidation
+  : createElementProd;
+const cloneElement: any = __DEV__
+  ? cloneElementWithValidation
+  : cloneElementProd;
+const createFactory: any = __DEV__
+  ? createFactoryWithValidation
+  : createFactoryProd;
 
 const Children = {
   map,
@@ -85,12 +97,15 @@ export {
   Component,
   PureComponent,
   createContext,
+  createServerContext,
   forwardRef,
   lazy,
   memo,
+  cache,
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent as experimental_useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -124,8 +139,12 @@ export {
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
+  use,
+  useMemoCache as unstable_useMemoCache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
+  // enableTransitionTracing
+  REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   useId,
   act,
 };

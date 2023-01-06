@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,27 +10,36 @@
 import * as React from 'react';
 import {Component, Suspense} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
+import UnsupportedBridgeOperationView from './UnsupportedBridgeOperationView';
 import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 import TimeoutView from './TimeoutView';
-import TimeoutError from 'react-devtools-shared/src/TimeoutError';
+import CaughtErrorView from './CaughtErrorView';
+import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
+import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
-type Props = {|
+type Props = {
   children: React$Node,
   canDismiss?: boolean,
   onBeforeDismissCallback?: () => void,
   store?: Store,
-|};
+};
 
-type State = {|
+type State = {
   callStack: string | null,
   canDismiss: boolean,
   componentStack: string | null,
   errorMessage: string | null,
   hasError: boolean,
+  isUnsupportedBridgeOperationError: boolean,
   isTimeout: boolean,
-|};
+  isUserError: boolean,
+  isUnknownHookError: boolean,
+};
 
 const InitialState: State = {
   callStack: null,
@@ -38,26 +47,43 @@ const InitialState: State = {
   componentStack: null,
   errorMessage: null,
   hasError: false,
+  isUnsupportedBridgeOperationError: false,
   isTimeout: false,
+  isUserError: false,
+  isUnknownHookError: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = InitialState;
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(
+    error: any,
+  ): {
+    callStack: string | null,
+    errorMessage: string | null,
+    hasError: boolean,
+    isTimeout: boolean,
+    isUnknownHookError: boolean,
+    isUnsupportedBridgeOperationError: boolean,
+    isUserError: boolean,
+  } {
     const errorMessage =
       typeof error === 'object' &&
       error !== null &&
-      error.hasOwnProperty('message')
+      typeof error.message === 'string'
         ? error.message
-        : String(error);
+        : null;
 
     const isTimeout = error instanceof TimeoutError;
+    const isUserError = error instanceof UserError;
+    const isUnknownHookError = error instanceof UnknownHookError;
+    const isUnsupportedBridgeOperationError =
+      error instanceof UnsupportedBridgeOperationError;
 
     const callStack =
       typeof error === 'object' &&
       error !== null &&
-      error.hasOwnProperty('stack')
+      typeof error.stack === 'string'
         ? error.stack
             .split('\n')
             .slice(1)
@@ -68,11 +94,15 @@ export default class ErrorBoundary extends Component<Props, State> {
       callStack,
       errorMessage,
       hasError: true,
+      isUnsupportedBridgeOperationError,
+      isUnknownHookError,
       isTimeout,
+      isUserError,
     };
   }
 
   componentDidCatch(error: any, {componentStack}: any) {
+    this._logError(error, componentStack);
     this.setState({
       componentStack,
     });
@@ -92,7 +122,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const {canDismiss: canDismissProp, children} = this.props;
     const {
       callStack,
@@ -100,7 +130,10 @@ export default class ErrorBoundary extends Component<Props, State> {
       componentStack,
       errorMessage,
       hasError,
+      isUnsupportedBridgeOperationError,
       isTimeout,
+      isUserError,
+      isUnknownHookError,
     } = this.state;
 
     if (hasError) {
@@ -113,6 +146,45 @@ export default class ErrorBoundary extends Component<Props, State> {
               canDismissProp || canDismissState ? this._dismissError : null
             }
             errorMessage={errorMessage}
+          />
+        );
+      } else if (isUnsupportedBridgeOperationError) {
+        return (
+          <UnsupportedBridgeOperationView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage}
+          />
+        );
+      } else if (isUserError) {
+        return (
+          <CaughtErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage || 'Error occured in inspected element'}
+            info={
+              <>
+                React DevTools encountered an error while trying to inspect the
+                hooks. This is most likely caused by a developer error in the
+                currently inspected element. Please see your console for logged
+                error.
+              </>
+            }
+          />
+        );
+      } else if (isUnknownHookError) {
+        return (
+          <CaughtErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage || 'Encountered an unknown hook'}
+            info={
+              <>
+                React DevTools encountered an unknown hook. This is probably
+                because the react-debug-tools package is out of date. To fix,
+                upgrade the React DevTools to the most recent version.
+              </>
+            }
           />
         );
       } else {
@@ -139,7 +211,19 @@ export default class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 
-  _dismissError = () => {
+  _logError: (error: any, componentStack: string | null) => void = (
+    error,
+    componentStack,
+  ) => {
+    logEvent({
+      event_name: 'error',
+      error_message: error.message ?? null,
+      error_stack: error.stack ?? null,
+      error_component_stack: componentStack ?? null,
+    });
+  };
+
+  _dismissError: () => void = () => {
     const onBeforeDismissCallback = this.props.onBeforeDismissCallback;
     if (typeof onBeforeDismissCallback === 'function') {
       onBeforeDismissCallback();
@@ -148,8 +232,9 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.setState(InitialState);
   };
 
-  _onStoreError = (error: Error) => {
+  _onStoreError: (error: Error) => void = error => {
     if (!this.state.hasError) {
+      this._logError(error, null);
       this.setState({
         ...ErrorBoundary.getDerivedStateFromError(error),
         canDismiss: true,

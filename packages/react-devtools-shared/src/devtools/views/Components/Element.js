@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,6 +17,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from './types';
@@ -31,7 +32,7 @@ type Props = {
   ...
 };
 
-export default function Element({data, index, style}: Props) {
+export default function Element({data, index, style}: Props): React.Node {
   const store = useContext(StoreContext);
   const {ownerFlatTree, ownerID, selectedElementID} = useContext(
     TreeStateContext,
@@ -63,10 +64,10 @@ export default function Element({data, index, style}: Props) {
     }),
     [store, element],
   );
-  const {errorCount, warningCount} = useSubscription<{|
+  const {errorCount, warningCount} = useSubscription<{
     errorCount: number,
     warningCount: number,
-  |}>(errorsAndWarningsSubscription);
+  }>(errorsAndWarningsSubscription);
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -74,8 +75,12 @@ export default function Element({data, index, style}: Props) {
     }
   };
 
-  const handleMouseDown = ({metaKey}) => {
+  const handleClick = ({metaKey}) => {
     if (id !== null) {
+      logEvent({
+        event_name: 'select-element',
+        metadata: {source: 'click-element'},
+      });
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
         payload: metaKey ? null : id,
@@ -113,9 +118,14 @@ export default function Element({data, index, style}: Props) {
     depth,
     displayName,
     hocDisplayNames,
+    isStrictModeNonCompliant,
     key,
     type,
   } = ((element: any): ElementType);
+
+  // Only show strict mode non-compliance badges for top level elements.
+  // Showing an inline badge for every element in the tree would be noisy.
+  const showStrictModeBadge = isStrictModeNonCompliant && depth === 0;
 
   let className = styles.Element;
   if (isSelected) {
@@ -131,9 +141,10 @@ export default function Element({data, index, style}: Props) {
       className={className}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       style={style}
+      data-testname="ComponentTreeListItem"
       data-depth={depth}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
@@ -146,7 +157,9 @@ export default function Element({data, index, style}: Props) {
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
+
         <DisplayName displayName={displayName} id={((id: any): number)} />
+
         {key && (
           <Fragment>
             &nbsp;<span className={styles.KeyName}>key</span>="
@@ -190,6 +203,17 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
+        {showStrictModeBadge && (
+          <Icon
+            className={
+              isSelected && treeFocused
+                ? styles.StrictModeContrast
+                : styles.StrictMode
+            }
+            title="This component is not running in StrictMode."
+            type="strict-mode-non-compliant"
+          />
+        )}
       </div>
     </div>
   );
@@ -201,10 +225,10 @@ const swallowDoubleClick = event => {
   event.stopPropagation();
 };
 
-type ExpandCollapseToggleProps = {|
+type ExpandCollapseToggleProps = {
   element: ElementType,
   store: Store,
-|};
+};
 
 function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   const {children, id, isCollapsed} = element;
@@ -236,10 +260,10 @@ function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   );
 }
 
-type DisplayNameProps = {|
+type DisplayNameProps = {
   displayName: string | null,
   id: number,
-|};
+};
 
 function DisplayName({displayName, id}: DisplayNameProps) {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);

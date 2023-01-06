@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,16 +8,16 @@
 'use strict';
 
 const minimatch = require('minimatch');
-const CLIEngine = require('eslint').CLIEngine;
+const {ESLint} = require('eslint');
 const listChangedFiles = require('../shared/listChangedFiles');
 
 const allPaths = ['**/*.js'];
 
 let changedFiles = null;
 
-function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
-  const cli = new CLIEngine(options);
-  const formatter = cli.getFormatter();
+async function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
+  const eslint = new ESLint(options);
+  const formatter = await eslint.loadFormatter();
 
   if (onlyChanged && changedFiles === null) {
     // Calculate lazily.
@@ -26,15 +26,15 @@ function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
   const finalFilePatterns = onlyChanged
     ? intersect(changedFiles, filePatterns)
     : filePatterns;
-  const report = cli.executeOnFiles(finalFilePatterns);
+  const results = await eslint.lintFiles(finalFilePatterns);
 
   if (options != null && options.fix === true) {
-    CLIEngine.outputFixes(report);
+    await ESLint.outputFixes(results);
   }
 
   // When using `ignorePattern`, eslint will show `File ignored...` warnings for any ignores.
   // We don't care because we *expect* some passed files will be ignores if `ignorePattern` is used.
-  const messages = report.results.filter(item => {
+  const messages = results.filter(item => {
     if (!onlyChanged) {
       // Don't suppress the message on a full run.
       // We only expect it to happen for "only changed" runs.
@@ -45,11 +45,19 @@ function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
     return !(item.messages[0] && item.messages[0].message === ignoreMessage);
   });
 
-  const ignoredMessageCount = report.results.length - messages.length;
+  const errorCount = results.reduce(
+    (count, result) => count + result.errorCount,
+    0
+  );
+  const warningCount = results.reduce(
+    (count, result) => count + result.warningCount,
+    0
+  );
+  const ignoredMessageCount = results.length - messages.length;
   return {
-    output: formatter(messages),
-    errorCount: report.errorCount,
-    warningCount: report.warningCount - ignoredMessageCount,
+    output: formatter.format(messages),
+    errorCount: errorCount,
+    warningCount: warningCount - ignoredMessageCount,
   };
 }
 
@@ -64,11 +72,11 @@ function intersect(files, patterns) {
   return [...new Set(intersection)];
 }
 
-function runESLint({onlyChanged, ...options}) {
+async function runESLint({onlyChanged, ...options}) {
   if (typeof onlyChanged !== 'boolean') {
     throw new Error('Pass options.onlyChanged as a boolean.');
   }
-  const {errorCount, warningCount, output} = runESLintOnFilesWithOptions(
+  const {errorCount, warningCount, output} = await runESLintOnFilesWithOptions(
     allPaths,
     onlyChanged,
     options

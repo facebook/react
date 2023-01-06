@@ -1949,9 +1949,9 @@ decamelize@^1.0.0, decamelize@^1.1.1, decamelize@^1.1.2:
   integrity sha1-9lNNFRSCabIDUue+4m9QH5oZEpA=
 
 decode-uri-component@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.0.tgz#eb3913333458775cb84cd1a1fae062106bb87545"
-  integrity sha1-6zkTMzRYd1y4TNGh+uBiEGu4dUU=
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.2.tgz#e69dbe25d37941171dd540e024c444cd5188e1e9"
+  integrity sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==
 
 deep-extend@^0.6.0:
   version "0.6.0"
@@ -4472,9 +4472,9 @@ mixin-deep@^1.2.0:
     minimist "^1.2.5"
 
 moment@^2.11.2:
-  version "2.29.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
-  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
+  version "2.29.4"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
+  integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
 ms@0.7.1:
   version "0.7.1"
@@ -5492,7 +5492,6 @@ react-dev-utils@^0.5.2:
 
 "react-dom@link:../../build/node_modules/react-dom":
   version "0.0.0"
-  uid ""
 
 react-scripts@0.9.5:
   version "0.9.5"
@@ -5542,7 +5541,6 @@ react-scripts@0.9.5:
 
 "react@link:../../build/node_modules/react":
   version "0.0.0"
-  uid ""
 
 read-pkg-up@^1.0.1:
   version "1.0.1"

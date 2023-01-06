@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,12 +27,14 @@ import type {
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
 // When the frontend polls the backend for an update on the element that's currently inspected,
 // the backend will send a "no-change" message if the element hasn't updated (rendered) since the last time it was asked.
-// In thid case, the frontend cache should reuse the previous (cached) value.
+// In this case, the frontend cache should reuse the previous (cached) value.
 // Using a WeakMap keyed on Element generally works well for this, since Elements are mutable and stable in the Store.
 // This doens't work properly though when component filters are changed,
 // because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
@@ -56,12 +58,12 @@ export function inspectElement({
   element,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   element: Element,
   path: Path | null,
   rendererID: number,
-|}): Promise<InspectElementReturnType> {
+}): Promise<InspectElementReturnType> {
   const {id} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.
@@ -80,14 +82,24 @@ export function inspectElement({
 
     let inspectedElement;
     switch (type) {
-      case 'error':
-        const {message, stack} = ((data: any): InspectElementError);
+      case 'error': {
+        const {message, stack, errorType} = ((data: any): InspectElementError);
 
+        // create a different error class for each error type
+        // and keep useful information from backend.
+        let error;
+        if (errorType === 'user') {
+          error = new UserError(message);
+        } else if (errorType === 'unknown-hook') {
+          error = new UnknownHookError(message);
+        } else {
+          error = new Error(message);
+        }
         // The backend's stack (where the error originated) is more meaningful than this stack.
-        const error = new Error(message);
-        error.stack = stack;
+        error.stack = stack || error.stack;
 
         throw error;
+      }
 
       case 'no-change':
         // This is a no-op for the purposes of our cache.
@@ -102,7 +114,7 @@ export function inspectElement({
       case 'not-found':
         // This is effectively a no-op.
         // If the Element is still in the Store, we can eagerly remove it from the Map.
-        inspectedElementCache.remove(id);
+        inspectedElementCache.del(id);
 
         throw Error(`Element "${id}" not found`);
 

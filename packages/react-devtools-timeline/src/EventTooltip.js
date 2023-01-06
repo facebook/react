@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,9 +13,9 @@ import type {
   NativeEvent,
   NetworkMeasure,
   ReactComponentMeasure,
-  ReactHoverContextInfo,
+  ReactEventInfo,
   ReactMeasure,
-  ReactProfilerData,
+  TimelineData,
   SchedulingEvent,
   Snapshot,
   SuspenseEvent,
@@ -24,34 +24,26 @@ import type {
 } from './types';
 
 import * as React from 'react';
-import {formatDuration, formatTimestamp, trimString} from './utils/formatting';
+import {
+  formatDuration,
+  formatTimestamp,
+  trimString,
+  getSchedulingEventLabel,
+} from './utils/formatting';
 import {getBatchRange} from './utils/getBatchRange';
 import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 const MAX_TOOLTIP_TEXT_LENGTH = 60;
 
-type Props = {|
-  canvasRef: {|current: HTMLCanvasElement | null|},
-  data: ReactProfilerData,
+type Props = {
+  canvasRef: {current: HTMLCanvasElement | null},
+  data: TimelineData,
   height: number,
-  hoveredEvent: ReactHoverContextInfo | null,
+  hoveredEvent: ReactEventInfo | null,
   origin: Point,
   width: number,
-|};
-
-function getSchedulingEventLabel(event: SchedulingEvent): string | null {
-  switch (event.type) {
-    case 'schedule-render':
-      return 'render scheduled';
-    case 'schedule-state-update':
-      return 'state update scheduled';
-    case 'schedule-force-update':
-      return 'force update scheduled';
-    default:
-      return null;
-  }
-}
+};
 
 function getReactMeasureLabel(type): string | null {
   switch (type) {
@@ -77,7 +69,7 @@ export default function EventTooltip({
   hoveredEvent,
   origin,
   width,
-}: Props) {
+}: Props): React.Node {
   const ref = useSmartTooltip({
     canvasRef,
     mouseX: origin.x,
@@ -143,9 +135,9 @@ export default function EventTooltip({
 
 const TooltipReactComponentMeasure = ({
   componentMeasure,
-}: {|
+}: {
   componentMeasure: ReactComponentMeasure,
-|}) => {
+}) => {
   const {componentName, duration, timestamp, type, warning} = componentMeasure;
 
   let label = componentName;
@@ -190,9 +182,9 @@ const TooltipReactComponentMeasure = ({
 
 const TooltipFlamechartNode = ({
   stackFrame,
-}: {|
+}: {
   stackFrame: FlamechartStackFrame,
-|}) => {
+}) => {
   const {name, timestamp, duration, locationLine, locationColumn} = stackFrame;
   return (
     <div className={styles.TooltipSection}>
@@ -215,7 +207,7 @@ const TooltipFlamechartNode = ({
   );
 };
 
-const TooltipNativeEvent = ({nativeEvent}: {|nativeEvent: NativeEvent|}) => {
+const TooltipNativeEvent = ({nativeEvent}: {nativeEvent: NativeEvent}) => {
   const {duration, timestamp, type, warning} = nativeEvent;
 
   return (
@@ -242,9 +234,9 @@ const TooltipNativeEvent = ({nativeEvent}: {|nativeEvent: NativeEvent|}) => {
 
 const TooltipNetworkMeasure = ({
   networkMeasure,
-}: {|
+}: {
   networkMeasure: NetworkMeasure,
-|}) => {
+}) => {
   const {
     finishTimestamp,
     lastReceivedDataTimestamp,
@@ -277,10 +269,10 @@ const TooltipNetworkMeasure = ({
 const TooltipSchedulingEvent = ({
   data,
   schedulingEvent,
-}: {|
-  data: ReactProfilerData,
+}: {
+  data: TimelineData,
   schedulingEvent: SchedulingEvent,
-|}) => {
+}) => {
   const label = getSchedulingEventLabel(schedulingEvent);
   if (!label) {
     if (__DEV__) {
@@ -343,11 +335,11 @@ const TooltipSnapshot = ({
   height,
   snapshot,
   width,
-}: {|
+}: {
   height: number,
   snapshot: Snapshot,
   width: number,
-|}) => {
+}) => {
   const aspectRatio = snapshot.width / snapshot.height;
 
   // Zoomed in view should not be any bigger than the DevTools viewport.
@@ -373,9 +365,9 @@ const TooltipSnapshot = ({
 
 const TooltipSuspenseEvent = ({
   suspenseEvent,
-}: {|
+}: {
   suspenseEvent: SuspenseEvent,
-|}) => {
+}) => {
   const {
     componentName,
     duration,
@@ -432,10 +424,10 @@ const TooltipSuspenseEvent = ({
 const TooltipReactMeasure = ({
   data,
   measure,
-}: {|
-  data: ReactProfilerData,
+}: {
+  data: TimelineData,
   measure: ReactMeasure,
-|}) => {
+}) => {
   const label = getReactMeasureLabel(measure.type);
   if (!label) {
     if (__DEV__) {
@@ -479,7 +471,7 @@ const TooltipReactMeasure = ({
   );
 };
 
-const TooltipUserTimingMark = ({mark}: {|mark: UserTimingMark|}) => {
+const TooltipUserTimingMark = ({mark}: {mark: UserTimingMark}) => {
   const {name, timestamp} = mark;
   return (
     <div className={styles.TooltipSection}>
@@ -493,7 +485,7 @@ const TooltipUserTimingMark = ({mark}: {|mark: UserTimingMark|}) => {
   );
 };
 
-const TooltipThrownError = ({thrownError}: {|thrownError: ThrownError|}) => {
+const TooltipThrownError = ({thrownError}: {thrownError: ThrownError}) => {
   const {componentName, message, phase, timestamp} = thrownError;
   const label = `threw an error during ${phase}`;
   return (

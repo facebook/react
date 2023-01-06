@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,17 +17,19 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
-  SuspenseList,
   cloneElement,
   createContext,
   createElement,
   createFactory,
-  createMutableSource as unstable_createMutableSource,
   createRef,
+  createServerContext,
+  use,
   forwardRef,
   isValidElement,
   lazy,
   memo,
+  cache,
+  unstable_useCacheRefresh,
   startTransition,
   useId,
   useCallback,
@@ -39,10 +41,10 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   version,
 } from './src/React';

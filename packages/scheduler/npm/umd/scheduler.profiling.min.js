@@ -1,7 +1,7 @@
 /**
  * @license React
  *
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@
 'use strict';
 
 (function(global, factory) {
-  // eslint-disable-next-line no-unused-expressions
+  // eslint-disable-next-line ft-flow/no-unused-expressions
   typeof exports === 'object' && typeof module !== 'undefined'
     ? (module.exports = factory(require('react')))
     : typeof define === 'function' && define.amd // eslint-disable-line no-undef

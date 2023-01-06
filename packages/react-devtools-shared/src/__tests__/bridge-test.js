@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,6 +14,7 @@ describe('Bridge', () => {
     Bridge = require('react-devtools-shared/src/bridge').default;
   });
 
+  // @reactVersion >=16.0
   it('should shutdown properly', () => {
     const wall = {
       listen: jest.fn(() => () => {}),

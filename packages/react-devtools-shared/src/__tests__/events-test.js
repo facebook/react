@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,10 +16,12 @@ describe('events', () => {
     dispatcher = new EventEmitter();
   });
 
+  // @reactVersion >=16
   it('can dispatch an event with no listeners', () => {
     dispatcher.emit('event', 123);
   });
 
+  // @reactVersion >=16
   it('handles a listener being attached multiple times', () => {
     const callback = jest.fn();
 
@@ -31,6 +33,7 @@ describe('events', () => {
     expect(callback).toHaveBeenCalledWith(123);
   });
 
+  // @reactVersion >=16
   it('notifies all attached listeners of events', () => {
     const callback1 = jest.fn();
     const callback2 = jest.fn();
@@ -48,6 +51,7 @@ describe('events', () => {
     expect(callback3).not.toHaveBeenCalled();
   });
 
+  // @reactVersion >= 16.0
   it('calls later listeners before re-throwing if an earlier one throws', () => {
     const callbackThatThrows = jest.fn(() => {
       throw Error('expected');
@@ -67,6 +71,7 @@ describe('events', () => {
     expect(callback).toHaveBeenCalledWith(123);
   });
 
+  // @reactVersion >= 16.0
   it('removes attached listeners', () => {
     const callback1 = jest.fn();
     const callback2 = jest.fn();
@@ -81,6 +86,7 @@ describe('events', () => {
     expect(callback2).toHaveBeenCalledWith(123);
   });
 
+  // @reactVersion >= 16.0
   it('removes all listeners', () => {
     const callback1 = jest.fn();
     const callback2 = jest.fn();
@@ -98,6 +104,7 @@ describe('events', () => {
     expect(callback3).not.toHaveBeenCalled();
   });
 
+  // @reactVersion >= 16.0
   it('should call the initial listeners even if others are added or removed during a dispatch', () => {
     const callback1 = jest.fn(() => {
       dispatcher.removeListener('event', callback2);

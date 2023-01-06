@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,12 +8,8 @@
  */
 
 import {createElement} from 'react';
-import {
-  // $FlowFixMe Flow does not yet know about flushSync()
-  flushSync,
-  // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
-} from 'react-dom';
+import {flushSync} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
@@ -41,13 +37,17 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 
 installHook(window);
 
-export type StatusListener = (message: string) => void;
+export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
+export type StatusListener = (message: string, status: StatusTypes) => void;
 export type OnDisconnectedCallback = () => void;
 
 let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
-let statusListener: StatusListener = (message: string) => {};
+let statusListener: StatusListener = (
+  message: string,
+  status?: StatusTypes,
+) => {};
 let disconnectedCallback: OnDisconnectedCallback = () => {};
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
@@ -57,7 +57,7 @@ function hookNamesModuleLoaderFunction() {
   );
 }
 
-function setContentDOMNode(value: HTMLElement) {
+function setContentDOMNode(value: HTMLElement): typeof DevtoolsUI {
   node = value;
 
   // Save so we can restore the exact waiting message between sessions.
@@ -70,12 +70,14 @@ function setProjectRoots(value: Array<string>) {
   projectRoots = value;
 }
 
-function setStatusListener(value: StatusListener) {
+function setStatusListener(value: StatusListener): typeof DevtoolsUI {
   statusListener = value;
   return DevtoolsUI;
 }
 
-function setDisconnectedCallback(value: OnDisconnectedCallback) {
+function setDisconnectedCallback(
+  value: OnDisconnectedCallback,
+): typeof DevtoolsUI {
   disconnectedCallback = value;
   return DevtoolsUI;
 }
@@ -103,9 +105,9 @@ function safeUnmount() {
   flushSync(() => {
     if (root !== null) {
       root.unmount();
+      root = null;
     }
   });
-  root = null;
 }
 
 function reload() {
@@ -254,18 +256,20 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
-    supportsNativeInspection: false,
+    supportsNativeInspection: true,
   });
 
   log('Connected');
+  statusListener('DevTools initialized.', 'devtools-connected');
   reload();
 }
 
 let startServerTimeoutID: TimeoutID | null = null;
 
-function connectToSocket(socket: WebSocket) {
+function connectToSocket(socket: WebSocket): {close(): void} {
   socket.onerror = err => {
     onDisconnected();
     log.error('Error with websocket connection', err);
@@ -283,21 +287,21 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {|
+type ServerOptions = {
   key?: string,
   cert?: string,
-|};
+};
 
-type LoggerOptions = {|
+type LoggerOptions = {
   surface?: ?string,
-|};
+};
 
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
-) {
+): {close(): void} {
   registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
 
   const useHttps = !!httpsOptions;
@@ -372,12 +376,15 @@ function startServer(
 
   httpServer.on('error', event => {
     onError(event);
-    statusListener('Failed to start the server.');
+    statusListener('Failed to start the server.', 'error');
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
   });
 
   httpServer.listen(port, () => {
-    statusListener('The server is listening on the port ' + port + '.');
+    statusListener(
+      'The server is listening on the port ' + port + '.',
+      'server-connected',
+    );
   });
 
   return {

@@ -4,6 +4,7 @@ const path = require('path');
 
 const babel = require('@babel/core');
 const coffee = require('coffee-script');
+const hermesParser = require('hermes-parser');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
@@ -24,6 +25,9 @@ const pathToTransformInfiniteLoops = require.resolve(
 );
 const pathToTransformTestGatePragma = require.resolve(
   '../babel/transform-test-gate-pragma'
+);
+const pathToTransformReactVersionPragma = require.resolve(
+  '../babel/transform-react-version-pragma'
 );
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
@@ -82,13 +86,26 @@ module.exports = {
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
-      return babel.transform(
+      if (
+        isTestFile &&
+        isInDevToolsPackages &&
+        (process.env.REACT_VERSION ||
+          filePath.match(/\/transform-react-version-pragma-test/))
+      ) {
+        plugins.push(pathToTransformReactVersionPragma);
+      }
+      let sourceAst = hermesParser.parse(src, {babel: true});
+      return babel.transformFromAstSync(
+        sourceAst,
         src,
         Object.assign(
           {filename: path.relative(process.cwd(), filePath)},
           babelOptions,
           {
             plugins,
+            sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
+              ? process.env.JEST_ENABLE_SOURCE_MAPS
+              : false,
           }
         )
       );
@@ -96,12 +113,19 @@ module.exports = {
     return src;
   },
 
-  getCacheKey: createCacheKeyFunction([
-    __filename,
-    pathToBabel,
-    pathToBabelrc,
-    pathToTransformInfiniteLoops,
-    pathToTransformTestGatePragma,
-    pathToErrorCodes,
-  ]),
+  getCacheKey: createCacheKeyFunction(
+    [
+      __filename,
+      pathToBabel,
+      pathToBabelrc,
+      pathToTransformInfiniteLoops,
+      pathToTransformTestGatePragma,
+      pathToTransformReactVersionPragma,
+      pathToErrorCodes,
+    ],
+    [
+      (process.env.REACT_VERSION != null).toString(),
+      (process.env.NODE_ENV === 'development').toString(),
+    ]
+  ),
 };

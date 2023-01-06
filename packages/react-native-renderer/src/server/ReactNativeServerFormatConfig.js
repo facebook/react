@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,6 +17,7 @@ import type {
 
 import {
   writeChunk,
+  writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
@@ -55,6 +56,9 @@ const SUSPENSE_UPDATE_TO_COMPLETE = new Uint8Array(1);
 SUSPENSE_UPDATE_TO_COMPLETE[0] = SUSPENSE_UPDATE_TO_COMPLETE_TAG;
 const SUSPENSE_UPDATE_TO_CLIENT_RENDER = new Uint8Array(1);
 SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
+
+export type Resources = void;
+export type BoundaryResources = void;
 
 // Per response,
 export type ResponseState = {
@@ -107,13 +111,23 @@ export function assignSuspenseBoundaryID(
   return responseState.nextSuspenseID++;
 }
 
+export function makeId(
+  responseState: ResponseState,
+  treeId: string,
+  localId: number,
+): string {
+  throw new Error('Not implemented');
+}
+
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  // This Renderer does not use this argument
+  textEmbedded: boolean,
+): boolean {
   target.push(
     INSTANCE,
     RAW_TEXT, // Type
@@ -121,14 +135,17 @@ export function pushTextInstance(
     // TODO: props { text: text }
     END, // End of children
   );
+  return false;
 }
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
+  textEmbedded: boolean,
 ): ReactNodeList {
   target.push(
     INSTANCE,
@@ -141,11 +158,20 @@ export function pushStartInstance(
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
   target.push(END);
 }
+
+// In this Renderer this is a noop
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {}
 
 export function writeCompletedRoot(
   destination: Destination,
@@ -177,7 +203,7 @@ export function writePlaceholder(
   id: number,
 ): boolean {
   writeChunk(destination, PLACEHOLDER);
-  return writeChunk(destination, formatID(id));
+  return writeChunkAndReturn(destination, formatID(id));
 }
 
 // Suspense boundaries are encoded as comments.
@@ -185,7 +211,7 @@ export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, SUSPENSE_COMPLETE);
+  return writeChunkAndReturn(destination, SUSPENSE_COMPLETE);
 }
 
 export function pushStartCompletedSuspenseBoundary(
@@ -200,19 +226,23 @@ export function writeStartPendingSuspenseBoundary(
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, SUSPENSE_PENDING);
-  return writeChunk(destination, formatID(id));
+  return writeChunkAndReturn(destination, formatID(id));
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
+  // TODO: encode error for native
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
-  return writeChunk(destination, SUSPENSE_CLIENT_RENDER);
+  return writeChunkAndReturn(destination, SUSPENSE_CLIENT_RENDER);
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, END);
+  return writeChunkAndReturn(destination, END);
 }
 export function pushEndCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
@@ -223,13 +253,13 @@ export function writeEndPendingSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, END);
+  return writeChunkAndReturn(destination, END);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, END);
+  return writeChunkAndReturn(destination, END);
 }
 
 export function writeStartSegment(
@@ -239,13 +269,13 @@ export function writeStartSegment(
   id: number,
 ): boolean {
   writeChunk(destination, SEGMENT);
-  return writeChunk(destination, formatID(id));
+  return writeChunkAndReturn(destination, formatID(id));
 }
 export function writeEndSegment(
   destination: Destination,
   formatContext: FormatContext,
 ): boolean {
-  return writeChunk(destination, END);
+  return writeChunkAndReturn(destination, END);
 }
 
 // Instruction Set
@@ -265,17 +295,58 @@ export function writeCompletedBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
+  resources: BoundaryResources,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_COMPLETE);
   writeChunk(destination, formatID(boundaryID));
-  return writeChunk(destination, formatID(contentSegmentID));
+  return writeChunkAndReturn(destination, formatID(contentSegmentID));
 }
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  // TODO: encode error for native
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
-  return writeChunk(destination, formatID(boundaryID));
+  return writeChunkAndReturn(destination, formatID(boundaryID));
 }
+
+export function writeInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+  willFlushAllSegments: boolean,
+): boolean {
+  return true;
+}
+
+export function writeImmediateResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
+export function hoistResources(
+  resources: Resources,
+  boundaryResources: BoundaryResources,
+) {}
+
+export function hoistResourcesToRoot(
+  resources: Resources,
+  boundaryResources: BoundaryResources,
+) {}
+
+export function prepareToRender(resources: Resources) {}
+export function cleanupAfterRender(previousDispatcher: mixed) {}
+export function createResources() {}
+export function createBoundaryResources() {}
+export function setCurrentlyRenderingBoundaryResourcesTarget(
+  resources: Resources,
+  boundaryResources: ?BoundaryResources,
+) {}

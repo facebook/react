@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -51,12 +51,20 @@ export function resetCurrentFiber() {
   }
 }
 
-export function setCurrentFiber(fiber: Fiber) {
+export function setCurrentFiber(fiber: Fiber | null) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
+    ReactDebugCurrentFrame.getCurrentStack =
+      fiber === null ? null : getCurrentFiberStackInDev;
     current = fiber;
     isRendering = false;
   }
+}
+
+export function getCurrentFiber(): Fiber | null {
+  if (__DEV__) {
+    return current;
+  }
+  return null;
 }
 
 export function setIsRendering(rendering: boolean) {
@@ -65,7 +73,7 @@ export function setIsRendering(rendering: boolean) {
   }
 }
 
-export function getIsRendering() {
+export function getIsRendering(): void | boolean {
   if (__DEV__) {
     return isRendering;
   }

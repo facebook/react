@@ -15,19 +15,26 @@ function scrapeBuildIDFromStatus(status) {
   return /\/facebook\/react\/([0-9]+)/.exec(status.target_url)[1];
 }
 
-async function getBuildIdForCommit(sha) {
+async function getBuildIdForCommit(sha, allowBrokenCI = false) {
   const retryLimit = Date.now() + RETRY_TIMEOUT;
   retry: while (true) {
     const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${sha}/status`
+      `https://api.github.com/repos/facebook/react/commits/${sha}/status?per_page=100`
     );
 
     if (!statusesResponse.ok) {
-      throw Error('Could not find commit for: ' + sha);
+      if (statusesResponse.status === 404) {
+        throw Error('Could not find commit for: ' + sha);
+      }
+      const {message, documentation_url} = await statusesResponse.json();
+      const msg = documentation_url
+        ? `${message}\n\t${documentation_url}`
+        : message;
+      throw Error(msg);
     }
 
     const {statuses, state} = await statusesResponse.json();
-    if (state === 'failure') {
+    if (!allowBrokenCI && state === 'failure') {
       throw new Error(`Base commit is broken: ${sha}`);
     }
     for (let i = 0; i < statuses.length; i++) {

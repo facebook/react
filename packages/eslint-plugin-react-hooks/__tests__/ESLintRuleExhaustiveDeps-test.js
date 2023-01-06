@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -1097,6 +1097,22 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [setCount]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function Counter() {
           const [count, setCount] = useState(0);
 
@@ -1574,6 +1590,48 @@ const tests = {
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'setCount'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [setCount]',
+              output: normalizeIndent`
+                function Counter(unstableProp) {
+                  let [count, setCount] = useState(0);
+                  setCount = unstableProp
+                  useEffect(() => {
+                    let id = setInterval(() => {
+                      setCount(c => c + 1);
+                    }, 1000);
+                    return () => clearInterval(id);
+                  }, [setCount]);
+
+                  return <h1>{count}</h1>;
                 }
               `,
             },
@@ -7571,6 +7629,62 @@ const tests = {
     },
   ],
 };
+
+if (__EXPERIMENTAL__) {
+  tests.valid = [
+    ...tests.valid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
+  ];
+
+  tests.invalid = [
+    ...tests.invalid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEffectEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
 
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {

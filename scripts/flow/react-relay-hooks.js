@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,24 +15,29 @@ type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
-declare class JSResourceReference<T> {
-  _moduleId: T;
-  getModuleId(): string;
-}
-
-// Haste
 declare module 'JSResourceReference' {
-  declare export default typeof JSResourceReference;
+  declare export interface JSResourceReference<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
 }
 
-// Metro
 declare module 'JSResourceReferenceImpl' {
-  declare export default class JSResourceReferenceImpl<
-    T,
-  > extends JSResourceReference<T> {}
+  declare export default class JSResourceReferenceImpl<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
 }
 
 declare module 'ReactFlightDOMRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
   declare export function emitRow(
@@ -49,19 +54,23 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
   ): JSResourceReference<T>;
   declare export function preloadModule<T>(
     moduleReference: JSResourceReference<T>,
-  ): void;
+  ): null | Promise<void>;
   declare export function requireModule<T>(
     moduleReference: JSResourceReference<T>,
   ): T;
 }
 
 declare module 'ReactFlightNativeRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
   declare export function emitRow(
@@ -78,13 +87,15 @@ declare module 'ReactFlightNativeRelayServerIntegration' {
 }
 
 declare module 'ReactFlightNativeRelayClientIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
   ): JSResourceReference<T>;
   declare export function preloadModule<T>(
     moduleReference: JSResourceReference<T>,
-  ): void;
+  ): null | Promise<void>;
   declare export function requireModule<T>(
     moduleReference: JSResourceReference<T>,
   ): T;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,10 +9,11 @@
 
 let act;
 let React;
-let ReactDOM;
-let JSResourceReference;
+let ReactDOMClient;
+let JSResourceReferenceImpl;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
+let SuspenseList;
 
 describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
@@ -20,10 +21,13 @@ describe('ReactFlightDOMRelay', () => {
 
     act = require('jest-react').act;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
     ReactDOMFlightRelayClient = require('react-server-dom-relay');
-    JSResourceReference = require('JSResourceReference');
+    JSResourceReferenceImpl = require('JSResourceReferenceImpl');
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
   });
 
   function readThrough(data) {
@@ -33,11 +37,20 @@ describe('ReactFlightDOMRelay', () => {
       ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactDOMFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 
-  it('can render a server component', () => {
+  it('can render a Server Component', () => {
     function Bar({text}) {
       return text.toUpperCase();
     }
@@ -72,7 +85,7 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it('can render a client component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', () => {
     function UserClient(props) {
       return (
         <span>
@@ -80,7 +93,7 @@ describe('ReactFlightDOMRelay', () => {
         </span>
       );
     }
-    const User = new JSResourceReference(UserClient);
+    const User = new JSResourceReferenceImpl(UserClient);
 
     function Greeting({firstName, lastName}) {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;
@@ -96,7 +109,7 @@ describe('ReactFlightDOMRelay', () => {
     const modelClient = readThrough(transport);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     act(() => {
       root.render(modelClient.greeting);
     });
@@ -104,16 +117,9 @@ describe('ReactFlightDOMRelay', () => {
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
 
+  // @gate enableSuspenseList
   it('can reasonably handle different element types', () => {
-    const {
-      forwardRef,
-      memo,
-      Fragment,
-      StrictMode,
-      Profiler,
-      Suspense,
-      SuspenseList,
-    } = React;
+    const {forwardRef, memo, Fragment, StrictMode, Profiler, Suspense} = React;
 
     const Inner = memo(
       forwardRef((props, ref) => {
@@ -227,7 +233,7 @@ describe('ReactFlightDOMRelay', () => {
       ReactDOMFlightRelayServer.render(<input value={new Foo()} />, transport);
       readThrough(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to client components from server components. ',
+      'Only plain objects can be passed to Client Components from Server Components. ',
       {withoutStack: true},
     );
   });

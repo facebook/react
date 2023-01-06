@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -57,7 +57,8 @@ export function useSyncExternalStore<T>(
   const value = getSnapshot();
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
-      if (value !== getSnapshot()) {
+      const cachedValue = getSnapshot();
+      if (!is(value, cachedValue)) {
         console.error(
           'The result of getSnapshot should be cached to avoid an infinite loop',
         );
@@ -127,7 +128,10 @@ export function useSyncExternalStore<T>(
   return value;
 }
 
-function checkIfSnapshotChanged(inst) {
+function checkIfSnapshotChanged<T>(inst: {
+  value: T,
+  getSnapshot: () => T,
+}): boolean {
   const latestGetSnapshot = inst.getSnapshot;
   const prevValue = inst.value;
   try {

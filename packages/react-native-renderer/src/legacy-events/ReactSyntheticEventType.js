@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,25 +11,27 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
-export type DispatchConfig = {|
+export type DispatchConfig = {
   dependencies?: Array<TopLevelType>,
-  phasedRegistrationNames: {|
+  phasedRegistrationNames: {
     bubbled: null | string,
     captured: null | string,
-  |},
+    skipBubbling?: ?boolean,
+  },
   registrationName?: string,
-|};
+};
 
-export type CustomDispatchConfig = {|
-  phasedRegistrationNames: {|
+export type CustomDispatchConfig = {
+  phasedRegistrationNames: {
     bubbled: null,
     captured: null,
-  |},
+    skipBubbling?: ?boolean,
+  },
   registrationName?: string,
   customEvent: true,
-|};
+};
 
-export type ReactSyntheticEvent = {|
+export type ReactSyntheticEvent = {
   dispatchConfig: DispatchConfig | CustomDispatchConfig,
   getPooled: (
     dispatchConfig: DispatchConfig | CustomDispatchConfig,
@@ -44,4 +46,4 @@ export type ReactSyntheticEvent = {|
   _targetInst: Fiber,
   type: string,
   currentTarget: null | EventTarget,
-|};
+};

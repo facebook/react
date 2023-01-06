@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -243,6 +243,8 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -448,6 +450,20 @@ export function preparePortalMount(portalInstance: any): void {
   // noop
 }
 
+// eslint-disable-next-line no-undef
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
+  // noop
+}
+
+// eslint-disable-next-line no-undef
+export function prepareRendererToRender(container: Container): void {
+  // noop
+}
+
+export function resetRendererAfterRender(): void {
   // noop
 }

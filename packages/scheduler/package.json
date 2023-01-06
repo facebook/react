@@ -1,6 +1,6 @@
 {
   "name": "scheduler",
-  "version": "0.20.1",
+  "version": "0.23.0",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
   "repository": {
@@ -17,13 +17,11 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
-    "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1"
+    "loose-envify": "^1.1.0"
   },
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "unstable_mock.js",
     "unstable_post_task.js",

@@ -157,12 +157,18 @@ describe('ReactBlockingMode', () => {
       }),
     );
 
-    // Only the second update should have flushed synchronously
-    expect(Scheduler).toHaveYielded(['B1']);
-    expect(root).toMatchRenderedOutput('A0B1');
-
     // Now flush the first update
-    expect(Scheduler).toFlushAndYield(['A1']);
-    expect(root).toMatchRenderedOutput('A1B1');
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
+      expect(Scheduler).toHaveYielded(['A1', 'B1']);
+      expect(root).toMatchRenderedOutput('A1B1');
+    } else {
+      // Only the second update should have flushed synchronously
+      expect(Scheduler).toHaveYielded(['B1']);
+      expect(root).toMatchRenderedOutput('A0B1');
+
+      // Now flush the first update
+      expect(Scheduler).toFlushAndYield(['A1']);
+      expect(root).toMatchRenderedOutput('A1B1');
+    }
   });
 });

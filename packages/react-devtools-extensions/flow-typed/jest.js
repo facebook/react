@@ -1,4 +1,15 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 'use strict';
+
+/* eslint-disable no-unused-vars */
 
 type JestMockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
   (...args: TArguments): TReturn,
@@ -206,7 +217,7 @@ type EnzymeMatchersType = {
   toIncludeText(text: string): void,
   toMatchElement(
     element: React$Element<any>,
-    options?: {|ignoreProps?: boolean, verbose?: boolean|}
+    options?: {ignoreProps?: boolean, verbose?: boolean}
   ): void,
   toMatchSelector(selector: string): void,
   // 7.x
@@ -693,13 +704,11 @@ interface JestExpectType {
    * specific arguments.
    */
   toHaveBeenCalledWith(...args: Array<any>): void;
-  toBeCalledWith(...args: Array<any>): void;
   /**
    * Use .toHaveBeenLastCalledWith to ensure that a mock function was last called
    * with specific arguments.
    */
   toHaveBeenLastCalledWith(...args: Array<any>): void;
-  lastCalledWith(...args: Array<any>): void;
   /**
    * Check that an object has a .length property and it is set to a certain
    * numeric value.
@@ -1095,7 +1104,7 @@ type JestPrettyFormatPrint = any => string;
 // eslint-disable-next-line no-unused-vars
 type JestPrettyFormatStringOrNull = string | null;
 
-type JestPrettyFormatOptions = {|
+type JestPrettyFormatOptions = {
   callToJSON: boolean,
   edgeSpacing: string,
   escapeRegex: boolean,
@@ -1107,14 +1116,14 @@ type JestPrettyFormatOptions = {|
   plugins: JestPrettyFormatPlugins,
   printFunctionName: boolean,
   spacing: string,
-  theme: {|
+  theme: {
     comment: string,
     content: string,
     prop: string,
     tag: string,
     value: string,
-  |},
-|};
+  },
+};
 
 type JestPrettyFormatPlugin = {
   print: (

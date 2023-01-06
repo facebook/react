@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ import styles from './NewArrayValue.css';
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   depth: number,
   hidden: boolean,
@@ -28,7 +28,7 @@ type Props = {|
   path: Array<string | number>,
   store: Store,
   type: 'props' | 'context' | 'hooks' | 'state',
-|};
+};
 
 export default function NewArrayValue({
   bridge,
@@ -40,7 +40,7 @@ export default function NewArrayValue({
   path,
   store,
   type,
-}: Props) {
+}: Props): React.Node {
   const [key, setKey] = useState<number>(0);
   const [isInvalid, setIsInvalid] = useState(false);
 

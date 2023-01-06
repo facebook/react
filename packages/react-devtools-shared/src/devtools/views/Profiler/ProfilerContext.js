@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext, useCallback, useContext, useMemo, useState} from 'react';
@@ -16,13 +18,13 @@ import {
   TreeStateContext,
 } from '../Components/TreeContext';
 import {StoreContext} from '../context';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {ProfilingDataFrontend} from './types';
 
-// TODO (timeline) Should this be its own context?
 export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
-export type Context = {|
+export type Context = {
   // Which tab is selected in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
@@ -65,24 +67,26 @@ export type Context = {|
   selectedFiberID: number | null,
   selectedFiberName: string | null,
   selectFiber: (id: number | null, name: string | null) => void,
-|};
+};
 
-const ProfilerContext = createContext<Context>(((null: any): Context));
+const ProfilerContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 ProfilerContext.displayName = 'ProfilerContext';
 
-type StoreProfilingState = {|
+type StoreProfilingState = {
   didRecordCommits: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
   supportsProfiling: boolean,
-|};
+};
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
-function ProfilerContextController({children}: Props) {
+function ProfilerContextController({children}: Props): React.Node {
   const store = useContext(StoreContext);
   const {selectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
@@ -96,18 +100,18 @@ function ProfilerContextController({children}: Props) {
         isProcessingData: profilerStore.isProcessingData,
         isProfiling: profilerStore.isProfiling,
         profilingData: profilerStore.profilingData,
-        supportsProfiling: store.supportsProfiling,
+        supportsProfiling: store.rootSupportsBasicProfiling,
       }),
       subscribe: (callback: Function) => {
         profilerStore.addListener('profilingData', callback);
         profilerStore.addListener('isProcessingData', callback);
         profilerStore.addListener('isProfiling', callback);
-        store.addListener('supportsProfiling', callback);
+        store.addListener('rootSupportsBasicProfiling', callback);
         return () => {
           profilerStore.removeListener('profilingData', callback);
           profilerStore.removeListener('isProcessingData', callback);
           profilerStore.removeListener('isProfiling', callback);
-          store.removeListener('supportsProfiling', callback);
+          store.removeListener('rootSupportsBasicProfiling', callback);
         };
       },
     }),
@@ -192,14 +196,6 @@ function ProfilerContextController({children}: Props) {
     });
   }
 
-  const startProfiling = useCallback(
-    () => store.profilerStore.startProfiling(),
-    [store],
-  );
-  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
-    store,
-  ]);
-
   const [
     isCommitFilterEnabled,
     setIsCommitFilterEnabled,
@@ -215,7 +211,26 @@ function ProfilerContextController({children}: Props) {
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::Profiler::defaultTab',
     'flame-chart',
+    value => {
+      logEvent({
+        event_name: 'profiler-tab-changed',
+        metadata: {
+          tabId: value,
+        },
+      });
+    },
   );
+
+  const startProfiling = useCallback(() => {
+    logEvent({
+      event_name: 'profiling-start',
+      metadata: {current_tab: selectedTabID},
+    });
+    store.profilerStore.startProfiling();
+  }, [store, selectedTabID]);
+  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
+    store,
+  ]);
 
   if (isProfiling) {
     batchedUpdates(() => {

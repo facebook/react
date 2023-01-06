@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,10 +25,12 @@ describe('ReactScope', () => {
 
   describe('ReactDOM', () => {
     let ReactDOM;
+    let ReactDOMClient;
     let container;
 
     beforeEach(() => {
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       ReactDOMServer = require('react-dom/server');
       container = document.createElement('div');
       document.body.appendChild(container);
@@ -312,8 +314,7 @@ describe('ReactScope', () => {
       // On the client we don't have all data yet but we want to start
       // hydrating anyway.
       suspend = true;
-      const root = ReactDOM.createRoot(container2, {hydrate: true});
-      root.render(<App />);
+      ReactDOMClient.hydrateRoot(container2, <App />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();
 

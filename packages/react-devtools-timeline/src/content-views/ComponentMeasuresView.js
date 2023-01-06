@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactComponentMeasure, ReactProfilerData} from '../types';
+import type {ReactComponentMeasure, TimelineData, ViewState} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -31,21 +31,37 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {COLORS, NATIVE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
+import {BORDER_SIZE, COLORS, NATIVE_EVENT_HEIGHT} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
 
 export class ComponentMeasuresView extends View {
+  _cachedSearchMatches: Map<string, boolean>;
+  _cachedSearchRegExp: RegExp | null = null;
   _hoveredComponentMeasure: ReactComponentMeasure | null = null;
   _intrinsicSize: IntrinsicSize;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
+  _viewState: ViewState;
 
   onHover: ((event: ReactComponentMeasure | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(
+    surface: Surface,
+    frame: Rect,
+    profilerData: TimelineData,
+    viewState: ViewState,
+  ) {
     super(surface, frame);
 
     this._profilerData = profilerData;
+    this._viewState = viewState;
+
+    this._cachedSearchMatches = new Map();
+    this._cachedSearchRegExp = null;
+
+    viewState.onSearchRegExpStateChange(() => {
+      this.setNeedsDisplay();
+    });
 
     this._intrinsicSize = {
       width: profilerData.duration,
@@ -53,7 +69,7 @@ export class ComponentMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 
@@ -150,6 +166,24 @@ export class ComponentMeasuresView extends View {
           break;
       }
     }
+
+    let isMatch = false;
+    const cachedSearchRegExp = this._cachedSearchRegExp;
+    if (cachedSearchRegExp !== null) {
+      const cachedSearchMatches = this._cachedSearchMatches;
+      const cachedValue = cachedSearchMatches.get(componentName);
+      if (cachedValue != null) {
+        isMatch = cachedValue;
+      } else {
+        isMatch = componentName.match(cachedSearchRegExp) !== null;
+        cachedSearchMatches.set(componentName, isMatch);
+      }
+    }
+
+    if (isMatch) {
+      context.fillStyle = COLORS.SEARCH_RESULT_FILL;
+    }
+
     context.fillRect(
       drawableRect.origin.x,
       drawableRect.origin.y,
@@ -173,6 +207,12 @@ export class ComponentMeasuresView extends View {
       _hoveredComponentMeasure,
       visibleArea,
     } = this;
+
+    const searchRegExp = this._viewState.searchRegExp;
+    if (this._cachedSearchRegExp !== searchRegExp) {
+      this._cachedSearchMatches = new Map();
+      this._cachedSearchRegExp = searchRegExp;
+    }
 
     context.fillStyle = COLORS.BACKGROUND;
     context.fillRect(

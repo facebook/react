@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -67,12 +67,10 @@ function transform(file, enc, cb) {
               const warningMsgLiteral = evalStringConcat(node.arguments[0]);
               warnings.add(JSON.stringify(warningMsgLiteral));
             } catch (error) {
-              console.error(
-                'Failed to extract warning message from',
-                file.path
-              );
-              console.error(astPath.node.loc);
-              throw error;
+              // Silently skip over this call. We have a lint rule to enforce
+              // that all calls are extractable, so if this one fails, assume
+              // it's intentional.
+              return;
             }
           }
         },

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,6 +23,7 @@ import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWa
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
+import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import Badge from './Badge';
@@ -31,6 +32,8 @@ import {
   copyInspectedElementPath as copyInspectedElementPathAPI,
   storeAsGlobal as storeAsGlobalAPI,
 } from 'react-devtools-shared/src/backendAPI';
+import {enableStyleXFeatures} from 'react-devtools-feature-flags';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import styles from './InspectedElementView.css';
 
@@ -42,13 +45,13 @@ import type {ToggleParseHookNames} from './InspectedElementContext';
 export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
-type Props = {|
+type Props = {
   element: Element,
   hookNames: HookNames | null,
   inspectedElement: InspectedElement,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
-|};
+};
 
 export default function InspectedElementView({
   element,
@@ -56,7 +59,7 @@ export default function InspectedElementView({
   inspectedElement,
   parseHookNames,
   toggleParseHookNames,
-}: Props) {
+}: Props): React.Node {
   const {id} = element;
   const {
     owners,
@@ -124,6 +127,15 @@ export default function InspectedElementView({
           store={store}
         />
 
+        {enableStyleXFeatures && (
+          <InspectedElementStyleXPlugin
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        )}
+
         <InspectedElementErrorsAndWarningsTree
           bridge={bridge}
           element={element}
@@ -134,7 +146,9 @@ export default function InspectedElementView({
         <NativeStyleEditor />
 
         {showRenderedBy && (
-          <div className={styles.Owners}>
+          <div
+            className={styles.Owners}
+            data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
             {showOwnersList &&
               ((owners: any): Array<SerializedElement>).map(owner => (
@@ -245,15 +259,15 @@ function formatSourceForDisplay(fileName: string, lineNumber: string) {
   return `${nameOnly}:${lineNumber}`;
 }
 
-type SourceProps = {|
+type SourceProps = {
   fileName: string,
   lineNumber: string,
-|};
+};
 
 function Source({fileName, lineNumber}: SourceProps) {
   const handleCopy = () => copy(`${fileName}:${lineNumber}`);
   return (
-    <div className={styles.Source}>
+    <div className={styles.Source} data-testname="InspectedElementView-Source">
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
         <Button onClick={handleCopy} title="Copy to clipboard">
@@ -267,13 +281,13 @@ function Source({fileName, lineNumber}: SourceProps) {
   );
 }
 
-type OwnerViewProps = {|
+type OwnerViewProps = {
   displayName: string,
   hocDisplayNames: Array<string> | null,
   id: number,
   isInStore: boolean,
   type: ElementType,
-|};
+};
 
 function OwnerView({
   displayName,
@@ -288,14 +302,16 @@ function OwnerView({
     clearHighlightNativeElement,
   } = useHighlightNativeElement();
 
-  const handleClick = useCallback(
-    () =>
-      dispatch({
-        type: 'SELECT_ELEMENT_BY_ID',
-        payload: id,
-      }),
-    [dispatch, id],
-  );
+  const handleClick = useCallback(() => {
+    logEvent({
+      event_name: 'select-element',
+      metadata: {source: 'owner-view'},
+    });
+    dispatch({
+      type: 'SELECT_ELEMENT_BY_ID',
+      payload: id,
+    });
+  }, [dispatch, id]);
 
   const onMouseEnter = () => highlightNativeElement(id);
 

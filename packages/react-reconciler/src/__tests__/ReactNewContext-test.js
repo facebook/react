@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -667,7 +667,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      // @gate experimental || www
+      // @gate www
       it("context consumer doesn't bail out inside hidden subtree", () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);

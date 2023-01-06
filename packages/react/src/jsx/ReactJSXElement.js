@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -151,10 +151,10 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
+    type,
+    key,
+    ref,
+    props,
 
     // Record the component responsible for creating this element.
     _owner: owner,

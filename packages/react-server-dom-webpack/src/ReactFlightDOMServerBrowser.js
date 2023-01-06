@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,15 +8,20 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFlightServer';
 
 type Options = {
+  identifierPrefix?: string,
+  signal?: AbortSignal,
+  context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
 };
 
@@ -29,22 +34,35 @@ function renderToReadableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
-  const stream = new ReadableStream({
-    start(controller) {
-      startWork(request);
-    },
-    pull(controller) {
-      // Pull is called immediately even if the stream is not passed to anything.
-      // That's buffering too early. We want to start buffering once the stream
-      // is actually used by something so we can give it the best result possible
-      // at that point.
-      if (stream.locked) {
+  if (options && options.signal) {
+    const signal = options.signal;
+    if (signal.aborted) {
+      abort(request, (signal: any).reason);
+    } else {
+      const listener = () => {
+        abort(request, (signal: any).reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start: (controller): ?Promise<void> => {
+        startWork(request);
+      },
+      pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
-      }
+      },
+      cancel: (reason): ?Promise<void> => {},
     },
-    cancel(reason) {},
-  });
+    // $FlowFixMe size() methods are not allowed on byte streams.
+    {highWaterMark: 0},
+  );
   return stream;
 }
 

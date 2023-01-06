@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -2689,9 +2689,13 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
       ReactDOM.render(<some-custom-element foo={true} />, container);
       const node = container.firstChild;
-      expect(node.getAttribute('foo')).toBe('true');
+      expect(node.getAttribute('foo')).toBe(
+        ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
+      );
       ReactDOM.render(<some-custom-element foo={false} />, container);
-      expect(node.getAttribute('foo')).toBe('false');
+      expect(node.getAttribute('foo')).toBe(
+        ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
+      );
       ReactDOM.render(<some-custom-element />, container);
       expect(node.hasAttribute('foo')).toBe(false);
       ReactDOM.render(<some-custom-element foo={true} />, container);

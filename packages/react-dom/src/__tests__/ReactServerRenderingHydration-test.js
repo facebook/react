@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,9 +9,13 @@
 
 'use strict';
 
+global.TextEncoder = require('util').TextEncoder;
+
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
+let ReactDOMServerBrowser;
 let Scheduler;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
@@ -21,7 +25,9 @@ describe('ReactDOMServerHydration', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    ReactDOMServerBrowser = require('react-dom/server.browser');
     Scheduler = require('scheduler');
   });
 
@@ -30,6 +36,8 @@ describe('ReactDOMServerHydration', () => {
     let numClicks = 0;
 
     class TestComponent extends React.Component {
+      spanRef = React.createRef();
+
       componentDidMount() {
         mountCount++;
       }
@@ -40,7 +48,7 @@ describe('ReactDOMServerHydration', () => {
 
       render() {
         return (
-          <span ref="span" onClick={this.click}>
+          <span ref={this.spanRef} onClick={this.click}>
             Name: {this.props.name}
           </span>
         );
@@ -83,7 +91,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(1);
 
       ReactDOM.unmountComponentAtNode(element);
@@ -101,7 +109,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(2);
     } finally {
       document.body.removeChild(element);
@@ -403,8 +411,7 @@ describe('ReactDOMServerHydration', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<div />);
+    const root = ReactDOMClient.hydrateRoot(container, <div />);
     Scheduler.unstable_flushAll();
     root.render(null);
     Scheduler.unstable_flushAll();
@@ -530,5 +537,161 @@ describe('ReactDOMServerHydration', () => {
     }).toErrorDev(
       'Warning: Did not expect server HTML to contain a <p> in <div>',
     );
+  });
+
+  it('should warn when hydrating read-only properties', () => {
+    const readOnlyProperties = [
+      'offsetParent',
+      'offsetTop',
+      'offsetLeft',
+      'offsetWidth',
+      'offsetHeight',
+      'isContentEditable',
+      'outerText',
+      'outerHTML',
+    ];
+    readOnlyProperties.forEach(readOnlyProperty => {
+      const props = {};
+      props[readOnlyProperty] = 'hello';
+      const jsx = React.createElement('my-custom-element', props);
+      const element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(jsx);
+      if (gate(flags => flags.enableCustomElementPropertySupport)) {
+        expect(() => ReactDOM.hydrate(jsx, element)).toErrorDev(
+          `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
+        );
+      } else {
+        ReactDOM.hydrate(jsx, element);
+      }
+    });
+  });
+
+  // @gate enableCustomElementPropertySupport
+  it('should not re-assign properties on hydration', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const jsx = React.createElement('my-custom-element', {
+      str: 'string',
+      obj: {foo: 'bar'},
+    });
+
+    container.innerHTML = ReactDOMServer.renderToString(jsx);
+    const customElement = container.querySelector('my-custom-element');
+
+    // Install setters to activate `in` check
+    Object.defineProperty(customElement, 'str', {
+      set: function(x) {
+        this._str = x;
+      },
+      get: function() {
+        return this._str;
+      },
+    });
+    Object.defineProperty(customElement, 'obj', {
+      set: function(x) {
+        this._obj = x;
+      },
+      get: function() {
+        return this._obj;
+      },
+    });
+
+    ReactDOM.hydrate(jsx, container);
+
+    expect(customElement.getAttribute('str')).toBe('string');
+    expect(customElement.getAttribute('obj')).toBe(null);
+    expect(customElement.str).toBe(undefined);
+    expect(customElement.obj).toBe(undefined);
+  });
+
+  it('refers users to apis that support Suspense when something suspends', () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToPipeableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
+  });
+
+  it('refers users to apis that support Suspense when something suspends (browser)', () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServerBrowser.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToReadableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
   });
 });

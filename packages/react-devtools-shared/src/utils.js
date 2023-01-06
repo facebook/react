@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,26 +22,28 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
+import {
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_TRACING_MARKER_TYPE as TracingMarker,
+} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
-} from './constants';
-import {ElementTypeRoot} from 'react-devtools-shared/src/types';
-import {
-  LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
+  ElementTypeRoot,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
@@ -53,6 +55,10 @@ import isArray from './isArray';
 
 import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+
+// $FlowFixMe[method-unbinding]
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
@@ -63,8 +69,8 @@ const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
 });
 
 export function alphaSortKeys(
-  a: string | number | Symbol,
-  b: string | number | Symbol,
+  a: string | number | symbol,
+  b: string | number | symbol,
 ): number {
   if (a.toString() > b.toString()) {
     return 1;
@@ -77,7 +83,7 @@ export function alphaSortKeys(
 
 export function getAllEnumerableKeys(
   obj: Object,
-): Set<string | number | Symbol> {
+): Set<string | number | symbol> {
   const keys = new Set();
   let current = obj;
   while (current != null) {
@@ -95,6 +101,19 @@ export function getAllEnumerableKeys(
     current = Object.getPrototypeOf(current);
   }
   return keys;
+}
+
+// Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
+export function getWrappedDisplayName(
+  outerType: mixed,
+  innerType: any,
+  wrapperName: string,
+  fallbackName?: string,
+): string {
+  const displayName = (outerType: any).displayName;
+  return (
+    displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
+  );
 }
 
 export function getDisplayName(
@@ -211,7 +230,9 @@ export function printOperationsArray(operations: Array<number>) {
         if (type === ElementTypeRoot) {
           logs.push(`Add new root node ${id}`);
 
+          i++; // isStrictModeCompliant
           i++; // supportsProfiling
+          i++; // supportsStrictMode
           i++; // hasOwnerMetadata
         } else {
           const parentID = ((operations[i]: any): number);
@@ -247,6 +268,15 @@ export function printOperationsArray(operations: Array<number>) {
         i += 1;
 
         logs.push(`Remove root ${rootID}`);
+        break;
+      }
+      case TREE_OPERATION_SET_SUBTREE_MODE: {
+        const id = operations[i + 1];
+        const mode = operations[i + 1];
+
+        i += 3;
+
+        logs.push(`Mode ${mode} set for subtree with root ${id}`);
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
@@ -296,7 +326,9 @@ export function getDefaultComponentFilters(): Array<ComponentFilter> {
 
 export function getSavedComponentFilters(): Array<ComponentFilter> {
   try {
-    const raw = localStorageGetItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
+    );
     if (raw != null) {
       return JSON.parse(raw);
     }
@@ -304,87 +336,60 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
   return getDefaultComponentFilters();
 }
 
-export function saveComponentFilters(
+export function setSavedComponentFilters(
   componentFilters: Array<ComponentFilter>,
 ): void {
   localStorageSetItem(
-    LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+    LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
     JSON.stringify(componentFilters),
   );
 }
 
-export function getAppendComponentStack(): boolean {
-  try {
-    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY);
-    if (raw != null) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {}
-  return true;
+function parseBool(s: ?string): ?boolean {
+  if (s === 'true') {
+    return true;
+  }
+  if (s === 'false') {
+    return false;
+  }
 }
 
-export function setAppendComponentStack(value: boolean): void {
-  localStorageSetItem(
-    LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
-    JSON.stringify(value),
+export function castBool(v: any): ?boolean {
+  if (v === true || v === false) {
+    return v;
+  }
+}
+
+export function castBrowserTheme(v: any): ?BrowserTheme {
+  if (v === 'light' || v === 'dark' || v === 'auto') {
+    return v;
+  }
+}
+
+export function getAppendComponentStack(): boolean {
+  const raw = localStorageGetItem(
+    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
   );
+  return parseBool(raw) ?? true;
 }
 
 export function getBreakOnConsoleErrors(): boolean {
-  try {
-    const raw = localStorageGetItem(
-      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-    );
-    if (raw != null) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {}
-  return false;
-}
-
-export function setBreakOnConsoleErrors(value: boolean): void {
-  localStorageSetItem(
-    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-    JSON.stringify(value),
-  );
+  const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS);
+  return parseBool(raw) ?? false;
 }
 
 export function getHideConsoleLogsInStrictMode(): boolean {
-  try {
-    const raw = localStorageGetItem(
-      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-    );
-    if (raw != null) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {}
-  return false;
-}
-
-export function sethideConsoleLogsInStrictMode(value: boolean): void {
-  localStorageSetItem(
+  const raw = localStorageGetItem(
     LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-    JSON.stringify(value),
   );
+  return parseBool(raw) ?? false;
 }
 
 export function getShowInlineWarningsAndErrors(): boolean {
-  try {
-    const raw = localStorageGetItem(
-      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-    );
-    if (raw != null) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {}
-  return true;
-}
-
-export function setShowInlineWarningsAndErrors(value: boolean): void {
-  localStorageSetItem(
+  const raw = localStorageGetItem(
     LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-    JSON.stringify(value),
   );
+  return parseBool(raw) ?? true;
 }
 
 export function getDefaultOpenInEditorURL(): string {
@@ -428,20 +433,6 @@ export function separateDisplayNameAndHOCs(
       break;
     default:
       break;
-  }
-
-  if (type === ElementTypeMemo) {
-    if (hocDisplayNames === null) {
-      hocDisplayNames = ['Memo'];
-    } else {
-      hocDisplayNames.unshift('Memo');
-    }
-  } else if (type === ElementTypeForwardRef) {
-    if (hocDisplayNames === null) {
-      hocDisplayNames = ['ForwardRef'];
-    } else {
-      hocDisplayNames.unshift('ForwardRef');
-    }
   }
 
   return [displayName, hocDisplayNames];
@@ -621,6 +612,7 @@ export function getDataType(data: Object): DataType {
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
+        // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
         if (toStringValue === '[object Date]') {
           return 'date';
@@ -635,6 +627,7 @@ export function getDataType(data: Object): DataType {
       return 'symbol';
     case 'undefined':
       if (
+        // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
       ) {
         return 'html_all_collection';
@@ -672,6 +665,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case SuspenseList:
       return 'SuspenseList';
+    case TracingMarker:
+      return 'TracingMarker';
     default:
       const {type} = element;
       if (typeof type === 'string') {

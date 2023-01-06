@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -256,12 +256,11 @@ describe('ReactHooksInspection', () => {
   });
 
   it('should support an injected dispatcher', () => {
-    function Foo(props) {
-      const [state] = React.useState('hello world');
-      return <div>{state}</div>;
-    }
-
-    const initial = {};
+    const initial = {
+      useState() {
+        throw new Error("Should've been proxied");
+      },
+    };
     let current = initial;
     let getterCalls = 0;
     const setterCalls = [];
@@ -276,21 +275,14 @@ describe('ReactHooksInspection', () => {
       },
     };
 
-    expect(() => {
-      expect(() => {
-        ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
-      }).toThrow("Cannot read property 'useState' of null");
-    }).toErrorDev(
-      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-        ' one of the following reasons:\n' +
-        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-        '2. You might be breaking the Rules of Hooks\n' +
-        '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-      {withoutStack: true},
-    );
+    function Foo(props) {
+      const [state] = FakeDispatcherRef.current.useState('hello world');
+      return <div>{state}</div>;
+    }
 
-    expect(getterCalls).toBe(1);
+    ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
+
+    expect(getterCalls).toBe(2);
     expect(setterCalls).toHaveLength(2);
     expect(setterCalls[0]).not.toBe(initial);
     expect(setterCalls[1]).toBe(initial);

@@ -108,6 +108,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  // @gate enableCPUSuspense
   it('skips CPU-bound trees on initial mount', async () => {
     function App() {
       return (
@@ -145,6 +146,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('does not skip CPU-bound trees during updates', async () => {
     let setCount;
 
@@ -193,6 +195,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('suspend inside CPU-bound tree', async () => {
     function App() {
       return (
@@ -242,6 +245,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('nested CPU-bound trees', async () => {
     function App() {
       return (

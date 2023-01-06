@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,9 +20,9 @@ import ReactFlightClient from 'react-client/flight';
 
 type Source = Array<string>;
 
-const {createResponse, processStringChunk, close} = ReactFlightClient({
+const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
   supportsBinaryStreams: false,
-  resolveModuleReference(idx: string) {
+  resolveModuleReference(bundlerConfig: null, idx: string) {
     return idx;
   },
   preloadModule(idx: string) {},
@@ -34,13 +34,13 @@ const {createResponse, processStringChunk, close} = ReactFlightClient({
   },
 });
 
-function read<T>(source: Source): T {
-  const response = createResponse(source);
+function read<T>(source: Source): Thenable<T> {
+  const response = createResponse(source, null);
   for (let i = 0; i < source.length; i++) {
     processStringChunk(response, source[i], 0);
   }
   close(response);
-  return response.readRoot();
+  return getRoot(response);
 }
 
 export {read};

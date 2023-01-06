@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,6 +16,7 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 describe('InspectedElement', () => {
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let PropTypes;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
@@ -52,6 +53,7 @@ describe('InspectedElement', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
     TestUtilsAct = require('jest-react').act;
     TestRenderer = utils.requireTestRenderer();
@@ -71,8 +73,10 @@ describe('InspectedElement', () => {
       .TreeContextController;
 
     // Used by inspectElementAtIndex() helper function
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
+    utils.act(() => {
+      testRendererInstance = TestRenderer.create(null, {
+        unstable_isConcurrent: true,
+      });
     });
 
     errorBoundaryInstance = null;
@@ -299,9 +303,14 @@ describe('InspectedElement', () => {
       // from props like defaultSelectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
-      testRendererInstance = TestRenderer.create(null, {
-        unstable_isConcurrent: true,
-      });
+      utils.withErrorsOrWarningsIgnored(
+        ['An update to %s inside a test was not wrapped in act'],
+        () => {
+          testRendererInstance = TestRenderer.create(null, {
+            unstable_isConcurrent: true,
+          });
+        },
+      );
 
       const inspectedElement = await inspectElementAtIndex(index);
 
@@ -450,7 +459,7 @@ describe('InspectedElement', () => {
     const prevInspectedElement = inspectedElement;
 
     // This test causes an intermediate error to be logged but we can ignore it.
-    console.error = () => {};
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // Wait for our check-for-updates poll to get the new data.
     jest.runOnlyPendingTimers();
@@ -460,9 +469,14 @@ describe('InspectedElement', () => {
     // The backend still thinks the most recently-inspected element is still cached,
     // so the frontend needs to tell it to resend a full value.
     // We can verify this by asserting that the component is re-rendered again.
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
-    });
+    utils.withErrorsOrWarningsIgnored(
+      ['An update to %s inside a test was not wrapped in act'],
+      () => {
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+      },
+    );
 
     const {
       clearCacheForTests,
@@ -494,7 +508,7 @@ describe('InspectedElement', () => {
     });
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await utils.actAsync(() => root.render(<Target a={1} b="abc" />));
 
     expect(targetRenderCount).toBe(1);
@@ -875,7 +889,7 @@ describe('InspectedElement', () => {
     `);
   });
 
-  it('should support objects with with inherited keys', async () => {
+  it('should support objects with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -2024,9 +2038,14 @@ describe('InspectedElement', () => {
     // from props like defaultSelectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
-    });
+    utils.withErrorsOrWarningsIgnored(
+      ['An update to %s inside a test was not wrapped in act'],
+      () => {
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+      },
+    );
 
     // Select/inspect the same element again
     inspectedElement = await inspectElementAtIndex(0);
@@ -2074,25 +2093,25 @@ describe('InspectedElement', () => {
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"render()"`);
   });
 
-  it('should display the root type for ReactDOM.hydrateRoot', async () => {
+  it('should display the root type for ReactDOMClient.hydrateRoot', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      ReactDOM.hydrateRoot(container).render(<Example />);
+      ReactDOMClient.hydrateRoot(container, <Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrateRoot()"`);
   });
 
-  it('should display the root type for ReactDOM.createRoot', async () => {
+  it('should display the root type for ReactDOMClient.createRoot', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
-      ReactDOM.createRoot(container).render(<Example />);
+      ReactDOMClient.createRoot(container).render(<Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
@@ -2116,7 +2135,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
-      ReactDOM.createRoot(container).render(<Example />);
+      ReactDOMClient.createRoot(container).render(<Example />);
     }, false);
 
     shouldThrow = true;
@@ -2715,6 +2734,62 @@ describe('InspectedElement', () => {
     });
   });
 
+  it('inspecting nested renderers should not throw', async () => {
+    // Ignoring react art warnings
+    spyOn(console, 'error');
+    const ReactArt = require('react-art');
+    const ArtSVGMode = require('art/modes/svg');
+    const ARTCurrentMode = require('art/modes/current');
+    store.componentFilters = [];
+
+    ARTCurrentMode.setCurrent(ArtSVGMode);
+    const {Surface, Group} = ReactArt;
+
+    function Child() {
+      return (
+        <Surface width={1} height={1}>
+          <Group />
+        </Surface>
+      );
+    }
+    function App() {
+      return <Child />;
+    }
+
+    await utils.actAsync(() => {
+      legacyRender(<App />, document.createElement('div'));
+    });
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Child>
+            ▾ <Surface>
+                <svg>
+      [root]
+          <Group>
+    `);
+
+    const inspectedElement = await inspectElementAtIndex(4);
+    expect(inspectedElement.owners).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "displayName": "Child",
+          "hocDisplayNames": null,
+          "id": 3,
+          "key": null,
+          "type": 5,
+        },
+        Object {
+          "displayName": "App",
+          "hocDisplayNames": null,
+          "id": 2,
+          "key": null,
+          "type": 5,
+        },
+      ]
+    `);
+  });
+
   describe('error boundary', () => {
     it('can toggle error', async () => {
       class LocalErrorBoundary extends React.Component<any> {
@@ -2743,11 +2818,15 @@ describe('InspectedElement', () => {
         0,
       ): any): number);
       const inspect = index => {
-        // HACK: Recreate TestRenderer instance so we can inspect different
-        // elements
-        testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
-        });
+        // HACK: Recreate TestRenderer instance so we can inspect different elements
+        utils.withErrorsOrWarningsIgnored(
+          ['An update to %s inside a test was not wrapped in act'],
+          () => {
+            testRendererInstance = TestRenderer.create(null, {
+              unstable_isConcurrent: true,
+            });
+          },
+        );
         return inspectElementAtIndex(index);
       };
       const toggleError = async forceError => {
@@ -2781,16 +2860,18 @@ describe('InspectedElement', () => {
       );
 
       // Suppress expected error and warning.
-      const originalError = console.error;
-      const originalWarn = console.warn;
-      console.error = () => {};
-      console.warn = () => {};
+      const consoleErrorMock = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const consoleWarnMock = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       // now force error state on <Example />
       await toggleError(true);
 
-      console.error = originalError;
-      console.warn = originalWarn;
+      consoleErrorMock.mockRestore();
+      consoleWarnMock.mockRestore();
 
       // we are in error state now, <Example /> won't show up
       withErrorsOrWarningsIgnored(['Invalid index'], () => {

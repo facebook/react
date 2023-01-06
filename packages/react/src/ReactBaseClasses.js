@@ -1,11 +1,12 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
+import assign from 'shared/assign';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -139,7 +140,7 @@ function PureComponent(props, context, updater) {
 const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(pureComponentPrototype, Component.prototype);
+assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
 export {Component, PureComponent};

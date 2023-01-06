@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -310,7 +310,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {

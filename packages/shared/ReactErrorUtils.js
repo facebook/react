@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -105,11 +105,11 @@ export function rethrowCaughtError() {
   }
 }
 
-export function hasCaughtError() {
+export function hasCaughtError(): boolean {
   return hasError;
 }
 
-export function clearCaughtError() {
+export function clearCaughtError(): mixed {
   if (hasError) {
     const error = caughtError;
     hasError = false;

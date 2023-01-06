@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -78,10 +78,11 @@ describe('ReactJSXElement', () => {
   });
 
   it('extracts key and ref from the rest of the props', () => {
-    const element = <Component key="12" ref="34" foo="56" />;
+    const ref = React.createRef();
+    const element = <Component key="12" ref={ref} foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe('34');
+    expect(element.ref).toBe(ref);
     const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);

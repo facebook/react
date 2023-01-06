@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -47,6 +47,12 @@ describe('ReactDOMServerIntegrationTextarea', () => {
     // a child of the element and accessible via the .value **property**.
     expect(e.getAttribute('value')).toBe(null);
     expect(e.value).toBe('foo');
+  });
+
+  itRenders('a textarea with a value of undefined', async render => {
+    const e = await render(<textarea value={undefined} />);
+    expect(e.getAttribute('value')).toBe(null);
+    expect(e.value).toBe('');
   });
 
   itRenders('a textarea with a value and readOnly', async render => {

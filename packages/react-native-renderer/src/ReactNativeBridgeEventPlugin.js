@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,16 +7,21 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
+import type {
+  AnyNativeEvent,
+  EventTypes,
+} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
+import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListener from './ReactNativeGetListener';
+import getListeners from './ReactNativeGetListeners';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import isArray from 'shared/isArray';
 
 const {
   customBubblingEventTypes,
@@ -26,10 +31,37 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
-function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst, registrationName);
+  return getListeners(inst, registrationName, propagationPhase, true);
+}
+
+function accumulateListenersAndInstances(inst, event, listeners) {
+  const listenersLength = listeners
+    ? isArray(listeners)
+      ? listeners.length
+      : 1
+    : 0;
+  if (listenersLength > 0) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listeners,
+    );
+
+    // Avoid allocating additional arrays here
+    if (event._dispatchInstances == null && listenersLength === 1) {
+      event._dispatchInstances = inst;
+    } else {
+      event._dispatchInstances = event._dispatchInstances || [];
+      if (!isArray(event._dispatchInstances)) {
+        event._dispatchInstances = [event._dispatchInstances];
+      }
+      for (let i = 0; i < listenersLength; i++) {
+        event._dispatchInstances.push(inst);
+      }
+    }
+  }
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -38,14 +70,8 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listener = listenerAtPhase(inst, event, phase);
-  if (listener) {
-    event._dispatchListeners = accumulateInto(
-      event._dispatchListeners,
-      listener,
-    );
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
-  }
+  const listeners = listenersAtPhase(inst, event, phase);
+  accumulateListenersAndInstances(inst, event, listeners);
 }
 
 function getParent(inst) {
@@ -66,7 +92,12 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+export function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: Function,
+  skipBubbling: boolean,
+) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -76,19 +107,40 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
-    fn(path[i], 'bubbled', arg);
+  if (skipBubbling) {
+    // Dispatch on target only
+    fn(path[0], 'bubbled', arg);
+  } else {
+    for (i = 0; i < path.length; i++) {
+      fn(path[i], 'bubbled', arg);
+    }
   }
 }
 
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      false,
+    );
   }
 }
 
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+
+function accumulateCapturePhaseDispatches(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      true,
+    );
+  }
 }
 
 /**
@@ -103,14 +155,8 @@ function accumulateDispatches(
 ): void {
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
-    const listener = getListener(inst, registrationName);
-    if (listener) {
-      event._dispatchListeners = accumulateInto(
-        event._dispatchListeners,
-        listener,
-      );
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
-    }
+    const listeners = getListeners(inst, registrationName, 'bubbled', false);
+    accumulateListenersAndInstances(inst, event, listeners);
   }
 }
 
@@ -130,10 +176,9 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 }
 
 // End of inline
-type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
-  eventTypes: {},
+  eventTypes: ({}: EventTypes),
 
   extractEvents: function(
     topLevelType: TopLevelType,
@@ -162,7 +207,15 @@ const ReactNativeBridgeEventPlugin = {
       nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
-      accumulateTwoPhaseDispatches(event);
+      const skipBubbling =
+        event != null &&
+        event.dispatchConfig.phasedRegistrationNames != null &&
+        event.dispatchConfig.phasedRegistrationNames.skipBubbling;
+      if (skipBubbling) {
+        accumulateCapturePhaseDispatches(event);
+      } else {
+        accumulateTwoPhaseDispatches(event);
+      }
     } else if (directDispatchConfig) {
       accumulateDirectDispatches(event);
     } else {

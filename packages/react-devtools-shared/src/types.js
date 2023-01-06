@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,11 +7,11 @@
  * @flow
  */
 
-export type Wall = {|
+export type Wall = {
   // `listen` returns the "unlisten" function.
   listen: (fn: Function) => Function,
   send: (event: string, payload: any, transferable?: Array<any>) => void,
-|};
+};
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -32,11 +32,12 @@ export const ElementTypeProfiler = 10;
 export const ElementTypeRoot = 11;
 export const ElementTypeSuspense = 12;
 export const ElementTypeSuspenseList = 13;
+export const ElementTypeTracingMarker = 14;
 
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
 // or to enable/disable certain functionality.
-export type ElementType = 1 | 2 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+export type ElementType = 1 | 2 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -51,26 +52,26 @@ export type ComponentFilterType = 1 | 2 | 3 | 4;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
-export type ElementTypeComponentFilter = {|
+export type ElementTypeComponentFilter = {
   isEnabled: boolean,
   type: 1,
   value: ElementType,
-|};
+};
 
 // Hide all elements with displayNames or paths matching one or more of the RegExps in this Set.
 // Path filters are only used when elements include debug source location.
-export type RegExpComponentFilter = {|
+export type RegExpComponentFilter = {
   isEnabled: boolean,
   isValid: boolean,
   type: 2 | 3,
   value: string,
-|};
+};
 
-export type BooleanComponentFilter = {|
+export type BooleanComponentFilter = {
   isEnabled: boolean,
   isValid: boolean,
   type: 4,
-|};
+};
 
 export type ComponentFilter =
   | BooleanComponentFilter
@@ -84,10 +85,21 @@ export type HookName = string | null;
 export type HookSourceLocationKey = string;
 export type HookNames = Map<HookSourceLocationKey, HookName>;
 
-export type LRUCache<K, V> = {|
+export type LRUCache<K, V> = {
+  del: (key: K) => void,
   get: (key: K) => V,
   has: (key: K) => boolean,
-  remove: (key: K) => void,
   reset: () => void,
   set: (key: K, value: V) => void,
-|};
+};
+
+export type StyleXPlugin = {
+  sources: Array<string>,
+  resolvedStyles: Object,
+};
+
+export type Plugins = {
+  stylex: StyleXPlugin | null,
+};
+
+export const StrictMode = 1;

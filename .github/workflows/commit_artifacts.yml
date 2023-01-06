@@ -1,0 +1,166 @@
+name: Commit Artifacts for Facebook WWW
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  download_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - run: npm init -y
+      - run: npm install node-fetch@2
+      - name: Download and unzip artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const cp = require('child_process');
+            const fetch = require('node-fetch');
+
+            function sleep(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            function execHelper(command, options, streamStdout = false) {
+              return new Promise((resolve, reject) => {
+                const proc = cp.exec(
+                  command,
+                  options,
+                  (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
+                );
+                if (streamStdout) {
+                  proc.stdout.pipe(process.stdout);
+                }
+              });
+            }
+
+            let artifactsUrl = null;
+            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
+            // workflow to notify this GitHub action. Sorry!
+            let iter = 0;
+            spinloop: while (iter < 15) {
+              const res = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha
+              });
+              for (const status of res.data) {
+                if (/process_artifacts_combined/.test(status.context)) {
+                  switch (status.state) {
+                    case 'pending': {
+                      console.log(`${status.context} is still pending`);
+                      break;
+                    }
+                    case 'failure':
+                    case 'error': {
+                      throw new Error(`${status.context} has failed or errored`);
+                    }
+                    case 'success': {
+                      // The status does not include a build ID, but we can extract it
+                      // from the URL. I couldn't find a better way to do this.
+                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+                        status.target_url,
+                      )[1];
+                      console.log(`CircleCI build id found: ${ciBuildId}`);
+                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
+                        artifactsUrl =
+                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                        break spinloop;
+                      } else {
+                        throw new Error(`${ciBuildId} isn't a number`);
+                      }
+                      break;
+                    }
+                    default: {
+                      throw new Error(`Unhandled status state: ${status.state}`);
+                      break;
+                    }
+                  }
+                }
+              }
+              iter++;
+              console.log("Sleeping for 60s...");
+              await sleep(60_000);
+            }
+            if (artifactsUrl != null) {
+              const res = await fetch(artifactsUrl);
+              const data = await res.json();
+              for (const artifact of data) {
+                if (artifact.path === 'build.tgz') {
+                  console.log(`Downloading and unzipping ${artifact.url}`);
+                  await execHelper(
+                    `curl -L ${artifact.url} | tar -xvz`
+                  );
+                }
+              }
+            } else {
+              process.exitCode = 1;
+            }
+      - name: Strip @license from eslint plugin and react-refresh
+        run: |
+          sed -i -e 's/ @license React*//' \
+            build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js
+      - name: Move relevant files into compiled
+        run: |
+          mkdir -p ./compiled
+          mkdir -p ./compiled/facebook-www
+          mkdir -p ./compiled/babel-plugin-react-refresh
+
+          # Copy the facebook-www folder into compiled
+          mv build/facebook-www ./compiled
+
+          # Copy WARNINGS to facebook-www
+          mv build/WARNINGS ./compiled/facebook-www/WARNINGS
+
+          # Copy eslint-plugin-react-hooks into facebook-www
+          mv build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            ./compiled/facebook-www/eslint-plugin-react-hooks.js
+
+          # Copy unstable_server-external-runtime.js into facebook-www
+          mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
+            ./compiled/facebook-www/unstable_server-external-runtime.js
+
+          # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
+          mv build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js \
+            ./compiled/babel-plugin-react-refresh/index.js
+
+          ls -R ./compiled
+      - name: Add REVISION files
+        run: |
+          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
+      - uses: actions/upload-artifact@v3
+        with:
+          name: compiled
+          path: compiled/
+
+  commit_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: builds/facebook-www
+      - name: Ensure clean directory
+        run: rm -rf compiled
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled
+          path: compiled/
+      - run: git status -u
+      - name: Commit changes to branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.head_commit.message }}
+
+            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
+            [View git log for this commit](https://github.com/facebook/react/commits/${{ github.sha }})
+          branch: builds/facebook-www
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          create_branch: true

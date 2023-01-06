@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,9 +13,12 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
+  Usable,
 } from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentCache from './ReactCurrentCache';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -41,14 +44,32 @@ function resolveDispatcher() {
 }
 
 export function getCacheSignal(): AbortSignal {
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
+  const dispatcher = ReactCurrentCache.current;
+  if (!dispatcher) {
+    // If we have no cache to associate with this call, then we don't know
+    // its lifetime. We abort early since that's safer than letting it live
+    // for ever. Unlike just caching which can be a functional noop outside
+    // of React, these should generally always be associated with some React
+    // render but we're not limiting quite as much as making it a Hook.
+    // It's safer than erroring early at runtime.
+    const controller = new AbortController();
+    const reason = new Error(
+      'This CacheSignal was requested outside React which means that it is ' +
+        'immediately aborted.',
+    );
+    // $FlowFixMe Flow doesn't yet know about this argument.
+    controller.abort(reason);
+    return controller.signal;
+  }
   return dispatcher.getCacheSignal();
 }
 
 export function getCacheForType<T>(resourceType: () => T): T {
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
+  const dispatcher = ReactCurrentCache.current;
+  if (!dispatcher) {
+    // If there is no dispatcher, then we treat this as not being cached.
+    return resourceType();
+  }
   return dispatcher.getCacheForType(resourceType);
 }
 
@@ -92,7 +113,7 @@ export function useReducer<S, I, A>(
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {|current: T|} {
+export function useRef<T>(initialValue: T): {current: T} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
@@ -138,7 +159,7 @@ export function useMemo<T>(
 }
 
 export function useImperativeHandle<T>(
-  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
@@ -156,9 +177,10 @@ export function useDebugValue<T>(
   }
 }
 
-export const emptyObject = {};
-
-export function useTransition(): [boolean, (() => void) => void] {
+export function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }
@@ -199,4 +221,22 @@ export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional
   return dispatcher.useCacheRefresh();
+}
+
+export function use<T>(usable: Usable<T>): T {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.use(usable);
+}
+
+export function useMemoCache(size: number): Array<any> {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useMemoCache(size);
+}
+
+export function useEffectEvent<T>(callback: T): void {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useEffectEvent(callback);
 }

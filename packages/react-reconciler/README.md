@@ -58,7 +58,7 @@ The React repository includes several renderers. Each of them has its own host c
 The examples in the React repository are declared a bit differently than a third-party renderer would be. In particular, the `HostConfig` object mentioned above is never explicitly declared, and instead is a *module* in our code. However, its exports correspond directly to properties on a `HostConfig` object you'd need to declare in your code:
 
 * [React ART](https://github.com/facebook/react/blob/main/packages/react-art/src/ReactART.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-art/src/ReactARTHostConfig.js)
-* [React DOM](https://github.com/facebook/react/blob/main/packages/react-dom/src/client/ReactDOM.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-dom/src/client/ReactDOMHostConfig.js)
+* [React DOM](https://github.com/facebook/react/blob/main/packages/react-dom/src/client/ReactDOM.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/ReactDOMHostConfig.js)
 * [React Native](https://github.com/facebook/react/blob/main/packages/react-native-renderer/src/ReactNativeRenderer.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-native-renderer/src/ReactNativeHostConfig.js)
 
 If these links break please file an issue and we’ll fix them. They intentionally link to the latest versions since the API is still evolving. If you have more questions please file an issue and we’ll try to help!
@@ -81,7 +81,7 @@ const HostConfig = {
 }
 ```
 
-If your target platform has immutable trees, you'll want the **persistent mode** instead. In that mode, existing nodes are never mutated, and instead every change clones the parent tree and then replaces the whole parent tree at the root. This is the node used by the new React Native renderer, codenamed "Fabric".
+If your target platform has immutable trees, you'll want the **persistent mode** instead. In that mode, existing nodes are never mutated, and instead every change clones the parent tree and then replaces the whole parent tree at the root. This is the mode used by the new React Native renderer, codenamed "Fabric".
 
 ```js
 const HostConfig = {
@@ -187,10 +187,6 @@ You can leave it empty.
 
 This method is called for a container that's used as a portal target. Usually you can leave it empty.
 
-#### `now()`
-
-You can proxy this to `performance.now()` or its equivalent in your environment.
-
 #### `scheduleTimeout(fn, delay)`
 
 You can proxy this to `setTimeout` or its equivalent in your environment.
@@ -203,7 +199,7 @@ You can proxy this to `clearTimeout` or its equivalent in your environment.
 
 This is a property (not a function) that should be set to something that can never be a valid timeout ID. For example, you can set it to `-1`.
 
-#### `supportsMicrotask`
+#### `supportsMicrotasks`
 
 Set this to true to indicate that your renderer supports `scheduleMicrotask`. We use microtasks as part of our discrete event implementation in React DOM. If you're not sure if your renderer should support this, you probably should. The option to not implement `scheduleMicrotask` exists so that platforms with more control over user events, like React Native, can choose to use a different mechanism.
 #### `scheduleMicrotask(fn)`

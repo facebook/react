@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,8 @@ let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
+let ReactDOMClient;
+let ReactFeatureFlags;
 let Scheduler;
 let act;
 let useState;
@@ -46,6 +48,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
@@ -90,7 +94,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       // the correct behavior, despite the fact that the legacy root API
       // triggers a warning in 18), write a test that uses
       // createLegacyRoot directly.
-      return ReactDOM.createRoot(container);
+      return ReactDOMClient.createRoot(container);
     } else {
       ReactDOM.render(null, container);
       return {
@@ -587,6 +591,33 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     );
   });
 
+  test('getSnapshot can return NaN without infinite loop warning', async () => {
+    const store = createExternalStore('not a number');
+
+    function App() {
+      const value = useSyncExternalStore(store.subscribe, () =>
+        parseInt(store.getState(), 10),
+      );
+      return <Text text={value} />;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    // Initial render that reads a snapshot of NaN. This is OK because we use
+    // Object.is algorithm to compare values.
+    await act(() => root.render(<App />));
+    expect(container.textContent).toEqual('NaN');
+
+    // Update to real number
+    await act(() => store.set(123));
+    expect(container.textContent).toEqual('123');
+
+    // Update back to NaN
+    await act(() => store.set('not a number'));
+    expect(container.textContent).toEqual('NaN');
+  });
+
   describe('extra features implemented in user-space', () => {
     // The selector implementation uses the lazy ref initialization pattern
     // @gate !(enableUseRefAccessWarning && __DEV__)
@@ -718,7 +749,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
         act(() => {
-          ReactDOM.hydrateRoot(container, <App />);
+          ReactDOMClient.hydrateRoot(container, <App />);
         });
         expect(Scheduler).toHaveYielded([
           // First it hydrates the server rendered HTML
@@ -743,6 +774,33 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('client');
       expect(ref.current).toEqual(serverRenderedDiv);
     });
+  });
+
+  test('regression test for #23150', async () => {
+    const store = createExternalStore('Initial');
+
+    function App() {
+      const text = useSyncExternalStore(store.subscribe, store.getState);
+      const [derivedText, setDerivedText] = useState(text);
+      useEffect(() => {}, []);
+      if (derivedText !== text.toUpperCase()) {
+        setDerivedText(text.toUpperCase());
+      }
+      return <Text text={derivedText} />;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(() => root.render(<App />));
+
+    expect(Scheduler).toHaveYielded(['INITIAL']);
+    expect(container.textContent).toEqual('INITIAL');
+
+    await act(() => {
+      store.set('Updated');
+    });
+    expect(Scheduler).toHaveYielded(['UPDATED']);
+    expect(container.textContent).toEqual('UPDATED');
   });
 
   // The selector implementation uses the lazy ref initialization pattern
@@ -826,8 +884,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
   describe('selector and isEqual error handling in extra', () => {
     let ErrorBoundary;
-    beforeAll(() => {
-      spyOnDev(console, 'warn');
+    beforeEach(() => {
       ErrorBoundary = class extends React.Component {
         state = {error: null};
         static getDerivedStateFromError(error) {
@@ -844,7 +901,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     it('selector can throw on update', async () => {
       const store = createExternalStore({a: 'a'});
-      const selector = state => state.a.toUpperCase();
+      const selector = state => {
+        if (typeof state.a !== 'string') {
+          throw new TypeError('Malformed state');
+        }
+        return state.a.toUpperCase();
+      };
 
       function App() {
         const a = useSyncExternalStoreWithSelector(
@@ -868,18 +930,27 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       expect(container.textContent).toEqual('A');
 
-      await act(() => {
-        store.set({});
-      });
-      expect(container.textContent).toEqual(
-        "Cannot read property 'toUpperCase' of undefined",
+      await expect(async () => {
+        await act(async () => {
+          store.set({});
+        });
+      }).toWarnDev(
+        ReactFeatureFlags.enableUseRefAccessWarning
+          ? ['Warning: App: Unsafe read of a mutable value during render.']
+          : [],
       );
+      expect(container.textContent).toEqual('Malformed state');
     });
 
     it('isEqual can throw on update', async () => {
       const store = createExternalStore({a: 'A'});
       const selector = state => state.a;
-      const isEqual = (left, right) => left.a.trim() === right.a.trim();
+      const isEqual = (left, right) => {
+        if (typeof left.a !== 'string' || typeof right.a !== 'string') {
+          throw new TypeError('Malformed state');
+        }
+        return left.a.trim() === right.a.trim();
+      };
 
       function App() {
         const a = useSyncExternalStoreWithSelector(
@@ -904,12 +975,16 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       expect(container.textContent).toEqual('A');
 
-      await act(() => {
-        store.set({});
-      });
-      expect(container.textContent).toEqual(
-        "Cannot read property 'trim' of undefined",
+      await expect(async () => {
+        await act(() => {
+          store.set({});
+        });
+      }).toWarnDev(
+        ReactFeatureFlags.enableUseRefAccessWarning
+          ? ['Warning: App: Unsafe read of a mutable value during render.']
+          : [],
       );
+      expect(container.textContent).toEqual('Malformed state');
     });
   });
 });

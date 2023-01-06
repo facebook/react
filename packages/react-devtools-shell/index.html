@@ -48,8 +48,13 @@
       <button id="mountButton">Unmount test app</button>
       <div class="optionsRowSpacer">&nbsp;</div>
       <span>
-        <a href="https://react-devtools-experimental-chrome.now.sh/">Chrome extension</a>
-        <a href="https://react-devtools-experimental-firefox.now.sh/">Firefox extension</a>
+        <a href="/multi.html">multi DevTools</a>
+        |
+        <a href="/e2e.html">e2e tests</a>
+        |
+        <a href="/e2e-regression.html">e2e regression tests</a>
+        |
+        <a href="/perf-regression.html">perf regression tests</a>
       </span>
     </div>
 
@@ -64,6 +69,6 @@
     <!-- This script installs the hook, injects the backend, and renders the DevTools UI -->
     <!-- In DEV mode, this file is served by the Webpack dev server -->
     <!-- For production builds, it's built by Webpack and uploaded from the local file system -->
-    <script src="dist/devtools.js"></script>
+    <script src="dist/app-devtools.js"></script>
   </body>
 </html>

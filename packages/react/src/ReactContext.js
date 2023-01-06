@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,6 +30,10 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
+
+    // Add these to use same hidden class in VM as ServerContext
+    _defaultValue: (null: any),
+    _globalName: (null: any),
   };
 
   context.Provider = {

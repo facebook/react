@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,6 +26,8 @@
 declare var $$$hostConfig: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
+export opaque type Resources = mixed;
+export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
 
@@ -35,6 +37,7 @@ export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
   $$$hostConfig.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
 export const assignSuspenseBoundaryID = $$$hostConfig.assignSuspenseBoundaryID;
+export const makeId = $$$hostConfig.makeId;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
 export const pushEndInstance = $$$hostConfig.pushEndInstance;
@@ -42,6 +45,7 @@ export const pushStartCompletedSuspenseBoundary =
   $$$hostConfig.pushStartCompletedSuspenseBoundary;
 export const pushEndCompletedSuspenseBoundary =
   $$$hostConfig.pushEndCompletedSuspenseBoundary;
+export const pushSegmentFinale = $$$hostConfig.pushSegmentFinale;
 export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
 export const writePlaceholder = $$$hostConfig.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
@@ -64,3 +68,17 @@ export const writeCompletedBoundaryInstruction =
   $$$hostConfig.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$hostConfig.writeClientRenderBoundaryInstruction;
+export const prepareToRender = $$$hostConfig.prepareToRender;
+export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
+
+// -------------------------
+//     Resources
+// -------------------------
+export const writeInitialResources = $$$hostConfig.writeInitialResources;
+export const writeImmediateResources = $$$hostConfig.writeImmediateResources;
+export const hoistResources = $$$hostConfig.hoistResources;
+export const hoistResourcesToRoot = $$$hostConfig.hoistResourcesToRoot;
+export const createResources = $$$hostConfig.createResources;
+export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
+export const setCurrentlyRenderingBoundaryResourcesTarget =
+  $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;

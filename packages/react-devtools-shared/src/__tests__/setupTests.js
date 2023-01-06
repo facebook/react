@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -52,8 +52,7 @@ env.beforeEach(() => {
   const {installHook} = require('react-devtools-shared/src/hook');
   const {
     getDefaultComponentFilters,
-    saveComponentFilters,
-    setShowInlineWarningsAndErrors,
+    setSavedComponentFilters,
   } = require('react-devtools-shared/src/utils');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
@@ -66,9 +65,13 @@ env.beforeEach(() => {
     if (typeof firstArg !== 'string') {
       return false;
     }
-    return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
-      return firstArg.indexOf(errorOrWarningMessage) !== -1;
-    });
+    const shouldFilter = global._ignoredErrorOrWarningMessages.some(
+      errorOrWarningMessage => {
+        return firstArg.indexOf(errorOrWarningMessage) !== -1;
+      },
+    );
+
+    return shouldFilter;
   }
 
   const originalConsoleError = console.error;
@@ -82,7 +85,15 @@ env.beforeEach(() => {
       throw args[1];
     } else if (
       typeof firstArg === 'string' &&
-      firstArg.startsWith("Warning: It looks like you're using the wrong act()")
+      (firstArg.startsWith(
+        "Warning: It looks like you're using the wrong act()",
+      ) ||
+        firstArg.startsWith(
+          'Warning: The current testing environment is not configured to support act',
+        ) ||
+        firstArg.startsWith(
+          'Warning: You seem to have overlapping act() calls',
+        ))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.
@@ -106,11 +117,10 @@ env.beforeEach(() => {
   };
 
   // Initialize filters to a known good state.
-  saveComponentFilters(getDefaultComponentFilters());
+  setSavedComponentFilters(getDefaultComponentFilters());
   global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
 
   // Also initialize inline warnings so that we can test them.
-  setShowInlineWarningsAndErrors(true);
   global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
 
   installHook(global);
@@ -161,4 +171,8 @@ env.afterEach(() => {
   // It's also important to reset after tests, rather than before,
   // so that we don't disconnect the ReactCurrentDispatcher ref.
   jest.resetModules();
+});
+
+expect.extend({
+  ...require('../../../../scripts/jest/matchers/schedulerTestMatchers'),
 });

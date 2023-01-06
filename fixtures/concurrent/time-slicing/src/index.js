@@ -1,5 +1,5 @@
 import React, {PureComponent, unstable_startTransition} from 'react';
-import {createRoot} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';

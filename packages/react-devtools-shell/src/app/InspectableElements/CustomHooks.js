@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -109,12 +109,13 @@ function wrapWithHoc(Component) {
   }
   // $FlowFixMe
   const displayName = Component.displayName || Component.name;
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   Hoc.displayName = `withHoc(${displayName})`;
   return Hoc;
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
-export default function CustomHooks() {
+export default function CustomHooks(): React.Node {
   return (
     <Fragment>
       <FunctionWithHooks />

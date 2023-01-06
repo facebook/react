@@ -1,7 +1,6 @@
 import React from 'react';
-import {createRoot} from 'react-dom';
+import {hydrateRoot} from 'react-dom/client';
 
 import App from './components/App';
 
-let root = createRoot(document, {hydrate: true});
-root.render(<App assets={window.assetManifest} />);
+hydrateRoot(document, <App assets={window.assetManifest} />);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,6 +27,7 @@ import {
   enableProfilerChangedHookIndices,
 } from 'react-devtools-feature-flags';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -35,7 +36,7 @@ import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
 
-type HooksTreeViewProps = {|
+type HooksTreeViewProps = {
   bridge: FrontendBridge,
   element: Element,
   hookNames: HookNames | null,
@@ -43,7 +44,7 @@ type HooksTreeViewProps = {|
   parseHookNames: boolean,
   store: Store,
   toggleParseHookNames: ToggleParseHookNames,
-|};
+};
 
 export function InspectedElementHooksTree({
   bridge,
@@ -53,7 +54,7 @@ export function InspectedElementHooksTree({
   parseHookNames,
   store,
   toggleParseHookNames,
-}: HooksTreeViewProps) {
+}: HooksTreeViewProps): React.Node {
   const {hooks, id} = inspectedElement;
 
   // Changing parseHookNames is done in a transition, because it suspends.
@@ -85,7 +86,9 @@ export function InspectedElementHooksTree({
     return null;
   } else {
     return (
-      <div className={styles.HooksTreeView}>
+      <div
+        className={styles.HooksTreeView}
+        data-testname="InspectedElementHooksTree">
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
           {enableNamedHooksFeature &&
@@ -96,6 +99,7 @@ export function InspectedElementHooksTree({
                 isChecked={parseHookNamesOptimistic}
                 isDisabled={parseHookNamesOptimistic || hookParsingFailed}
                 onChange={handleChange}
+                testName="LoadHookNamesButton"
                 title={toggleTitle}>
                 <ButtonIcon type="parse-hook-names" />
               </Toggle>
@@ -117,14 +121,14 @@ export function InspectedElementHooksTree({
   }
 }
 
-type InnerHooksTreeViewProps = {|
+type InnerHooksTreeViewProps = {
   element: Element,
   hookNames: HookNames | null,
   hooks: HooksTree,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
-|};
+};
 
 export function InnerHooksTreeView({
   element,
@@ -133,8 +137,7 @@ export function InnerHooksTreeView({
   id,
   inspectedElement,
   path,
-}: InnerHooksTreeViewProps) {
-  // $FlowFixMe "Missing type annotation for U" whatever that means
+}: InnerHooksTreeViewProps): React.Node {
   return hooks.map((hook, index) => (
     <HookView
       key={index}
@@ -148,14 +151,14 @@ export function InnerHooksTreeView({
   ));
 }
 
-type HookViewProps = {|
+type HookViewProps = {
   element: Element,
   hook: HooksNode,
   hookNames: HookNames | null,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
-|};
+};
 
 function HookView({
   element,
@@ -266,7 +269,7 @@ function HookView({
     displayValue = 'null';
   } else if (value === undefined) {
     displayValue = null;
-  } else if (Array.isArray(value)) {
+  } else if (isArray(value)) {
     isComplexDisplayValue = true;
     displayValue = 'Array';
   } else if (type === 'object') {
@@ -275,7 +278,7 @@ function HookView({
   }
 
   if (isCustomHook) {
-    const subHooksView = Array.isArray(subHooks) ? (
+    const subHooksView = isArray(subHooks) ? (
       <InnerHooksTreeView
         element={element}
         hooks={subHooks}
@@ -352,7 +355,6 @@ function HookView({
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
               {hookDisplayName || 'Anonymous'}
             </span>{' '}
-            {/* $FlowFixMe */}
             <span className={styles.Value} onClick={toggleIsOpen}>
               {displayValue}
             </span>
@@ -413,5 +415,6 @@ function HookView({
   }
 }
 
-// $FlowFixMe
-export default React.memo(InspectedElementHooksTree);
+export default (React.memo(
+  InspectedElementHooksTree,
+): React.ComponentType<HookViewProps>);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -2180,9 +2180,9 @@ describe('TreeListContext', () => {
     it('should update correctly when elements are re-ordered', () => {
       const container = document.createElement('div');
       function ErrorOnce() {
-        const didErroRef = React.useRef(false);
-        if (!didErroRef.current) {
-          didErroRef.current = true;
+        const didErrorRef = React.useRef(false);
+        if (!didErrorRef.current) {
+          didErrorRef.current = true;
           console.error('test-only:one-time-error');
         }
         return null;

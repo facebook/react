@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,9 +18,9 @@ import ButtonIcon from '../ButtonIcon';
 
 import styles from './SidebarSelectedFiberInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
-export default function SidebarSelectedFiberInfo(_: Props) {
+export default function SidebarSelectedFiberInfo(_: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {
     rootID,
@@ -67,6 +67,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     const selectedElement = selectedListItemRef.current;
     if (
       selectedElement !== null &&
+      // $FlowFixMe[method-unbinding]
       typeof selectedElement.scrollIntoView === 'function'
     ) {
       selectedElement.scrollIntoView({block: 'nearest', inline: 'nearest'});

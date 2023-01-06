@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -123,6 +123,7 @@ describe('Fast Refresh', () => {
     return ReactFreshRuntime.createSignatureFunctionForTransform();
   }
 
+  // @reactVersion >= 16.9
   it('should not break the DevTools store', () => {
     render(`
       function Parent() {
@@ -186,6 +187,7 @@ describe('Fast Refresh', () => {
     expect(container.firstChild).not.toBe(element);
   });
 
+  // @reactVersion >= 16.9
   it('should not break when there are warnings in between patching', () => {
     withErrorsOrWarningsIgnored(['Expected:'], () => {
       render(`

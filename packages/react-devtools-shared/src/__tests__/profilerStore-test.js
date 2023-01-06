@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,6 +30,7 @@ describe('ProfilerStore', () => {
     ReactDOM = require('react-dom');
   });
 
+  // @reactVersion >= 16.9
   it('should not remove profiling data when roots are unmounted', async () => {
     const Parent = ({count}) =>
       new Array(count)
@@ -66,6 +67,7 @@ describe('ProfilerStore', () => {
     expect(store.profilerStore.getDataForRoot(rootB)).not.toBeNull();
   });
 
+  // @reactVersion >= 16.9
   it('should not allow new/saved profiling data to be set while profiling is in progress', () => {
     utils.act(() => store.profilerStore.startProfiling());
     const fauxProfilingData = {
@@ -83,6 +85,7 @@ describe('ProfilerStore', () => {
     expect(store.profilerStore.profilingData).toBe(fauxProfilingData);
   });
 
+  // @reactVersion >= 16.9
   // This test covers current broken behavior (arguably) with the synthetic event system.
   it('should filter empty commits', () => {
     const inputRef = React.createRef();
@@ -124,6 +127,59 @@ describe('ProfilerStore', () => {
     expect(data.operations).toHaveLength(1);
   });
 
+  // @reactVersion >= 16.9
+  it('should filter empty commits alt', () => {
+    let commitCount = 0;
+
+    const inputRef = React.createRef();
+    const Example = () => {
+      const [, setTouched] = React.useState(false);
+
+      const handleBlur = () => {
+        setTouched(true);
+      };
+
+      require('scheduler').unstable_advanceTime(1);
+
+      React.useLayoutEffect(() => {
+        commitCount++;
+      });
+
+      return <input ref={inputRef} onBlur={handleBlur} />;
+    };
+
+    const container = document.createElement('div');
+
+    // This element has to be in the <body> for the event system to work.
+    document.body.appendChild(container);
+
+    // It's important that this test uses legacy sync mode.
+    // The root API does not trigger this particular failing case.
+    legacyRender(<Example />, container);
+
+    expect(commitCount).toBe(1);
+    commitCount = 0;
+
+    utils.act(() => store.profilerStore.startProfiling());
+
+    // Focus and blur.
+    const target = inputRef.current;
+    target.focus();
+    target.blur();
+    target.focus();
+    target.blur();
+    expect(commitCount).toBe(1);
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    // Only one commit should have been recorded (in response to the "change" event).
+    const root = store.roots[0];
+    const data = store.profilerStore.getDataForRoot(root);
+    expect(data.commitData).toHaveLength(1);
+    expect(data.operations).toHaveLength(1);
+  });
+
+  // @reactVersion >= 16.9
   it('should throw if component filters are modified while profiling', () => {
     utils.act(() => store.profilerStore.startProfiling());
 
@@ -139,6 +195,7 @@ describe('ProfilerStore', () => {
     }).toThrow('Cannot modify filter preferences while profiling');
   });
 
+  // @reactVersion >= 16.9
   it('should not throw if state contains a property hasOwnProperty ', () => {
     let setStateCallback;
     const ControlledInput = () => {
@@ -169,5 +226,26 @@ describe('ProfilerStore', () => {
     const data = store.profilerStore.getDataForRoot(root);
     expect(data.commitData).toHaveLength(1);
     expect(data.operations).toHaveLength(1);
+  });
+
+  // @reactVersion >= 18.0
+  it('should not throw while initializing context values for Fibers within a not-yet-mounted subtree', () => {
+    const promise = new Promise(resolve => {});
+    const SuspendingView = () => {
+      throw promise;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback="Fallback">
+          <SuspendingView />
+        </React.Suspense>
+      );
+    };
+
+    const container = document.createElement('div');
+
+    utils.act(() => legacyRender(<App />, container));
+    utils.act(() => store.profilerStore.startProfiling());
   });
 });

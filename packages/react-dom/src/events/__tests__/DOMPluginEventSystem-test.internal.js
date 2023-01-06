@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,6 +14,7 @@ import {createEventTarget} from 'dom-event-testing-library';
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let act;
@@ -57,6 +58,16 @@ describe('DOMPluginEventSystem', () => {
       'enableLegacyFBSupport ' +
         (enableLegacyFBSupport ? 'enabled' : 'disabled'),
       () => {
+        beforeAll(() => {
+          // These tests are run twice, once with legacyFBSupport enabled and once disabled.
+          // The document needs to be cleaned up a bit before the second pass otherwise it is
+          // operating in a non pristine environment
+          document.removeChild(document.documentElement);
+          document.appendChild(document.createElement('html'));
+          document.documentElement.appendChild(document.createElement('head'));
+          document.documentElement.appendChild(document.createElement('body'));
+        });
+
         beforeEach(() => {
           jest.resetModules();
           ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -64,6 +75,7 @@ describe('DOMPluginEventSystem', () => {
 
           React = require('react');
           ReactDOM = require('react-dom');
+          ReactDOMClient = require('react-dom/client');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
           act = require('jest-react').act;
@@ -560,7 +572,6 @@ describe('DOMPluginEventSystem', () => {
           }
 
           ReactDOM.render(<Parent />, container);
-
           const second = document.body.lastChild;
           expect(second.textContent).toEqual('second');
           dispatchClickEvent(second);
@@ -616,7 +627,7 @@ describe('DOMPluginEventSystem', () => {
 
           // We're going to use a different root as a parent.
           // This lets us detect whether an event goes through React's event system.
-          const parentRoot = ReactDOM.createRoot(parentContainer);
+          const parentRoot = ReactDOMClient.createRoot(parentContainer);
           parentRoot.render(<Parent />);
           Scheduler.unstable_flushAll();
 
@@ -629,8 +640,7 @@ describe('DOMPluginEventSystem', () => {
           suspend = true;
 
           // Hydrate asynchronously.
-          const root = ReactDOM.createRoot(childContainer, {hydrate: true});
-          root.render(<App />);
+          ReactDOMClient.hydrateRoot(childContainer, <App />);
           jest.runAllTimers();
           Scheduler.unstable_flushAll();
 
@@ -1259,6 +1269,7 @@ describe('DOMPluginEventSystem', () => {
 
             React = require('react');
             ReactDOM = require('react-dom');
+            ReactDOMClient = require('react-dom/client');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
             act = require('jest-react').act;
@@ -1941,7 +1952,7 @@ describe('DOMPluginEventSystem', () => {
               return <button ref={ref}>Press me</button>;
             }
 
-            const root = ReactDOM.createRoot(container);
+            const root = ReactDOMClient.createRoot(container);
             root.render(<Test counter={0} />);
 
             expect(Scheduler).toFlushAndYield(['Test']);
@@ -2562,7 +2573,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
 
             act(() => {
               root.render(<Component />);
@@ -2649,7 +2660,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
 
             act(() => {
               root.render(<Component />);
@@ -2716,7 +2727,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
             act(() => {
               root.render(<Component />);
             });
@@ -2873,6 +2884,7 @@ describe('DOMPluginEventSystem', () => {
 
               React = require('react');
               ReactDOM = require('react-dom');
+              ReactDOMClient = require('react-dom/client');
               Scheduler = require('scheduler');
               ReactDOMServer = require('react-dom/server');
             });

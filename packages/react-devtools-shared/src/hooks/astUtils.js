@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,15 +8,20 @@
  */
 
 import {withSyncPerfMeasurements} from 'react-devtools-shared/src/PerformanceLoggingUtils';
-import traverse, {NodePath, Node} from '@babel/traverse';
-import {File} from '@babel/types';
+import traverse from '@babel/traverse';
 
 import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
 
-export type Position = {|
+// Missing types in @babel/traverse
+type NodePath = any;
+type Node = any;
+// Missing types in @babel/types
+type File = any;
+
+export type Position = {
   line: number,
   column: number,
-|};
+};
 
 export type SourceFileASTWithHookDetails = {
   sourceFileAST: File,
@@ -147,8 +152,8 @@ export function getHookName(
         originalSourceLineNumber,
       );
 
-      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-      return nodeLocationCheck && hookDeclaractionCheck;
+      const hookDeclarationCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclarationCheck;
     });
 
     if (matchingNodes.length === 1) {
@@ -162,8 +167,8 @@ export function getHookName(
         originalSourceColumnNumber,
       );
 
-      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-      return nodeLocationCheck && hookDeclaractionCheck;
+      const hookDeclarationCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclarationCheck;
     });
   }
 
@@ -356,7 +361,7 @@ function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
  */
 export function getHookNamesMappingFromAST(
   sourceAST: File,
-): $ReadOnlyArray<{|name: string, start: Position|}> {
+): $ReadOnlyArray<{name: string, start: Position}> {
   const hookStack = [];
   const hookNames = [];
   const pushFrame = (name: string, node: Node) => {
@@ -398,7 +403,7 @@ export function getHookNamesMappingFromAST(
           // If it doesn't, we immediately use the declared variable name
           // as the Hook name. We do this because for any other Hooks that
           // aren't the built-in Hooks that return a tuple, we can't reliably
-          // extract a Hook name from other variable declartions derived from
+          // extract a Hook name from other variable declarations derived from
           // this one, since we don't know which of the declared variables
           // are the relevant ones to track and show in dev tools.
           if (!isBuiltInHookThatReturnsTuple(path)) {
@@ -455,7 +460,7 @@ export function getHookNamesMappingFromAST(
                 case AST_NODE_TYPES.MEMBER_EXPRESSION: {
                   // When encountering a MemberExpression inside the new
                   // variable declaration, we only want to extract the variable
-                  // name if we're assinging the value of the first member,
+                  // name if we're assigning the value of the first member,
                   // which is handled by `filterMemberWithHookVariableName`.
                   // E.g.
                   //    const countState = useState(0);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,17 +9,19 @@
 
 import {getHookNamesMappingFromAST} from './astUtils';
 import {encode, decode} from 'sourcemap-codec';
-import {File} from '@babel/types';
 
-export type HookMap = {|
+// Missing types in @babel/types
+type File = any;
+
+export type HookMap = {
   names: $ReadOnlyArray<string>,
   mappings: HookMapMappings,
-|};
+};
 
-export type EncodedHookMap = {|
+export type EncodedHookMap = {
   names: $ReadOnlyArray<string>,
   mappings: string,
-|};
+};
 
 // See generateHookMap below for more details on formatting
 export type HookMapEntry = [

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,6 +9,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let Scheduler;
 let act;
@@ -31,7 +32,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot = ReactDOMClient.createRoot(dom);
       if (__DEV__) {
         act(() => concurrentRoot.render(el));
       } else {
@@ -100,7 +101,7 @@ describe('ReactTestUtils.act()', () => {
 
     // @gate __DEV__
     it('does not warn in concurrent mode', () => {
-      const root = ReactDOM.createRoot(document.createElement('div'));
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
     });
@@ -113,6 +114,7 @@ function runActTests(label, render, unmount, rerender) {
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       ReactTestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
       act = ReactTestUtils.act;
@@ -501,16 +503,15 @@ function runActTests(label, render, unmount, rerender) {
       // @gate __DEV__
       it('warns if you try to interleave multiple act calls', async () => {
         spyOnDevAndProd(console, 'error');
-        // let's try to cheat and spin off a 'thread' with an act call
-        (async () => {
-          await act(async () => {
-            await sleep(50);
-          });
-        })();
 
-        await act(async () => {
-          await sleep(100);
-        });
+        await Promise.all([
+          act(async () => {
+            await sleep(50);
+          }),
+          act(async () => {
+            await sleep(100);
+          }),
+        ]);
 
         await sleep(150);
         if (__DEV__) {

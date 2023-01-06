@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,20 +11,55 @@ module.exports = [
     shortName: 'dom',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/src/server/ReactDOMFizzServerNode',
-      'react-server-dom-webpack/writer.node.server',
-      'react-server-dom-webpack',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-dom/static.node',
+      'react-dom/server-rendering-stub',
+      'react-dom/unstable_server-external-runtime',
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/client',
     ],
     paths: [
       'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/writer',
-      'react-server-dom-webpack/writer.node.server',
-      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server',
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
       'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'bun',
+    entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
+    paths: [
+      'react-dom',
+      'react-dom/server',
+      'react-dom/server.bun',
+      'react-dom/src/server/ReactDOMFizzServerBun.js',
+      'react-dom-bindings',
+      'react-dom/server.node',
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server',
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -33,19 +68,33 @@ module.exports = [
     shortName: 'dom-browser',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/src/server/ReactDOMFizzServerBrowser',
-      'react-server-dom-webpack/writer.browser.server',
-      'react-server-dom-webpack',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+      'react-dom/static.browser',
+      'react-dom/server-rendering-stub',
+      'react-dom/unstable_server-external-runtime',
+      'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/client',
     ],
     paths: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server.browser',
+      'react-dom/static.browser',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/writer.browser.server',
-      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -53,15 +102,20 @@ module.exports = [
   {
     shortName: 'dom-legacy',
     entryPoints: [
-      'react-dom/src/server/ReactDOMLegacyServerBrowser', // react-dom/server.browser
-      'react-dom/src/server/ReactDOMLegacyServerNode', // react-dom/server.node
+      'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
     ],
     paths: [
       'react-dom',
+      'react-dom-bindings',
       'react-server-dom-webpack',
+      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',
+      'react-dom/src/server/ReactDOMLegacyServerNodeStream.js', // file indirection to support partial forking of some methods in *Node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -99,9 +153,14 @@ module.exports = [
     entryPoints: [
       'react-server-dom-relay',
       'react-server-dom-relay/server',
-      'react-server-dom-relay/src/ReactDOMServerFB',
+      'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
-    paths: ['react-dom', 'react-server-dom-relay'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-server-dom-relay',
+      'shared/ReactDOMSharedInternals',
+    ],
     isFlowTyped: true,
     isServerSupported: true,
   },

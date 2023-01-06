@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,6 +9,7 @@
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import resolveBoxStyle from './resolveBoxStyle';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {RendererID} from '../types';
@@ -24,7 +25,7 @@ export default function setupNativeStyleEditor(
 ) {
   bridge.addListener(
     'NativeStyleEditor_measure',
-    ({id, rendererID}: {|id: number, rendererID: RendererID|}) => {
+    ({id, rendererID}: {id: number, rendererID: RendererID}) => {
       measureStyle(agent, bridge, resolveNativeStyle, id, rendererID);
     },
   );
@@ -37,13 +38,13 @@ export default function setupNativeStyleEditor(
       oldName,
       newName,
       value,
-    }: {|
+    }: {
       id: number,
       rendererID: RendererID,
       oldName: string,
       newName: string,
       value: string,
-    |}) => {
+    }) => {
       renameStyle(agent, id, rendererID, oldName, newName, value);
       setTimeout(() =>
         measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),
@@ -58,12 +59,12 @@ export default function setupNativeStyleEditor(
       rendererID,
       name,
       value,
-    }: {|
+    }: {
       id: number,
       rendererID: number,
       name: string,
       value: string,
-    |}) => {
+    }) => {
       setStyle(agent, id, rendererID, name, value);
       setTimeout(() =>
         measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),
@@ -128,7 +129,6 @@ function measureStyle(
     return;
   }
 
-  // $FlowFixMe the parameter types of an unknown function are unknown
   instance.measure((x, y, width, height, left, top) => {
     // RN Android sometimes returns undefined here. Don't send measurements in this case.
     // https://github.com/jhen0409/react-native-debugger/issues/84#issuecomment-304611817
@@ -210,12 +210,9 @@ function renameStyle(
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
     instance.setNativeProps({style: newStyle});
-  } else if (Array.isArray(style)) {
+  } else if (isArray(style)) {
     const lastIndex = style.length - 1;
-    if (
-      typeof style[lastIndex] === 'object' &&
-      !Array.isArray(style[lastIndex])
-    ) {
+    if (typeof style[lastIndex] === 'object' && !isArray(style[lastIndex])) {
       customStyle = shallowClone(style[lastIndex]);
       delete customStyle[oldName];
       if (newName) {
@@ -296,12 +293,9 @@ function setStyle(
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
     instance.setNativeProps({style: newStyle});
-  } else if (Array.isArray(style)) {
+  } else if (isArray(style)) {
     const lastLength = style.length - 1;
-    if (
-      typeof style[lastLength] === 'object' &&
-      !Array.isArray(style[lastLength])
-    ) {
+    if (typeof style[lastLength] === 'object' && !isArray(style[lastLength])) {
       agent.overrideValueAtPath({
         type: 'props',
         id,

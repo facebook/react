@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 
 let JSDOM;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
@@ -29,7 +29,7 @@ describe('useId', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
@@ -93,8 +93,12 @@ describe('useId', () => {
   }
 
   function normalizeTreeIdForTesting(id) {
-    const [serverClientPrefix, base32, hookIndex] = id.split(':');
-    if (serverClientPrefix === 'r') {
+    const result = id.match(/:(R|r)([a-z0-9]*)(H([0-9]*))?:/);
+    if (result === undefined) {
+      throw new Error('Invalid id format');
+    }
+    const [, serverClientPrefix, base32, hookIndex] = result;
+    if (serverClientPrefix.endsWith('r')) {
       // Client ids aren't stable. For testing purposes, strip out the counter.
       return (
         'CLIENT_GENERATED_ID' +
@@ -132,7 +136,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -177,7 +181,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -216,7 +220,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -252,7 +256,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -278,7 +282,7 @@ describe('useId', () => {
     // 'R:' prefix, and the first character after that, which may not correspond
     // to a complete set of 5 bits.
     //
-    // Example: R:clalalalalalalala...
+    // Example: :Rclalalalalalalala...:
     //
     // We can use this pattern to test large ids that exceed the bitwise
     // safe range (32 bits). The algorithm should theoretically support ids
@@ -307,14 +311,14 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     const divs = container.querySelectorAll('div');
 
     // Confirm that every id matches the expected pattern
     for (let i = 0; i < divs.length; i++) {
-      // Example: R:clalalalalalalala...
-      expect(divs[i].id).toMatch(/^R:.(((al)*a?)((la)*l?))*$/);
+      // Example: :Rclalalalalalalala...:
+      expect(divs[i].id).toMatch(/^:R.(((al)*a?)((la)*l?))*:$/);
     }
   });
 
@@ -331,15 +335,14 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     // We append a suffix to the end of the id to distinguish them
     expect(container).toMatchInlineSnapshot(`
       <div
         id="container"
       >
-        R:0, R:0:1, R:0:2
-        <!-- -->
+        :R0:, :R0H1:, :R0H2:
       </div>
     `);
   });
@@ -358,14 +361,13 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
         id="container"
       >
-        R:0
-        <!-- -->
+        :R0:
       </div>
     `);
   });
@@ -388,7 +390,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -439,7 +441,7 @@ describe('useId', () => {
     });
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
-      const root = ReactDOM.hydrateRoot(container, <App />);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
       expect(Scheduler).toFlushUntilNextPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
@@ -520,7 +522,7 @@ describe('useId', () => {
     });
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
-      const root = ReactDOM.hydrateRoot(container, <App />);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
       expect(Scheduler).toFlushUntilNextPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
@@ -568,5 +570,131 @@ describe('useId', () => {
     `);
     // Should have hydrated successfully
     expect(span.current).toBe(dehydratedSpan);
+  });
+
+  test('identifierPrefix option', async () => {
+    function Child() {
+      const id = useId();
+      return <div>{id}</div>;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child />
+          <Child />
+          {showMore && <Child />}
+        </>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        identifierPrefix: 'custom-prefix-',
+      });
+      pipe(writable);
+    });
+    let root;
+    await clientAct(async () => {
+      root = ReactDOMClient.hydrateRoot(container, <App />, {
+        identifierPrefix: 'custom-prefix-',
+      });
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :custom-prefix-R1:
+        </div>
+        <div>
+          :custom-prefix-R2:
+        </div>
+      </div>
+    `);
+
+    // Mount a new, client-only id
+    await clientAct(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :custom-prefix-R1:
+        </div>
+        <div>
+          :custom-prefix-R2:
+        </div>
+        <div>
+          :custom-prefix-r0:
+        </div>
+      </div>
+    `);
+  });
+
+  // https://github.com/vercel/next.js/issues/43033
+  // re-rendering in strict mode caused the localIdCounter to be reset but it the rerender hook does not
+  // increment it again. This only shows up as a problem for subsequent useId's because it affects child
+  // and sibling counters not the initial one
+  it('does not forget it mounted an id when re-rendering in dev', async () => {
+    function Parent() {
+      const id = useId();
+      return (
+        <div>
+          {id} <Child />
+        </div>
+      );
+    }
+    function Child() {
+      const id = useId();
+      return <div>{id}</div>;
+    }
+
+    function App({showMore}) {
+      return (
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
+        </div>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
+        </div>
+      </div>
+    `);
   });
 });

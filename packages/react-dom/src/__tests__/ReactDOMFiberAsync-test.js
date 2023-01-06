@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,7 @@
 let React;
 
 let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let act;
 
@@ -28,6 +29,7 @@ describe('ReactDOMFiberAsync', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
 
@@ -184,7 +186,7 @@ describe('ReactDOMFiberAsync', () => {
           );
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(asyncValueRef.current.textContent).toBe('');
@@ -204,7 +206,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     it('top-level updates are concurrent', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -226,7 +228,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -256,7 +258,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<Component />);
       Scheduler.unstable_flushAll();
 
@@ -273,20 +275,35 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual([]);
       });
       // Only the active updates have flushed
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
 
-      instance.push('D');
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        instance.push('D');
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        instance.push('D');
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
 
       // Flush the async updates
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
-      expect(ops).toEqual(['BC', 'ABCD']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(ops).toEqual(['ABC', 'ABCD']);
+      } else {
+        expect(ops).toEqual(['BC', 'ABCD']);
+      }
     });
 
-    // @gate experimental || www
+    // @gate www
     it('flushControlled flushes updates before yielding to browser', () => {
       let inst;
       class Counter extends React.Component {
@@ -298,7 +315,7 @@ describe('ReactDOMFiberAsync', () => {
           return this.state.counter;
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('0');
@@ -326,7 +343,7 @@ describe('ReactDOMFiberAsync', () => {
       ]);
     });
 
-    // @gate experimental || www
+    // @gate www
     it('flushControlled does not flush until end of outermost batchedUpdates', () => {
       let inst;
       class Counter extends React.Component {
@@ -357,7 +374,7 @@ describe('ReactDOMFiberAsync', () => {
       ]);
     });
 
-    // @gate experimental || www
+    // @gate www
     it('flushControlled returns nothing', () => {
       // In the future, we may want to return a thenable "work" object.
       let inst;
@@ -401,7 +418,7 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       await act(async () => {
         root.render(<Form />);
       });
@@ -452,7 +469,7 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       await act(async () => {
         root.render(<Form />);
       });
@@ -511,7 +528,7 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       await act(async () => {
         root.render(<Form />);
       });
@@ -576,7 +593,7 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   it('updates flush without yielding in the next event', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function Text(props) {
       Scheduler.unstable_yieldValue(props.text);
@@ -621,7 +638,7 @@ describe('ReactDOMFiberAsync', () => {
       return <button ref={ref}>new</button>;
     }
 
-    const oldRoot = ReactDOM.createRoot(container);
+    const oldRoot = ReactDOMClient.createRoot(container);
     act(() => {
       oldRoot.render(<OldApp />);
     });
@@ -633,7 +650,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(container.textContent).toBe('');
 
     // We can now render a new one.
-    const newRoot = ReactDOM.createRoot(container);
+    const newRoot = ReactDOMClient.createRoot(container);
     ReactDOM.flushSync(() => {
       newRoot.render(<NewApp />);
     });

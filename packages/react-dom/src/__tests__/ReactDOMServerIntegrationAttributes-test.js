@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,6 +10,7 @@
 'use strict';
 
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React;
 let ReactDOM;
@@ -36,6 +37,7 @@ const {
   resetModules,
   itRenders,
   clientCleanRender,
+  clientRenderOnServerString,
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
@@ -335,7 +337,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
-            return <div ref="foo" />;
+            return <div ref={React.createRef()} />;
           }
         }
         const e = await render(<RefComponent />);
@@ -495,9 +497,9 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'badly cased aliased HTML attribute with a warning',
         async render => {
-          const e = await render(<meta httpequiv="refresh" />, 1);
-          expect(e.hasAttribute('http-equiv')).toBe(false);
-          expect(e.getAttribute('httpequiv')).toBe('refresh');
+          const e = await render(<form acceptcharset="utf-8" />, 1);
+          expect(e.hasAttribute('accept-charset')).toBe(false);
+          expect(e.getAttribute('acceptcharset')).toBe('utf-8');
         },
       );
 
@@ -657,17 +659,28 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('className for custom elements', async render => {
-      const e = await render(<div is="custom-element" className="test" />, 0);
-      expect(e.getAttribute('className')).toBe('test');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        const e = await render(
+          <div is="custom-element" className="test" />,
+          render === clientRenderOnServerString ? 1 : 0,
+        );
+        expect(e.getAttribute('className')).toBe(null);
+        expect(e.getAttribute('class')).toBe('test');
+      } else {
+        const e = await render(<div is="custom-element" className="test" />, 0);
+        expect(e.getAttribute('className')).toBe('test');
+      }
     });
 
     itRenders('htmlFor attribute on custom elements', async render => {
       const e = await render(<div is="custom-element" htmlFor="test" />);
       expect(e.getAttribute('htmlFor')).toBe('test');
+      expect(e.getAttribute('for')).toBe(null);
     });
 
     itRenders('for attribute on custom elements', async render => {
       const e = await render(<div is="custom-element" for="test" />);
+      expect(e.getAttribute('htmlFor')).toBe(null);
       expect(e.getAttribute('for')).toBe('test');
     });
 
@@ -683,12 +696,20 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('unknown boolean `true` attributes as strings', async render => {
       const e = await render(<custom-element foo={true} />);
-      expect(e.getAttribute('foo')).toBe('true');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(e.getAttribute('foo')).toBe('');
+      } else {
+        expect(e.getAttribute('foo')).toBe('true');
+      }
     });
 
     itRenders('unknown boolean `false` attributes as strings', async render => {
       const e = await render(<custom-element foo={false} />);
-      expect(e.getAttribute('foo')).toBe('false');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(e.getAttribute('foo')).toBe(null);
+      } else {
+        expect(e.getAttribute('foo')).toBe('false');
+      }
     });
 
     itRenders(

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -75,6 +75,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+      'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -177,6 +178,159 @@ describe('memo', () => {
         parent.current.setState({count: 1});
         expect(Scheduler).toFlushAndYield(['Count: 1']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
+
+      it('consistent behavior for reusing props object across different function component types', async () => {
+        // This test is a bit complicated because it relates to an
+        // implementation detail. We don't have strong guarantees that the props
+        // object is referentially equal during updates where we can't bail
+        // out anyway — like if the props are shallowly equal, but there's a
+        // local state or context update in the same batch.
+        //
+        // However, as a principle, we should aim to make the behavior
+        // consistent across different ways of memoizing a component. For
+        // example, React.memo has a different internal Fiber layout if you pass
+        // a normal function component (SimpleMemoComponent) versus if you pass
+        // a different type like forwardRef (MemoComponent). But this is an
+        // implementation detail. Wrapping a component in forwardRef (or
+        // React.lazy, etc) shouldn't affect whether the props object is reused
+        // during a bailout.
+        //
+        // So this test isn't primarily about asserting a particular behavior
+        // for reusing the props object; it's about making sure the behavior
+        // is consistent.
+
+        const {useEffect, useState} = React;
+
+        let setSimpleMemoStep;
+        const SimpleMemo = React.memo(props => {
+          const [step, setStep] = useState(0);
+          setSimpleMemoStep = setStep;
+
+          const prevProps = React.useRef(props);
+          useEffect(() => {
+            if (props !== prevProps.current) {
+              prevProps.current = props;
+              Scheduler.unstable_yieldValue('Props changed [SimpleMemo]');
+            }
+          }, [props]);
+
+          return <Text text={`SimpleMemo [${props.prop}${step}]`} />;
+        });
+
+        let setComplexMemo;
+        const ComplexMemo = React.memo(
+          React.forwardRef((props, ref) => {
+            const [step, setStep] = useState(0);
+            setComplexMemo = setStep;
+
+            const prevProps = React.useRef(props);
+            useEffect(() => {
+              if (props !== prevProps.current) {
+                prevProps.current = props;
+                Scheduler.unstable_yieldValue('Props changed [ComplexMemo]');
+              }
+            }, [props]);
+
+            return <Text text={`ComplexMemo [${props.prop}${step}]`} />;
+          }),
+        );
+
+        let setMemoWithIndirectionStep;
+        const MemoWithIndirection = React.memo(props => {
+          return <Indirection props={props} />;
+        });
+        function Indirection({props}) {
+          const [step, setStep] = useState(0);
+          setMemoWithIndirectionStep = setStep;
+
+          const prevProps = React.useRef(props);
+          useEffect(() => {
+            if (props !== prevProps.current) {
+              prevProps.current = props;
+              Scheduler.unstable_yieldValue(
+                'Props changed [MemoWithIndirection]',
+              );
+            }
+          }, [props]);
+
+          return <Text text={`MemoWithIndirection [${props.prop}${step}]`} />;
+        }
+
+        function setLocalUpdateOnChildren(step) {
+          setSimpleMemoStep(step);
+          setMemoWithIndirectionStep(step);
+          setComplexMemo(step);
+        }
+
+        function App({prop}) {
+          return (
+            <>
+              <SimpleMemo prop={prop} />
+              <ComplexMemo prop={prop} />
+              <MemoWithIndirection prop={prop} />
+            </>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+        await act(async () => {
+          root.render(<App prop="A" />);
+        });
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [A0]',
+          'ComplexMemo [A0]',
+          'MemoWithIndirection [A0]',
+        ]);
+
+        // Demonstrate what happens when the props change
+        await act(async () => {
+          root.render(<App prop="B" />);
+        });
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B0]',
+          'ComplexMemo [B0]',
+          'MemoWithIndirection [B0]',
+          'Props changed [SimpleMemo]',
+          'Props changed [ComplexMemo]',
+          'Props changed [MemoWithIndirection]',
+        ]);
+
+        // Demonstrate what happens when the prop object changes but there's a
+        // bailout because all the individual props are the same.
+        await act(async () => {
+          root.render(<App prop="B" />);
+        });
+        // Nothing re-renders
+        expect(Scheduler).toHaveYielded([]);
+
+        // Demonstrate what happens when the prop object changes, it bails out
+        // because all the props are the same, but we still render the
+        // children because there's a local update in the same batch.
+        await act(async () => {
+          root.render(<App prop="B" />);
+          setLocalUpdateOnChildren(1);
+        });
+        // The components should re-render with the new local state, but none
+        // of the props objects should have changed
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B1]',
+          'ComplexMemo [B1]',
+          'MemoWithIndirection [B1]',
+        ]);
+
+        // Do the same thing again. We should still reuse the props object.
+        await act(async () => {
+          root.render(<App prop="B" />);
+          setLocalUpdateOnChildren(2);
+        });
+        // The components should re-render with the new local state, but none
+        // of the props objects should have changed
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B2]',
+          'ComplexMemo [B2]',
+          'MemoWithIndirection [B2]',
+        ]);
       });
 
       it('accepts custom comparison function', async () => {
@@ -288,7 +442,11 @@ describe('memo', () => {
         );
         expect(Scheduler).toFlushAndYield(['Loading...']);
         await Promise.resolve();
-        expect(Scheduler).toFlushAndYield([15]);
+        expect(() => {
+          expect(Scheduler).toFlushAndYield([15]);
+        }).toErrorDev([
+          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+        ]);
         expect(ReactNoop.getChildren()).toEqual([span(15)]);
 
         // Should bail out because props have not changed
@@ -399,7 +557,11 @@ describe('memo', () => {
             <Outer />
           </div>,
         );
-        expect(Scheduler).toFlushWithoutYielding();
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toErrorDev([
+          'Inner: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+        ]);
 
         // Mount
         expect(() => {

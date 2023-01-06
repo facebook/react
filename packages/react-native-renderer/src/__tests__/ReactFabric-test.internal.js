@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -631,6 +631,106 @@ describe('ReactFabric', () => {
     // props even though the actual scheduling of the event could have happened earlier.
     // This could change in the future.
     expect(touchStart2).toBeCalled();
+  });
+
+  describe('skipBubbling', () => {
+    it('should skip bubbling to ancestor if specified', () => {
+      const View = createReactNativeComponentClass('RCTView', () => ({
+        validAttributes: {},
+        uiViewClassName: 'RCTView',
+        bubblingEventTypes: {
+          topDefaultBubblingEvent: {
+            phasedRegistrationNames: {
+              captured: 'onDefaultBubblingEventCapture',
+              bubbled: 'onDefaultBubblingEvent',
+            },
+          },
+          topBubblingEvent: {
+            phasedRegistrationNames: {
+              captured: 'onBubblingEventCapture',
+              bubbled: 'onBubblingEvent',
+              skipBubbling: false,
+            },
+          },
+          topSkipBubblingEvent: {
+            phasedRegistrationNames: {
+              captured: 'onSkippedBubblingEventCapture',
+              bubbled: 'onSkippedBubblingEvent',
+              skipBubbling: true,
+            },
+          },
+        },
+      }));
+      const ancestorBubble = jest.fn();
+      const ancestorCapture = jest.fn();
+      const targetBubble = jest.fn();
+      const targetCapture = jest.fn();
+
+      const event = {};
+
+      act(() => {
+        ReactFabric.render(
+          <View
+            onSkippedBubblingEventCapture={ancestorCapture}
+            onDefaultBubblingEventCapture={ancestorCapture}
+            onBubblingEventCapture={ancestorCapture}
+            onSkippedBubblingEvent={ancestorBubble}
+            onDefaultBubblingEvent={ancestorBubble}
+            onBubblingEvent={ancestorBubble}>
+            <View
+              onSkippedBubblingEventCapture={targetCapture}
+              onDefaultBubblingEventCapture={targetCapture}
+              onBubblingEventCapture={targetCapture}
+              onSkippedBubblingEvent={targetBubble}
+              onDefaultBubblingEvent={targetBubble}
+              onBubblingEvent={targetBubble}
+            />
+          </View>,
+          11,
+        );
+      });
+
+      expect(nativeFabricUIManager.createNode.mock.calls.length).toBe(2);
+      expect(nativeFabricUIManager.registerEventHandler.mock.calls.length).toBe(
+        1,
+      );
+      const [
+        ,
+        ,
+        ,
+        ,
+        childInstance,
+      ] = nativeFabricUIManager.createNode.mock.calls[0];
+      const [
+        dispatchEvent,
+      ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
+
+      dispatchEvent(childInstance, 'topDefaultBubblingEvent', event);
+      expect(targetBubble).toHaveBeenCalledTimes(1);
+      expect(targetCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorBubble).toHaveBeenCalledTimes(1);
+      ancestorBubble.mockReset();
+      ancestorCapture.mockReset();
+      targetBubble.mockReset();
+      targetCapture.mockReset();
+
+      dispatchEvent(childInstance, 'topBubblingEvent', event);
+      expect(targetBubble).toHaveBeenCalledTimes(1);
+      expect(targetCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorBubble).toHaveBeenCalledTimes(1);
+      ancestorBubble.mockReset();
+      ancestorCapture.mockReset();
+      targetBubble.mockReset();
+      targetCapture.mockReset();
+
+      dispatchEvent(childInstance, 'topSkipBubblingEvent', event);
+      expect(targetBubble).toHaveBeenCalledTimes(1);
+      expect(targetCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorCapture).toHaveBeenCalledTimes(1);
+      expect(ancestorBubble).not.toBeCalled();
+    });
   });
 
   it('dispatches event with target as instance', () => {

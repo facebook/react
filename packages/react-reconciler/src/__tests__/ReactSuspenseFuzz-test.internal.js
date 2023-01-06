@@ -176,18 +176,6 @@ describe('ReactSuspenseFuzz', () => {
         const legacyOutput = ReactNoop.getChildrenAsJSX();
         expect(legacyOutput).toEqual(expectedOutput);
         ReactNoop.renderLegacySyncRoot(null);
-
-        // Observable behavior differs here in a way that's expected:
-        // If enableSuspenseLayoutEffectSemantics is enabled, layout effects are destroyed on re-suspend
-        // before larger 'beginAfter' timers have a chance to fire.
-        if (!flags.enableSuspenseLayoutEffectSemantics) {
-          resetCache();
-          const concurrentRoot = ReactNoop.createRoot();
-          concurrentRoot.render(children);
-          resolveAllTasks();
-          const concurrentOutput = concurrentRoot.getChildrenAsJSX();
-          expect(concurrentOutput).toEqual(expectedOutput);
-        }
       });
     }
 

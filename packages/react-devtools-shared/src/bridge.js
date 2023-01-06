@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,14 +17,14 @@ import type {
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/console';
 
 const BATCH_DURATION = 100;
 
 // This message specifies the version of the DevTools protocol currently supported by the backend,
 // as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
 // This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
-export type BridgeProtocol = {|
+export type BridgeProtocol = {
   // Version supported by the current frontend/backend.
   version: number,
 
@@ -32,7 +32,7 @@ export type BridgeProtocol = {|
   // Note that 'maxNpmVersion' is only set when the version is bumped.
   minNpmVersion: string,
   maxNpmVersion: string | null,
-|};
+};
 
 // Bump protocol version whenever a backwards breaking change is made
 // in the messages sent between BackendBridge and FrontendBridge.
@@ -54,9 +54,18 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
     minNpmVersion: '"<4.11.0"',
     maxNpmVersion: '"<4.11.0"',
   },
+  // Versions 4.11.x – 4.12.x contained the backwards breaking change,
+  // but we didn't add the "fix" of checking the protocol version until 4.13,
+  // so we don't recommend downgrading to 4.11 or 4.12.
   {
     version: 1,
     minNpmVersion: '4.13.0',
+    maxNpmVersion: '4.21.0',
+  },
+  // Version 2 adds a StrictMode-enabled and supports-StrictMode bits to add-root operation.
+  {
+    version: 2,
+    minNpmVersion: '4.22.0',
     maxNpmVersion: null,
   },
 ];
@@ -64,116 +73,118 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
 export const currentBridgeProtocol: BridgeProtocol =
   BRIDGE_PROTOCOL[BRIDGE_PROTOCOL.length - 1];
 
-type ElementAndRendererID = {|id: number, rendererID: RendererID|};
+type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {|
+type Message = {
   event: string,
   payload: any,
-|};
+};
 
-type HighlightElementInDOM = {|
+type HighlightElementInDOM = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
   openNativeElementsPanel: boolean,
   scrollIntoView: boolean,
-|};
+};
 
-type OverrideValue = {|
+type OverrideValue = {
   ...ElementAndRendererID,
   path: Array<string | number>,
   wasForwarded?: boolean,
   value: any,
-|};
+};
 
-type OverrideHookState = {|
+type OverrideHookState = {
   ...OverrideValue,
   hookID: number,
-|};
+};
 
 type PathType = 'props' | 'hooks' | 'state' | 'context';
 
-type DeletePath = {|
+type DeletePath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   path: Array<string | number>,
-|};
+};
 
-type RenamePath = {|
+type RenamePath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   oldPath: Array<string | number>,
   newPath: Array<string | number>,
-|};
+};
 
-type OverrideValueAtPath = {|
+type OverrideValueAtPath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   path: Array<string | number>,
   value: any,
-|};
+};
 
-type OverrideError = {|
+type OverrideError = {
   ...ElementAndRendererID,
   forceError: boolean,
-|};
+};
 
-type OverrideSuspense = {|
+type OverrideSuspense = {
   ...ElementAndRendererID,
   forceFallback: boolean,
-|};
+};
 
-type CopyElementPathParams = {|
+type CopyElementPathParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
-|};
+};
 
-type ViewAttributeSourceParams = {|
+type ViewAttributeSourceParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
-|};
+};
 
-type InspectElementParams = {|
+type InspectElementParams = {
   ...ElementAndRendererID,
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
-|};
+};
 
-type StoreAsGlobalParams = {|
+type StoreAsGlobalParams = {
   ...ElementAndRendererID,
   count: number,
   path: Array<string | number>,
-|};
+};
 
-type NativeStyleEditor_RenameAttributeParams = {|
+type NativeStyleEditor_RenameAttributeParams = {
   ...ElementAndRendererID,
   oldName: string,
   newName: string,
   value: string,
-|};
+};
 
-type NativeStyleEditor_SetValueParams = {|
+type NativeStyleEditor_SetValueParams = {
   ...ElementAndRendererID,
   name: string,
   value: string,
-|};
+};
 
-type UpdateConsolePatchSettingsParams = {|
+type SavedPreferencesParams = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
+  componentFilters: Array<ComponentFilter>,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
-|};
+};
 
-export type BackendEvents = {|
+export type BackendEvents = {
+  backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
+  getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   isSynchronousXHRSupported: [boolean],
@@ -192,21 +203,22 @@ export type BackendEvents = {|
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
-    {|isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>|},
+    {isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
-|};
+};
 
-type FrontendEvents = {|
-  clearErrorsAndWarnings: [{|rendererID: RendererID|}],
+type FrontendEvents = {
+  clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForFiberID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
   clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  getBackendVersion: [],
   getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
-  getProfilingData: [{|rendererID: RendererID|}],
+  getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
@@ -217,6 +229,7 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
+  savedPreferences: [SavedPreferencesParams],
   selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
@@ -226,7 +239,7 @@ type FrontendEvents = {|
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
-  updateConsolePatchSettings: [UpdateConsolePatchSettingsParams],
+  updateConsolePatchSettings: [ConsolePatchSettings],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
@@ -249,15 +262,15 @@ type FrontendEvents = {|
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
-|};
+};
 
 class Bridge<
   OutgoingEvents: Object,
   IncomingEvents: Object,
-> extends EventEmitter<{|
+> extends EventEmitter<{
   ...IncomingEvents,
   ...OutgoingEvents,
-|}> {
+}> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;
@@ -271,7 +284,9 @@ class Bridge<
 
     this._wallUnlisten =
       wall.listen((message: Message) => {
-        (this: any).emit(message.event, message.payload);
+        if (message && message.event) {
+          (this: any).emit(message.event, message.payload);
+        }
       }) || null;
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.
@@ -352,7 +367,7 @@ class Bridge<
     }
   }
 
-  _flush = () => {
+  _flush: () => void = () => {
     // This method is used after the bridge is marked as destroyed in shutdown sequence,
     // so we do not bail out if the bridge marked as destroyed.
     // It is a private method that the bridge ensures is only called at the right times.
@@ -377,7 +392,7 @@ class Bridge<
 
   // Temporarily support older standalone backends by forwarding "overrideValueAtPath" commands
   // to the older message types they may be listening to.
-  overrideValueAtPath = ({
+  overrideValueAtPath: OverrideValueAtPath => void = ({
     id,
     path,
     rendererID,

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
  */
 
 /*
- * The `'' + value` pattern (used in in perf-sensitive code) throws for Symbol
+ * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
  * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
  *
  * The functions in this module will throw an easier-to-understand,
@@ -26,6 +26,7 @@ function typeName(value: mixed): string {
       (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
       (value: any).constructor.name ||
       'Object';
+    // $FlowFixMe
     return type;
   }
 }
@@ -72,7 +73,7 @@ function testStringCoercion(value: mixed) {
 export function checkAttributeStringCoercion(
   value: mixed,
   attributeName: string,
-) {
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -86,7 +87,7 @@ export function checkAttributeStringCoercion(
   }
 }
 
-export function checkKeyStringCoercion(value: mixed) {
+export function checkKeyStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -99,7 +100,10 @@ export function checkKeyStringCoercion(value: mixed) {
   }
 }
 
-export function checkPropStringCoercion(value: mixed, propName: string) {
+export function checkPropStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -113,7 +117,10 @@ export function checkPropStringCoercion(value: mixed, propName: string) {
   }
 }
 
-export function checkCSSPropertyStringCoercion(value: mixed, propName: string) {
+export function checkCSSPropertyStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -127,7 +134,7 @@ export function checkCSSPropertyStringCoercion(value: mixed, propName: string) {
   }
 }
 
-export function checkHtmlStringCoercion(value: mixed) {
+export function checkHtmlStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -140,7 +147,7 @@ export function checkHtmlStringCoercion(value: mixed) {
   }
 }
 
-export function checkFormFieldValueStringCoercion(value: mixed) {
+export function checkFormFieldValueStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(

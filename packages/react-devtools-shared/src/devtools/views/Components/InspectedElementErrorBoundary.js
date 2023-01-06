@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,13 +18,13 @@ import {TreeStateContext} from './TreeContext';
 import {clearCacheBecauseOfError} from '../../../inspectedElementCache';
 import styles from './InspectedElementErrorBoundary.css';
 
-type WrapperProps = {|
+type WrapperProps = {
   children: React$Node,
-|};
+};
 
 export default function InspectedElementErrorBoundaryWrapper({
   children,
-}: WrapperProps) {
+}: WrapperProps): React.Node {
   // Key on the selected element ID so that changing the selected element automatically hides the boundary.
   // This seems best since an error inspecting one element isn't likely to be relevant to another element.
   const {selectedElementID} = useContext(TreeStateContext);

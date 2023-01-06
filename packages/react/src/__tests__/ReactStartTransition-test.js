@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,7 +27,6 @@ describe('ReactStartTransition', () => {
     useTransition = React.useTransition;
   });
 
-  // @gate warnOnSubscriptionInsideStartTransition || !__DEV__
   it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
     const subs = new Set();
     const useUserSpaceSubscription = () => {

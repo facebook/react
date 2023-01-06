@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -93,9 +93,7 @@ describe('ReactDOMServerFB', () => {
     await jest.runAllTimers();
 
     const result = readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
-    );
+    expect(result).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
   it('should throw an error when an error is thrown at the root', () => {
@@ -171,6 +169,7 @@ describe('ReactDOMServerFB', () => {
   });
 
   it('should be able to complete by aborting even if the promise never resolves', () => {
+    const errors = [];
     const stream = ReactDOMServer.renderToStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
@@ -179,7 +178,7 @@ describe('ReactDOMServerFB', () => {
       </div>,
       {
         onError(x) {
-          console.error(x);
+          errors.push(x.message);
         },
       },
     );
@@ -191,5 +190,9 @@ describe('ReactDOMServerFB', () => {
 
     const remaining = readResult(stream);
     expect(remaining).toEqual('');
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 });

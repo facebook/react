@@ -1,5 +1,5 @@
 ###
-Copyright (c) Facebook, Inc. and its affiliates.
+Copyright (c) Meta Platforms, Inc. and affiliates.
 
 This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
@@ -8,6 +8,8 @@ LICENSE file in the root directory of this source tree.
 PropTypes = null
 React = null
 ReactDOM = null
+ReactDOMClient = null
+ReactFeatureFlags = null
 act = null
 
 describe 'ReactCoffeeScriptClass', ->
@@ -20,10 +22,12 @@ describe 'ReactCoffeeScriptClass', ->
   beforeEach ->
     React = require 'react'
     ReactDOM = require 'react-dom'
+    ReactDOMClient = require 'react-dom/client'
+    ReactFeatureFlags = require 'shared/ReactFeatureFlags'
     act = require('jest-react').act
     PropTypes = require 'prop-types'
     container = document.createElement 'div'
-    root = ReactDOM.createRoot container
+    root = ReactDOMClient.createRoot container
     attachedListener = null
     renderedName = null
     InnerComponent = class extends React.Component
@@ -129,6 +133,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
 
   it 'warns if getDerivedStateFromError is not static', ->
@@ -140,6 +145,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -151,6 +157,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
@@ -167,6 +174,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev (
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
       'undefined. This is not recommended. Instead, define the initial state by ' +
@@ -526,7 +534,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo), 'DIV', 'bar-through-context'
 
-  it 'supports classic refs', ->
+  it 'supports string refs', ->
     class Foo extends React.Component
       render: ->
         React.createElement(InnerComponent,
@@ -535,7 +543,19 @@ describe 'ReactCoffeeScriptClass', ->
         )
 
     ref = React.createRef()
-    test(React.createElement(Foo, ref: ref), 'DIV', 'foo')
+    expect(->
+      test(React.createElement(Foo, ref: ref), 'DIV', 'foo')
+    ).toErrorDev(
+      if ReactFeatureFlags.warnAboutStringRefs
+      then [
+        'Warning: Component "Foo" contains the string ref "inner". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+          '    in Foo (at **)'
+      ]
+      else []
+    );
     expect(ref.current.refs.inner.getName()).toBe 'foo'
 
   it 'supports drilling through to the DOM using findDOMNode', ->

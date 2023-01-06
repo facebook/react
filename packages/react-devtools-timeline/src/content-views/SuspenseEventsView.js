@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {SuspenseEvent, ReactProfilerData} from '../types';
+import type {SuspenseEvent, TimelineData} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -47,11 +47,11 @@ export class SuspenseEventsView extends View {
   _hoveredEvent: SuspenseEvent | null = null;
   _intrinsicSize: IntrinsicSize;
   _maxDepth: number = 0;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
 
   onHover: ((event: SuspenseEvent | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
 
     this._profilerData = profilerData;
@@ -85,7 +85,7 @@ export class SuspenseEventsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 
