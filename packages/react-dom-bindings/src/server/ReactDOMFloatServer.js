@@ -129,6 +129,8 @@ export type Resources = {
   preconnects: Set<LinkResource>,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
+  firstPrecedence: string,
+  firstPrecedenceFlushed: boolean,
   precedences: Map<string, Set<StyleResource>>,
   usedStylePreloads: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
@@ -161,6 +163,8 @@ export function createResources(): Resources {
     preconnects: new Set(),
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
+    firstPrecedence: '',
+    firstPrecedenceFlushed: false,
     precedences: new Map(),
     usedStylePreloads: new Set(),
     scripts: new Set(),
@@ -485,7 +489,7 @@ function createStyleResource(
       );
     }
   }
-  const {stylesMap, preloadsMap, precedences} = resources;
+  const {stylesMap, preloadsMap, precedences, firstPrecedence} = resources;
 
   // If this is the first time we've seen this precedence we encode it's position in our set even though
   // we don't add the resource to this set yet
@@ -493,6 +497,9 @@ function createStyleResource(
   if (!precedenceSet) {
     precedenceSet = new Set();
     precedences.set(precedence, precedenceSet);
+    if (!firstPrecedence) {
+      resources.firstPrecedence = precedence;
+    }
   }
 
   let hint = preloadsMap.get(href);

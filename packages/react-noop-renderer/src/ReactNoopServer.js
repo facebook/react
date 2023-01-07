@@ -120,7 +120,6 @@ const ReactNoopServer = ReactFizzServer({
   },
   pushStartInstance(
     target: Array<Uint8Array>,
-    preamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): ReactNodeList {
@@ -136,9 +135,9 @@ const ReactNoopServer = ReactFizzServer({
 
   pushEndInstance(
     target: Array<Uint8Array>,
-    postamble: Array<Uint8Array>,
     type: string,
     props: Object,
+    formatContext: null,
   ): void {
     target.push(POP);
   },
@@ -271,8 +270,11 @@ const ReactNoopServer = ReactFizzServer({
     boundary.status = 'client-render';
   },
 
-  writeInitialResources() {},
-  writeImmediateResources() {},
+  writeEarlyPreamble() {},
+  writePreamble() {},
+  writePostamble() {},
+
+  writeResources() {},
 
   createResources(): Resources {
     return null;

@@ -66,6 +66,7 @@ function prerender(
     }
     const request = createRequest(
       children,
+      undefined, // fallback
       createResponseState(
         options ? options.identifierPrefix : undefined,
         undefined,

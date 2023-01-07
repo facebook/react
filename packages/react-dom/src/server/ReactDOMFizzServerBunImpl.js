@@ -83,6 +83,7 @@ function renderToReadableStream(
     }
     const request = createRequest(
       children,
+      undefined, // fallback
       createResponseState(
         options ? options.identifierPrefix : undefined,
         options ? options.nonce : undefined,
@@ -93,6 +94,7 @@ function renderToReadableStream(
         undefined, // fallbackBootstrapScripts
         undefined, // fallbackBootstrapModules
         options ? options.unstable_externalRuntimeSrc : undefined,
+        undefined, // documentEmbedding
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -150,6 +152,7 @@ function renderIntoContainer(
 
     const request = createRequest(
       children,
+      undefined, // fallback
       createResponseState(
         options ? options.identifierPrefix : undefined,
         options ? options.nonce : undefined,
@@ -160,6 +163,7 @@ function renderIntoContainer(
         options ? options.fallbackBootstrapScripts : undefined,
         options ? options.fallbackBootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
+        undefined, // documentEmbedding
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -169,6 +173,92 @@ function renderIntoContainer(
       undefined, // onShellError
       onFatalError,
       createRootBoundaryID(containerID),
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+
+    const stream: ReactDOMServerReadableStream = (new ReadableStream(
+      {
+        type: 'direct',
+        pull: (controller): ?Promise<void> => {
+          // $FlowIgnore
+          startFlowing(request, controller);
+        },
+        cancel: (reason): ?Promise<void> => {
+          abort(request);
+        },
+      },
+      // $FlowFixMe size() methods are not allowed on byte streams.
+      {highWaterMark: 2048},
+    ): any);
+    // TODO: Move to sub-classing ReadableStream.
+    stream.allReady = allReady;
+    return stream;
+  });
+}
+
+type IntoDocumentOptions = {
+  identifierPrefix?: string,
+  namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapScriptContent?: string,
+  fallbackBootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  progressiveChunkSize?: number,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+function renderIntoDocument(
+  children: ReactNodeList,
+  fallback?: ReactNodeList,
+  options?: IntoDocumentOptions,
+): Promise<ReactDOMServerReadableStream> {
+  return new Promise((resolve, reject) => {
+    let onFatalError;
+    let onAllReady;
+    const allReady = new Promise((res, rej) => {
+      onAllReady = res;
+      onFatalError = rej;
+    });
+
+    const request = createRequest(
+      children,
+      fallback ? fallback : null,
+      createResponseState(
+        options ? options.identifierPrefix : undefined,
+        options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.fallbackBootstrapScriptContent : undefined,
+        options ? options.fallbackBootstrapScripts : undefined,
+        options ? options.fallbackBootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
+        true, // documentEmbedding
+      ),
+      createRootFormatContext(options ? options.namespaceURI : undefined),
+      options ? options.progressiveChunkSize : undefined,
+      options ? options.onError : undefined,
+      onAllReady,
+      undefined, // onShellReady
+      undefined, // onShellError
+      onFatalError,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -221,6 +311,7 @@ function renderToStaticNodeStream() {
 export {
   renderToReadableStream,
   renderIntoContainer,
+  renderIntoDocument,
   renderToNodeStream,
   renderToStaticNodeStream,
   ReactVersion as version,

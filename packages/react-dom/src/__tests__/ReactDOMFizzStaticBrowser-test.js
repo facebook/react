@@ -64,7 +64,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
     );
   });
 

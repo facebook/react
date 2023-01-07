@@ -63,6 +63,7 @@ function renderToStringImpl(
   }
   const request = createRequest(
     children,
+    undefined, // fallback
     createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,

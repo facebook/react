@@ -74,7 +74,7 @@ describe('ReactDOMFizzServerNode', () => {
     pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
     );
   });
 
@@ -646,6 +646,22 @@ describe('ReactDOMFizzServerNode', () => {
       expect(
         output.result.startsWith('<div hidden id="S:0"><div>foo</div></div>'),
       ).toBe(true);
+    });
+  });
+
+  describe('renderIntoDocumentAsPipeableStream', () => {
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render into a container', async () => {
+      const {writable, output} = getTestWritable();
+      const {pipe} = ReactDOMFizzServer.renderIntoDocumentAsPipeableStream(
+        <div>foo</div>,
+      );
+      pipe(writable);
+      jest.runAllTimers();
+
+      expect(output.result).toEqual(
+        '<!DOCTYPE html><html><head></head><body><div>foo</div></body></html>',
+      );
     });
   });
 });

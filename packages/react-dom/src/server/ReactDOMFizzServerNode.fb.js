@@ -9,6 +9,7 @@
 
 export {
   renderIntoContainerAsPipeableStream,
+  renderIntoDocumentAsPipeableStream,
   renderToPipeableStream,
   version,
 } from './ReactDOMFizzServerNodeImpl';

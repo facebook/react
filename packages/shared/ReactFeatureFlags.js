@@ -128,6 +128,7 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 export const enableFizzExternalRuntime = false;
 
 export const enableFizzIntoContainer = __EXPERIMENTAL__;
+export const enableFizzIntoDocument = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

@@ -20,3 +20,7 @@ if (typeof s.renderIntoContainerAsPipeableStream === 'function') {
   exports.renderIntoContainerAsPipeableStream =
     s.renderIntoContainerAsPipeableStream;
 }
+if (typeof s.renderIntoDocumentAsPipeableStream === 'function') {
+  exports.renderIntoDocumentAsPipeableStream =
+    s.renderIntoDocumentAsPipeableStream;
+}

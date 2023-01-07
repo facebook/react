@@ -45,8 +45,16 @@ export function renderToReadableStream() {
     arguments,
   );
 }
+
 export function renderIntoContainer() {
   return require('./src/server/ReactDOMFizzServerBun').renderIntoContainer.apply(
+    this,
+    arguments,
+  );
+}
+
+export function renderIntoDocument() {
+  return require('./src/server/ReactDOMFizzServerBun').renderIntoDocument.apply(
     this,
     arguments,
   );

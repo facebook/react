@@ -49,3 +49,10 @@ export function renderIntoContainer() {
     arguments,
   );
 }
+
+export function renderIntoDocument() {
+  return require('./src/server/ReactDOMFizzServerBrowser').renderIntoDocument.apply(
+    this,
+    arguments,
+  );
+}

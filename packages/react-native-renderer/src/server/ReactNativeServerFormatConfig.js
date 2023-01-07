@@ -140,7 +140,6 @@ export function pushTextInstance(
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -158,9 +157,9 @@ export function pushStartInstance(
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  formatContext: FormatContext,
 ): void {
   target.push(END);
 }
@@ -186,6 +185,29 @@ export function writeErroredRoot(
 ): boolean {
   return true;
 }
+
+export function writeEarlyPreamble(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+  willEmitInstructions: boolean,
+): boolean {
+  return true;
+}
+
+export function writePreamble(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+  willEmitInstructions: boolean,
+): boolean {
+  return true;
+}
+
+export function writePostamble(
+  destination: Destination,
+  responseState: ResponseState,
+): void {}
 
 // IDs are formatted as little endian Uint16
 function formatID(id: number): Uint8Array {
@@ -334,7 +356,18 @@ export function writeClientRenderBoundaryInstruction(
   return writeChunkAndReturn(destination, formatID(boundaryID));
 }
 
-export function writeInitialResources(
+export function writePreambleOpen(
+  destination: Destination,
+  preamble: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+) {}
+
+export function writePreambleClose(
+  destination: Destination,
+  preamble: Array<Chunk | PrecomputedChunk>,
+) {}
+
+export function writeResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
@@ -343,14 +376,7 @@ export function writeInitialResources(
   return true;
 }
 
-export function writeImmediateResources(
-  destination: Destination,
-  resources: Resources,
-  responseState: ResponseState,
-  willEmitInstructions: boolean,
-): boolean {
-  return true;
-}
+export function prepareForFallback(responseState: ResponseState) {}
 
 export function hoistResources(
   resources: Resources,

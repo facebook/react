@@ -452,5 +452,7 @@
   "464": "ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available in Bun. Use ReactDOMServer.renderToReadableStream() instead.",
   "465": "enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.",
   "466": "The root container experienced an error before hydration could begin. The root will switch to client rendering.\n  Container Error: \"%s\"",
-  "467": "React encountered a render instruction it did not recognize."
+  "467": "React encountered a render instruction it did not recognize.",
+  "468": "An <html> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderIntoDocument`. React does not support this; use a `children` prop instead",
+  "469": "A <head> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderIntoDocument`. React does not support this; use a `children` prop instead"
 }

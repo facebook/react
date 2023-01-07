@@ -73,6 +73,7 @@ function renderToNodeStreamImpl(
   const destination = new ReactMarkupReadableStream();
   const request = createRequest(
     children,
+    undefined, // fallback
     createResponseState(false, options ? options.identifierPrefix : undefined),
     createRootFormatContext(),
     Infinity,

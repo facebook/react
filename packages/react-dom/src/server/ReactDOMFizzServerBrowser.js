@@ -9,6 +9,7 @@
 
 export {
   renderIntoContainer,
+  renderIntoDocument,
   renderToReadableStream,
   version,
 } from './ReactDOMFizzServerBrowserImpl';

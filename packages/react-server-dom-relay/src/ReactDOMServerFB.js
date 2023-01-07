@@ -51,6 +51,7 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
   const request = createRequest(
     children,
+    undefined, // fallback
     createResponseState(
       options ? options.identifierPrefix : undefined,
       undefined,

@@ -209,52 +209,86 @@ describe('ReactDOMFizzServer', () => {
     // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
     // We also want to execute any scripts that are embedded.
     // We assume that we have now received a proper fragment of HTML.
-    const bufferedContent = buffer;
-    buffer = '';
+    while (true) {
+      const bufferedContent = buffer;
 
-    let parent;
-    let temporaryHostElement;
-    if (bufferedContent.startsWith('<!DOCTYPE html>')) {
-      parent = document;
-      document.removeChild(document.documentElement);
+      document.__headOpen =
+        document.__headOpen ||
+        ((bufferedContent.includes('<head>') ||
+          bufferedContent.includes('<head ')) &&
+          !bufferedContent.includes('</head>'));
 
-      // Parse the buffered content into a temporary document
-      const jsdom = new JSDOM(bufferedContent);
-      temporaryHostElement = jsdom.window.document;
+      let parent;
+      let temporaryHostElement;
+      if (bufferedContent.startsWith('<!DOCTYPE html>')) {
+        parent = document;
+        document.removeChild(document.documentElement);
 
-      // Remove the Doctype node
-      temporaryHostElement.removeChild(temporaryHostElement.firstChild);
-    } else if (bufferedContent.startsWith('<html')) {
-      throw new Error(
-        '"act" processed buffered content that starts with an <html> tag but does not contain the Doctype declaration. This is likely a bug in React',
-      );
-    } else if (bufferedContent.startsWith('<head')) {
-      parent = document.documentElement;
-      parent.innerHTML = '';
-      temporaryHostElement = document.createElement('html');
-      temporaryHostElement.innerHTML = bufferedContent;
-    } else if (bufferedContent.startsWith('<body')) {
-      parent = document.documentElement;
-      if (document.body) {
-        parent.removeChild(document.body);
+        // Parse the buffered content into a temporary document
+        const jsdom = new JSDOM(bufferedContent);
+        temporaryHostElement = jsdom.window.document;
+
+        // Remove the Doctype node
+        temporaryHostElement.removeChild(temporaryHostElement.firstChild);
+        buffer = '';
+      } else if (bufferedContent.startsWith('<html')) {
+        throw new Error(
+          '"act" processed buffered content that starts with an <html> tag but does not contain the Doctype declaration. This is likely a bug in React',
+        );
+      } else if (bufferedContent.startsWith('<head')) {
+        parent = document.documentElement;
+        parent.innerHTML = '';
+        // Parse the buffered content into a temporary document
+        const jsdom = new JSDOM(bufferedContent);
+        temporaryHostElement = jsdom.window.document.documentElement;
+        buffer = '';
+      } else if (bufferedContent.startsWith('<body')) {
+        parent = document.documentElement;
+        if (document.body) {
+          parent.removeChild(document.body);
+        }
+
+        // Parse the buffered content into a temporary document
+        const jsdom = new JSDOM(bufferedContent);
+        temporaryHostElement = document.createElement('html');
+        temporaryHostElement.appendChild(jsdom.window.document.body);
+        buffer = '';
+      } else {
+        const closingHeadIndex = bufferedContent.indexOf('</head>');
+        if (closingHeadIndex > -1) {
+          const [headContent, bodyContent] = bufferedContent.split('</head>');
+          parent = document.head;
+          temporaryHostElement = document.createElement('head');
+          temporaryHostElement.innerHTML = headContent;
+          buffer = bodyContent;
+          document.__headOpen = false;
+        } else if (document.__headOpen) {
+          parent = document.head;
+          temporaryHostElement = document.createElement('head');
+          temporaryHostElement.innerHTML = bufferedContent;
+          buffer = '';
+        } else {
+          parent = document.body;
+          temporaryHostElement = document.createElement('body');
+          temporaryHostElement.innerHTML = bufferedContent;
+          buffer = '';
+        }
       }
-      temporaryHostElement = document.createElement('html');
-      temporaryHostElement.innerHTML = bufferedContent;
-    } else {
-      parent = document.body;
-      temporaryHostElement = document.createElement('body');
-      temporaryHostElement.innerHTML = bufferedContent;
+
+      await withLoadingReadyState(async () => {
+        while (temporaryHostElement.firstChild) {
+          parent.appendChild(temporaryHostElement.firstChild);
+        }
+        // If there is any async work to do to execute these scripts we await that now. We want
+        // to do this while the document loading state is overriden so the fizz runtime will
+        // install it's own mutation observer
+        await pendingWork(window);
+      }, document);
+
+      if (buffer === '') {
+        break;
+      }
     }
-
-    await withLoadingReadyState(async () => {
-      while (temporaryHostElement.firstChild) {
-        parent.appendChild(temporaryHostElement.firstChild);
-      }
-      // If there is any async work to do to execute these scripts we await that now. We want
-      // to do this while the document loading state is overriden so the fizz runtime will
-      // install it's own mutation observer
-      await pendingWork(window);
-    }, document);
 
     removeScriptObserver(document);
   }
@@ -395,6 +429,14 @@ describe('ReactDOMFizzServer', () => {
     return ReactDOMFizzServer.renderIntoContainerAsPipeableStream(
       jsx,
       containerID,
+      mergeOptions(options, renderOptions),
+    );
+  }
+  function renderIntoDocumentAsPipeableStream(jsx, fallback, options) {
+    // Merge options with renderOptions, which may contain featureFlag specific behavior
+    return ReactDOMFizzServer.renderIntoDocumentAsPipeableStream(
+      jsx,
+      fallback,
       mergeOptions(options, renderOptions),
     );
   }
@@ -6119,6 +6161,615 @@ describe('ReactDOMFizzServer', () => {
             <link rel="preload" href="bar" as="style" />
           </body>
         </html>,
+      );
+    });
+  });
+
+  describe('renderIntoDocument', () => {
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render arbitrary HTML into a Document', async () => {
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <div id="div">foo</div>,
+        );
+        pipe(writable);
+      });
+
+      expect(content.slice(0, 34)).toEqual(
+        '<!DOCTYPE html><html><head></head>',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div id="div">foo</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render <body> into a Document', async () => {
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <body id="body">foo</body>,
+        );
+        pipe(writable);
+      });
+
+      expect(content.slice(0, 34)).toEqual(
+        '<!DOCTYPE html><html><head></head>',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body id="body">foo</body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render <html> into a Document', async () => {
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+      await expect(async () => {
+        await act(() => {
+          const {pipe} = renderIntoDocumentAsPipeableStream(
+            <html id="html">
+              <head id="head">
+                <title>a title</title>
+              </head>
+              <body id="body">foo</body>
+            </html>,
+          );
+          pipe(writable);
+        });
+      }).toErrorDev(
+        'A <head> tag was rendered with props when using `renderIntoDocument`. In this rendering mode React may emit the head tag early in some circumstances and therefore props on the <head> tag are not supported and may be missing in the rendered output for any particular render. In many cases props that are set on a <head> tag can be set on the <html> tag instead.',
+      );
+
+      expect(content.slice(0, 47)).toEqual(
+        '<!DOCTYPE html><html id="html"><head id="head">',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head id="head">
+            <title>a title</title>
+          </head>
+          <body id="body">foo</body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('inserts an empty head when rendering <html> if no <head /> is provided', async () => {
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <body id="body">foo</body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(content.slice(0, 49)).toEqual(
+        '<!DOCTYPE html><html id="html"><head></head><body',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head />
+          <body id="body">foo</body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render a fallback if the shell errors', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <body id="body">
+              <Throw />
+            </body>
+          </html>,
+          <div>Some Skeleton UI while client renders</div>,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(errors).toEqual(['uh oh']);
+
+      expect(content.slice(0, 49)).toEqual(
+        '<!DOCTYPE html><html><head></head><body><div>Some',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>Some Skeleton UI while client renders</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render a fallback if the shell errors even if the preamble has already been flushed', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      function BlockOn({value, children}) {
+        readText(value);
+        return children;
+      }
+
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <BlockOn value="foo">
+              <body id="body">
+                <Throw />
+              </body>
+            </BlockOn>
+            <link rel="stylesheet" href="foo" precedence="foo" />
+            <link rel="stylesheet" href="bar" precedence="bar" />
+          </html>,
+          <div>Some Skeleton UI while client renders</div>,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(errors).toEqual([]);
+
+      expect(content.slice(0, 37)).toEqual(
+        '<!DOCTYPE html><html id="html"><head>',
+      );
+      content = '';
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body />
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('foo');
+      });
+
+      expect(errors).toEqual(['uh oh']);
+      expect(content.slice(0, 33)).toEqual('<link rel="stylesheet" href="bar"');
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="preload" href="bar" as="style" />
+            <link rel="stylesheet" href="bar" data-precedence="bar" />
+          </head>
+          <body>
+            <div>Some Skeleton UI while client renders</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('can render an empty fallback', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+
+      let didBootstrap = false;
+      function bootstrap() {
+        didBootstrap = true;
+      }
+      window.__INIT__ = bootstrap;
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <link rel="stylesheet" href="foo" precedence="foo" />
+            <link rel="stylesheet" href="bar" precedence="bar" />
+            <body id="body">
+              <Throw />
+            </body>
+          </html>,
+          undefined,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+            fallbackBootstrapScriptContent: '__INIT__()',
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(errors).toEqual(['uh oh']);
+      expect(didBootstrap).toBe(true);
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="bar" />
+          </head>
+          <body />
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('emits fallback bootstrap scripts if configured when rendering the fallback shell', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      let didBootstrap = false;
+      function bootstrap() {
+        didBootstrap = true;
+      }
+      window.__INIT__ = bootstrap;
+
+      let didFallback = false;
+      function fallback() {
+        didFallback = true;
+      }
+      window.__FALLBACK_INIT__ = fallback;
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <body id="body">
+              hello world
+              <Throw />
+            </body>
+          </html>,
+          <div>fallback</div>,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+            bootstrapScriptContent: '__INIT__();',
+            fallbackBootstrapScriptContent: '__FALLBACK_INIT__();',
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>fallback</div>
+          </body>
+        </html>,
+      );
+
+      expect(didBootstrap).toBe(false);
+      expect(didFallback).toBe(true);
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('emits bootstrap scripts if no fallback bootstrap scripts are configured when rendering the fallback shell', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      let didBootstrap = false;
+      function bootstrap() {
+        didBootstrap = true;
+      }
+      window.__INIT__ = bootstrap;
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <body id="body">
+              <Throw />
+              hello world
+            </body>
+          </html>,
+          <div>fallback</div>,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+            bootstrapScriptContent: '__INIT__();',
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>fallback</div>
+          </body>
+        </html>,
+      );
+
+      expect(didBootstrap).toBe(true);
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('does not work on the fallback unless the primary children error in the shell', async () => {
+      function Throw() {
+        throw new Error('uh oh');
+      }
+
+      const logs = [];
+      function BlockOn({value, children}) {
+        readText(value);
+        logs.push(value);
+        return children;
+      }
+
+      const errors = [];
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <body id="body">
+              <BlockOn value="error">
+                <Throw />
+              </BlockOn>
+              <BlockOn value="resource">
+                <link rel="stylesheet" href="foo" precedence="foo" />
+              </BlockOn>
+              hello world
+            </body>
+          </html>,
+          <div>
+            <BlockOn value="fallback">fallback</BlockOn>
+          </div>,
+          {
+            onError(err) {
+              errors.push(err.message);
+            },
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(logs).toEqual([]);
+      logs.length = 0;
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head />
+          <body />
+        </html>,
+      );
+
+      // Even though we unblock fallback since the task is not scheduled no log is observed
+      await act(() => {
+        resolveText('fallback');
+      });
+      expect(logs).toEqual([]);
+      logs.length = 0;
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head />
+          <body />
+        </html>,
+      );
+
+      // When we resolve the resource it is emitted in the open preamble.
+      await act(() => {
+        resolveText('resource');
+      });
+      expect(logs).toEqual(['resource']);
+      logs.length = 0;
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+          </head>
+          <body />
+        </html>,
+      );
+
+      // When we resolve the resource it is emitted in the open preamble.
+      await act(() => {
+        resolveText('error');
+      });
+      expect(logs).toEqual(['error', 'fallback']);
+      logs.length = 0;
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+          </head>
+          <body>
+            <div>fallback</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('only emits stylesheets up to the first precedence during the early preamble', async () => {
+      function BlockOn({value, children}) {
+        readText(value);
+        return children;
+      }
+
+      await act(() => {
+        const {pipe} = renderIntoDocumentAsPipeableStream(
+          <html id="html">
+            <head />
+            <body id="body">
+              <BlockOn value="two">
+                <link rel="stylesheet" href="baz1" precedence="baz" />
+                <link rel="stylesheet" href="foo2" precedence="foo" />
+                <script async={true} src="script2" />
+              </BlockOn>
+              <BlockOn value="one">
+                <link rel="stylesheet" href="foo1" precedence="foo" />
+                <link rel="stylesheet" href="bar1" precedence="bar" />
+                <script async={true} src="script1" />
+              </BlockOn>
+              <BlockOn value="three">
+                <link rel="stylesheet" href="baz2" precedence="baz" />
+                <link rel="stylesheet" href="bar2" precedence="bar" />
+                <link rel="stylesheet" href="foo3" precedence="foo" />
+                <script async={true} src="script3" />
+              </BlockOn>
+              hello world
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head />
+          <body />
+        </html>,
+      );
+
+      // We emit all resources that are unblocked which is most types except stylesheets.
+      // For stylesheets we can only emit up to the first precedence since we may discover
+      // additional stylesheets with this precedence level after this flush and would violate
+      // stylesheet order. For stylesheets we cannot emit we can emit a preload instead so the
+      // browser can start downloading the resource as soon as possible
+      await act(() => {
+        resolveText('one');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo1" data-precedence="foo" />
+            <link rel="preload" href="bar1" as="style" />
+            <script async="" src="script1" />
+          </head>
+          <body />
+        </html>,
+      );
+
+      // We can continue to emit early resources according to these rules
+      await act(() => {
+        resolveText('two');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo1" data-precedence="foo" />
+            <link rel="preload" href="bar1" as="style" />
+            <script async="" src="script1" />
+            <link rel="stylesheet" href="foo2" data-precedence="foo" />
+            <link rel="preload" href="baz1" as="style" />
+            <script async="" src="script2" />
+          </head>
+          <body />
+        </html>,
+      );
+
+      // Once the Shell is unblocked we can now emit the entire preamble as well as
+      // the main content
+      await act(() => {
+        resolveText('three');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html id="html">
+          <head>
+            <link rel="stylesheet" href="foo1" data-precedence="foo" />
+            <link rel="preload" href="bar1" as="style" />
+            <script async="" src="script1" />
+            <link rel="stylesheet" href="foo2" data-precedence="foo" />
+            <link rel="preload" href="baz1" as="style" />
+            <script async="" src="script2" />
+            <link rel="stylesheet" href="foo3" data-precedence="foo" />
+            <link rel="stylesheet" href="bar1" data-precedence="bar" />
+            <link rel="stylesheet" href="bar2" data-precedence="bar" />
+            <link rel="stylesheet" href="baz1" data-precedence="baz" />
+            <link rel="stylesheet" href="baz2" data-precedence="baz" />
+            <script async="" src="script3" />
+          </head>
+          <body id="body">hello world</body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableFizzIntoDocument
+    it('errors fatally if the fallback shell errors', async () => {
+      let content = '';
+      writable.on('data', chunk => (content += chunk));
+      function Throw({reason}) {
+        throw new Error(reason);
+      }
+
+      const errors = [];
+      try {
+        await act(() => {
+          const {pipe} = renderIntoDocumentAsPipeableStream(
+            <html id="html">
+              <head />
+              <link rel="stylesheet" href="foo" precedence="foo" />
+              <body id="body">
+                <Throw reason="The primary App failed for some reason" />
+                hello world
+              </body>
+            </html>,
+            <html id="fallback">
+              <Throw reason="The fallback App failed for some reason" />
+            </html>,
+            {
+              onError(error) {
+                errors.push(error.message);
+              },
+            },
+          );
+          pipe(writable);
+        });
+      } catch (fatal) {}
+
+      expect(hasErrored).toBe(true);
+      expect(fatalError.message).toBe(
+        'The fallback App failed for some reason',
       );
     });
   });

@@ -65,6 +65,7 @@ function renderToPipeableStream(
 ): PipeableStream {
   const request = createRequest(
     children,
+    undefined, // fallback
     createResponseState(
       options ? options.identifierPrefix : undefined,
       options ? options.nonce : undefined,
@@ -75,6 +76,7 @@ function renderToPipeableStream(
       undefined, // fallbackBootstrapScripts
       undefined, // fallbackBootstrapModules
       options ? options.unstable_externalRuntimeSrc : undefined,
+      undefined, // documentEmbedding
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -139,6 +141,7 @@ function renderIntoContainerAsPipeableStream(
 ): PipeableStream {
   const request = createRequest(
     children,
+    undefined, // fallback
     createResponseState(
       options ? options.identifierPrefix : undefined,
       options ? options.nonce : undefined,
@@ -149,6 +152,7 @@ function renderIntoContainerAsPipeableStream(
       options ? options.fallbackBootstrapScripts : undefined,
       options ? options.fallbackBootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
+      undefined, // documentEmbedding
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -190,8 +194,84 @@ function renderIntoContainerAsPipeableStream(
   };
 }
 
+type IntoDocumentOptions = {
+  identifierPrefix?: string,
+  namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapScriptContent?: string,
+  fallbackBootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  progressiveChunkSize?: number,
+  onAllReady?: () => void,
+  onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+function renderIntoDocumentAsPipeableStream(
+  children: ReactNodeList,
+  fallback?: ReactNodeList,
+  options?: IntoDocumentOptions,
+): PipeableStream {
+  const request = createRequest(
+    children,
+    fallback ? fallback : null,
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.fallbackBootstrapScriptContent : undefined,
+      options ? options.fallbackBootstrapScripts : undefined,
+      options ? options.fallbackBootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+      true, // documentEmbedding
+    ),
+    createRootFormatContext(options ? options.namespaceURI : undefined),
+    options ? options.progressiveChunkSize : undefined,
+    options ? options.onError : undefined,
+    options ? options.onAllReady : undefined,
+    undefined, // onShellReady
+    undefined, // onShellError
+    undefined, // onFatalError
+  );
+  let hasStartedFlowing = false;
+  startWork(request);
+  return {
+    pipe<T: Writable>(destination: T): T {
+      if (hasStartedFlowing) {
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
+      }
+      hasStartedFlowing = true;
+      startFlowing(request, destination);
+      destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createAbortHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createAbortHandler(request, 'The destination stream closed early.'),
+      );
+      return destination;
+    },
+    abort(reason: mixed) {
+      abort(request, reason);
+    },
+  };
+}
+
 export {
   renderToPipeableStream,
   renderIntoContainerAsPipeableStream,
+  renderIntoDocumentAsPipeableStream,
   ReactVersion as version,
 };

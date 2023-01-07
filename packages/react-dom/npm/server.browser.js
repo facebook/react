@@ -19,3 +19,6 @@ exports.renderToReadableStream = s.renderToReadableStream;
 if (typeof s.renderIntoContainer === 'function') {
   exports.renderIntoContainer = s.renderIntoContainer;
 }
+if (typeof s.renderIntoDocument === 'function') {
+  exports.renderIntoDocument = s.renderIntoDocument;
+}

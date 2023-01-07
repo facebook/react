@@ -81,6 +81,7 @@ function prerenderToNodeStreams(
 
     const request = createRequest(
       children,
+      undefined, // fallback
       createResponseState(
         options ? options.identifierPrefix : undefined,
         undefined,

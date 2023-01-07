@@ -603,7 +603,7 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
     expect(chunks).toEqual([
-      '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
+      '<!DOCTYPE html><html><head><script async="" src="foo"></script><title>foo</title></head><body>bar',
       '</body></html>',
     ]);
   });

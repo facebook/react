@@ -11,6 +11,7 @@ import type {
   BootstrapScriptDescriptor,
   FormatContext,
   StreamingFormat,
+  DocumentStructureTag,
 } from './ReactDOMServerFormatConfig';
 
 import {
@@ -22,6 +23,7 @@ import {
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
   HTML_MODE,
+  NONE,
 } from './ReactDOMServerFormatConfig';
 
 import type {
@@ -36,6 +38,13 @@ export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   fallbackBootstrapChunks: void | Array<Chunk | PrecomputedChunk>,
+  htmlChunks: Array<Chunk | PrecomputedChunk>,
+  headChunks: Array<Chunk | PrecomputedChunk>,
+  requiresEmbedding: boolean,
+  rendered: DocumentStructureTag,
+  flushed: DocumentStructureTag,
+  charsetChunks: Array<Chunk | PrecomputedChunk>,
+  hoistableChunks: Array<Chunk | PrecomputedChunk>,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
@@ -73,6 +82,13 @@ export function createResponseState(
     // Keep this in sync with ReactDOMServerFormatConfig
     bootstrapChunks: responseState.bootstrapChunks,
     fallbackBootstrapChunks: responseState.fallbackBootstrapChunks,
+    htmlChunks: [],
+    headChunks: [],
+    requiresEmbedding: false,
+    rendered: NONE,
+    flushed: NONE,
+    charsetChunks: [],
+    hoistableChunks: [],
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
@@ -126,15 +142,19 @@ export {
   writePlaceholder,
   writeCompletedRoot,
   writeErroredRoot,
+  createRootBoundaryID,
   createResources,
   createBoundaryResources,
-  writeInitialResources,
-  writeImmediateResources,
+  writeResources,
   hoistResources,
   hoistResourcesToRoot,
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,
+  writeEarlyPreamble,
+  writePreamble,
+  writePostamble,
+  prepareForFallback,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
