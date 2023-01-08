@@ -2556,13 +2556,11 @@ const styleInsertionFunction = stringToPrecomputedChunk(
 );
 
 const completeBoundaryScript1 = stringToPrecomputedChunk('$RC("');
-const completeBoundaryWithStylesScript1 = stringToPrecomputedChunk(
-  '$RR(false,"',
-);
+const completeBoundaryWithStylesScript1 = stringToPrecomputedChunk('$RR($RC,"');
 
 const completeContainerScript1 = stringToPrecomputedChunk('$RK("');
 const completeContainerWithStylesScript1 = stringToPrecomputedChunk(
-  '$RR(true,"',
+  '$RR($RK,"',
 );
 const completeBoundaryOrContainerScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryOrContainerScript2a = stringToPrecomputedChunk('",');

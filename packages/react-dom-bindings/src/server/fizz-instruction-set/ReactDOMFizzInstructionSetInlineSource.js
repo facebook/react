@@ -18,12 +18,11 @@ export {clientRenderBoundary, completeBoundary, completeSegment};
 // runtime (ReactDOMFizzInstructionSetExternalRuntime), with the exception of
 // how we read completeBoundaryImpl and resourceMap
 export function completeBoundaryWithStyles(
-  isContainer,
+  completionFn,
   suspenseBoundaryID,
   contentID,
   styles,
 ) {
-  const completeBoundaryImpl = window[isContainer ? '$RK' : '$RC'];
   const resourceMap = window['$RM'];
 
   const precedences = new Map();
@@ -106,12 +105,12 @@ export function completeBoundaryWithStyles(
   }
 
   Promise.all(dependencies).then(
-    completeBoundaryImpl.bind(null, suspenseBoundaryID, contentID, ''),
-    completeBoundaryImpl.bind(
+    completionFn.bind(null, suspenseBoundaryID, contentID, ''),
+    completionFn.bind(
       null,
       suspenseBoundaryID,
       contentID,
-      'Stylesheet failed to load',
+      'Stylesheet failed to load.',
     ),
   );
 }
