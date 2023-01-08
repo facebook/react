@@ -117,7 +117,6 @@ export function completeBoundaryWithStyles(
 }
 
 export function completeContainer(containerID, contentID) {
-  console.log('completeContainer');
   const thisDocument = document;
   try {
     const contentNode = thisDocument.getElementById(contentID);

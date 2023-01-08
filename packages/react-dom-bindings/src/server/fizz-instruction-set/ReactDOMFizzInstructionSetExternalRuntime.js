@@ -2,25 +2,47 @@
 
 // Instruction set for the Fizz external runtime
 
-import {LOADED, ERRORED} from './ReactDOMFizzInstructionSetShared';
-
-export {
+import {
   clientRenderBoundary,
   completeBoundary,
   completeSegment,
+  LOADED,
+  ERRORED,
 } from './ReactDOMFizzInstructionSetShared';
+
+export {clientRenderBoundary, completeBoundary, completeSegment};
 
 const resourceMap = new Map();
 
-// This function is almost identical to the version used by inline scripts
-// (ReactDOMFizzInstructionSetInlineSource), with the exception of how we read
-// completeBoundary and resourceMap
 export function completeBoundaryWithStyles(
-  completionFn,
   suspenseBoundaryID,
   contentID,
   styles,
 ) {
+  const complete = completeBoundary.bind(
+    null,
+    suspenseBoundaryID,
+    contentID,
+    null,
+  );
+  const clientRender = completeBoundary.bind(
+    null,
+    suspenseBoundaryID,
+    contentID,
+    'Stylesheet failed to load.',
+  );
+  insertStyles(styles).then(complete, clientRender);
+}
+export function completeContainerWithStyles(
+  suspenseBoundaryID,
+  contentID,
+  styles,
+) {
+  const complete = completeContainer.bind(null, suspenseBoundaryID, contentID);
+  insertStyles(styles).then(complete, complete);
+}
+
+function insertStyles(styles) {
   const precedences = new Map();
   const thisDocument = document;
   let lastResource, node;
@@ -100,15 +122,7 @@ export function completeBoundaryWithStyles(
     }
   }
 
-  Promise.all(dependencies).then(
-    completionFn.bind(null, suspenseBoundaryID, contentID, ''),
-    completionFn.bind(
-      null,
-      suspenseBoundaryID,
-      contentID,
-      'Stylesheet failed to load',
-    ),
-  );
+  return Promise.all(dependencies);
 }
 
 export function completeContainer(containerID, contentID) {

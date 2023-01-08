@@ -10,4 +10,4 @@ export const completeBoundaryWithStyles =
 export const completeSegment =
   '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};';
 export const completeContainer =
-  '$RK=function(a,e){console.log("completeContainer");var b=document;try{var c=b.getElementById(e);c.parentNode.removeChild(c);var d=b.getElementById(a);if(d)for(d.textContent="";c.firstChild;)d.appendChild(c.firstChild)}finally{if(a=b.getElementById("bs:"+e))b.body.appendChild(a.content),a.parentNode.removeChild(a)}};';
+  '$RK=function(a,e){var b=document;try{var c=b.getElementById(e);c.parentNode.removeChild(c);var d=b.getElementById(a);if(d)for(d.textContent="";c.firstChild;)d.appendChild(c.firstChild)}finally{if(a=b.getElementById("bs:"+e))b.body.appendChild(a.content),a.parentNode.removeChild(a)}};';

@@ -10,6 +10,7 @@
 import {
   clientRenderBoundary,
   completeBoundaryWithStyles,
+  completeContainerWithStyles,
   completeBoundary,
   completeContainer,
   completeSegment,
@@ -68,40 +69,49 @@ function installFizzInstrObserver(target /*: Node */) {
 }
 
 function handleNode(node_ /*: Node */) {
-  // $FlowFixMe[incompatible-cast]
-  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement*/).dataset) {
+  if (
+    node_.nodeType !== 1 ||
+    // $FlowFixMe[incompatible-cast]
+    !(node_ /*: HTMLElement*/).dataset
+  ) {
     return;
   }
   // $FlowFixMe[incompatible-cast]
   const node = (node_ /*: HTMLElement*/);
   const dataset = node.dataset;
-  let register = '';
-  if (dataset['rxi'] != null) {
-    clientRenderBoundary(
-      dataset['bid'],
-      dataset['dgst'],
-      dataset['msg'],
-      dataset['stck'],
-    );
+
+  if (dataset.hasOwnProperty('ri')) {
     node.remove();
-  } else if ((register = dataset['rri']) != null) {
-    // Convert styles here, since its type is Array<Array<string>>
-    completeBoundaryWithStyles(
-      register === 'c' ? completeContainer : completeBoundary,
-      dataset['bid'],
-      dataset['sid'],
-      JSON.parse(dataset['sty']),
-    );
-    node.remove();
-  } else if ((register = dataset['rci']) != null) {
-    if (register === 'c') {
-      completeContainer(dataset['bid'], dataset['sid']);
-    } else {
-      completeBoundary(dataset['bid'], dataset['sid']);
+    switch (dataset.ri) {
+      case 'x':
+        return clientRenderBoundary(
+          dataset.bid,
+          dataset.dgst,
+          dataset.msg,
+          dataset.stck,
+        );
+      case 's':
+        return completeSegment(dataset.sid, dataset.pid);
+      case 'b':
+        return completeBoundary(dataset.bid, dataset.sid);
+      case 'rb':
+        return completeBoundaryWithStyles(
+          dataset.bid,
+          dataset.sid,
+          JSON.parse(dataset.sty),
+        );
+      case 'c':
+        return completeContainer(dataset.bid, dataset.sid);
+      case 'rc':
+        return completeContainerWithStyles(
+          dataset.bid,
+          dataset.sid,
+          JSON.parse(dataset.sty),
+        );
+      default:
+        throw new Error(
+          'React encountered a render instruction it did not recognize.',
+        );
     }
-    node.remove();
-  } else if (dataset['rsi'] != null) {
-    completeSegment(dataset['sid'], dataset['pid']);
-    node.remove();
   }
 }

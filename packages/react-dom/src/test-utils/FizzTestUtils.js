@@ -114,10 +114,7 @@ async function replaceScriptsAndMove(
     node.nodeType === 1 &&
     // $FlowFixMe[prop-missing]
     node.dataset != null &&
-    (node.dataset.rxi != null ||
-      node.dataset.rri != null ||
-      node.dataset.rci != null ||
-      node.dataset.rsi != null)
+    node.dataset.ri != null
   ) {
     // External runtime assumes that instruction data nodes are eventually
     // appended to the body
