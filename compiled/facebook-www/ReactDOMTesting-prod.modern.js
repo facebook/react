@@ -13967,7 +13967,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1674 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0b974418c-20230106",
+  version: "18.3.0-www-modern-0b4f44302-20230109",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2073 = {
@@ -13998,7 +13998,7 @@ var internals$jscomp$inline_2073 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0b974418c-20230106"
+  reconcilerVersion: "18.3.0-next-0b4f44302-20230109"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2074 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14321,4 +14321,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-0b974418c-20230106";
+exports.version = "18.3.0-next-0b4f44302-20230109";

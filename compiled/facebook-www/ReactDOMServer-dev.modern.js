@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0b974418c-20230106";
+var ReactVersion = "18.3.0-www-modern-0b4f44302-20230109";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -352,7 +352,7 @@ function shouldRemoveAttributeWithWarning(
 }
 function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
-}
+} // $FlowFixMe[missing-this-annot]
 
 function PropertyInfoRecord(
   name,
@@ -6178,7 +6178,7 @@ function writeInitialResources(
       as: "script",
       integrity: integrity
     });
-  }
+  } // $FlowFixMe[missing-local-annot]
 
   function flushLinkResource(resource) {
     if (!resource.flushed) {
@@ -6292,6 +6292,7 @@ function writeInitialResources(
   return r;
 }
 function writeImmediateResources(destination, resources, responseState) {
+  // $FlowFixMe[missing-local-annot]
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -7685,6 +7686,7 @@ var classComponentUpdater = {
   isMounted: function(inst) {
     return false;
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState: function(inst, payload, callback) {
     var internals = get(inst);
 
@@ -7711,6 +7713,7 @@ var classComponentUpdater = {
       }
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate: function(inst, callback) {
     var internals = get(inst);
 
@@ -10146,7 +10149,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       "components) or a class/function (for composite components) " +
       ("but got: " + (type == null ? type : typeof type) + "." + info)
   );
-}
+} // $FlowFixMe[missing-local-annot]
 
 function validateIterable(iterable, iteratorFn) {
   {
@@ -11300,6 +11303,7 @@ function renderToStringImpl(
   var fatalError = null;
   var result = "";
   var destination = {
+    // $FlowFixMe[missing-local-annot]
     push: function(chunk) {
       if (chunk !== null) {
         result += chunk;
@@ -11307,6 +11311,7 @@ function renderToStringImpl(
 
       return true;
     },
+    // $FlowFixMe[missing-local-annot]
     destroy: function(error) {
       didFatal = true;
       fatalError = error;

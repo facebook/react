@@ -577,7 +577,7 @@ function shouldRemoveAttribute(
 }
 function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
-}
+} // $FlowFixMe[missing-this-annot]
 
 function PropertyInfoRecord(
   name,
@@ -2115,9 +2115,12 @@ function trackValueOnNode(node) {
     set = descriptor.set;
   Object.defineProperty(node, valueField, {
     configurable: true,
+    // $FlowFixMe[missing-this-annot]
     get: function() {
       return get.call(this);
     },
+    // $FlowFixMe[missing-local-annot]
+    // $FlowFixMe[missing-this-annot]
     set: function(value) {
       {
         checkFormFieldValueStringCoercion(value);
@@ -8361,6 +8364,7 @@ function createSyntheticEvent(Interface) {
    * normalizing browser quirks. Subclasses do not necessarily have to implement a
    * DOM interface; custom application-specific events can also subclass this.
    */
+  // $FlowFixMe[missing-this-annot]
   function SyntheticBaseEvent(
     reactName,
     reactEventType,
@@ -8405,6 +8409,7 @@ function createSyntheticEvent(Interface) {
   } // $FlowFixMe[prop-missing] found when upgrading Flow
 
   assign(SyntheticBaseEvent.prototype, {
+    // $FlowFixMe[missing-this-annot]
     preventDefault: function() {
       this.defaultPrevented = true;
       var event = this.nativeEvent;
@@ -8421,6 +8426,7 @@ function createSyntheticEvent(Interface) {
 
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
+    // $FlowFixMe[missing-this-annot]
     stopPropagation: function() {
       var event = this.nativeEvent;
 
@@ -8726,6 +8732,8 @@ var modifierKeyToProp = {
 }; // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
 // getModifierState. If getModifierState is not supported, we map it to a set of
 // modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
+// $FlowFixMe[missing-this-annot]
 
 function modifierStateGetter(keyArg) {
   var syntheticEvent = this;
@@ -9397,7 +9405,7 @@ function registerEvents$1() {
   ]);
 }
 
-function createAndAccumulateChangeEvent(
+function createAndAccumulateChangeEvent( // $FlowFixMe[missing-local-annot]
   dispatchQueue,
   inst,
   nativeEvent,
@@ -9519,6 +9527,7 @@ function stopWatchingForValueChange() {
  * (For IE <=9) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
+// $FlowFixMe[missing-local-annot]
 
 function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== "value") {
@@ -11173,7 +11182,7 @@ function addTrappedEventListener(
   // need support for such browsers.
 
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
-    var originalListener = listener;
+    var originalListener = listener; // $FlowFixMe[missing-this-annot]
 
     listener = function() {
       removeEventListener(
@@ -25067,6 +25076,7 @@ function applyDerivedStateFromProps(
 
 var classComponentUpdater = {
   isMounted: isMounted,
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState: function(inst, payload, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -25138,6 +25148,7 @@ var classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate: function(inst, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -26248,6 +26259,7 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
   var inst = fiber.stateNode;
 
   if (inst !== null && typeof inst.componentDidCatch === "function") {
+    // $FlowFixMe[missing-this-annot]
     update.callback = function callback() {
       {
         markFailedErrorBoundaryForHotReloading(fiber);
@@ -31337,7 +31349,7 @@ function readContext(context) {
 
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
-    ? AbortController
+    ? AbortController // $FlowFixMe[missing-this-annot]
     : function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
@@ -38715,8 +38727,7 @@ function markRootSuspended$1(root, suspendedLanes) {
   suspendedLanes = removeLanes(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes
-  ); // $FlowFixMe[incompatible-call] found when upgrading Flow
-
+  );
   markRootSuspended(root, suspendedLanes);
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
@@ -39191,6 +39202,7 @@ function renderDidSuspendDelayIfPossible() {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    // $FlowFixMe[incompatible-call] need null check workInProgressRoot
     markRootSuspended$1(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -40979,7 +40991,7 @@ function restorePendingUpdaters(root, lanes) {
     }
   }
 }
-var fakeActCallbackNode = {};
+var fakeActCallbackNode = {}; // $FlowFixMe[missing-local-annot]
 
 function scheduleCallback$2(priorityLevel, callback) {
   {
@@ -42265,7 +42277,7 @@ function assignFiberPropertiesInDEV(target, source) {
 }
 
 function FiberRootNode(
-  containerInfo,
+  containerInfo, // $FlowFixMe[missing-local-annot]
   tag,
   hydrate,
   identifierPrefix,
@@ -42413,7 +42425,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0b974418c-20230106";
+var ReactVersion = "18.3.0-www-modern-0b4f44302-20230109";
 
 function createPortal(
   children,
@@ -43017,11 +43029,12 @@ var defaultOnRecoverableError =
         // In older browsers and test environments, fallback to console.error.
         // eslint-disable-next-line react-internal/no-production-logging
         console["error"](error);
-      };
+      }; // $FlowFixMe[missing-this-annot]
 
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
 } // $FlowFixMe[prop-missing] found when upgrading Flow
+// $FlowFixMe[missing-this-annot]
 
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
   children
@@ -43055,6 +43068,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
 
   updateContainer(children, root, null, null);
 }; // $FlowFixMe[prop-missing] found when upgrading Flow
+// $FlowFixMe[missing-this-annot]
 
 ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function() {
   {
@@ -43167,7 +43181,7 @@ function createRoot(container, options) {
   listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   return new ReactDOMRoot(root);
-}
+} // $FlowFixMe[missing-this-annot]
 
 function ReactDOMHydrationRoot(internalRoot) {
   this._internalRoot = internalRoot;

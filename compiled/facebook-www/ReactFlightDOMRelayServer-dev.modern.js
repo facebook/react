@@ -1294,6 +1294,7 @@ function createRequest(
     identifierPrefix: identifierPrefix || "",
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
+    // $FlowFixMe[missing-this-annot]
     toJSON: function(key, value) {
       return resolveModelToJSON(request, this, key, value);
     }

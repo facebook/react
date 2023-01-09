@@ -9534,6 +9534,7 @@ function applyDerivedStateFromProps(
 
 var classComponentUpdater = {
   isMounted: isMounted,
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState: function(inst, payload, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -9579,6 +9580,7 @@ var classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate: function(inst, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -10673,6 +10675,7 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
   var inst = fiber.stateNode;
 
   if (inst !== null && typeof inst.componentDidCatch === "function") {
+    // $FlowFixMe[missing-this-annot]
     update.callback = function callback() {
       {
         markFailedErrorBoundaryForHotReloading(fiber);
@@ -14613,7 +14616,7 @@ function readContext(context) {
 
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
-    ? AbortController
+    ? AbortController // $FlowFixMe[missing-this-annot]
     : function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
@@ -20736,8 +20739,7 @@ function markRootSuspended$1(root, suspendedLanes) {
   suspendedLanes = removeLanes(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes
-  ); // $FlowFixMe[incompatible-call] found when upgrading Flow
-
+  );
   markRootSuspended(root, suspendedLanes);
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
@@ -21131,6 +21133,7 @@ function renderDidSuspendDelayIfPossible() {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    // $FlowFixMe[incompatible-call] need null check workInProgressRoot
     markRootSuspended$1(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -22605,7 +22608,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
     }
   }
 }
-var fakeActCallbackNode = {};
+var fakeActCallbackNode = {}; // $FlowFixMe[missing-local-annot]
 
 function scheduleCallback$2(priorityLevel, callback) {
   {
@@ -23776,7 +23779,7 @@ function createFiberFromPortal(portal, mode, lanes) {
 } // Used for stashing WIP properties to replay failed work in DEV.
 
 function FiberRootNode(
-  containerInfo,
+  containerInfo, // $FlowFixMe[missing-local-annot]
   tag,
   hydrate,
   identifierPrefix,
@@ -23898,7 +23901,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-0b974418c-20230106";
+var ReactVersion = "18.3.0-www-classic-0b4f44302-20230109";
 
 // Might add PROFILE later.
 
@@ -24388,7 +24391,7 @@ function toJSON(inst) {
     default:
       throw new Error("Unexpected node type in toJSON: " + inst.tag);
   }
-}
+} // $FlowFixMe[missing-local-annot]
 
 function childrenToTree(node) {
   if (!node) {
@@ -24404,7 +24407,7 @@ function childrenToTree(node) {
   }
 
   return flatten(children.map(toTree));
-}
+} // $FlowFixMe[missing-local-annot]
 
 function nodeAndSiblingsArray(nodeWithSibling) {
   var array = [];
@@ -24416,7 +24419,7 @@ function nodeAndSiblingsArray(nodeWithSibling) {
   }
 
   return array;
-}
+} // $FlowFixMe[missing-local-annot]
 
 function flatten(arr) {
   var result = [];
@@ -24769,7 +24772,7 @@ function propsMatch(props, filter) {
   }
 
   return true;
-}
+} // $FlowFixMe[missing-local-annot]
 
 function onRecoverableError(error$1) {
   // TODO: Expose onRecoverableError option to userspace

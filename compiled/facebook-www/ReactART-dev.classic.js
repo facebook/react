@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-0b974418c-20230106";
+var ReactVersion = "18.3.0-www-classic-0b4f44302-20230109";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -10963,6 +10963,7 @@ function applyDerivedStateFromProps(
 
 var classComponentUpdater = {
   isMounted: isMounted,
+  // $FlowFixMe[missing-local-annot]
   enqueueSetState: function(inst, payload, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -11034,6 +11035,7 @@ var classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
+  // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate: function(inst, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
@@ -12176,6 +12178,7 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
   var inst = fiber.stateNode;
 
   if (inst !== null && typeof inst.componentDidCatch === "function") {
+    // $FlowFixMe[missing-this-annot]
     update.callback = function callback() {
       {
         markFailedErrorBoundaryForHotReloading(fiber);
@@ -16971,7 +16974,7 @@ function readContext(context) {
 
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
-    ? AbortController
+    ? AbortController // $FlowFixMe[missing-this-annot]
     : function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
@@ -24054,8 +24057,7 @@ function markRootSuspended$1(root, suspendedLanes) {
   suspendedLanes = removeLanes(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes
-  ); // $FlowFixMe[incompatible-call] found when upgrading Flow
-
+  );
   markRootSuspended(root, suspendedLanes);
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
@@ -24453,6 +24455,7 @@ function renderDidSuspendDelayIfPossible() {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    // $FlowFixMe[incompatible-call] need null check workInProgressRoot
     markRootSuspended$1(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -26212,7 +26215,7 @@ function restorePendingUpdaters(root, lanes) {
     }
   }
 }
-var fakeActCallbackNode = {};
+var fakeActCallbackNode = {}; // $FlowFixMe[missing-local-annot]
 
 function scheduleCallback$2(priorityLevel, callback) {
   {
@@ -27479,7 +27482,7 @@ function assignFiberPropertiesInDEV(target, source) {
 }
 
 function FiberRootNode(
-  containerInfo,
+  containerInfo, // $FlowFixMe[missing-local-annot]
   tag,
   hydrate,
   identifierPrefix,

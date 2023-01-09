@@ -29,7 +29,7 @@ function resolveModuleReference(bundlerConfig, moduleData) {
   return ReactFlightDOMRelayClientIntegration.resolveModuleReference(
     moduleData
   );
-}
+} // $FlowFixMe[missing-local-annot]
 
 function parseModelRecursively(response, parentObj, key, value) {
   if (typeof value === "string") {
@@ -91,7 +91,7 @@ var BLOCKED = "blocked";
 var RESOLVED_MODEL = "resolved_model";
 var RESOLVED_MODULE = "resolved_module";
 var INITIALIZED = "fulfilled";
-var ERRORED = "rejected";
+var ERRORED = "rejected"; // $FlowFixMe[missing-this-annot]
 
 function Chunk(status, value, reason, response) {
   this.status = status;
@@ -429,7 +429,7 @@ function createModelResolver(chunk, parentObject, key) {
       deps: 1,
       value: null
     };
-  }
+  } // $FlowFixMe[missing-local-annot]
 
   return function(value) {
     parentObject[key] = value;

@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-0b974418c-20230106";
+var ReactVersion = "18.3.0-www-modern-0b4f44302-20230109";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1311,7 +1311,7 @@ function countChildren(children) {
 
 function forEachChildren(children, forEachFunc, forEachContext) {
   mapChildren(
-    children,
+    children, // $FlowFixMe[missing-this-annot]
     function() {
       forEachFunc.apply(this, arguments); // Don't return anything.
     },
@@ -1582,6 +1582,7 @@ function lazy(ctor) {
         get: function() {
           return defaultProps;
         },
+        // $FlowFixMe[missing-local-annot]
         set: function(newDefaultProps) {
           error(
             "React.lazy(...): It is not supported to assign `defaultProps` to " +
@@ -1602,6 +1603,7 @@ function lazy(ctor) {
         get: function() {
           return propTypes;
         },
+        // $FlowFixMe[missing-local-annot]
         set: function(newPropTypes) {
           error(
             "React.lazy(...): It is not supported to assign `propTypes` to " +

@@ -421,6 +421,7 @@ function createSyntheticEvent(Interface) {
    * normalizing browser quirks. Subclasses do not necessarily have to implement a
    * DOM interface; custom application-specific events can also subclass this.
    */
+  // $FlowFixMe[missing-this-annot]
   function SyntheticBaseEvent(
     reactName,
     reactEventType,
@@ -465,6 +466,7 @@ function createSyntheticEvent(Interface) {
   } // $FlowFixMe[prop-missing] found when upgrading Flow
 
   assign(SyntheticBaseEvent.prototype, {
+    // $FlowFixMe[missing-this-annot]
     preventDefault: function() {
       this.defaultPrevented = true;
       var event = this.nativeEvent;
@@ -481,6 +483,7 @@ function createSyntheticEvent(Interface) {
 
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
+    // $FlowFixMe[missing-this-annot]
     stopPropagation: function() {
       var event = this.nativeEvent;
 
@@ -778,6 +781,8 @@ var modifierKeyToProp = {
 }; // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
 // getModifierState. If getModifierState is not supported, we map it to a set of
 // modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
+// $FlowFixMe[missing-this-annot]
 
 function modifierStateGetter(keyArg) {
   var syntheticEvent = this;
