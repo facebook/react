@@ -213,8 +213,8 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
+// $FlowFixMe[missing-this-annot]
 function PropertyInfoRecord(
-  this: any,
   name: string,
   type: PropertyType,
   mustUseProperty: boolean,

@@ -78,11 +78,13 @@ function trackValueOnNode(node: any): ?ValueTracker {
   const {get, set} = descriptor;
   Object.defineProperty(node, valueField, {
     configurable: true,
-    get: function(this: any) {
+    // $FlowFixMe[missing-this-annot]
+    get: function() {
       return get.call(this);
     },
     // $FlowFixMe[missing-local-annot]
-    set: function(this: any, value) {
+    // $FlowFixMe[missing-this-annot]
+    set: function(value) {
       if (__DEV__) {
         checkFormFieldValueStringCoercion(value);
       }

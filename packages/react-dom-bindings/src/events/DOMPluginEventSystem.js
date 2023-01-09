@@ -462,7 +462,8 @@ function addTrappedEventListener(
   // need support for such browsers.
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
-    listener = function(this: any, ...p) {
+    // $FlowFixMe[missing-this-annot]
+    listener = function(...p) {
       removeEventListener(
         targetContainer,
         domEventName,

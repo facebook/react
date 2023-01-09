@@ -193,11 +193,8 @@ export function createRequest(
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
-    toJSON: function(
-      this: any,
-      key: string,
-      value: ReactModel,
-    ): ReactJSONValue {
+    // $FlowFixMe[missing-this-annot]
+    toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };

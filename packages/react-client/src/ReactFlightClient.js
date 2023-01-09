@@ -94,13 +94,8 @@ type SomeChunk<T> =
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
-function Chunk(
-  this: any,
-  status: any,
-  value: any,
-  reason: any,
-  response: Response,
-) {
+// $FlowFixMe[missing-this-annot]
+function Chunk(status: any, value: any, reason: any, response: Response) {
   this.status = status;
   this.value = value;
   this.reason = reason;

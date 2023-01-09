@@ -91,13 +91,14 @@ const defaultOnRecoverableError =
         console['error'](error);
       };
 
-function ReactDOMRoot(this: any, internalRoot: FiberRoot) {
+// $FlowFixMe[missing-this-annot]
+function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
+// $FlowFixMe[missing-this-annot]
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
-  this: any,
   children: ReactNodeList,
 ): void {
   const root = this._internalRoot;
@@ -147,9 +148,8 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
 };
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
-ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(
-  this: any,
-): void {
+// $FlowFixMe[missing-this-annot]
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
       console.error(
@@ -262,7 +262,8 @@ export function createRoot(
   return new ReactDOMRoot(root);
 }
 
-function ReactDOMHydrationRoot(this: any, internalRoot: FiberRoot) {
+// $FlowFixMe[missing-this-annot]
+function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 function scheduleHydration(target: Node) {

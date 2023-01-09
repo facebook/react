@@ -113,13 +113,8 @@ module.exports = function register() {
   const originalResolveFilename = Module._resolveFilename;
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  Module._resolveFilename = function(
-    this: any,
-    request,
-    parent,
-    isMain,
-    options,
-  ) {
+  // $FlowFixMe[missing-this-annot]
+  Module._resolveFilename = function(request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {
       if (
