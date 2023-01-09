@@ -163,15 +163,15 @@ export default class HIRBuilder {
     };
     logHIR("Build (pre-shrink)", ir);
     // First reduce indirections
-    let shrunk = shrink(ir);
-    logHIR("Build (shrunk)", shrunk);
+    shrink(ir);
+    logHIR("Build (shrunk)", ir);
     // then convert to reverse postorder
-    const rpo = reversePostorderBlocks(shrunk);
-    removeUnreachableFallthroughs(rpo);
-    markInstructionIds(rpo);
-    markPredecessors(rpo);
+    reversePostorderBlocks(ir);
+    removeUnreachableFallthroughs(ir);
+    markInstructionIds(ir);
+    markPredecessors(ir);
 
-    return rpo;
+    return ir;
   }
 
   /**
@@ -360,7 +360,7 @@ export default class HIRBuilder {
 /**
  * Helper to shrink a CFG eliminate jump-only blocks.
  */
-function shrink(func: HIR): HIR {
+function shrink(func: HIR): void {
   const gotos = new Map();
   /**
    * Given a target block for some terminator, resolves the ideal block that should be
@@ -408,10 +408,10 @@ function shrink(func: HIR): HIR {
     });
   }
 
-  return { blocks, entry: func.entry };
+  func.blocks = blocks;
 }
 
-function removeUnreachableFallthroughs(func: HIR) {
+function removeUnreachableFallthroughs(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   for (const [_, block] of func.blocks) {
     visited.add(block.id);
@@ -437,7 +437,7 @@ function removeUnreachableFallthroughs(func: HIR) {
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
  * before successors except in the case of back links (ie loops).
  */
-function reversePostorderBlocks(func: HIR): HIR {
+function reversePostorderBlocks(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   const postorder: Array<BlockId> = [];
   function visit(blockId: BlockId) {
@@ -520,10 +520,8 @@ function reversePostorderBlocks(func: HIR): HIR {
   for (const blockId of postorder.reverse()) {
     blocks.set(blockId, func.blocks.get(blockId)!);
   }
-  return {
-    blocks,
-    entry: func.entry,
-  };
+
+  func.blocks = blocks;
 }
 
 function markInstructionIds(func: HIR) {
