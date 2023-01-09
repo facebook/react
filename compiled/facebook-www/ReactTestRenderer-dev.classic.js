@@ -19825,8 +19825,8 @@ function isLegacyActEnvironment(fiber) {
     // act environment whenever `jest` is defined, but you can still turn off
     // spurious warnings by setting IS_REACT_ACT_ENVIRONMENT explicitly
     // to false.
-    var isReactActEnvironmentGlobal = // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
-      typeof IS_REACT_ACT_ENVIRONMENT !== "undefined"
+    var isReactActEnvironmentGlobal = // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      typeof IS_REACT_ACT_ENVIRONMENT !== "undefined" // $FlowFixMe[cannot-resolve-name]
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined; // $FlowFixMe - Flow doesn't know about jest
 
@@ -19836,8 +19836,8 @@ function isLegacyActEnvironment(fiber) {
 }
 function isConcurrentActEnvironment() {
   {
-    var isReactActEnvironmentGlobal =
-      typeof IS_REACT_ACT_ENVIRONMENT !== "undefined"
+    var isReactActEnvironmentGlobal = // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      typeof IS_REACT_ACT_ENVIRONMENT !== "undefined" // $FlowFixMe[cannot-resolve-name]
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
@@ -23901,7 +23901,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-e2424f33b-20230109";
+var ReactVersion = "18.3.0-www-classic-34464fb16-20230109";
 
 // Might add PROFILE later.
 
