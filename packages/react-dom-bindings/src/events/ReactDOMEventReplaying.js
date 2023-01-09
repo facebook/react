@@ -619,7 +619,7 @@ export function retryIfBlockedOn(
   if (queuedMouse !== null) {
     scheduleCallbackIfUnblocked(queuedMouse, unblocked);
   }
-  const unblock = queuedEvent =>
+  const unblock = (queuedEvent: QueuedReplayableEvent) =>
     scheduleCallbackIfUnblocked(queuedEvent, unblocked);
   queuedPointers.forEach(unblock);
   queuedPointerCaptures.forEach(unblock);

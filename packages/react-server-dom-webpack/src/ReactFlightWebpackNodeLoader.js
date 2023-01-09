@@ -100,7 +100,7 @@ export async function getSource(
   return defaultGetSource(url, context, defaultGetSource);
 }
 
-function addExportNames(names, node) {
+function addExportNames(names: Array<string>, node: any) {
   switch (node.type) {
     case 'Identifier':
       names.push(node.name);
@@ -174,7 +174,7 @@ async function parseExportNamesInto(
   transformedSource: string,
   names: Array<string>,
   parentURL: string,
-  defaultTransformSource,
+  defaultTransformSource: TransformSourceFunction,
 ): Promise<void> {
   const {body} = acorn.parse(transformedSource, {
     ecmaVersion: '2019',

@@ -94,6 +94,7 @@ type SomeChunk<T> =
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
+// $FlowFixMe[missing-this-annot]
 function Chunk(status: any, value: any, reason: any, response: Response) {
   this.status = status;
   this.value = value;
@@ -104,6 +105,7 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
 Chunk.prototype = (Object.create(Promise.prototype): any);
 // TODO: This doesn't return a new Promise chain unlike the real .then
 Chunk.prototype.then = function<T>(
+  this: SomeChunk<T>,
   resolve: (value: T) => mixed,
   reject: (reason: mixed) => mixed,
 ) {
@@ -369,7 +371,11 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
-function createElement(type, key, props): React$Element<any> {
+function createElement(
+  type: mixed,
+  key: mixed,
+  props: mixed,
+): React$Element<any> {
   const element: any = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -446,6 +452,7 @@ function createModelResolver<T>(
       value: null,
     };
   }
+  // $FlowFixMe[missing-local-annot]
   return value => {
     parentObject[key] = value;
     blocked.deps--;
@@ -465,7 +472,7 @@ function createModelResolver<T>(
 }
 
 function createModelReject<T>(chunk: SomeChunk<T>) {
-  return error => triggerErrorOnChunk(chunk, error);
+  return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
 export function parseModelString(

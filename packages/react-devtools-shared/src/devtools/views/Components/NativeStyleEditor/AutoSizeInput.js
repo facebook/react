@@ -27,6 +27,7 @@ export default function AutoSizeInput({
   value,
   ...rest
 }: Props): React.Node {
+  // $FlowFixMe[missing-local-annot]
   const onFocusWrapper = event => {
     const input = event.target;
     if (input !== null) {

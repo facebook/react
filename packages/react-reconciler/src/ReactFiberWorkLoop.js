@@ -1003,7 +1003,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
-function performConcurrentWorkOnRoot(root, didTimeout) {
+function performConcurrentWorkOnRoot(root: FiberRoot, didTimeout: boolean) {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
@@ -1171,9 +1171,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 }
 
 function recoverFromConcurrentError(
-  root,
-  originallyAttemptedLanes,
-  errorRetryLanes,
+  root: FiberRoot,
+  originallyAttemptedLanes: Lanes,
+  errorRetryLanes: Lanes,
 ) {
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
@@ -1259,7 +1259,11 @@ export function queueRecoverableErrors(errors: Array<CapturedValue<mixed>>) {
   }
 }
 
-function finishConcurrentRender(root, exitStatus, lanes) {
+function finishConcurrentRender(
+  root: FiberRoot,
+  exitStatus: RootExitStatus,
+  lanes: Lanes,
+) {
   switch (exitStatus) {
     case RootInProgress:
     case RootFatalErrored: {
@@ -1439,7 +1443,7 @@ function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
   return true;
 }
 
-function markRootSuspended(root, suspendedLanes) {
+function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
   // TODO: Lol maybe there's a better way to factor this besides this
@@ -1449,13 +1453,12 @@ function markRootSuspended(root, suspendedLanes) {
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes,
   );
-  // $FlowFixMe[incompatible-call] found when upgrading Flow
   markRootSuspended_dontCallThisOneDirectly(root, suspendedLanes);
 }
 
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
-function performSyncWorkOnRoot(root) {
+function performSyncWorkOnRoot(root: FiberRoot) {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     syncNestedUpdateFlag();
   }
@@ -1764,7 +1767,7 @@ function resetSuspendedWorkLoopOnUnwind() {
   resetHooksOnUnwind();
 }
 
-function handleThrow(root, thrownValue): void {
+function handleThrow(root: FiberRoot, thrownValue: any): void {
   // A component threw an exception. Usually this is because it suspended, but
   // it also includes regular program errors.
   //
@@ -1902,7 +1905,7 @@ function shouldAttemptToSuspendUntilDataResolves() {
   return false;
 }
 
-function pushDispatcher(container) {
+function pushDispatcher(container: any) {
   prepareRendererToRender(container);
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -1916,7 +1919,7 @@ function pushDispatcher(container) {
   }
 }
 
-function popDispatcher(prevDispatcher) {
+function popDispatcher(prevDispatcher: any) {
   resetRendererAfterRender();
   ReactCurrentDispatcher.current = prevDispatcher;
 }
@@ -1931,7 +1934,7 @@ function pushCacheDispatcher() {
   }
 }
 
-function popCacheDispatcher(prevCacheDispatcher) {
+function popCacheDispatcher(prevCacheDispatcher: any) {
   if (enableCache) {
     ReactCurrentCache.current = prevCacheDispatcher;
   }
@@ -1973,6 +1976,7 @@ export function renderDidSuspendDelayIfPossible(): void {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    // $FlowFixMe[incompatible-call] need null check workInProgressRoot
     markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
@@ -3753,7 +3757,7 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
 let beginWork;
 if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
   const dummyFiber = null;
-  beginWork = (current, unitOfWork, lanes) => {
+  beginWork = (current: null | Fiber, unitOfWork: Fiber, lanes: Lanes) => {
     // If a component throws an error, we replay it again in a synchronously
     // dispatched event, so that the debugger will treat it as an uncaught
     // error See ReactErrorUtils for more information.
@@ -3834,7 +3838,7 @@ if (__DEV__) {
   didWarnAboutUpdateInRenderForAnotherComponent = new Set();
 }
 
-function warnAboutRenderPhaseUpdatesInDEV(fiber) {
+function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {
   if (__DEV__) {
     if (ReactCurrentDebugFiberIsRenderingInDEV) {
       switch (fiber.tag) {
@@ -3893,7 +3897,8 @@ export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
 }
 
 const fakeActCallbackNode = {};
-function scheduleCallback(priorityLevel, callback) {
+// $FlowFixMe[missing-local-annot]
+function scheduleCallback(priorityLevel: any, callback) {
   if (__DEV__) {
     // If we're currently inside an `act` scope, bypass Scheduler and push to
     // the `act` queue instead.
@@ -3910,7 +3915,7 @@ function scheduleCallback(priorityLevel, callback) {
   }
 }
 
-function cancelCallback(callbackNode) {
+function cancelCallback(callbackNode: any) {
   if (__DEV__ && callbackNode === fakeActCallbackNode) {
     return;
   }

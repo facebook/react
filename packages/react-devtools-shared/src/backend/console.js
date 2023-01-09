@@ -197,6 +197,7 @@ export function patch({
           ? targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
           : targetConsole[method]);
 
+        // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
           let shouldAppendWarningStack = false;
           if (method !== 'log') {
@@ -335,6 +336,7 @@ export function patchForStrictMode() {
           ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
           : targetConsole[method]);
 
+        // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
           if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
             // Dim the text color of the double logs if we're not

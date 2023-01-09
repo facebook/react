@@ -6,6 +6,7 @@
  *
  * @flow
  */
+import type {TextInstance, Instance} from '../../client/ReactDOMHostConfig';
 import type {AnyNativeEvent} from '../PluginModuleType';
 import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
@@ -50,10 +51,11 @@ function registerEvents() {
 }
 
 function createAndAccumulateChangeEvent(
+  // $FlowFixMe[missing-local-annot]
   dispatchQueue,
-  inst,
-  nativeEvent,
-  target,
+  inst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  target: null | EventTarget,
 ) {
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
@@ -78,7 +80,7 @@ let activeElementInst = null;
 /**
  * SECTION: handle `change` event
  */
-function shouldUseChangeEvent(elem) {
+function shouldUseChangeEvent(elem: Instance | TextInstance) {
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
@@ -86,7 +88,7 @@ function shouldUseChangeEvent(elem) {
   );
 }
 
-function manualDispatchChangeEvent(nativeEvent) {
+function manualDispatchChangeEvent(nativeEvent: AnyNativeEvent) {
   const dispatchQueue = [];
   createAndAccumulateChangeEvent(
     dispatchQueue,
@@ -109,7 +111,7 @@ function manualDispatchChangeEvent(nativeEvent) {
   batchedUpdates(runEventInBatch, dispatchQueue);
 }
 
-function runEventInBatch(dispatchQueue) {
+function runEventInBatch(dispatchQueue: DispatchQueue) {
   processDispatchQueue(dispatchQueue, 0);
 }
 
@@ -120,7 +122,10 @@ function getInstIfValueChanged(targetInst: Object) {
   }
 }
 
-function getTargetInstForChangeEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForChangeEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'change') {
     return targetInst;
   }
@@ -143,7 +148,10 @@ if (canUseDOM) {
  * and override the value property so that we can distinguish user events from
  * value changes in JS.
  */
-function startWatchingForValueChange(target, targetInst) {
+function startWatchingForValueChange(
+  target: Instance | TextInstance,
+  targetInst: null | Fiber,
+) {
   activeElement = target;
   activeElementInst = targetInst;
   (activeElement: any).attachEvent('onpropertychange', handlePropertyChange);
@@ -166,6 +174,7 @@ function stopWatchingForValueChange() {
  * (For IE <=9) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
+// $FlowFixMe[missing-local-annot]
 function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;
@@ -177,8 +186,8 @@ function handlePropertyChange(nativeEvent) {
 
 function handleEventsForInputEventPolyfill(
   domEventName: DOMEventName,
-  target,
-  targetInst,
+  target: Instance | TextInstance,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'focusin') {
     // In IE9, propertychange fires for most input events but is buggy and
@@ -201,7 +210,7 @@ function handleEventsForInputEventPolyfill(
 // For IE8 and IE9.
 function getTargetInstForInputEventPolyfill(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (
     domEventName === 'selectionchange' ||
@@ -225,7 +234,7 @@ function getTargetInstForInputEventPolyfill(
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
+function shouldUseClickEvent(elem: any) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
@@ -237,7 +246,10 @@ function shouldUseClickEvent(elem) {
   );
 }
 
-function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForClickEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'click') {
     return getInstIfValueChanged(targetInst);
   }
@@ -245,7 +257,7 @@ function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
 
 function getTargetInstForInputOrChangeEvent(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'input' || domEventName === 'change') {
     return getInstIfValueChanged(targetInst);

@@ -118,7 +118,7 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(type, partialState) {
+  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -194,7 +194,8 @@ function applyDerivedStateFromProps(
 
 const classComponentUpdater = {
   isMounted,
-  enqueueSetState(inst, payload, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -227,7 +228,7 @@ const classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
-  enqueueReplaceState(inst, payload, callback) {
+  enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -262,7 +263,8 @@ const classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
-  enqueueForceUpdate(inst, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -299,13 +301,13 @@ const classComponentUpdater = {
 };
 
 function checkShouldComponentUpdate(
-  workInProgress,
-  ctor,
-  oldProps,
-  newProps,
-  oldState,
-  newState,
-  nextContext,
+  workInProgress: Fiber,
+  ctor: any,
+  oldProps: any,
+  newProps: any,
+  oldState: any,
+  newState: any,
+  nextContext: any,
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
@@ -760,7 +762,7 @@ function constructClassInstance(
   return instance;
 }
 
-function callComponentWillMount(workInProgress, instance) {
+function callComponentWillMount(workInProgress: Fiber, instance: any) {
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
@@ -784,10 +786,10 @@ function callComponentWillMount(workInProgress, instance) {
 }
 
 function callComponentWillReceiveProps(
-  workInProgress,
-  instance,
-  newProps,
-  nextContext,
+  workInProgress: Fiber,
+  instance: any,
+  newProps: any,
+  nextContext: any,
 ) {
   const oldState = instance.state;
   if (typeof instance.componentWillReceiveProps === 'function') {

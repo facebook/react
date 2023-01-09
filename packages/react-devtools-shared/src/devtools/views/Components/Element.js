@@ -75,6 +75,7 @@ export default function Element({data, index, style}: Props): React.Node {
     }
   };
 
+  // $FlowFixMe[missing-local-annot]
   const handleClick = ({metaKey}) => {
     if (id !== null) {
       logEvent({
@@ -99,6 +100,7 @@ export default function Element({data, index, style}: Props): React.Node {
     setIsHovered(false);
   };
 
+  // $FlowFixMe[missing-local-annot]
   const handleKeyDoubleClick = event => {
     // Double clicks on key value are used for text selection (if the text has been truncated).
     // They should not enter the owners tree view.
@@ -220,6 +222,7 @@ export default function Element({data, index, style}: Props): React.Node {
 }
 
 // Prevent double clicks on toggle from drilling into the owner list.
+// $FlowFixMe[missing-local-annot]
 const swallowDoubleClick = event => {
   event.preventDefault();
   event.stopPropagation();
@@ -233,6 +236,7 @@ type ExpandCollapseToggleProps = {
 function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   const {children, id, isCollapsed} = element;
 
+  // $FlowFixMe[missing-local-annot]
   const toggleCollapsed = event => {
     event.preventDefault();
     event.stopPropagation();
@@ -240,6 +244,7 @@ function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
     store.toggleIsCollapsed(id, !isCollapsed);
   };
 
+  // $FlowFixMe[missing-local-annot]
   const stopPropagation = event => {
     // Prevent the row from selecting
     event.stopPropagation();

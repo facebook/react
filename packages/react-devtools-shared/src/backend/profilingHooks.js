@@ -204,7 +204,7 @@ export function createProfilingHooks({
     }
   }
 
-  function markAndClear(markName) {
+  function markAndClear(markName: string) {
     // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
     ((performanceTarget: any): Performance).mark(markName);
     ((performanceTarget: any): Performance).clearMarks(markName);

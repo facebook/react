@@ -111,7 +111,7 @@ if (enableCreateEventHandleAPI) {
   topLevelEventsToReactNames.set('afterblur', null);
 }
 
-function registerSimpleEvent(domEventName, reactName) {
+function registerSimpleEvent(domEventName: DOMEventName, reactName: string) {
   topLevelEventsToReactNames.set(domEventName, reactName);
   registerTwoPhaseEvent(reactName, [domEventName]);
 }

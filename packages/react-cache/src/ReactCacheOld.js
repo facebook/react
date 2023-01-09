@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {ReactContext, Thenable} from 'shared/ReactTypes';
 
 import * as React from 'react';
 
@@ -48,7 +48,7 @@ const ReactCurrentDispatcher =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     .ReactCurrentDispatcher;
 
-function readContext(Context) {
+function readContext(Context: ReactContext<mixed>) {
   const dispatcher = ReactCurrentDispatcher.current;
   if (dispatcher === null) {
     // This wasn't being minified but we're going to retire this package anyway.
@@ -62,6 +62,7 @@ function readContext(Context) {
   return dispatcher.readContext(Context);
 }
 
+// $FlowFixMe[missing-local-annot]
 function identityHashFn(input) {
   if (__DEV__) {
     if (
@@ -133,7 +134,7 @@ function accessResult<I, K, V>(
   }
 }
 
-function deleteEntry(resource, key) {
+function deleteEntry(resource: any, key: mixed) {
   const entriesForResource = entries.get(resource);
   if (entriesForResource !== undefined) {
     entriesForResource.delete(key);

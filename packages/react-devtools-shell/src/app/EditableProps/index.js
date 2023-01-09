@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import {
   createContext,
@@ -23,7 +24,8 @@ import {
 
 const initialData = {foo: 'FOO', bar: 'BAR'};
 
-function reducer(state, action) {
+// $FlowFixMe[missing-local-annot]
+function reducer(state, action: {type: string}) {
   switch (action.type) {
     case 'swap':
       return {foo: state.bar, bar: state.foo};
@@ -72,19 +74,20 @@ type Props = {name: string, toggle: boolean};
 type State = {cities: Array<string>, state: string};
 
 class StatefulClass extends Component<Props, State> {
-  static contextType = BoolContext;
+  static contextType: ReactContext<boolean> = BoolContext;
 
   state: State = {
     cities: ['San Francisco', 'San Jose'],
     state: 'California',
   };
 
-  handleChange = ({target}) =>
+  // $FlowFixMe[missing-local-annot]
+  handleChange = ({target}): any =>
     this.setState({
       state: target.value,
     });
 
-  render() {
+  render(): any {
     return (
       <ul>
         <li>Name: {this.props.name}</li>
@@ -141,7 +144,7 @@ export default function EditableProps(): React.Node {
 }
 
 // Below copied from https://usehooks.com/
-function useDebounce(value, delay) {
+function useDebounce(value: number, delay: number) {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
 

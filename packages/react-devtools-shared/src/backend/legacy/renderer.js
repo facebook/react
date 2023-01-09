@@ -195,7 +195,7 @@ export function attach(
     return ((internalInstanceToIDMap.get(internalInstance): any): number);
   }
 
-  function areEqualArrays(a, b) {
+  function areEqualArrays(a: Array<any>, b: Array<any>) {
     if (a.length !== b.length) {
       return false;
     }

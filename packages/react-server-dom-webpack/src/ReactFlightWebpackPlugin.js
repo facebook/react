@@ -144,6 +144,7 @@ export default class ReactFlightWebpackPlugin {
           new NullDependency.Template(),
         );
 
+        // $FlowFixMe[missing-local-annot]
         const handler = parser => {
           // We need to add all client references as dependency of something in the graph so
           // Webpack knows which entries need to know about the relevant chunks and include the
@@ -220,7 +221,8 @@ export default class ReactFlightWebpackPlugin {
               return c.id;
             });
 
-            function recordModule(id, module) {
+            // $FlowFixMe[missing-local-annot]
+            function recordModule(id: any, module) {
               // TODO: Hook into deps instead of the target module.
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.

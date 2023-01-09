@@ -244,6 +244,7 @@ class ReactFabricHostComponent {
     eventType: string,
     listener: EventListener,
     options: EventListenerOptions | boolean,
+    // $FlowFixMe[missing-local-annot]
   ) {
     if (typeof eventType !== 'string') {
       throw new Error('addEventListener_unstable eventType must be a string');

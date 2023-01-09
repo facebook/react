@@ -42,6 +42,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
    * normalizing browser quirks. Subclasses do not necessarily have to implement a
    * DOM interface; custom application-specific events can also subclass this.
    */
+  // $FlowFixMe[missing-this-annot]
   function SyntheticBaseEvent(
     reactName: string | null,
     reactEventType: string,
@@ -83,6 +84,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
   assign(SyntheticBaseEvent.prototype, {
+    // $FlowFixMe[missing-this-annot]
     preventDefault: function() {
       this.defaultPrevented = true;
       const event = this.nativeEvent;
@@ -99,6 +101,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
 
+    // $FlowFixMe[missing-this-annot]
     stopPropagation: function() {
       const event = this.nativeEvent;
       if (!event) {
@@ -147,7 +150,7 @@ const EventInterface = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
-  timeStamp: function(event) {
+  timeStamp: function(event: {[propName: string]: mixed}) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: 0,
@@ -168,7 +171,7 @@ let lastMovementX;
 let lastMovementY;
 let lastMouseEvent;
 
-function updateMouseMovementPolyfillState(event) {
+function updateMouseMovementPolyfillState(event: {[propName: string]: mixed}) {
   if (event !== lastMouseEvent) {
     if (lastMouseEvent && event.type === 'mousemove') {
       // $FlowFixMe assuming this is a number
@@ -373,7 +376,7 @@ const translateToKey = {
  * @param {object} nativeEvent Native browser event.
  * @return {string} Normalized `key` property.
  */
-function getEventKey(nativeEvent) {
+function getEventKey(nativeEvent: {[propName: string]: mixed}) {
   if (nativeEvent.key) {
     // Normalize inconsistent values reported by browsers due to
     // implementations of a working draft specification.
@@ -422,6 +425,8 @@ const modifierKeyToProp = {
 // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
 // getModifierState. If getModifierState is not supported, we map it to a set of
 // modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
+// $FlowFixMe[missing-this-annot]
 function modifierStateGetter(keyArg) {
   const syntheticEvent = this;
   const nativeEvent = syntheticEvent.nativeEvent;
@@ -432,7 +437,7 @@ function modifierStateGetter(keyArg) {
   return keyProp ? !!nativeEvent[keyProp] : false;
 }
 
-function getEventModifierState(nativeEvent) {
+function getEventModifierState(nativeEvent: {[propName: string]: mixed}) {
   return modifierStateGetter;
 }
 
@@ -453,7 +458,7 @@ const KeyboardEventInterface = {
   locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
-  charCode: function(event) {
+  charCode: function(event: {[propName: string]: mixed}) {
     // `charCode` is the result of a KeyPress event and represents the value of
     // the actual printable character.
 
@@ -467,7 +472,7 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-  keyCode: function(event) {
+  keyCode: function(event: {[propName: string]: mixed}) {
     // `keyCode` is the result of a KeyDown/Up event and represents the value of
     // physical keyboard key.
 
@@ -480,7 +485,7 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-  which: function(event) {
+  which: function(event: {[propName: string]: mixed}) {
     // `which` is an alias for either `keyCode` or `charCode` depending on the
     // type of the event.
     if (event.type === 'keypress') {
@@ -560,7 +565,7 @@ export const SyntheticTransitionEvent: $FlowFixMe = createSyntheticEvent(
  */
 const WheelEventInterface = {
   ...MouseEventInterface,
-  deltaX(event) {
+  deltaX(event: {[propName: string]: mixed}) {
     return 'deltaX' in event
       ? event.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
@@ -569,7 +574,7 @@ const WheelEventInterface = {
         -event.wheelDeltaX
       : 0;
   },
-  deltaY(event) {
+  deltaY(event: {[propName: string]: mixed}) {
     return 'deltaY' in event
       ? event.deltaY
       : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).

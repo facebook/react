@@ -21,7 +21,8 @@ import * as Scheduler from 'scheduler';
 const AbortControllerLocal: typeof AbortController = enableCache
   ? typeof AbortController !== 'undefined'
     ? AbortController
-    : (function AbortControllerShim() {
+    : // $FlowFixMe[missing-this-annot]
+      (function AbortControllerShim() {
         const listeners = [];
         const signal = (this.signal = {
           aborted: false,

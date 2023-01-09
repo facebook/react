@@ -296,6 +296,7 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
+    // $FlowFixMe[missing-this-annot]
     function() {
       forEachFunc.apply(this, arguments);
       // Don't return anything.

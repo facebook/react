@@ -676,7 +676,7 @@ export function processUpdateQueue<State>(
   }
 }
 
-function callCallback(callback, context) {
+function callCallback(callback: () => mixed, context: any) {
   if (typeof callback !== 'function') {
     throw new Error(
       'Invalid argument passed as callback. Expected a function. Instead ' +

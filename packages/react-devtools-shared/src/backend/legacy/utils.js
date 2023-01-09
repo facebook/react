@@ -11,6 +11,7 @@ import type {InternalInstance} from './renderer';
 
 export function decorate(object: Object, attr: string, fn: Function): Function {
   const old = object[attr];
+  // $FlowFixMe[missing-this-annot] webpack config needs to be updated to allow `this` type annotations
   object[attr] = function(instance: InternalInstance) {
     return fn.call(this, old, arguments);
   };
@@ -34,6 +35,7 @@ export function restoreMany(source: Object, olds: Object): void {
   }
 }
 
+// $FlowFixMe[missing-this-annot] webpack config needs to be updated to allow `this` type annotations
 export function forceUpdate(instance: InternalInstance): void {
   if (typeof instance.forceUpdate === 'function') {
     instance.forceUpdate();

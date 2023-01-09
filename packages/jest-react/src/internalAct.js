@@ -122,7 +122,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
   }
 }
 
-function flushActWork(resolve, reject) {
+function flushActWork(resolve: () => void, reject: (error: any) => void) {
   if (Scheduler.unstable_hasPendingWork()) {
     try {
       Scheduler.unstable_flushUntilNextPaint();

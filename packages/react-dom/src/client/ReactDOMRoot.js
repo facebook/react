@@ -91,11 +91,13 @@ const defaultOnRecoverableError =
         console['error'](error);
       };
 
+// $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
+// $FlowFixMe[missing-this-annot]
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
@@ -146,6 +148,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
 };
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
+// $FlowFixMe[missing-this-annot]
 ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
@@ -259,6 +262,7 @@ export function createRoot(
   return new ReactDOMRoot(root);
 }
 
+// $FlowFixMe[missing-this-annot]
 function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }

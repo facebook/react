@@ -193,6 +193,7 @@ export function createRequest(
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
+    // $FlowFixMe[missing-this-annot]
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
@@ -481,7 +482,7 @@ function escapeStringValue(value: string): string {
   }
 }
 
-function isObjectPrototype(object): boolean {
+function isObjectPrototype(object: any): boolean {
   if (!object) {
     return false;
   }
@@ -503,7 +504,7 @@ function isObjectPrototype(object): boolean {
   return true;
 }
 
-function isSimpleObject(object): boolean {
+function isSimpleObject(object: any): boolean {
   if (!isObjectPrototype(Object.getPrototypeOf(object))) {
     return false;
   }
@@ -529,7 +530,7 @@ function isSimpleObject(object): boolean {
   return true;
 }
 
-function objectName(object): string {
+function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
   return name.replace(/^\[object (.*)\]$/, function(m, p0) {

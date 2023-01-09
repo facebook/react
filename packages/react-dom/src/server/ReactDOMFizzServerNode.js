@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Request} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
@@ -26,11 +27,11 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
-function createDrainHandler(destination: Destination, request) {
+function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
 
-function createAbortHandler(request, reason) {
+function createAbortHandler(request: Request, reason: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
   return () => abort(request, new Error(reason));
 }

@@ -7,6 +7,7 @@
  * @flow
  */
 
+// $FlowFixMe[missing-this-annot]
 function invokeGuardedCallbackProd<Args: Array<mixed>, Context>(
   name: string | null,
   func: (...Args) => mixed,
@@ -62,6 +63,7 @@ if (__DEV__) {
     invokeGuardedCallbackImpl = function invokeGuardedCallbackDev<
       Args: Array<mixed>,
       Context,
+      // $FlowFixMe[missing-this-annot]
     >(name: string | null, func: (...Args) => mixed, context: Context): void {
       // If document doesn't exist we know for sure we will crash in this method
       // when we call document.createEvent(). However this can cause confusing
@@ -150,6 +152,7 @@ if (__DEV__) {
       let didSetError = false;
       let isCrossOriginError = false;
 
+      // $FlowFixMe[missing-local-annot]
       function handleWindowError(event) {
         error = event.error;
         didSetError = true;

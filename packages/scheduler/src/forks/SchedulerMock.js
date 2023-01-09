@@ -322,6 +322,7 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[missing-this-annot]
   return function() {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;

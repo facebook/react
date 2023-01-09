@@ -16,7 +16,11 @@ module.exports = function register() {
   const PROMISE_PROTOTYPE = Promise.prototype;
 
   const proxyHandlers = {
-    get: function(target, name, receiver) {
+    get: function(
+      target: {[string]: any},
+      name: string,
+      receiver: Proxy<{[string]: any}>,
+    ) {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -50,7 +54,8 @@ module.exports = function register() {
             // If this module is expected to return a Promise (such as an AsyncModule) then
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
-            const then = function then(resolve, reject) {
+            // $FlowFixMe[missing-local-annot]
+            const then = function then(resolve, reject: any) {
               const moduleReference: {[string]: any, ...} = {
                 $$typeof: MODULE_REFERENCE,
                 filepath: target.filepath,
@@ -82,7 +87,7 @@ module.exports = function register() {
       }
       return cachedReference;
     },
-    getPrototypeOf(target) {
+    getPrototypeOf(target: {[string]: any}) {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },
@@ -108,6 +113,7 @@ module.exports = function register() {
   const originalResolveFilename = Module._resolveFilename;
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
+  // $FlowFixMe[missing-this-annot]
   Module._resolveFilename = function(request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {
