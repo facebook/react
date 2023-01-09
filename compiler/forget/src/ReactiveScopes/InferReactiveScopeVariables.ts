@@ -173,6 +173,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "NewExpression":
     case "ObjectExpression":
     case "OtherStatement":
+    case "FunctionExpression":
     case "UnaryExpression": {
       return true;
     }

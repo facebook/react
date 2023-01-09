@@ -313,6 +313,7 @@ function valueKind(value: InstructionValue): DeclKind {
     case "JsxFragment":
     case "NewExpression":
     case "ObjectExpression":
+    case "FunctionExpression":
     case "OtherStatement":
     case "UnaryExpression": {
       return DeclKind.Dynamic;

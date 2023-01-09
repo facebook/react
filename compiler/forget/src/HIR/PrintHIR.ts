@@ -290,6 +290,12 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       )}] = ${printPlace(instrValue.value)}`;
       break;
     }
+    case "FunctionExpression": {
+      const params = instrValue.params.join(",");
+      const body = generate(instrValue.body).code;
+      value = `Function ${instrValue.name}(${params}){${body}}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

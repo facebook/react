@@ -89,6 +89,7 @@ export function* eachInstructionValueOperand(
     }
     case "OtherStatement":
     case "Primitive":
+    case "FunctionExpression":
     case "JSXText": {
       break;
     }
@@ -175,6 +176,7 @@ export function mapInstructionOperands(
     }
     case "OtherStatement":
     case "Primitive":
+    case "FunctionExpression":
     case "JSXText": {
       break;
     }

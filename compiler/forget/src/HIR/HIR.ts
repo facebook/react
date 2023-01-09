@@ -309,6 +309,12 @@ export type InstructionData =
   | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
   // load `object[index]` - like PropertyLoad but with a dynamic property
   | { kind: "ComputedLoad"; object: Place; property: Place }
+  | {
+      kind: "FunctionExpression";
+      name: string | null;
+      params: Array<string>;
+      body: t.BlockStatement;
+    }
 
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc

@@ -1148,6 +1148,22 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "FunctionExpression": {
+      const expr = exprPath as NodePath<t.FunctionExpression>;
+      const name: string | null = expr.get("id")?.node?.name ?? null;
+      const body = expr.get("body").node;
+      const params: Array<string> = expr.get("params").map((p) => {
+        todoInvariant(p.isIdentifier(), "handle non identifier params");
+        return p.node.name;
+      });
+      return {
+        kind: "FunctionExpression",
+        name,
+        body,
+        params,
+        loc: exprLoc,
+      };
+    }
     default: {
       todo(`lowerExpression(${exprNode.type})`);
       //   assertExhaustive(

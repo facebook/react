@@ -498,6 +498,13 @@ export function codegenInstructionValue(
       value = codegenPlace(temp, instrValue);
       break;
     }
+    case "FunctionExpression": {
+      const id =
+        instrValue.name !== null ? t.identifier(instrValue.name) : null;
+      const params = instrValue.params.map((p) => t.identifier(p));
+      value = t.functionExpression(id, params, instrValue.body);
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,
