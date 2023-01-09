@@ -8,4 +8,5 @@
 export { lower } from "./BuildHIR";
 export { HIRFunction, ReactiveFunction } from "./HIR";
 export { Environment } from "./HIRBuilder";
+export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction } from "./PrintHIR";

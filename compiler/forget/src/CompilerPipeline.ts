@@ -6,8 +6,14 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import {
+  Environment,
+  HIRFunction,
+  lower,
+  mergeConsecutiveBlocks,
+  ReactiveFunction,
+} from "./HIR";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
-import { Environment, HIRFunction, lower, ReactiveFunction } from "./HIR";
 import {
   buildReactiveFunction,
   codegenReactiveFunction,
@@ -37,6 +43,9 @@ export default function (
 
   const ir = lower(func, env);
   logHIRFunction("HIR", ir);
+
+  mergeConsecutiveBlocks(ir);
+  logHIRFunction("mergeConsecutiveBlocks", ir);
 
   enterSSA(ir, env);
   logHIRFunction("SSA", ir);
