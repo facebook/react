@@ -48,4 +48,4 @@ munge_underscores=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.194.0
+^0.195.0
