@@ -108,7 +108,7 @@ export function validatePreloadResourceDifference(
       let extraProps = null;
       let differentProps = null;
       if (originalProps.media != null && latestProps.media == null) {
-        missingProps = missingProps || {};
+        missingProps = missingProps || ({}: {[string]: any});
         missingProps.media = originalProps.media;
       }
 
@@ -167,7 +167,7 @@ export function validateStyleResourceDifference(
     let extraProps = null;
     let differentProps = null;
     if (originalProps.media != null && latestProps.media == null) {
-      missingProps = missingProps || {};
+      missingProps = missingProps || ({}: {[string]: any});
       missingProps.media = originalProps.media;
     }
 

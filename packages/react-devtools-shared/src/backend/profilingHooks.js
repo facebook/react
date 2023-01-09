@@ -52,7 +52,7 @@ let supportsUserTiming =
 let supportsUserTimingV3 = false;
 if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
-  const markOptions = {};
+  const markOptions = ({}: {startTime?: number});
   Object.defineProperty(markOptions, 'startTime', {
     get: function() {
       supportsUserTimingV3 = true;

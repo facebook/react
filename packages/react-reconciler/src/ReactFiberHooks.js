@@ -144,6 +144,7 @@ import {
   createThenableState,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -2383,7 +2384,7 @@ function startTransition(
   setPending(true);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (enableTransitionTracing) {
@@ -2408,6 +2409,7 @@ function startTransition(
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -2415,7 +2417,6 @@ function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        currentTransition._updatedFibers.clear();
       }
     }
   }
