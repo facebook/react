@@ -191,7 +191,7 @@ export function createResponseState(
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
-  const bootstrapChunks = [];
+  const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeDesc = null;
   let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
@@ -2777,7 +2777,7 @@ export function writeInitialResources(
     }
   }
 
-  const target = [];
+  const target: Array<Chunk | PrecomputedChunk> = [];
 
   const {
     charset,
@@ -2902,7 +2902,7 @@ export function writeImmediateResources(
     }
   }
 
-  const target = [];
+  const target: Array<Chunk | PrecomputedChunk> = [];
 
   const {
     charset,

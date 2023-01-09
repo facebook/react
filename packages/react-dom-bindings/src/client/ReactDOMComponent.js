@@ -672,7 +672,7 @@ export function diffProperties(
       for (styleName in lastStyle) {
         if (lastStyle.hasOwnProperty(styleName)) {
           if (!styleUpdates) {
-            styleUpdates = {};
+            styleUpdates = ({}: {[string]: $FlowFixMe});
           }
           styleUpdates[styleName] = '';
         }
@@ -725,7 +725,7 @@ export function diffProperties(
             (!nextProp || !nextProp.hasOwnProperty(styleName))
           ) {
             if (!styleUpdates) {
-              styleUpdates = {};
+              styleUpdates = ({}: {[string]: string});
             }
             styleUpdates[styleName] = '';
           }
@@ -737,7 +737,7 @@ export function diffProperties(
             lastProp[styleName] !== nextProp[styleName]
           ) {
             if (!styleUpdates) {
-              styleUpdates = {};
+              styleUpdates = ({}: {[string]: $FlowFixMe});
             }
             styleUpdates[styleName] = nextProp[styleName];
           }

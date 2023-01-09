@@ -237,7 +237,7 @@ export async function transformSource(
       throw new Error('Expected source to have been transformed to a string.');
     }
 
-    const names = [];
+    const names: Array<string> = [];
     await parseExportNamesInto(
       transformedSource,
       names,

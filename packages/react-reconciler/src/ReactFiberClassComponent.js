@@ -77,7 +77,9 @@ import {
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 
-const fakeInternalInstance = {};
+const fakeInternalInstance: {
+  _processChildContext?: () => empty,
+} = {};
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -139,7 +141,7 @@ if (__DEV__) {
   // exception.
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
-    value: function() {
+    value: function(): empty {
       throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +

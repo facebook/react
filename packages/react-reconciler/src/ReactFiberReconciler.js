@@ -136,7 +136,7 @@ let didWarnAboutFindNodeInStrictMode;
 
 if (__DEV__) {
   didWarnAboutNestedUpdates = false;
-  didWarnAboutFindNodeInStrictMode = {};
+  didWarnAboutFindNodeInStrictMode = ({}: {[string]: boolean});
 }
 
 function getContextForSubtree(

@@ -3252,7 +3252,7 @@ export function attach(
 
     let owners = null;
     if (_debugOwner) {
-      owners = [];
+      owners = ([]: Array<SerializedElement>);
       let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.push(fiberToSerializedElement(owner));
@@ -3265,7 +3265,7 @@ export function attach(
 
     let hooks = null;
     if (usesHooks) {
-      const originalConsoleMethods = {};
+      const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {

@@ -16,7 +16,7 @@ import {
   setInObject,
 } from './utils';
 
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {DehydratedData} from './devtools/views/Components/types';
 
 export const meta = {
   inspectable: (Symbol('inspectable'): symbol),
@@ -124,13 +124,7 @@ export function dehydrate(
   path: Array<string | number>,
   isPathAllowed: (path: Array<string | number>) => boolean,
   level?: number = 0,
-):
-  | string
-  | Dehydrated
-  | Unserializable
-  | Array<Dehydrated>
-  | Array<Unserializable>
-  | {[key: string]: string | Dehydrated | Unserializable, ...} {
+): $PropertyType<DehydratedData, 'data'> {
   const type = getDataType(data);
 
   let isPathAllowedCheck;
@@ -304,7 +298,9 @@ export function dehydrate(
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
-        const object = {};
+        const object: {
+          [string]: $PropertyType<DehydratedData, 'data'>,
+        } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
           object[name] = dehydrate(

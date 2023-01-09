@@ -17,9 +17,9 @@ module.exports = function register() {
 
   const proxyHandlers = {
     get: function(
-      target: {[string]: any},
+      target: {[string]: $FlowFixMe},
       name: string,
-      receiver: Proxy<{[string]: any}>,
+      receiver: Proxy<{[string]: $FlowFixMe}>,
     ) {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
@@ -87,7 +87,7 @@ module.exports = function register() {
       }
       return cachedReference;
     },
-    getPrototypeOf(target: {[string]: any}) {
+    getPrototypeOf(target: {[string]: $FlowFixMe}) {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },

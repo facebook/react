@@ -33,7 +33,7 @@ ignoreErrors([
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);
 
-const unmountFunctions = [];
+const unmountFunctions: Array<() => void | boolean> = [];
 
 function createContainer() {
   const container = document.createElement('div');

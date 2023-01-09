@@ -150,6 +150,7 @@ function updateTree(
 
   // Clone nodes before mutating them so edits don't affect them.
   const getClonedNode = (id: number): CommitTreeNode => {
+    // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
     const clonedNode = ((Object.assign(
       {},
       nodes.get(id),

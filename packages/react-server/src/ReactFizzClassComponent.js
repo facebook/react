@@ -20,8 +20,8 @@ import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
-const didWarnAboutNoopUpdateForComponent = {};
-const didWarnAboutDeprecatedWillMount = {};
+const didWarnAboutNoopUpdateForComponent: {[string]: boolean} = {};
+const didWarnAboutDeprecatedWillMount: {[string]: boolean} = {};
 
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;

@@ -54,15 +54,15 @@ let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 if (__DEV__) {
   didWarnAboutMaps = false;
   didWarnAboutGenerators = false;
-  didWarnAboutStringRefs = {};
+  didWarnAboutStringRefs = ({}: {[string]: boolean});
 
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
    * object keys are not valid. This allows us to keep track of children between
    * updates.
    */
-  ownerHasKeyUseWarning = {};
-  ownerHasFunctionTypeWarning = {};
+  ownerHasKeyUseWarning = ({}: {[string]: boolean});
+  ownerHasFunctionTypeWarning = ({}: {[string]: boolean});
 
   warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
     if (child === null || typeof child !== 'object') {

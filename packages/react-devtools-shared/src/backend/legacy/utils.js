@@ -22,7 +22,7 @@ export function decorateMany(
   source: Object,
   fns: {[attr: string]: Function, ...},
 ): Object {
-  const olds = {};
+  const olds: {[string]: $FlowFixMe} = {};
   for (const name in fns) {
     olds[name] = decorate(source, name, fns[name]);
   }

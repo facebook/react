@@ -44,6 +44,7 @@ untyped-type-import=error
 exact_by_default=true
 munge_underscores=false
 enforce_local_inference_annotations=true
+exact_empty_objects=true
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%

@@ -29,7 +29,7 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   let targetConsole: Object = console;
-  let targetConsoleMethods = {};
+  let targetConsoleMethods: {[string]: $FlowFixMe} = {};
   for (const method in console) {
     targetConsoleMethods[method] = console[method];
   }
@@ -39,7 +39,7 @@ export function installHook(target: any): DevToolsHook | null {
   ): void {
     targetConsole = targetConsoleForTesting;
 
-    targetConsoleMethods = {};
+    targetConsoleMethods = ({}: {[string]: $FlowFixMe});
     for (const method in targetConsole) {
       targetConsoleMethods[method] = console[method];
     }
@@ -250,7 +250,7 @@ export function installHook(target: any): DevToolsHook | null {
       return;
     }
 
-    const originalConsoleMethods = {};
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
     unpatchFn = () => {
       for (const method in originalConsoleMethods) {
@@ -516,9 +516,9 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
-  const fiberRoots = {};
+  const fiberRoots: {[RendererID]: Set<mixed>} = {};
   const rendererInterfaces = new Map();
-  const listeners = {};
+  const listeners: {[string]: Array<Handler>} = {};
   const renderers = new Map();
 
   const hook: DevToolsHook = {

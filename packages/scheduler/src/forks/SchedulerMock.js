@@ -66,7 +66,7 @@ var LOW_PRIORITY_TIMEOUT = 10000;
 var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt;
 
 // Tasks are stored on a min heap
-var taskQueue = [];
+var taskQueue: Array<Task> = [];
 var timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.

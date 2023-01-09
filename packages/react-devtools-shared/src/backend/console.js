@@ -79,7 +79,7 @@ const injectedRenderers: Map<
 > = new Map();
 
 let targetConsole: Object = console;
-let targetConsoleMethods = {};
+let targetConsoleMethods: {[string]: $FlowFixMe} = {};
 for (const method in console) {
   targetConsoleMethods[method] = console[method];
 }
@@ -97,7 +97,7 @@ export function dangerous_setTargetConsoleForTesting(
 ): void {
   targetConsole = targetConsoleForTesting;
 
-  targetConsoleMethods = {};
+  targetConsoleMethods = ({}: {[string]: $FlowFixMe});
   for (const method in targetConsole) {
     targetConsoleMethods[method] = console[method];
   }
@@ -179,7 +179,7 @@ export function patch({
       return;
     }
 
-    const originalConsoleMethods = {};
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
     unpatchFn = () => {
       for (const method in originalConsoleMethods) {
@@ -318,7 +318,7 @@ export function patchForStrictMode() {
       return;
     }
 
-    const originalConsoleMethods = {};
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
     unpatchForStrictModeFn = () => {
       for (const method in originalConsoleMethods) {

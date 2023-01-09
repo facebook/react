@@ -149,7 +149,7 @@ function DO_NOT_USE_queryAllNodes(
     return null;
   }
   const child = currentFiber.child;
-  const scopedNodes = [];
+  const scopedNodes: Array<any> = [];
   if (child !== null) {
     collectScopedNodesFromChildren(child, fn, scopedNodes);
   }
@@ -191,7 +191,7 @@ function getChildContextValues<T>(
     return [];
   }
   const child = currentFiber.child;
-  const childContextValues = [];
+  const childContextValues: Array<T> = [];
   if (child !== null) {
     collectNearestChildContextValues(child, context, childContextValues);
   }

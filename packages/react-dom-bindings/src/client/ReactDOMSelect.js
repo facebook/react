@@ -77,7 +77,7 @@ function updateOptions(
 
   if (multiple) {
     const selectedValues = (propValue: Array<string>);
-    const selectedValue = {};
+    const selectedValue: {[string]: boolean} = {};
     for (let i = 0; i < selectedValues.length; i++) {
       // Prefix to avoid chaos with special keys.
       selectedValue['$' + selectedValues[i]] = true;
