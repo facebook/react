@@ -61,7 +61,7 @@
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "1.2.0",
     "filesize": "^6.0.1",
-    "flow-bin": "^0.190.0",
+    "flow-bin": "^0.196.3",
     "flow-remove-types": "^2.196.1",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
