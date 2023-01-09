@@ -387,28 +387,25 @@ function shrink(func: HIR): void {
   }
 
   const queue = [func.entry];
-  const blocks: Map<BlockId, BasicBlock> = new Map();
+  const reachable = new Set<BlockId>();
   while (queue.length !== 0) {
     const blockId = queue.shift()!;
-    if (blocks.has(blockId)) {
+    if (reachable.has(blockId)) {
       continue;
     }
-    const { instructions, terminal: prevTerminal } = func.blocks.get(blockId)!;
-    const terminal = mapTerminalSuccessors(prevTerminal, (prevTarget) => {
+    reachable.add(blockId);
+    const block = func.blocks.get(blockId)!;
+    block.terminal = mapTerminalSuccessors(block.terminal, (prevTarget) => {
       const target = resolveBlockTarget(prevTarget);
       queue.push(target);
       return target;
     });
-    blocks.set(blockId, {
-      id: blockId,
-      instructions,
-      terminal,
-      preds: new Set(),
-      phis: new Set(),
-    });
   }
-
-  func.blocks = blocks;
+  for (const [blockId] of func.blocks) {
+    if (!reachable.has(blockId)) {
+      func.blocks.delete(blockId);
+    }
+  }
 }
 
 function removeUnreachableFallthroughs(func: HIR): void {
@@ -526,9 +523,14 @@ function reversePostorderBlocks(func: HIR): void {
 
 function markInstructionIds(func: HIR) {
   let id = 0;
+  const visited = new Set<Instruction>();
   for (const [_, block] of func.blocks) {
     for (const instr of block.instructions) {
-      invariant(instr.id === 0, `${printInstruction(instr)} already visited!`);
+      invariant(
+        !visited.has(instr),
+        `${printInstruction(instr)} already visited!`
+      );
+      visited.add(instr);
       instr.id = makeInstructionId(++id);
     }
     block.terminal.id = makeInstructionId(++id);
@@ -536,6 +538,9 @@ function markInstructionIds(func: HIR) {
 }
 
 function markPredecessors(func: HIR) {
+  for (const [, block] of func.blocks) {
+    block.preds.clear();
+  }
   const visited: Set<BlockId> = new Set();
   function visit(blockId: BlockId, prevBlock: BasicBlock | null) {
     const block = func.blocks.get(blockId)!;
