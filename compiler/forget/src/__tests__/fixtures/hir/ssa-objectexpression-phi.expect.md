@@ -25,38 +25,18 @@ function foo() {
   const $ = React.useMemoCache();
   const x = 1;
   const y = 2;
-  let x$0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x$0 = x;
-    let y$1 = y;
-
-    if (x > 1) {
-      const x$2 = 2;
-      x$0 = x$2;
-    } else {
-      const y$3 = 3;
-      y$1 = y$3;
-    }
-
-    $[0] = x$0;
-  } else {
-    x$0 = $[0];
-  }
-
-  const c_1 = $[1] !== x$0;
-  const c_2 = $[2] !== y$1;
+  1;
+  false;
+  const y$0 = 3;
   let t;
-
-  if (c_1 || c_2) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t = {
-      x: x$0,
-      y: y$1,
+      x: x,
+      y: y$0,
     };
-    $[1] = x$0;
-    $[2] = y$1;
-    $[3] = t;
+    $[0] = t;
   } else {
-    t = $[3];
+    t = $[0];
   }
 
   return t;

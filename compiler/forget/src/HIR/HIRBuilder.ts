@@ -360,7 +360,7 @@ export default class HIRBuilder {
 /**
  * Helper to shrink a CFG eliminate jump-only blocks.
  */
-function shrink(func: HIR): void {
+export function shrink(func: HIR): void {
   const gotos = new Map();
   /**
    * Given a target block for some terminator, resolves the ideal block that should be
@@ -408,7 +408,7 @@ function shrink(func: HIR): void {
   }
 }
 
-function removeUnreachableFallthroughs(func: HIR): void {
+export function removeUnreachableFallthroughs(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   for (const [_, block] of func.blocks) {
     visited.add(block.id);
@@ -434,7 +434,7 @@ function removeUnreachableFallthroughs(func: HIR): void {
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
  * before successors except in the case of back links (ie loops).
  */
-function reversePostorderBlocks(func: HIR): void {
+export function reversePostorderBlocks(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   const postorder: Array<BlockId> = [];
   function visit(blockId: BlockId) {
@@ -521,7 +521,7 @@ function reversePostorderBlocks(func: HIR): void {
   func.blocks = blocks;
 }
 
-function markInstructionIds(func: HIR) {
+export function markInstructionIds(func: HIR) {
   let id = 0;
   const visited = new Set<Instruction>();
   for (const [_, block] of func.blocks) {
@@ -537,7 +537,7 @@ function markInstructionIds(func: HIR) {
   }
 }
 
-function markPredecessors(func: HIR) {
+export function markPredecessors(func: HIR) {
   for (const [, block] of func.blocks) {
     block.preds.clear();
   }

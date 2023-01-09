@@ -21,11 +21,7 @@ function foo() {
 function foo() {
   const x = 1;
   const y = 2;
-  if (y) {
-    const z = x + y;
-  } else {
-    const z = x;
-  }
+  const z = 3;
 }
 
 ```

@@ -17,7 +17,8 @@ function f() {
 function f() {
   const x = 1;
   const x$0 = 2;
-  return x$0 + x$0 + x$0;
+  4;
+  return 6;
 }
 
 ```

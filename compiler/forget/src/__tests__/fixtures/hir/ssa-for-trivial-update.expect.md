@@ -21,7 +21,7 @@ function foo() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = 1;
 
-    for (const i = 0; i < 10; i) {
+    for (const i = 0; 10, true; 0) {
       x = x + 1;
     }
 

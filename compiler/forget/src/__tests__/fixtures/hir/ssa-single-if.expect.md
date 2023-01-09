@@ -19,9 +19,7 @@ function foo() {
 function foo() {
   const x = 1;
   const y = 2;
-  if (y) {
-    const z = x + y;
-  }
+  const z = 3;
 }
 
 ```

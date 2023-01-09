@@ -16,8 +16,10 @@ function f() {
 ```javascript
 function f() {
   const x = 1;
-  const x$0 = x + 1;
-  const x$1 = x$0 + 1;
+  1;
+  const x$0 = 2;
+  1;
+  const x$1 = 3;
   const x$2 = x$1 >>> 1;
 }
 

@@ -25,7 +25,8 @@ function foo(a, b, c) {
   while (a) {
     while (b) {
       while (c) {
-        x + 1;
+        1;
+        1;
       }
     }
   }

@@ -14,6 +14,7 @@ import {
   ReactiveFunction,
 } from "./HIR";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
+import { constantPropagation } from "./Optimization";
 import {
   buildReactiveFunction,
   codegenReactiveFunction,
@@ -52,6 +53,9 @@ export default function (
 
   eliminateRedundantPhi(ir);
   logHIRFunction("eliminateRedundantPhi", ir);
+
+  constantPropagation(ir);
+  logHIRFunction("constantPropagation", ir);
 
   inferTypes(ir);
   logHIRFunction("inferTypes", ir);

@@ -6,7 +6,14 @@
  */
 
 export { lower } from "./BuildHIR";
-export { HIRFunction, ReactiveFunction } from "./HIR";
-export { Environment } from "./HIRBuilder";
+export * from "./HIR";
+export {
+  Environment,
+  markInstructionIds,
+  markPredecessors,
+  removeUnreachableFallthroughs,
+  reversePostorderBlocks,
+  shrink,
+} from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction } from "./PrintHIR";
