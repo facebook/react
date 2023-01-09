@@ -23,6 +23,7 @@ import {
   enableUpdaterTracking,
   allowConcurrentByDefault,
   enableTransitionTracing,
+  enableUnifiedSyncLane,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -44,6 +45,8 @@ export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
 export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000100000;
+
+export const SyncUpdateLanes: Lane = /*                */ 0b0000000000000000000000000101010;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111110000000;
@@ -133,6 +136,12 @@ let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
+  if (enableUnifiedSyncLane) {
+    const pendingSyncLanes = lanes & SyncUpdateLanes;
+    if (pendingSyncLanes !== 0) {
+      return pendingSyncLanes;
+    }
+  }
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
       return SyncHydrationLane;
@@ -754,46 +763,50 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  switch (renderLane) {
-    case SyncLane:
-      lane = SyncHydrationLane;
-      break;
-    case InputContinuousLane:
-      lane = InputContinuousHydrationLane;
-      break;
-    case DefaultLane:
-      lane = DefaultHydrationLane;
-      break;
-    case TransitionLane1:
-    case TransitionLane2:
-    case TransitionLane3:
-    case TransitionLane4:
-    case TransitionLane5:
-    case TransitionLane6:
-    case TransitionLane7:
-    case TransitionLane8:
-    case TransitionLane9:
-    case TransitionLane10:
-    case TransitionLane11:
-    case TransitionLane12:
-    case TransitionLane13:
-    case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
-    case RetryLane1:
-    case RetryLane2:
-    case RetryLane3:
-    case RetryLane4:
-      lane = TransitionHydrationLane;
-      break;
-    case IdleLane:
-      lane = IdleHydrationLane;
-      break;
-    default:
-      // Everything else is already either a hydration lane, or shouldn't
-      // be retried at a hydration lane.
-      lane = NoLane;
-      break;
+  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+    lane = SyncHydrationLane;
+  } else {
+    switch (renderLane) {
+      case SyncLane:
+        lane = SyncHydrationLane;
+        break;
+      case InputContinuousLane:
+        lane = InputContinuousHydrationLane;
+        break;
+      case DefaultLane:
+        lane = DefaultHydrationLane;
+        break;
+      case TransitionLane1:
+      case TransitionLane2:
+      case TransitionLane3:
+      case TransitionLane4:
+      case TransitionLane5:
+      case TransitionLane6:
+      case TransitionLane7:
+      case TransitionLane8:
+      case TransitionLane9:
+      case TransitionLane10:
+      case TransitionLane11:
+      case TransitionLane12:
+      case TransitionLane13:
+      case TransitionLane14:
+      case TransitionLane15:
+      case TransitionLane16:
+      case RetryLane1:
+      case RetryLane2:
+      case RetryLane3:
+      case RetryLane4:
+        lane = TransitionHydrationLane;
+        break;
+      case IdleLane:
+        lane = IdleHydrationLane;
+        break;
+      default:
+        // Everything else is already either a hydration lane, or shouldn't
+        // be retried at a hydration lane.
+        lane = NoLane;
+        break;
+    }
   }
 
   // Check if the lane we chose is suspended. If so, that indicates that we

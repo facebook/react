@@ -39,7 +39,11 @@ async function main() {
       const fullEntryPath = instructionDir + '/' + entry;
       const compiler = new ClosureCompiler({
         entry_point: fullEntryPath,
-        js: [fullEntryPath, instructionDir + '/ReactDOMFizzInstructionSet.js'],
+        js: [
+          fullEntryPath,
+          instructionDir + '/ReactDOMFizzInstructionSetInlineSource.js',
+          instructionDir + '/ReactDOMFizzInstructionSetShared.js',
+        ],
         compilation_level: 'ADVANCED',
         module_resolution: 'NODE',
         // This is necessary to prevent Closure from inlining a Promise polyfill

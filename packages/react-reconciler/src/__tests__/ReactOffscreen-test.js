@@ -690,8 +690,15 @@ describe('ReactOffscreen', () => {
       );
 
       // Before the inner update can finish, we receive another pair of updates.
-      setOuter(2);
-      setInner(2);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        React.startTransition(() => {
+          setOuter(2);
+          setInner(2);
+        });
+      } else {
+        setOuter(2);
+        setInner(2);
+      }
 
       // Also, before either of these new updates are processed, the hidden
       // tree is revealed at high priority.

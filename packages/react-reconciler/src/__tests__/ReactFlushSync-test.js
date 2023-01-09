@@ -54,15 +54,21 @@ describe('ReactFlushSync', () => {
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
       expect(() => {
-        expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
+        expect(Scheduler).toFlushUntilNextPaint(
+          gate(flags => flags.enableUnifiedSyncLane) ? ['1, 1'] : ['1, 0'],
+        );
       }).toErrorDev('flushSync was called from inside a lifecycle method');
 
       // The remaining update is not sync
       ReactNoop.flushSync();
       expect(Scheduler).toHaveYielded([]);
 
-      // Now flush it.
-      expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(Scheduler).toFlushUntilNextPaint([]);
+      } else {
+        // Now flush it.
+        expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
+      }
     });
     expect(root).toMatchRenderedOutput('1, 1');
   });
