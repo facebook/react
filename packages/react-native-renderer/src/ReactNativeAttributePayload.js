@@ -345,7 +345,7 @@ function diffProperties(
       // case: !Object is the default case
       if (defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
-        (updatePayload || (updatePayload = ({}: {[string]: any})))[
+        (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
         ] = nextProp;
       }
@@ -365,7 +365,7 @@ function diffProperties(
             ? // $FlowFixMe[incompatible-use] found when upgrading Flow
               attributeConfig.process(nextProp)
             : nextProp;
-        (updatePayload || (updatePayload = ({}: {[string]: any})))[
+        (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
         ] = nextValue;
       }
@@ -421,7 +421,7 @@ function diffProperties(
     ) {
       // case: CustomAttributeConfiguration | !Object
       // Flag the leaf property for removal by sending a sentinel.
-      (updatePayload || (updatePayload = ({}: {[string]: any})))[
+      (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
         propKey
       ] = null;
       if (!removedKeys) {

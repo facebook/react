@@ -3265,7 +3265,7 @@ export function attach(
 
     let hooks = null;
     if (usesHooks) {
-      const originalConsoleMethods: {[string]: any} = {};
+      const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {

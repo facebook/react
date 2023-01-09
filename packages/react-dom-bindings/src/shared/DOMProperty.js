@@ -239,7 +239,7 @@ function PropertyInfoRecord(
 // When adding attributes to this list, be sure to also add them to
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
-const properties: {[string]: any} = {};
+const properties: {[string]: $FlowFixMe} = {};
 
 // These props are reserved by React. They shouldn't be written to the DOM.
 const reservedProps = [

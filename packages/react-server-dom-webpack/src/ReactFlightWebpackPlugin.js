@@ -217,7 +217,7 @@ export default class ReactFlightWebpackPlugin {
 
           const json: {
             [string]: {
-              [string]: {chunks: any, id: any, name: string},
+              [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
             },
           } = {};
           compilation.chunkGroups.forEach(function(chunkGroup) {
@@ -226,7 +226,7 @@ export default class ReactFlightWebpackPlugin {
             });
 
             // $FlowFixMe[missing-local-annot]
-            function recordModule(id: any, module) {
+            function recordModule(id: $FlowFixMe, module) {
               // TODO: Hook into deps instead of the target module.
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.
@@ -240,7 +240,7 @@ export default class ReactFlightWebpackPlugin {
                 .getProvidedExports();
 
               const moduleExports: {
-                [string]: {chunks: any, id: any, name: string},
+                [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
               } = {};
               ['', '*']
                 .concat(

@@ -32,7 +32,7 @@ export function getMaskedContext(type: any, unmaskedContext: Object): Object {
       return emptyContextObject;
     }
 
-    const context: {[string]: any} = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }

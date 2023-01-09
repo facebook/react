@@ -98,7 +98,7 @@ function getMaskedContext(
       return instance.__reactInternalMemoizedMaskedChildContext;
     }
 
-    const context: {[string]: any} = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
