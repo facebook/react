@@ -142,7 +142,9 @@ type PersistedSelection = {
 };
 
 let shouldInitiallyProfile = false;
-export const setShouldInitiallyProfile = (newShouldInitiallyProfile: bool): void => {
+export const setShouldInitiallyProfile = (
+  newShouldInitiallyProfile: boolean,
+): void => {
   shouldInitiallyProfile = newShouldInitiallyProfile;
 };
 
