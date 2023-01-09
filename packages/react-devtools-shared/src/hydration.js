@@ -248,6 +248,7 @@ export function dehydrate(
         // Other types (e.g. typed arrays, Sets) will not spread correctly.
         Array.from(data).forEach(
           (item, i) =>
+            // $FlowFixMe[prop-missing] Unserializable doesn't have an index signature
             (unserializableValue[i] = dehydrate(
               item,
               cleaned,

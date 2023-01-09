@@ -43,10 +43,9 @@ untyped-type-import=error
 %CI_MAX_WORKERS%
 exact_by_default=true
 munge_underscores=false
-exact_empty_objects=true
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.191.0
+^0.192.0

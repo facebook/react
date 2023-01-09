@@ -3271,6 +3271,7 @@ export function attach(
       for (const method in console) {
         try {
           originalConsoleMethods[method] = console[method];
+          // $FlowFixMe[prop-missing]
           console[method] = () => {};
         } catch (error) {}
       }
@@ -3285,6 +3286,7 @@ export function attach(
         // Restore original console functionality.
         for (const method in originalConsoleMethods) {
           try {
+            // $FlowFixMe[prop-missing]
             console[method] = originalConsoleMethods[method];
           } catch (error) {}
         }
