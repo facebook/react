@@ -6,4 +6,5 @@ function foo(a, b, c) {
       break label;
     }
   }
+  return y;
 }
