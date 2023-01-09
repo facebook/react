@@ -452,7 +452,8 @@ function createModelResolver<T>(
       value: null,
     };
   }
-  return (value: any) => {
+  // $FlowFixMe[missing-local-annot]
+  return value => {
     parentObject[key] = value;
     blocked.deps--;
     if (blocked.deps === 0) {
