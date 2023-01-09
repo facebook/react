@@ -313,6 +313,7 @@ export type InstructionData =
       kind: "FunctionExpression";
       name: string | null;
       params: Array<string>;
+      dependencies: Set<t.Identifier>;
       body: t.BlockStatement;
     }
 

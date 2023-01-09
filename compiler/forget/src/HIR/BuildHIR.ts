@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/traverse";
+import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { invariant } from "../Utils/CompilerError";
 import todo, { todoInvariant } from "../Utils/todo";
@@ -1151,6 +1151,8 @@ function lowerExpression(
     case "FunctionExpression": {
       const expr = exprPath as NodePath<t.FunctionExpression>;
       const name: string | null = expr.get("id")?.node?.name ?? null;
+      const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
+      const dependencies = gatherCapturedDeps(expr, componentScope);
       const body = expr.get("body").node;
       const params: Array<string> = expr.get("params").map((p) => {
         todoInvariant(p.isIdentifier(), "handle non identifier params");
@@ -1161,6 +1163,7 @@ function lowerExpression(
         name,
         body,
         params,
+        dependencies,
         loc: exprLoc,
       };
     }
@@ -1539,4 +1542,54 @@ function lowerAssignment(
       todo("Support other lvalue types beyond identifier");
     }
   }
+}
+
+function capturePureScopes(
+  currentScope: Scope,
+  componentScope: Scope
+): Set<Scope> {
+  let pureScopes: Set<Scope> = new Set();
+  while (currentScope) {
+    pureScopes.add(currentScope);
+
+    if (currentScope === componentScope) {
+      break;
+    }
+
+    currentScope = currentScope.parent;
+  }
+  return pureScopes;
+}
+
+function gatherCapturedDeps(
+  fn: NodePath<t.FunctionExpression>,
+  componentScope: Scope
+): Set<t.Identifier> {
+  const captured: Set<t.Identifier> = new Set();
+
+  // Capture all the scopes from the parent of this function up to and including
+  // the component scope.
+  const pureScopes: Set<Scope> = capturePureScopes(
+    fn.scope.parent,
+    componentScope
+  );
+
+  fn.get("body").traverse({
+    Expression(path) {
+      // TODO(gsn): Handle member expressions
+      if (!path.isIdentifier) {
+        return;
+      }
+
+      const id = path as NodePath<t.Identifier>;
+      const binding = id.scope.getBinding(id.node.name);
+      if (binding === undefined || !pureScopes.has(binding.scope)) {
+        return;
+      }
+
+      captured.add(binding.identifier);
+    },
+  });
+
+  return captured;
 }
