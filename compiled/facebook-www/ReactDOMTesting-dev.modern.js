@@ -12981,6 +12981,7 @@ function validateURLKeyedUpdatedProps(
 
         if (missingProps !== null && typeof missingProps === "object") {
           for (var _propName3 in missingProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement +=
               "\n  " +
               _propName3 +
@@ -12992,6 +12993,7 @@ function validateURLKeyedUpdatedProps(
 
         if (extraProps !== null && typeof extraProps === "object") {
           for (var _propName4 in extraProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement +=
               "\n  " +
               _propName4 +
@@ -13003,6 +13005,7 @@ function validateURLKeyedUpdatedProps(
 
         if (differentProps !== null && typeof differentProps === "object") {
           for (var _propName5 in differentProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement +=
               "\n  " +
               _propName5 +
@@ -14048,6 +14051,7 @@ function getResource(type, pendingProps, currentProps) {
 }
 
 function preloadPropsFromRawProps(rawBorrowedProps) {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   return assign({}, rawBorrowedProps);
 }
 
@@ -14059,6 +14063,7 @@ function titlePropsFromRawProps(child, rawProps) {
 }
 
 function stylePropsFromRawProps(rawProps) {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   var props = assign({}, rawProps);
 
   props["data-precedence"] = rawProps.precedence;
@@ -14067,6 +14072,7 @@ function stylePropsFromRawProps(rawProps) {
 }
 
 function scriptPropsFromRawProps(rawProps) {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   var props = assign({}, rawProps);
 
   return props;
@@ -22139,6 +22145,8 @@ function startTransition(setPending, callback, options) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         var updatedFibersCount = currentTransition._updatedFibers.size;
 
+        currentTransition._updatedFibers.clear();
+
         if (updatedFibersCount > 10) {
           warn(
             "Detected a large number of updates inside startTransition. " +
@@ -22146,8 +22154,6 @@ function startTransition(setPending, callback, options) {
               "Otherwise concurrent mode guarantees are off the table."
           );
         }
-
-        currentTransition._updatedFibers.clear();
       }
     }
   }
@@ -38513,7 +38519,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0b4f44302-20230109";
+var ReactVersion = "18.3.0-www-modern-e2424f33b-20230109";
 
 function createPortal(
   children,

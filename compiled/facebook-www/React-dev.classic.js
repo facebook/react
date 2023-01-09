@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-0b4f44302-20230109";
+var ReactVersion = "18.3.0-www-classic-e2424f33b-20230109";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -3089,6 +3089,8 @@ function startTransition(scope, options) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         var updatedFibersCount = currentTransition._updatedFibers.size;
 
+        currentTransition._updatedFibers.clear();
+
         if (updatedFibersCount > 10) {
           warn(
             "Detected a large number of updates inside startTransition. " +
@@ -3096,8 +3098,6 @@ function startTransition(scope, options) {
               "Otherwise concurrent mode guarantees are off the table."
           );
         }
-
-        currentTransition._updatedFibers.clear();
       }
     }
   }
