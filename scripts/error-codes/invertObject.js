@@ -7,8 +7,7 @@
  * @flow
  */
 'use strict';
-
-/*:: import type { ErrorMap } from './Types' */
+import type { ErrorMap } from './Types'
 
 /**
  * turns
@@ -16,7 +15,7 @@
  * into
  *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
-function invertObject(targetObj /* : ErrorMap */) /* : ErrorMap */ {
+function invertObject(targetObj  : ErrorMap )  : ErrorMap  {
   const result = {};
   const mapKeys = Object.keys(targetObj);
 
