@@ -51,7 +51,7 @@ export default function printHIR(
     if (block.preds.size > 0) {
       const preds = ["predecessor blocks:"];
       for (const pred of block.preds) {
-        preds.push(`bb${pred.id}`);
+        preds.push(`bb${pred}`);
       }
       push(preds.join(" "));
     }
@@ -114,8 +114,8 @@ function printPhi(phi: Phi): string {
   items.push(printMutableRange(phi.id));
   items.push(": phi(");
   const phis = [];
-  for (const [block, id] of phi.operands) {
-    phis.push(`bb${block.id}: ${printIdentifier(id)}`);
+  for (const [blockId, id] of phi.operands) {
+    phis.push(`bb${blockId}: ${printIdentifier(id)}`);
   }
 
   items.push(phis.join(", "));

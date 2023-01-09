@@ -43,8 +43,8 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
       // On the first iteration of the loop check for any back-edges.
       // if there aren't any then there won't be a second iteration
       if (!hasBackEdge) {
-        for (const pred of block.preds) {
-          if (!visited.has(pred.id)) {
+        for (const predId of block.preds) {
+          if (!visited.has(predId)) {
             hasBackEdge = true;
           }
         }

@@ -540,7 +540,7 @@ function markPredecessors(func: HIR) {
   function visit(blockId: BlockId, prevBlock: BasicBlock | null) {
     const block = func.blocks.get(blockId)!;
     if (prevBlock) {
-      block.preds.add(prevBlock);
+      block.preds.add(prevBlock.id);
     }
 
     if (visited.has(blockId)) {

@@ -145,7 +145,7 @@ export type BasicBlock = {
   id: BlockId;
   instructions: Array<Instruction>;
   terminal: Terminal;
-  preds: Set<BasicBlock>;
+  preds: Set<BlockId>;
   phis: Set<Phi>;
 };
 
@@ -272,7 +272,7 @@ export type InstructionValue =
 export type Phi = {
   kind: "Phi";
   id: Identifier;
-  operands: Map<BasicBlock, Identifier>;
+  operands: Map<BlockId, Identifier>;
 };
 
 export type InstructionData =

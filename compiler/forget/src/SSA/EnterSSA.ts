@@ -1,5 +1,6 @@
 import {
   BasicBlock,
+  BlockId,
   HIRFunction,
   Identifier,
   IdentifierId,
@@ -32,9 +33,11 @@ class SSABuilder {
   #states: Map<BasicBlock, State> = new Map();
   #current: BasicBlock | null = null;
   unsealedPreds: Map<BasicBlock, number> = new Map();
+  #blocks: Map<BlockId, BasicBlock>;
   #env: Environment;
 
-  constructor(env: Environment) {
+  constructor(env: Environment, blocks: Map<BlockId, BasicBlock>) {
+    this.#blocks = blocks;
     this.#env = env;
   }
 
@@ -74,15 +77,16 @@ class SSABuilder {
   }
 
   getPlace(oldPlace: Place): Place {
-    const newId = this.getIdAt(oldPlace.identifier, this.#current!);
+    const newId = this.getIdAt(oldPlace.identifier, this.#current!.id);
     return {
       ...oldPlace,
       identifier: newId,
     };
   }
 
-  getIdAt(oldId: Identifier, block: BasicBlock): Identifier {
+  getIdAt(oldId: Identifier, blockId: BlockId): Identifier {
     // check if Place is defined locally
+    const block = this.#blocks.get(blockId)!;
     const state = this.#states.get(block)!;
 
     if (state.defs.has(oldId)) {
@@ -124,10 +128,10 @@ class SSABuilder {
   }
 
   addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier): Identifier {
-    const predDefs: Map<BasicBlock, Identifier> = new Map();
-    for (const predBlock of block.preds) {
-      const predId = this.getIdAt(oldId, predBlock);
-      predDefs.set(predBlock, predId);
+    const predDefs: Map<BlockId, Identifier> = new Map();
+    for (const predBlockId of block.preds) {
+      const predId = this.getIdAt(oldId, predBlockId);
+      predDefs.set(predBlockId, predId);
     }
 
     const phi: Phi = {
@@ -179,7 +183,7 @@ class SSABuilder {
 
 export default function enterSSA(func: HIRFunction, env: Environment) {
   const visitedBlocks: Set<BasicBlock> = new Set();
-  const builder = new SSABuilder(env);
+  const builder = new SSABuilder(env, func.body.blocks);
   for (const [blockId, block] of func.body.blocks) {
     invariant(
       !visitedBlocks.has(block),

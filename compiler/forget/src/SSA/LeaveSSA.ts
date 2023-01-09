@@ -216,10 +216,11 @@ export function leaveSSA(fn: HIRFunction) {
       }
 
       // Generate an assignment in each predecessor
-      for (const [predecessor, operand] of phi.operands) {
+      for (const [predecessorId, operand] of phi.operands) {
         if (operand === initOperand) {
           continue;
         }
+        const predecessor = fn.body.blocks.get(predecessorId)!;
         const instr: Instruction = {
           id: predecessor.terminal.id,
           lvalue: {
