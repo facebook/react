@@ -503,6 +503,10 @@ export function reversePostorderBlocks(func: HIR): void {
         }
         break;
       }
+      case "logical": {
+        visit(terminal.test);
+        break;
+      }
       case "while": {
         visit(terminal.test);
         break;

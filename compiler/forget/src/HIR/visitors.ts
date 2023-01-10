@@ -241,6 +241,17 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "logical": {
+      const test = fn(terminal.test);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "logical",
+        test,
+        fallthrough,
+        operator: terminal.operator,
+        id: makeInstructionId(0),
+      };
+    }
     case "return": {
       return {
         kind: "return",
@@ -312,6 +323,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       }
       break;
     }
+    case "logical": {
+      yield terminal.test;
+      break;
+    }
     case "return": {
       break;
     }
@@ -361,6 +376,7 @@ export function mapTerminalOperands(
       }
       break;
     }
+    case "logical":
     case "while":
     case "for":
     case "goto": {
@@ -399,6 +415,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       }
       break;
     }
+    case "logical":
     case "while":
     case "for":
     case "goto": {

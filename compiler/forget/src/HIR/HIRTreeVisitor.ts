@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import {
   BasicBlock,
@@ -444,6 +445,9 @@ class Driver<
           );
         }
         break;
+      }
+      case "logical": {
+        todo("Implement tree visitor for logical terminal");
       }
       case "goto": {
         this.visitor.visitTerminalId(terminal.id);

@@ -162,7 +162,8 @@ export type Terminal =
   | IfTerminal
   | SwitchTerminal
   | ForTerminal
-  | WhileTerminal;
+  | WhileTerminal
+  | LogicalTerminal;
 
 /**
  * Terminal nodes allowed for a value block
@@ -222,6 +223,14 @@ export type ForTerminal = {
   test: BlockId;
   update: BlockId;
   loop: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+};
+
+export type LogicalTerminal = {
+  kind: "logical";
+  operator: t.LogicalExpression["operator"];
+  test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
 };

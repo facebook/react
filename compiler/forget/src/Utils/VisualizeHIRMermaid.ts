@@ -95,6 +95,10 @@ function printTerminalLabel(terminal: Terminal): string {
     case "throw":
       buffer.push(`Throw ${printPlace(terminal.value)}`);
       break;
+    case "logical": {
+      buffer.push(`Logical ${terminal.operator}`);
+      break;
+    }
     case "while":
       buffer.push("While");
       break;
@@ -121,6 +125,11 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
           printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
+      break;
+    }
+    case "logical": {
+      buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;
     }
     case "goto": {
