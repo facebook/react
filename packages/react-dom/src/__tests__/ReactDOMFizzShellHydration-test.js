@@ -287,23 +287,18 @@ describe('ReactDOMFizzShellHydration', () => {
   test('TODO: A large component stack causes SSR to stack overflow', async () => {
     spyOnDevAndProd(console, 'error');
 
-    function createNestedComponent(depth: number) {
+    function NestedComponent({depth}: {depth: number}) {
       if (depth <= 0) {
-        return function Leaf() {
-          return <AsyncText text="Shell" />;
-        };
+        return <AsyncText text="Shell" />;
       }
-      const NextComponent = createNestedComponent(depth - 1);
-      function Component() {
-        return <NextComponent />;
-      }
-      return Component;
+      return <NestedComponent depth={depth - 1} />;
     }
-    const NestedComponent = createNestedComponent(1500);
 
     // Server render
     await serverAct(async () => {
-      ReactDOMFizzServer.renderToPipeableStream(<NestedComponent />);
+      ReactDOMFizzServer.renderToPipeableStream(
+        <NestedComponent depth={3000} />,
+      );
     });
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.calls.argsFor(0)[0].toString()).toBe(
