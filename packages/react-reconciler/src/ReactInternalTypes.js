@@ -350,6 +350,38 @@ type TransitionTracingOnlyFiberRootProperties = {
   incompleteTransitions: Map<Transition, TracingMarkerInstance>,
 };
 
+export type TracingHooks = {
+  onCommitStarted?: () => void,
+  onCommitStopped?: () => void,
+  onComponentRenderStarted?: (componentName: ?string) => void,
+  onComponentRenderStopped?: () => void,
+  onComponentPassiveEffectMountStarted?: (componentName: ?string) => void,
+  onComponentPassiveEffectMountStopped?: () => void,
+  onComponentPassiveEffectUnmountStarted?: (componentName: ?string) => void,
+  onComponentPassiveEffectUnmountStopped?: () => void,
+  onComponentLayoutEffectMountStarted?: (componentName: ?string) => void,
+  onComponentLayoutEffectMountStopped?: () => void,
+  onComponentLayoutEffectUnmountStarted?: (componentName: ?string) => void,
+  onComponentLayoutEffectUnmountStopped?: () => void,
+  onComponentErrored?: (thrownValue: mixed) => void,
+  onComponentSuspended?: () => void,
+  onLayoutEffectsStarted?: () => void,
+  onLayoutEffectsStopped?: () => void,
+  onPassiveEffectsStarted?: () => void,
+  onPassiveEffectsStopped?: () => void,
+  onRenderStarted?: () => void,
+  onRenderYielded?: () => void,
+  onRenderStopped?: () => void,
+  onRenderScheduled?: () => void,
+  onForceUpdateScheduled?: (componentName: ?string) => void,
+  onStateUpdateScheduled?: (componentName: ?string) => void,
+};
+
+// The following fields are only used when tracing hooks are enabled.
+type TracingHooksOnlyFiberRootProperties = {
+  tracingHooks: null | TracingHooks,
+};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // The types are defined separately within this file to ensure they stay in sync.
@@ -358,6 +390,7 @@ export type FiberRoot = {
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
   ...TransitionTracingOnlyFiberRootProperties,
+  ...TracingHooksOnlyFiberRootProperties,
   ...
 };
 

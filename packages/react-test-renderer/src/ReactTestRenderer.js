@@ -508,6 +508,7 @@ function create(
     '',
     onRecoverableError,
     null,
+    null,
   );
 
   if (root == null) {

@@ -31,6 +31,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
+  enableTracingHooks,
   enableCache,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
@@ -122,9 +123,10 @@ import {
 } from './ReactMutableSource';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
-  markStateUpdateScheduled,
+  markStateUpdateScheduled as markStateUpdateScheduledInDevTools,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {markStateUpdateScheduled as markStateUpdateScheduledInTracingHooks} from './ReactFiberTracingHook';
 import {createCache} from './ReactFiberCacheComponent';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -2748,7 +2750,10 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 
   if (enableSchedulingProfiler) {
-    markStateUpdateScheduled(fiber, lane);
+    markStateUpdateScheduledInDevTools(fiber, lane);
+  }
+  if (enableTracingHooks) {
+    markStateUpdateScheduledInTracingHooks(getWorkInProgressRoot(), fiber);
   }
 }
 

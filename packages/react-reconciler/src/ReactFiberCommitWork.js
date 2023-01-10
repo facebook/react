@@ -44,6 +44,7 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
+  enableTracingHooks,
   enableSuspenseCallback,
   enableScopeAPI,
   deletedTreeCleanUpLevel,
@@ -183,16 +184,26 @@ import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
-  markComponentPassiveEffectMountStarted,
-  markComponentPassiveEffectMountStopped,
-  markComponentPassiveEffectUnmountStarted,
-  markComponentPassiveEffectUnmountStopped,
-  markComponentLayoutEffectMountStarted,
-  markComponentLayoutEffectMountStopped,
-  markComponentLayoutEffectUnmountStarted,
-  markComponentLayoutEffectUnmountStopped,
+  markComponentPassiveEffectMountStarted as markComponentPassiveEffectMountStartedInDevTools,
+  markComponentPassiveEffectMountStopped as markComponentPassiveEffectMountStoppedInDevTools,
+  markComponentPassiveEffectUnmountStarted as markComponentPassiveEffectUnmountStartedInDevTools,
+  markComponentPassiveEffectUnmountStopped as markComponentPassiveEffectUnmountStoppedInDevTools,
+  markComponentLayoutEffectMountStarted as markComponentLayoutEffectMountStartedInDevTools,
+  markComponentLayoutEffectMountStopped as markComponentLayoutEffectMountStoppedInDevTools,
+  markComponentLayoutEffectUnmountStarted as markComponentLayoutEffectUnmountStartedInDevTools,
+  markComponentLayoutEffectUnmountStopped as markComponentLayoutEffectUnmountStoppedInDevTools,
   onCommitUnmount,
 } from './ReactFiberDevToolsHook';
+import {
+  markComponentPassiveEffectMountStarted as markComponentPassiveEffectMountStartedInTracingHooks,
+  markComponentPassiveEffectMountStopped as markComponentPassiveEffectMountStoppedInTracingHooks,
+  markComponentPassiveEffectUnmountStarted as markComponentPassiveEffectUnmountStartedInTracingHooks,
+  markComponentPassiveEffectUnmountStopped as markComponentPassiveEffectUnmountStoppedInTracingHooks,
+  markComponentLayoutEffectMountStarted as markComponentLayoutEffectMountStartedInTracingHooks,
+  markComponentLayoutEffectMountStopped as markComponentLayoutEffectMountStoppedInTracingHooks,
+  markComponentLayoutEffectUnmountStarted as markComponentLayoutEffectUnmountStartedInTracingHooks,
+  markComponentLayoutEffectUnmountStopped as markComponentLayoutEffectUnmountStoppedInTracingHooks,
+} from './ReactFiberTracingHook';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent';
 import {clearTransitionsForLanes} from './ReactFiberLane';
 import {
@@ -589,9 +600,22 @@ function commitHookEffectListUnmount(
         if (destroy !== undefined) {
           if (enableSchedulingProfiler) {
             if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStarted(finishedWork);
+              markComponentPassiveEffectUnmountStartedInDevTools(finishedWork);
             } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStarted(finishedWork);
+              markComponentLayoutEffectUnmountStartedInDevTools(finishedWork);
+            }
+          }
+          if (enableTracingHooks) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectUnmountStartedInTracingHooks(
+                inProgressRoot,
+                finishedWork,
+              );
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectUnmountStartedInTracingHooks(
+                inProgressRoot,
+                finishedWork,
+              );
             }
           }
 
@@ -609,9 +633,20 @@ function commitHookEffectListUnmount(
 
           if (enableSchedulingProfiler) {
             if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStopped();
+              markComponentPassiveEffectUnmountStoppedInDevTools();
             } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStopped();
+              markComponentLayoutEffectUnmountStoppedInDevTools();
+            }
+          }
+          if (enableTracingHooks) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectUnmountStoppedInTracingHooks(
+                inProgressRoot,
+              );
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectUnmountStoppedInTracingHooks(
+                inProgressRoot,
+              );
             }
           }
         }
@@ -631,9 +666,22 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
       if ((effect.tag & flags) === flags) {
         if (enableSchedulingProfiler) {
           if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStarted(finishedWork);
+            markComponentPassiveEffectMountStartedInDevTools(finishedWork);
           } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStarted(finishedWork);
+            markComponentLayoutEffectMountStartedInDevTools(finishedWork);
+          }
+        }
+        if (enableTracingHooks) {
+          if ((flags & HookPassive) !== NoHookEffect) {
+            markComponentPassiveEffectMountStartedInTracingHooks(
+              inProgressRoot,
+              finishedWork,
+            );
+          } else if ((flags & HookLayout) !== NoHookEffect) {
+            markComponentLayoutEffectMountStartedInTracingHooks(
+              inProgressRoot,
+              finishedWork,
+            );
           }
         }
 
@@ -653,9 +701,18 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 
         if (enableSchedulingProfiler) {
           if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStopped();
+            markComponentPassiveEffectMountStoppedInDevTools();
           } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStopped();
+            markComponentLayoutEffectMountStoppedInDevTools();
+          }
+        }
+        if (enableTracingHooks) {
+          if ((flags & HookPassive) !== NoHookEffect) {
+            markComponentPassiveEffectMountStoppedInTracingHooks(
+              inProgressRoot,
+            );
+          } else if ((flags & HookLayout) !== NoHookEffect) {
+            markComponentLayoutEffectMountStoppedInTracingHooks(inProgressRoot);
           }
         }
 
@@ -2216,7 +2273,15 @@ function commitDeletionEffectsOnFiber(
                   );
                 } else if ((tag & HookLayout) !== NoHookEffect) {
                   if (enableSchedulingProfiler) {
-                    markComponentLayoutEffectUnmountStarted(deletedFiber);
+                    markComponentLayoutEffectUnmountStartedInDevTools(
+                      deletedFiber,
+                    );
+                  }
+                  if (enableTracingHooks) {
+                    markComponentLayoutEffectUnmountStartedInTracingHooks(
+                      inProgressRoot,
+                      deletedFiber,
+                    );
                   }
 
                   if (shouldProfile(deletedFiber)) {
@@ -2236,7 +2301,12 @@ function commitDeletionEffectsOnFiber(
                   }
 
                   if (enableSchedulingProfiler) {
-                    markComponentLayoutEffectUnmountStopped();
+                    markComponentLayoutEffectUnmountStoppedInDevTools();
+                  }
+                  if (enableTracingHooks) {
+                    markComponentLayoutEffectUnmountStoppedInTracingHooks(
+                      inProgressRoot,
+                    );
                   }
                 }
               }

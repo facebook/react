@@ -23,6 +23,7 @@ import {
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
+  enableTracingHooks,
   warnAboutDeprecatedLifecycles,
   enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
@@ -72,10 +73,14 @@ import {
 } from './ReactFiberWorkLoop';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
-  markForceUpdateScheduled,
-  markStateUpdateScheduled,
+  markForceUpdateScheduled as markForceUpdateScheduledInDevTools,
+  markStateUpdateScheduled as markStateUpdateScheduledInDevTools,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {
+  markForceUpdateScheduled as markForceUpdateScheduledInTracingHooks,
+  markStateUpdateScheduled as markStateUpdateScheduledInTracingHooks,
+} from './ReactFiberTracingHook';
 
 const fakeInternalInstance: {
   _processChildContext?: () => empty,
@@ -227,7 +232,10 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      markStateUpdateScheduled(fiber, lane);
+      markStateUpdateScheduledInDevTools(fiber, lane);
+    }
+    if (enableTracingHooks) {
+      markStateUpdateScheduledInTracingHooks(root, fiber);
     }
   },
   enqueueReplaceState(inst: any, payload: any, callback: null) {
@@ -262,7 +270,10 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      markStateUpdateScheduled(fiber, lane);
+      markStateUpdateScheduledInDevTools(fiber, lane);
+    }
+    if (enableTracingHooks) {
+      markStateUpdateScheduledInTracingHooks(root, fiber);
     }
   },
   // $FlowFixMe[missing-local-annot]
@@ -297,7 +308,10 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      markForceUpdateScheduled(fiber, lane);
+      markForceUpdateScheduledInDevTools(fiber, lane);
+    }
+    if (enableTracingHooks) {
+      markForceUpdateScheduledInTracingHooks(root, fiber);
     }
   },
 };

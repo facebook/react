@@ -40,6 +40,7 @@ import {
   enableCache,
   enableTransitionTracing,
   useModernStrictMode,
+  enableTracingHooks,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -246,21 +247,35 @@ import {
 } from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
-  markCommitStarted,
-  markCommitStopped,
-  markComponentRenderStopped,
-  markComponentSuspended,
-  markComponentErrored,
-  markLayoutEffectsStarted,
-  markLayoutEffectsStopped,
-  markPassiveEffectsStarted,
-  markPassiveEffectsStopped,
-  markRenderStarted,
-  markRenderYielded,
-  markRenderStopped,
+  markCommitStarted as markCommitStartedInDevTools,
+  markCommitStopped as markCommitStoppedInDevTools,
+  markComponentRenderStopped as markComponentRenderStoppedInDevTools,
+  markComponentSuspended as markComponentSuspendedInDevTools,
+  markComponentErrored as markComponentErroredInDevTools,
+  markLayoutEffectsStarted as markLayoutEffectsStartedInDevTools,
+  markLayoutEffectsStopped as markLayoutEffectsStoppedInDevTools,
+  markPassiveEffectsStarted as markPassiveEffectsStartedInDevTools,
+  markPassiveEffectsStopped as markPassiveEffectsStoppedInDevTools,
+  markRenderStarted as markRenderStartedInDevTools,
+  markRenderYielded as markRenderYieldedInDevTools,
+  markRenderStopped as markRenderStoppedInDevTools,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
 } from './ReactFiberDevToolsHook';
+import {
+  markCommitStarted as markCommitStartedInTracingHooks,
+  markCommitStopped as markCommitStoppedInTracingHooks,
+  markComponentRenderStopped as markComponentRenderStoppedInTracingHooks,
+  markComponentSuspended as markComponentSuspendedInTracingHooks,
+  markComponentErrored as markComponentErroredInTracingHooks,
+  markLayoutEffectsStarted as markLayoutEffectsStartedInTracingHooks,
+  markLayoutEffectsStopped as markLayoutEffectsStoppedInTracingHooks,
+  markPassiveEffectsStarted as markPassiveEffectsStartedInTracingHooks,
+  markPassiveEffectsStopped as markPassiveEffectsStoppedInTracingHooks,
+  markRenderStarted as markRenderStartedInTracingHooks,
+  markRenderYielded as markRenderYieldedInTracingHooks,
+  markRenderStopped as markRenderStoppedInTracingHooks,
+} from './ReactFiberTracingHook';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent';
 import {
@@ -1842,20 +1857,28 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   }
 
   if (enableSchedulingProfiler) {
-    markComponentRenderStopped();
+    markComponentRenderStoppedInDevTools();
     if (workInProgressSuspendedReason !== SuspendedOnError) {
       const wakeable: Wakeable = (thrownValue: any);
-      markComponentSuspended(
+      markComponentSuspendedInDevTools(
         erroredWork,
         wakeable,
         workInProgressRootRenderLanes,
       );
     } else {
-      markComponentErrored(
+      markComponentErroredInDevTools(
         erroredWork,
         thrownValue,
         workInProgressRootRenderLanes,
       );
+    }
+  }
+  if (enableTracingHooks) {
+    markComponentRenderStoppedInTracingHooks(root);
+    if (workInProgressSuspendedReason !== SuspendedOnError) {
+      markComponentSuspendedInTracingHooks(root);
+    } else {
+      markComponentErroredInTracingHooks(root, thrownValue);
     }
   }
 }
@@ -2038,7 +2061,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   }
 
   if (enableSchedulingProfiler) {
-    markRenderStarted(lanes);
+    markRenderStartedInDevTools(lanes);
+  }
+  if (enableTracingHooks) {
+    markRenderStartedInTracingHooks(root);
   }
 
   outer: do {
@@ -2102,7 +2128,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   }
 
   if (enableSchedulingProfiler) {
-    markRenderStopped();
+    markRenderStoppedInDevTools();
+  }
+  if (enableTracingHooks) {
+    markRenderStoppedInTracingHooks(root);
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -2161,7 +2190,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   }
 
   if (enableSchedulingProfiler) {
-    markRenderStarted(lanes);
+    markRenderStartedInDevTools(lanes);
+  }
+  if (enableTracingHooks) {
+    markRenderStartedInTracingHooks(root);
   }
 
   outer: do {
@@ -2272,13 +2304,19 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   if (workInProgress !== null) {
     // Still work remaining.
     if (enableSchedulingProfiler) {
-      markRenderYielded();
+      markRenderYieldedInDevTools();
+    }
+    if (enableTracingHooks) {
+      markRenderYieldedInTracingHooks(root);
     }
     return RootInProgress;
   } else {
     // Completed the tree.
     if (enableSchedulingProfiler) {
-      markRenderStopped();
+      markRenderStoppedInDevTools();
+    }
+    if (enableTracingHooks) {
+      markRenderStoppedInTracingHooks(root);
     }
 
     // Set this to null to indicate there's no in-progress render.
@@ -2630,7 +2668,10 @@ function commitRootImpl(
   }
 
   if (enableSchedulingProfiler) {
-    markCommitStarted(lanes);
+    markCommitStartedInDevTools(lanes);
+  }
+  if (enableTracingHooks) {
+    markCommitStartedInTracingHooks(root);
   }
 
   if (finishedWork === null) {
@@ -2641,7 +2682,10 @@ function commitRootImpl(
     }
 
     if (enableSchedulingProfiler) {
-      markCommitStopped();
+      markCommitStoppedInDevTools();
+    }
+    if (enableTracingHooks) {
+      markCommitStoppedInTracingHooks(root);
     }
 
     return null;
@@ -2796,7 +2840,10 @@ function commitRootImpl(
       }
     }
     if (enableSchedulingProfiler) {
-      markLayoutEffectsStarted(lanes);
+      markLayoutEffectsStartedInDevTools(lanes);
+    }
+    if (enableTracingHooks) {
+      markLayoutEffectsStartedInTracingHooks(root);
     }
     commitLayoutEffects(finishedWork, root, lanes);
     if (__DEV__) {
@@ -2806,7 +2853,10 @@ function commitRootImpl(
     }
 
     if (enableSchedulingProfiler) {
-      markLayoutEffectsStopped();
+      markLayoutEffectsStoppedInDevTools();
+    }
+    if (enableTracingHooks) {
+      markLayoutEffectsStoppedInTracingHooks(root);
     }
 
     if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
@@ -2954,7 +3004,10 @@ function commitRootImpl(
   }
 
   if (enableSchedulingProfiler) {
-    markCommitStopped();
+    markCommitStoppedInDevTools();
+  }
+  if (enableTracingHooks) {
+    markCommitStoppedInTracingHooks(root);
   }
 
   if (enableTransitionTracing) {
@@ -3115,7 +3168,10 @@ function flushPassiveEffectsImpl() {
   }
 
   if (enableSchedulingProfiler) {
-    markPassiveEffectsStarted(lanes);
+    markPassiveEffectsStartedInDevTools(lanes);
+  }
+  if (enableTracingHooks) {
+    markPassiveEffectsStartedInTracingHooks(root);
   }
 
   const prevExecutionContext = executionContext;
@@ -3141,7 +3197,10 @@ function flushPassiveEffectsImpl() {
   }
 
   if (enableSchedulingProfiler) {
-    markPassiveEffectsStopped();
+    markPassiveEffectsStoppedInDevTools();
+  }
+  if (enableTracingHooks) {
+    markPassiveEffectsStoppedInTracingHooks(root);
   }
 
   if (__DEV__) {

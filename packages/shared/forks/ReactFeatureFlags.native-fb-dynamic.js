@@ -21,6 +21,7 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // update the test configuration.
 
 export const enableUseRefAccessWarning = __VARIANT__;
+export const enableTracingHooks = __VARIANT__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): DynamicFlagsType): ExportsType);
