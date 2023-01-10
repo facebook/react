@@ -1813,7 +1813,6 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
     const isWakeable =
       thrownValue !== null &&
       typeof thrownValue === 'object' &&
-      // $FlowFixMe[method-unbinding]
       typeof thrownValue.then === 'function';
 
     workInProgressSuspendedReason = isWakeable
@@ -3458,7 +3457,6 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
       break;
     case OffscreenComponent: {
       const instance: OffscreenInstance = boundaryFiber.stateNode;
-      // $FlowFixMe[incompatible-type] found when upgrading Flow
       retryCache = instance._retryCache;
       break;
     }

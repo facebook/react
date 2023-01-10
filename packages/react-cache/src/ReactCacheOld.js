@@ -125,7 +125,6 @@ function accessResult<I, K, V>(
       status: Pending,
       value: thenable,
     };
-    // $FlowFixMe[escaped-generic] discovered when updating Flow
     const newEntry = lru.add(newResult, deleteEntry.bind(null, resource, key));
     entriesForResource.set(key, newEntry);
     return newResult;

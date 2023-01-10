@@ -148,7 +148,6 @@ export function connectToDevTools(options: ?ConnectOptions) {
         }
       },
     });
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     bridge.addListener(
       'updateComponentFilters',
       (componentFilters: Array<ComponentFilter>) => {

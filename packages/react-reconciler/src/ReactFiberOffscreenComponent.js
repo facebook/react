@@ -54,7 +54,6 @@ export type OffscreenInstance = {
   _visibility: OffscreenVisibility,
   _pendingMarkers: Set<TracingMarkerInstance> | null,
   _transitions: Set<Transition> | null,
-  // $FlowFixMe[incompatible-type-arg] found when upgrading Flow
   _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 
   // Represents the current Offscreen fiber

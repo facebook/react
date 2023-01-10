@@ -1006,7 +1006,6 @@ export function resolveModelToJSON(
     return serializeByValueID(symbolId);
   }
 
-  // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
     throw new Error(
       `BigInt (${value}) is not yet supported in Client Component props.` +

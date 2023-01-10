@@ -63,7 +63,6 @@ export function initialize(
   }: {
     bridge?: FrontendBridge,
     store?: Store,
-    // $FlowFixMe[incompatible-exact]
   } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {
