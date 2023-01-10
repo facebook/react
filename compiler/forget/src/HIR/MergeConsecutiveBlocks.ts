@@ -6,7 +6,6 @@
  */
 
 import { invariant } from "../Utils/CompilerError";
-import { assertExhaustive } from "../Utils/utils";
 import {
   BlockId,
   Effect,
@@ -30,40 +29,10 @@ import {
  */
 export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   const merged = new MergedBlocks();
-  const valueBlocks = new Set<BlockId>();
   for (const [, block] of fn.body.blocks) {
-    // Before evaluating the block itself, determine which other blocks
-    // are value blocks. See above TODO which would allow us to bypass this.
-    const terminal = block.terminal;
-    switch (terminal.kind) {
-      case "while": {
-        valueBlocks.add(terminal.test);
-        break;
-      }
-      case "for": {
-        valueBlocks.add(terminal.init);
-        valueBlocks.add(terminal.test);
-        valueBlocks.add(terminal.update);
-        break;
-      }
-      case "if":
-      case "goto":
-      case "return":
-      case "throw":
-      case "switch": {
-        break;
-      }
-      default: {
-        assertExhaustive(
-          terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
-        );
-      }
-    }
-
     // Can only merge blocks with a single predecessor, can't merge
     // value blocks
-    if (block.preds.size !== 1 || valueBlocks.has(block.id)) {
+    if (block.kind === "value" || block.preds.size !== 1) {
       continue;
     }
     const originalPredecessorId = Array.from(block.preds)[0]!;

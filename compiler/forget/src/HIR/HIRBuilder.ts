@@ -12,6 +12,7 @@ import { assertExhaustive } from "../Utils/utils";
 import {
   BasicBlock,
   BlockId,
+  BlockKind,
   GeneratedSource,
   GotoVariant,
   HIR,
@@ -146,6 +147,7 @@ export default class HIRBuilder {
   build(): HIR {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      kind: "block",
       id: blockId,
       instructions,
       terminal: {
@@ -177,9 +179,10 @@ export default class HIRBuilder {
   /**
    * Terminate the current block w the given terminal, and start a new block
    */
-  terminate(terminal: Terminal) {
+  terminate(kind: BlockKind, terminal: Terminal) {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      kind,
       id: blockId,
       instructions,
       terminal,
@@ -194,12 +197,17 @@ export default class HIRBuilder {
    * Terminate the current block w the given terminal, and set the previously
    * reserved block as the new current block
    */
-  terminateWithContinuation(terminal: Terminal, continuation: WipBlock) {
+  terminateWithContinuation(
+    kind: BlockKind,
+    terminal: Terminal,
+    continuation: WipBlock
+  ) {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      kind: kind,
       id: blockId,
       instructions,
-      terminal,
+      terminal: terminal,
       preds: new Set(),
       phis: new Set(),
     });
@@ -218,9 +226,10 @@ export default class HIRBuilder {
   /**
    * Save a previously reserved block as completed
    */
-  complete(block: WipBlock, terminal: Terminal) {
+  complete(kind: BlockKind, block: WipBlock, terminal: Terminal) {
     const { id: blockId, instructions } = block;
     this.#completed.set(blockId, {
+      kind,
       id: blockId,
       instructions,
       terminal,
@@ -235,13 +244,14 @@ export default class HIRBuilder {
    * The lambda must return a terminal node, which is used to terminate the
    * newly constructed block.
    */
-  enter(fn: (blockId: BlockId) => Terminal): BlockId {
+  enter(kind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
     const current = this.#current;
     const nextId = makeBlockId(this.#nextId++);
     this.#current = newBlock(nextId);
     const terminal = fn(nextId);
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      kind,
       id: blockId,
       instructions,
       terminal,

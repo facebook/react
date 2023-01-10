@@ -47,7 +47,7 @@ export default function printHIR(
     output.push(`${indent}${text}`);
   };
   for (const [blockId, block] of ir.blocks) {
-    output.push(`bb${blockId}:`);
+    output.push(`bb${blockId} (${block.kind}):`);
     if (block.preds.size > 0) {
       const preds = ["predecessor blocks:"];
       for (const pred of block.preds) {

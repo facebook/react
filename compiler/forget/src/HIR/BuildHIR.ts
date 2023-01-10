@@ -122,7 +122,7 @@ function lowerStatement(
         value,
         id: makeInstructionId(0),
       };
-      builder.terminate(terminal);
+      builder.terminate("block", terminal);
       return;
     }
     case "ReturnStatement": {
@@ -138,7 +138,7 @@ function lowerStatement(
         value,
         id: makeInstructionId(0),
       };
-      builder.terminateWithContinuation(terminal, fallthrough);
+      builder.terminateWithContinuation("block", terminal, fallthrough);
       return;
     }
     case "IfStatement": {
@@ -146,7 +146,7 @@ function lowerStatement(
       //  Block for code following the if
       const continuationBlock = builder.reserve();
       //  Block for the consequent (if the test is truthy)
-      const consequentBlock = builder.enter((blockId) => {
+      const consequentBlock = builder.enter("block", (blockId) => {
         lowerStatement(builder, stmt.get("consequent"));
         return {
           kind: "goto",
@@ -159,7 +159,7 @@ function lowerStatement(
       let alternateBlock = null;
       const alternate = stmt.get("alternate");
       if (alternate.hasNode()) {
-        alternateBlock = builder.enter((blockId) => {
+        alternateBlock = builder.enter("block", (blockId) => {
           lowerStatement(builder, alternate);
           return {
             kind: "goto",
@@ -181,7 +181,7 @@ function lowerStatement(
         fallthrough: continuationBlock.id,
         id: makeInstructionId(0),
       };
-      builder.terminateWithContinuation(terminal, continuationBlock);
+      builder.terminateWithContinuation("block", terminal, continuationBlock);
       return;
     }
     case "BlockStatement": {
@@ -192,7 +192,7 @@ function lowerStatement(
     case "BreakStatement": {
       const stmt = stmtPath as NodePath<t.BreakStatement>;
       const block = builder.lookupBreak(stmt.node.label?.name ?? null);
-      builder.terminate({
+      builder.terminate("block", {
         kind: "goto",
         block,
         variant: GotoVariant.Break,
@@ -203,7 +203,7 @@ function lowerStatement(
     case "ContinueStatement": {
       const stmt = stmtPath as NodePath<t.ContinueStatement>;
       const block = builder.lookupContinue(stmt.node.label?.name ?? null);
-      builder.terminate({
+      builder.terminate("block", {
         kind: "goto",
         block,
         variant: GotoVariant.Continue,
@@ -217,7 +217,7 @@ function lowerStatement(
       const conditionalBlock = builder.reserve();
       //  Block for code following the loop
       const continuationBlock = builder.reserve();
-      const loopBlock = builder.enter((blockId) => {
+      const loopBlock = builder.enter("block", (blockId) => {
         return builder.loop(
           label,
           conditionalBlock.id,
@@ -235,6 +235,7 @@ function lowerStatement(
       });
       //  End the block leading up to the loop and jump to the conditional block
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "goto",
           block: conditionalBlock.id,
@@ -257,7 +258,7 @@ function lowerStatement(
         fallthrough: continuationBlock.id,
         id: makeInstructionId(0),
       };
-      builder.terminateWithContinuation(terminal, continuationBlock);
+      builder.terminateWithContinuation("block", terminal, continuationBlock);
       return;
     }
     case "ForOfStatement": {
@@ -270,7 +271,7 @@ function lowerStatement(
        * Build the loop body, each iteration loops back to the conditional block
        * to check whether to continue or exit
        */
-      const loopBlock = builder.enter((blockId) => {
+      const loopBlock = builder.enter("block", (blockId) => {
         return builder.loop(
           label,
           conditionalBlock.id,
@@ -288,6 +289,7 @@ function lowerStatement(
       });
       //  End the block leading up to the loop and jump to the conditional block
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "goto",
           block: conditionalBlock.id,
@@ -310,7 +312,7 @@ function lowerStatement(
         fallthrough: continuationBlock.id,
         id: makeInstructionId(0),
       };
-      builder.terminateWithContinuation(terminal, continuationBlock);
+      builder.terminateWithContinuation("block", terminal, continuationBlock);
       return;
     }
     case "ForStatement": {
@@ -320,7 +322,7 @@ function lowerStatement(
       //  Block for code following the loop
       const continuationBlock = builder.reserve();
 
-      const initBlock = builder.enter((blockId) => {
+      const initBlock = builder.enter("value", (blockId) => {
         const init = stmt.get("init") as NodePath<t.VariableDeclaration>;
         todoInvariant(
           t.isVariableDeclaration(init.node),
@@ -335,7 +337,7 @@ function lowerStatement(
         };
       });
 
-      const updateBlock = builder.enter((blockId) => {
+      const updateBlock = builder.enter("value", (blockId) => {
         const update = stmt.get("update");
         todoInvariant(update.hasNode(), "Handle empty for updater");
         if (update.hasNode()) {
@@ -349,7 +351,7 @@ function lowerStatement(
         };
       });
 
-      const bodyBlock = builder.enter((blockId) => {
+      const bodyBlock = builder.enter("block", (blockId) => {
         return builder.loop(label, updateBlock, continuationBlock.id, () => {
           lowerStatement(builder, stmt.get("body"));
           return {
@@ -362,6 +364,7 @@ function lowerStatement(
       });
 
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "for",
           init: initBlock,
@@ -377,6 +380,7 @@ function lowerStatement(
       const test = stmt.get("test");
       todoInvariant(test.hasNode(), "ForStatement without test");
       builder.terminateWithContinuation(
+        "value",
         {
           kind: "if",
           test: lowerExpressionToPlace(builder, test),
@@ -394,7 +398,7 @@ function lowerStatement(
       //  Block for code following the loop
       const continuationBlock = builder.reserve();
       //  Loop body
-      const loopBlock = builder.enter((loopBlock) => {
+      const loopBlock = builder.enter("block", (loopBlock) => {
         return builder.loop(label, loopBlock, continuationBlock.id, () => {
           lowerStatement(builder, stmt.get("body"));
           /**
@@ -415,6 +419,7 @@ function lowerStatement(
       });
       //  do-while unconditionally enters the loop
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "goto",
           block: loopBlock,
@@ -432,7 +437,7 @@ function lowerStatement(
       //  Block for code following the loop
       const continuationBlock = builder.reserve();
       //  Loop body
-      const loopBlock = builder.enter((blockId) => {
+      const loopBlock = builder.enter("block", (blockId) => {
         return builder.loop(
           label,
           conditionalBlock.id,
@@ -455,6 +460,7 @@ function lowerStatement(
       const loc = stmt.node.loc;
       invariant(loc, "while statement must have a location");
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "while",
           loc,
@@ -479,7 +485,7 @@ function lowerStatement(
         id: makeInstructionId(0),
       };
       //  Complete the conditional and continue with code after the loop
-      builder.terminateWithContinuation(terminal, continuationBlock);
+      builder.terminateWithContinuation("value", terminal, continuationBlock);
       return;
     }
     case "LabeledStatement": {
@@ -505,6 +511,7 @@ function lowerStatement(
             lowerStatement(builder, stmt.get("body"));
           });
           builder.terminateWithContinuation(
+            "block",
             {
               kind: "goto",
               block: continuationBlock.id,
@@ -543,7 +550,7 @@ function lowerStatement(
           );
           hasDefault = true;
         }
-        const block = builder.enter((_blockId) => {
+        const block = builder.enter("block", (_blockId) => {
           return builder.switch(label, continuationBlock.id, () => {
             case_
               .get("consequent")
@@ -581,6 +588,7 @@ function lowerStatement(
 
       const test = lowerExpressionToPlace(builder, stmt.get("discriminant"));
       builder.terminateWithContinuation(
+        "block",
         {
           kind: "switch",
           test,
@@ -1192,7 +1200,7 @@ function lowerConditional(
   //  Block for code following the if
   const continuationBlock = builder.reserve();
   //  Block for the consequent (if the test is truthy)
-  const consequentBlock = builder.enter((blockId) => {
+  const consequentBlock = builder.enter("value", (blockId) => {
     let value = consequent();
     builder.push({
       id: makeInstructionId(0),
@@ -1208,7 +1216,7 @@ function lowerConditional(
     };
   });
   //  Block for the alternate (if the test is not truthy)
-  const alternateBlock = builder.enter((blockId) => {
+  const alternateBlock = builder.enter("value", (blockId) => {
     let value = alternate();
     builder.push({
       id: makeInstructionId(0),
@@ -1231,7 +1239,7 @@ function lowerConditional(
     fallthrough: continuationBlock.id,
     id: makeInstructionId(0),
   };
-  builder.terminateWithContinuation(terminal, continuationBlock);
+  builder.terminateWithContinuation("value", terminal, continuationBlock);
   return place;
 }
 

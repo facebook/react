@@ -6,7 +6,6 @@
  */
 
 import {
-  BlockId,
   GotoVariant,
   HIRFunction,
   IdentifierId,
@@ -72,9 +71,6 @@ export function constantPropagation(fn: HIRFunction): void {
 function applyConstantPropagation(fn: HIRFunction): boolean {
   let hasChanges = false;
 
-  // A set of blocks whose terminals can't (yet) be safely rewritten
-  const valueBlocks = new Set<BlockId>();
-
   const constants: Constants = new Map();
   for (const [, block] of fn.body.blocks) {
     // Initialize phi values if all operands have the same known constant value.
@@ -108,7 +104,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
       }
     }
 
-    if (valueBlocks.has(block.id)) {
+    if (block.kind === "value") {
       // can't rewrite terminals in value blocks yet
       continue;
     }
@@ -128,16 +124,6 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
             id: terminal.id,
           };
         }
-        break;
-      }
-      case "while": {
-        valueBlocks.add(terminal.test);
-        break;
-      }
-      case "for": {
-        valueBlocks.add(terminal.init);
-        valueBlocks.add(terminal.test);
-        valueBlocks.add(terminal.update);
         break;
       }
       default: {

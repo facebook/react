@@ -141,7 +141,9 @@ export type HIR = {
  * an exception occurs, therefore the block model only represents explicit throw
  * statements and not implicit exceptions which may occur.
  */
+export type BlockKind = "block" | "value";
 export type BasicBlock = {
+  kind: BlockKind;
   id: BlockId;
   instructions: Array<Instruction>;
   terminal: Terminal;
@@ -161,6 +163,11 @@ export type Terminal =
   | SwitchTerminal
   | ForTerminal
   | WhileTerminal;
+
+/**
+ * Terminal nodes allowed for a value block
+ */
+export type ValueTerminal = IfTerminal | GotoTerminal;
 
 export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
 
