@@ -7,35 +7,21 @@
 
 import React, { useCallback } from "react";
 
-export type TabTypes =
-  | "HIR"
-  | "SSA"
-  | "EliminateRedundantPhi"
-  | "InferTypes"
-  | "InferReferenceEffects"
-  | "InferMutableRanges"
-  | "InferReactiveScopeVariables"
-  | "InferReactiveScopes"
-  | "ReactiveFunctions"
-  | "LeaveSSA"
-  | "JS"
-  | "SourceMap";
-
-type TabsRecord = Record<TabTypes, React.ReactNode>;
+type TabsRecord = Map<string, React.ReactNode>;
 
 export default function TabbedWindow(props: {
   defaultTab: string | null;
   tabs: TabsRecord;
-  tabsOpen: Map<TabTypes, boolean>;
-  setTabsOpen: (newTab: Map<TabTypes, boolean>) => void;
+  tabsOpen: Set<string>;
+  setTabsOpen: (newTab: Set<string>) => void;
 }): React.ReactElement {
   return (
     <div className="flex flex-row h-full">
-      {Object.keys(props.tabs).map((name, index, all) => {
+      {Array.from(props.tabs.keys()).map((name) => {
         return (
           <TabbedWindowItem
-            name={name as TabTypes}
-            key={index}
+            name={name}
+            key={name}
             tabs={props.tabs}
             tabsOpen={props.tabsOpen}
             setTabsOpen={props.setTabsOpen}
@@ -52,16 +38,20 @@ function TabbedWindowItem({
   tabsOpen,
   setTabsOpen,
 }: {
-  name: TabTypes;
+  name: string;
   tabs: TabsRecord;
-  tabsOpen: Map<TabTypes, boolean>;
-  setTabsOpen: (newTab: Map<TabTypes, boolean>) => void;
+  tabsOpen: Set<string>;
+  setTabsOpen: (newTab: Set<string>) => void;
 }): React.ReactElement {
-  const isShow = tabsOpen.get(name) ?? false;
+  const isShow = tabsOpen.has(name);
 
   const toggleTabs = useCallback(() => {
-    const nextState = new Map(tabsOpen);
-    nextState.set(name, !isShow);
+    const nextState = new Set(tabsOpen);
+    if (nextState.has(name)) {
+      nextState.delete(name);
+    } else {
+      nextState.add(name);
+    }
     setTabsOpen(nextState);
   }, [tabsOpen, name, isShow, setTabsOpen]);
 
@@ -75,7 +65,7 @@ function TabbedWindowItem({
           >
             - {name}
           </h2>
-          {tabs[name]}
+          {tabs.get(name) ?? <div>No output for {name}</div>}
         </div>
       ) : (
         <div className="relative items-center h-full px-4 py-8 align-middle border-r border-grey-200">

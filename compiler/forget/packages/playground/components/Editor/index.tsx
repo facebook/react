@@ -8,7 +8,7 @@
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue } from "react";
 import { useMountEffect } from "../../hooks";
 import { defaultStore } from "../../lib/defaultStore";
 import {
@@ -19,7 +19,6 @@ import {
   type Store,
 } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
-import { TabTypes } from "../TabbedWindow";
 import Input from "./Input";
 import Output from "./Output";
 
@@ -28,7 +27,6 @@ export default function Editor() {
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const [tabsOpen, setTabsOpen] = useState<Map<TabTypes, boolean>>(new Map());
 
   useMountEffect(() => {
     let mountStore: Store;
@@ -62,11 +60,7 @@ export default function Editor() {
           <Input />
         </div>
         <div className={clsx("flex sm:flex")}>
-          <Output
-            tabsOpen={tabsOpen}
-            setTabsOpen={setTabsOpen}
-            store={deferredStore}
-          />
+          <Output store={deferredStore} />
         </div>
       </div>
     </>
