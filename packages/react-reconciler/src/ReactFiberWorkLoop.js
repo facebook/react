@@ -3369,7 +3369,7 @@ function pingSuspendedRoot(
   }
 
   const eventTime = requestEventTime();
-  markRootPinged(root, pingedLanes, eventTime);
+  markRootPinged(root, pingedLanes);
 
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 
