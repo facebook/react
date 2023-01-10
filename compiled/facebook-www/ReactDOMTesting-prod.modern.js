@@ -13964,17 +13964,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1674 = {
+var devToolsConfig$jscomp$inline_1673 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1253462ea-20230109",
+  version: "18.3.0-www-modern-afe6521e1-20230109",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2073 = {
-  bundleType: devToolsConfig$jscomp$inline_1674.bundleType,
-  version: devToolsConfig$jscomp$inline_1674.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1674.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1674.rendererConfig,
+var internals$jscomp$inline_2072 = {
+  bundleType: devToolsConfig$jscomp$inline_1673.bundleType,
+  version: devToolsConfig$jscomp$inline_1673.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1673.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1673.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -13991,26 +13991,26 @@ var internals$jscomp$inline_2073 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1674.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1673.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1253462ea-20230109"
+  reconcilerVersion: "18.3.0-next-afe6521e1-20230109"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2074 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2073 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2074.isDisabled &&
-    hook$jscomp$inline_2074.supportsFiber
+    !hook$jscomp$inline_2073.isDisabled &&
+    hook$jscomp$inline_2073.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2074.inject(
-        internals$jscomp$inline_2073
+      (rendererID = hook$jscomp$inline_2073.inject(
+        internals$jscomp$inline_2072
       )),
-        (injectedHook = hook$jscomp$inline_2074);
+        (injectedHook = hook$jscomp$inline_2073);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -14321,4 +14321,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1253462ea-20230109";
+exports.version = "18.3.0-next-afe6521e1-20230109";

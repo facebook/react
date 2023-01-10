@@ -1742,7 +1742,7 @@ function markRootSuspended(root, suspendedLanes) {
     lanes &= ~lane;
   }
 }
-function markRootPinged(root, pingedLanes, eventTime) {
+function markRootPinged(root, pingedLanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 function markRootMutableRead(root, updateLane) {
@@ -23901,7 +23901,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1253462ea-20230109";
+var ReactVersion = "18.3.0-www-modern-afe6521e1-20230109";
 
 // Might add PROFILE later.
 

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-1253462ea-20230109";
+var ReactVersion = "18.3.0-www-classic-afe6521e1-20230109";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2232,7 +2232,7 @@ function markRootSuspended(root, suspendedLanes) {
     lanes &= ~lane;
   }
 }
-function markRootPinged(root, pingedLanes, eventTime) {
+function markRootPinged(root, pingedLanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 function markRootMutableRead(root, updateLane) {

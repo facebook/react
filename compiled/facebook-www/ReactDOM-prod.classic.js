@@ -15551,17 +15551,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1751 = {
+var devToolsConfig$jscomp$inline_1750 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1253462ea-20230109",
+  version: "18.3.0-www-classic-afe6521e1-20230109",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2135 = {
-  bundleType: devToolsConfig$jscomp$inline_1751.bundleType,
-  version: devToolsConfig$jscomp$inline_1751.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1751.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1751.rendererConfig,
+var internals$jscomp$inline_2134 = {
+  bundleType: devToolsConfig$jscomp$inline_1750.bundleType,
+  version: devToolsConfig$jscomp$inline_1750.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1750.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1750.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15577,26 +15577,26 @@ var internals$jscomp$inline_2135 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1751.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1750.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1253462ea-20230109"
+  reconcilerVersion: "18.3.0-next-afe6521e1-20230109"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2136 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2135 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2136.isDisabled &&
-    hook$jscomp$inline_2136.supportsFiber
+    !hook$jscomp$inline_2135.isDisabled &&
+    hook$jscomp$inline_2135.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2136.inject(
-        internals$jscomp$inline_2135
+      (rendererID = hook$jscomp$inline_2135.inject(
+        internals$jscomp$inline_2134
       )),
-        (injectedHook = hook$jscomp$inline_2136);
+        (injectedHook = hook$jscomp$inline_2135);
     } catch (err) {}
 }
 assign(Internals, {
@@ -15826,4 +15826,4 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1253462ea-20230109";
+exports.version = "18.3.0-next-afe6521e1-20230109";

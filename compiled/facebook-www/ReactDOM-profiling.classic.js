@@ -16321,10 +16321,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1825 = {
+var devToolsConfig$jscomp$inline_1824 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1253462ea-20230109",
+  version: "18.3.0-www-classic-afe6521e1-20230109",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -16342,10 +16342,10 @@ var devToolsConfig$jscomp$inline_1825 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1825.bundleType,
-  version: devToolsConfig$jscomp$inline_1825.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1825.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1825.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1824.bundleType,
+  version: devToolsConfig$jscomp$inline_1824.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1824.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1824.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16361,14 +16361,14 @@ var devToolsConfig$jscomp$inline_1825 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1825.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1824.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1253462ea-20230109"
+  reconcilerVersion: "18.3.0-next-afe6521e1-20230109"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16597,7 +16597,7 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1253462ea-20230109";
+exports.version = "18.3.0-next-afe6521e1-20230109";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
