@@ -28,7 +28,7 @@ import type {
   ProfilingDataForRootFrontend,
 } from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cCommitTreeBuilder %c${methodName}`,
@@ -150,6 +150,7 @@ function updateTree(
 
   // Clone nodes before mutating them so edits don't affect them.
   const getClonedNode = (id: number): CommitTreeNode => {
+    // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
     const clonedNode = ((Object.assign(
       {},
       nodes.get(id),

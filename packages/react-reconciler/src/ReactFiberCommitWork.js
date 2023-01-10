@@ -248,7 +248,10 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   }
 }
 
-const callComponentWillUnmountWithTimer = function(current, instance) {
+const callComponentWillUnmountWithTimer = function(
+  current: Fiber,
+  instance: any,
+) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {
@@ -1495,7 +1498,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
   }
 }
 
-function hideOrUnhideAllChildren(finishedWork, isHidden) {
+function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
   // Only hide or unhide the top-most host nodes.
   let hostSubtreeRoot = null;
 
@@ -2018,9 +2021,9 @@ function commitDeletionEffects(
 }
 
 function recursivelyTraverseDeletionEffects(
-  finishedRoot,
-  nearestMountedAncestor,
-  parent,
+  finishedRoot: FiberRoot,
+  nearestMountedAncestor: Fiber,
+  parent: Fiber,
 ) {
   // TODO: Use a static flag to skip trees that don't have unmount effects
   let child = parent.child;
@@ -2374,7 +2377,7 @@ function commitSuspenseHydrationCallbacks(
   }
 }
 
-function getRetryCache(finishedWork) {
+function getRetryCache(finishedWork: Fiber) {
   // TODO: Unify the interface for the retry cache so we don't have to switch
   // on the tag like this.
   switch (finishedWork.tag) {
@@ -4017,7 +4020,7 @@ function detachAlternateSiblings(parentFiber: Fiber) {
 
 function commitHookPassiveUnmountEffects(
   finishedWork: Fiber,
-  nearestMountedAncestor,
+  nearestMountedAncestor: null | Fiber,
   hookFlags: HookFlags,
 ) {
   if (shouldProfile(finishedWork)) {

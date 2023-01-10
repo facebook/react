@@ -198,7 +198,7 @@ const STACK_SOURCE_LOCATION = /([^\s]+) \((.+):(.+):(.+)\)/;
 export function stackToComponentSources(
   stack: string,
 ): Array<[string, ?Stack]> {
-  const out = [];
+  const out: Array<[string, ?Stack]> = [];
   stack
     .split(STACK_DELIMETER)
     .slice(1)

@@ -195,7 +195,7 @@ export function attach(
     return ((internalInstanceToIDMap.get(internalInstance): any): number);
   }
 
-  function areEqualArrays(a, b) {
+  function areEqualArrays(a: Array<any>, b: Array<any>) {
     if (a.length !== b.length) {
       return false;
     }
@@ -785,7 +785,7 @@ export function attach(
 
       let owner = element._owner;
       if (owner) {
-        owners = [];
+        owners = ([]: Array<SerializedElement>);
         while (owner != null) {
           owners.push({
             displayName: getData(owner).displayName || 'Unknown',
@@ -807,8 +807,8 @@ export function attach(
     }
 
     // Not implemented
-    const errors = [];
-    const warnings = [];
+    const errors: Array<[string, number]> = [];
+    const warnings: Array<[string, number]> = [];
 
     return {
       id,

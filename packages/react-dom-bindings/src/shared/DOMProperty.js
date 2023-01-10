@@ -70,8 +70,8 @@ export const VALID_ATTRIBUTE_NAME_REGEX: RegExp = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
-const illegalAttributeNameCache = {};
-const validatedAttributeNameCache = {};
+const illegalAttributeNameCache: {[string]: boolean} = {};
+const validatedAttributeNameCache: {[string]: boolean} = {};
 
 export function isAttributeNameSafe(attributeName: string): boolean {
   if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
@@ -213,6 +213,7 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
+// $FlowFixMe[missing-this-annot]
 function PropertyInfoRecord(
   name: string,
   type: PropertyType,
@@ -238,7 +239,7 @@ function PropertyInfoRecord(
 // When adding attributes to this list, be sure to also add them to
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
-const properties = {};
+const properties: {[string]: $FlowFixMe} = {};
 
 // These props are reserved by React. They shouldn't be written to the DOM.
 const reservedProps = [
@@ -456,7 +457,7 @@ reservedProps.forEach(name => {
 });
 
 const CAMELIZE = /[\-\:]([a-z])/g;
-const capitalize = token => token[1].toUpperCase();
+const capitalize = (token: string) => token[1].toUpperCase();
 
 // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings

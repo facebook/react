@@ -140,20 +140,26 @@ function collectNearestChildContextValues<T>(
   }
 }
 
-function DO_NOT_USE_queryAllNodes(fn: ReactScopeQuery): null | Array<Object> {
+function DO_NOT_USE_queryAllNodes(
+  this: $FlowFixMe,
+  fn: ReactScopeQuery,
+): null | Array<Object> {
   const currentFiber = getInstanceFromScope(this);
   if (currentFiber === null) {
     return null;
   }
   const child = currentFiber.child;
-  const scopedNodes = [];
+  const scopedNodes: Array<any> = [];
   if (child !== null) {
     collectScopedNodesFromChildren(child, fn, scopedNodes);
   }
   return scopedNodes.length === 0 ? null : scopedNodes;
 }
 
-function DO_NOT_USE_queryFirstNode(fn: ReactScopeQuery): null | Object {
+function DO_NOT_USE_queryFirstNode(
+  this: $FlowFixMe,
+  fn: ReactScopeQuery,
+): null | Object {
   const currentFiber = getInstanceFromScope(this);
   if (currentFiber === null) {
     return null;
@@ -165,7 +171,7 @@ function DO_NOT_USE_queryFirstNode(fn: ReactScopeQuery): null | Object {
   return null;
 }
 
-function containsNode(node: Object): boolean {
+function containsNode(this: $FlowFixMe, node: Object): boolean {
   let fiber = getInstanceFromNode(node);
   while (fiber !== null) {
     if (fiber.tag === ScopeComponent && fiber.stateNode === this) {
@@ -176,13 +182,16 @@ function containsNode(node: Object): boolean {
   return false;
 }
 
-function getChildContextValues<T>(context: ReactContext<T>): Array<T> {
+function getChildContextValues<T>(
+  this: $FlowFixMe,
+  context: ReactContext<T>,
+): Array<T> {
   const currentFiber = getInstanceFromScope(this);
   if (currentFiber === null) {
     return [];
   }
   const child = currentFiber.child;
-  const childContextValues = [];
+  const childContextValues: Array<T> = [];
   if (child !== null) {
     collectNearestChildContextValues(child, context, childContextValues);
   }

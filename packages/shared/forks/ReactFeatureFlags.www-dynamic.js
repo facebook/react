@@ -24,6 +24,7 @@ export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
 export const enableSyncDefaultUpdates = __VARIANT__;
+export const enableUnifiedSyncLane = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = __VARIANT__;
 export const enableClientRenderFallbackOnTextMismatch = __VARIANT__;

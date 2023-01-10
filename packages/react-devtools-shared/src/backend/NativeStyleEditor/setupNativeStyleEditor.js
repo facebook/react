@@ -170,7 +170,7 @@ function measureStyle(
 }
 
 function shallowClone(object: Object): Object {
-  const cloned = {};
+  const cloned: {[string]: $FlowFixMe} = {};
   for (const n in object) {
     cloned[n] = object[n];
   }

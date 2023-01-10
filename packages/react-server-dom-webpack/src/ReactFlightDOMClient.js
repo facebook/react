@@ -31,7 +31,7 @@ function startReadingFromStream(
   stream: ReadableStream,
 ): void {
   const reader = stream.getReader();
-  function progress({done, value}) {
+  function progress({done, value}: {done: boolean, value: ?any, ...}) {
     if (done) {
       close(response);
       return;
@@ -43,7 +43,7 @@ function startReadingFromStream(
       .then(progress)
       .catch(error);
   }
-  function error(e) {
+  function error(e: any) {
     reportGlobalError(response, e);
   }
   reader

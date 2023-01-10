@@ -362,7 +362,7 @@ function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
 export function getHookNamesMappingFromAST(
   sourceAST: File,
 ): $ReadOnlyArray<{name: string, start: Position}> {
-  const hookStack = [];
+  const hookStack: Array<{name: string, start: $FlowFixMe}> = [];
   const hookNames = [];
   const pushFrame = (name: string, node: Node) => {
     const nameInfo = {name, start: {...node.loc.start}};

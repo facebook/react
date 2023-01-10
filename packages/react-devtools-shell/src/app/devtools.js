@@ -81,7 +81,7 @@ inject('dist/app-index.js', () => {
   });
 });
 
-function inject(sourcePath, callback) {
+function inject(sourcePath: string, callback: () => void) {
   const script = contentDocument.createElement('script');
   script.onload = callback;
   script.src = sourcePath;

@@ -132,6 +132,7 @@ if (__DEV__) {
 }
 
 function FiberNode(
+  this: $FlowFixMe,
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,

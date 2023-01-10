@@ -44,6 +44,7 @@ export function resolveModuleReference<T>(
   return resolveModuleReferenceImpl(moduleData);
 }
 
+// $FlowFixMe[missing-local-annot]
 function parseModelRecursively(response: Response, parentObj, key, value) {
   if (typeof value === 'string') {
     return parseModelString(response, parentObj, key, value);

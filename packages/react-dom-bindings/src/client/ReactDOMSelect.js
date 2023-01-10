@@ -38,7 +38,7 @@ const valuePropNames = ['value', 'defaultValue'];
 /**
  * Validation function for `value` and `defaultValue`.
  */
-function checkSelectPropTypes(props) {
+function checkSelectPropTypes(props: any) {
   if (__DEV__) {
     checkControlledValueProps('select', props);
 
@@ -77,7 +77,7 @@ function updateOptions(
 
   if (multiple) {
     const selectedValues = (propValue: Array<string>);
-    const selectedValue = {};
+    const selectedValue: {[string]: boolean} = {};
     for (let i = 0; i < selectedValues.length; i++) {
       // Prefix to avoid chaos with special keys.
       selectedValue['$' + selectedValues[i]] = true;

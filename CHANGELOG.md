@@ -17,7 +17,7 @@
 
 ### Server Components (Experimental)
 
-* Add support for `useId()` inside Server Components. ([@gnoff](https://github.com/gnoff)) in [#24172](https://github.com/facebook/react/pull/24172)
+* Add support for `useId()` inside Server Components. ([@gnoff](https://github.com/gnoff) in [#24172](https://github.com/facebook/react/pull/24172))
 
 ## 18.1.0 (April 26, 2022)
 

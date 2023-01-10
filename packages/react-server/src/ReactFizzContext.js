@@ -14,7 +14,7 @@ import checkPropTypes from 'shared/checkPropTypes';
 let warnedAboutMissingGetChildContext;
 
 if (__DEV__) {
-  warnedAboutMissingGetChildContext = {};
+  warnedAboutMissingGetChildContext = ({}: {[string]: boolean});
 }
 
 // $FlowFixMe[incompatible-exact]
@@ -32,7 +32,7 @@ export function getMaskedContext(type: any, unmaskedContext: Object): Object {
       return emptyContextObject;
     }
 
-    const context = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }

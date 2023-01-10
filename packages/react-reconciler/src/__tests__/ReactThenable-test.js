@@ -9,6 +9,7 @@ let useState;
 let useMemo;
 let Suspense;
 let startTransition;
+let cache;
 let pendingTextRequests;
 
 describe('ReactThenable', () => {
@@ -24,6 +25,7 @@ describe('ReactThenable', () => {
     useMemo = React.useMemo;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+    cache = React.cache;
 
     pendingTextRequests = new Map();
   });
@@ -876,4 +878,147 @@ describe('ReactThenable', () => {
       ]);
     },
   );
+
+  // @gate enableUseHook
+  test('load multiple nested Suspense boundaries', async () => {
+    const getCachedAsyncText = cache(getAsyncText);
+
+    function AsyncText({text}) {
+      return <Text text={use(getCachedAsyncText(text))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="(Loading A...)" />}>
+          <AsyncText text="A" />
+          <Suspense fallback={<Text text="(Loading B...)" />}>
+            <AsyncText text="B" />
+            <Suspense fallback={<Text text="(Loading C...)" />}>
+              <AsyncText text="C" />
+            </Suspense>
+          </Suspense>
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [A]',
+      'Async text requested [B]',
+      'Async text requested [C]',
+      '(Loading C...)',
+      '(Loading B...)',
+      '(Loading A...)',
+    ]);
+    expect(root).toMatchRenderedOutput('(Loading A...)');
+
+    await act(async () => {
+      resolveTextRequests('A');
+    });
+    expect(Scheduler).toHaveYielded(['A', '(Loading C...)', '(Loading B...)']);
+    expect(root).toMatchRenderedOutput('A(Loading B...)');
+
+    await act(async () => {
+      resolveTextRequests('B');
+    });
+    expect(Scheduler).toHaveYielded(['B', '(Loading C...)']);
+    expect(root).toMatchRenderedOutput('AB(Loading C...)');
+
+    await act(async () => {
+      resolveTextRequests('C');
+    });
+    expect(Scheduler).toHaveYielded(['C']);
+    expect(root).toMatchRenderedOutput('ABC');
+  });
+
+  // @gate enableUseHook
+  test('load multiple nested Suspense boundaries (uncached requests)', async () => {
+    // This the same as the previous test, except the requests are not cached.
+    // The tree should still eventually resolve, despite the
+    // duplicate requests.
+    function AsyncText({text}) {
+      // This initiates a new request on each render.
+      return <Text text={use(getAsyncText(text))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="(Loading A...)" />}>
+          <AsyncText text="A" />
+          <Suspense fallback={<Text text="(Loading B...)" />}>
+            <AsyncText text="B" />
+            <Suspense fallback={<Text text="(Loading C...)" />}>
+              <AsyncText text="C" />
+            </Suspense>
+          </Suspense>
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [A]',
+      'Async text requested [B]',
+      'Async text requested [C]',
+      '(Loading C...)',
+      '(Loading B...)',
+      '(Loading A...)',
+    ]);
+    expect(root).toMatchRenderedOutput('(Loading A...)');
+
+    await act(async () => {
+      resolveTextRequests('A');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [A]']);
+    expect(root).toMatchRenderedOutput('(Loading A...)');
+
+    await act(async () => {
+      resolveTextRequests('A');
+    });
+    expect(Scheduler).toHaveYielded([
+      // React suspends until A finishes loading.
+      'Async text requested [A]',
+      'A',
+
+      // Now React can continue rendering the rest of the tree.
+
+      // React does not suspend on the inner requests, because that would
+      // block A from appearing. Instead it shows a fallback.
+      'Async text requested [B]',
+      'Async text requested [C]',
+      '(Loading C...)',
+      '(Loading B...)',
+    ]);
+    expect(root).toMatchRenderedOutput('A(Loading B...)');
+
+    await act(async () => {
+      resolveTextRequests('B');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [B]']);
+    expect(root).toMatchRenderedOutput('A(Loading B...)');
+
+    await act(async () => {
+      resolveTextRequests('B');
+    });
+    expect(Scheduler).toHaveYielded([
+      // React suspends until B finishes loading.
+      'Async text requested [B]',
+      'B',
+
+      // React does not suspend on C, because that would block B from appearing.
+      'Async text requested [C]',
+      '(Loading C...)',
+    ]);
+    expect(root).toMatchRenderedOutput('AB(Loading C...)');
+
+    await act(async () => {
+      resolveTextRequests('C');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [C]']);
+    expect(root).toMatchRenderedOutput('AB(Loading C...)');
+
+    await act(async () => {
+      resolveTextRequests('C');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [C]', 'C']);
+    expect(root).toMatchRenderedOutput('ABC');
+  });
 });

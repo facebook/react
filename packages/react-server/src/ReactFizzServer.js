@@ -295,11 +295,11 @@ export function createRequest(
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    clientRenderedBoundaries: [],
-    completedBoundaries: [],
-    partialBoundaries: [],
-    preamble: [],
-    postamble: [],
+    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
+    completedBoundaries: ([]: Array<SuspenseBoundary>),
+    partialBoundaries: ([]: Array<SuspenseBoundary>),
+    preamble: ([]: Array<Chunk | PrecomputedChunk>),
+    postamble: ([]: Array<Chunk | PrecomputedChunk>),
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -719,7 +719,7 @@ function renderHostElement(
   popComponentStackInDEV(task);
 }
 
-function shouldConstruct(Component) {
+function shouldConstruct(Component: any) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
@@ -795,12 +795,12 @@ function renderClassComponent(
   popComponentStackInDEV(task);
 }
 
-const didWarnAboutBadClass = {};
-const didWarnAboutModulePatternComponent = {};
-const didWarnAboutContextTypeOnFunctionComponent = {};
-const didWarnAboutGetDerivedStateOnFunctionComponent = {};
+const didWarnAboutBadClass: {[string]: boolean} = {};
+const didWarnAboutModulePatternComponent: {[string]: boolean} = {};
+const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
+const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
-const didWarnAboutDefaultPropsOnFunctionComponent = {};
+const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 let hasWarnedAboutUsingContextAsConsumer = false;
@@ -1012,7 +1012,7 @@ function resolveDefaultProps(Component: any, baseProps: Object): Object {
 function renderForwardRef(
   request: Request,
   task: Task,
-  prevThenableState,
+  prevThenableState: null | ThenableState,
   type: any,
   props: Object,
   ref: any,
@@ -1301,6 +1301,7 @@ function renderElement(
   );
 }
 
+// $FlowFixMe[missing-local-annot]
 function validateIterable(iterable, iteratorFn: Function): void {
   if (__DEV__) {
     // We don't support rendering Generators because it's a mutation.
@@ -1505,7 +1506,11 @@ function renderNodeDestructiveImpl(
   }
 }
 
-function renderChildrenArray(request, task, children) {
+function renderChildrenArray(
+  request: Request,
+  task: Task,
+  children: Array<any>,
+) {
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
     const prevTreeContext = task.treeContext;
@@ -1668,7 +1673,7 @@ function erroredTask(
   }
 }
 
-function abortTaskSoft(task: Task): void {
+function abortTaskSoft(this: Request, task: Task): void {
   // This aborts task without aborting the parent boundary that it blocks.
   // It's used for when we didn't need this task to complete the tree.
   // If task was needed, then it should use abortTask instead.
@@ -2027,7 +2032,7 @@ function flushSubtree(
 
 function flushSegment(
   request: Request,
-  destination,
+  destination: Destination,
   segment: Segment,
 ): boolean {
   const boundary = segment.boundary;

@@ -122,6 +122,7 @@ export function processBinaryChunk(
 }
 
 function createFromJSONCallback(response: Response) {
+  // $FlowFixMe[missing-this-annot]
   return function(key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.

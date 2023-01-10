@@ -21,7 +21,7 @@ import {createCursor, push, pop} from './ReactFiberStack';
 let warnedAboutMissingGetChildContext;
 
 if (__DEV__) {
-  warnedAboutMissingGetChildContext = {};
+  warnedAboutMissingGetChildContext = ({}: {[string]: boolean});
 }
 
 // $FlowFixMe[incompatible-exact]
@@ -98,7 +98,7 @@ function getMaskedContext(
       return instance.__reactInternalMemoizedMaskedChildContext;
     }
 
-    const context = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }

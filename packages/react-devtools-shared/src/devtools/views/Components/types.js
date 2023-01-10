@@ -125,14 +125,16 @@ export type InspectedElement = {
 
 // TODO: Add profiling type
 
+type Data =
+  | string
+  | Dehydrated
+  | Unserializable
+  | Array<Dehydrated>
+  | Array<Unserializable>
+  | {[string]: Data};
+
 export type DehydratedData = {
   cleaned: Array<Array<string | number>>,
-  data:
-    | string
-    | Dehydrated
-    | Unserializable
-    | Array<Dehydrated>
-    | Array<Unserializable>
-    | {[key: string]: string | Dehydrated | Unserializable, ...},
+  data: Data,
   unserializable: Array<Array<string | number>>,
 };

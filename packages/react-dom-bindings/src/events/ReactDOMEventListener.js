@@ -112,10 +112,10 @@ export function createEventListenerWrapperWithPriority(
 }
 
 function dispatchDiscreteEvent(
-  domEventName,
-  eventSystemFlags,
-  container,
-  nativeEvent,
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  container: EventTarget,
+  nativeEvent: AnyNativeEvent,
 ) {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -130,10 +130,10 @@ function dispatchDiscreteEvent(
 }
 
 function dispatchContinuousEvent(
-  domEventName,
-  eventSystemFlags,
-  container,
-  nativeEvent,
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  container: EventTarget,
+  nativeEvent: AnyNativeEvent,
 ) {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
