@@ -11,9 +11,7 @@ const ReactDebugCurrentFrame: {
   setExtraStackFrame?: (stack: null | string) => void,
   getCurrentStack?: null | (() => string),
   getStackAddendum?: () => string,
-} =
-  // $FlowFixMe[incompatible-exact]
-  {};
+} = {};
 
 let currentExtraStackFrame = (null: null | string);
 

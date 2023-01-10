@@ -599,7 +599,6 @@ function updateSimpleMemoComponent(
         try {
           outerMemoType = init(payload);
         } catch (x) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           outerMemoType = null;
         }
         // Inner propTypes will be validated in the function component path.

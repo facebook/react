@@ -2806,7 +2806,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useId: mountId,
 };
 if (enableCache) {
-  // $FlowFixMe[escaped-generic] discovered when updating Flow
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
 if (enableUseHook) {

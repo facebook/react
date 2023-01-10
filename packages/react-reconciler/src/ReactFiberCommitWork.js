@@ -2391,12 +2391,9 @@ function getRetryCache(finishedWork: Fiber) {
     }
     case OffscreenComponent: {
       const instance: OffscreenInstance = finishedWork.stateNode;
-      // $FlowFixMe[incompatible-type-arg] found when upgrading Flow
       let retryCache: null | Set<Wakeable> | WeakSet<Wakeable> =
-        // $FlowFixMe[incompatible-type] found when upgrading Flow
         instance._retryCache;
       if (retryCache === null) {
-        // $FlowFixMe[incompatible-type]
         retryCache = instance._retryCache = new PossiblyWeakSet();
       }
       return retryCache;

@@ -151,7 +151,6 @@ export function serializeToString(data: any): string {
       }
       cache.add(value);
     }
-    // $FlowFixMe
     if (typeof value === 'bigint') {
       return value.toString() + 'n';
     }

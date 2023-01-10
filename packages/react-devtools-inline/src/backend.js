@@ -81,7 +81,6 @@ export function activate(
     bridge,
   }: {
     bridge?: BackendBridge,
-    // $FlowFixMe[incompatible-exact]
   } = {},
 ): void {
   if (bridge == null) {

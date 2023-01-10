@@ -201,7 +201,6 @@ function getRootNode(container: Container): FloatRoot {
 
 function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
-  // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
   return currentContainer ? getRootNode(currentContainer) : null;
 }
 
