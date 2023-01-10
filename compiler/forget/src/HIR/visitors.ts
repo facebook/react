@@ -87,9 +87,12 @@ export function* eachInstructionValueOperand(
       yield* instrValue.elements;
       break;
     }
+    case "FunctionExpression": {
+      yield* instrValue.dependencies;
+      break;
+    }
     case "OtherStatement":
     case "Primitive":
-    case "FunctionExpression":
     case "JSXText": {
       break;
     }
@@ -174,9 +177,12 @@ export function mapInstructionOperands(
       instrValue.children = instrValue.children.map((e) => fn(e));
       break;
     }
+    case "FunctionExpression": {
+      instrValue.dependencies = instrValue.dependencies.map((d) => fn(d));
+      break;
+    }
     case "OtherStatement":
     case "Primitive":
-    case "FunctionExpression":
     case "JSXText": {
       break;
     }

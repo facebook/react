@@ -293,7 +293,9 @@ export function printInstructionValue(instrValue: InstructionValue): string {
     case "FunctionExpression": {
       const params = instrValue.params.join(",");
       const body = generate(instrValue.body).code;
-      const deps = [...instrValue.dependencies].map((i) => i.name).join(",");
+      const deps = instrValue.dependencies
+        .map((i) => printIdentifier(i.identifier))
+        .join(",");
       value = `Function ${instrValue.name ?? ""} @deps[${deps}] (${
         params ?? ""
       }){${body}}`;

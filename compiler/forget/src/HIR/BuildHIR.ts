@@ -1152,7 +1152,11 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.FunctionExpression>;
       const name: string | null = expr.get("id")?.node?.name ?? null;
       const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
-      const dependencies = gatherCapturedDeps(expr, componentScope);
+      const dependencies: Array<Place> = gatherCapturedDeps(
+        builder,
+        expr,
+        componentScope
+      );
       const body = expr.get("body").node;
       const params: Array<string> = expr.get("params").map((p) => {
         todoInvariant(p.isIdentifier(), "handle non identifier params");
@@ -1562,10 +1566,11 @@ function capturePureScopes(
 }
 
 function gatherCapturedDeps(
+  builder: HIRBuilder,
   fn: NodePath<t.FunctionExpression>,
   componentScope: Scope
-): Set<t.Identifier> {
-  const captured: Set<t.Identifier> = new Set();
+): Array<Place> {
+  const captured: Set<Place> = new Set();
 
   // Capture all the scopes from the parent of this function up to and including
   // the component scope.
@@ -1587,9 +1592,14 @@ function gatherCapturedDeps(
         return;
       }
 
-      captured.add(binding.identifier);
+      captured.add({
+        kind: "Identifier",
+        identifier: builder.resolveIdentifier(binding.identifier),
+        effect: Effect.Unknown,
+        loc: id.node.loc!,
+      });
     },
   });
 
-  return captured;
+  return [...captured];
 }
