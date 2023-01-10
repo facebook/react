@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-0f4a83596-20230110";
+var ReactVersion = "18.3.0-www-classic-a48e54f2b-20230110";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -11646,12 +11646,10 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
       );
     }
 
-    {
-      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance
-      );
-    }
+    ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+      workInProgress,
+      instance
+    );
   }
 
   instance.state = workInProgress.memoizedState;
@@ -25951,10 +25949,7 @@ function throwIfInfiniteUpdateLoopDetected() {
 function flushRenderPhaseStrictModeWarningsInDEV() {
   {
     ReactStrictModeWarnings.flushLegacyContextWarning();
-
-    {
-      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
-    }
+    ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
   }
 }
 

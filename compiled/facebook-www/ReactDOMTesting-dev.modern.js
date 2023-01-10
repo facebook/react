@@ -24131,12 +24131,10 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
       );
     }
 
-    {
-      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance
-      );
-    }
+    ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+      workInProgress,
+      instance
+    );
   }
 
   instance.state = workInProgress.memoizedState;
@@ -37088,10 +37086,7 @@ function throwIfInfiniteUpdateLoopDetected() {
 function flushRenderPhaseStrictModeWarningsInDEV() {
   {
     ReactStrictModeWarnings.flushLegacyContextWarning();
-
-    {
-      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
-    }
+    ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
   }
 }
 
@@ -38514,7 +38509,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0f4a83596-20230110";
+var ReactVersion = "18.3.0-www-modern-a48e54f2b-20230110";
 
 function createPortal(
   children,
