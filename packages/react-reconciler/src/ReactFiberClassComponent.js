@@ -23,7 +23,6 @@ import {
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
-  warnAboutDeprecatedLifecycles,
   enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -868,12 +867,10 @@ function mountClassInstance(
       );
     }
 
-    if (warnAboutDeprecatedLifecycles) {
-      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance,
-      );
-    }
+    ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+      workInProgress,
+      instance,
+    );
   }
 
   instance.state = workInProgress.memoizedState;
