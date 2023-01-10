@@ -3372,13 +3372,12 @@ function resourcesFromLink(props) {
         // client
         {
           validateLinkPropsForStyleResource(props);
-        } // $FlowFixMe[incompatible-use] found when upgrading Flow
+        }
 
         var preloadResource = resources.preloadsMap.get(href);
 
         if (!preloadResource) {
           preloadResource = createPreloadResource(
-            // $FlowFixMe[incompatible-call] found when upgrading Flow
             resources,
             href,
             "style",
@@ -3550,7 +3549,6 @@ function resourcesFromScript(props) {
 
       if (!preloadResource) {
         preloadResource = createPreloadResource(
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           resources,
           src,
           "script",

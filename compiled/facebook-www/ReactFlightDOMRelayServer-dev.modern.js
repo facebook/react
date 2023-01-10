@@ -1198,8 +1198,7 @@ var DefaultCacheDispatcher = {
     var entry = cache.get(createSignal);
 
     if (entry === undefined) {
-      entry = createSignal(); // $FlowFixMe[incompatible-use] found when upgrading Flow
-
+      entry = createSignal();
       cache.set(createSignal, entry);
     }
 
@@ -1211,7 +1210,6 @@ var DefaultCacheDispatcher = {
 
     if (entry === undefined) {
       entry = resourceType(); // TODO: Warn if undefined?
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
 
       cache.set(resourceType, entry);
     }
@@ -2171,7 +2169,7 @@ function resolveModelToJSON(request, parent, key, value) {
     emitSymbolChunk(request, symbolId, name);
     writtenSymbols.set(value, symbolId);
     return serializeByValueID(symbolId);
-  } // $FlowFixMe: bigint isn't added to Flow yet.
+  }
 
   if (typeof value === "bigint") {
     throw new Error(

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-afe6521e1-20230109";
+var ReactVersion = "18.3.0-www-modern-c49131669-20230110";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -12841,7 +12841,6 @@ function updateSimpleMemoComponent(
         try {
           outerMemoType = init(payload);
         } catch (x) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           outerMemoType = null;
         } // Inner propTypes will be validated in the function component path.
 
@@ -20552,12 +20551,10 @@ function getRetryCache(finishedWork) {
     }
 
     case OffscreenComponent: {
-      var instance = finishedWork.stateNode; // $FlowFixMe[incompatible-type-arg] found when upgrading Flow
-
-      var _retryCache = instance._retryCache; // $FlowFixMe[incompatible-type] found when upgrading Flow
+      var instance = finishedWork.stateNode;
+      var _retryCache = instance._retryCache;
 
       if (_retryCache === null) {
-        // $FlowFixMe[incompatible-type]
         _retryCache = instance._retryCache = new PossiblyWeakSet();
       }
 
@@ -23994,7 +23991,7 @@ function handleThrow(root, thrownValue) {
     // This is a regular error.
     var isWakeable =
       thrownValue !== null &&
-      typeof thrownValue === "object" && // $FlowFixMe[method-unbinding]
+      typeof thrownValue === "object" &&
       typeof thrownValue.then === "function";
     workInProgressSuspendedReason = isWakeable // A wakeable object was thrown by a legacy Suspense implementation.
       ? // This has slightly different behavior than suspending with `use`.
@@ -25566,8 +25563,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
       break;
 
     case OffscreenComponent: {
-      var instance = boundaryFiber.stateNode; // $FlowFixMe[incompatible-type] found when upgrading Flow
-
+      var instance = boundaryFiber.stateNode;
       retryCache = instance._retryCache;
       break;
     }

@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-afe6521e1-20230109";
+var ReactVersion = "18.3.0-www-modern-c49131669-20230110";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2179,9 +2179,7 @@ var ReactCurrentActQueue = {
   didUsePromise: false
 };
 
-var ReactDebugCurrentFrame =
-  // $FlowFixMe[incompatible-exact]
-  {};
+var ReactDebugCurrentFrame = {};
 var currentExtraStackFrame = null;
 function setExtraStackFrame(stack) {
   {
