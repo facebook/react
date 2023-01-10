@@ -10,8 +10,7 @@
 import type * as BabelCore from "@babel/core";
 import type { PluginObj } from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
-import Pipeline from "../CompilerPipeline";
-import { invariant } from "../Utils/CompilerError";
+import { compile } from "../CompilerPipeline";
 
 /**
  * The React Forget Babel Plugin
@@ -25,8 +24,7 @@ export default function (babel: typeof BabelCore): PluginObj {
     visitor: {
       FunctionDeclaration: {
         enter(fn, pass) {
-          const { ast } = Pipeline(fn);
-          invariant(ast !== null, "Expected ast to be present");
+          const ast = compile(fn);
           fn.replaceWith(ast);
         },
       },

@@ -30,77 +30,132 @@ import {
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { inferTypes } from "./TypeInference";
 import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
+import { assertExhaustive } from "./Utils/utils";
 
-export type CompilerResult = {
-  ast: t.Function;
-  ir: HIRFunction;
-  reactiveFunction: ReactiveFunction;
-};
+export type CompilerPipelineValue =
+  | { kind: "ast"; name: string; value: t.Function }
+  | { kind: "hir"; name: string; value: HIRFunction }
+  | { kind: "reactive"; name: string; value: ReactiveFunction };
 
-export default function (
+export function* run(
   func: NodePath<t.FunctionDeclaration>
-): CompilerResult {
+): Iterator<CompilerPipelineValue, t.Function> {
   const env = new Environment();
 
-  const ir = lower(func, env);
-  logHIRFunction("HIR", ir);
+  const hir = lower(func, env);
+  yield log({ kind: "hir", name: "HIR", value: hir });
 
-  mergeConsecutiveBlocks(ir);
-  logHIRFunction("mergeConsecutiveBlocks", ir);
+  mergeConsecutiveBlocks(hir);
+  yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
-  enterSSA(ir, env);
-  logHIRFunction("SSA", ir);
+  enterSSA(hir, env);
+  yield log({ kind: "hir", name: "SSA", value: hir });
 
-  eliminateRedundantPhi(ir);
-  logHIRFunction("eliminateRedundantPhi", ir);
+  eliminateRedundantPhi(hir);
+  yield log({ kind: "hir", name: "EliminateRedundantPhi", value: hir });
 
-  constantPropagation(ir);
-  logHIRFunction("constantPropagation", ir);
+  constantPropagation(hir);
+  yield log({ kind: "hir", name: "ConstantPropagation", value: hir });
 
-  inferTypes(ir);
-  logHIRFunction("inferTypes", ir);
+  inferTypes(hir);
+  yield log({ kind: "hir", name: "InferTypes", value: hir });
 
-  inferReferenceEffects(ir);
-  logHIRFunction("inferReferenceEffects", ir);
+  inferReferenceEffects(hir);
+  yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
 
-  inferMutableRanges(ir);
-  logHIRFunction("inferMutableRanges", ir);
+  inferMutableRanges(hir);
+  yield log({ kind: "hir", name: "InferMutableRanges", value: hir });
 
-  leaveSSA(ir);
-  logHIRFunction("leaveSSA", ir);
+  leaveSSA(hir);
+  yield log({ kind: "hir", name: "LeaveSSA", value: hir });
 
-  inferReactiveScopeVariables(ir);
-  logHIRFunction("inferReactiveScopeVariables", ir);
+  inferReactiveScopeVariables(hir);
+  yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
 
-  inferReactiveScopes(ir);
-  logHIRFunction("inferReactiveScopes", ir);
+  inferReactiveScopes(hir);
+  yield log({ kind: "hir", name: "InferReactiveScopes", value: hir });
 
-  const reactiveFunction = buildReactiveFunction(ir);
-  logReactiveFunction("buildReactiveFunction", reactiveFunction);
+  const reactiveFunction = buildReactiveFunction(hir);
+  yield log({
+    kind: "reactive",
+    name: "BuildReactiveFunction",
+    value: reactiveFunction,
+  });
 
   pruneUnusedLabels(reactiveFunction);
-  logReactiveFunction("pruneUnusedLabels", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneUnusedLabels",
+    value: reactiveFunction,
+  });
 
   flattenReactiveLoops(reactiveFunction);
-  logReactiveFunction("flattenReactiveLoops", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "FlattenReactiveLoops",
+    value: reactiveFunction,
+  });
 
   propagateScopeDependencies(reactiveFunction);
-  logReactiveFunction("propagateScopeDependencies", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PropagateScopeDependencies",
+    value: reactiveFunction,
+  });
 
   pruneUnusedScopes(reactiveFunction);
-  logReactiveFunction("pruneUnusedScopes", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneUnusedScopes",
+    value: reactiveFunction,
+  });
 
   pruneUnusedLValues(reactiveFunction);
-  logReactiveFunction("pruneUnusedLValues", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneUnusedLValues",
+    value: reactiveFunction,
+  });
 
   renameVariables(reactiveFunction);
-  logReactiveFunction("renameVariables", reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "RenameVariables",
+    value: reactiveFunction,
+  });
 
   const ast = codegenReactiveFunction(reactiveFunction);
+  yield log({ kind: "ast", name: "Codegen", value: ast });
 
-  return {
-    ast,
-    ir,
-    reactiveFunction,
-  };
+  return ast;
+}
+
+export function compile(func: NodePath<t.FunctionDeclaration>): t.Function {
+  let generator = run(func);
+  while (true) {
+    const next = generator.next();
+    if (next.done) {
+      return next.value;
+    }
+  }
+}
+
+function log(value: CompilerPipelineValue): CompilerPipelineValue {
+  switch (value.kind) {
+    case "ast": {
+      break;
+    }
+    case "hir": {
+      logHIRFunction(value.name, value.value);
+      break;
+    }
+    case "reactive": {
+      logReactiveFunction(value.name, value.value);
+      break;
+    }
+    default: {
+      assertExhaustive(value, "Unexpected compilation kind");
+    }
+  }
+  return value;
 }

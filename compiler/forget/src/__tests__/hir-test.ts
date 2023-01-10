@@ -13,7 +13,7 @@ import traverse from "@babel/traverse";
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import prettier from "prettier";
-import run from "../CompilerPipeline";
+import { compile } from "../CompilerPipeline";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -121,7 +121,7 @@ function transform(text: string, file: string): Array<TestOutput> {
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
-        const { ast } = run(nodePath);
+        const ast = compile(nodePath);
 
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
           semi: true,

@@ -14,12 +14,12 @@ declare global {
 import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import { compile, run } from "./CompilerPipeline";
 import { lower } from "./HIR/BuildHIR";
 import codegen from "./HIR/Codegen";
 import { Environment } from "./HIR/HIRBuilder";
-import { inferMutableRanges, inferReferenceEffects } from "./Inference";
-import { inferTypes } from "./TypeInference";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
+import { inferMutableRanges, inferReferenceEffects } from "./Inference";
 import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunction";
 import { codegenReactiveFunction } from "./ReactiveScopes/CodegenReactiveFunction";
 import { flattenReactiveLoops } from "./ReactiveScopes/FlattenReactiveLoops";
@@ -32,6 +32,7 @@ import { pruneUnusedScopes } from "./ReactiveScopes/PruneUnusedScopes";
 import { eliminateRedundantPhi } from "./SSA/EliminateRedundantPhi";
 import enterSSA from "./SSA/EnterSSA";
 import { leaveSSA } from "./SSA/LeaveSSA";
+import { inferTypes } from "./TypeInference";
 
 function parseFunctions(
   source: string
@@ -55,27 +56,29 @@ function parseFunctions(
 }
 
 export const HIR = {
-  codegenReactiveFunction,
-  flattenReactiveLoops,
-  propagateScopeDependencies,
   buildReactiveFunction,
   codegen,
+  codegenReactiveFunction,
+  compile,
   eliminateRedundantPhi,
   enterSSA,
   Environment,
-  inferTypes,
+  flattenReactiveLoops,
   inferMutableRanges,
   inferReactiveScopes,
   inferReactiveScopeVariables,
   inferReferenceEffects,
+  inferTypes,
   leaveSSA,
   lower,
   parseFunctions,
   printFunction,
   printHIR,
   printReactiveFunction,
+  propagateScopeDependencies,
   pruneUnusedLabels,
   pruneUnusedScopes,
+  run,
 };
 
 export default BabelPlugin;
