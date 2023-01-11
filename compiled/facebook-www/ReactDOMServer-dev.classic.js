@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-fb324faf8-20230110";
+var ReactVersion = "18.3.0-www-classic-7002a6743-20230110";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -231,8 +231,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault =
-    dynamicFeatureFlags.createRootStrictEffectsByDefault,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
@@ -244,8 +242,6 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, false is used for a new modern build.
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;

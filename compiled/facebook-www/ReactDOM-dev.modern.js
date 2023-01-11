@@ -155,8 +155,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault =
-    dynamicFeatureFlags.createRootStrictEffectsByDefault,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
@@ -168,14 +166,14 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
+var createRootStrictEffectsByDefault = false;
+var enableClientRenderFallbackOnTextMismatch = false; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var warnAboutStringRefs = true;
@@ -42421,7 +42419,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-fb324faf8-20230110";
+var ReactVersion = "18.3.0-www-modern-7002a6743-20230110";
 
 function createPortal(
   children,

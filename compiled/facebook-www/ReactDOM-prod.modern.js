@@ -49,8 +49,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault =
-    dynamicFeatureFlags.createRootStrictEffectsByDefault,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
@@ -62,8 +60,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   allNativeEvents = new Set();
 allNativeEvents.add("beforeblur");
@@ -3912,15 +3908,6 @@ function normalizeMarkupForTextOrAttribute(markup) {
     .replace(NORMALIZE_NEWLINES_REGEX, "\n")
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
 }
-function checkForUnmatchedText(serverText, clientText, isConcurrentMode) {
-  clientText = normalizeMarkupForTextOrAttribute(clientText);
-  if (
-    normalizeMarkupForTextOrAttribute(serverText) !== clientText &&
-    isConcurrentMode &&
-    enableClientRenderFallbackOnTextMismatch
-  )
-    throw Error(formatProdErrorMessage(425));
-}
 function noop() {}
 function createElement(type, props, rootContainerElement, parentNamespace) {
   rootContainerElement =
@@ -5399,7 +5386,6 @@ function prepareToHydrateHostInstance(fiber) {
     props = fiber.memoizedProps;
   instance[internalInstanceKey] = fiber;
   instance[internalPropsKey] = props;
-  var isConcurrentMode = 0 !== (fiber.mode & 1);
   switch (type) {
     case "dialog":
       listenToNonDelegatedEvent("cancel", instance);
@@ -5440,34 +5426,30 @@ function prepareToHydrateHostInstance(fiber) {
         listenToNonDelegatedEvent("invalid", instance);
   }
   assertValidProps(type, props);
-  i = null;
-  for (var propKey in props)
-    if (props.hasOwnProperty(propKey)) {
-      var nextProp = props[propKey];
+  var updatePayload = null,
+    propKey;
+  for (propKey in props)
+    props.hasOwnProperty(propKey) &&
+      ((i = props[propKey]),
       "children" === propKey
-        ? "string" === typeof nextProp
-          ? instance.textContent !== nextProp &&
+        ? "string" === typeof i
+          ? instance.textContent !== i &&
             (!0 !== props.suppressHydrationWarning &&
-              checkForUnmatchedText(
-                instance.textContent,
-                nextProp,
-                isConcurrentMode
-              ),
-            (i = ["children", nextProp]))
-          : "number" === typeof nextProp &&
-            instance.textContent !== "" + nextProp &&
+              ((updatePayload = instance.textContent),
+              normalizeMarkupForTextOrAttribute(i),
+              normalizeMarkupForTextOrAttribute(updatePayload)),
+            (updatePayload = ["children", i]))
+          : "number" === typeof i &&
+            instance.textContent !== "" + i &&
             (!0 !== props.suppressHydrationWarning &&
-              checkForUnmatchedText(
-                instance.textContent,
-                nextProp,
-                isConcurrentMode
-              ),
-            (i = ["children", "" + nextProp]))
+              ((updatePayload = instance.textContent),
+              normalizeMarkupForTextOrAttribute(i),
+              normalizeMarkupForTextOrAttribute(updatePayload)),
+            (updatePayload = ["children", "" + i]))
         : registrationNameDependencies.hasOwnProperty(propKey) &&
-          null != nextProp &&
+          null != i &&
           "onScroll" === propKey &&
-          listenToNonDelegatedEvent("scroll", instance);
-    }
+          listenToNonDelegatedEvent("scroll", instance));
   switch (type) {
     case "input":
       track(instance);
@@ -5483,7 +5465,7 @@ function prepareToHydrateHostInstance(fiber) {
     default:
       "function" === typeof props.onClick && (instance.onclick = noop);
   }
-  instance = i;
+  instance = updatePayload;
   fiber.updateQueue = instance;
   return null !== instance ? !0 : !1;
 }
@@ -10088,29 +10070,25 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          current = workInProgress.stateNode;
-          renderLanes = workInProgress.memoizedProps;
-          current[internalInstanceKey] = workInProgress;
-          if ((newProps = current.nodeValue !== renderLanes))
+          newProps = workInProgress.stateNode;
+          current = workInProgress.memoizedProps;
+          newProps[internalInstanceKey] = workInProgress;
+          if ((renderLanes = newProps.nodeValue !== current))
             if (((type = hydrationParentFiber), null !== type))
               switch (type.tag) {
                 case 3:
-                  checkForUnmatchedText(
-                    current.nodeValue,
-                    renderLanes,
-                    0 !== (type.mode & 1)
-                  );
+                  newProps = newProps.nodeValue;
+                  normalizeMarkupForTextOrAttribute(current);
+                  normalizeMarkupForTextOrAttribute(newProps);
                   break;
                 case 27:
                 case 5:
                   !0 !== type.memoizedProps.suppressHydrationWarning &&
-                    checkForUnmatchedText(
-                      current.nodeValue,
-                      renderLanes,
-                      0 !== (type.mode & 1)
-                    );
+                    ((newProps = newProps.nodeValue),
+                    normalizeMarkupForTextOrAttribute(current),
+                    normalizeMarkupForTextOrAttribute(newProps));
               }
-          newProps && markUpdate(workInProgress);
+          renderLanes && markUpdate(workInProgress);
         } else
           (current = (9 === current.nodeType
             ? current
@@ -14875,9 +14853,11 @@ function createFiberRoot(
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
   if (1 === tag) {
-    tag = 1;
-    if (!0 === isStrictMode || createRootStrictEffectsByDefault) tag |= 24;
-    if (!enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
+    if (
+      ((tag = 1),
+      !0 === isStrictMode && (tag |= 24),
+      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
+    )
       tag |= 32;
   } else tag = 0;
   isStrictMode = createFiber(3, null, null, tag);
@@ -15115,7 +15095,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1718 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-fb324faf8-20230110",
+  version: "18.3.0-www-modern-7002a6743-20230110",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2109 = {
@@ -15146,7 +15126,7 @@ var internals$jscomp$inline_2109 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-fb324faf8-20230110"
+  reconcilerVersion: "18.3.0-next-7002a6743-20230110"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15334,4 +15314,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-fb324faf8-20230110";
+exports.version = "18.3.0-next-7002a6743-20230110";

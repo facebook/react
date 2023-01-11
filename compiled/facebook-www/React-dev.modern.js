@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-fb324faf8-20230110";
+var ReactVersion = "18.3.0-www-modern-7002a6743-20230110";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -492,8 +492,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault =
-    dynamicFeatureFlags.createRootStrictEffectsByDefault,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
@@ -505,8 +503,6 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, true is used for a new modern build.
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
