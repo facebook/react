@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
@@ -20,7 +19,6 @@ describe('ReactIncrementalSideEffects', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });

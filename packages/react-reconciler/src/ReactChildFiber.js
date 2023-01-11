@@ -39,7 +39,6 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
-import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 

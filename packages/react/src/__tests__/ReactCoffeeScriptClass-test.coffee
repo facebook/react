@@ -9,7 +9,6 @@ PropTypes = null
 React = null
 ReactDOM = null
 ReactDOMClient = null
-ReactFeatureFlags = null
 act = null
 
 describe 'ReactCoffeeScriptClass', ->
@@ -23,7 +22,6 @@ describe 'ReactCoffeeScriptClass', ->
     React = require 'react'
     ReactDOM = require 'react-dom'
     ReactDOMClient = require 'react-dom/client'
-    ReactFeatureFlags = require 'shared/ReactFeatureFlags'
     act = require('jest-react').act
     PropTypes = require 'prop-types'
     container = document.createElement 'div'

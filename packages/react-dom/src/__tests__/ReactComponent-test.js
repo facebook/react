@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 describe('ReactComponent', () => {
@@ -22,7 +21,6 @@ describe('ReactComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 

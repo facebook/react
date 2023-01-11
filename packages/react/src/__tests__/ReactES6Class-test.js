@@ -13,7 +13,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let act;
 
 describe('ReactES6Class', () => {
@@ -32,7 +31,6 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('jest-react').act;
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
