@@ -120,6 +120,7 @@ class Driver<
             kind: "return",
             loc: terminal.loc,
             value,
+            id: terminal.id,
           })
         );
         break;
@@ -132,6 +133,7 @@ class Driver<
           this.visitor.visitTerminal({
             kind: "throw",
             value,
+            id: terminal.id,
           })
         );
         break;
@@ -156,7 +158,7 @@ class Driver<
         this.visitor.visitTerminalId(terminal.id);
         let consequent: TBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
-          const break_ = this.visitBreak(terminal.consequent);
+          const break_ = this.visitBreak(terminal.consequent, null);
           if (break_ !== null) {
             const builder = this.visitor.enterBlock();
             this.visitor.appendBlock(builder, break_);
@@ -171,7 +173,7 @@ class Driver<
         let alternate: TBlock | null = null;
         if (alternateId !== null) {
           if (this.cx.isScheduled(alternateId)) {
-            const break_ = this.visitBreak(alternateId);
+            const break_ = this.visitBreak(alternateId, null);
             if (break_ !== null) {
               const builder = this.visitor.enterBlock();
               this.visitor.appendBlock(builder, break_);
@@ -191,6 +193,7 @@ class Driver<
               test,
               consequent: consequent ?? this.emptyBlock(),
               alternate: alternate,
+              id: terminal.id,
             }),
             fallthroughId
           );
@@ -203,6 +206,7 @@ class Driver<
               test,
               consequent: consequent ?? this.emptyBlock(),
               alternate: alternate,
+              id: terminal.id,
             })
           );
         }
@@ -234,7 +238,7 @@ class Driver<
             // that are already scheduled. emit as follows:
             // - if the block is for another case branch, don't emit a break and fall-through
             // - else, emit an explicit break.
-            const break_ = this.visitBreak(case_.block);
+            const break_ = this.visitBreak(case_.block, null);
             if (
               index === 0 &&
               break_ === null &&
@@ -270,6 +274,7 @@ class Driver<
               kind: "switch",
               test,
               cases,
+              id: terminal.id,
             }),
             fallthroughId
           );
@@ -281,6 +286,7 @@ class Driver<
               kind: "switch",
               test,
               cases,
+              id: terminal.id,
             })
           );
         }
@@ -319,7 +325,7 @@ class Driver<
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop);
+          const break_ = this.visitBreak(terminal.loop, null);
           invariant(
             break_ !== null,
             "If loop body is already scheduled it must be a break"
@@ -338,6 +344,7 @@ class Driver<
               loc: terminal.loc,
               test: testValue,
               loop: loopBody,
+              id: terminal.id,
             }),
             fallthroughId
           );
@@ -350,6 +357,7 @@ class Driver<
               loc: terminal.loc,
               test: testValue,
               loop: loopBody,
+              id: terminal.id,
             })
           );
         }
@@ -408,7 +416,7 @@ class Driver<
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop);
+          const break_ = this.visitBreak(terminal.loop, null);
           invariant(
             break_ !== null,
             "If loop body is already scheduled it must be a break"
@@ -428,6 +436,7 @@ class Driver<
               test: testValue,
               update: updateValue,
               loop: loopBody,
+              id: terminal.id,
             }),
             fallthroughId
           );
@@ -441,6 +450,7 @@ class Driver<
               test: testValue,
               update: updateValue,
               loop: loopBody,
+              id: terminal.id,
             })
           );
         }
@@ -453,14 +463,14 @@ class Driver<
         this.visitor.visitTerminalId(terminal.id);
         switch (terminal.variant) {
           case GotoVariant.Break: {
-            const break_ = this.visitBreak(terminal.block);
+            const break_ = this.visitBreak(terminal.block, terminal.id);
             if (break_ !== null) {
               this.visitor.appendBlock(blockValue, break_);
             }
             break;
           }
           case GotoVariant.Continue: {
-            const continue_ = this.visitContinue(terminal.block);
+            const continue_ = this.visitContinue(terminal.block, terminal.id);
             if (continue_ !== null) {
               this.visitor.appendBlock(blockValue, continue_);
             }
@@ -519,7 +529,7 @@ class Driver<
     return this.visitor.leaveBlock(block);
   }
 
-  visitBreak(block: BlockId): TStatement | null {
+  visitBreak(block: BlockId, id: InstructionId | null): TStatement | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
       // TODO: we should always have a target
@@ -530,18 +540,19 @@ class Driver<
         return this.visitor.visitImplicitTerminal();
       }
       case "unlabeled": {
-        return this.visitor.visitTerminal({ kind: "break", label: null });
+        return this.visitor.visitTerminal({ kind: "break", label: null, id });
       }
       case "labeled": {
         return this.visitor.visitTerminal({
           kind: "break",
           label: target.block,
+          id,
         });
       }
     }
   }
 
-  visitContinue(block: BlockId): TStatement | null {
+  visitContinue(block: BlockId, id: InstructionId): TStatement | null {
     const target = this.cx.getContinueTarget(block);
     invariant(
       target !== null,
@@ -552,12 +563,14 @@ class Driver<
         return this.visitor.visitTerminal({
           kind: "continue",
           label: target.block,
+          id,
         });
       }
       case "unlabeled": {
         return this.visitor.visitTerminal({
           kind: "continue",
           label: null,
+          id,
         });
       }
       case "implicit": {
@@ -911,20 +924,27 @@ export interface Visitor<
 }
 
 export type BlockTerminal<TInit, TValue, TBlock, TCase> =
-  | { kind: "return"; loc: SourceLocation; value: TValue | null }
-  | { kind: "throw"; value: TValue }
+  | {
+      kind: "return";
+      loc: SourceLocation;
+      value: TValue | null;
+      id: InstructionId;
+    }
+  | { kind: "throw"; value: TValue; id: InstructionId }
   | {
       kind: "if";
       test: TValue;
       consequent: TBlock;
       alternate: TBlock | null;
+      id: InstructionId;
     }
-  | { kind: "switch"; test: TValue; cases: Array<TCase> }
+  | { kind: "switch"; test: TValue; cases: Array<TCase>; id: InstructionId }
   | {
       kind: "while";
       loc: SourceLocation;
       test: TValue;
       loop: TBlock;
+      id: InstructionId;
     }
   | {
       kind: "for";
@@ -932,6 +952,7 @@ export type BlockTerminal<TInit, TValue, TBlock, TCase> =
       test: TValue;
       update: TValue;
       loop: TBlock;
+      id: InstructionId;
     }
-  | { kind: "break"; label: BlockId | null }
-  | { kind: "continue"; label: BlockId | null };
+  | { kind: "break"; label: BlockId | null; id: InstructionId | null }
+  | { kind: "continue"; label: BlockId | null; id: InstructionId };

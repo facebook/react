@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
+export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
+export { buildReactiveFunction as buildReactiveFunctionWithoutScopes } from "./BuildReactiveFunctionWithoutScopes";
 export { codegenReactiveFunction } from "./CodegenReactiveFunction";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { inferReactiveScopes } from "./InferReactiveScopes";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
+export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";
 export { printReactiveFunction } from "./PrintReactiveFunction";
 export { propagateScopeDependencies } from "./PropagateScopeDependencies";
 export { pruneTemporaryLValues as pruneUnusedLValues } from "./PruneTemporaryLValues";

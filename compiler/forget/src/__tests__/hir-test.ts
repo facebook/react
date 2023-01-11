@@ -13,6 +13,7 @@ import traverse from "@babel/traverse";
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import prettier from "prettier";
+import { flags } from "../CompilerFlags";
 import { compile } from "../CompilerPipeline";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
@@ -30,6 +31,9 @@ wasmFolder(
 const Pragma_RE = /\/\/\s*@enable\((\w+)\)$/gm;
 
 describe("React Forget (HIR version)", () => {
+  flags.enableNewReactiveFunctionBuilder =
+    String(process.env["ENABLE_NEW_BUILDER"]) === "1";
+
   generateTestsFromFixtures(
     path.join(__dirname, "fixtures", "hir"),
     (input, file, options) => {

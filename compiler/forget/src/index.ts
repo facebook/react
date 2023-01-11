@@ -20,7 +20,7 @@ import codegen from "./HIR/Codegen";
 import { Environment } from "./HIR/HIRBuilder";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
-import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunction";
+import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunctionWithoutScopes";
 import { codegenReactiveFunction } from "./ReactiveScopes/CodegenReactiveFunction";
 import { flattenReactiveLoops } from "./ReactiveScopes/FlattenReactiveLoops";
 import { inferReactiveScopes } from "./ReactiveScopes/InferReactiveScopes";

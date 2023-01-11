@@ -6,6 +6,7 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import { flags } from "./CompilerFlags";
 import {
   Environment,
   HIRFunction,
@@ -16,11 +17,15 @@ import {
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
 import { constantPropagation } from "./Optimization";
 import {
+  alignReactiveScopesToBlockScopes,
+  buildReactiveBlocks,
   buildReactiveFunction,
+  buildReactiveFunctionWithoutScopes,
   codegenReactiveFunction,
   flattenReactiveLoops,
   inferReactiveScopes,
   inferReactiveScopeVariables,
+  mergeOverlappingReactiveScopes,
   propagateScopeDependencies,
   pruneUnusedLabels,
   pruneUnusedLValues,
@@ -72,15 +77,46 @@ export function* run(
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
 
-  inferReactiveScopes(hir);
-  yield log({ kind: "hir", name: "InferReactiveScopes", value: hir });
+  let reactiveFunction: ReactiveFunction;
+  if (!flags.enableNewReactiveFunctionBuilder) {
+    inferReactiveScopes(hir);
+    yield log({ kind: "hir", name: "InferReactiveScopes", value: hir });
 
-  const reactiveFunction = buildReactiveFunction(hir);
-  yield log({
-    kind: "reactive",
-    name: "BuildReactiveFunction",
-    value: reactiveFunction,
-  });
+    reactiveFunction = buildReactiveFunction(hir);
+    yield log({
+      kind: "reactive",
+      name: "BuildReactiveFunction",
+      value: reactiveFunction,
+    });
+  } else {
+    reactiveFunction = buildReactiveFunctionWithoutScopes(hir);
+    yield log({
+      kind: "reactive",
+      name: "BuildReactiveFunction",
+      value: reactiveFunction,
+    });
+
+    alignReactiveScopesToBlockScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "AlignReactiveScopesToBlockScopes",
+      value: reactiveFunction,
+    });
+
+    mergeOverlappingReactiveScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "MergeOverlappingReactiveScopes",
+      value: reactiveFunction,
+    });
+
+    buildReactiveBlocks(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "BuildReactiveBlocks",
+      value: reactiveFunction,
+    });
+  }
 
   pruneUnusedLabels(reactiveFunction);
   yield log({

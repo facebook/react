@@ -77,10 +77,10 @@ export type ReactiveInstruction = {
 };
 
 export type ReactiveTerminal =
-  | { kind: "break"; label: BlockId | null }
-  | { kind: "continue"; label: BlockId | null }
-  | { kind: "return"; value: Place | null }
-  | { kind: "throw"; value: Place }
+  | { kind: "break"; label: BlockId | null; id: InstructionId | null }
+  | { kind: "continue"; label: BlockId | null; id: InstructionId }
+  | { kind: "return"; value: Place | null; id: InstructionId }
+  | { kind: "throw"; value: Place; id: InstructionId }
   | {
       kind: "switch";
       test: Place;
@@ -88,20 +88,28 @@ export type ReactiveTerminal =
         test: Place | null;
         block: ReactiveBlock | void;
       }>;
+      id: InstructionId;
     }
-  | { kind: "while"; test: ReactiveValueBlock; loop: ReactiveBlock }
+  | {
+      kind: "while";
+      test: ReactiveValueBlock;
+      loop: ReactiveBlock;
+      id: InstructionId;
+    }
   | {
       kind: "for";
       init: ReactiveValueBlock;
       test: ReactiveValueBlock;
       update: ReactiveValueBlock;
       loop: ReactiveBlock;
+      id: InstructionId;
     }
   | {
       kind: "if";
       test: Place;
       consequent: ReactiveBlock;
       alternate: ReactiveBlock | null;
+      id: InstructionId;
     };
 
 /**
