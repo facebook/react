@@ -327,16 +327,19 @@ function printMutableRange(identifier: Identifier): string {
 }
 
 export function printLValue(lval: LValue): string {
-  let place = printPlace(lval.place);
+  let lvalue = `${printPlace(lval.place)}${printMutableRange(
+    lval.place.identifier
+  )}`;
+
   switch (lval.kind) {
     case InstructionKind.Let: {
-      return `Let ${place}`;
+      return `Let ${lvalue}`;
     }
     case InstructionKind.Const: {
-      return `Const ${place}`;
+      return `Const ${lvalue}$`;
     }
     case InstructionKind.Reassign: {
-      return `Reassign ${place}`;
+      return `Reassign ${lvalue}`;
     }
     default: {
       assertExhaustive(lval.kind, `Unexpected lvalue kind '${lval.kind}'`);
