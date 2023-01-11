@@ -1,0 +1,56 @@
+version: 2.1
+orbs:
+  react-native: circleci/react-native@2.0.0
+
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:14.5
+    steps:
+      - checkout
+      - run: yarn install
+      - run: yarn test
+      - run: npx jetify
+      - run: yarn android:build
+      - run: yarn ios:build
+    when:
+      event:
+        - push
+        - pull_request
+        
+  test-android:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:14.5
+    steps:
+      - checkout
+      - run: yarn install
+      - run: npx jetify
+      - run: yarn android:test
+    when:
+      event:
+        - push
+        - pull_request
+        
+  test-ios:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:14.5
+    steps:
+      - checkout
+      - run: yarn install
+      - run: npx jetify
+      - run: yarn ios:test
+    when:
+      event:
+        - push
+        - pull_request
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - build
+      - test-android
+      - test-ios
