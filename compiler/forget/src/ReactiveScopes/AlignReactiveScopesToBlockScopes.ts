@@ -81,6 +81,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         if (id !== null) {
           context.visitId(id);
         }
+        // TODO: visit terminal operands!
         eachTerminalBlock(
           stmt.terminal,
           (block) => {
@@ -120,6 +121,7 @@ function visitValueBlock(
       }
     }
   }
+  // TODO: visit the block value!!
 }
 
 type PendingReactiveScope = { active: boolean; scope: ReactiveScope };

@@ -5,7 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ReactiveFunction } from "../HIR";
+import {
+  InstructionId,
+  InstructionValue,
+  makeInstructionId,
+  ReactiveBlock,
+  ReactiveFunction,
+  ReactiveInstruction,
+  ReactiveScope,
+  ReactiveValueBlock,
+  ScopeId,
+} from "../HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
+import { invariant } from "../Utils/CompilerError";
+import DisjointSet from "../Utils/DisjointSet";
+import { retainWhere } from "../Utils/utils";
+import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 
 /**
  * Note: this is the 3rd of 3 passes that determine how to break a function into discrete
@@ -82,4 +97,196 @@ import { ReactiveFunction } from "../HIR";
  * Then we would see that 'x' is active, but that it is shadowed. The two scopes would have
  * to be merged.
  */
-export function mergeOverlappingReactiveScopes(fn: ReactiveFunction): void {}
+export function mergeOverlappingReactiveScopes(fn: ReactiveFunction): void {
+  const context = new Context();
+  context.enter(() => {
+    visitBlock(context, fn.body);
+  });
+}
+
+function visitBlock(context: Context, block: ReactiveBlock): void {
+  for (const stmt of block) {
+    switch (stmt.kind) {
+      case "instruction": {
+        visitValue(context, stmt.instruction.id, stmt.instruction.value);
+        visitInstruction(context, stmt.instruction);
+        break;
+      }
+      case "terminal": {
+        const id = stmt.terminal.id;
+        if (id !== null) {
+          context.visitId(id);
+          eachTerminalOperand(stmt.terminal, (operand) => {
+            visitValue(context, id, operand);
+          });
+        }
+        eachTerminalBlock(
+          stmt.terminal,
+          (block) => {
+            context.enter(() => {
+              visitBlock(context, block);
+            });
+          },
+          (valueBlock) => visitValueBlock(context, valueBlock)
+        );
+        break;
+      }
+      case "scope": {
+        invariant(false, "Expected scopes to be constructed later");
+      }
+    }
+  }
+}
+
+function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
+  visitBlock(context, block.instructions);
+  // TODO: visit the value block value!
+}
+
+function visitInstruction(
+  context: Context,
+  instruction: ReactiveInstruction
+): void {
+  context.visitId(instruction.id);
+  invariant(
+    instruction.lvalue !== null,
+    "Expected lvalues to not be null when assigning scopes. " +
+      "Pruning lvalues too early can result in missing scope information."
+  );
+  if (
+    instruction.lvalue.place.identifier.scope !== null &&
+    instruction.id >= instruction.lvalue.place.identifier.scope.range.start &&
+    instruction.id < instruction.lvalue.place.identifier.scope.range.end
+  ) {
+    context.visitScope(instruction.lvalue.place.identifier.scope);
+  }
+}
+
+function visitValue(
+  context: Context,
+  id: InstructionId,
+  value: InstructionValue
+): void {
+  context.visitId(id);
+  for (const operand of eachInstructionValueOperand(value)) {
+    if (
+      operand.identifier.scope !== null &&
+      id >= operand.identifier.scope.range.start &&
+      id < operand.identifier.scope.range.end
+    ) {
+      context.visitScope(operand.identifier.scope);
+    }
+  }
+}
+
+class BlockScope {
+  seen: Set<ScopeId> = new Set();
+  scopes: Array<ShadowableReactiveScope> = [];
+}
+
+type ShadowableReactiveScope = {
+  scope: ReactiveScope;
+  shadowedBy: ReactiveScope | null;
+};
+
+class Context {
+  scopes: Array<BlockScope> = [];
+  seenScopes: Set<ScopeId> = new Set();
+  joinedScopes: DisjointSet<ReactiveScope> = new DisjointSet();
+
+  visitId(id: InstructionId): void {
+    const currentBlock = this.scopes[this.scopes.length - 1]!;
+    retainWhere(currentBlock.scopes, (pending) => {
+      if (pending.scope.range.end > id) {
+        return true;
+      } else {
+        currentBlock.seen.delete(pending.scope.id);
+        return false;
+      }
+    });
+  }
+
+  visitScope(scope: ReactiveScope): void {
+    const currentBlock = this.scopes[this.scopes.length - 1]!;
+    // Fast-path for the first time we see a new scope
+    if (!this.seenScopes.has(scope.id)) {
+      this.seenScopes.add(scope.id);
+      currentBlock.seen.add(scope.id);
+      currentBlock.scopes.push({ shadowedBy: null, scope });
+      return;
+    }
+    // Scope has already been seen, find it in the current block or a parent
+    let index = this.scopes.length - 1;
+    let nextBlock = currentBlock;
+    while (!nextBlock.seen.has(scope.id)) {
+      // scopes that cross control-flow boundaries are merged with overlapping
+      // scopes
+      this.joinedScopes.union([scope, ...nextBlock.scopes.map((s) => s.scope)]);
+      index--;
+      if (index < 0) {
+        // TODO: handle reassignments in multiple branches. these create new identifiers that
+        // add an entry to this.seenScopes but which are then removed when their blocks exit.
+        // this is also wrong for codegen, different versions of an identifier could be cached
+        // differently and so a reassigned version of a variable needs a separate declaration.
+        // console.log(`scope ${scope.id} not found`);
+
+        // for (let i = this.scopes.length - 1; i > index; i--) {
+        //   const s = this.scopes[i];
+        //   console.log(
+        //     JSON.stringify(
+        //       {
+        //         seen: Array.from(s.seen),
+        //         scopes: s.scopes,
+        //       },
+        //       null,
+        //       2
+        //     )
+        //   );
+        // }
+        currentBlock.seen.add(scope.id);
+        currentBlock.scopes.push({ shadowedBy: null, scope });
+        return;
+      }
+      nextBlock = this.scopes[index]!;
+    }
+
+    // Handle interleaving within a given block scope
+    let found = false;
+    for (let i = 0; i < nextBlock.scopes.length; i++) {
+      const current = nextBlock.scopes[i]!;
+      if (current.scope.id === scope.id) {
+        found = true;
+        if (current.shadowedBy !== null) {
+          this.joinedScopes.union([current.shadowedBy, current.scope]);
+        }
+      } else if (found && current.shadowedBy === null) {
+        // `scope` is shadowing `current`, but we don't know they are interleaved yet
+        current.shadowedBy = scope;
+      }
+    }
+    if (!currentBlock.seen.has(scope.id)) {
+      currentBlock.seen.add(scope.id);
+      currentBlock.scopes.push({ shadowedBy: null, scope });
+    }
+  }
+
+  enter(fn: () => void): void {
+    this.scopes.push(new BlockScope());
+    fn();
+    this.scopes.pop();
+    if (this.scopes.length === 0) {
+      this.joinedScopes.forEach((scope, groupScope) => {
+        if (scope !== groupScope) {
+          groupScope.range.start = makeInstructionId(
+            Math.min(groupScope.range.start, scope.range.start)
+          );
+          groupScope.range.end = makeInstructionId(
+            Math.max(groupScope.range.end, scope.range.end)
+          );
+          scope.range = groupScope.range;
+          scope.id = groupScope.id;
+        }
+      });
+    }
+  }
+}
