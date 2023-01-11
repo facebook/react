@@ -3,7 +3,6 @@ import invariant from "invariant";
 import {
   HIRFunction,
   Instruction,
-  Place,
   Type,
   typeEquals,
   TypeId,
@@ -46,6 +45,9 @@ export default function (func: HIRFunction) {
 
 function apply(func: HIRFunction, unifier: Unifier) {
   for (const [_, block] of func.body.blocks) {
+    for (const phi of block.phis) {
+      phi.type = unifier.get(phi.type);
+    }
     for (const instr of block.instructions) {
       for (const place of eachInstructionOperand(instr)) {
         place.identifier.type = unifier.get(place.identifier.type);
@@ -61,8 +63,20 @@ type TypeEquation = {
   right: Type;
 };
 
-function* generate(func: HIRFunction) {
+function* generate(
+  func: HIRFunction
+): Generator<TypeEquation, void, undefined> {
   for (const [_, block] of func.body.blocks) {
+    for (const phi of block.phis) {
+      yield {
+        left: phi.type,
+        right: {
+          kind: "Phi",
+          operands: [...phi.operands.values()].map((id) => id.type),
+        },
+      };
+    }
+
     for (const instr of block.instructions) {
       yield* generateTypeEquation(instr);
     }
@@ -148,6 +162,19 @@ class Unifier {
       return;
     }
 
+    if (type.kind === "Phi") {
+      const operands = new Set(type.operands.map((i) => this.get(i).kind));
+
+      invariant(operands.size > 0, "there should be at least one operand");
+      const kind = operands.values().next().value;
+
+      // there's only one unique type and it's not a type var
+      if (operands.size === 1 && kind !== "Type") {
+        this.unify(v, type.operands[0]);
+        return;
+      }
+    }
+
     if (this.occursCheck(v, type)) {
       throw new Error("cycle detected");
     }
@@ -162,6 +189,10 @@ class Unifier {
       return this.occursCheck(v, this.substitutions.get(type.id)!);
     }
 
+    if (type.kind === "Phi") {
+      return type.operands.some((o) => this.occursCheck(v, o));
+    }
+
     return false;
   }
 
@@ -169,9 +200,11 @@ class Unifier {
     if (type.kind === "Type") {
       if (this.substitutions.has(type.id)) {
         return this.get(this.substitutions.get(type.id)!);
-      } else {
-        return type;
       }
+    }
+
+    if (type.kind === "Phi") {
+      return { kind: "Phi", operands: type.operands.map((o) => this.get(o)) };
     }
 
     return type;
