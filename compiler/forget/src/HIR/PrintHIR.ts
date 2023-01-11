@@ -112,6 +112,7 @@ function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
   items.push(printMutableRange(phi.id));
+  items.push(printType(phi.type));
   items.push(": phi(");
   const phis = [];
   for (const [blockId, id] of phi.operands) {
