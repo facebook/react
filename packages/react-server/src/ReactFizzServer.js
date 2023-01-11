@@ -129,7 +129,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
   disableModulePatternComponents,
-  warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
@@ -949,10 +948,7 @@ function validateFunctionComponentInDev(Component: any): void {
       }
     }
 
-    if (
-      warnAboutDefaultPropsOnFunctionComponents &&
-      Component.defaultProps !== undefined
-    ) {
+    if (Component.defaultProps !== undefined) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {

@@ -123,28 +123,24 @@ describe('reactiverefs', () => {
     let testRefsComponent;
     expect(() => {
       testRefsComponent = ReactDOM.render(<TestRefsComponent />, container);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "div" contains the string ref "resetDiv". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-            'Warning: Component "span" contains the string ref "clickLog0". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in span (at **)\n' +
-              '    in ClickCounter (at **)\n' +
-              '    in div (at **)\n' +
-              '    in GeneralContainerComponent (at **)\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "div" contains the string ref "resetDiv". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
+        '    in TestRefsComponent (at **)',
+      'Warning: Component "span" contains the string ref "clickLog0". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in span (at **)\n' +
+        '    in ClickCounter (at **)\n' +
+        '    in div (at **)\n' +
+        '    in GeneralContainerComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in TestRefsComponent (at **)',
+    ]);
 
     expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
 
@@ -349,17 +345,13 @@ describe('ref swapping', () => {
     let a;
     expect(() => {
       a = ReactTestUtils.renderIntoDocument(<A />);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "A" contains the string ref "1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in A (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "A" contains the string ref "1". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in A (at **)',
+    ]);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
@@ -546,18 +538,14 @@ describe('strings refs across renderers', () => {
     let inst;
     expect(() => {
       inst = ReactDOM.render(<Parent />, div1);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Indirection" contains the string ref "child1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Indirection (at **)\n' +
-              '    in Parent (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "Indirection" contains the string ref "child1". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Indirection (at **)\n' +
+        '    in Parent (at **)',
+    ]);
 
     // Only the first ref has rendered yet.
     expect(inst.refs.child1.tagName).toBe('DIV');
@@ -567,14 +555,12 @@ describe('strings refs across renderers', () => {
       // Now both refs should be rendered.
       ReactDOM.render(<Parent />, div1);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Root" contains the string ref "child2". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
-          ]
-        : [],
+      [
+        'Warning: Component "Root" contains the string ref "child2". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
+      ],
       {withoutStack: true},
     );
     expect(inst.refs.child1.tagName).toBe('DIV');
