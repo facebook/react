@@ -143,6 +143,11 @@ describe('ReactComponent', () => {
         '    in div (at **)\n' +
         '    in Wrapper (at **)\n' +
         '    in Component (at **)',
+      'Warning: Component "Component" contains the string ref "outer". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Component (at **)',
     ]);
   });
 
