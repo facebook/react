@@ -487,6 +487,7 @@ export type Type =
   | PrimitiveType
   | FunctionType
   | ObjectType
+  | PhiType
   | PolyType
   | TypeVar;
 export type PrimitiveType = { kind: "Primitive" };
@@ -500,6 +501,10 @@ export type TypeVar = {
 };
 export type PolyType = {
   kind: "Poly";
+};
+export type PhiType = {
+  kind: "Phi";
+  operands: Array<Type>;
 };
 
 /**
@@ -532,7 +537,8 @@ export function typeEquals(tA: Type, tB: Type): boolean {
     funcTypeEquals(tA, tB) ||
     objectTypeEquals(tA, tB) ||
     primitiveTypeEquals(tA, tB) ||
-    polyTypeEquals(tA, tB)
+    polyTypeEquals(tA, tB) ||
+    phiTypeEquals(tA, tB)
   );
 }
 
@@ -557,6 +563,23 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
   return tA.kind === "Function" && tB.kind === "Function";
+}
+
+function phiTypeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Phi" && tB.kind === "Phi") {
+    if (tA.operands.length !== tB.operands.length) {
+      return false;
+    }
+
+    let operands = new Set(tA.operands);
+    for (let i = 0; i < tB.operands.length; i++) {
+      if (!operands.has(tB.operands[i])) {
+        return false;
+      }
+    }
+  }
+
+  return false;
 }
 
 export function isObjectType(id: Identifier): boolean {
