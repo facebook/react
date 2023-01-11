@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-7002a6743-20230110";
+var ReactVersion = "18.3.0-www-modern-0fce6bb49-20230111";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -201,7 +201,6 @@ var enableProfilerNestedUpdateScheduledHook =
 var createRootStrictEffectsByDefault = false;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
-var warnAboutStringRefs = true;
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -5320,10 +5319,8 @@ function coerceRef(returnFiber, current, element) {
     typeof mixedRef !== "object"
   ) {
     {
-      // TODO: Clean this up once we turn on the string ref warning for
-      // everyone, because the strict mode case will no longer be relevant
       if (
-        (returnFiber.mode & StrictLegacyMode || warnAboutStringRefs) && // We warn in ReactElement.js if owner and self are equal for string refs
+        // We warn in ReactElement.js if owner and self are equal for string refs
         // because these cannot be automatically converted to an arrow function
         // using a codemod. Therefore, we don't have to warn about string refs again.
         !(
@@ -5339,17 +5336,15 @@ function coerceRef(returnFiber, current, element) {
           getComponentNameFromFiber(returnFiber) || "Component";
 
         if (!didWarnAboutStringRefs[componentName]) {
-          {
-            error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                "will be removed in a future major release. We recommend using " +
-                "useRef() or createRef() instead. " +
-                "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
-              componentName,
-              mixedRef
-            );
-          }
+          error(
+            'Component "%s" contains the string ref "%s". Support for string refs ' +
+              "will be removed in a future major release. We recommend using " +
+              "useRef() or createRef() instead. " +
+              "Learn more about using refs safely here: " +
+              "https://reactjs.org/link/strict-mode-string-ref",
+            componentName,
+            mixedRef
+          );
 
           didWarnAboutStringRefs[componentName] = true;
         }
