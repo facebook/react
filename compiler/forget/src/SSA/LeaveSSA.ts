@@ -7,6 +7,8 @@
 
 import invariant from "invariant";
 import {
+  BasicBlock,
+  BlockId,
   Effect,
   GeneratedSource,
   HIRFunction,
@@ -96,6 +98,16 @@ export function leaveSSA(fn: HIRFunction) {
   // phi id or, more typically, the operand that was defined prior to the phi.
   const rewrites: Map<Identifier, Identifier> = new Map();
 
+  type PhiState = {
+    phi: Phi;
+    block: BasicBlock;
+  };
+  function pushPhis(arr: Array<PhiState>, block: BasicBlock) {
+    for (const phi of block.phis) {
+      arr.push({ phi, block });
+    }
+  }
+
   for (const [, block] of fn.body.blocks) {
     invariant(
       block.phis.size === 0,
@@ -105,8 +117,8 @@ export function leaveSSA(fn: HIRFunction) {
     // Find any phi nodes which need a variable declaration in the current block
     // This includes phis in fallthrough nodes, or blocks that form part of control flow
     // such as for or while (and later if/switch).
-    const reassignmentPhis: Array<Phi> = [];
-    const rewritePhis: Array<Phi> = [];
+    const reassignmentPhis: Array<PhiState> = [];
+    const rewritePhis: Array<PhiState> = [];
     const terminal = block.terminal;
     if (
       (terminal.kind === "if" ||
@@ -116,29 +128,29 @@ export function leaveSSA(fn: HIRFunction) {
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      reassignmentPhis.push(...fallthrough.phis);
+      pushPhis(reassignmentPhis, fallthrough);
       fallthrough.phis.clear();
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
       const test = fn.body.blocks.get(terminal.test)!;
-      rewritePhis.push(...test.phis);
+      pushPhis(rewritePhis, test);
       test.phis.clear();
 
       const loop = fn.body.blocks.get(terminal.loop)!;
-      rewritePhis.push(...loop.phis);
+      pushPhis(rewritePhis, loop);
       loop.phis.clear();
     }
     if (terminal.kind === "for") {
       const init = fn.body.blocks.get(terminal.init)!;
-      rewritePhis.push(...init.phis);
+      pushPhis(rewritePhis, init);
       init.phis.clear();
 
       const update = fn.body.blocks.get(terminal.update)!;
-      rewritePhis.push(...update.phis);
+      pushPhis(rewritePhis, update);
       update.phis.clear();
     }
 
-    for (const phi of reassignmentPhis) {
+    for (const { phi, block: phiBlock } of reassignmentPhis) {
       // In some cases one of the phi operands can be defined *before* the let binding
       // we will generate. For example, a variable that is only rebound in one branch of
       // an if but not another. In this case we populate the let binding with this initial
@@ -177,6 +189,14 @@ export function leaveSSA(fn: HIRFunction) {
       }
       canonicalId.mutableRange.start = makeInstructionId(start);
       canonicalId.mutableRange.end = makeInstructionId(end);
+
+      // If there are no instructions in the block then there's just a terminal
+      // node, which has no mutation, so that should be false.
+      //
+      // TODO(joe): This above statement is true, right? Could there be a value
+      // block with instructions in terminals?
+      const isPhiMutatedAfterCreation: boolean =
+        end > (phiBlock.instructions.at(0)?.id ?? end);
 
       // If this phi id is the canonical id we need to generate a let binding for it
       // (otherwise, it means this phi merges into some other phi which already generated
@@ -220,6 +240,9 @@ export function leaveSSA(fn: HIRFunction) {
         if (operand === initOperand) {
           continue;
         }
+        if (isPhiMutatedAfterCreation) {
+          operand.mutableRange.end = canonicalId.mutableRange.end;
+        }
         const predecessor = fn.body.blocks.get(predecessorId)!;
         const instr: Instruction = {
           id: predecessor.terminal.id,
@@ -247,7 +270,7 @@ export function leaveSSA(fn: HIRFunction) {
     // Similar logic for rewrite phis that occur in loops, except that instead of a new let binding
     // we pick one of the operands as the canonical id, and rewrite all references to the other
     // operands and the phi to reference this canonical id.
-    for (const phi of rewritePhis) {
+    for (const { phi } of rewritePhis) {
       let canonicalId = rewrites.get(phi.id);
       if (canonicalId === undefined) {
         canonicalId = phi.id;
