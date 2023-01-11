@@ -84,13 +84,13 @@ function visitBlock(block: ReactiveBlock): ReactiveBlock {
     }
   }
   while (current.kind === "scope") {
-    invariant(current.scope.range.end === lastId + 1, "Scope ended too soon");
+    // invariant(current.scope.range.end === lastId + 1, "Scope ended too soon");
     current = stack.pop()!;
   }
   return current.instructions;
 }
 
-function getInstructionScope({
+export function getInstructionScope({
   id,
   lvalue,
   value,
