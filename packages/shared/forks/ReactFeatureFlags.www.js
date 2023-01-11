@@ -25,7 +25,6 @@ export const {
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
@@ -33,7 +32,6 @@ export const {
   enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing,
 } = dynamicFeatureFlags;
 
@@ -48,6 +46,7 @@ export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
+export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
@@ -56,6 +55,7 @@ export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
+export const enableClientRenderFallbackOnTextMismatch = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
