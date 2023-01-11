@@ -874,7 +874,7 @@ describe('ReactNewContext', () => {
       }
     });
 
-    it('warns not if multiple renderers finished rendering the same context', () => {
+    it('does not warn if multiple renderers use the same context sequentially', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
 
