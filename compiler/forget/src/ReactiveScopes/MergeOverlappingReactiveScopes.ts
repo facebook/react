@@ -24,7 +24,7 @@ import { getPlaceScope } from "./BuildReactiveBlocks";
 import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 
 /**
- * Note: this is the 3rd of 3 passes that determine how to break a function into discrete
+ * Note: this is the 3rd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
  *    them a unique reactive scope.
@@ -32,6 +32,8 @@ import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
  *    to block scopes.
  * 3. MergeOverlappingReactiveScopes (this pass, on ReactiveFunction) ensures that reactive
  *    scopes do not overlap, merging any such scopes.
+ * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
+ *    a ReactiveScopeBlock.
  *
  * Previous passes may leave "overlapping" scopes, ie where one or more instructions are within
  * the mutable range of multiple reactive scopes. We prefer to avoid executing instructions twice
@@ -144,7 +146,18 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 }
 
 function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
-  visitBlock(context, block.instructions);
+  for (const stmt of block.instructions) {
+    switch (stmt.kind) {
+      case "instruction": {
+        visitValue(context, stmt.instruction.id, stmt.instruction.value);
+        visitInstruction(context, stmt.instruction);
+        break;
+      }
+      default: {
+        invariant(false, "Unexpected terminal or scope in value block");
+      }
+    }
+  }
   if (block.last !== null) {
     context.visitId(block.last.id);
     if (block.last.value.kind === "Identifier") {

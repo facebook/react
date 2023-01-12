@@ -22,6 +22,17 @@ import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
+ * Note: this is the 1st of 4 passes that determine how to break a function into discrete
+ * reactive scopes (independently memoizeable units of code):
+ * 1. InferReactiveScopeVariables (this pass, on HIR) determines operands that mutate
+ *    together and assigns them a unique reactive scope.
+ * 2. AlignReactiveScopesToBlockScopes (on ReactiveFunction) aligns reactive scopes
+ *    to block scopes.
+ * 3. MergeOverlappingReactiveScopes (on ReactiveFunction) ensures that reactive
+ *    scopes do not overlap, merging any such scopes.
+ * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
+ *    a ReactiveScopeBlock.
+ *
  * For each mutable variable, infers a reactive scope which will construct that
  * variable. Variables that co-mutate are assigned to the same reactive scope.
  * This pass does *not* infer the set of instructions necessary to compute each

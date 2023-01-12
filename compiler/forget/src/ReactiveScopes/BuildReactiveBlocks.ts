@@ -7,73 +7,168 @@
 
 import invariant from "invariant";
 import {
+  BlockId,
   InstructionId,
-  makeInstructionId,
   Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveStatement,
+  ReactiveValueBlock,
+  ScopeId,
 } from "../HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { mapTerminalBlocks } from "./visitors";
+import { assertExhaustive } from "../Utils/utils";
+import { eachTerminalBlock, mapTerminalBlocks } from "./visitors";
 
 /**
+ * Note: this is the 4th of 4 passes that determine how to break a function into discrete
+ * reactive scopes (independently memoizeable units of code):
+ * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
+ *    them a unique reactive scope.
+ * 2. AlignReactiveScopesToBlockScopes (on ReactiveFunction) aligns reactive scopes
+ *    to block scopes.
+ * 3. MergeOverlappingReactiveScopes (this pass, on ReactiveFunction) ensures that reactive
+ *    scopes do not overlap, merging any such scopes.
+ * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
+ *    a ReactiveScopeBlock.
+ *
  * Given a function where the reactive scopes have been correctly aligned and merged,
  * this pass groups the instructions for each reactive scope into ReactiveBlocks.
  */
 export function buildReactiveBlocks(fn: ReactiveFunction): void {
-  fn.body = visitBlock(fn.body);
+  const context = new Context();
+  fn.body = context.enter(() => {
+    visitBlock(context, fn.body);
+  });
 }
 
-type Entry =
-  | ReactiveScopeBlock
-  | { kind: "block"; instructions: ReactiveBlock };
+class Context {
+  #builders: Array<Builder> = [];
+  #scopes: Set<ScopeId> = new Set();
 
-function visitBlock(block: ReactiveBlock): ReactiveBlock {
-  let current: Entry = { kind: "block", instructions: [] };
-  const stack: Array<Entry> = [current];
-  let lastId: InstructionId = makeInstructionId(0);
+  visitId(id: InstructionId): void {
+    const builder = this.#builders.at(-1)!;
+    builder.visitId(id);
+  }
+
+  visitScope(scope: ReactiveScope): void {
+    if (this.#scopes.has(scope.id)) {
+      return;
+    }
+    this.#scopes.add(scope.id);
+    this.#builders.at(-1)!.startScope(scope);
+  }
+
+  append(stmt: ReactiveStatement, label: BlockId | null): void {
+    this.#builders.at(-1)!.append(stmt, label);
+  }
+
+  enter(fn: () => void): ReactiveBlock {
+    const builder = new Builder();
+    this.#builders.push(builder);
+    fn();
+    const popped = this.#builders.pop();
+    invariant(popped === builder, "Expected push/pop to be called 1:1");
+    return builder.complete();
+  }
+}
+
+class Builder {
+  #instructions: ReactiveBlock;
+  #stack: Array<
+    | { kind: "scope"; block: ReactiveScopeBlock }
+    | { kind: "block"; block: ReactiveBlock }
+  >;
+
+  constructor() {
+    const block: ReactiveBlock = [];
+    this.#instructions = block;
+    this.#stack = [{ kind: "block", block }];
+  }
+
+  append(item: ReactiveStatement, label: BlockId | null): void {
+    if (label !== null) {
+      invariant(item.kind === "terminal", "Only terminals may have a label");
+      item.label = label;
+    }
+    this.#instructions.push(item);
+  }
+
+  startScope(scope: ReactiveScope): void {
+    const block: ReactiveScopeBlock = {
+      kind: "scope",
+      scope,
+      instructions: [],
+    };
+    this.append(block, null);
+    this.#instructions = block.instructions;
+    this.#stack.push({ kind: "scope", block });
+  }
+
+  visitId(id: InstructionId): void {
+    for (let i = 0; i < this.#stack.length; i++) {
+      const entry = this.#stack[i]!;
+      if (entry.kind === "scope" && id >= entry.block.scope.range.end) {
+        this.#stack.length = i;
+        break;
+      }
+    }
+    const last = this.#stack[this.#stack.length - 1]!;
+    if (last.kind === "block") {
+      this.#instructions = last.block;
+    } else {
+      this.#instructions = last.block.instructions;
+    }
+  }
+
+  complete(): ReactiveBlock {
+    // TODO: @josephsavona debug violations of this invariant
+    // invariant(
+    //   this.#stack.length === 1,
+    //   "Expected all scopes to be closed when exiting a block"
+    // );
+    const first = this.#stack[0]!;
+    invariant(
+      first.kind === "block",
+      "Expected first stack item to be a basic block"
+    );
+    return first.block;
+  }
+}
+
+function visitBlock(context: Context, block: ReactiveBlock): void {
   for (const stmt of block) {
     switch (stmt.kind) {
       case "instruction": {
-        lastId = stmt.instruction.id;
-        while (current.kind === "scope" && lastId >= current.scope.range.end) {
-          current = stack.pop()!;
-        }
+        context.visitId(stmt.instruction.id);
         const scope = getInstructionScope(stmt.instruction);
-
-        if (
-          scope !== null &&
-          (current.kind !== "scope" || current.scope.id !== scope.id)
-        ) {
-          const reactiveScope: ReactiveScopeBlock = {
-            kind: "scope",
-            scope,
-            instructions: [],
-          };
-          current.instructions.push(reactiveScope);
-          stack.push(current);
-          current = reactiveScope;
+        if (scope !== null) {
+          context.visitScope(scope);
         }
-
-        current.instructions.push(stmt);
+        context.append(stmt, null);
         break;
       }
       case "terminal": {
         const id = stmt.terminal.id;
         if (id !== null) {
-          lastId = id;
-          while (
-            current.kind === "scope" &&
-            lastId >= current.scope.range.end
-          ) {
-            current = stack.pop()!;
-          }
+          context.visitId(id);
         }
-        mapTerminalBlocks(stmt.terminal, visitBlock);
-        current.instructions.push(stmt);
+        mapTerminalBlocks(stmt.terminal, (block) => {
+          return context.enter(() => {
+            visitBlock(context, block);
+          });
+        });
+        eachTerminalBlock(
+          stmt.terminal,
+          (_) => {},
+          (valueBlock) => {
+            visitValueBlock(context, valueBlock);
+          }
+        );
+        context.append(stmt, stmt.label);
         break;
       }
       case "scope": {
@@ -82,13 +177,35 @@ function visitBlock(block: ReactiveBlock): ReactiveBlock {
           "Expected the function to not have scopes already assigned"
         );
       }
+      default: {
+        assertExhaustive(
+          stmt,
+          `Unexpected statement kind '${(stmt as any).kind}'`
+        );
+      }
     }
   }
-  while (current.kind === "scope") {
-    // invariant(current.scope.range.end === lastId + 1, "Scope ended too soon");
-    current = stack.pop()!;
+}
+
+function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
+  for (const stmt of block.instructions) {
+    switch (stmt.kind) {
+      case "instruction": {
+        context.visitId(stmt.instruction.id);
+        const scope = getInstructionScope(stmt.instruction);
+        if (scope !== null) {
+          context.visitScope(scope);
+        }
+        break;
+      }
+      default: {
+        invariant(false, "Unexpected terminal or scope in value block");
+      }
+    }
   }
-  return current.instructions;
+  if (block.last !== null) {
+    context.visitId(block.last.id);
+  }
 }
 
 export function getInstructionScope({

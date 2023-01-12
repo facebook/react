@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import {
   ReactiveFunction,
   ReactiveScopeBlock,
@@ -20,6 +19,7 @@ import {
   printInstructionValue,
   printPlace,
 } from "../HIR/PrintHIR";
+import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
 export function printReactiveFunction(fn: ReactiveFunction): string {
@@ -113,23 +113,25 @@ function printValueBlock(writer: Writer, block: ReactiveValueBlock): void {
 function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case "break": {
+      const id = terminal.id !== null ? `[${terminal.id}]` : [];
       if (terminal.label !== null) {
-        writer.writeLine(`break bb${terminal.label}`);
+        writer.writeLine(`${id} break bb${terminal.label}`);
       } else {
-        writer.writeLine(`break`);
+        writer.writeLine(`${id} break`);
       }
       break;
     }
     case "continue": {
+      const id = `[${terminal.id}]`;
       if (terminal.label !== null) {
-        writer.writeLine(`continue bb${terminal.label}`);
+        writer.writeLine(`${id} continue bb${terminal.label}`);
       } else {
-        writer.writeLine(`continue`);
+        writer.writeLine(`${id} continue`);
       }
       break;
     }
     case "while": {
-      writer.writeLine(`while (`);
+      writer.writeLine(`[${terminal.id}] while (`);
       printValueBlock(writer, terminal.test);
       writer.writeLine(") {");
       printReactiveInstructions(writer, terminal.loop);
@@ -138,7 +140,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "if": {
       const { test, consequent, alternate } = terminal;
-      writer.writeLine(`if (${printPlace(test)}) {`);
+      writer.writeLine(`[${terminal.id}] if (${printPlace(test)}) {`);
       printReactiveInstructions(writer, consequent);
       if (alternate !== null) {
         writer.writeLine("} else {");
@@ -148,7 +150,9 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     case "switch": {
-      writer.writeLine(`switch (${printPlace(terminal.test)}) {`);
+      writer.writeLine(
+        `[${terminal.id}] switch (${printPlace(terminal.test)}) {`
+      );
       writer.indented(() => {
         for (const case_ of terminal.cases) {
           let prefix =
@@ -166,7 +170,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     case "for": {
-      writer.writeLine("for (");
+      writer.writeLine("[${terminal.id}] for (");
       printValueBlock(writer, terminal.init);
       writer.writeLine(";");
       printValueBlock(writer, terminal.test);
@@ -178,14 +182,16 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     case "throw": {
-      writer.writeLine(`throw ${printPlace(terminal.value)}`);
+      writer.writeLine(`[${terminal.id}] throw ${printPlace(terminal.value)}`);
       break;
     }
     case "return": {
       if (terminal.value !== null) {
-        writer.writeLine(`return ${printPlace(terminal.value)}`);
+        writer.writeLine(
+          `[${terminal.id}] return ${printPlace(terminal.value)}`
+        );
       } else {
-        writer.writeLine("return");
+        writer.writeLine(`[${terminal.id}] return`);
       }
       break;
     }

@@ -19,7 +19,7 @@ import { getInstructionScope, getPlaceScope } from "./BuildReactiveBlocks";
 import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 
 /**
- * Note: this is the 2nd of 3 passes that determine how to break a function into discrete
+ * Note: this is the 2nd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
  *    them a unique reactive scope.
@@ -27,6 +27,8 @@ import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
  *    to block scopes.
  * 3. MergeOverlappingReactiveScopes (on ReactiveFunction) ensures that reactive scopes do not
  *    overlap, merging any such scopes.
+ * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
+ *    a ReactiveScopeBlock.
  *
  * Prior inference passes assign a reactive scope to each operand, but the ranges of these
  * scopes are based on specific instructions at arbitrary points in the control-flow graph.
