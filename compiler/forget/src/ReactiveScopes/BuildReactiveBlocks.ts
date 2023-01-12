@@ -9,6 +9,7 @@ import invariant from "invariant";
 import {
   InstructionId,
   makeInstructionId,
+  Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -100,20 +101,26 @@ export function getInstructionScope({
     "Expected lvalues to not be null when assigning scopes. " +
       "Pruning lvalues too early can result in missing scope information."
   );
-  if (
-    lvalue.place.identifier.scope !== null &&
-    isScopeActive(lvalue.place.identifier.scope, id)
-  ) {
-    return lvalue.place.identifier.scope;
-  } else {
-    for (const operand of eachInstructionValueOperand(value)) {
-      if (
-        operand.identifier.scope !== null &&
-        isScopeActive(operand.identifier.scope, id)
-      ) {
-        return operand.identifier.scope;
-      }
+  const lvalueScope = getPlaceScope(id, lvalue.place);
+  if (lvalueScope !== null) {
+    return lvalueScope;
+  }
+  for (const operand of eachInstructionValueOperand(value)) {
+    const operandScope = getPlaceScope(id, operand);
+    if (operandScope !== null) {
+      return operandScope;
     }
+  }
+  return null;
+}
+
+export function getPlaceScope(
+  id: InstructionId,
+  place: Place
+): ReactiveScope | null {
+  const scope = place.identifier.scope;
+  if (scope !== null && isScopeActive(scope, id)) {
+    return scope;
   }
   return null;
 }

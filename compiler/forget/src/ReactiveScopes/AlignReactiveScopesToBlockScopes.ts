@@ -15,8 +15,8 @@ import {
   ScopeId,
 } from "../HIR/HIR";
 import { invariant } from "../Utils/CompilerError";
-import { getInstructionScope } from "./BuildReactiveBlocks";
-import { eachTerminalBlock } from "./visitors";
+import { getInstructionScope, getPlaceScope } from "./BuildReactiveBlocks";
+import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 
 /**
  * Note: this is the 2nd of 3 passes that determine how to break a function into discrete
@@ -81,13 +81,23 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         if (id !== null) {
           context.visitId(id);
         }
-        // TODO: visit terminal operands!
+        eachTerminalOperand(stmt.terminal, (operand) => {
+          const scope = getPlaceScope(id!, operand);
+          if (scope !== null) {
+            context.visitScope(scope);
+          }
+        });
         eachTerminalBlock(
           stmt.terminal,
           (block) => {
             context.enter(() => visitBlock(context, block));
           },
-          (valueBlock) => visitValueBlock(context, valueBlock, id!)
+          (valueBlock) => {
+            context.enter(
+              () => visitValueBlock(context, valueBlock, id!),
+              "value"
+            );
+          }
         );
         break;
       }
@@ -143,8 +153,8 @@ class Context {
   // the above data structures they're in, to avoid tracking the same scope twice.
   #seenScopes: Set<ScopeId> = new Set();
 
-  enter(fn: () => void): void {
-    this.#blockScopes.push({ kind: "block", scopes: [] });
+  enter(fn: () => void, kind: "block" | "value" = "block"): void {
+    this.#blockScopes.push({ kind, scopes: [] });
     fn();
     const lastScope = this.#blockScopes.pop()!;
     for (const scope of lastScope.scopes) {
