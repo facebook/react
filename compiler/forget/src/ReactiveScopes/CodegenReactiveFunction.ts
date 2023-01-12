@@ -8,17 +8,14 @@
 import * as t from "@babel/types";
 import invariant from "invariant";
 import {
-  codegenInstruction,
-  codegenInstructionValue,
-  codegenLabel,
-  codegenPlace,
-  convertIdentifier,
-  createFunctionDeclaration,
-  Temporaries,
-} from "../HIR/Codegen";
-import {
+  BlockId,
+  GeneratedSource,
   Identifier,
+  IdentifierId,
   InstructionKind,
+  InstructionValue,
+  LValue,
+  Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -26,6 +23,7 @@ import {
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValueBlock,
+  SourceLocation,
 } from "../HIR/HIR";
 import { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
@@ -299,7 +297,7 @@ function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
   }
 }
 
-export function codegenInstructionNullable(
+function codegenInstructionNullable(
   cx: Context,
   instr: ReactiveInstruction,
   value: t.Expression
@@ -389,4 +387,319 @@ function codegenDependency(
     }
   }
   return object;
+}
+
+function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
+  fn: T
+): (
+  loc: SourceLocation | null | undefined,
+  ...args: Parameters<T>
+) => ReturnType<T> {
+  return (
+    loc: SourceLocation | null | undefined,
+    ...args: Parameters<T>
+  ): ReturnType<T> => {
+    const node = fn(...args);
+    if (loc != null && loc != GeneratedSource) {
+      node.loc = loc;
+    }
+    // @ts-ignore
+    return node;
+  };
+}
+
+const createBinaryExpression = withLoc(t.binaryExpression);
+const createCallExpression = withLoc(t.callExpression);
+const createExpressionStatement = withLoc(t.expressionStatement);
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
+const createLabelledStatement = withLoc(t.labeledStatement);
+const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createWhileStatement = withLoc(t.whileStatement);
+
+type Temporaries = Map<IdentifierId, t.Expression>;
+
+function codegenLabel(id: BlockId): string {
+  return `bb${id}`;
+}
+
+function codegenInstruction(
+  temp: Temporaries,
+  instr: ReactiveInstruction,
+  value: t.Expression
+): t.Statement {
+  if (t.isStatement(value)) {
+    return value;
+  }
+  if (instr.lvalue === null) {
+    return t.expressionStatement(value);
+  }
+  if (instr.lvalue.place.identifier.name === null) {
+    // temporary
+    temp.set(instr.lvalue.place.identifier.id, value);
+    return t.emptyStatement();
+  } else {
+    switch (instr.lvalue.kind) {
+      case InstructionKind.Const: {
+        return createVariableDeclaration(instr.loc, "const", [
+          t.variableDeclarator(codegenLVal(instr.lvalue), value),
+        ]);
+      }
+      case InstructionKind.Let: {
+        return createVariableDeclaration(instr.loc, "let", [
+          t.variableDeclarator(codegenLVal(instr.lvalue), value),
+        ]);
+      }
+      case InstructionKind.Reassign: {
+        return createExpressionStatement(
+          instr.loc,
+          t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
+        );
+      }
+      default: {
+        assertExhaustive(
+          instr.lvalue.kind,
+          `Unexpected instruction kind '${instr.lvalue.kind}'`
+        );
+      }
+    }
+  }
+}
+
+function codegenInstructionValue(
+  temp: Temporaries,
+  instrValue: InstructionValue
+): t.Expression {
+  let value: t.Expression;
+  switch (instrValue.kind) {
+    case "ArrayExpression": {
+      const elements = instrValue.elements.map((element) =>
+        codegenPlace(temp, element)
+      );
+      value = t.arrayExpression(elements);
+      break;
+    }
+    case "BinaryExpression": {
+      const left = codegenPlace(temp, instrValue.left);
+      const right = codegenPlace(temp, instrValue.right);
+      value = createBinaryExpression(
+        instrValue.loc,
+        instrValue.operator,
+        left,
+        right
+      );
+      break;
+    }
+    case "UnaryExpression": {
+      value = t.unaryExpression(
+        instrValue.operator as "throw", // todo
+        codegenPlace(temp, instrValue.value)
+      );
+      break;
+    }
+    case "Primitive": {
+      value = codegenValue(temp, instrValue.value);
+      break;
+    }
+    case "CallExpression": {
+      const callee = codegenPlace(temp, instrValue.callee);
+      const args = instrValue.args.map((arg) => codegenPlace(temp, arg));
+      value = createCallExpression(instrValue.loc, callee, args);
+      break;
+    }
+    case "NewExpression": {
+      const callee = codegenPlace(temp, instrValue.callee);
+      const args = instrValue.args.map((arg) => codegenPlace(temp, arg));
+      value = t.newExpression(callee, args);
+      break;
+    }
+    case "ObjectExpression": {
+      const properties = [];
+      if (instrValue.properties !== null) {
+        for (const [property, value] of instrValue.properties) {
+          properties.push(
+            t.objectProperty(
+              t.stringLiteral(property),
+              codegenPlace(temp, value)
+            )
+          );
+        }
+      }
+      value = t.objectExpression(properties);
+      break;
+    }
+    case "JSXText": {
+      value = t.stringLiteral(instrValue.value);
+      break;
+    }
+    case "JsxExpression": {
+      const attributes: Array<t.JSXAttribute> = [];
+      for (const [prop, value] of instrValue.props) {
+        attributes.push(
+          t.jsxAttribute(
+            t.jsxIdentifier(prop),
+            t.jsxExpressionContainer(codegenPlace(temp, value))
+          )
+        );
+      }
+      let tagValue = codegenPlace(temp, instrValue.tag);
+      let tag: string;
+      if (tagValue.type === "Identifier") {
+        tag = tagValue.name;
+      } else {
+        invariant(
+          tagValue.type === "StringLiteral",
+          "Expected JSX tag to be an identifier or string"
+        );
+        tag = tagValue.value;
+      }
+      const children =
+        instrValue.children !== null
+          ? instrValue.children.map((child) => codegenJsxElement(temp, child))
+          : [];
+      value = t.jsxElement(
+        t.jsxOpeningElement(
+          t.jsxIdentifier(tag),
+          attributes,
+          instrValue.children === null
+        ),
+        instrValue.children !== null
+          ? t.jsxClosingElement(t.jsxIdentifier(tag))
+          : null,
+        children,
+        instrValue.children === null
+      );
+      break;
+    }
+    case "JsxFragment": {
+      value = t.jsxFragment(
+        t.jsxOpeningFragment(),
+        t.jsxClosingFragment(),
+        instrValue.children.map((child) => codegenJsxElement(temp, child))
+      );
+      break;
+    }
+    case "OtherStatement": {
+      const node = instrValue.node;
+      if (!t.isExpression(node)) {
+        return node as any; // TODO handle statements, jsx fragments
+      }
+      value = node;
+      break;
+    }
+    case "PropertyStore": {
+      value = t.assignmentExpression(
+        "=",
+        t.memberExpression(
+          codegenPlace(temp, instrValue.object),
+          t.identifier(instrValue.property)
+        ),
+        codegenPlace(temp, instrValue.value)
+      );
+      break;
+    }
+    case "PropertyLoad": {
+      value = t.memberExpression(
+        codegenPlace(temp, instrValue.object),
+        t.identifier(instrValue.property)
+      );
+      break;
+    }
+    case "ComputedStore": {
+      value = t.assignmentExpression(
+        "=",
+        t.memberExpression(
+          codegenPlace(temp, instrValue.object),
+          codegenPlace(temp, instrValue.property),
+          true
+        ),
+        codegenPlace(temp, instrValue.value)
+      );
+      break;
+    }
+    case "ComputedLoad": {
+      value = t.memberExpression(
+        codegenPlace(temp, instrValue.object),
+        codegenPlace(temp, instrValue.property),
+        true
+      );
+      break;
+    }
+    case "Identifier": {
+      value = codegenPlace(temp, instrValue);
+      break;
+    }
+    case "FunctionExpression": {
+      const id =
+        instrValue.name !== null ? t.identifier(instrValue.name) : null;
+      const params = instrValue.params.map((p) => t.identifier(p));
+      value = t.functionExpression(id, params, instrValue.body);
+      break;
+    }
+    default: {
+      assertExhaustive(
+        instrValue,
+        `Unexpected instruction value kind '${(instrValue as any).kind}'`
+      );
+    }
+  }
+  return value;
+}
+
+function codegenJsxElement(
+  temp: Temporaries,
+  place: Place
+):
+  | t.JSXText
+  | t.JSXExpressionContainer
+  | t.JSXSpreadChild
+  | t.JSXElement
+  | t.JSXFragment {
+  const value = codegenPlace(temp, place);
+  switch (value.type) {
+    case "StringLiteral": {
+      return t.jsxText(value.value);
+    }
+    default: {
+      return t.jsxExpressionContainer(value);
+    }
+  }
+}
+
+function codegenLVal(lval: LValue): t.LVal {
+  return convertIdentifier(lval.place.identifier);
+}
+
+function codegenValue(
+  temp: Temporaries,
+  value: boolean | number | string | null | undefined
+): t.Expression {
+  if (typeof value === "number") {
+    return t.numericLiteral(value);
+  } else if (typeof value === "boolean") {
+    return t.booleanLiteral(value);
+  } else if (typeof value === "string") {
+    return t.stringLiteral(value);
+  } else if (value === null) {
+    return t.nullLiteral();
+  } else if (value === undefined) {
+    return t.identifier("undefined");
+  } else {
+    assertExhaustive(value, "Unexpected primitive value kind");
+  }
+}
+
+function codegenPlace(temp: Temporaries, place: Place): t.Expression {
+  todoInvariant(place.kind === "Identifier", "support scope values");
+  let tmp = temp.get(place.identifier.id);
+  if (tmp != null) {
+    return tmp;
+  }
+  return convertIdentifier(place.identifier);
+}
+
+function convertIdentifier(identifier: Identifier): t.Identifier {
+  if (identifier.name !== null) {
+    return t.identifier(`${identifier.name}`);
+  }
+  return t.identifier(`t${identifier.id}`);
 }

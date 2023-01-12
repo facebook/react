@@ -16,7 +16,6 @@ import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { compile, run } from "./CompilerPipeline";
 import { lower } from "./HIR/BuildHIR";
-import codegen from "./HIR/Codegen";
 import { Environment } from "./HIR/HIRBuilder";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
@@ -56,7 +55,6 @@ function parseFunctions(
 
 export const HIR = {
   buildReactiveFunction,
-  codegen,
   codegenReactiveFunction,
   compile,
   eliminateRedundantPhi,
