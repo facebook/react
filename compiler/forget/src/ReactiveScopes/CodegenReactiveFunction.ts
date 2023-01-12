@@ -331,12 +331,12 @@ function codegenForInit(
   init: ReactiveValueBlock
 ): t.Expression | t.VariableDeclaration | null {
   const body = codegenBlock(cx, init.instructions).body;
-  if (init.value !== null) {
+  if (init.last !== null) {
     invariant(
       body.length === 0,
       "Expected for init block to produce only temporaries"
     );
-    return codegenInstructionValue(cx.temp, init.value);
+    return codegenInstructionValue(cx.temp, init.last.value);
   } else {
     invariant(
       body.length === 1,
@@ -363,8 +363,8 @@ function codegenValueBlock(
       todoInvariant(false, `Handle conversion of ${stmt.type} to expression`);
     }
   });
-  if (block.value !== null) {
-    const value = codegenInstructionValue(cx.temp, block.value);
+  if (block.last !== null) {
+    const value = codegenInstructionValue(cx.temp, block.last.value);
     expressions.push(value);
   }
   invariant(

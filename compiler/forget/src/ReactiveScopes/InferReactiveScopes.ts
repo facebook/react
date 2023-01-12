@@ -268,7 +268,10 @@ class MergeOverlappingReactiveScopesVisitor
   leaveInitBlock(block: void): void {
     this.leaveBlock();
   }
-  leaveValueBlock(block: void, value: void): void {
+  leaveValueBlock(
+    block: void,
+    value: { value: void; id: InstructionId } | null
+  ): void {
     this.leaveBlock();
   }
   visitValue(value: InstructionValue, id: InstructionId): void {
@@ -389,7 +392,10 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
     this.blockScopes.push({ kind: "value", scopes: [] });
   }
   appendValueBlock(block: void, item: void): void {}
-  leaveValueBlock(block: void, value: void): void {
+  leaveValueBlock(
+    block: void,
+    value: { value: void; id: InstructionId } | null
+  ): void {
     const lastScope = this.blockScopes.pop();
     invariant(
       lastScope !== undefined && lastScope.kind === "value",
@@ -409,7 +415,7 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   }
   appendInitBlock(block: void, item: void): void {}
   leaveInitBlock(block: void): void {
-    this.leaveValueBlock(block);
+    this.leaveValueBlock(block, null);
   }
 
   visitInstruction(instruction: Instruction, value: void): void {

@@ -141,12 +141,12 @@ class CodegenVisitor
   }
   leaveValueBlock(
     block: t.Statement[],
-    place: t.Expression | null
+    place: { value: t.Expression; id: InstructionId } | null
   ): t.Expression {
     this.depth--;
     if (block.length === 0) {
       invariant(place !== null, "Unexpected empty value block");
-      return place;
+      return place.value;
     }
     const expressions = block.map((stmt) => {
       switch (stmt.type) {
@@ -160,7 +160,7 @@ class CodegenVisitor
       }
     });
     if (place !== null) {
-      expressions.push(place);
+      expressions.push(place.value);
     }
     return t.sequenceExpression(expressions);
   }

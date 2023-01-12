@@ -519,7 +519,10 @@ class Driver<
     }
     const value =
       lastValue !== null
-        ? this.visitor.visitValue(lastValue.value, lastValue.id)
+        ? {
+            value: this.visitor.visitValue(lastValue.value, lastValue.id),
+            id: lastValue.id,
+          }
         : null;
     return this.visitor.leaveValueBlock(valueBlock, value);
   }
@@ -873,7 +876,10 @@ export interface Visitor<
    * Converts the visitor's value block (and final value) to the visitor's
    * value representation.
    */
-  leaveValueBlock(block: TValueBlock, value: TValue | null): TValue;
+  leaveValueBlock(
+    block: TValueBlock,
+    value: { value: TValue; id: InstructionId } | null
+  ): TValue;
 
   enterInitBlock(block: TBlockBuilder): TValueBlock;
 

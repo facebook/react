@@ -260,8 +260,8 @@ function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
       visitInstruction(context, initItem.instruction);
     }
   }
-  if (block.value !== null) {
-    visitInstructionValue(context, block.value, null);
+  if (block.last !== null) {
+    visitInstructionValue(context, block.last.value, null);
   }
 }
 

@@ -83,8 +83,8 @@ function visitValueBlock(scopes: Scopes, block: ReactiveValueBlock): void {
       scopes.visit(stmt.instruction.lvalue.place.identifier);
     }
   }
-  if (block.value !== null) {
-    for (const operand of eachInstructionValueOperand(block.value)) {
+  if (block.last !== null) {
+    for (const operand of eachInstructionValueOperand(block.last.value)) {
       scopes.visit(operand.identifier);
     }
   }

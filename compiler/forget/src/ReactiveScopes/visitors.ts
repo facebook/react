@@ -74,8 +74,8 @@ export function visitFunction(
   }
   function visitValueBlock(block: ReactiveValueBlock): void {
     visitBlock(block.instructions);
-    if (block.value !== null && visitValue) {
-      visitValue(block.value);
+    if (block.last !== null && visitValue) {
+      visitValue(block.last.value);
     }
   }
   visitBlock(fn.body);

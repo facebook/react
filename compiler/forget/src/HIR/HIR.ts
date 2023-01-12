@@ -61,7 +61,10 @@ export type ReactiveBlock = Array<ReactiveStatement>;
 export type ReactiveValueBlock = {
   kind: "value-block";
   instructions: ReactiveBlock;
-  value: InstructionValue | null;
+  last: {
+    value: InstructionValue;
+    id: InstructionId;
+  } | null;
 };
 
 export type ReactiveStatement =

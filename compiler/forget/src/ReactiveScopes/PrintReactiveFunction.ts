@@ -104,8 +104,8 @@ function printValueBlock(writer: Writer, block: ReactiveValueBlock): void {
     for (const instr of block.instructions) {
       printReactiveInstruction(writer, instr);
     }
-    if (block.value !== null) {
-      writer.writeLine(printInstructionValue(block.value));
+    if (block.last !== null) {
+      writer.writeLine(printInstructionValue(block.last.value));
     }
   });
 }

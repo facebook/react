@@ -152,7 +152,7 @@ class ReactiveFunctionBuilder
     return {
       kind: "value-block",
       instructions: [],
-      value: null,
+      last: null,
     };
   }
   appendValueBlock(block: ReactiveValueBlock, item: ReactiveStatement): void {
@@ -160,14 +160,18 @@ class ReactiveFunctionBuilder
   }
   leaveValueBlock(
     block: ReactiveValueBlock,
-    value: InstructionValue | ReactiveValueBlock | null
+    last: {
+      value: InstructionValue | ReactiveValueBlock;
+      id: InstructionId;
+    } | null
   ): InstructionValue | ReactiveValueBlock {
-    if (value !== null) {
+    if (last !== null) {
+      const { id, value } = last;
       invariant(
         value.kind !== "value-block",
         "Expected value block to end in a value"
       );
-      block.value = value;
+      block.last = { id, value };
     }
     return block;
   }
