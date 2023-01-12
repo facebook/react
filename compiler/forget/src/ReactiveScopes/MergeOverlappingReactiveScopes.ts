@@ -20,6 +20,7 @@ import { eachInstructionValueOperand } from "../HIR/visitors";
 import { invariant } from "../Utils/CompilerError";
 import DisjointSet from "../Utils/DisjointSet";
 import { retainWhere } from "../Utils/utils";
+import { getPlaceScope } from "./BuildReactiveBlocks";
 import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 
 /**
@@ -127,7 +128,11 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
               visitBlock(context, block);
             });
           },
-          (valueBlock) => visitValueBlock(context, valueBlock)
+          (valueBlock) => {
+            context.enter(() => {
+              visitValueBlock(context, valueBlock);
+            });
+          }
         );
         break;
       }
@@ -140,7 +145,15 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 
 function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
   visitBlock(context, block.instructions);
-  // TODO: visit the value block value!
+  if (block.last !== null) {
+    context.visitId(block.last.id);
+    if (block.last.value.kind === "Identifier") {
+      const scope = getPlaceScope(block.last.id, block.last.value);
+      if (scope !== null) {
+        context.visitScope(scope);
+      }
+    }
+  }
 }
 
 function visitInstruction(
