@@ -12,6 +12,8 @@ import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/Reac
 
 import ReactVersion from 'shared/ReactVersion';
 
+import {enableFizzIntoContainer} from 'shared/ReactFeatureFlags';
+
 import {
   createRequest,
   startWork,
@@ -199,4 +201,13 @@ function renderIntoContainer(
   return stream;
 }
 
-export {renderToReadableStream, renderIntoContainer, ReactVersion as version};
+let renderIntoContainerExport: void | typeof renderIntoContainer;
+if (enableFizzIntoContainer) {
+  renderIntoContainerExport = renderIntoContainer;
+}
+
+export {
+  renderToReadableStream,
+  renderIntoContainerExport as renderIntoContainer,
+  ReactVersion as version,
+};

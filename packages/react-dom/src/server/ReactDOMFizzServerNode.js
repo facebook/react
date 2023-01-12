@@ -14,6 +14,7 @@ import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/Reac
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
+import {enableFizzIntoContainer} from 'shared/ReactFeatureFlags';
 
 import {
   createRequest,
@@ -189,8 +190,15 @@ function renderIntoContainerAsPipeableStream(
   };
 }
 
+let renderIntoContainerExport:
+  | void
+  | typeof renderIntoContainerAsPipeableStream;
+if (enableFizzIntoContainer) {
+  renderIntoContainerExport = renderIntoContainerAsPipeableStream;
+}
+
 export {
   renderToPipeableStream,
-  renderIntoContainerAsPipeableStream,
+  renderIntoContainerExport as renderIntoContainerAsPipeableStream,
   ReactVersion as version,
 };

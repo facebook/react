@@ -12,6 +12,8 @@ import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/Reac
 
 import ReactVersion from 'shared/ReactVersion';
 
+import {enableFizzIntoContainer} from 'shared/ReactFeatureFlags';
+
 import {
   createRequest,
   startWork,
@@ -202,6 +204,11 @@ function renderIntoContainer(
   });
 }
 
+let renderIntoContainerExport: void | typeof renderIntoContainer;
+if (enableFizzIntoContainer) {
+  renderIntoContainerExport = renderIntoContainer;
+}
+
 function renderToNodeStream() {
   throw new Error(
     'ReactDOMServer.renderToNodeStream(): The Node Stream API is not available ' +
@@ -218,7 +225,7 @@ function renderToStaticNodeStream() {
 
 export {
   renderToReadableStream,
-  renderIntoContainer,
+  renderIntoContainerExport as renderIntoContainer,
   renderToNodeStream,
   renderToStaticNodeStream,
   ReactVersion as version,

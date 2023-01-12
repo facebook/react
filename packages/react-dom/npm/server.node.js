@@ -15,5 +15,8 @@ exports.renderToStaticMarkup = l.renderToStaticMarkup;
 exports.renderToNodeStream = l.renderToNodeStream;
 exports.renderToStaticNodeStream = l.renderToStaticNodeStream;
 exports.renderToPipeableStream = s.renderToPipeableStream;
-exports.renderIntoContainerAsPipeableStream =
-  s.renderIntoContainerAsPipeableStream;
+
+if (typeof s.renderIntoContainerAsPipeableStream === 'function') {
+  exports.renderIntoContainerAsPipeableStream =
+    s.renderIntoContainerAsPipeableStream;
+}

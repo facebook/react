@@ -630,6 +630,7 @@ describe('ReactDOMFizzServerNode', () => {
   });
 
   describe('renderIntoContainerAsPipeableStream', () => {
+    // @gate enableFloat && enableFizzIntoContainer
     it('can render into a container', async () => {
       const {writable, output} = getTestWritable();
       const {pipe} = ReactDOMFizzServer.renderIntoContainerAsPipeableStream(

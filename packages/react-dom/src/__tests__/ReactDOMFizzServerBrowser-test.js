@@ -623,6 +623,7 @@ describe('ReactDOMFizzServerBrowser', () => {
   });
 
   describe('renderIntoContainer', () => {
+    // @gate enableFloat && enableFizzIntoContainer
     it('can render into a container with a stream that is synchronously available', async () => {
       await act(() => {
         const stream = ReactDOMFizzServer.renderIntoContainer(

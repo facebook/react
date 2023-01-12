@@ -5723,6 +5723,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   describe('renderIntoContainer', () => {
+    // @gate enableFloat && enableFizzIntoContainer
     it('can render into a container', async () => {
       await act(() => {
         const {pipe} = renderIntoContainerAsPipeableStream(
@@ -5744,7 +5745,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableFizzIntoContainer
     it('can render into a container with style resources', async () => {
       await act(() => {
         const {pipe} = renderIntoContainerAsPipeableStream(
@@ -5788,7 +5789,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableFizzIntoContainer
     it('bootstraps after completing the Root Boundary', async () => {
       let didBootstrap = false;
       function bootstrap() {
@@ -5821,7 +5822,7 @@ describe('ReactDOMFizzServer', () => {
       expect(didBootstrap).toBe(true);
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableFizzIntoContainer
     it('emits non-stylesheet resources eagerly in place', async () => {
       await act(() => {
         const {pipe} = renderIntoContainerAsPipeableStream(
@@ -5864,6 +5865,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate enableFloat && enableFizzIntoContainer
     it('emits fallback bootstrap scripts when the Root Boundary errors', async () => {
       let didBootstrap = false;
       function bootstrap() {
@@ -5919,6 +5921,7 @@ describe('ReactDOMFizzServer', () => {
       expect(didFallback).toBe(true);
     });
 
+    // @gate enableFloat && enableFizzIntoContainer
     it('emits regular bootstrap scripts when the Root Boundary errors if no fallback scripts were provided', async () => {
       let didBootstrap = false;
       function bootstrap() {
@@ -5965,7 +5968,7 @@ describe('ReactDOMFizzServer', () => {
       expect(didBootstrap).toBe(true);
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableFizzIntoContainer
     it('can delay bootstrapping hydration until stylesheets load', async () => {
       let didBootstrap = false;
       function bootstrap() {
@@ -6053,7 +6056,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableFizzIntoContainer
     it('can delay bootstrapping until stylesheets error', async () => {
       let didBootstrap = false;
       function bootstrap() {
