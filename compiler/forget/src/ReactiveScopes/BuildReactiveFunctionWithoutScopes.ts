@@ -19,7 +19,11 @@ import {
   ReactiveTerminal,
   ReactiveValueBlock,
 } from "../HIR/HIR";
-import { BlockTerminal, Visitor, visitTree } from "../HIR/HIRTreeVisitor";
+import {
+  BlockTerminal,
+  Visitor,
+  visitTreeForReactiveFunction as visitTree,
+} from "../HIR/ReactiveFunctionVisitor";
 import { assertExhaustive } from "../Utils/utils";
 
 export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
