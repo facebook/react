@@ -37,10 +37,7 @@ export function printFunction(fn: HIRFunction): string {
   return output.join("\n");
 }
 
-export default function printHIR(
-  ir: HIR,
-  options: Options | null = null
-): string {
+export function printHIR(ir: HIR, options: Options | null = null): string {
   let output = [];
   let indent = " ".repeat(options?.indent ?? 0);
   const push = (text: string, indent: string = "  ") => {

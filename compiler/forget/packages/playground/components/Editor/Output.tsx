@@ -4,16 +4,23 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 import generate from "@babel/generator";
+import { parse } from "@babel/parser";
+import traverse, { NodePath } from "@babel/traverse";
+import * as t from "@babel/types";
 import MonacoEditor from "@monaco-editor/react";
-import { HIR } from "babel-plugin-react-forget";
+import {
+  printHIR,
+  printReactiveFunction,
+  run,
+} from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo, useState } from "react";
 import type { Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
-const { parseFunctions, printHIR, printReactiveFunction } = HIR;
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
@@ -23,6 +30,27 @@ type Props = {
 };
 
 type CompilerError = string;
+
+function parseFunctions(
+  source: string
+): Array<NodePath<t.FunctionDeclaration>> {
+  try {
+    const ast = parse(source, {
+      plugins: ["typescript", "jsx"],
+    });
+    const items: Array<NodePath<t.FunctionDeclaration>> = [];
+    traverse(ast, {
+      FunctionDeclaration: {
+        enter(nodePath) {
+          items.push(nodePath);
+        },
+      },
+    });
+    return items;
+  } catch (e) {
+    return [];
+  }
+}
 
 function compile(source: string): Map<string, React.ReactNode> | CompilerError {
   try {
@@ -35,7 +63,7 @@ function compile(source: string): Map<string, React.ReactNode> | CompilerError {
     const func = astFunctions[0];
 
     const tabs = new Map<string, React.ReactNode>();
-    const generator = HIR.run(func);
+    const generator = run(func);
     let ast;
     while (true) {
       const next = generator.next();
@@ -95,6 +123,7 @@ function compile(source: string): Map<string, React.ReactNode> | CompilerError {
     });
     return reorderedTabs;
   } catch (e: any) {
+    console.error(e);
     return e.toString();
   }
 }

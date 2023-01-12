@@ -6,7 +6,7 @@
  */
 
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
-import printHIR, { printFunction } from "../HIR/PrintHIR";
+import { printFunction, printHIR } from "../HIR/PrintHIR";
 import { printReactiveFunction } from "../ReactiveScopes";
 
 let ENABLED: boolean = false;

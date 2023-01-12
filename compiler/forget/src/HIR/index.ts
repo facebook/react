@@ -16,4 +16,4 @@ export {
   shrink,
 } from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
-export { printFunction } from "./PrintHIR";
+export { printFunction, printHIR } from "./PrintHIR";
