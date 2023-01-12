@@ -26,7 +26,7 @@ Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) p
 
 The documentation is divided into several sections:
 
-* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
+* [Tutorial](https://reactjs.org/tutorial/tutorial.html/)
 * [Main Concepts](https://reactjs.org/docs/hello-world.html)
 * [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
 * [API Reference](https://reactjs.org/docs/react-api.html)
