@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-type Flags = {
-  enableNewReactiveFunctionBuilder: boolean;
-};
+type Flags = {};
 
-export const flags: Flags = {
-  enableNewReactiveFunctionBuilder: false,
-};
+export const flags: Flags = {};

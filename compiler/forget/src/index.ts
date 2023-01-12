@@ -20,10 +20,9 @@ import codegen from "./HIR/Codegen";
 import { Environment } from "./HIR/HIRBuilder";
 import printHIR, { printFunction } from "./HIR/PrintHIR";
 import { inferMutableRanges, inferReferenceEffects } from "./Inference";
-import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunctionWithoutScopes";
+import { buildReactiveFunction } from "./ReactiveScopes/BuildReactiveFunction";
 import { codegenReactiveFunction } from "./ReactiveScopes/CodegenReactiveFunction";
 import { flattenReactiveLoops } from "./ReactiveScopes/FlattenReactiveLoops";
-import { inferReactiveScopes } from "./ReactiveScopes/InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./ReactiveScopes/InferReactiveScopeVariables";
 import { printReactiveFunction } from "./ReactiveScopes/PrintReactiveFunction";
 import { propagateScopeDependencies } from "./ReactiveScopes/PropagateScopeDependencies";
@@ -65,7 +64,6 @@ export const HIR = {
   Environment,
   flattenReactiveLoops,
   inferMutableRanges,
-  inferReactiveScopes,
   inferReactiveScopeVariables,
   inferReferenceEffects,
   inferTypes,

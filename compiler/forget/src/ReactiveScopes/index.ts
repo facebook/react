@@ -8,10 +8,8 @@
 export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
-export { buildReactiveFunction as buildReactiveFunctionWithoutScopes } from "./BuildReactiveFunctionWithoutScopes";
 export { codegenReactiveFunction } from "./CodegenReactiveFunction";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
-export { inferReactiveScopes } from "./InferReactiveScopes";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";
 export { printReactiveFunction } from "./PrintReactiveFunction";
