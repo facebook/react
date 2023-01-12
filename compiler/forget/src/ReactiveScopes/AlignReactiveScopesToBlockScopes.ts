@@ -131,7 +131,15 @@ function visitValueBlock(
       }
     }
   }
-  // TODO: visit the block value!!
+  if (block.last !== null) {
+    context.visitId(block.last.id);
+    if (block.last.value.kind === "Identifier") {
+      const scope = getPlaceScope(block.last.id, block.last.value);
+      if (scope !== null) {
+        context.visitScope(scope);
+      }
+    }
+  }
 }
 
 type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
