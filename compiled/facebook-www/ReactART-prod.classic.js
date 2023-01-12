@@ -4795,11 +4795,11 @@ function pushProvider(providerFiber, context, nextValue) {
 }
 function popProvider(context) {
   var currentValue = valueCursor.current;
-  pop(valueCursor);
   context._currentValue2 =
     currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
       ? context._defaultValue
       : currentValue;
+  pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
   for (; null !== parent; ) {
@@ -9804,7 +9804,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-0fce6bb49-20230111",
+    version: "18.3.0-www-classic-555ece0cd-20230112",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1318 = {
@@ -9835,7 +9835,7 @@ var internals$jscomp$inline_1318 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0fce6bb49-20230111"
+  reconcilerVersion: "18.3.0-next-555ece0cd-20230112"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1319 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-0fce6bb49-20230111";
+var ReactVersion = "18.3.0-www-classic-555ece0cd-20230112";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -16344,6 +16344,13 @@ function beginWork(current, workInProgress, renderLanes) {
 }
 
 var valueCursor = createCursor(null);
+
+var renderer2CursorDEV;
+
+{
+  renderer2CursorDEV = createCursor(null);
+}
+
 var rendererSigil$1;
 
 {
@@ -16382,6 +16389,8 @@ function pushProvider(providerFiber, context, nextValue) {
     context._currentValue2 = nextValue;
 
     {
+      push(renderer2CursorDEV, context._currentRenderer2, providerFiber);
+
       if (
         context._currentRenderer2 !== undefined &&
         context._currentRenderer2 !== null &&
@@ -16399,7 +16408,6 @@ function pushProvider(providerFiber, context, nextValue) {
 }
 function popProvider(context, providerFiber) {
   var currentValue = valueCursor.current;
-  pop(valueCursor, providerFiber);
 
   {
     if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
@@ -16407,7 +16415,15 @@ function popProvider(context, providerFiber) {
     } else {
       context._currentValue2 = currentValue;
     }
+
+    {
+      var currentRenderer2 = renderer2CursorDEV.current;
+      pop(renderer2CursorDEV, providerFiber);
+      context._currentRenderer2 = currentRenderer2;
+    }
   }
+
+  pop(valueCursor, providerFiber);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
   // Update the child lanes of all the ancestors, including the alternates.

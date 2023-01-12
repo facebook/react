@@ -8827,11 +8827,11 @@ function pushProvider(providerFiber, context, nextValue) {
 }
 function popProvider(context) {
   var currentValue = valueCursor.current;
-  pop(valueCursor);
   context._currentValue =
     currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
       ? context._defaultValue
       : currentValue;
+  pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
   for (; null !== parent; ) {
@@ -13967,7 +13967,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1673 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0fce6bb49-20230111",
+  version: "18.3.0-www-modern-555ece0cd-20230112",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2072 = {
@@ -13998,7 +13998,7 @@ var internals$jscomp$inline_2072 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0fce6bb49-20230111"
+  reconcilerVersion: "18.3.0-next-555ece0cd-20230112"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2073 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14321,4 +14321,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-0fce6bb49-20230111";
+exports.version = "18.3.0-next-555ece0cd-20230112";

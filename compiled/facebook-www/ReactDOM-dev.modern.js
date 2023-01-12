@@ -30725,6 +30725,12 @@ function beginWork(current, workInProgress, renderLanes) {
 }
 
 var valueCursor = createCursor(null);
+var rendererCursorDEV;
+
+{
+  rendererCursorDEV = createCursor(null);
+}
+
 var rendererSigil$1;
 
 {
@@ -30763,6 +30769,8 @@ function pushProvider(providerFiber, context, nextValue) {
     context._currentValue = nextValue;
 
     {
+      push(rendererCursorDEV, context._currentRenderer, providerFiber);
+
       if (
         context._currentRenderer !== undefined &&
         context._currentRenderer !== null &&
@@ -30780,7 +30788,6 @@ function pushProvider(providerFiber, context, nextValue) {
 }
 function popProvider(context, providerFiber) {
   var currentValue = valueCursor.current;
-  pop(valueCursor, providerFiber);
 
   {
     if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
@@ -30788,7 +30795,15 @@ function popProvider(context, providerFiber) {
     } else {
       context._currentValue = currentValue;
     }
+
+    {
+      var currentRenderer = rendererCursorDEV.current;
+      pop(rendererCursorDEV, providerFiber);
+      context._currentRenderer = currentRenderer;
+    }
   }
+
+  pop(valueCursor, providerFiber);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
   // Update the child lanes of all the ancestors, including the alternates.
@@ -42414,7 +42429,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0fce6bb49-20230111";
+var ReactVersion = "18.3.0-www-modern-555ece0cd-20230112";
 
 function createPortal(
   children,
