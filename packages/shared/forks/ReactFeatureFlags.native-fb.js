@@ -37,7 +37,6 @@ export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-export const warnAboutDeprecatedLifecycles = true;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;

@@ -13,7 +13,6 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const warnAboutDeprecatedLifecycles = true;
 export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 

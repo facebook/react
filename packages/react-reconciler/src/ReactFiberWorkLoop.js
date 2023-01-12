@@ -24,7 +24,6 @@ import type {
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
-  warnAboutDeprecatedLifecycles,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
@@ -3503,10 +3502,7 @@ export function throwIfInfiniteUpdateLoopDetected() {
 function flushRenderPhaseStrictModeWarningsInDEV() {
   if (__DEV__) {
     ReactStrictModeWarnings.flushLegacyContextWarning();
-
-    if (warnAboutDeprecatedLifecycles) {
-      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
-    }
+    ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
   }
 }
 
