@@ -485,6 +485,8 @@ class Driver<
         }
         break;
       }
+      case "error":
+        break;
       default: {
         assertExhaustive(terminal, "Unexpected terminal");
       }

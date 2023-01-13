@@ -7,6 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { CompilerError, CompilerErrorOptions } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import {
@@ -83,6 +84,7 @@ export default class HIRBuilder {
   #scopes: Array<Scope> = [];
   #bindings: Map<t.Identifier, Identifier> = new Map();
   #env: Environment;
+  errors: CompilerError[] = [];
 
   get nextIdentifierId() {
     return this.#env.nextIdentifierId;
@@ -365,6 +367,16 @@ export default class HIRBuilder {
     }
     invariant(false, "Expected a loop to be in scope");
   }
+
+  pushError(options: CompilerErrorOptions): CompilerError {
+    const error = new CompilerError(options);
+    this.errors.push(error);
+    return error;
+  }
+
+  hasErrors(): boolean {
+    return this.errors.length > 0;
+  }
 }
 
 /**
@@ -513,6 +525,9 @@ export function reversePostorderBlocks(func: HIR): void {
       }
       case "for": {
         visit(terminal.init);
+        break;
+      }
+      case "error": {
         break;
       }
       default: {

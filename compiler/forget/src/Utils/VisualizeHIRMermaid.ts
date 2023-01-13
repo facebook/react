@@ -105,6 +105,9 @@ function printTerminalLabel(terminal: Terminal): string {
     case "for":
       buffer.push("For");
       break;
+    case "error": {
+      break;
+    }
     default:
       assertExhaustive(terminal, `unhandled terminal ${terminal}`);
   }
@@ -168,7 +171,8 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
       break;
     }
     case "throw":
-    case "return": {
+    case "return":
+    case "error": {
       break;
     }
     default:

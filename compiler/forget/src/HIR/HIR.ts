@@ -167,6 +167,7 @@ export type BasicBlock = {
  * for-of, if-else, return, etc.
  */
 export type Terminal =
+  | ErrorTerminal
   | ThrowTerminal
   | ReturnTerminal
   | GotoTerminal
@@ -180,7 +181,8 @@ export type Terminal =
  * Terminal nodes allowed for a value block
  */
 export type ValueTerminal = IfTerminal | GotoTerminal;
-
+// A terminal that couldn't be lowered correctly.
+export type ErrorTerminal = { kind: "error"; id: InstructionId };
 export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
 
 export type ReturnTerminal = {

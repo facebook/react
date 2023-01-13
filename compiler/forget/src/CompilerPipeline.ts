@@ -44,7 +44,12 @@ export function* run(
 ): Iterator<CompilerPipelineValue, t.Function> {
   const env = new Environment();
 
-  const hir = lower(func, env);
+  const lowering = lower(func, env).orElse((errors) => {
+    const msg = errors.map((error) => error.toString()).join("\n\n");
+    throw new Error(msg);
+  });
+
+  const hir = lowering.unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   mergeConsecutiveBlocks(hir);

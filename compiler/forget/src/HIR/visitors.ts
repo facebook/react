@@ -292,6 +292,9 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "error": {
+      return terminal;
+    }
     default: {
       assertExhaustive(
         terminal,
@@ -341,6 +344,8 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.init;
       break;
     }
+    case "error":
+      break;
     default: {
       assertExhaustive(
         terminal,
@@ -379,7 +384,8 @@ export function mapTerminalOperands(
     case "logical":
     case "while":
     case "for":
-    case "goto": {
+    case "goto":
+    case "error": {
       // no-op
       break;
     }
@@ -418,7 +424,8 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "logical":
     case "while":
     case "for":
-    case "goto": {
+    case "goto":
+    case "error": {
       // no-op
       break;
     }

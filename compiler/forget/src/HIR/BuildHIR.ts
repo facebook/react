@@ -8,6 +8,8 @@
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { CompilerError, ErrorSeverity } from "../CompilerError";
+import { Err, Ok, Result } from "../lib/Result";
 import todo, { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import {
@@ -64,7 +66,7 @@ function getOrAddGlobal(identifierName: string): t.Identifier {
 export function lower(
   func: NodePath<t.Function>,
   env: Environment
-): HIRFunction {
+): Result<HIRFunction, CompilerError[]> {
   const builder = new HIRBuilder(env);
 
   const id =
@@ -73,35 +75,63 @@ export function lower(
       : null;
 
   const params: Array<Place> = [];
-  func.node.params.forEach((param) => {
-    todoInvariant(t.isIdentifier(param), "todo: support non-identifier params");
-    const identifier = builder.resolveIdentifier(param);
-    const place: Place = {
-      kind: "Identifier",
-      identifier,
-      effect: Effect.Unknown,
-      loc: param.loc ?? GeneratedSource,
-    };
-    params.push(place);
-  });
+  for (const param of func.get("params")) {
+    if (param.isIdentifier()) {
+      const identifier = builder.resolveIdentifier(param.node);
+      const place: Place = {
+        kind: "Identifier",
+        identifier,
+        effect: Effect.Unknown,
+        loc: param.node.loc ?? GeneratedSource,
+      };
+      params.push(place);
+    } else {
+      builder.pushError({
+        reason: `Support non-identifier params: ${param.node.type}`,
+        severity: ErrorSeverity.Todo,
+        // 1. We can't use NodePath.toString() because we're using @babel/traverse directly, see
+        //    https://fburl.com/45x18dcm for details.
+        // 2. Only NodePaths override toString to print the source, so if you tried this with
+        //    Node.toString() you'd just get [object Object].
+        // 3. You will see this in other calls to builder.pushError in this file.
+        source: func.toString(),
+        loc: param.node.loc ?? null,
+      });
+      continue;
+    }
+  }
 
   const body = func.get("body");
   if (body.isExpression()) {
-    todoInvariant(false, "TODO handle arrow functions");
+    builder.pushError({
+      reason: "Support arrow functions",
+      severity: ErrorSeverity.Todo,
+      source: func.toString(),
+      loc: body.node.loc ?? null,
+    });
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
   } else {
-    invariant(false, "Unexpected function body kind");
+    builder.pushError({
+      reason: `Unexpected function body kind: ${body.type}}`,
+      severity: ErrorSeverity.InvalidInput,
+      source: func.toString(),
+      loc: body.node.loc ?? null,
+    });
   }
 
-  return {
+  if (builder.hasErrors()) {
+    return Err(builder.errors);
+  }
+
+  return Ok({
     id,
     params,
     body: builder.build(),
     generator: func.node.generator === true,
     async: func.node.async === true,
     loc: func.node.loc ?? GeneratedSource,
-  };
+  });
 }
 
 /**
@@ -323,11 +353,16 @@ function lowerStatement(
       const continuationBlock = builder.reserve();
 
       const initBlock = builder.enter("value", (blockId) => {
-        const init = stmt.get("init") as NodePath<t.VariableDeclaration>;
-        todoInvariant(
-          t.isVariableDeclaration(init.node),
-          "handle non variable initialization in for"
-        );
+        const init = stmt.get("init");
+        if (!init.isVariableDeclaration()) {
+          builder.pushError({
+            reason: "Support non-variable initialization in for",
+            severity: ErrorSeverity.Todo,
+            source: stmt.toString(),
+            loc: init.node?.loc ?? null,
+          });
+          return { kind: "error", id: makeInstructionId(0) };
+        }
         lowerStatement(builder, init);
         return {
           kind: "goto",
@@ -339,10 +374,16 @@ function lowerStatement(
 
       const updateBlock = builder.enter("value", (blockId) => {
         const update = stmt.get("update");
-        todoInvariant(update.hasNode(), "Handle empty for updater");
-        if (update.hasNode()) {
-          lowerExpressionToVoid(builder, update);
+        if (!update.hasNode()) {
+          builder.pushError({
+            reason: "Handle empty for updater",
+            severity: ErrorSeverity.Todo,
+            source: stmt.toString(),
+            loc: null,
+          });
+          return { kind: "error", id: makeInstructionId(0) };
         }
+        lowerExpressionToVoid(builder, update);
         return {
           kind: "goto",
           block: testBlock.id,
@@ -378,19 +419,27 @@ function lowerStatement(
       );
 
       const test = stmt.get("test");
-      todoInvariant(test.hasNode(), "ForStatement without test");
-      builder.terminateWithContinuation(
-        "value",
-        {
-          kind: "if",
-          test: lowerExpressionToPlace(builder, test),
-          consequent: bodyBlock,
-          alternate: continuationBlock.id,
-          fallthrough: continuationBlock.id,
-          id: makeInstructionId(0),
-        },
-        continuationBlock
-      );
+      if (!test.hasNode()) {
+        builder.pushError({
+          reason: "ForStatement without test",
+          severity: ErrorSeverity.Todo,
+          source: stmt.toString(),
+          loc: null,
+        });
+      } else {
+        builder.terminateWithContinuation(
+          "value",
+          {
+            kind: "if",
+            test: lowerExpressionToPlace(builder, test),
+            consequent: bodyBlock,
+            alternate: continuationBlock.id,
+            fallthrough: continuationBlock.id,
+            id: makeInstructionId(0),
+          },
+          continuationBlock
+        );
+      }
       return;
     }
     case "DoWhileStatement": {
@@ -458,19 +507,27 @@ function lowerStatement(
        * to evaluate whether to enter the loop or bypass to the continuation.
        */
       const loc = stmt.node.loc;
-      invariant(loc, "while statement must have a location");
-      builder.terminateWithContinuation(
-        "block",
-        {
-          kind: "while",
-          loc,
-          test: conditionalBlock.id,
-          loop: loopBlock,
-          fallthrough: continuationBlock.id,
-          id: makeInstructionId(0),
-        },
-        conditionalBlock
-      );
+      if (loc == null) {
+        builder.pushError({
+          reason: "while statement must have a location",
+          severity: ErrorSeverity.InvalidInput,
+          source: stmt.toString(),
+          loc: null,
+        });
+      } else {
+        builder.terminateWithContinuation(
+          "block",
+          {
+            kind: "while",
+            loc,
+            test: conditionalBlock.id,
+            loop: loopBlock,
+            fallthrough: continuationBlock.id,
+            id: makeInstructionId(0),
+          },
+          conditionalBlock
+        );
+      }
       /**
        * The conditional block is empty and exists solely as conditional for
        * (re)entering or exiting the loop
@@ -544,10 +601,16 @@ function lowerStatement(
         const case_: NodePath<t.SwitchCase> = stmt.get("cases")[ii];
         const test = case_.get("test");
         if (!test.hasNode()) {
-          invariant(
-            !hasDefault,
-            "Expected at most one `default` branch, this code should have failed to parse"
-          );
+          if (hasDefault) {
+            builder.pushError({
+              reason:
+                "Expected at most one `default` branch, this code should have failed to parse",
+              severity: ErrorSeverity.InvalidInput,
+              source: stmt.toString(),
+              loc: case_.node.loc ?? null,
+            });
+            break;
+          }
           hasDefault = true;
         }
         const block = builder.enter("block", (_blockId) => {
@@ -623,10 +686,16 @@ function lowerStatement(
     case "VariableDeclaration": {
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
       const nodeKind: string = stmt.node.kind;
-      invariant(
-        nodeKind === "let" || nodeKind === "const",
-        "`var` declarations are not supported, use let or const"
-      );
+      if (nodeKind === "var") {
+        builder.pushError({
+          reason: "`var` declarations are not supported, use let or const",
+          severity: ErrorSeverity.Todo,
+          source: stmt.toString(),
+          loc: stmt.node.loc ?? null,
+        });
+        // TODO: should we lower this to an error variant
+        return;
+      }
       const kind =
         nodeKind === "let" ? InstructionKind.Let : InstructionKind.Const;
       for (const declaration of stmt.get("declarations")) {

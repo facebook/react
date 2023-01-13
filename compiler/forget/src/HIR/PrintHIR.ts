@@ -82,6 +82,7 @@ export function printMixedHIR(
     case "throw":
     case "while":
     case "for":
+    case "error":
     case "goto": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
@@ -177,6 +178,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "for": {
       value = `[${terminal.id}] For init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} update=bb${terminal.update} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "error": {
+      value = `Error`;
       break;
     }
     default: {
