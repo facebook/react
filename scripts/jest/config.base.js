@@ -28,4 +28,6 @@ module.exports = {
   testSequencer: require.resolve('./jestSequencer'),
 
   testEnvironment: 'jsdom',
+
+  testRunner: 'jasmine2',
 };
