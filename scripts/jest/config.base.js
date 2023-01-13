@@ -21,7 +21,8 @@ module.exports = {
   roots: ['<rootDir>/packages', '<rootDir>/scripts'],
   collectCoverageFrom: ['packages/**/*.js'],
   fakeTimers: {
-    enableGlobally: true
+    enableGlobally: true,
+    legacyFakeTimers: true,
   },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
