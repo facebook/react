@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   InstructionId,
   makeInstructionId,
@@ -14,7 +15,6 @@ import {
   ReactiveValueBlock,
   ScopeId,
 } from "../HIR/HIR";
-import { invariant } from "../Utils/CompilerError";
 import { getInstructionScope, getPlaceScope } from "./BuildReactiveBlocks";
 import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
 

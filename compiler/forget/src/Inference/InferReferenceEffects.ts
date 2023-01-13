@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { invariant } from "../Utils/CompilerError";
-import { assertExhaustive } from "../Utils/utils";
+import invariant from "invariant";
 import {
   BasicBlock,
   BlockId,
@@ -29,6 +28,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from "../HIR/visitors";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * For every usage of a value in the given function, infers the effect or action

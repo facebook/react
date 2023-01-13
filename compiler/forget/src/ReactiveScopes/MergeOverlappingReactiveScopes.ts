@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   InstructionId,
   InstructionValue,
@@ -17,7 +18,6 @@ import {
   ScopeId,
 } from "../HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { invariant } from "../Utils/CompilerError";
 import DisjointSet from "../Utils/DisjointSet";
 import { retainWhere } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";

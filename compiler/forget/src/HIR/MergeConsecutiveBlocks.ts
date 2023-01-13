@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { invariant } from "../Utils/CompilerError";
+import invariant from "invariant";
 import {
   BlockId,
   Effect,

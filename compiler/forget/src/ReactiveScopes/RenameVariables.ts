@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   Identifier,
   IdentifierId,
@@ -14,7 +15,6 @@ import {
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
 /**

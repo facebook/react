@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   ReactiveFunction,
   ReactiveScopeBlock,
@@ -19,7 +20,6 @@ import {
   printInstructionValue,
   printPlace,
 } from "../HIR/PrintHIR";
-import { invariant } from "../Utils/CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 
 export function printReactiveFunction(fn: ReactiveFunction): string {

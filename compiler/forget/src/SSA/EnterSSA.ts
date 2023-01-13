@@ -1,3 +1,4 @@
+import invariant from "invariant";
 import {
   BasicBlock,
   BlockId,
@@ -17,7 +18,6 @@ import {
   mapInstructionOperands,
   mapTerminalOperands,
 } from "../HIR/visitors";
-import { invariant } from "../Utils/CompilerError";
 
 type IncompletePhi = {
   oldId: Identifier;

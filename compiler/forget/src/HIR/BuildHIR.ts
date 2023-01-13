@@ -7,7 +7,7 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
-import { invariant } from "../Utils/CompilerError";
+import invariant from "invariant";
 import todo, { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import {

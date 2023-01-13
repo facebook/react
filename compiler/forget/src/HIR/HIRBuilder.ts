@@ -6,7 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import { invariant } from "../Utils/CompilerError";
+import invariant from "invariant";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import {
