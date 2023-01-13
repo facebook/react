@@ -61,24 +61,12 @@ function compile(source: string): Map<string, React.ReactNode> | CompilerError {
 
     // TODO: Handle multiple functions
     const func = astFunctions[0];
-
     const tabs = new Map<string, React.ReactNode>();
-    const generator = run(func);
-    let ast;
-    while (true) {
-      const next = generator.next();
-      if (next.done) {
-        ast = next.value;
-        break;
-      }
-      const result = next.value;
+    let ast: t.Function | null = null;
+    for (const result of run(func)) {
       switch (result.kind) {
         case "ast": {
-          const { code } = codegen(result.value, source);
-          tabs.set(
-            result.name,
-            <TextTabContent output={code}></TextTabContent>
-          );
+          ast = result.value;
           break;
         }
         case "hir": {
@@ -104,19 +92,21 @@ function compile(source: string): Map<string, React.ReactNode> | CompilerError {
     }
     // Ensure that JS and the JS source map come first
     const reorderedTabs = new Map();
-    const { code, sourceMapUrl } = codegen(ast, source);
-    reorderedTabs.set("JS", <TextTabContent output={code}></TextTabContent>);
-    if (sourceMapUrl) {
-      reorderedTabs.set(
-        "SourceMap",
-        <>
-          <iframe
-            src={sourceMapUrl}
-            className="w-full h-96"
-            title="Generated Code"
-          />
-        </>
-      );
+    if (ast !== null) {
+      const { code, sourceMapUrl } = codegen(ast, source);
+      reorderedTabs.set("JS", <TextTabContent output={code}></TextTabContent>);
+      if (sourceMapUrl) {
+        reorderedTabs.set(
+          "SourceMap",
+          <>
+            <iframe
+              src={sourceMapUrl}
+              className="w-full h-96"
+              title="Generated Code"
+            />
+          </>
+        );
+      }
     }
     tabs.forEach((tab, name) => {
       reorderedTabs.set(name, tab);
