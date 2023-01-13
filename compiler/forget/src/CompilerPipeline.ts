@@ -41,7 +41,7 @@ export type CompilerPipelineValue =
 
 export function* run(
   func: NodePath<t.FunctionDeclaration>
-): Iterator<CompilerPipelineValue, t.Function> {
+): Generator<CompilerPipelineValue, t.Function> {
   const env = new Environment();
 
   const lowering = lower(func, env).orElse((errors) => {
