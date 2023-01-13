@@ -107,8 +107,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,

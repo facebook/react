@@ -141,8 +141,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,
@@ -173,7 +171,7 @@ var enableProfilerNestedUpdatePhase = true;
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 var createRootStrictEffectsByDefault = false;
-var enableClientRenderFallbackOnTextMismatch = false; // Logs additional User Timing API marks for use with an experimental profiling tool.
+var enableClientRenderFallbackOnTextMismatch = false;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var enableSuspenseCallback = true;
@@ -1177,10 +1175,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
           checkAttributeStringCoercion(value, name);
         }
 
-        node.setAttribute(
-          _attributeName,
-          enableTrustedTypesIntegration ? value : "" + value
-        );
+        node.setAttribute(_attributeName, "" + value);
       }
     }
 
@@ -1220,9 +1215,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
-        attributeValue = value;
-      } else {
+      {
         {
           checkAttributeStringCoercion(value, attributeName);
         }
@@ -3027,23 +3020,6 @@ var reusableSVGContainer;
 
 var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
   if (node.namespaceURI === SVG_NAMESPACE) {
-    {
-      if (enableTrustedTypesIntegration) {
-        // TODO: reconsider the text of this warning and when it should show
-        // before enabling the feature flag.
-        if (typeof trustedTypes !== "undefined") {
-          error(
-            "Using 'dangerouslySetInnerHTML' in an svg element with " +
-              "Trusted Types enabled in an Internet Explorer will cause " +
-              "the trusted value to be converted to string. Assigning string " +
-              "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-              "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
-              "on the enclosing div instead."
-          );
-        }
-      }
-    }
-
     if (!("innerHTML" in node)) {
       // IE does not have innerHTML for SVG nodes, so instead we inject the
       // new markup in a temp node and then move the child nodes across into
@@ -11739,7 +11715,6 @@ function getListenerSetKey(domEventName, capture) {
 }
 
 var didWarnInvalidHydration = false;
-var didWarnScriptTags = false;
 var DANGEROUSLY_SET_INNER_HTML = "dangerouslySetInnerHTML";
 var SUPPRESS_CONTENT_EDITABLE_WARNING = "suppressContentEditableWarning";
 var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
@@ -12053,19 +12028,6 @@ function createElement(type, props, rootContainerElement, parentNamespace) {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       var div = ownerDocument.createElement("div");
-
-      {
-        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-          error(
-            "Encountered a script tag while rendering React component. " +
-              "Scripts inside React components are never executed when rendering " +
-              "on the client. Consider using template tag instead " +
-              "(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
-          );
-
-          didWarnScriptTags = true;
-        }
-      }
 
       div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
       // This is guaranteed to yield a script element.
@@ -42429,7 +42391,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-489d00fa6-20230112";
+var ReactVersion = "18.3.0-www-modern-379dd741e-20230113";
 
 function createPortal(
   children,

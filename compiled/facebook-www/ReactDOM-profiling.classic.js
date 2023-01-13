@@ -31,8 +31,6 @@ var Scheduler = require("scheduler"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
@@ -635,10 +633,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       isAttributeNameSafe(name) &&
         (null === value
           ? node.removeAttribute(name)
-          : node.setAttribute(
-              name,
-              enableTrustedTypesIntegration ? value : "" + value
-            ));
+          : node.setAttribute(name, "" + value));
     else if (JSCompiler_inline_result.mustUseProperty)
       node[JSCompiler_inline_result.propertyName] =
         null === value
@@ -656,7 +651,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       var type$3 = JSCompiler_inline_result.type;
       if (3 === type$3 || (4 === type$3 && !0 === value)) value = "";
       else if (
-        ((value = enableTrustedTypesIntegration ? value : "" + value),
+        ((value = "" + value),
         JSCompiler_inline_result.sanitizeURL &&
           isJavaScriptProtocol.test(value.toString()))
       )
@@ -16304,7 +16299,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1824 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-489d00fa6-20230112",
+  version: "18.3.0-www-classic-379dd741e-20230113",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -16348,7 +16343,7 @@ var devToolsConfig$jscomp$inline_1824 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-489d00fa6-20230112"
+  reconcilerVersion: "18.3.0-next-379dd741e-20230113"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16577,7 +16572,7 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-489d00fa6-20230112";
+exports.version = "18.3.0-next-379dd741e-20230113";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

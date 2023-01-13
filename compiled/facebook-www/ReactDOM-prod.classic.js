@@ -20,8 +20,6 @@ var Scheduler = require("scheduler"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
@@ -621,10 +619,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       isAttributeNameSafe(name) &&
         (null === value
           ? node.removeAttribute(name)
-          : node.setAttribute(
-              name,
-              enableTrustedTypesIntegration ? value : "" + value
-            ));
+          : node.setAttribute(name, "" + value));
     else if (JSCompiler_inline_result.mustUseProperty)
       node[JSCompiler_inline_result.propertyName] =
         null === value
@@ -642,7 +637,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       var type$3 = JSCompiler_inline_result.type;
       if (3 === type$3 || (4 === type$3 && !0 === value)) value = "";
       else if (
-        ((value = enableTrustedTypesIntegration ? value : "" + value),
+        ((value = "" + value),
         JSCompiler_inline_result.sanitizeURL &&
           isJavaScriptProtocol.test(value.toString()))
       )
@@ -15534,7 +15529,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1750 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-489d00fa6-20230112",
+  version: "18.3.0-www-classic-379dd741e-20230113",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2134 = {
@@ -15564,7 +15559,7 @@ var internals$jscomp$inline_2134 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-489d00fa6-20230112"
+  reconcilerVersion: "18.3.0-next-379dd741e-20230113"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2135 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15806,4 +15801,4 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-489d00fa6-20230112";
+exports.version = "18.3.0-next-379dd741e-20230113";

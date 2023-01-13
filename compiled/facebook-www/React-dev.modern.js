@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-489d00fa6-20230112";
+var ReactVersion = "18.3.0-www-modern-379dd741e-20230113";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -478,8 +478,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,
