@@ -1625,21 +1625,18 @@ function lowerAssignment(
   }
 }
 
-function capturePureScopes(
-  currentScope: Scope,
-  componentScope: Scope
-): Set<Scope> {
-  let pureScopes: Set<Scope> = new Set();
-  while (currentScope) {
-    pureScopes.add(currentScope);
+function captureScopes({ from, to }: { from: Scope; to: Scope }): Set<Scope> {
+  let scopes: Set<Scope> = new Set();
+  while (from) {
+    scopes.add(from);
 
-    if (currentScope === componentScope) {
+    if (from === to) {
       break;
     }
 
-    currentScope = currentScope.parent;
+    from = from.parent;
   }
-  return pureScopes;
+  return scopes;
 }
 
 function gatherCapturedDeps(
@@ -1651,10 +1648,10 @@ function gatherCapturedDeps(
 
   // Capture all the scopes from the parent of this function up to and including
   // the component scope.
-  const pureScopes: Set<Scope> = capturePureScopes(
-    fn.scope.parent,
-    componentScope
-  );
+  const pureScopes: Set<Scope> = captureScopes({
+    from: fn.scope.parent,
+    to: componentScope,
+  });
 
   fn.get("body").traverse({
     Expression(path) {
