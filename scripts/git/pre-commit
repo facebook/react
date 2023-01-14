@@ -8,3 +8,9 @@ exec 1>&2
 git diff --cached --name-only --diff-filter=ACMRTUB | \
   grep '\.js$' | \
   xargs ./node_modules/.bin/eslint --
+
+# The script begins with the shebang line #!/bin/sh which specifies that the file should be executed by the shell.
+# The next line is a comment indicating that the file is a pre-commit hook and should be symlinked or copied to the .git/hooks/ directory in order to enable it.
+# The script then redirects the output to stderr using the exec 1>&2 command.
+# The script then uses the git diff command to list all the files that have been added, modified, renamed or deleted in the current commit and filters them by file extension .js using grep.
+# Finally, it runs ./node_modules/.bin/eslint command on the filtered files and this command will lint the javascript files and if there are any errors it will prevent the commit from being made.
