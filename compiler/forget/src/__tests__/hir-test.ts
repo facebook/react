@@ -121,6 +121,10 @@ function transform(text: string, file: string): Array<TestOutput> {
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
+        if (nodePath.scope.getProgramParent() !== nodePath.scope.parent) {
+          return;
+        }
+
         const ast = compile(nodePath);
 
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
