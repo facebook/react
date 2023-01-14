@@ -1,5 +1,5 @@
-function component() {
-  let z = 100;
+function component(a) {
+  let z = { a };
   let x = function () {
     (function () {
       z;

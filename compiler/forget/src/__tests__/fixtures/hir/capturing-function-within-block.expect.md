@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-function component() {
-  let z = 100;
+function component(a) {
+  let z = { a };
   let x;
   {
     x = function () {
@@ -18,19 +18,33 @@ function component() {
 ## Code
 
 ```javascript
-function component() {
+function component(a) {
   const $ = React.useMemoCache();
-  const z = 100;
+  const c_0 = $[0] !== a;
+  let z;
+  if (c_0) {
+    z = {
+      a: a,
+    };
+    $[0] = a;
+    $[1] = z;
+  } else {
+    z = $[1];
+  }
+
   const x = undefined;
+  const c_2 = $[2] !== z;
   let x$0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+
+  if (c_2) {
     x$0 = function () {
       z;
     };
 
-    $[0] = x$0;
+    $[2] = z;
+    $[3] = x$0;
   } else {
-    x$0 = $[0];
+    x$0 = $[3];
   }
 
   return x$0;
