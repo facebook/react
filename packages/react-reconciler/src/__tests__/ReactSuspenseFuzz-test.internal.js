@@ -7,13 +7,13 @@ let ReactFeatureFlags;
 let Random;
 
 const SEED = process.env.FUZZ_TEST_SEED || 'default';
-const prettyFormatPkg = require('pretty-format');
+const {format: _prettyFormat, plugins} = require('pretty-format');
 
 function prettyFormat(thing) {
-  return prettyFormatPkg(thing, {
+  return _prettyFormat(thing, {
     plugins: [
-      prettyFormatPkg.plugins.ReactElement,
-      prettyFormatPkg.plugins.ReactTestComponent,
+      plugins.ReactElement,
+      plugins.ReactTestComponent,
     ],
   });
 }
