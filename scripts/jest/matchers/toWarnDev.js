@@ -270,15 +270,20 @@ const createMatcherFor = (consoleMethod, matcherName) =>
           // Once `act(async () => {}).then(() => {}).then(() => {})` works
           // we can just return `result.then(onFinally, error => ...)`
           returnPromise = new Promise((resolve, reject) => {
-            result.then(
-              () => {
-                resolve(onFinally());
-              },
-              error => {
-                caughtError = error;
-                return resolve(onFinally());
-              }
-            );
+            result
+              .then(
+                () => {
+                  resolve(onFinally());
+                },
+                error => {
+                  caughtError = error;
+                  return resolve(onFinally());
+                }
+              )
+              // In case onFinally throws we need to reject from this matcher
+              .catch(error => {
+                reject(error);
+              });
           });
         }
       } catch (error) {
