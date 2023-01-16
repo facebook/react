@@ -607,3 +607,7 @@ function phiTypeEquals(tA: Type, tB: Type): boolean {
 export function isObjectType(id: Identifier): boolean {
   return id.type.kind === "Object";
 }
+
+export function isPrimitiveType(id: Identifier): boolean {
+  return id.type.kind === "Primitive";
+}

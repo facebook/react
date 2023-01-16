@@ -3,6 +3,7 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
+  isPrimitiveType,
   LValue,
   Place,
 } from "../HIR/HIR";
@@ -33,6 +34,9 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
   let alias: Place | null = null;
   switch (instrValue.kind) {
     case "Identifier": {
+      if (isPrimitiveType(instrValue.identifier)) {
+        return;
+      }
       alias = instrValue;
       break;
     }
