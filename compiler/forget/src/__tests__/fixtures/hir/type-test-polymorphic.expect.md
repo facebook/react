@@ -41,20 +41,18 @@ function component() {
     o = $[1];
   }
 
-  const c_2 = $[2] !== p;
-  const c_3 = $[3] !== o;
+  const c_2 = $[2] !== o;
   let x;
 
-  if (c_2 || c_3) {
+  if (c_2) {
     x = {};
     x.t = p;
     const z = x.t;
     x.t = o;
-    $[2] = p;
-    $[3] = o;
-    $[4] = x;
+    $[2] = o;
+    $[3] = x;
   } else {
-    x = $[4];
+    x = $[3];
   }
 
   const y = x.t;

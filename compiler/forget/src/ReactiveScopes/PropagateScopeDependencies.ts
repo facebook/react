@@ -10,6 +10,7 @@ import {
   InstructionId,
   InstructionKind,
   InstructionValue,
+  isPrimitiveType,
   LValue,
   makeInstructionId,
   Place,
@@ -287,7 +288,9 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
     const range = lvalue.place.identifier.mutableRange;
     // TODO: only assign Const if the value is never reassigned
     const kind =
-      range.end === range.start + 1 ? valueKind(instr.value) : DeclKind.Dynamic;
+      range.end === range.start + 1
+        ? valueKind(lvalue.place.identifier)
+        : DeclKind.Dynamic;
     context.declare(lvalue.place.identifier, {
       kind,
       id: lvalue.place.identifier.mutableRange.start,
@@ -295,31 +298,6 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   }
 }
 
-function valueKind(value: InstructionValue): DeclKind {
-  switch (value.kind) {
-    case "BinaryExpression":
-    case "JSXText":
-    case "Primitive": {
-      return DeclKind.Const;
-    }
-    case "ComputedLoad":
-    case "ComputedStore":
-    case "PropertyStore":
-    case "PropertyLoad":
-    case "Identifier":
-    case "ArrayExpression":
-    case "CallExpression":
-    case "JsxExpression":
-    case "JsxFragment":
-    case "NewExpression":
-    case "ObjectExpression":
-    case "FunctionExpression":
-    case "OtherStatement":
-    case "UnaryExpression": {
-      return DeclKind.Dynamic;
-    }
-    default: {
-      assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
-    }
-  }
+function valueKind(id: Identifier): DeclKind {
+  return isPrimitiveType(id) ? DeclKind.Const : DeclKind.Dynamic;
 }
