@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -25,7 +26,7 @@ let fatalError = undefined;
 describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
     jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
+    ({JSDOM} = require('jsdom'));
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
