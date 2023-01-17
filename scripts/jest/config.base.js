@@ -26,7 +26,7 @@ module.exports = {
   },
   snapshotFormat: {
     escapeString: true,
-    printBasicPrototype: true
+    printBasicPrototype: true,
   },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 

@@ -109,7 +109,7 @@ module.exports = {
                 : false,
             }
           )
-        ).code
+        ).code,
       };
     }
     return {code: src};
