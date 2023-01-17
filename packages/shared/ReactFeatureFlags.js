@@ -101,19 +101,6 @@ export const enableHostSingletons = true;
 
 export const enableFloat = true;
 
-// When a node is unmounted, recurse into the Fiber subtree and clean out
-// references. Each level cleans up more fiber fields than the previous level.
-// As far as we know, React itself doesn't leak, but because the Fiber contains
-// cycles, even a single leak in product code can cause us to retain large
-// amounts of memory.
-//
-// The long term plan is to remove the cycles, but in the meantime, we clear
-// additional fields to mitigate.
-//
-// It's an enum so that we can experiment with different levels of
-// aggressiveness.
-export const deletedTreeCleanUpLevel = 3;
-
 export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
