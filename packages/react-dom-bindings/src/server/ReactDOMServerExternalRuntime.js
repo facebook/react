@@ -80,38 +80,36 @@ function handleNode(node_ /*: Node */) {
   const node = (node_ /*: HTMLElement*/);
   const dataset = node.dataset;
 
-  if (dataset.hasOwnProperty('ri')) {
+  if (dataset['ix'] != null) {
     node.remove();
-    switch (dataset.ri) {
-      case 'x':
-        return clientRenderBoundary(
-          dataset.bid,
-          dataset.dgst,
-          dataset.msg,
-          dataset.stck,
-        );
-      case 's':
-        return completeSegment(dataset.sid, dataset.pid);
-      case 'b':
-        return completeBoundary(dataset.bid, dataset.sid);
-      case 'rb':
-        return completeBoundaryWithStyles(
-          dataset.bid,
-          dataset.sid,
-          JSON.parse(dataset.sty),
-        );
-      case 'c':
-        return completeContainer(dataset.bid, dataset.sid);
-      case 'rc':
-        return completeContainerWithStyles(
-          dataset.bid,
-          dataset.sid,
-          JSON.parse(dataset.sty),
-        );
-      default:
-        throw new Error(
-          'React encountered a render instruction it did not recognize.',
-        );
-    }
+    return clientRenderBoundary(
+      dataset['ix'],
+      dataset['dgst'],
+      dataset['msg'],
+      dataset['stck'],
+    );
+  } else if (dataset['is'] != null) {
+    node.remove();
+    return completeSegment(dataset['is'], dataset['p']);
+  } else if (dataset['ir'] != null) {
+    node.remove();
+    return completeBoundaryWithStyles(
+      dataset['ir'],
+      dataset['s'],
+      JSON.parse(dataset['r']),
+    );
+  } else if (dataset['ib'] != null) {
+    node.remove();
+    return completeBoundary(dataset['ib'], dataset['s']);
+  } else if (dataset['ik'] != null) {
+    node.remove();
+    return completeContainerWithStyles(
+      dataset['ik'],
+      dataset['s'],
+      JSON.parse(dataset['r']),
+    );
+  } else if (dataset['ic'] != null) {
+    node.remove();
+    return completeContainer(dataset['ic'], dataset['s']);
   }
 }

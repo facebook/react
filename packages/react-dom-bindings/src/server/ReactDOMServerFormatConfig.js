@@ -2509,10 +2509,23 @@ const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScriptEnd = stringToPrecomputedChunk('")</script>');
 
-const completeSegmentData1 = stringToPrecomputedChunk(
-  '<template data-ri="s" data-sid="',
-);
-const completeSegmentData2 = stringToPrecomputedChunk('" data-pid="');
+/**
+ * Instrucntion enconding legend
+ *
+ * is = complete segment instruction (segmentID)
+ * ix = client render boundaryinstrunction (boundaryID)
+ * ib = complete boundary instruction (boundaryID)
+ * ir = complete boundary with styles insertion instruction (boundaryID)
+ * ic = complete container instruction (containerID)
+ * ik = complete container with styles insertion instruction (containerID)
+ *
+ * s = segmentID
+ * p = placeholderID
+ * r = styles JSON string
+ */
+
+const completeSegmentData1 = stringToPrecomputedChunk('<template data-is="');
+const completeSegmentData2 = stringToPrecomputedChunk('" data-p="');
 const completeSegmentDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedSegmentInstruction(
@@ -2586,24 +2599,16 @@ const bootstrapContainerOpenStart = stringToPrecomputedChunk(
 const bootstrapContainerOpenEnd = stringToPrecomputedChunk('">');
 const bootstrapContainerClose = stringToPrecomputedChunk('</template>');
 
-const completeContainerData1 = stringToPrecomputedChunk(
-  '<template data-ri="c" data-bid="',
-);
+const completeContainerData1 = stringToPrecomputedChunk('<template data-ic="');
 const completeContainerWithStylesData1 = stringToPrecomputedChunk(
-  '<template data-ri="rc" data-bid="',
+  '<template data-ik="',
 );
-const completeBoundaryData1 = stringToPrecomputedChunk(
-  '<template data-ri="b" data-bid="',
-);
+const completeBoundaryData1 = stringToPrecomputedChunk('<template data-ib="');
 const completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
-  '<template data-ri="rb" data-bid="',
+  '<template data-ir="',
 );
-const completeBoundaryOrContainerData2 = stringToPrecomputedChunk(
-  '" data-sid="',
-);
-const completeBoundaryOrContainerData3 = stringToPrecomputedChunk(
-  '" data-sty="',
-);
+const completeBoundaryOrContainerData2 = stringToPrecomputedChunk('" data-s="');
+const completeBoundaryOrContainerData3 = stringToPrecomputedChunk('" data-r="');
 const completeBoundaryOrContainerDataEmptyEnd = dataElementQuotedEnd;
 
 export function writeCompletedBoundaryInstruction(
@@ -2852,9 +2857,7 @@ const clientRenderScript1A = stringToPrecomputedChunk('"');
 const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
 const clientRenderScriptEnd = stringToPrecomputedChunk(')</script>');
 
-const clientRenderData1 = stringToPrecomputedChunk(
-  '<template data-ri="x" data-bid="',
-);
+const clientRenderData1 = stringToPrecomputedChunk('<template data-ix="');
 const clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
 const clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
 const clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
@@ -2882,7 +2885,7 @@ export function writeClientRenderBoundaryInstruction(
       writeChunk(destination, clientRenderScript1Partial);
     }
   } else {
-    // <template data-ri="x" data-bid="
+    // <template data-ix="
     writeChunk(destination, clientRenderData1);
   }
 
