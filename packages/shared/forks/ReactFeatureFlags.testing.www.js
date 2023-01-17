@@ -49,7 +49,6 @@ export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = true;
-export const deletedTreeCleanUpLevel = 3;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 
