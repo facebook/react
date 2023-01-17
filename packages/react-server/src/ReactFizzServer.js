@@ -2356,22 +2356,24 @@ function flushCompletedQueues(
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
+    } else if (request.pendingRootTasks > 0) {
+      // There are still root tasks and we have no completedRootSegment. We infer that a root segment
+      // will eventually arrive and avoid flushing anything deeper. We do this to avoid emitting
+      // resources or boundaries before we have flushed the completedRootSegment
+      return;
     }
 
-    const clientRenderedBoundaries = request.clientRenderedBoundaries;
-    const completedBoundaries = request.completedBoundaries;
-    const partialBoundaries = request.partialBoundaries;
-    const willEmitInstructions =
-      clientRenderedBoundaries.length > 0 ||
-      completedBoundaries.length > 0 ||
-      partialBoundaries.length > 0;
-
     if (enableFloat) {
+      const willFlushInstructions =
+        request.rootBoundary !== null ||
+        request.clientRenderedBoundaries.length > 0 ||
+        request.partialBoundaries.length > 0 ||
+        request.completedBoundaries.length > 0;
       flushImmediateResources(
         destination,
         request.resources,
         request.responseState,
-        willEmitInstructions,
+        willFlushInstructions,
       );
     }
 
@@ -2391,6 +2393,7 @@ function flushCompletedQueues(
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
+    const clientRenderedBoundaries = request.clientRenderedBoundaries;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
@@ -2405,6 +2408,7 @@ function flushCompletedQueues(
     // Next we emit any complete boundaries. It's better to favor boundaries
     // that are completely done since we can actually show them, than it is to emit
     // any individual segments from a partially complete boundary.
+    const completedBoundaries = request.completedBoundaries;
     for (i = 0; i < completedBoundaries.length; i++) {
       const boundary = completedBoundaries[i];
       if (!flushCompletedBoundary(request, destination, boundary)) {
@@ -2425,6 +2429,7 @@ function flushCompletedQueues(
 
     // Next we emit any segments of any boundaries that are partially complete
     // but not deeply complete.
+    const partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
       if (!flushPartialBoundary(request, destination, boundary)) {
