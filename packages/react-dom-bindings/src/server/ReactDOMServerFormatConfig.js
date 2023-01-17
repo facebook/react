@@ -126,7 +126,6 @@ export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  containerBoundaryID: SuspenseBoundaryID,
   idPrefix: string,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
@@ -198,7 +197,6 @@ export function createResponseState(
     string | BootstrapScriptDescriptor,
   > | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
-  containerID: string | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
@@ -339,9 +337,6 @@ export function createResponseState(
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
     idPrefix: idPrefix,
-    containerBoundaryID: containerID
-      ? stringToPrecomputedChunk(containerID)
-      : null,
     nextSuspenseID: 0,
     streamingFormat,
     startInlineScript: inlineScriptWithNonce,
@@ -493,10 +488,8 @@ export function assignSuspenseBoundaryID(
   );
 }
 
-export function getRootBoundaryID(
-  responseState: ResponseState,
-): SuspenseBoundaryID {
-  return responseState.containerBoundaryID;
+export function createRootBoundaryID(containerID: string): SuspenseBoundaryID {
+  return stringToPrecomputedChunk(containerID);
 }
 
 export function makeId(
@@ -2210,6 +2203,24 @@ export function writeCompletedRoot(
   return true;
 }
 
+export function writeErroredRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  // If fallback bootstrap scripts were provided and we errored at the Root Boundary
+  // then use those. Use the normal bootstrapChunks if no fallbacks were provided
+  const bootstrapChunks =
+    responseState.fallbackBootstrapChunks || responseState.bootstrapChunks;
+  let i = 0;
+  for (; i < bootstrapChunks.length - 1; i++) {
+    writeChunk(destination, bootstrapChunks[i]);
+  }
+  if (i < bootstrapChunks.length) {
+    return writeChunkAndReturn(destination, bootstrapChunks[i]);
+  }
+  return true;
+}
+
 // Structural Nodes
 
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
@@ -2615,207 +2626,220 @@ export function writeCompletedBoundaryInstruction(
   const scriptFormat =
     !enableFizzExternalRuntime ||
     responseState.streamingFormat === ScriptStreamingFormat;
-  let r = true;
   if (scriptFormat) {
     if (enableFloat && hasStyleDependencies) {
-      if (boundaryID === responseState.containerBoundaryID) {
-        // We emit the bootstrap chunks into a template container with an id
-        // formed from the root segment ID. The insertion script will inject
-        // the bootstrap scripts into the DOM after revealing the content.
-        // We don't do this for cases where there are no style dependencies because
-        // the content swap is synchronous and will therefore always complete before
-        // the bootstrap scripts run
-        const bootstrapChunks = responseState.bootstrapChunks;
-        if (bootstrapChunks.length) {
-          writeChunk(destination, bootstrapContainerOpenStart);
-          writeChunk(destination, responseState.segmentPrefix);
-          writeChunk(destination, formattedContentID);
-          writeChunk(destination, bootstrapContainerOpenEnd);
-          for (let i = 0; i < bootstrapChunks.length; i++) {
-            writeChunk(destination, bootstrapChunks[i]);
-          }
-          writeChunk(destination, bootstrapContainerClose);
-        }
-
-        writeChunk(destination, responseState.startInlineScript);
-        if (!responseState.sentStyleInsertionFunction) {
-          responseState.sentStyleInsertionFunction = true;
-          writeChunk(
-            destination,
-            clonePrecomputedChunk(styleInsertionFunction),
-          );
-        }
-        if (!responseState.sentCompleteContainerFunction) {
-          responseState.sentCompleteContainerFunction = true;
-          writeChunk(destination, completeContainerFunction);
-        }
-        writeChunk(destination, completeContainerWithStylesScript1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerScript2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerScript2a);
-        writeStyleResourceDependenciesInJS(destination, boundaryResources);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerScriptEnd,
-        );
-      } else {
-        writeChunk(destination, responseState.startInlineScript);
-        if (!responseState.sentStyleInsertionFunction) {
-          responseState.sentStyleInsertionFunction = true;
-          writeChunk(
-            destination,
-            clonePrecomputedChunk(styleInsertionFunction),
-          );
-        }
-        if (!responseState.sentCompleteBoundaryFunction) {
-          responseState.sentCompleteBoundaryFunction = true;
-          writeChunk(destination, completeBoundaryFunction);
-        }
-        writeChunk(destination, completeBoundaryWithStylesScript1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerScript2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerScript2a);
-        writeStyleResourceDependenciesInJS(destination, boundaryResources);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerScriptEnd,
-        );
+      writeChunk(destination, responseState.startInlineScript);
+      if (!responseState.sentStyleInsertionFunction) {
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(destination, clonePrecomputedChunk(styleInsertionFunction));
       }
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        writeChunk(destination, completeBoundaryFunction);
+      }
+      writeChunk(destination, completeBoundaryWithStylesScript1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerScript2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerScript2a);
+      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerScriptEnd,
+      );
     } else {
-      if (boundaryID === responseState.containerBoundaryID) {
-        writeChunk(destination, responseState.startInlineScript);
-        if (!responseState.sentCompleteContainerFunction) {
-          responseState.sentCompleteContainerFunction = true;
-          writeChunk(destination, completeContainerFunction);
-        }
-        writeChunk(destination, completeContainerScript1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerScript2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerScript3);
-        r = writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerScriptEnd,
-        );
-
-        // We emit bootstrap scripts after the completeContainer instruction
-        // because we want to ensure the reveal ocurrs before the bootstrap
-        // scripts execute. Notice that unlike with the styles case the scripts
-        // are not embedded in a template
-        const bootstrapChunks = responseState.bootstrapChunks;
-        let i = 0;
-        for (; i < bootstrapChunks.length - 1; i++) {
-          writeChunk(destination, bootstrapChunks[i]);
-        }
-        if (i < bootstrapChunks.length) {
-          r = writeChunkAndReturn(destination, bootstrapChunks[i]);
-        }
-        return r;
-      } else {
-        writeChunk(destination, responseState.startInlineScript);
-        if (!responseState.sentCompleteBoundaryFunction) {
-          responseState.sentCompleteBoundaryFunction = true;
-          writeChunk(destination, completeBoundaryFunction);
-        }
-        writeChunk(destination, completeBoundaryScript1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerScript2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerScript3);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerScriptEnd,
-        );
+      writeChunk(destination, responseState.startInlineScript);
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        writeChunk(destination, completeBoundaryFunction);
       }
+      writeChunk(destination, completeBoundaryScript1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerScript2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerScript3);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerScriptEnd,
+      );
     }
   } else {
     if (enableFloat && hasStyleDependencies) {
-      if (boundaryID === responseState.containerBoundaryID) {
-        // We emit the bootstrap chunks into a template container with an id
-        // formed from the root segment ID. The insertion script will inject
-        // the bootstrap scripts into the DOM after revealing the content.
-        // We don't do this for cases where there are no style dependencies because
-        // the content swap is synchronous and will therefore always complete before
-        // the bootstrap scripts run
-        const bootstrapChunks = responseState.bootstrapChunks;
-        if (bootstrapChunks.length) {
-          writeChunk(destination, bootstrapContainerOpenStart);
-          writeChunk(destination, responseState.segmentPrefix);
-          writeChunk(destination, formattedContentID);
-          writeChunk(destination, bootstrapContainerOpenEnd);
-          for (let i = 0; i < bootstrapChunks.length; i++) {
-            writeChunk(destination, bootstrapChunks[i]);
-          }
-          writeChunk(destination, bootstrapContainerClose);
-        }
-
-        writeChunk(destination, completeContainerWithStylesData1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerData2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerData3);
-        writeStyleResourceDependenciesInAttr(destination, boundaryResources);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerDataEmptyEnd,
-        );
-      } else {
-        writeChunk(destination, completeBoundaryWithStylesData1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerData2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        writeChunk(destination, completeBoundaryOrContainerData3);
-        writeStyleResourceDependenciesInAttr(destination, boundaryResources);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerDataEmptyEnd,
-        );
-      }
+      writeChunk(destination, completeBoundaryWithStylesData1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerData2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerData3);
+      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerDataEmptyEnd,
+      );
     } else {
-      if (boundaryID === responseState.containerBoundaryID) {
-        // We emit the bootstrap chunks into a template container with an id
-        // formed from the root segment ID. The insertion script will inject
-        // the bootstrap scripts into the DOM after revealing the content.
-        const bootstrapChunks = responseState.bootstrapChunks;
-        if (bootstrapChunks.length) {
-          writeChunk(destination, bootstrapContainerOpenStart);
-          writeChunk(destination, responseState.segmentPrefix);
-          writeChunk(destination, formattedContentID);
-          writeChunk(destination, bootstrapContainerOpenEnd);
-          for (let i = 0; i < bootstrapChunks.length; i++) {
-            writeChunk(destination, bootstrapChunks[i]);
-          }
-          writeChunk(destination, bootstrapContainerClose);
-        }
+      writeChunk(destination, completeBoundaryData1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerData2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerDataEmptyEnd,
+      );
+    }
+  }
+}
 
-        writeChunk(destination, completeContainerData1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerData2);
+export function writeCompletedRootBoundaryInstruction(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  contentSegmentID: number,
+  boundaryResources: BoundaryResources,
+): boolean {
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+  let hasStyleDependencies;
+  if (enableFloat) {
+    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+  }
+  const formattedContentID = stringToChunk(contentSegmentID.toString(16));
+  const scriptFormat =
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
+  let r = true;
+  if (scriptFormat) {
+    if (enableFloat && hasStyleDependencies) {
+      // We emit the bootstrap chunks into a template container with an id
+      // formed from the root segment ID. The insertion script will inject
+      // the bootstrap scripts into the DOM after revealing the content.
+      // We don't do this for cases where there are no style dependencies because
+      // the content swap is synchronous and will therefore always complete before
+      // the bootstrap scripts run
+      const bootstrapChunks = responseState.bootstrapChunks;
+      if (bootstrapChunks.length) {
+        writeChunk(destination, bootstrapContainerOpenStart);
         writeChunk(destination, responseState.segmentPrefix);
         writeChunk(destination, formattedContentID);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerDataEmptyEnd,
-        );
-      } else {
-        writeChunk(destination, completeBoundaryData1);
-        writeChunk(destination, boundaryID);
-        writeChunk(destination, completeBoundaryOrContainerData2);
-        writeChunk(destination, responseState.segmentPrefix);
-        writeChunk(destination, formattedContentID);
-        return writeChunkAndReturn(
-          destination,
-          completeBoundaryOrContainerDataEmptyEnd,
-        );
+        writeChunk(destination, bootstrapContainerOpenEnd);
+        for (let i = 0; i < bootstrapChunks.length; i++) {
+          writeChunk(destination, bootstrapChunks[i]);
+        }
+        writeChunk(destination, bootstrapContainerClose);
       }
+
+      writeChunk(destination, responseState.startInlineScript);
+      if (!responseState.sentStyleInsertionFunction) {
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(destination, clonePrecomputedChunk(styleInsertionFunction));
+      }
+      if (!responseState.sentCompleteContainerFunction) {
+        responseState.sentCompleteContainerFunction = true;
+        writeChunk(destination, completeContainerFunction);
+      }
+      writeChunk(destination, completeContainerWithStylesScript1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerScript2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerScript2a);
+      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerScriptEnd,
+      );
+    } else {
+      writeChunk(destination, responseState.startInlineScript);
+      if (!responseState.sentCompleteContainerFunction) {
+        responseState.sentCompleteContainerFunction = true;
+        writeChunk(destination, completeContainerFunction);
+      }
+      writeChunk(destination, completeContainerScript1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerScript2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerScript3);
+      r = writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerScriptEnd,
+      );
+
+      // We emit bootstrap scripts after the completeContainer instruction
+      // because we want to ensure the reveal ocurrs before the bootstrap
+      // scripts execute. Notice that unlike with the styles case the scripts
+      // are not embedded in a template
+      const bootstrapChunks = responseState.bootstrapChunks;
+      let i = 0;
+      for (; i < bootstrapChunks.length - 1; i++) {
+        writeChunk(destination, bootstrapChunks[i]);
+      }
+      if (i < bootstrapChunks.length) {
+        r = writeChunkAndReturn(destination, bootstrapChunks[i]);
+      }
+      return r;
+    }
+  } else {
+    if (enableFloat && hasStyleDependencies) {
+      // We emit the bootstrap chunks into a template container with an id
+      // formed from the root segment ID. The insertion script will inject
+      // the bootstrap scripts into the DOM after revealing the content.
+      // We don't do this for cases where there are no style dependencies because
+      // the content swap is synchronous and will therefore always complete before
+      // the bootstrap scripts run
+      const bootstrapChunks = responseState.bootstrapChunks;
+      if (bootstrapChunks.length) {
+        writeChunk(destination, bootstrapContainerOpenStart);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, bootstrapContainerOpenEnd);
+        for (let i = 0; i < bootstrapChunks.length; i++) {
+          writeChunk(destination, bootstrapChunks[i]);
+        }
+        writeChunk(destination, bootstrapContainerClose);
+      }
+
+      writeChunk(destination, completeContainerWithStylesData1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerData2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      writeChunk(destination, completeBoundaryOrContainerData3);
+      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerDataEmptyEnd,
+      );
+    } else {
+      // We emit the bootstrap chunks into a template container with an id
+      // formed from the root segment ID. The insertion script will inject
+      // the bootstrap scripts into the DOM after revealing the content.
+      const bootstrapChunks = responseState.bootstrapChunks;
+      if (bootstrapChunks.length) {
+        writeChunk(destination, bootstrapContainerOpenStart);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, bootstrapContainerOpenEnd);
+        for (let i = 0; i < bootstrapChunks.length; i++) {
+          writeChunk(destination, bootstrapChunks[i]);
+        }
+        writeChunk(destination, bootstrapContainerClose);
+      }
+
+      writeChunk(destination, completeContainerData1);
+      writeChunk(destination, boundaryID);
+      writeChunk(destination, completeBoundaryOrContainerData2);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, formattedContentID);
+      return writeChunkAndReturn(
+        destination,
+        completeBoundaryOrContainerDataEmptyEnd,
+      );
     }
   }
 }
@@ -2847,20 +2871,7 @@ export function writeClientRenderBoundaryInstruction(
   const scriptFormat =
     !enableFizzExternalRuntime ||
     responseState.streamingFormat === ScriptStreamingFormat;
-  if (boundaryID === responseState.containerBoundaryID) {
-    // If fallback bootstrap scripts were provided and we errored at the Root Boundary
-    // then use those. Use the normal bootstrapChunks if no fallbacks were provided
-    const bootstrapChunks =
-      responseState.fallbackBootstrapChunks || responseState.bootstrapChunks;
-    let i = 0;
-    for (; i < bootstrapChunks.length - 1; i++) {
-      writeChunk(destination, bootstrapChunks[i]);
-    }
-    if (i < bootstrapChunks.length) {
-      return writeChunkAndReturn(destination, bootstrapChunks[i]);
-    }
-    return true;
-  } else if (scriptFormat) {
+  if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (!responseState.sentClientRenderFunction) {
       // The first time we write this, we'll need to include the full implementation.

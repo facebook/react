@@ -26,6 +26,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
+  createRootBoundaryID,
 } from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 function createDrainHandler(destination: Destination, request: Request) {
@@ -75,7 +76,6 @@ function renderToPipeableStream(
       undefined, // fallbackBootstrapScripts
       undefined, // fallbackBootstrapModules
       options ? options.unstable_externalRuntimeSrc : undefined,
-      undefined, // containerID
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -84,6 +84,7 @@ function renderToPipeableStream(
     options ? options.onShellReady : undefined,
     options ? options.onShellError : undefined,
     undefined, // onFatalError
+    undefined, // rootBoundaryID
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -149,7 +150,6 @@ function renderIntoContainerAsPipeableStream(
       options ? options.fallbackBootstrapScripts : undefined,
       options ? options.fallbackBootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
-      containerID,
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -158,6 +158,7 @@ function renderIntoContainerAsPipeableStream(
     undefined, // onShellReady
     undefined, // onShellError
     undefined, // onFatalError
+    createRootBoundaryID(containerID),
   );
   let hasStartedFlowing = false;
   startWork(request);

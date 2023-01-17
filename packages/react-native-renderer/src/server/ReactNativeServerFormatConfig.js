@@ -180,6 +180,13 @@ export function writeCompletedRoot(
   return true;
 }
 
+export function writeErroredRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
 // IDs are formatted as little endian Uint16
 function formatID(id: number): Uint8Array {
   if (id > 0xffff) {
@@ -290,6 +297,18 @@ export function writeCompletedSegmentInstruction(
   return true;
 }
 
+export function writeCompletedRootBoundaryInstruction(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  contentSegmentID: number,
+  resources: BoundaryResources,
+): boolean {
+  writeChunk(destination, SUSPENSE_UPDATE_TO_COMPLETE);
+  writeChunk(destination, formatID(boundaryID));
+  return writeChunkAndReturn(destination, formatID(contentSegmentID));
+}
+
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
@@ -351,9 +370,3 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources: Resources,
   boundaryResources: ?BoundaryResources,
 ) {}
-
-export function getRootBoundaryID(
-  responseState: ResponseState,
-): SuspenseBoundaryID {
-  return UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
-}

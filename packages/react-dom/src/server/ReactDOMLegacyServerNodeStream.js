@@ -80,6 +80,8 @@ function renderToNodeStreamImpl(
     onAllReady,
     undefined,
     undefined,
+    undefined, // rootBoundaryID
+    undefined, // rootBoundaryID
   );
   destination.request = request;
   startWork(request);

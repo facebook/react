@@ -47,6 +47,7 @@ export const pushEndCompletedSuspenseBoundary =
   $$$hostConfig.pushEndCompletedSuspenseBoundary;
 export const pushSegmentFinale = $$$hostConfig.pushSegmentFinale;
 export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
+export const writeErroredRoot = $$$hostConfig.writeErroredRoot;
 export const writePlaceholder = $$$hostConfig.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
   $$$hostConfig.writeStartCompletedSuspenseBoundary;
@@ -64,13 +65,14 @@ export const writeStartSegment = $$$hostConfig.writeStartSegment;
 export const writeEndSegment = $$$hostConfig.writeEndSegment;
 export const writeCompletedSegmentInstruction =
   $$$hostConfig.writeCompletedSegmentInstruction;
+export const writeCompletedRootBoundaryInstruction =
+  $$$hostConfig.writeCompletedRootBoundaryInstruction;
 export const writeCompletedBoundaryInstruction =
   $$$hostConfig.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$hostConfig.writeClientRenderBoundaryInstruction;
 export const prepareToRender = $$$hostConfig.prepareToRender;
 export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
-export const getRootBoundaryID = $$$hostConfig.getRootBoundaryID;
 
 // -------------------------
 //     Resources

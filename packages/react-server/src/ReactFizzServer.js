@@ -44,6 +44,7 @@ import {
 } from './ReactServerStreamConfig';
 import {
   writeCompletedRoot,
+  writeErroredRoot,
   writePlaceholder,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
@@ -54,6 +55,7 @@ import {
   writeStartSegment,
   writeEndSegment,
   writeClientRenderBoundaryInstruction,
+  writeCompletedRootBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
   pushTextInstance,
@@ -64,7 +66,6 @@ import {
   pushSegmentFinale,
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
-  getRootBoundaryID,
   getChildFormatContext,
   writeInitialResources,
   writeImmediateResources,
@@ -134,6 +135,7 @@ import {
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
   enableCache,
+  enableFizzIntoContainer,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -219,6 +221,7 @@ export opaque type Request = {
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
+  rootBoundary: null | SuspenseBoundary, // If the root should stream with Boundary semantics it will be encoded here instead of completedRootSegment
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
@@ -275,6 +278,7 @@ export function createRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
+  rootBoundaryID: void | SuspenseBoundaryID,
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -295,6 +299,7 @@ export function createRequest(
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
+    rootBoundary: (null: null | SuspenseBoundary),
     clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
     completedBoundaries: ([]: Array<SuspenseBoundary>),
     partialBoundaries: ([]: Array<SuspenseBoundary>),
@@ -306,15 +311,16 @@ export function createRequest(
     onShellError: onShellError === undefined ? noop : onShellError,
     onFatalError: onFatalError === undefined ? noop : onFatalError,
   };
-  const rootBoundaryID = getRootBoundaryID(responseState);
-  let maybeRootBoundary = null;
-  if (rootBoundaryID !== UNINITIALIZED_SUSPENSE_BOUNDARY_ID) {
+
+  if (rootBoundaryID !== undefined) {
     const fallbackAbortSet: Set<Task> = new Set();
-    const rootBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+    const rootBoundary = (request.rootBoundary = createSuspenseBoundary(
+      request,
+      fallbackAbortSet,
+    ));
     rootBoundary.parentFlushed = true;
     rootBoundary.rootSegmentID = request.nextSegmentId++;
     rootBoundary.id = rootBoundaryID;
-    maybeRootBoundary = rootBoundary;
   }
 
   const rootSegment = createPendingSegment(
@@ -333,7 +339,7 @@ export function createRequest(
     request,
     null,
     children,
-    maybeRootBoundary,
+    request.rootBoundary || null,
     rootSegment,
     abortSet,
     emptyContextObject,
@@ -1664,7 +1670,7 @@ function erroredTask(
 
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
-      if (boundary.parentFlushed) {
+      if (boundary.parentFlushed && boundary !== request.rootBoundary) {
         // We don't have a preference where in the queue this goes since it's likely
         // to error on the client anyway. However, intentionally client-rendered
         // boundaries should be flushed earlier so that they can start on the client.
@@ -1813,7 +1819,7 @@ function finishedTask(
       if (enableFloat) {
         hoistCompletedBoundaryResources(request, boundary);
       }
-      if (boundary.parentFlushed) {
+      if (boundary.parentFlushed && boundary !== request.rootBoundary) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
         request.completedBoundaries.push(boundary);
@@ -2193,6 +2199,34 @@ function flushSegmentContainer(
   return writeEndSegment(destination, segment.formatContext);
 }
 
+function flushCompletedRootBoundary(
+  request: Request,
+  destination: Destination,
+  boundary: SuspenseBoundary,
+): boolean {
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      boundary.resources,
+    );
+  }
+  const completedSegments = boundary.completedSegments;
+  let i = 0;
+  for (; i < completedSegments.length; i++) {
+    const segment = completedSegments[i];
+    flushPartiallyCompletedSegment(request, destination, boundary, segment);
+  }
+  completedSegments.length = 0;
+
+  return writeCompletedRootBoundaryInstruction(
+    destination,
+    request.responseState,
+    boundary.id,
+    boundary.rootSegmentID,
+    boundary.resources,
+  );
+}
+
 function flushCompletedBoundary(
   request: Request,
   destination: Destination,
@@ -2339,6 +2373,19 @@ function flushCompletedQueues(
         request.responseState,
         willEmitInstructions,
       );
+    }
+
+    if (enableFizzIntoContainer) {
+      if (request.rootBoundary !== null) {
+        const rootBoundary = request.rootBoundary;
+        if (rootBoundary.forceClientRender) {
+          request.rootBoundary = null;
+          writeErroredRoot(destination, request.responseState);
+        } else if (rootBoundary.pendingTasks === 0) {
+          request.rootBoundary = null;
+          flushCompletedRootBoundary(request, destination, rootBoundary);
+        }
+      }
     }
 
     // We emit client rendering instructions for already emitted boundaries first.

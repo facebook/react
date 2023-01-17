@@ -11,7 +11,6 @@ import type {
   BootstrapScriptDescriptor,
   FormatContext,
   StreamingFormat,
-  SuspenseBoundaryID,
 } from './ReactDOMServerFormatConfig';
 
 import {
@@ -41,7 +40,6 @@ export type ResponseState = {
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
   idPrefix: string,
-  containerBoundaryID: SuspenseBoundaryID,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
@@ -79,7 +77,6 @@ export function createResponseState(
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
     idPrefix: responseState.idPrefix,
-    containerBoundaryID: null,
     nextSuspenseID: responseState.nextSuspenseID,
     streamingFormat: responseState.streamingFormat,
     startInlineScript: responseState.startInlineScript,
@@ -121,12 +118,14 @@ export {
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,
+  writeCompletedRootBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeClientRenderBoundaryInstruction,
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
   writeCompletedRoot,
+  writeErroredRoot,
   createResources,
   createBoundaryResources,
   writeInitialResources,
@@ -136,7 +135,6 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,
-  getRootBoundaryID,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

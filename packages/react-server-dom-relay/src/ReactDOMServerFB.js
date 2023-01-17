@@ -67,6 +67,7 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
     options.onError,
     undefined,
     undefined,
+    undefined, // rootBoundaryID
   );
   startWork(request);
   if (destination.fatal) {

@@ -24,6 +24,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
+  createRootBoundaryID,
 } from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 type Options = {
@@ -102,6 +103,7 @@ function renderToReadableStream(
       onShellReady,
       onShellError,
       onFatalError,
+      undefined, // rootBoundaryID
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -160,7 +162,6 @@ function renderIntoContainer(
         options ? options.fallbackBootstrapScripts : undefined,
         options ? options.fallbackBootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
-        containerID,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -169,6 +170,7 @@ function renderIntoContainer(
       undefined, // onShellReady
       undefined, // onShellError
       onFatalError,
+      createRootBoundaryID(containerID),
     );
     if (options && options.signal) {
       const signal = options.signal;

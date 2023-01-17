@@ -99,6 +99,7 @@ function prerenderToNodeStreams(
       undefined,
       undefined,
       onFatalError,
+      undefined, // rootBoundaryID
     );
     if (options && options.signal) {
       const signal = options.signal;

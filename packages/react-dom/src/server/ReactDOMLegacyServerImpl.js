@@ -75,6 +75,7 @@ function renderToStringImpl(
     onShellReady,
     undefined,
     undefined,
+    undefined, // rootBoundaryID
   );
   startWork(request);
   // If anything suspended and is still pending, we'll abort it before writing.
