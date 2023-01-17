@@ -518,6 +518,24 @@ function codegenInstructionValue(
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
+    case "PropertyCall": {
+      const receiver = codegenPlace(temp, instrValue.receiver);
+      const callee = t.memberExpression(
+        receiver,
+        t.identifier(instrValue.property)
+      );
+      const args = instrValue.args.map((arg) => codegenPlace(temp, arg));
+      value = createCallExpression(instrValue.loc, callee, args);
+      break;
+    }
+    case "ComputedCall": {
+      const receiver = codegenPlace(temp, instrValue.receiver);
+      const property = codegenPlace(temp, instrValue.property);
+      const callee = t.memberExpression(receiver, property, true);
+      const args = instrValue.args.map((arg) => codegenPlace(temp, arg));
+      value = createCallExpression(instrValue.loc, callee, args);
+      break;
+    }
     case "NewExpression": {
       const callee = codegenPlace(temp, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenPlace(temp, arg));

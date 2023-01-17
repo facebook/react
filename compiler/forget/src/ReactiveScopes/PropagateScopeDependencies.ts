@@ -271,11 +271,10 @@ function visitInstructionValue(
   value: InstructionValue,
   lvalue: LValue | null
 ): void {
-  for (const operand of eachInstructionValueOperand(value)) {
-    // check for method invocation, we want to depend on the callee, not the method
-    if (value.kind === "PropertyLoad" && lvalue !== null) {
-      context.declareProperty(lvalue.place, value.object, value.property);
-    } else {
+  if (value.kind === "PropertyLoad" && lvalue !== null) {
+    context.declareProperty(lvalue.place, value.object, value.property);
+  } else {
+    for (const operand of eachInstructionValueOperand(value)) {
       context.visitOperand(operand);
     }
   }

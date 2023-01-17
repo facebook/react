@@ -39,21 +39,20 @@ function Component(props) {
   const items = props.items;
   const maxItems = props.maxItems;
   const c_0 = $[0] !== maxItems;
-  const c_1 = $[1] !== items.length;
-  const c_2 = $[2] !== items.at;
+  const c_1 = $[1] !== items;
   let renderedItems;
-  if (c_0 || c_1 || c_2) {
+  if (c_0 || c_1) {
     renderedItems = [];
     const seen = new Set();
-    const c_4 = $[4] !== maxItems;
+    const c_3 = $[3] !== maxItems;
     let max;
 
-    if (c_4) {
+    if (c_3) {
       max = Math.max(0, maxItems);
-      $[4] = maxItems;
-      $[5] = max;
+      $[3] = maxItems;
+      $[4] = max;
     } else {
-      max = $[5];
+      max = $[4];
     }
 
     for (let i = 0; i < items.length; i = i + 1, i) {
@@ -76,44 +75,43 @@ function Component(props) {
     }
 
     $[0] = maxItems;
-    $[1] = items.length;
-    $[2] = items.at;
-    $[3] = renderedItems;
+    $[1] = items;
+    $[2] = renderedItems;
   } else {
-    renderedItems = $[3];
+    renderedItems = $[2];
   }
 
   const count = renderedItems.length;
-  const c_6 = $[6] !== count;
-  let t7;
+  const c_5 = $[5] !== count;
+  let t6;
 
-  if (c_6) {
-    t7 = <h1>{count} Items</h1>;
-    $[6] = count;
-    $[7] = t7;
+  if (c_5) {
+    t6 = <h1>{count} Items</h1>;
+    $[5] = count;
+    $[6] = t6;
   } else {
-    t7 = $[7];
+    t6 = $[6];
   }
 
-  const c_8 = $[8] !== t7;
-  const c_9 = $[9] !== renderedItems;
-  let t10;
+  const c_7 = $[7] !== t6;
+  const c_8 = $[8] !== renderedItems;
+  let t9;
 
-  if (c_8 || c_9) {
-    t10 = (
+  if (c_7 || c_8) {
+    t9 = (
       <div>
-        {t7}
+        {t6}
         {renderedItems}
       </div>
     );
-    $[8] = t7;
-    $[9] = renderedItems;
-    $[10] = t10;
+    $[7] = t6;
+    $[8] = renderedItems;
+    $[9] = t9;
   } else {
-    t10 = $[10];
+    t9 = $[9];
   }
 
-  return t10;
+  return t9;
 }
 
 ```

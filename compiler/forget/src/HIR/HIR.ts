@@ -355,7 +355,23 @@ export type InstructionData =
       right: Place;
     }
   | { kind: "NewExpression"; callee: Place; args: Array<Place> }
-  | { kind: "CallExpression"; callee: Place; args: Array<Place> }
+  | {
+      kind: "CallExpression";
+      callee: Place;
+      args: Array<Place>;
+    }
+  | {
+      kind: "PropertyCall";
+      receiver: Place;
+      property: string;
+      args: Array<Place>;
+    }
+  | {
+      kind: "ComputedCall";
+      receiver: Place;
+      property: Place;
+      args: Array<Place>;
+    }
   | { kind: "UnaryExpression"; operator: string; value: Place }
   | {
       kind: "JsxExpression";

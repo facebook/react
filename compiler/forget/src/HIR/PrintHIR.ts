@@ -229,6 +229,18 @@ export function printInstructionValue(instrValue: InstructionValue): string {
         .join(", ")})`;
       break;
     }
+    case "PropertyCall": {
+      value = `PropertyCall ${printPlace(instrValue.receiver)}.${
+        instrValue.property
+      }(${instrValue.args.map((arg) => printPlace(arg)).join(", ")})`;
+      break;
+    }
+    case "ComputedCall": {
+      value = `ComputedCall ${printPlace(instrValue.receiver)}[${printPlace(
+        instrValue.property
+      )}](${instrValue.args.map((arg) => printPlace(arg)).join(", ")})`;
+      break;
+    }
     case "JSXText":
     case "Primitive": {
       value = JSON.stringify(instrValue.value);

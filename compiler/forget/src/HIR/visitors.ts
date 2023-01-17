@@ -37,6 +37,17 @@ export function* eachInstructionValueOperand(
       yield instrValue.right;
       break;
     }
+    case "PropertyCall": {
+      yield instrValue.receiver;
+      yield* instrValue.args;
+      break;
+    }
+    case "ComputedCall": {
+      yield instrValue.receiver;
+      yield instrValue.property;
+      yield* instrValue.args;
+      break;
+    }
     case "Identifier": {
       yield instrValue;
       break;
@@ -143,6 +154,17 @@ export function mapInstructionOperands(
     case "NewExpression":
     case "CallExpression": {
       instrValue.callee = fn(instrValue.callee);
+      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      break;
+    }
+    case "PropertyCall": {
+      instrValue.receiver = fn(instrValue.receiver);
+      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      break;
+    }
+    case "ComputedCall": {
+      instrValue.receiver = fn(instrValue.receiver);
+      instrValue.property = fn(instrValue.property);
       instrValue.args = instrValue.args.map((arg) => fn(arg));
       break;
     }

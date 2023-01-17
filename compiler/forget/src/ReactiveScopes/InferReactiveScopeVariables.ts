@@ -175,6 +175,8 @@ function mayAllocate(value: InstructionValue): boolean {
     case "Primitive": {
       return false;
     }
+    case "PropertyCall":
+    case "ComputedCall":
     case "PropertyStore":
     case "ComputedStore":
     case "ArrayExpression":

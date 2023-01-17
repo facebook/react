@@ -583,6 +583,49 @@ function inferBlock(env: Environment, block: BasicBlock) {
         valueKind = ValueKind.Immutable;
         break;
       }
+      case "PropertyCall": {
+        if (!env.isDefined(instrValue.receiver)) {
+          // TODO @josephsavona: improve handling of globals
+          const value: InstructionValue = {
+            kind: "Primitive",
+            loc: instrValue.loc,
+            value: undefined,
+          };
+          env.initialize(value, ValueKind.Frozen);
+          env.define(instrValue.receiver, value);
+        }
+
+        env.reference(instrValue.receiver, Effect.Mutate);
+        for (const arg of instrValue.args) {
+          env.reference(arg, Effect.Mutate);
+        }
+        env.initialize(instrValue, ValueKind.Mutable);
+        env.define(instr.lvalue.place, instrValue);
+        instr.lvalue.place.effect = Effect.Mutate;
+        continue;
+      }
+      case "ComputedCall": {
+        if (!env.isDefined(instrValue.receiver)) {
+          // TODO @josephsavona: improve handling of globals
+          const value: InstructionValue = {
+            kind: "Primitive",
+            loc: instrValue.loc,
+            value: undefined,
+          };
+          env.initialize(value, ValueKind.Frozen);
+          env.define(instrValue.receiver, value);
+        }
+
+        env.reference(instrValue.receiver, Effect.Mutate);
+        env.reference(instrValue.property, Effect.Read);
+        for (const arg of instrValue.args) {
+          env.reference(arg, Effect.Mutate);
+        }
+        env.initialize(instrValue, ValueKind.Mutable);
+        env.define(instr.lvalue.place, instrValue);
+        instr.lvalue.place.effect = Effect.Mutate;
+        continue;
+      }
       case "PropertyStore": {
         const effect = isObjectType(instrValue.object.identifier)
           ? Effect.Store

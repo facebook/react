@@ -902,21 +902,51 @@ function lowerExpression(
         calleePath.isExpression(),
         "Call expressions only support callees that are expressions (v8 intrinsics not supported)"
       );
-      const callee = lowerExpressionToPlace(builder, calleePath);
-      const argPaths = expr.get("arguments");
-      const args = argPaths.map((arg) => {
-        todoInvariant(
-          arg.isExpression(),
-          "todo: support non-expression call arguments"
+      if (calleePath.isMemberExpression()) {
+        const { object, property, value } = lowerMemberExpression(
+          builder,
+          calleePath
         );
-        return lowerExpressionToPlace(builder, arg);
-      });
-      return {
-        kind: "CallExpression",
-        callee,
-        args,
-        loc: exprLoc,
-      };
+        const args = expr.get("arguments").map((arg) => {
+          todoInvariant(
+            arg.isExpression(),
+            "todo: support non-expression call arguments"
+          );
+          return lowerExpressionToPlace(builder, arg);
+        });
+        if (typeof property === "string") {
+          return {
+            kind: "PropertyCall",
+            receiver: object,
+            property,
+            args,
+            loc: exprLoc,
+          };
+        } else {
+          return {
+            kind: "ComputedCall",
+            receiver: object,
+            property,
+            args,
+            loc: exprLoc,
+          };
+        }
+      } else {
+        const callee = lowerExpressionToPlace(builder, calleePath);
+        const args = expr.get("arguments").map((arg) => {
+          todoInvariant(
+            arg.isExpression(),
+            "todo: support non-expression call arguments"
+          );
+          return lowerExpressionToPlace(builder, arg);
+        });
+        return {
+          kind: "CallExpression",
+          callee,
+          args,
+          loc: exprLoc,
+        };
+      }
     }
     case "BinaryExpression": {
       const expr = exprPath as NodePath<t.BinaryExpression>;
@@ -1141,31 +1171,7 @@ function lowerExpression(
     }
     case "MemberExpression": {
       const expr = exprPath as NodePath<t.MemberExpression>;
-      const object = lowerExpressionToPlace(builder, expr.get("object"));
-      invariant(object.kind === "Identifier", "scope cannot appear here");
-      const property = expr.get("property");
-      let value: InstructionValue;
-      if (!expr.node.computed) {
-        todoInvariant(property.isIdentifier(), "Support private names");
-        value = {
-          kind: "PropertyLoad",
-          object,
-          property: property.node.name,
-          loc: exprLoc,
-        };
-      } else {
-        invariant(
-          property.isExpression(),
-          "Expected private names to be non-computed"
-        );
-        const propertyPlace = lowerExpressionToPlace(builder, property);
-        value = {
-          kind: "ComputedLoad",
-          object,
-          property: propertyPlace,
-          loc: exprLoc,
-        };
-      }
+      const { value } = lowerMemberExpression(builder, expr);
       const place: Place = buildTemporaryPlace(builder, exprLoc);
       builder.push({
         id: makeInstructionId(0),
@@ -1255,6 +1261,38 @@ function lowerExpression(
       //     `Unexpected expression kind '${exprNode.type}'`
       //   );
     }
+  }
+}
+
+function lowerMemberExpression(
+  builder: HIRBuilder,
+  expr: NodePath<t.MemberExpression>
+): { object: Place; property: Place | string; value: InstructionValue } {
+  const exprLoc = expr.node.loc ?? GeneratedSource;
+  const object = lowerExpressionToPlace(builder, expr.get("object"));
+  const property = expr.get("property");
+  if (!expr.node.computed) {
+    todoInvariant(property.isIdentifier(), "Support private names");
+    const value: InstructionValue = {
+      kind: "PropertyLoad",
+      object: { ...object },
+      property: property.node.name,
+      loc: exprLoc,
+    };
+    return { object, property: property.node.name, value };
+  } else {
+    invariant(
+      property.isExpression(),
+      "Expected private names to be non-computed"
+    );
+    const propertyPlace = lowerExpressionToPlace(builder, property);
+    const value: InstructionValue = {
+      kind: "ComputedLoad",
+      object: { ...object },
+      property: { ...propertyPlace },
+      loc: exprLoc,
+    };
+    return { object, property: propertyPlace, value };
   }
 }
 

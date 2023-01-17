@@ -6,7 +6,6 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Utils/utils";
 import {
   Effect,
   HIRFunction,
@@ -16,6 +15,7 @@ import {
 } from "../HIR/HIR";
 import { printInstruction, printPlace } from "../HIR/PrintHIR";
 import { eachInstructionOperand } from "../HIR/visitors";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * For each usage of a value in the given function, determines if the usage
@@ -72,7 +72,7 @@ function inferPlace(
   switch (place.effect) {
     case Effect.Unknown: {
       throw new Error(
-        `Found an unkown place ${printPlace(place)} at ${printInstruction(
+        `Found an unknown place ${printPlace(place)} at ${printInstruction(
           instr
         )}!`
       );
