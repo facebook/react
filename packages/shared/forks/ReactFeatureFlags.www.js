@@ -95,8 +95,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
 
-export const deletedTreeCleanUpLevel = 3;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 
