@@ -283,4 +283,26 @@ describe('ReactDOMFizzShellHydration', () => {
     ]);
     expect(container.textContent).toBe('New screen');
   });
+
+  test('TODO: A large component stack causes SSR to stack overflow', async () => {
+    spyOnDevAndProd(console, 'error');
+
+    function NestedComponent({depth}: {depth: number}) {
+      if (depth <= 0) {
+        return <AsyncText text="Shell" />;
+      }
+      return <NestedComponent depth={depth - 1} />;
+    }
+
+    // Server render
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        <NestedComponent depth={3000} />,
+      );
+    });
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error.calls.argsFor(0)[0].toString()).toBe(
+      'RangeError: Maximum call stack size exceeded',
+    );
+  });
 });
