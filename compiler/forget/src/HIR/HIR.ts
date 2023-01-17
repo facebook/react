@@ -68,9 +68,22 @@ export type ReactiveValueBlock = {
 };
 
 export type ReactiveStatement =
-  | { kind: "instruction"; instruction: ReactiveInstruction }
-  | { kind: "terminal"; terminal: ReactiveTerminal; label: BlockId | null }
+  | ReactiveInstructionStatement
+  | ReactiveTerminalStatement
   | ReactiveScopeBlock;
+
+export type ReactiveInstructionStatement = {
+  kind: "instruction";
+  instruction: ReactiveInstruction;
+};
+
+export type ReactiveTerminalStatement<
+  Tterminal extends ReactiveTerminal = ReactiveTerminal
+> = {
+  kind: "terminal";
+  terminal: Tterminal;
+  label: BlockId | null;
+};
 
 export type ReactiveInstruction = {
   id: InstructionId;
@@ -80,40 +93,67 @@ export type ReactiveInstruction = {
 };
 
 export type ReactiveTerminal =
-  | { kind: "break"; label: BlockId | null; id: InstructionId | null }
-  | { kind: "continue"; label: BlockId | null; id: InstructionId }
-  | { kind: "return"; value: Place | null; id: InstructionId }
-  | { kind: "throw"; value: Place; id: InstructionId }
-  | {
-      kind: "switch";
-      test: Place;
-      cases: Array<{
-        test: Place | null;
-        block: ReactiveBlock | void;
-      }>;
-      id: InstructionId;
-    }
-  | {
-      kind: "while";
-      test: ReactiveValueBlock;
-      loop: ReactiveBlock;
-      id: InstructionId;
-    }
-  | {
-      kind: "for";
-      init: ReactiveValueBlock;
-      test: ReactiveValueBlock;
-      update: ReactiveValueBlock;
-      loop: ReactiveBlock;
-      id: InstructionId;
-    }
-  | {
-      kind: "if";
-      test: Place;
-      consequent: ReactiveBlock;
-      alternate: ReactiveBlock | null;
-      id: InstructionId;
-    };
+  | ReactiveBreakTerminal
+  | ReactiveContinueTerminal
+  | ReactiveReturnTerminal
+  | ReactiveThrowTerminal
+  | ReactiveSwitchTerminal
+  | ReactiveWhileTerminal
+  | ReactiveForTerminal
+  | ReactiveIfTerminal;
+
+export type ReactiveBreakTerminal = {
+  kind: "break";
+  label: BlockId | null;
+  id: InstructionId | null;
+  implicit: boolean;
+};
+export type ReactiveContinueTerminal = {
+  kind: "continue";
+  label: BlockId | null;
+  id: InstructionId;
+  implicit: boolean;
+};
+export type ReactiveReturnTerminal = {
+  kind: "return";
+  value: Place | null;
+  id: InstructionId;
+};
+export type ReactiveThrowTerminal = {
+  kind: "throw";
+  value: Place;
+  id: InstructionId;
+};
+export type ReactiveSwitchTerminal = {
+  kind: "switch";
+  test: Place;
+  cases: Array<{
+    test: Place | null;
+    block: ReactiveBlock | void;
+  }>;
+  id: InstructionId;
+};
+export type ReactiveWhileTerminal = {
+  kind: "while";
+  test: ReactiveValueBlock;
+  loop: ReactiveBlock;
+  id: InstructionId;
+};
+export type ReactiveForTerminal = {
+  kind: "for";
+  init: ReactiveValueBlock;
+  test: ReactiveValueBlock;
+  update: ReactiveValueBlock;
+  loop: ReactiveBlock;
+  id: InstructionId;
+};
+export type ReactiveIfTerminal = {
+  kind: "if";
+  test: Place;
+  consequent: ReactiveBlock;
+  alternate: ReactiveBlock | null;
+  id: InstructionId;
+};
 
 /**
  * A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph

@@ -20,19 +20,11 @@ function Component(props) {
 
 ```
 
-## Code
 
-```javascript
-function Component(props) {
-  const a = [];
-  a.push(props.a);
-  if (props.b) {
-    a.push(props.d);
-    return a;
-  }
-
-  a.push(props.c);
-}
+## Error
 
 ```
+Expected a break target
+```
+          
       

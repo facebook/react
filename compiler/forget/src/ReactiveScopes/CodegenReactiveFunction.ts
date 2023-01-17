@@ -104,6 +104,9 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
       }
       case "terminal": {
         const statement = codegenTerminal(cx, item.terminal);
+        if (statement === null) {
+          break;
+        }
         if (item.label !== null) {
           statements.push(
             t.labeledStatement(
@@ -232,9 +235,15 @@ function codegenReactiveScope(
   statements.push(t.ifStatement(testCondition, computationBlock, memoBlock));
 }
 
-function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
+function codegenTerminal(
+  cx: Context,
+  terminal: ReactiveTerminal
+): t.Statement | null {
   switch (terminal.kind) {
     case "break": {
+      if (terminal.implicit) {
+        return null;
+      }
       return t.breakStatement(
         terminal.label !== null
           ? t.identifier(codegenLabel(terminal.label))
@@ -242,6 +251,9 @@ function codegenTerminal(cx: Context, terminal: ReactiveTerminal): t.Statement {
       );
     }
     case "continue": {
+      if (terminal.implicit) {
+        return null;
+      }
       return t.continueStatement(
         terminal.label !== null
           ? t.identifier(codegenLabel(terminal.label))

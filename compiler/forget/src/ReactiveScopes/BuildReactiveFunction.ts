@@ -15,10 +15,15 @@ import {
   InstructionValue,
   Place,
   ReactiveBlock,
-  ReactiveStatement,
   ReactiveValueBlock,
 } from "../HIR";
-import { HIRFunction, ReactiveFunction } from "../HIR/HIR";
+import {
+  HIRFunction,
+  ReactiveBreakTerminal,
+  ReactiveContinueTerminal,
+  ReactiveFunction,
+  ReactiveTerminalStatement,
+} from "../HIR/HIR";
 import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -180,7 +185,7 @@ class Driver {
             const break_ = this.visitBreak(case_.block, null);
             if (
               index === 0 &&
-              break_ === null &&
+              break_.terminal.implicit &&
               case_.block === terminal.fallthrough &&
               case_.test === null
             ) {
@@ -383,6 +388,9 @@ class Driver {
         }
         break;
       }
+      case "error": {
+        invariant(false, "Unexpected error terminal");
+      }
       default: {
         assertExhaustive(terminal, "Unexpected terminal");
       }
@@ -434,27 +442,30 @@ class Driver {
   visitBreak(
     block: BlockId,
     id: InstructionId | null
-  ): ReactiveStatement | null {
+  ): ReactiveTerminalStatement<ReactiveBreakTerminal> {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
-      // TODO: we should always have a target
-      return null;
+      invariant(false, "Expected a break target");
     }
     switch (target.type) {
       case "implicit": {
-        return null;
+        return {
+          kind: "terminal",
+          terminal: { kind: "break", label: null, id, implicit: true },
+          label: null,
+        };
       }
       case "labeled": {
         return {
           kind: "terminal",
-          terminal: { kind: "break", label: target.block, id },
+          terminal: { kind: "break", label: target.block, id, implicit: false },
           label: null,
         };
       }
       case "unlabeled": {
         return {
           kind: "terminal",
-          terminal: { kind: "break", label: null, id },
+          terminal: { kind: "break", label: null, id, implicit: false },
           label: null,
         };
       }
@@ -467,7 +478,10 @@ class Driver {
     }
   }
 
-  visitContinue(block: BlockId, id: InstructionId): ReactiveStatement | null {
+  visitContinue(
+    block: BlockId,
+    id: InstructionId
+  ): ReactiveTerminalStatement<ReactiveContinueTerminal> {
     const target = this.cx.getContinueTarget(block);
     invariant(
       target !== null,
@@ -475,19 +489,28 @@ class Driver {
     );
     switch (target.type) {
       case "implicit": {
-        return null;
+        return {
+          kind: "terminal",
+          terminal: { kind: "continue", label: null, id, implicit: true },
+          label: null,
+        };
       }
       case "labeled": {
         return {
           kind: "terminal",
-          terminal: { kind: "continue", label: target.block, id },
+          terminal: {
+            kind: "continue",
+            label: target.block,
+            id,
+            implicit: false,
+          },
           label: null,
         };
       }
       case "unlabeled": {
         return {
           kind: "terminal",
-          terminal: { kind: "continue", label: null, id },
+          terminal: { kind: "continue", label: null, id, implicit: false },
           label: null,
         };
       }

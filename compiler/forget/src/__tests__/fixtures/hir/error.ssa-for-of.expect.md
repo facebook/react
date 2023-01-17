@@ -15,12 +15,11 @@ function foo(cond) {
 
 ```
 
-## Code
 
-```javascript
-function foo(cond) {
-  const items = [];
-}
+## Error
 
 ```
+Expected a break target
+```
+          
       
