@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 let JSDOM;
@@ -27,7 +28,7 @@ let fatalError = undefined;
 describe('useId', () => {
   beforeEach(() => {
     jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
+    ({JSDOM} = require('jsdom'));
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');

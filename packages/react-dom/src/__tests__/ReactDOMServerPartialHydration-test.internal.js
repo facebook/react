@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -3119,7 +3120,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // We're now partially hydrated.
     await act(async () => {
       form.dispatchEvent(
-        new Event('submit', {
+        new window.Event('submit', {
           bubbles: true,
         }),
       );

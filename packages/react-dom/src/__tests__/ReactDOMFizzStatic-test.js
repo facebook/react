@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -26,7 +27,7 @@ let fatalError = undefined;
 describe('ReactDOMFizzStatic', () => {
   beforeEach(() => {
     jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
+    ({JSDOM} = require('jsdom'));
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     if (__EXPERIMENTAL__) {
