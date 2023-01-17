@@ -728,7 +728,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
-
     if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
@@ -745,7 +744,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getPendingChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
- 
     if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
