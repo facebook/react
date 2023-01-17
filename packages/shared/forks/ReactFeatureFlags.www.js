@@ -18,7 +18,6 @@ export const {
   disableInputAttributeSyncing,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
@@ -56,6 +55,7 @@ export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableTrustedTypesIntegration = false;
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
