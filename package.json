@@ -37,6 +37,7 @@
     "@babel/preset-react": "^7.10.4",
     "@babel/traverse": "^7.11.0",
     "abort-controller": "^3.0.0",
+    "abortcontroller-polyfill": "^1.7.5",
     "art": "0.10.1",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "chalk": "^3.0.0",
