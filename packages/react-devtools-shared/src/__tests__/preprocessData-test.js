@@ -327,11 +327,11 @@ describe('Timeline profiler', () => {
           randomSample,
         ]);
         expect(data).toMatchInlineSnapshot(`
-                Object {
+                {
                   "batchUIDToMeasuresMap": Map {},
-                  "componentMeasures": Array [],
+                  "componentMeasures": [],
                   "duration": 0.005,
-                  "flamechart": Array [],
+                  "flamechart": [],
                   "internalModuleSourceToRanges": Map {},
                   "laneToLabelMap": Map {
                     0 => "Sync",
@@ -367,48 +367,48 @@ describe('Timeline profiler', () => {
                     30 => "Offscreen",
                   },
                   "laneToReactMeasureMap": Map {
-                    0 => Array [],
-                    1 => Array [],
-                    2 => Array [],
-                    3 => Array [],
-                    4 => Array [],
-                    5 => Array [],
-                    6 => Array [],
-                    7 => Array [],
-                    8 => Array [],
-                    9 => Array [],
-                    10 => Array [],
-                    11 => Array [],
-                    12 => Array [],
-                    13 => Array [],
-                    14 => Array [],
-                    15 => Array [],
-                    16 => Array [],
-                    17 => Array [],
-                    18 => Array [],
-                    19 => Array [],
-                    20 => Array [],
-                    21 => Array [],
-                    22 => Array [],
-                    23 => Array [],
-                    24 => Array [],
-                    25 => Array [],
-                    26 => Array [],
-                    27 => Array [],
-                    28 => Array [],
-                    29 => Array [],
-                    30 => Array [],
+                    0 => [],
+                    1 => [],
+                    2 => [],
+                    3 => [],
+                    4 => [],
+                    5 => [],
+                    6 => [],
+                    7 => [],
+                    8 => [],
+                    9 => [],
+                    10 => [],
+                    11 => [],
+                    12 => [],
+                    13 => [],
+                    14 => [],
+                    15 => [],
+                    16 => [],
+                    17 => [],
+                    18 => [],
+                    19 => [],
+                    20 => [],
+                    21 => [],
+                    22 => [],
+                    23 => [],
+                    24 => [],
+                    25 => [],
+                    26 => [],
+                    27 => [],
+                    28 => [],
+                    29 => [],
+                    30 => [],
                   },
-                  "nativeEvents": Array [],
-                  "networkMeasures": Array [],
-                  "otherUserTimingMarks": Array [],
+                  "nativeEvents": [],
+                  "networkMeasures": [],
+                  "otherUserTimingMarks": [],
                   "reactVersion": "<filtered-version>",
-                  "schedulingEvents": Array [],
+                  "schedulingEvents": [],
                   "snapshotHeight": 0,
-                  "snapshots": Array [],
+                  "snapshots": [],
                   "startTime": 1,
-                  "suspenseEvents": Array [],
-                  "thrownErrors": Array [],
+                  "suspenseEvents": [],
+                  "thrownErrors": [],
                 }
           `);
       });
@@ -452,10 +452,10 @@ describe('Timeline profiler', () => {
           }),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.005,
@@ -463,7 +463,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -471,7 +471,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -479,7 +479,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -489,9 +489,9 @@ describe('Timeline profiler', () => {
                 },
               ],
             },
-            "componentMeasures": Array [],
+            "componentMeasures": [],
             "duration": 0.011,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {},
             "laneToLabelMap": Map {
               0 => "Sync",
@@ -527,17 +527,17 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [],
-              1 => Array [],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [],
-              5 => Array [],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [
-                Object {
+              0 => [],
+              1 => [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.005,
@@ -545,7 +545,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -553,7 +553,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -561,7 +561,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -570,34 +570,34 @@ describe('Timeline profiler', () => {
                   "type": "layout-effects",
                 },
               ],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
+            "schedulingEvents": [
+              {
                 "lanes": "0b0000000000000000000000000001001",
                 "timestamp": 0.005,
                 "type": "schedule-render",
@@ -605,10 +605,10 @@ describe('Timeline profiler', () => {
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 1,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
@@ -621,10 +621,10 @@ describe('Timeline profiler', () => {
           ...createUserTimingData(clearedMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
@@ -632,7 +632,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -640,7 +640,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -648,7 +648,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -658,19 +658,19 @@ describe('Timeline profiler', () => {
                 },
               ],
             },
-            "componentMeasures": Array [],
+            "componentMeasures": [],
             "duration": 0.016,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {
-              undefined => Array [
-                Array [
-                  Object {
+              undefined => [
+                [
+                  {
                     "columnNumber": 0,
                     "functionName": "filtered",
                     "lineNumber": 0,
                     "source": "  at filtered (<anonymous>:0:0)",
                   },
-                  Object {
+                  {
                     "columnNumber": 1,
                     "functionName": "filtered",
                     "lineNumber": 1,
@@ -713,9 +713,9 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [],
-              1 => Array [
-                Object {
+              0 => [],
+              1 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
@@ -723,7 +723,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -731,7 +731,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -739,7 +739,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -748,42 +748,42 @@ describe('Timeline profiler', () => {
                   "type": "layout-effects",
                 },
               ],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [],
-              5 => Array [],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
+            "schedulingEvents": [
+              {
                 "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 0.005,
                 "type": "schedule-render",
@@ -791,10 +791,10 @@ describe('Timeline profiler', () => {
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 4,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
@@ -818,10 +818,10 @@ describe('Timeline profiler', () => {
           ...createUserTimingData(clearedMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
@@ -829,7 +829,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -837,7 +837,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -845,7 +845,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.01,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -853,7 +853,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.016,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
@@ -862,8 +862,8 @@ describe('Timeline profiler', () => {
                   "type": "passive-effects",
                 },
               ],
-              1 => Array [
-                Object {
+              1 => [
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
@@ -871,7 +871,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.024,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
@@ -879,7 +879,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.024,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
@@ -887,7 +887,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.028,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
@@ -895,7 +895,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.034,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
@@ -905,29 +905,29 @@ describe('Timeline profiler', () => {
                 },
               ],
             },
-            "componentMeasures": Array [
-              Object {
+            "componentMeasures": [
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.007,
                 "type": "render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.002,
                 "timestamp": 0.02,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.025,
                 "type": "render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.038,
@@ -936,17 +936,17 @@ describe('Timeline profiler', () => {
               },
             ],
             "duration": 0.04,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {
-              undefined => Array [
-                Array [
-                  Object {
+              undefined => [
+                [
+                  {
                     "columnNumber": 0,
                     "functionName": "filtered",
                     "lineNumber": 0,
                     "source": "  at filtered (<anonymous>:0:0)",
                   },
-                  Object {
+                  {
                     "columnNumber": 1,
                     "functionName": "filtered",
                     "lineNumber": 1,
@@ -989,13 +989,13 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [],
-              1 => Array [],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [],
-              5 => Array [
-                Object {
+              0 => [],
+              1 => [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
@@ -1003,7 +1003,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -1011,7 +1011,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -1019,7 +1019,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.01,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -1027,7 +1027,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.016,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
@@ -1035,7 +1035,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.019,
                   "type": "passive-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
@@ -1043,7 +1043,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.024,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
@@ -1051,7 +1051,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.024,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
@@ -1059,7 +1059,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.028,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
@@ -1067,7 +1067,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.034,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
@@ -1076,44 +1076,44 @@ describe('Timeline profiler', () => {
                   "type": "passive-effects",
                 },
               ],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
+            "schedulingEvents": [
+              {
                 "lanes": "0b0000000000000000000000000000101",
                 "timestamp": 0.005,
                 "type": "schedule-render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "lanes": "0b0000000000000000000000000000101",
                 "timestamp": 0.021,
@@ -1122,10 +1122,10 @@ describe('Timeline profiler', () => {
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 4,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
@@ -1199,16 +1199,16 @@ describe('Timeline profiler', () => {
           ...userTimingData,
         ]);
         expect(data.otherUserTimingMarks).toMatchInlineSnapshot(`
-                Array [
-                  Object {
+                [
+                  {
                     "name": "VCWithoutImage: root",
                     "timestamp": 0.003,
                   },
-                  Object {
+                  {
                     "name": "--a-mark-that-looks-like-one-of-ours",
                     "timestamp": 0.004,
                   },
-                  Object {
+                  {
                     "name": "Some other mark",
                     "timestamp": 0.005,
                   },
@@ -1953,10 +1953,10 @@ describe('Timeline profiler', () => {
       expect(data).toHaveLength(1);
       const timelineData = data[0];
       expect(timelineData).toMatchInlineSnapshot(`
-        Object {
+        {
           "batchUIDToMeasuresMap": Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1964,7 +1964,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1972,7 +1972,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1980,7 +1980,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -1990,9 +1990,9 @@ describe('Timeline profiler', () => {
               },
             ],
           },
-          "componentMeasures": Array [],
+          "componentMeasures": [],
           "duration": 20,
-          "flamechart": Array [],
+          "flamechart": [],
           "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             1 => "SyncHydrationLane",
@@ -2028,9 +2028,9 @@ describe('Timeline profiler', () => {
             1073741824 => "Offscreen",
           },
           "laneToReactMeasureMap": Map {
-            1 => Array [],
-            2 => Array [
-              Object {
+            1 => [],
+            2 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2038,7 +2038,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2046,7 +2046,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2054,7 +2054,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2063,42 +2063,42 @@ describe('Timeline profiler', () => {
                 "type": "layout-effects",
               },
             ],
-            4 => Array [],
-            8 => Array [],
-            16 => Array [],
-            32 => Array [],
-            64 => Array [],
-            128 => Array [],
-            256 => Array [],
-            512 => Array [],
-            1024 => Array [],
-            2048 => Array [],
-            4096 => Array [],
-            8192 => Array [],
-            16384 => Array [],
-            32768 => Array [],
-            65536 => Array [],
-            131072 => Array [],
-            262144 => Array [],
-            524288 => Array [],
-            1048576 => Array [],
-            2097152 => Array [],
-            4194304 => Array [],
-            8388608 => Array [],
-            16777216 => Array [],
-            33554432 => Array [],
-            67108864 => Array [],
-            134217728 => Array [],
-            268435456 => Array [],
-            536870912 => Array [],
-            1073741824 => Array [],
+            4 => [],
+            8 => [],
+            16 => [],
+            32 => [],
+            64 => [],
+            128 => [],
+            256 => [],
+            512 => [],
+            1024 => [],
+            2048 => [],
+            4096 => [],
+            8192 => [],
+            16384 => [],
+            32768 => [],
+            65536 => [],
+            131072 => [],
+            262144 => [],
+            524288 => [],
+            1048576 => [],
+            2097152 => [],
+            4194304 => [],
+            8388608 => [],
+            16777216 => [],
+            33554432 => [],
+            67108864 => [],
+            134217728 => [],
+            268435456 => [],
+            536870912 => [],
+            1073741824 => [],
           },
-          "nativeEvents": Array [],
-          "networkMeasures": Array [],
-          "otherUserTimingMarks": Array [],
+          "nativeEvents": [],
+          "networkMeasures": [],
+          "otherUserTimingMarks": [],
           "reactVersion": "<filtered-version>",
-          "schedulingEvents": Array [
-            Object {
+          "schedulingEvents": [
+            {
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 10,
               "type": "schedule-render",
@@ -2106,10 +2106,10 @@ describe('Timeline profiler', () => {
             },
           ],
           "snapshotHeight": 0,
-          "snapshots": Array [],
+          "snapshots": [],
           "startTime": -10,
-          "suspenseEvents": Array [],
-          "thrownErrors": Array [],
+          "suspenseEvents": [],
+          "thrownErrors": [],
         }
       `);
     });
@@ -2142,10 +2142,10 @@ describe('Timeline profiler', () => {
       });
 
       expect(timelineData).toMatchInlineSnapshot(`
-        Object {
+        {
           "batchUIDToMeasuresMap": Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2153,7 +2153,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2161,7 +2161,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2169,7 +2169,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2177,7 +2177,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2186,8 +2186,8 @@ describe('Timeline profiler', () => {
                 "type": "passive-effects",
               },
             ],
-            2 => Array [
-              Object {
+            2 => [
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2195,7 +2195,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2203,7 +2203,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2211,7 +2211,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2219,7 +2219,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2229,29 +2229,29 @@ describe('Timeline profiler', () => {
               },
             ],
           },
-          "componentMeasures": Array [
-            Object {
+          "componentMeasures": [
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
@@ -2260,7 +2260,7 @@ describe('Timeline profiler', () => {
             },
           ],
           "duration": 20,
-          "flamechart": Array [],
+          "flamechart": [],
           "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             1 => "SyncHydrationLane",
@@ -2296,13 +2296,13 @@ describe('Timeline profiler', () => {
             1073741824 => "Offscreen",
           },
           "laneToReactMeasureMap": Map {
-            1 => Array [],
-            2 => Array [],
-            4 => Array [],
-            8 => Array [],
-            16 => Array [],
-            32 => Array [
-              Object {
+            1 => [],
+            2 => [],
+            4 => [],
+            8 => [],
+            16 => [],
+            32 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2310,7 +2310,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2318,7 +2318,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2326,7 +2326,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2334,7 +2334,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2342,7 +2342,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "passive-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2350,7 +2350,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2358,7 +2358,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2366,7 +2366,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2374,7 +2374,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2383,44 +2383,44 @@ describe('Timeline profiler', () => {
                 "type": "passive-effects",
               },
             ],
-            64 => Array [],
-            128 => Array [],
-            256 => Array [],
-            512 => Array [],
-            1024 => Array [],
-            2048 => Array [],
-            4096 => Array [],
-            8192 => Array [],
-            16384 => Array [],
-            32768 => Array [],
-            65536 => Array [],
-            131072 => Array [],
-            262144 => Array [],
-            524288 => Array [],
-            1048576 => Array [],
-            2097152 => Array [],
-            4194304 => Array [],
-            8388608 => Array [],
-            16777216 => Array [],
-            33554432 => Array [],
-            67108864 => Array [],
-            134217728 => Array [],
-            268435456 => Array [],
-            536870912 => Array [],
-            1073741824 => Array [],
+            64 => [],
+            128 => [],
+            256 => [],
+            512 => [],
+            1024 => [],
+            2048 => [],
+            4096 => [],
+            8192 => [],
+            16384 => [],
+            32768 => [],
+            65536 => [],
+            131072 => [],
+            262144 => [],
+            524288 => [],
+            1048576 => [],
+            2097152 => [],
+            4194304 => [],
+            8388608 => [],
+            16777216 => [],
+            33554432 => [],
+            67108864 => [],
+            134217728 => [],
+            268435456 => [],
+            536870912 => [],
+            1073741824 => [],
           },
-          "nativeEvents": Array [],
-          "networkMeasures": Array [],
-          "otherUserTimingMarks": Array [],
+          "nativeEvents": [],
+          "networkMeasures": [],
+          "otherUserTimingMarks": [],
           "reactVersion": "<filtered-version>",
-          "schedulingEvents": Array [
-            Object {
+          "schedulingEvents": [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "componentStack": "
             in App (at **)",
@@ -2431,10 +2431,10 @@ describe('Timeline profiler', () => {
             },
           ],
           "snapshotHeight": 0,
-          "snapshots": Array [],
+          "snapshots": [],
           "startTime": -10,
-          "suspenseEvents": Array [],
-          "thrownErrors": Array [],
+          "suspenseEvents": [],
+          "thrownErrors": [],
         }
       `);
     });
