@@ -3539,7 +3539,7 @@ describe('ReactDOMFizzServer', () => {
       expect(window.__test_outlet).toMatch(stringWithScriptsInIt);
     });
 
-    it('does not escape \\u2028, or \\u2029 characters', async () => {
+    it('does not escape u2028, or u2029 characters', async () => {
       // these characters are ignored in engines support https://github.com/tc39/proposal-json-superset
       // in this test with JSDOM the characters are silently dropped and thus don't need to be encoded.
       // if you send these characters to an older browser they could fail so it is a good idea to

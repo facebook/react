@@ -84,7 +84,7 @@ describe('ReactIdentity', () => {
 
   it('should allow any character as a key, in a detached parent', () => {
     const detachedContainer = document.createElement('div');
-    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", detachedContainer);
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&key'>", detachedContainer);
   });
 
   it('should allow any character as a key, in an attached parent', () => {
@@ -93,7 +93,7 @@ describe('ReactIdentity', () => {
     const attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
 
-    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", attachedContainer);
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&key'>", attachedContainer);
 
     document.body.removeChild(attachedContainer);
   });
