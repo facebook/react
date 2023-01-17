@@ -4055,8 +4055,14 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(Scheduler).toFlushAndYield([
         'throwing: first error',
-        // this repeated first error is the invokeGuardedCallback throw
-        'throwing: first error',
+        ...gate(flags =>
+          flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+            ? [
+                // this repeated first error is the invokeGuardedCallback throw
+                'throwing: first error',
+              ]
+            : [],
+        ),
         // these are actually thrown during render but no iGC repeat and no queueing as hydration errors
         'throwing: second error',
         'throwing: third error',
@@ -4309,19 +4315,29 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(Scheduler).toFlushAndYield([
         'throwing: first error',
-        // duplicate because first error is re-done in invokeGuardedCallback
-        'throwing: first error',
+        ...gate(flags =>
+          flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+            ? [
+                // duplicate because first error is re-done in invokeGuardedCallback
+                'throwing: first error',
+              ]
+            : [],
+        ),
         'throwing: second error',
         'suspending',
         'throwing: third error',
       ]);
       // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
       // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
-      expect(mockError.mock.calls).toEqual([
-        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
-        // suspense boundary
-        ['Error: Uncaught [Error: first error]'],
-      ]);
+      expect(mockError.mock.calls).toEqual(
+        gate(flags =>
+          flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+            ? // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
+              // suspense boundary
+              ['Error: Uncaught [Error: first error]']
+            : [],
+        ),
+      );
       mockError.mockClear();
 
       expect(getVisibleChildren(container)).toEqual(

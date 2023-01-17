@@ -62,19 +62,20 @@ describe('ReactES6Class', () => {
 
   it('throws if no render function is defined', () => {
     class Foo extends React.Component {}
+    const message =
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+      'instance: you may have forgotten to define `render`.';
     expect(() => {
       expect(() => act(() => root.render(<Foo />))).toThrow();
-    }).toErrorDev([
-      // A failed component renders four times in DEV in concurrent mode
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-    ]);
+    }).toErrorDev(
+      gate(flags =>
+        // A failed component renders twice in DEV in concurrent mode and
+        // double that with replayFailedUnitOfWorkWithInvokeGuardedCallback.
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? [message, message, message, message]
+          : [message, message],
+      ),
+    );
   });
 
   it('renders a simple stateless component with prop', () => {
