@@ -5,11 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, CompilerErrorOptions } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
+import { getOrAddGlobal } from "./Globals";
 import {
   BasicBlock,
   BlockId,
@@ -82,7 +84,8 @@ export default class HIRBuilder {
   #current: WipBlock = newBlock(makeBlockId(0));
   #entry: BlockId = makeBlockId(0);
   #scopes: Array<Scope> = [];
-  #bindings: Map<t.Identifier, Identifier> = new Map();
+  #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
+    new Map();
   #env: Environment;
   errors: CompilerError[] = [];
 
@@ -124,23 +127,67 @@ export default class HIRBuilder {
     };
   }
 
-  resolveIdentifier(node: t.Identifier): Identifier {
-    let identifier = this.#bindings.get(node);
-    if (identifier == null) {
-      const id = this.nextIdentifierId;
-      identifier = {
-        id,
-        name: node.name,
-        mutableRange: {
-          start: makeInstructionId(0),
-          end: makeInstructionId(0),
-        },
-        scope: null,
-        type: makeType(),
-      };
-      this.#bindings.set(node, identifier);
+  /**
+   * Maps an Identifier (or JSX identifier) Babel node to an internal `Identifier`
+   * which represents the variable being referenced, according to the JS scoping rules.
+   *
+   * Because Forget does not preserve _all_ block scopes in the input (only those that
+   * happen to occur from control flow), this resolution ensures that different variables
+   * with the same name are mapped to a unique name. Concretely, this function maintains
+   * the invariant that all references to a given variable will return an `Identifier`
+   * with the same (unique for the function) `name` and `id`.
+   *
+   * Example:
+   *
+   * ```javascript
+   * function foo() {
+   *   const x = 0;
+   *   {
+   *     const x = 1;
+   *   }
+   *   return x;
+   * }
+   * ```
+   *
+   * The above converts as follows:
+   *
+   * ```
+   * Const Identifier { name: 'x', id: 0 } = Primitive { value: 0 };
+   * Const Identifier { name: 'x_0', id: 1 } = Primitive { value: 1 };
+   * Return Identifier { name: 'x', id: 0};
+   * ```
+   */
+  resolveIdentifier(
+    path: NodePath<t.Identifier | t.JSXIdentifier>
+  ): Identifier {
+    const originalName = path.node.name;
+    const node =
+      path.scope.getBindingIdentifier(originalName) ??
+      getOrAddGlobal(originalName);
+    let name = originalName;
+    let index = 0;
+    while (true) {
+      const mapping = this.#bindings.get(name);
+      if (mapping === undefined) {
+        const id = this.nextIdentifierId;
+        const identifier: Identifier = {
+          id,
+          name,
+          mutableRange: {
+            start: makeInstructionId(0),
+            end: makeInstructionId(0),
+          },
+          scope: null,
+          type: makeType(),
+        };
+        this.#bindings.set(name, { node, identifier });
+        return identifier;
+      } else if (mapping.node === node) {
+        return mapping.identifier;
+      } else {
+        name = `${originalName}_${index++}`;
+      }
     }
-    return identifier;
   }
 
   /**

@@ -40,7 +40,7 @@ function component() {
     const z = {};
   }
 
-  const z = foo();
+  const z_0 = foo();
 }
 
 ```

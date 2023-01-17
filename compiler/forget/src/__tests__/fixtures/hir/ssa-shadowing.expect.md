@@ -35,11 +35,11 @@ function Foo(cond) {
     str$0 = str;
 
     if (cond) {
-      const str$1 = "other test";
-      log(str$1);
+      const str_0 = "other test";
+      log(str_0);
     } else {
-      const str$2 = "fallthrough test";
-      str$0 = str$2;
+      const str$1 = "fallthrough test";
+      str$0 = str$1;
     }
 
     $[0] = cond;

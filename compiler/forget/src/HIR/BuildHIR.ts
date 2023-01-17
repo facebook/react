@@ -34,24 +34,6 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
 // *******************************************************************************************
 // *******************************************************************************************
 
-const GLOBALS: Map<string, t.Identifier> = new Map([
-  ["Map", t.identifier("Map")],
-  ["Set", t.identifier("Set")],
-  ["Math", t.identifier("Math")],
-]);
-
-// TODO: This will work as a stopgap but it isn't really correct. We need proper handling of globals
-// and module-scoped variables, which means understanding module constants and imports.
-function getOrAddGlobal(identifierName: string): t.Identifier {
-  const ident = GLOBALS.get(identifierName);
-  if (ident != null) {
-    return ident;
-  }
-  const newIdent = t.identifier(identifierName);
-  GLOBALS.set(identifierName, newIdent);
-  return newIdent;
-}
-
 /**
  * Lower a function declaration into a control flow graph that models aspects of
  * control flow that are necessary for memoization. Notably, only control flow
@@ -70,14 +52,14 @@ export function lower(
   const builder = new HIRBuilder(env);
 
   const id =
-    func.isFunctionDeclaration() && func.node.id != null
-      ? builder.resolveIdentifier(func.node.id)
+    func.isFunctionDeclaration() && func.get("id").hasNode()
+      ? builder.resolveIdentifier(func.get("id") as NodePath<t.Identifier>)
       : null;
 
   const params: Array<Place> = [];
-  for (const param of func.get("params")) {
+  func.get("params").forEach((param) => {
     if (param.isIdentifier()) {
-      const identifier = builder.resolveIdentifier(param.node);
+      const identifier = builder.resolveIdentifier(param);
       const place: Place = {
         kind: "Identifier",
         identifier,
@@ -97,9 +79,8 @@ export function lower(
         source: func.toString(),
         loc: param.node.loc ?? null,
       });
-      continue;
     }
-  }
+  });
 
   const body = func.get("body");
   if (body.isExpression()) {
@@ -1360,14 +1341,7 @@ function lowerJsxElementName(
   const exprLoc = exprPath.node.loc ?? GeneratedSource;
   const tag: string = exprPath.node.name;
   if (tag.match(/^[A-Z]/)) {
-    const binding =
-      exprPath.scope.getBindingIdentifier(tag) ?? getOrAddGlobal(tag);
-    invariant(
-      binding != null,
-      `Expected to find a binding for variable '%s'`,
-      tag
-    );
-    const identifier = builder.resolveIdentifier(binding);
+    const identifier = builder.resolveIdentifier(exprPath);
     const place: Place = {
       kind: "Identifier",
       identifier: identifier,
@@ -1487,15 +1461,7 @@ function lowerIdentifier(
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  const binding =
-    exprPath.scope.getBindingIdentifier(exprNode.name) ??
-    getOrAddGlobal(exprNode.name);
-  invariant(
-    binding != null,
-    `Expected to find a binding for variable '%s'`,
-    exprNode.name
-  );
-  const identifier = builder.resolveIdentifier(binding);
+  const identifier = builder.resolveIdentifier(exprPath);
   const place: Place = {
     kind: "Identifier",
     identifier: identifier,
@@ -1694,21 +1660,20 @@ function gatherCapturedDeps(
   fn.get("body").traverse({
     Expression(path) {
       // TODO(gsn): Handle member expressions
-      if (!path.isIdentifier) {
+      if (!path.isIdentifier()) {
         return;
       }
 
-      const id = path as NodePath<t.Identifier>;
-      const binding = id.scope.getBinding(id.node.name);
+      const binding = path.scope.getBinding(path.node.name);
       if (binding === undefined || !pureScopes.has(binding.scope)) {
         return;
       }
 
       captured.add({
         kind: "Identifier",
-        identifier: builder.resolveIdentifier(binding.identifier),
+        identifier: builder.resolveIdentifier(path),
         effect: Effect.Unknown,
-        loc: id.node.loc!,
+        loc: path.node.loc ?? GeneratedSource,
       });
     },
   });
