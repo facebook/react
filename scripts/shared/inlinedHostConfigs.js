@@ -13,6 +13,8 @@ module.exports = [
       'react-dom',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-dom/src/server/ReactDOMFizzServerNode.fb.js',
+      'react-dom/src/server/ReactDOMFizzServerNode.stable.js',
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
@@ -28,6 +30,9 @@ module.exports = [
       'react-dom/static',
       'react-dom/static.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzServerNode.fb.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzServerNode.stable.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzServerNodeImpl.js',
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
@@ -47,12 +52,20 @@ module.exports = [
   },
   {
     shortName: 'bun',
-    entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
+    entryPoints: [
+      'react-dom',
+      'react-dom/src/server/ReactDOMFizzServerBun.js',
+      'react-dom/src/server/ReactDOMFizzServerBun.fb.js',
+      'react-dom/src/server/ReactDOMFizzServerBun.stable.js',
+    ],
     paths: [
       'react-dom',
       'react-dom/server',
       'react-dom/server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
+      'react-dom/src/server/ReactDOMFizzServerBun.fb.js',
+      'react-dom/src/server/ReactDOMFizzServerBun.stable.js',
+      'react-dom/src/server/ReactDOMFizzServerBunImpl.js',
       'react-dom-bindings',
       'react-dom/server.node',
       'react-server-dom-webpack',
@@ -70,6 +83,8 @@ module.exports = [
       'react-dom',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.fb.js',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.stable.js',
       'react-dom/static.browser',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
@@ -84,6 +99,9 @@ module.exports = [
       'react-dom/static.browser',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzServerBrowser.fb.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzServerBrowser.stable.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzServerBrowserImpl.js',
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',

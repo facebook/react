@@ -7,8 +7,4 @@
  * @flow
  */
 
-export {
-  renderIntoContainer,
-  renderToReadableStream,
-  version,
-} from './ReactDOMFizzServerBrowserImpl';
+export {renderToReadableStream, version} from './ReactDOMFizzServerBrowserImpl';

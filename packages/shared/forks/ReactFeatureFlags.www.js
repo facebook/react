@@ -108,7 +108,7 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
-export const enableFizzIntoContainer = __EXPERIMENTAL__;
+export const enableFizzIntoContainer = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

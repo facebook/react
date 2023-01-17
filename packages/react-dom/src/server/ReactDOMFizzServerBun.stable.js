@@ -8,7 +8,8 @@
  */
 
 export {
-  renderIntoContainer,
   renderToReadableStream,
+  renderToNodeStream,
+  renderToStaticNodeStream,
   version,
-} from './ReactDOMFizzServerBrowserImpl';
+} from './ReactDOMFizzServerBunImpl';
