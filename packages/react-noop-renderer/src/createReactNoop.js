@@ -728,9 +728,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
-    if (children === null) {
-      return null;
-    }
     if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
