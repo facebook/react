@@ -208,9 +208,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const prelude = await readContent(result.prelude);
     expect(prelude).toContain('Loading');
 
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   // @gate experimental
@@ -232,10 +230,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     let caughtError = null;
@@ -278,12 +272,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(caughtError.message).toBe(
-      'The render was aborted by the server without a reason.',
-    );
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(caughtError.message).toBe('The operation was aborted.');
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   // @gate experimental
@@ -291,10 +281,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     const promise = ReactDOMFizzStatic.prerender(
@@ -356,10 +342,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = 'foobar';
     controller.abort('foobar');
 
     await resultPromise;
@@ -400,10 +382,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = new Error('uh oh');
     controller.abort(new Error('uh oh'));
 
     await resultPromise;
