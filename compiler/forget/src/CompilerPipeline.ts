@@ -107,13 +107,6 @@ export function* run(
     value: reactiveFunction,
   });
 
-  pruneUnusedLabels(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PruneUnusedLabels",
-    value: reactiveFunction,
-  });
-
   flattenReactiveLoops(reactiveFunction);
   yield log({
     kind: "reactive",
@@ -132,6 +125,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PruneUnusedScopes",
+    value: reactiveFunction,
+  });
+
+  pruneUnusedLabels(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneUnusedLabels",
     value: reactiveFunction,
   });
 
