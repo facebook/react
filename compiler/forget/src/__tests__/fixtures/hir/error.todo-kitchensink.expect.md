@@ -6,6 +6,11 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   let i = 0;
   var x = [];
 
+  class Bar {}
+
+  with (true) {
+  }
+
   for (; i < 3; i += 1) {
     x.push(i);
   }
@@ -27,6 +32,8 @@ function foo([a, b], {
 }, f = "f", ...args) {
   let i = 0;
   var x = [];
+  class Bar {}
+  with (true) {}
   for (; i < 3; i += 1) {
     x.push(i);
   }
@@ -42,6 +49,8 @@ function foo([a, b], {
 }, f = "f", ...args) {
   let i = 0;
   var x = [];
+  class Bar {}
+  with (true) {}
   for (; i < 3; i += 1) {
     x.push(i);
   }
@@ -57,6 +66,8 @@ function foo([a, b], {
 }, f = "f", ...args) {
   let i = 0;
   var x = [];
+  class Bar {}
+  with (true) {}
   for (; i < 3; i += 1) {
     x.push(i);
   }
@@ -72,6 +83,8 @@ function foo([a, b], {
 }, f = "f", ...args) {
   let i = 0;
   var x = [];
+  class Bar {}
+  with (true) {}
   for (; i < 3; i += 1) {
     x.push(i);
   }
@@ -81,6 +94,12 @@ function foo([a, b], {
 
 Forget Error: [TODO] `var` declarations are not supported, use let or const on lines 3:3
 var x = [];
+
+Forget Error: [TODO] Unhandled statement type: ClassDeclaration
+class Bar {}
+
+Forget Error: [TODO] Unhandled statement type: WithStatement
+with (true) {}
 
 Forget Error: [TODO] Support non-variable initialization in for
 for (; i < 3; i += 1) {

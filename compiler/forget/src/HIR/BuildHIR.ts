@@ -753,6 +753,12 @@ function lowerStatement(
     case "TSNamespaceExportDeclaration":
     case "TSTypeAliasDeclaration":
     case "WithStatement": {
+      builder.pushError({
+        reason: `Unhandled statement type: ${stmtPath.type}`,
+        severity: ErrorSeverity.Todo,
+        source: stmtPath.toString(),
+        loc: null,
+      });
       builder.push({
         id: makeInstructionId(0),
         lvalue: {
