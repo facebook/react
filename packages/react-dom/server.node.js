@@ -50,8 +50,8 @@ export function renderIntoContainerAsPipeableStream() {
   );
 }
 
-export function renderIntoDocumentAsPipeableStream() {
-  return require('./src/server/ReactDOMFizzServerNode').renderIntoDocumentAsPipeableStream.apply(
+export function renderDocumentAsPipeableStream() {
+  return require('./src/server/ReactDOMFizzServerNode').renderDocumentAsPipeableStream.apply(
     this,
     arguments,
   );

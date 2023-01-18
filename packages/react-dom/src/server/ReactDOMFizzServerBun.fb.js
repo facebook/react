@@ -9,7 +9,7 @@
 
 export {
   renderIntoContainer,
-  renderIntoDocument,
+  renderDocument,
   renderToReadableStream,
   renderToNodeStream,
   renderToStaticNodeStream,

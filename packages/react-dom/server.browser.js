@@ -50,8 +50,8 @@ export function renderIntoContainer() {
   );
 }
 
-export function renderIntoDocument() {
-  return require('./src/server/ReactDOMFizzServerBrowser').renderIntoDocument.apply(
+export function renderDocument() {
+  return require('./src/server/ReactDOMFizzServerBrowser').renderDocument.apply(
     this,
     arguments,
   );

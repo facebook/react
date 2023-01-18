@@ -351,7 +351,7 @@ export function createRequest(
   pingedTasks.push(rootTask);
 
   // null is a valid fallback so we distinguish between undefined and null here
-  // If you use renderIntoDocument without a fallback argument the Request still
+  // If you use renderDocument without a fallback argument the Request still
   // has a null fallback and will exhibit fallback behavior
   if (fallback !== undefined) {
     const fallbackRootSegment = createPendingSegment(

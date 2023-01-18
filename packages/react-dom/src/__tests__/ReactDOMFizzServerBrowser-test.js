@@ -646,12 +646,12 @@ describe('ReactDOMFizzServerBrowser', () => {
     });
   });
 
-  describe('renderIntoDocument', () => {
+  describe('renderDocument', () => {
     // @gate enableFloat && enableFizzIntoDocument
     it('can render into a container', async () => {
       let content = '';
       await act(async () => {
-        const stream = ReactDOMFizzServer.renderIntoDocument(<div>foo</div>);
+        const stream = ReactDOMFizzServer.renderDocument(<div>foo</div>);
         const reader = stream.getReader();
         while (true) {
           const {done, value} = await reader.read();

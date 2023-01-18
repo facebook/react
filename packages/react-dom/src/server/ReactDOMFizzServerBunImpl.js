@@ -224,7 +224,7 @@ type IntoDocumentOptions = {
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
-function renderIntoDocument(
+function renderDocument(
   children: ReactNodeList,
   fallback?: ReactNodeList,
   options?: IntoDocumentOptions,
@@ -311,7 +311,7 @@ function renderToStaticNodeStream() {
 export {
   renderToReadableStream,
   renderIntoContainer,
-  renderIntoDocument,
+  renderDocument,
   renderToNodeStream,
   renderToStaticNodeStream,
   ReactVersion as version,

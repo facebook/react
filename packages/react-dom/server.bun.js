@@ -53,8 +53,8 @@ export function renderIntoContainer() {
   );
 }
 
-export function renderIntoDocument() {
-  return require('./src/server/ReactDOMFizzServerBun').renderIntoDocument.apply(
+export function renderDocument() {
+  return require('./src/server/ReactDOMFizzServerBun').renderDocument.apply(
     this,
     arguments,
   );

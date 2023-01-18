@@ -1686,11 +1686,11 @@ function pushStartHtml(
         responseState.requiresEmbedding &&
         hasOwnProperty.call(props, 'dangerouslySetInnerHTML')
       ) {
-        // We only enforce this restriction with new APIs like `renderIntoDocument` which
+        // We only enforce this restriction with new APIs like `renderDocument` which
         // we currently feature detect with `requiresEmbedding`.
         // @TODO In a major version lets enforce this restriction globally
         throw new Error(
-          'An <html> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderIntoDocument`. React does not support this; use a `children` prop instead',
+          'An <html> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderDocument`. React does not support this; use a `children` prop instead',
         );
       }
 
@@ -1771,7 +1771,7 @@ function pushStartHtml(
           if (differentProps) {
             console.error(
               'React encountered differing props when rendering the root <html> element of' +
-                ' the fallback children when using `renderIntoDocument`. When using `renderIntoDocument`' +
+                ' the fallback children when using `renderDocument`. When using `renderDocument`' +
                 ' React will often emit the <html> tag early, before the we know whether the' +
                 ' Shell has finished. If the Shell errors and the fallback children are rendered' +
                 ' the props used on the <html> tag of the fallback tree will be ignored.' +
@@ -1814,11 +1814,11 @@ function pushStartHead(
       responseState.requiresEmbedding &&
       hasOwnProperty.call(props, 'dangerouslySetInnerHTML')
     ) {
-      // We only enforce this restriction with new APIs like `renderIntoDocument` which
+      // We only enforce this restriction with new APIs like `renderDocument` which
       // we currently feature detect with `requiresEmbedding`.
       // @TODO In a major version lets enforce this restriction globally
       throw new Error(
-        'A <head> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderIntoDocument`. React does not support this; use a `children` prop instead',
+        'A <head> tag was rendered with a `dangerouslySetInnerHTML` prop while using `renderDocument`. React does not support this; use a `children` prop instead',
       );
     }
 
@@ -1877,9 +1877,9 @@ function pushStartHead(
 
     if (__DEV__) {
       if (responseState.requiresEmbedding && attributePropsIncluded) {
-        // We use this requiresEmbedding flag a heuristic for whether we are rendering with renderIntoDocument
+        // We use this requiresEmbedding flag a heuristic for whether we are rendering with renderDocument
         console.error(
-          'A <head> tag was rendered with props when using `renderIntoDocument`. In this rendering mode' +
+          'A <head> tag was rendered with props when using `renderDocument`. In this rendering mode' +
             ' React may emit the head tag early in some circumstances and therefore props on the <head> tag are not' +
             ' supported and may be missing in the rendered output for any particular render. In many cases props that' +
             ' are set on a <head> tag can be set on the <html> tag instead.',
@@ -2415,7 +2415,7 @@ export function pushEndInstance(
   target.push(endTag1, stringToChunk(type), endTag2);
 }
 
-// In some render modes (such as `renderIntoDocument`) WriteEarlyPreamble
+// In some render modes (such as `renderDocument`) WriteEarlyPreamble
 // is called to allow flushing of the preamble and Resources as early as possible.
 // It is possible for this to be called more than once and needs to be
 // resilient to that. For instance by not writing the preamble open tags
@@ -2427,7 +2427,7 @@ export function writeEarlyPreamble(
   willEmitInstructions: boolean,
 ): boolean {
   if (enableFloat) {
-    // We use `requiresEmbedding` as a hueristic for `renderIntoDocument`
+    // We use `requiresEmbedding` as a hueristic for `renderDocument`
     // which is the only render method which should emit an early preamble
     // In the future other render methods might and this hueristic may need
     // to change
@@ -2476,7 +2476,7 @@ export function writeEarlyPreamble(
 // and will close the preamble if necessary. After this function completes
 // the shell will flush. In modes that do not have a shell such as `renderIntoContainer`
 // this function is not called. In modes that render a shell fallback such as
-// `renderIntoDocument` this function is still only called once, either for the
+// `renderDocument` this function is still only called once, either for the
 // primary shell (no fallback possible at this point) or for the fallback shell
 // (was not called for the primary children).
 export function writePreamble(

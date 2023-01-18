@@ -210,7 +210,7 @@ type IntoDocumentOptions = {
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
-function renderIntoDocumentAsPipeableStream(
+function renderDocumentAsPipeableStream(
   children: ReactNodeList,
   fallback?: ReactNodeList,
   options?: IntoDocumentOptions,
@@ -272,6 +272,6 @@ function renderIntoDocumentAsPipeableStream(
 export {
   renderToPipeableStream,
   renderIntoContainerAsPipeableStream,
-  renderIntoDocumentAsPipeableStream,
+  renderDocumentAsPipeableStream,
   ReactVersion as version,
 };

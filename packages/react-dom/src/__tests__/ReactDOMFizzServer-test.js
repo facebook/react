@@ -432,9 +432,9 @@ describe('ReactDOMFizzServer', () => {
       mergeOptions(options, renderOptions),
     );
   }
-  function renderIntoDocumentAsPipeableStream(jsx, fallback, options) {
+  function renderDocumentAsPipeableStream(jsx, fallback, options) {
     // Merge options with renderOptions, which may contain featureFlag specific behavior
-    return ReactDOMFizzServer.renderIntoDocumentAsPipeableStream(
+    return ReactDOMFizzServer.renderDocumentAsPipeableStream(
       jsx,
       fallback,
       mergeOptions(options, renderOptions),
@@ -6165,15 +6165,13 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  describe('renderIntoDocument', () => {
+  describe('renderDocument', () => {
     // @gate enableFloat && enableFizzIntoDocument
     it('can render arbitrary HTML into a Document', async () => {
       let content = '';
       writable.on('data', chunk => (content += chunk));
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
-          <div id="div">foo</div>,
-        );
+        const {pipe} = renderDocumentAsPipeableStream(<div id="div">foo</div>);
         pipe(writable);
       });
 
@@ -6196,7 +6194,7 @@ describe('ReactDOMFizzServer', () => {
       let content = '';
       writable.on('data', chunk => (content += chunk));
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <body id="body">foo</body>,
         );
         pipe(writable);
@@ -6220,7 +6218,7 @@ describe('ReactDOMFizzServer', () => {
       writable.on('data', chunk => (content += chunk));
       await expect(async () => {
         await act(() => {
-          const {pipe} = renderIntoDocumentAsPipeableStream(
+          const {pipe} = renderDocumentAsPipeableStream(
             <html id="html">
               <head id="head">
                 <title>a title</title>
@@ -6231,7 +6229,7 @@ describe('ReactDOMFizzServer', () => {
           pipe(writable);
         });
       }).toErrorDev(
-        'A <head> tag was rendered with props when using `renderIntoDocument`. In this rendering mode React may emit the head tag early in some circumstances and therefore props on the <head> tag are not supported and may be missing in the rendered output for any particular render. In many cases props that are set on a <head> tag can be set on the <html> tag instead.',
+        'A <head> tag was rendered with props when using `renderDocument`. In this rendering mode React may emit the head tag early in some circumstances and therefore props on the <head> tag are not supported and may be missing in the rendered output for any particular render. In many cases props that are set on a <head> tag can be set on the <html> tag instead.',
       );
 
       expect(content.slice(0, 47)).toEqual(
@@ -6253,7 +6251,7 @@ describe('ReactDOMFizzServer', () => {
       let content = '';
       writable.on('data', chunk => (content += chunk));
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <body id="body">foo</body>
           </html>,
@@ -6284,7 +6282,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <body id="body">
               <Throw />
@@ -6332,7 +6330,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <BlockOn value="foo">
               <body id="body">
@@ -6406,7 +6404,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <link rel="stylesheet" href="foo" precedence="foo" />
             <link rel="stylesheet" href="bar" precedence="bar" />
@@ -6459,7 +6457,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <body id="body">
               hello world
@@ -6505,7 +6503,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <body id="body">
               <Throw />
@@ -6550,7 +6548,7 @@ describe('ReactDOMFizzServer', () => {
 
       const errors = [];
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <body id="body">
               <BlockOn value="error">
@@ -6637,7 +6635,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(() => {
-        const {pipe} = renderIntoDocumentAsPipeableStream(
+        const {pipe} = renderDocumentAsPipeableStream(
           <html id="html">
             <head />
             <body id="body">
@@ -6745,7 +6743,7 @@ describe('ReactDOMFizzServer', () => {
       const errors = [];
       try {
         await act(() => {
-          const {pipe} = renderIntoDocumentAsPipeableStream(
+          const {pipe} = renderDocumentAsPipeableStream(
             <html id="html">
               <head />
               <link rel="stylesheet" href="foo" precedence="foo" />
