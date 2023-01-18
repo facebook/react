@@ -72,20 +72,7 @@ export default function generateTestsFromFixtures(
         input: inputFile,
         output: outputFile,
       } of Array.from(fixtures.values())) {
-        let testCommand;
-
-        switch (basename.split(".")[0]) {
-          case "only":
-            testCommand = test.only;
-            break;
-          case "skip":
-            testCommand = test.skip;
-            break;
-          default:
-            testCommand = test;
-            break;
-        }
-
+        let testCommand = test;
         let input: string | null = null;
         let debug = false;
         if (inputFile != null) {
@@ -94,6 +81,9 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@only") !== -1) {
             testCommand = test.only;
             debug = true;
+          }
+          if (lines[0]!.indexOf("@skip") !== -1) {
+            testCommand = test.skip;
           }
         }
 
