@@ -566,4 +566,45 @@ describe('ReactDOMFiberAsync', () => {
 
     expect(container.textContent).toBe('new');
   });
+
+  it('should synchronously render the transition lane in a popState', async () => {
+    function App() {
+      const [syncState, setSyncState] = React.useState(false);
+      const [hasNavigated, setHasNavigated] = React.useState(false);
+      function onPopstate() {
+        Scheduler.log(`popState`);
+        React.startTransition(() => {
+          setHasNavigated(true);
+        });
+        setSyncState(true);
+
+        // Jest is not emulating window.event correctly in the microtask
+        const currentEvent = window.event;
+        window.event = currentEvent;
+        queueMicrotask(() => {
+          window.event = null;
+        });
+      }
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+      Scheduler.log(`render:${hasNavigated}/${syncState}`);
+      return null;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['render:false/false']);
+
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+      window.dispatchEvent(popStateEvent);
+    });
+
+    assertLog(['popState', 'render:true/true']);
+
+    root.unmount();
+  });
 });

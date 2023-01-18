@@ -19,7 +19,11 @@ import {
   getHighestPriorityLane,
   getNextLanes,
   includesSyncLane,
+  includesTransitionLane,
   markStarvedLanesAsExpired,
+  markRootEntangled,
+  mergeLanes,
+  getTransitionLanes,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -49,7 +53,11 @@ import {
   IdleEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberConfig';
+import {
+  supportsMicrotasks,
+  scheduleMicrotask,
+  shouldAttemptEagerTransition,
+} from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
@@ -238,6 +246,12 @@ function processRootScheduleInMicrotask() {
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
+    if (includesTransitionLane(root.pendingLanes) && shouldAttemptEagerTransition()) {
+      markRootEntangled(
+        root,
+        mergeLanes(getTransitionLanes(root.pendingLanes), SyncLane),
+      );
+    }
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To

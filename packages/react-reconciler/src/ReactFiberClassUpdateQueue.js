@@ -94,7 +94,7 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
-  isTransitionLane,
+  includesTransitionLane,
   intersectLanes,
   markRootEntangled,
 } from './ReactFiberLane';
@@ -279,7 +279,7 @@ export function entangleTransitions(root: FiberRoot, fiber: Fiber, lane: Lane) {
   }
 
   const sharedQueue: SharedQueue<mixed> = (updateQueue: any).shared;
-  if (isTransitionLane(lane)) {
+  if (includesTransitionLane(lane)) {
     let queueLanes = sharedQueue.lanes;
 
     // If any entangled lanes are no longer pending on the root, then they must
