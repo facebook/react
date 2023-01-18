@@ -11,20 +11,46 @@ import { printReactiveFunction } from "../ReactiveScopes";
 
 let ENABLED: boolean = false;
 
+let lastLogged: string;
+
 export function toggleLogging(enabled: boolean) {
   ENABLED = enabled;
 }
 
 export function logHIR(step: string, ir: HIR): void {
-  log(() => `${step}:\n${printHIR(ir)}`);
+  if (ENABLED) {
+    const printed = printHIR(ir);
+    if (printed !== lastLogged) {
+      lastLogged = printed;
+      process.stdout.write(`${step}:\n${printed}\n\n`);
+    } else {
+      process.stdout.write(`${step}: (no change)\n\n`);
+    }
+  }
 }
 
 export function logHIRFunction(step: string, fn: HIRFunction): void {
-  log(() => `${step}:\n${printFunction(fn)}`);
+  if (ENABLED) {
+    const printed = printFunction(fn);
+    if (printed !== lastLogged) {
+      lastLogged = printed;
+      process.stdout.write(`${step}:\n${printed}\n\n`);
+    } else {
+      process.stdout.write(`${step}: (no change)\n\n`);
+    }
+  }
 }
 
 export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
-  log(() => `${step}:\n${printReactiveFunction(fn)}`);
+  if (ENABLED) {
+    const printed = printReactiveFunction(fn);
+    if (printed !== lastLogged) {
+      lastLogged = printed;
+      process.stdout.write(`${step}:\n${printed}\n\n`);
+    } else {
+      process.stdout.write(`${step}: (no change)\n\n`);
+    }
+  }
 }
 
 export function log(fn: () => string) {
