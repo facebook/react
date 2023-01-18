@@ -114,19 +114,21 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case "break": {
       const id = terminal.id !== null ? `[${terminal.id}]` : [];
+      const implicit = terminal.implicit ? "(implicit) " : "";
       if (terminal.label !== null) {
-        writer.writeLine(`${id} break bb${terminal.label}`);
+        writer.writeLine(`${id} ${implicit}break bb${terminal.label}`);
       } else {
-        writer.writeLine(`${id} break`);
+        writer.writeLine(`${id} ${implicit}break`);
       }
       break;
     }
     case "continue": {
       const id = `[${terminal.id}]`;
+      const implicit = terminal.implicit ? "(implicit) " : "";
       if (terminal.label !== null) {
-        writer.writeLine(`${id} continue bb${terminal.label}`);
+        writer.writeLine(`${id} ${implicit}continue bb${terminal.label}`);
       } else {
-        writer.writeLine(`${id} continue`);
+        writer.writeLine(`${id} ${implicit}continue`);
       }
       break;
     }
