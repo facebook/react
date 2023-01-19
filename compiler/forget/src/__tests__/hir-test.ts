@@ -69,10 +69,8 @@ describe("React Forget (HIR version)", () => {
         }
       } else {
         if (error !== null) {
-          console.error(error);
-          throw new Error(
-            `Expected fixture '${file}' to succeed but it failed with error: '${error.message}'. See console output for details.`
-          );
+          error.message = `Expected fixture '${file}' to succeed but it failed with error:\n\n${error.message}`;
+          throw error;
         }
         if (items === null || items.length === 0) {
           throw new Error(`Expected at least one output for file '${file}'.`);
