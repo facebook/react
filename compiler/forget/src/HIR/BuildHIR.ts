@@ -1675,12 +1675,7 @@ function gatherCapturedDeps(
         return;
       }
 
-      captured.add({
-        kind: "Identifier",
-        identifier: builder.resolveIdentifier(path),
-        effect: Effect.Unknown,
-        loc: path.node.loc ?? GeneratedSource,
-      });
+      captured.add(lowerExpressionToPlace(builder, path));
     },
   });
 
