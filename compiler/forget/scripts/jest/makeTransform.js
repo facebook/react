@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const ReactForgetBabelPlugin = require("../../dist").default;
+const ReactForgetBabelPlugin = require("../../dist").BabelPlugin;
 const babelJest = require("babel-jest");
 const { readFileSync } = require("fs");
 
