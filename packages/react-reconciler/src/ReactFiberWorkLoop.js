@@ -1195,9 +1195,7 @@ function recoverFromConcurrentError(
     // Something to consider for a future refactor.
     const rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
     rootWorkInProgress.flags |= ForceClientRender;
-    if (__DEV__) {
-      errorHydratingContainer(root.containerInfo);
-    }
+    errorHydratingContainer(root.containerInfo);
   }
 
   const exitStatus = renderRootSync(root, errorRetryLanes);

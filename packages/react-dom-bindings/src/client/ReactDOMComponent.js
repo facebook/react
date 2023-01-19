@@ -244,15 +244,13 @@ export function checkForUnmatchedText(
   }
 
   if (shouldWarnDev) {
-    if (__DEV__) {
-      if (!didWarnInvalidHydration) {
-        didWarnInvalidHydration = true;
-        console.error(
-          'Text content did not match. Server: "%s" Client: "%s"',
-          normalizedServerText,
-          normalizedClientText,
-        );
-      }
+    if (!didWarnInvalidHydration) {
+      didWarnInvalidHydration = true;
+      console.error(
+        'Text content did not match. Server: "%s" Client: "%s"',
+        normalizedServerText,
+        normalizedClientText,
+      );
     }
   }
 
