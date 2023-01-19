@@ -1,5 +1,5 @@
 'use strict';
-
+const { declare } = require('@babel/helper-plugin-utils')
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 const getComments = require('./getComments');
@@ -113,4 +113,4 @@ function transform(babel) {
   };
 }
 
-module.exports = transform;
+module.exports = declare(transform);

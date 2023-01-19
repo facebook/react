@@ -8,8 +8,8 @@
 'use strict';
 
 const helperModuleImports = require('@babel/helper-module-imports');
-
-module.exports = function autoImporter(babel) {
+const { declare } = require('@babel/helper-plugin-utils')
+module.exports =  declare((babel) => {
   function getAssignIdent(path, file, state) {
     if (state.id) {
       return state.id;
@@ -51,4 +51,4 @@ module.exports = function autoImporter(babel) {
       },
     },
   };
-};
+});
