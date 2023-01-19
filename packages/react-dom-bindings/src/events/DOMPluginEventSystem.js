@@ -262,6 +262,7 @@ function processDispatchQueueItemsInOrder(
 // `registerTwoPhaseEvent` create additional event by dependencies in queue.
 // Some dependencies event called `preventDefault` which should not trigger synthetic event.
 // In current check logic, we only check `click` to not to trigger `change`.
+// Ref:
 // https://html.spec.whatwg.org/multipage/input.html#the-input-element
 function checkEventValidation(event: ReactSyntheticEvent) {
   if (
