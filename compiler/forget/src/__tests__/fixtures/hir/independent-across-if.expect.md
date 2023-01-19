@@ -61,9 +61,10 @@ function Component(props) {
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;
   let a;
+  let b;
   if (c_0 || c_1 || c_2) {
     a = compute(props.a);
-    const b = compute(props.b);
+    b = compute(props.b);
     if (props.c) {
       mutate(a);
       mutate(b);
@@ -72,21 +73,23 @@ function Component(props) {
     $[1] = props.b;
     $[2] = props.c;
     $[3] = a;
+    $[4] = b;
   } else {
     a = $[3];
+    b = $[4];
   }
-  const c_4 = $[4] !== a;
-  const c_5 = $[5] !== b;
-  let t6;
-  if (c_4 || c_5) {
-    t6 = <Foo a={a} b={b}></Foo>;
-    $[4] = a;
-    $[5] = b;
-    $[6] = t6;
+  const c_5 = $[5] !== a;
+  const c_6 = $[6] !== b;
+  let t7;
+  if (c_5 || c_6) {
+    t7 = <Foo a={a} b={b}></Foo>;
+    $[5] = a;
+    $[6] = b;
+    $[7] = t7;
   } else {
-    t6 = $[6];
+    t7 = $[7];
   }
-  return t6;
+  return t7;
 }
 
 ```

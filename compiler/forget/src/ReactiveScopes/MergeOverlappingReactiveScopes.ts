@@ -106,6 +106,7 @@ export function mergeOverlappingReactiveScopes(fn: ReactiveFunction): void {
   context.enter(() => {
     visitBlock(context, fn.body);
   });
+  context.complete();
 }
 
 function visitBlock(context: Context, block: ReactiveBlock): void {
@@ -205,6 +206,7 @@ class Context {
   scopes: Array<BlockScope> = [];
   seenScopes: Set<ScopeId> = new Set();
   joinedScopes: DisjointSet<ReactiveScope> = new DisjointSet();
+  operandScopes: Map<Place, ReactiveScope> = new Map();
 
   visitId(id: InstructionId): void {
     const currentBlock = this.scopes[this.scopes.length - 1]!;
@@ -223,6 +225,7 @@ class Context {
     if (scope === null) {
       return;
     }
+    this.operandScopes.set(place, scope);
     const currentBlock = this.scopes[this.scopes.length - 1]!;
     // Fast-path for the first time we see a new scope
     if (!this.seenScopes.has(scope.id)) {
@@ -290,19 +293,24 @@ class Context {
     this.scopes.push(new BlockScope());
     fn();
     this.scopes.pop();
-    if (this.scopes.length === 0) {
-      this.joinedScopes.forEach((scope, groupScope) => {
-        if (scope !== groupScope) {
-          groupScope.range.start = makeInstructionId(
-            Math.min(groupScope.range.start, scope.range.start)
-          );
-          groupScope.range.end = makeInstructionId(
-            Math.max(groupScope.range.end, scope.range.end)
-          );
-          scope.range = groupScope.range;
-          scope.id = groupScope.id;
-        }
-      });
+  }
+
+  complete(): void {
+    this.joinedScopes.forEach((scope, groupScope) => {
+      if (scope !== groupScope) {
+        groupScope.range.start = makeInstructionId(
+          Math.min(groupScope.range.start, scope.range.start)
+        );
+        groupScope.range.end = makeInstructionId(
+          Math.max(groupScope.range.end, scope.range.end)
+        );
+      }
+    });
+    for (const [operand, originalScope] of this.operandScopes) {
+      const mergedScope = this.joinedScopes.find(originalScope);
+      if (mergedScope !== null) {
+        operand.identifier.scope = mergedScope;
+      }
     }
   }
 }
