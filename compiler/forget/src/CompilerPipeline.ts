@@ -42,9 +42,7 @@ export type CompilerPipelineValue =
 export function* run(
   func: NodePath<t.FunctionDeclaration>
 ): Generator<CompilerPipelineValue, t.Function> {
-  const env = new Environment();
-
-  const lowering = lower(func, env).orElse((errors) => {
+  const lowering = lower(func).orElse((errors) => {
     const msg = errors.map((error) => error.toString()).join("\n\n");
     throw new Error(msg);
   });
@@ -55,7 +53,7 @@ export function* run(
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
-  enterSSA(hir, env);
+  enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
 
   eliminateRedundantPhi(hir);

@@ -7,6 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { Environment } from "./HIRBuilder";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -161,6 +162,7 @@ export type ReactiveIfTerminal = {
 export type HIRFunction = {
   loc: SourceLocation;
   id: Identifier | null;
+  env: Environment;
   params: Array<Place>;
   body: HIR;
   generator: boolean;

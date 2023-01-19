@@ -48,9 +48,9 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
  * grained reactivity.
  */
 export function lower(
-  func: NodePath<t.Function>,
-  env: Environment
+  func: NodePath<t.Function>
 ): Result<HIRFunction, CompilerError[]> {
+  const env = new Environment();
   const builder = new HIRBuilder(env);
 
   const id =
@@ -106,6 +106,7 @@ export function lower(
     generator: func.node.generator === true,
     async: func.node.async === true,
     loc: func.node.loc ?? GeneratedSource,
+    env,
   });
 }
 
