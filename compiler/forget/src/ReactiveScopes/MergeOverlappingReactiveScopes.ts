@@ -10,6 +10,7 @@ import {
   InstructionId,
   InstructionValue,
   makeInstructionId,
+  Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -161,10 +162,7 @@ function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
   if (block.last !== null) {
     context.visitId(block.last.id);
     if (block.last.value.kind === "Identifier") {
-      const scope = getPlaceScope(block.last.id, block.last.value);
-      if (scope !== null) {
-        context.visitScope(scope);
-      }
+      context.visitPlace(block.last.id, block.last.value);
     }
   }
 }
@@ -179,13 +177,7 @@ function visitInstruction(
     "Expected lvalues to not be null when assigning scopes. " +
       "Pruning lvalues too early can result in missing scope information."
   );
-  if (
-    instruction.lvalue.place.identifier.scope !== null &&
-    instruction.id >= instruction.lvalue.place.identifier.scope.range.start &&
-    instruction.id < instruction.lvalue.place.identifier.scope.range.end
-  ) {
-    context.visitScope(instruction.lvalue.place.identifier.scope);
-  }
+  context.visitPlace(instruction.id, instruction.lvalue.place);
 }
 
 function visitValue(
@@ -195,13 +187,7 @@ function visitValue(
 ): void {
   context.visitId(id);
   for (const operand of eachInstructionValueOperand(value)) {
-    if (
-      operand.identifier.scope !== null &&
-      id >= operand.identifier.scope.range.start &&
-      id < operand.identifier.scope.range.end
-    ) {
-      context.visitScope(operand.identifier.scope);
-    }
+    context.visitPlace(id, operand);
   }
 }
 
@@ -232,7 +218,11 @@ class Context {
     });
   }
 
-  visitScope(scope: ReactiveScope): void {
+  visitPlace(id: InstructionId, place: Place): void {
+    const scope = getPlaceScope(id, place);
+    if (scope === null) {
+      return;
+    }
     const currentBlock = this.scopes[this.scopes.length - 1]!;
     // Fast-path for the first time we see a new scope
     if (!this.seenScopes.has(scope.id)) {
