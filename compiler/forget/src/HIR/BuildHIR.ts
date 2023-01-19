@@ -71,13 +71,7 @@ export function lower(
       builder.pushError({
         reason: `Support non-identifier params: ${param.node.type}`,
         severity: ErrorSeverity.Todo,
-        // 1. We can't use NodePath.toString() because we're using @babel/traverse directly, see
-        //    https://fburl.com/45x18dcm for details.
-        // 2. Only NodePaths override toString to print the source, so if you tried this with
-        //    Node.toString() you'd just get [object Object].
-        // 3. You will see this in other calls to builder.pushError in this file.
-        source: func.toString(),
-        loc: param.node.loc ?? null,
+        nodePath: param,
       });
     }
   });
@@ -87,8 +81,7 @@ export function lower(
     builder.pushError({
       reason: "Support arrow functions",
       severity: ErrorSeverity.Todo,
-      source: func.toString(),
-      loc: body.node.loc ?? null,
+      nodePath: body,
     });
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
@@ -96,8 +89,7 @@ export function lower(
     builder.pushError({
       reason: `Unexpected function body kind: ${body.type}}`,
       severity: ErrorSeverity.InvalidInput,
-      source: func.toString(),
-      loc: body.node.loc ?? null,
+      nodePath: body,
     });
   }
 
@@ -339,8 +331,7 @@ function lowerStatement(
           builder.pushError({
             reason: "Support non-variable initialization in for",
             severity: ErrorSeverity.Todo,
-            source: stmt.toString(),
-            loc: init.node?.loc ?? null,
+            nodePath: stmt,
           });
           return { kind: "error", id: makeInstructionId(0) };
         }
@@ -359,8 +350,7 @@ function lowerStatement(
           builder.pushError({
             reason: "Handle empty for updater",
             severity: ErrorSeverity.Todo,
-            source: stmt.toString(),
-            loc: null,
+            nodePath: stmt,
           });
           return { kind: "error", id: makeInstructionId(0) };
         }
@@ -404,8 +394,7 @@ function lowerStatement(
         builder.pushError({
           reason: "ForStatement without test",
           severity: ErrorSeverity.Todo,
-          source: stmt.toString(),
-          loc: null,
+          nodePath: stmt,
         });
       } else {
         builder.terminateWithContinuation(
@@ -492,8 +481,7 @@ function lowerStatement(
         builder.pushError({
           reason: "while statement must have a location",
           severity: ErrorSeverity.InvalidInput,
-          source: stmt.toString(),
-          loc: null,
+          nodePath: stmt,
         });
       } else {
         builder.terminateWithContinuation(
@@ -587,8 +575,7 @@ function lowerStatement(
               reason:
                 "Expected at most one `default` branch, this code should have failed to parse",
               severity: ErrorSeverity.InvalidInput,
-              source: stmt.toString(),
-              loc: case_.node.loc ?? null,
+              nodePath: case_,
             });
             break;
           }
@@ -671,8 +658,7 @@ function lowerStatement(
         builder.pushError({
           reason: "`var` declarations are not supported, use let or const",
           severity: ErrorSeverity.Todo,
-          source: stmt.toString(),
-          loc: stmt.node.loc ?? null,
+          nodePath: stmt,
         });
         // TODO: should we lower this to an error variant
         return;
@@ -756,8 +742,7 @@ function lowerStatement(
       builder.pushError({
         reason: `Unhandled statement type: ${stmtPath.type}`,
         severity: ErrorSeverity.Todo,
-        source: stmtPath.toString(),
-        loc: null,
+        nodePath: stmtPath,
       });
       builder.push({
         id: makeInstructionId(0),

@@ -24,102 +24,111 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 ## Error
 
 ```
-Forget Error: [TODO] Support non-identifier params: ArrayPattern on lines 1:1
-function foo([a, b], {
-  c,
-  d,
-  e = "e"
-}, f = "f", ...args) {
-  let i = 0;
-  var x = [];
-  class Bar {}
-  with (true) {}
-  for (; i < 3; i += 1) {
-    x.push(i);
-  }
-  for (; i < 3;) {}
-  for (;;) {}
-}
+[ReactForget] TodoError: Support non-identifier params: ArrayPattern
+> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+    |              ^^^^^^
+  2 |   let i = 0;
+  3 |   var x = [];
+  4 |
 
-Forget Error: [TODO] Support non-identifier params: ObjectPattern on lines 1:1
-function foo([a, b], {
-  c,
-  d,
-  e = "e"
-}, f = "f", ...args) {
-  let i = 0;
-  var x = [];
-  class Bar {}
-  with (true) {}
-  for (; i < 3; i += 1) {
-    x.push(i);
-  }
-  for (; i < 3;) {}
-  for (;;) {}
-}
+[ReactForget] TodoError: Support non-identifier params: ObjectPattern
+> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+    |                      ^^^^^^^^^^^^^^^^^
+  2 |   let i = 0;
+  3 |   var x = [];
+  4 |
 
-Forget Error: [TODO] Support non-identifier params: AssignmentPattern on lines 1:1
-function foo([a, b], {
-  c,
-  d,
-  e = "e"
-}, f = "f", ...args) {
-  let i = 0;
-  var x = [];
-  class Bar {}
-  with (true) {}
-  for (; i < 3; i += 1) {
-    x.push(i);
-  }
-  for (; i < 3;) {}
-  for (;;) {}
-}
+[ReactForget] TodoError: Support non-identifier params: AssignmentPattern
+> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+    |                                         ^^^^^^^
+  2 |   let i = 0;
+  3 |   var x = [];
+  4 |
 
-Forget Error: [TODO] Support non-identifier params: RestElement on lines 1:1
-function foo([a, b], {
-  c,
-  d,
-  e = "e"
-}, f = "f", ...args) {
-  let i = 0;
-  var x = [];
-  class Bar {}
-  with (true) {}
-  for (; i < 3; i += 1) {
-    x.push(i);
-  }
-  for (; i < 3;) {}
-  for (;;) {}
-}
+[ReactForget] TodoError: Support non-identifier params: RestElement
+> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+    |                                                  ^^^^^^^
+  2 |   let i = 0;
+  3 |   var x = [];
+  4 |
 
-Forget Error: [TODO] `var` declarations are not supported, use let or const on lines 3:3
-var x = [];
+[ReactForget] TodoError: `var` declarations are not supported, use let or const
+  1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+  2 |   let i = 0;
+> 3 |   var x = [];
+    |   ^^^^^^^^^^^
+  4 |
+  5 |   class Bar {}
+  6 |
 
-Forget Error: [TODO] Unhandled statement type: ClassDeclaration
-class Bar {}
+[ReactForget] TodoError: Unhandled statement type: ClassDeclaration
+  3 |   var x = [];
+  4 |
+> 5 |   class Bar {}
+    |   ^^^^^^^^^^^^
+  6 |
+  7 |   with (true) {
+  8 |   }
 
-Forget Error: [TODO] Unhandled statement type: WithStatement
-with (true) {}
+[ReactForget] TodoError: Unhandled statement type: WithStatement
+   5 |   class Bar {}
+   6 |
+>  7 |   with (true) {
+     |   ^
+   8 |   }
+   9 |
+  10 |   for (; i < 3; i += 1) {
 
-Forget Error: [TODO] Support non-variable initialization in for
-for (; i < 3; i += 1) {
-  x.push(i);
-}
+[ReactForget] TodoError: Support non-variable initialization in for
+   8 |   }
+   9 |
+> 10 |   for (; i < 3; i += 1) {
+     |   ^
+  11 |     x.push(i);
+  12 |   }
+  13 |   for (; i < 3; ) {}
 
-Forget Error: [TODO] Support non-variable initialization in for
-for (; i < 3;) {}
+[ReactForget] TodoError: Support non-variable initialization in for
+  11 |     x.push(i);
+  12 |   }
+> 13 |   for (; i < 3; ) {}
+     |   ^^^^^^^^^^^^^^^^^^
+  14 |   for (;;) {}
+  15 | }
+  16 |
 
-Forget Error: [TODO] Handle empty for updater
-for (; i < 3;) {}
+[ReactForget] TodoError: Handle empty for updater
+  11 |     x.push(i);
+  12 |   }
+> 13 |   for (; i < 3; ) {}
+     |   ^^^^^^^^^^^^^^^^^^
+  14 |   for (;;) {}
+  15 | }
+  16 |
 
-Forget Error: [TODO] Support non-variable initialization in for
-for (;;) {}
+[ReactForget] TodoError: Support non-variable initialization in for
+  12 |   }
+  13 |   for (; i < 3; ) {}
+> 14 |   for (;;) {}
+     |   ^^^^^^^^^^^
+  15 | }
+  16 |
 
-Forget Error: [TODO] Handle empty for updater
-for (;;) {}
+[ReactForget] TodoError: Handle empty for updater
+  12 |   }
+  13 |   for (; i < 3; ) {}
+> 14 |   for (;;) {}
+     |   ^^^^^^^^^^^
+  15 | }
+  16 |
 
-Forget Error: [TODO] ForStatement without test
-for (;;) {}
+[ReactForget] TodoError: ForStatement without test
+  12 |   }
+  13 |   for (; i < 3; ) {}
+> 14 |   for (;;) {}
+     |   ^^^^^^^^^^^
+  15 | }
+  16 |
 ```
           
       
