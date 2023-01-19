@@ -161,7 +161,7 @@ class SSABuilder {
   }
 
   print() {
-    const text = [];
+    const text: string[] = [];
     for (const [block, state] of this.#states) {
       text.push(`bb${block.id}:`);
       for (const [oldId, newId] of state.defs) {

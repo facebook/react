@@ -13,6 +13,8 @@ import { Err, Ok, Result } from "../lib/Result";
 import todo, { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import {
+  BlockId,
+  Case,
   Effect,
   GeneratedSource,
   GotoVariant,
@@ -159,7 +161,7 @@ function lowerStatement(
         };
       });
       //  Block for the alternate (if the test is not truthy)
-      let alternateBlock = null;
+      let alternateBlock: BlockId;
       const alternate = stmt.get("alternate");
       if (alternate.hasNode()) {
         alternateBlock = builder.enter("block", (blockId) => {
@@ -564,7 +566,7 @@ function lowerStatement(
        * Iterate through cases in reverse order, so that previous blocks can fallthrough
        * to successors
        */
-      const cases = [];
+      const cases: Case[] = [];
       let hasDefault = false;
       for (let ii = stmt.get("cases").length - 1; ii >= 0; ii--) {
         const case_: NodePath<t.SwitchCase> = stmt.get("cases")[ii];

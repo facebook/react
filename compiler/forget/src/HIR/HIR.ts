@@ -224,6 +224,7 @@ export type ValueTerminal = IfTerminal | GotoTerminal;
 // A terminal that couldn't be lowered correctly.
 export type ErrorTerminal = { kind: "error"; id: InstructionId };
 export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
+export type Case = { test: Place | null; block: BlockId };
 
 export type ReturnTerminal = {
   kind: "return";
@@ -256,7 +257,7 @@ export type IfTerminal = {
 export type SwitchTerminal = {
   kind: "switch";
   test: Place;
-  cases: Array<{ test: Place | null; block: BlockId }>;
+  cases: Case[];
   fallthrough: BlockId | null;
   id: InstructionId;
 };
