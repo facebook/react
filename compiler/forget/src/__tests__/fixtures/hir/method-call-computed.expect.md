@@ -32,10 +32,8 @@ function foo(a, b, c) {
   } else {
     x = $[1];
   }
-
   const c_2 = $[2] !== a;
   let y;
-
   if (c_2) {
     y = makeObject(a);
     $[2] = a;
@@ -43,7 +41,6 @@ function foo(a, b, c) {
   } else {
     y = $[3];
   }
-
   <div>
     {x}
     {y}
@@ -52,7 +49,6 @@ function foo(a, b, c) {
   const c_5 = $[5] !== y.method;
   const c_6 = $[6] !== b;
   let z;
-
   if (c_4 || c_5 || c_6) {
     z = x[y.method](b);
     $[4] = x;
@@ -62,7 +58,6 @@ function foo(a, b, c) {
   } else {
     z = $[7];
   }
-
   return z;
 }
 

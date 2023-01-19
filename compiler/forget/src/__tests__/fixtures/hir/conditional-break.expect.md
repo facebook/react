@@ -61,6 +61,9 @@ function Component(props) {
 ## Code
 
 ```javascript
+/**
+ * props.b does *not* influence `a`
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -70,7 +73,6 @@ function Component(props) {
   if (c_0 || c_1 || c_2) {
     a_DEBUG = [];
     a_DEBUG.push(props.a);
-
     if (props.b) {
       return null;
     }
@@ -83,14 +85,12 @@ function Component(props) {
   } else {
     a_DEBUG = $[3];
   }
-
   return a_DEBUG;
 }
 
-```
-## Code
-
-```javascript
+/**
+ * props.b *does* influence `a`
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -101,7 +101,6 @@ function Component(props) {
   if (c_0 || c_1 || c_2 || c_3) {
     a = [];
     a.push(props.a);
-
     if (props.b) {
       a.push(props.c);
     }
@@ -115,14 +114,12 @@ function Component(props) {
   } else {
     a = $[4];
   }
-
   return a;
 }
 
-```
-## Code
-
-```javascript
+/**
+ * props.b *does* influence `a`, but only in a way that is never observable
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -133,7 +130,6 @@ function Component(props) {
   if (c_0 || c_1 || c_2 || c_3) {
     a = [];
     a.push(props.a);
-
     if (props.b) {
       a.push(props.c);
       return null;
@@ -148,14 +144,12 @@ function Component(props) {
   } else {
     a = $[4];
   }
-
   return a;
 }
 
-```
-## Code
-
-```javascript
+/**
+ * props.b *does* influence `a`
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -166,7 +160,6 @@ function Component(props) {
   if (c_0 || c_1 || c_2 || c_3) {
     a = [];
     a.push(props.a);
-
     if (props.b) {
       a.push(props.c);
       return a;
@@ -181,7 +174,6 @@ function Component(props) {
   } else {
     a = $[4];
   }
-
   return a;
 }
 

@@ -20,11 +20,6 @@ function foo() {
 
 ```javascript
 function mutate() {}
-
-```
-## Code
-
-```javascript
 function foo() {
   const $ = React.useMemoCache();
   const a = {};
@@ -40,7 +35,6 @@ function foo() {
   } else {
     c$2 = $[0];
   }
-
   return c$2;
 }
 

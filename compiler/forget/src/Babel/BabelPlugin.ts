@@ -8,22 +8,23 @@
 /// <reference path="./plugin-syntax-jsx.d.ts" />
 
 import type * as BabelCore from "@babel/core";
-import type { PluginObj } from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
 import { compile } from "../CompilerPipeline";
 
 /**
  * The React Forget Babel Plugin
- * @param {*} babel
+ * @param {*} _babel
  * @returns
  */
-export default function (babel: typeof BabelCore): PluginObj {
+export default function ReactForgetBabelPlugin(
+  _babel: typeof BabelCore
+): BabelCore.PluginObj {
   return {
     name: "react-forget",
     inherits: jsx,
     visitor: {
       FunctionDeclaration: {
-        enter(fn, pass) {
+        enter(fn, _pass) {
           if (fn.scope.getProgramParent() !== fn.scope.parent) {
             return;
           }

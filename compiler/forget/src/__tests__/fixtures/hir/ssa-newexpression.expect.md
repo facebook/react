@@ -18,10 +18,6 @@ function Component(props) {
 ```javascript
 function Foo() {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   const $ = React.useMemoCache();
   let c;
@@ -33,7 +29,6 @@ function Component(props) {
   } else {
     c = $[0];
   }
-
   return c;
 }
 

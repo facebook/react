@@ -23,10 +23,8 @@ function foo() {
   } else {
     x = $[0];
   }
-
   const c_1 = $[1] !== x;
   let y;
-
   if (c_1) {
     y = {};
     y.x = x;
@@ -35,7 +33,6 @@ function foo() {
   } else {
     y = $[2];
   }
-
   return y;
 }
 

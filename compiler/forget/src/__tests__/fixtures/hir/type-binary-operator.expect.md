@@ -24,16 +24,13 @@ function component() {
   } else {
     a = $[0];
   }
-
   let b;
-
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     b = someOther();
     $[1] = b;
   } else {
     b = $[1];
   }
-
   if (a > b) {
     const m = {};
   }

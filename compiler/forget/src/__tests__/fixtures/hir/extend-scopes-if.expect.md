@@ -31,11 +31,9 @@ function foo(a, b, c) {
       }
     }
   }
-
   if (a.length) {
     return a;
   }
-
   return null;
 }
 

@@ -21,12 +21,10 @@ function component() {
     x = function (a) {
       a.foo();
     };
-
     $[0] = x;
   } else {
     x = $[0];
   }
-
   return x;
 }
 

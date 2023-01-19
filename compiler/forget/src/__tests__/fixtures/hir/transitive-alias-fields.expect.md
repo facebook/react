@@ -28,6 +28,7 @@ function component() {
   x.y = y;
   p.y = x.y;
   q.y = p.y;
+
   mutate(q);
 }
 

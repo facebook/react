@@ -22,13 +22,10 @@ function foo(a, b, c) {
   const c_2 = $[2] !== c;
   let x;
   if (c_0 || c_1 || c_2) {
-    x = {
-      a: a,
-    };
+    x = { a: a };
     const c_4 = $[4] !== b;
     const c_5 = $[5] !== c;
     let t6;
-
     if (c_4 || c_5) {
       t6 = [b, c];
       $[4] = b;
@@ -37,7 +34,6 @@ function foo(a, b, c) {
     } else {
       t6 = $[6];
     }
-
     x.y = t6;
     $[0] = a;
     $[1] = b;
@@ -46,7 +42,6 @@ function foo(a, b, c) {
   } else {
     x = $[3];
   }
-
   return x;
 }
 

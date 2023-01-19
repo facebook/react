@@ -28,7 +28,6 @@ function foo(a, b, c, d) {
   let y;
   if (c_0 || c_1 || c_2 || c_3) {
     y = [];
-
     bb1: if (a) {
       if (b) {
         y.push(c);
@@ -37,7 +36,6 @@ function foo(a, b, c, d) {
 
       y.push(d);
     }
-
     $[0] = a;
     $[1] = b;
     $[2] = c;
@@ -46,7 +44,6 @@ function foo(a, b, c, d) {
   } else {
     y = $[4];
   }
-
   return y;
 }
 

@@ -22,18 +22,15 @@ function foo(a, b) {
   let x;
   if (c_0 || c_1) {
     x = 0;
-
     while (a.b.c) {
       x = x + b;
     }
-
     $[0] = a.b.c;
     $[1] = b;
     $[2] = x;
   } else {
     x = $[2];
   }
-
   return x;
 }
 

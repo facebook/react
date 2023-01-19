@@ -25,10 +25,8 @@ function component() {
   } else {
     z = $[0];
   }
-
   const c_1 = $[1] !== z;
   let y;
-
   if (c_1) {
     y = {};
     y.z = z;
@@ -37,10 +35,8 @@ function component() {
   } else {
     y = $[2];
   }
-
   const c_3 = $[3] !== y;
   let x;
-
   if (c_3) {
     x = {};
     x.y = y;
@@ -49,7 +45,6 @@ function component() {
   } else {
     x = $[4];
   }
-
   return x;
 }
 

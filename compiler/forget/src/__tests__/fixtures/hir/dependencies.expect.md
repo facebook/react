@@ -32,22 +32,18 @@ function foo(x, y, z) {
   let items2;
   if (c_0 || c_1) {
     items2 = [];
-
     if (x) {
       items2.push(y);
     }
-
     $[0] = x;
     $[1] = y;
     $[2] = items2;
   } else {
     items2 = $[2];
   }
-
   if (y) {
     items.push(x);
   }
-
   return items2;
 }
 

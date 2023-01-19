@@ -36,7 +36,6 @@ function foo(cond) {
     a = {};
     b = {};
     c = {};
-
     while (cond) {
       const z = a;
       a = b;
@@ -44,7 +43,6 @@ function foo(cond) {
       c = z;
       mutate(a, b);
     }
-
     $[0] = cond;
     $[1] = a;
     $[2] = b;
@@ -54,17 +52,12 @@ function foo(cond) {
     b = $[2];
     c = $[3];
   }
-
   a;
   b;
   c;
   return a;
 }
 
-```
-## Code
-
-```javascript
 function mutate(x, y) {}
 
 ```

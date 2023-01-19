@@ -27,10 +27,8 @@ function Foo(props) {
   } else {
     t0 = $[0];
   }
-
   const c_1 = $[1] !== t0;
   let t2;
-
   if (c_1) {
     t2 = <div>{t0}</div>;
     $[1] = t0;
@@ -38,11 +36,9 @@ function Foo(props) {
   } else {
     t2 = $[2];
   }
-
   const c_3 = $[3] !== props.greeting;
   const c_4 = $[4] !== t2;
   let t5;
-
   if (c_3 || c_4) {
     t5 = (
       <>
@@ -56,7 +52,6 @@ function Foo(props) {
   } else {
     t5 = $[5];
   }
-
   return t5;
 }
 

@@ -35,23 +35,19 @@ function Component(props) {
   let a$0;
   if (c_0 || c_1) {
     a$0 = undefined;
-
     if (cond) {
       const a$1 = x;
       a$0 = a$1;
     } else {
       let a$2;
-
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
         a$2 = [];
         $[3] = a$2;
       } else {
         a$2 = $[3];
       }
-
       a$0 = a$2;
     }
-
     $[0] = cond;
     $[1] = x;
     $[2] = a$0;
@@ -65,16 +61,7 @@ function Component(props) {
   return a$0;
 }
 
-```
-## Code
-
-```javascript
 function useFreeze(x) {}
-
-```
-## Code
-
-```javascript
 function call(x) {}
 
 ```

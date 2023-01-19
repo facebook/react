@@ -23,6 +23,7 @@ function foo(a, b, c, d) {
     if (b) {
       continue;
     }
+
     c();
   }
 

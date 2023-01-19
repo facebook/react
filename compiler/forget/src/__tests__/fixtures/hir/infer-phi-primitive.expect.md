@@ -26,7 +26,6 @@ function foo(a, b) {
   let x$0;
   if (c_0) {
     x$0 = undefined;
-
     if (a) {
       const x$1 = 1;
       x$0 = x$1;
@@ -34,7 +33,6 @@ function foo(a, b) {
       const x$2 = 2;
       x$0 = x$2;
     }
-
     $[0] = a;
     $[1] = x$0;
   } else {

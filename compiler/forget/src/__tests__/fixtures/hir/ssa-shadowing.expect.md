@@ -22,10 +22,6 @@ function Foo(cond) {
 ```javascript
 function log() {}
 
-```
-## Code
-
-```javascript
 function Foo(cond) {
   const $ = React.useMemoCache();
   const str = "";
@@ -33,7 +29,6 @@ function Foo(cond) {
   let str$0;
   if (c_0) {
     str$0 = str;
-
     if (cond) {
       const str_0 = "other test";
       log(str_0);
@@ -41,7 +36,6 @@ function Foo(cond) {
       const str$1 = "fallthrough test";
       str$0 = str$1;
     }
-
     $[0] = cond;
     $[1] = str$0;
   } else {

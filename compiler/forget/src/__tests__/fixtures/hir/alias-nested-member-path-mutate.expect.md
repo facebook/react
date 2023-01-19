@@ -20,8 +20,10 @@ function component() {
   const z = [];
   const y = {};
   y.z = z;
+
   const x = {};
   x.y = y;
+
   mutate(x.y.z);
 }
 

@@ -43,17 +43,8 @@ function Component(props) {
 
 ```javascript
 function mutate(x, y) {}
-
-```
-## Code
-
-```javascript
 function cond(x) {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   let a = {};
   let b = {};
@@ -74,21 +65,16 @@ function Component(props) {
     b$1 = b;
     c$2 = c;
     d$3 = d;
-
     if (cond(a)) {
       break;
     }
   }
-
   if (a$0) {
   }
-
   if (b$1) {
   }
-
   if (c$2) {
   }
-
   if (d$3) {
   }
 

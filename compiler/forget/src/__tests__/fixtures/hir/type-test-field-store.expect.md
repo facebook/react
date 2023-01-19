@@ -20,14 +20,12 @@ function component() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     let q;
-
     if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
       q = {};
       $[1] = q;
     } else {
       q = $[1];
     }
-
     x.t = q;
     $[0] = x;
   } else {

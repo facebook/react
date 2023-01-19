@@ -20,10 +20,6 @@ function Component(props) {
 ```javascript
 function foo() {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   const $ = React.useMemoCache();
   let a;
@@ -32,9 +28,7 @@ function Component(props) {
     a = [];
     b = {};
     foo(a, b);
-
     const _ = <div a={a}></div>;
-
     foo(a, b);
     $[0] = a;
     $[1] = b;
@@ -42,11 +36,9 @@ function Component(props) {
     a = $[0];
     b = $[1];
   }
-
   const c_2 = $[2] !== a;
   const c_3 = $[3] !== b;
   let t4;
-
   if (c_2 || c_3) {
     t4 = <div a={a} b={b}></div>;
     $[2] = a;
@@ -55,7 +47,6 @@ function Component(props) {
   } else {
     t4 = $[4];
   }
-
   return t4;
 }
 

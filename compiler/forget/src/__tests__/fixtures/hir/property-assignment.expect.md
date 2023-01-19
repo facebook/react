@@ -25,6 +25,7 @@ function Component(props) {
     x = {};
     const y = [];
     x.y = y;
+
     child = <Component data={y}></Component>;
     x.y.push(props.p0);
     $[0] = props.p0;
@@ -34,11 +35,9 @@ function Component(props) {
     x = $[1];
     child = $[2];
   }
-
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== child;
   let t5;
-
   if (c_3 || c_4) {
     t5 = <Component data={x}>{child}</Component>;
     $[3] = x;
@@ -47,7 +46,6 @@ function Component(props) {
   } else {
     t5 = $[5];
   }
-
   return t5;
 }
 

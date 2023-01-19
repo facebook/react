@@ -25,9 +25,11 @@ function foo() {
   const y = 2;
   2;
   true;
+
   const x$0 = 3;
   3;
   false;
+
   const y$1 = x$0;
 }
 

@@ -20,15 +20,11 @@ function Component(props) {
   const b = 2;
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {
-      a: a,
-      b: b,
-    };
+    x = { a: a, b: b };
     $[0] = x;
   } else {
     x = $[0];
   }
-
   return x;
 }
 

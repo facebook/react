@@ -38,17 +38,8 @@ function Component(props) {
 
 ```javascript
 function mutate() {}
-
-```
-## Code
-
-```javascript
 function cond() {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   const $ = React.useMemoCache();
   const a = {};
@@ -60,26 +51,19 @@ function Component(props) {
   } else {
     c = $[0];
   }
-
   const d = {};
-
   while (true) {
     mutate(a, b);
-
     if (cond(a)) {
       break;
     }
   }
-
   if (a) {
   }
-
   if (b) {
   }
-
   if (c) {
   }
-
   if (d) {
   }
 

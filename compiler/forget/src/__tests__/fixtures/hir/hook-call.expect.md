@@ -23,17 +23,8 @@ function Component(props) {
 
 ```javascript
 function useFreeze() {}
-
-```
-## Code
-
-```javascript
 function foo() {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   const $ = React.useMemoCache();
   let x;
@@ -43,10 +34,8 @@ function Component(props) {
   } else {
     x = $[0];
   }
-
   const c_1 = $[1] !== x;
   let y;
-
   if (c_1) {
     y = useFreeze(x);
     $[1] = x;
@@ -54,12 +43,10 @@ function Component(props) {
   } else {
     y = $[2];
   }
-
   foo(y, x);
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== y;
   let t5;
-
   if (c_3 || c_4) {
     t5 = (
       <Component>
@@ -73,7 +60,6 @@ function Component(props) {
   } else {
     t5 = $[5];
   }
-
   return t5;
 }
 

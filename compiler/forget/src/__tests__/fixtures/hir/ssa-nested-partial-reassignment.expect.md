@@ -29,7 +29,6 @@ function foo(a, b, c, d, e) {
   let x$0;
   if (c_0 || c_1 || c_2 || c_3) {
     x$0 = x;
-
     if (a) {
       const x$1 = b;
       x$0 = x$1;
@@ -39,7 +38,6 @@ function foo(a, b, c, d, e) {
         x$0 = x$2;
       }
     }
-
     $[0] = a;
     $[1] = b;
     $[2] = c;
@@ -48,7 +46,6 @@ function foo(a, b, c, d, e) {
   } else {
     x$0 = $[4];
   }
-
   return x$0;
 }
 

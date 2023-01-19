@@ -26,22 +26,12 @@ function Component() {
   } else {
     a = $[0];
   }
-
   const b = a;
   useFreeze(a);
   foo(b);
 }
 
-```
-## Code
-
-```javascript
 function useFreeze() {}
-
-```
-## Code
-
-```javascript
 function foo(x) {}
 
 ```

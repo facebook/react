@@ -49,7 +49,6 @@ function Component(props) {
   let x$0;
   if (c_0 || c_1 || c_2 || c_3 || c_4 || c_5 || c_6 || c_7) {
     x$0 = undefined;
-
     bb1: if (props.cond) {
       switch (props.test) {
         case 0: {
@@ -57,16 +56,13 @@ function Component(props) {
           x$0 = x$1;
           break bb1;
         }
-
         case 1: {
           const x$2 = props.v1;
           x$0 = x$2;
           break bb1;
         }
-
         case 2: {
         }
-
         default: {
           const x$3 = props.v2;
           x$0 = x$3;
@@ -81,7 +77,6 @@ function Component(props) {
         x$0 = x$5;
       }
     }
-
     $[0] = props.cond;
     $[1] = props.test;
     $[2] = props.v0;
@@ -94,7 +89,6 @@ function Component(props) {
   } else {
     x$0 = $[8];
   }
-
   x$0;
 }
 

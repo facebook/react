@@ -16,6 +16,7 @@ function MyApp(props) {
 ## Code
 
 ```javascript
+// This caused an infinite loop in the compiler
 function MyApp(props) {
   const $ = React.useMemoCache();
   let y;
@@ -28,7 +29,6 @@ function MyApp(props) {
   } else {
     y = $[0];
   }
-
   return y;
 }
 

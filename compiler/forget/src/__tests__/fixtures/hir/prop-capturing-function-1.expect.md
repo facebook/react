@@ -21,31 +21,24 @@ function component(a, b) {
   const c_1 = $[1] !== b;
   let z;
   if (c_0 || c_1) {
-    z = {
-      a: a,
-      b: b,
-    };
+    z = { a: a, b: b };
     $[0] = a;
     $[1] = b;
     $[2] = z;
   } else {
     z = $[2];
   }
-
   const c_3 = $[3] !== z;
   let x;
-
   if (c_3) {
     x = function () {
       z;
     };
-
     $[3] = z;
     $[4] = x;
   } else {
     x = $[4];
   }
-
   return x;
 }
 

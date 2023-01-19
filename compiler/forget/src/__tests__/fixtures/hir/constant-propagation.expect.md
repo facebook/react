@@ -34,7 +34,9 @@ function foo() {
   const e = 9;
   const f = 3;
   const g = -6;
+
   console.log("foo");
+
   const h = -6;
   const i = -6;
   const j = -6;

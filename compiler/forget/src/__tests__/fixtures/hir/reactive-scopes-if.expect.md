@@ -27,11 +27,9 @@ function foo(a, b, c) {
   let x;
   if (c_0 || c_1 || c_2) {
     x = [];
-
     if (a) {
       const c_4 = $[4] !== b;
       let y;
-
       if (c_4) {
         y = [];
         y.push(b);
@@ -40,10 +38,8 @@ function foo(a, b, c) {
       } else {
         y = $[5];
       }
-
       const c_6 = $[6] !== y;
       let t7;
-
       if (c_6) {
         t7 = <div>{y}</div>;
         $[6] = y;
@@ -51,12 +47,10 @@ function foo(a, b, c) {
       } else {
         t7 = $[7];
       }
-
       x.push(t7);
     } else {
       x.push(c);
     }
-
     $[0] = a;
     $[1] = b;
     $[2] = c;
@@ -64,7 +58,6 @@ function foo(a, b, c) {
   } else {
     x = $[3];
   }
-
   return x;
 }
 

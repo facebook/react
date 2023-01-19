@@ -29,14 +29,13 @@ function foo(a, b, c) {
   } else {
     x = $[1];
   }
-
   <div>{x}</div>;
+
   const method = x.method;
   const c_2 = $[2] !== method;
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== b;
   let y;
-
   if (c_2 || c_3 || c_4) {
     y = method.call(x, b);
     $[2] = method;
@@ -46,7 +45,6 @@ function foo(a, b, c) {
   } else {
     y = $[5];
   }
-
   return y;
 }
 

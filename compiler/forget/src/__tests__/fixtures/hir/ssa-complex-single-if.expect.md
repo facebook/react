@@ -22,7 +22,9 @@ function foo() {
   const y = 2;
   2;
   true;
+
   const x$0 = 3;
+
   const y$1 = x$0;
 }
 

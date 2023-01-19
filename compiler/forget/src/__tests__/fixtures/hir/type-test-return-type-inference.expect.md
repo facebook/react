@@ -26,16 +26,13 @@ function component() {
   } else {
     x = $[0];
   }
-
   let y;
-
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = foo();
     $[1] = y;
   } else {
     y = $[1];
   }
-
   if (x > y) {
     const z = {};
   }

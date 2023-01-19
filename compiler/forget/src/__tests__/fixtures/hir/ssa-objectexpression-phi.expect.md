@@ -27,18 +27,15 @@ function foo() {
   const y = 2;
   1;
   false;
+
   const y$0 = 3;
   let t;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t = {
-      x: x,
-      y: y$0,
-    };
+    t = { x: x, y: y$0 };
     $[0] = t;
   } else {
     t = $[0];
   }
-
   return t;
 }
 

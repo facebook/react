@@ -25,7 +25,6 @@ function Foo() {
   } else {
     x = $[0];
   }
-
   return x;
 }
 

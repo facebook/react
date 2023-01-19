@@ -7,15 +7,15 @@
 
 "use strict";
 
-import generate from "@babel/generator";
-import * as parser from "@babel/parser";
-import traverse from "@babel/traverse";
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
-import prettier from "prettier";
-import { compile } from "../CompilerPipeline";
+import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
+
+type TestOutput = {
+  js: string;
+};
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
   return `\`\`\`${ext ?? ""}
@@ -46,13 +46,13 @@ describe("React Forget (HIR version)", () => {
         }
       }
 
-      let items: Array<TestOutput> | null = null;
+      let items: Array<TestOutput> = [];
       let error: Error | null = null;
       if (options.debug) {
         toggleLogging(options.debug);
       }
       try {
-        items = transform(input, file);
+        items.push({ js: runReactForgetBabelPlugin(input, file).code });
       } catch (e) {
         error = e;
       }
@@ -91,6 +91,10 @@ ${outputs.join("\n")}
 });
 
 function formatErrorOutput(error: Error): string {
+  // Babel outputs absolute paths of the filename in the error mesage, which means fixtures will
+  // contain paths that only pertain to your local machine. Strip it just here because that info
+  // is still useful in real world usage of the Babel plugin.
+  error.message = error.message.replace(/^\/.*?:\s/, "");
   return `
 ## Error
 
@@ -106,34 +110,4 @@ function formatOutput(items: Array<TestOutput>): Array<string> {
 ${wrapWithTripleBackticks(js, "javascript")}
         `.trim();
   });
-}
-
-type TestOutput = {
-  js: string;
-};
-
-function transform(text: string, file: string): Array<TestOutput> {
-  const items: Array<TestOutput> = [];
-  const ast = parser.parse(text, {
-    sourceFilename: file,
-    plugins: ["typescript", "jsx"],
-  });
-  traverse(ast, {
-    FunctionDeclaration: {
-      enter(nodePath) {
-        if (nodePath.scope.getProgramParent() !== nodePath.scope.parent) {
-          return;
-        }
-
-        const ast = compile(nodePath);
-
-        const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
-          semi: true,
-          parser: "babel-ts",
-        });
-        items.push({ js: text });
-      },
-    },
-  });
-  return items;
 }

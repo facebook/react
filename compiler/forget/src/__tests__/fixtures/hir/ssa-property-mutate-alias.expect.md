@@ -26,12 +26,12 @@ function foo() {
     y = a;
     const x = [];
     y.x = x;
+
     mutate(a);
     $[0] = y;
   } else {
     y = $[0];
   }
-
   return y;
 }
 

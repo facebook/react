@@ -26,7 +26,6 @@ function foo(a) {
   let x;
   if (c_0) {
     x = {};
-
     if (a) {
       const y = {};
       x.y = y;
@@ -41,7 +40,6 @@ function foo(a) {
   } else {
     x = $[1];
   }
-
   return x;
 }
 

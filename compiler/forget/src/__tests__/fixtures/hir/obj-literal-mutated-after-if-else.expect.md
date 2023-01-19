@@ -27,19 +27,13 @@ function foo(a, b, c, d) {
   let x$0;
   if (c_0 || c_1) {
     x$0 = undefined;
-
     if (someVal) {
-      const x$1 = {
-        b: b,
-      };
+      const x$1 = { b: b };
       x$0 = x$1;
     } else {
-      const x$2 = {
-        c: c,
-      };
+      const x$2 = { c: c };
       x$0 = x$2;
     }
-
     x$0.f = 1;
     $[0] = b;
     $[1] = c;
@@ -47,7 +41,6 @@ function foo(a, b, c, d) {
   } else {
     x$0 = $[2];
   }
-
   return x$0;
 }
 

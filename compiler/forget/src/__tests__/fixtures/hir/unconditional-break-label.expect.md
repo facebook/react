@@ -18,6 +18,7 @@ function foo(a) {
 ```javascript
 function foo(a) {
   const x = 0;
+
   const x$0 = 1;
   return a + x$0;
 }

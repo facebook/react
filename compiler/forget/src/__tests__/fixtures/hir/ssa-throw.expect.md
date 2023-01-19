@@ -19,6 +19,7 @@ function foo() {
   const x = 1;
   1;
   true;
+
   const x$0 = 2;
   throw x$0;
 }

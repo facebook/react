@@ -27,35 +27,26 @@ function component() {
   } else {
     t0 = $[0];
   }
-
   let t1;
-
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = makeSomePrimitive();
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-
   const c_2 = $[2] !== t0;
   const c_3 = $[3] !== t1;
   let x;
-
   if (c_2 || c_3) {
-    x = {
-      u: t0,
-      v: t1,
-    };
+    x = { u: t0, v: t1 };
     $[2] = t0;
     $[3] = t1;
     $[4] = x;
   } else {
     x = $[4];
   }
-
   const u = x.u;
   const v = x.v;
-
   if (u > v) {
   }
 

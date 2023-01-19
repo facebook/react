@@ -5,14 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import BabelPlugin from "./Babel/BabelPlugin";
-
-declare global {
-  var __DEV__: boolean | null | undefined;
-}
-
+export { default as BabelPlugin } from "./Babel/BabelPlugin";
 export { compile, run } from "./CompilerPipeline";
 export { printHIR } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
-export default BabelPlugin;
+declare global {
+  var __DEV__: boolean | null | undefined;
+}

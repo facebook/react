@@ -27,6 +27,16 @@ function Foo() {}
 ## Code
 
 ```javascript
+/**
+ * Should produce 3 scopes:
+ *
+ * a: inputs=props.a, outputs=a
+ *   a = compute(props.a);
+ * b: inputs=props.b, outputs=b
+ *   b = compute(props.b);
+ * return: inputs=a, b outputs=return
+ *   return = <Foo a={a} b={b} />
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -38,10 +48,8 @@ function Component(props) {
   } else {
     a = $[1];
   }
-
   const c_2 = $[2] !== props.b;
   let b;
-
   if (c_2) {
     b = compute(props.b);
     $[2] = props.b;
@@ -49,11 +57,9 @@ function Component(props) {
   } else {
     b = $[3];
   }
-
   const c_4 = $[4] !== a;
   const c_5 = $[5] !== b;
   let t6;
-
   if (c_4 || c_5) {
     t6 = <Foo a={a} b={b}></Foo>;
     $[4] = a;
@@ -62,26 +68,11 @@ function Component(props) {
   } else {
     t6 = $[6];
   }
-
   return t6;
 }
 
-```
-## Code
-
-```javascript
 function compute() {}
-
-```
-## Code
-
-```javascript
 function foo() {}
-
-```
-## Code
-
-```javascript
 function Foo() {}
 
 ```

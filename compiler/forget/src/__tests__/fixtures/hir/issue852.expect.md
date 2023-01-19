@@ -19,16 +19,13 @@ function Component(c) {
   const c_0 = $[0] !== c;
   let x;
   if (c_0) {
-    x = {
-      c: c,
-    };
+    x = { c: c };
     mutate(x);
     $[0] = c;
     $[1] = x;
   } else {
     x = $[1];
   }
-
   const a = x;
   const b = a;
 }

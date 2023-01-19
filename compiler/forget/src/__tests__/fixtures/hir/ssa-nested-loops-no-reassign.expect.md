@@ -20,6 +20,7 @@ function foo(a, b, c) {
 ## Code
 
 ```javascript
+// @xonly
 function foo(a, b, c) {
   const x = 0;
   while (a) {
@@ -30,7 +31,6 @@ function foo(a, b, c) {
       }
     }
   }
-
   return x;
 }
 

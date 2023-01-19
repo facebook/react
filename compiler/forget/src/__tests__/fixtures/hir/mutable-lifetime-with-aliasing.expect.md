@@ -40,32 +40,24 @@ function Component(props) {
 ```javascript
 function mutate(x, y) {}
 
-```
-## Code
-
-```javascript
 function Component(props) {
   const a = {};
   const b = [a];
   const c = {};
-  const d = {
-    c: c,
-  };
+  const d = { c: c };
+
   const x = {};
   x.b = b;
+
   const y = mutate(x, d);
   if (a) {
   }
-
   if (b) {
   }
-
   if (c) {
   }
-
   if (d) {
   }
-
   if (y) {
   }
 

@@ -33,14 +33,12 @@ function foo(a, b) {
   } else {
     x = $[1];
   }
-
   <div>{x}</div>;
-  const y = [];
 
+  const y = [];
   if (x.length) {
     y.push(x);
   }
-
   if (b) {
     y.push(b);
   }

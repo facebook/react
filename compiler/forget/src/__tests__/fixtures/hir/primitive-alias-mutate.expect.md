@@ -26,7 +26,6 @@ function component(a) {
   let x$0;
   if (c_0) {
     x$0 = undefined;
-
     if (a) {
       const x$1 = "bar";
       x$0 = x$1;
@@ -34,7 +33,6 @@ function component(a) {
       const x$2 = "baz";
       x$0 = x$2;
     }
-
     $[0] = a;
     $[1] = x$0;
   } else {

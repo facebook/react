@@ -28,12 +28,10 @@ function foo(a, b, c) {
   } else {
     x = $[1];
   }
-
   <div>{x}</div>;
   const c_2 = $[2] !== x;
   const c_3 = $[3] !== b;
   let y;
-
   if (c_2 || c_3) {
     y = x.foo(b);
     $[2] = x;
@@ -42,7 +40,6 @@ function foo(a, b, c) {
   } else {
     y = $[4];
   }
-
   return y;
 }
 

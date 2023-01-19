@@ -27,6 +27,15 @@ function Foo() {}
 ## Code
 
 ```javascript
+/**
+ * Should produce 1 scope:
+ *
+ * return: inputs=props.a & props.b; outputs=return
+ *   const a = compute(props.a);
+ *   const b = compute(props.b);
+ *   foo(a, b);
+ *   return = <Foo a={a} b={b} />
+ */
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
@@ -45,11 +54,9 @@ function Component(props) {
     a = $[2];
     b = $[3];
   }
-
   const c_4 = $[4] !== a;
   const c_5 = $[5] !== b;
   let t6;
-
   if (c_4 || c_5) {
     t6 = <Foo a={a} b={b}></Foo>;
     $[4] = a;
@@ -58,26 +65,11 @@ function Component(props) {
   } else {
     t6 = $[6];
   }
-
   return t6;
 }
 
-```
-## Code
-
-```javascript
 function compute() {}
-
-```
-## Code
-
-```javascript
 function foo() {}
-
-```
-## Code
-
-```javascript
 function Foo() {}
 
 ```

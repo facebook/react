@@ -27,23 +27,13 @@ function Component() {
   } else {
     a = $[0];
   }
-
   useFreeze(a);
   useFreeze(a);
   call(a);
   return a;
 }
 
-```
-## Code
-
-```javascript
 function useFreeze(x) {}
-
-```
-## Code
-
-```javascript
 function call(x) {}
 
 ```

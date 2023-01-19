@@ -20,16 +20,13 @@ function foo() {
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = 1;
-
     for (const i = 0; 10, true; 0) {
       x = x + 1;
     }
-
     $[0] = x;
   } else {
     x = $[0];
   }
-
   return x;
 }
 
