@@ -76,19 +76,21 @@ export default function inferReferenceEffects(fn: HIRFunction) {
   // Initial environment contains function params
   // TODO: include module declarations here as well
   const initialEnvironment = Environment.empty();
-  const id: Place = {
-    kind: "Identifier",
-    identifier: fn.id as any,
-    loc: fn.loc,
-    effect: Effect.Freeze,
-  };
   const value: InstructionValue = {
     kind: "Primitive",
     loc: fn.loc,
     value: undefined,
   };
   initialEnvironment.initialize(value, ValueKind.Frozen);
-  initialEnvironment.define(id, value);
+  if (fn.id !== null) {
+    const id: Place = {
+      kind: "Identifier",
+      identifier: fn.id,
+      loc: fn.loc,
+      effect: Effect.Freeze,
+    };
+    initialEnvironment.define(id, value);
+  }
 
   for (const param of fn.params) {
     const value: InstructionValue = {
