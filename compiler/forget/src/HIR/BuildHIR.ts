@@ -1665,16 +1665,21 @@ function gatherCapturedDeps(
 
   fn.get("body").traverse({
     Expression(path) {
-      // TODO(gsn): Handle member expressions
-      if (!path.isIdentifier()) {
+      let obj = path;
+      while (obj.isMemberExpression()) {
+        obj = obj.get("object");
+      }
+
+      if (!obj.isIdentifier()) {
         return;
       }
 
-      const binding = path.scope.getBinding(path.node.name);
+      const binding = obj.scope.getBinding(obj.node.name);
       if (binding === undefined || !pureScopes.has(binding.scope)) {
         return;
       }
 
+      path.skip();
       captured.add(lowerExpressionToPlace(builder, path));
     },
   });
