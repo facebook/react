@@ -1,4 +1,5 @@
-const runReactForgetBabelPlugin = require("../dist/Babel/RunReactForgetBabelPlugin");
+const runReactForgetBabelPlugin =
+  require("../dist/Babel/RunReactForgetBabelPlugin").default;
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short
 // circuit test execution and report an error immediately.
