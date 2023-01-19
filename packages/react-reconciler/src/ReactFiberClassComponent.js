@@ -23,7 +23,6 @@ import {
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
-  warnAboutDeprecatedLifecycles,
   enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -77,7 +76,9 @@ import {
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 
-const fakeInternalInstance = {};
+const fakeInternalInstance: {
+  _processChildContext?: () => empty,
+} = {};
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -118,7 +119,7 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(type, partialState) {
+  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -139,7 +140,7 @@ if (__DEV__) {
   // exception.
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
-    value: function() {
+    value: function(): empty {
       throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +
@@ -194,7 +195,8 @@ function applyDerivedStateFromProps(
 
 const classComponentUpdater = {
   isMounted,
-  enqueueSetState(inst, payload, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -227,7 +229,7 @@ const classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
-  enqueueReplaceState(inst, payload, callback) {
+  enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -262,7 +264,8 @@ const classComponentUpdater = {
       markStateUpdateScheduled(fiber, lane);
     }
   },
-  enqueueForceUpdate(inst, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
@@ -299,13 +302,13 @@ const classComponentUpdater = {
 };
 
 function checkShouldComponentUpdate(
-  workInProgress,
-  ctor,
-  oldProps,
-  newProps,
-  oldState,
-  newState,
-  nextContext,
+  workInProgress: Fiber,
+  ctor: any,
+  oldProps: any,
+  newProps: any,
+  oldState: any,
+  newState: any,
+  nextContext: any,
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
@@ -760,7 +763,7 @@ function constructClassInstance(
   return instance;
 }
 
-function callComponentWillMount(workInProgress, instance) {
+function callComponentWillMount(workInProgress: Fiber, instance: any) {
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
@@ -784,10 +787,10 @@ function callComponentWillMount(workInProgress, instance) {
 }
 
 function callComponentWillReceiveProps(
-  workInProgress,
-  instance,
-  newProps,
-  nextContext,
+  workInProgress: Fiber,
+  instance: any,
+  newProps: any,
+  nextContext: any,
 ) {
   const oldState = instance.state;
   if (typeof instance.componentWillReceiveProps === 'function') {
@@ -864,12 +867,10 @@ function mountClassInstance(
       );
     }
 
-    if (warnAboutDeprecatedLifecycles) {
-      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance,
-      );
-    }
+    ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+      workInProgress,
+      instance,
+    );
   }
 
   instance.state = workInProgress.memoizedState;

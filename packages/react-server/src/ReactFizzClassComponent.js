@@ -10,18 +10,15 @@
 import {emptyContextObject} from './ReactFizzContext';
 import {readContext} from './ReactFizzNewContext';
 
-import {
-  disableLegacyContext,
-  warnAboutDeprecatedLifecycles,
-} from 'shared/ReactFeatureFlags';
+import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
-const didWarnAboutNoopUpdateForComponent = {};
-const didWarnAboutDeprecatedWillMount = {};
+const didWarnAboutNoopUpdateForComponent: {[string]: boolean} = {};
+const didWarnAboutDeprecatedWillMount: {[string]: boolean} = {};
 
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
@@ -60,7 +57,7 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(type, partialState) {
+  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -106,10 +103,11 @@ type InternalInstance = {
 };
 
 const classComponentUpdater = {
-  isMounted(inst) {
+  isMounted(inst: any) {
     return false;
   },
-  enqueueSetState(inst, payload, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueSetState(inst: any, payload: any, callback) {
     const internals: InternalInstance = getInstance(inst);
     if (internals.queue === null) {
       warnNoop(inst, 'setState');
@@ -122,7 +120,7 @@ const classComponentUpdater = {
       }
     }
   },
-  enqueueReplaceState(inst, payload, callback) {
+  enqueueReplaceState(inst: any, payload: any, callback: null) {
     const internals: InternalInstance = getInstance(inst);
     internals.replace = true;
     internals.queue = [payload];
@@ -132,7 +130,8 @@ const classComponentUpdater = {
       }
     }
   },
-  enqueueForceUpdate(inst, callback) {
+  // $FlowFixMe[missing-local-annot]
+  enqueueForceUpdate(inst: any, callback) {
     const internals: InternalInstance = getInstance(inst);
     if (internals.queue === null) {
       warnNoop(inst, 'forceUpdate');
@@ -532,15 +531,12 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
   }
 }
 
-function callComponentWillMount(type, instance) {
+function callComponentWillMount(type: any, instance: any) {
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
     if (__DEV__) {
-      if (
-        warnAboutDeprecatedLifecycles &&
-        instance.componentWillMount.__suppressDeprecationWarning !== true
-      ) {
+      if (instance.componentWillMount.__suppressDeprecationWarning !== true) {
         const componentName = getComponentNameFromType(type) || 'Unknown';
 
         if (!didWarnAboutDeprecatedWillMount[componentName]) {

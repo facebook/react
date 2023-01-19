@@ -874,6 +874,48 @@ describe('ReactNewContext', () => {
       }
     });
 
+    it('does not warn if multiple renderers use the same context sequentially', () => {
+      spyOnDev(console, 'error');
+      const Context = React.createContext(0);
+
+      function Foo(props) {
+        Scheduler.unstable_yieldValue('Foo');
+        return null;
+      }
+
+      function App(props) {
+        return (
+          <Context.Provider value={props.value}>
+            <Foo />
+            <Foo />
+          </Context.Provider>
+        );
+      }
+
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<App value={1} />);
+        });
+      } else {
+        ReactNoop.render(<App value={1} />);
+      }
+      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+
+      // Get a new copy of ReactNoop
+      jest.resetModules();
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      Scheduler = require('scheduler');
+
+      // Render the provider again using a different renderer
+      ReactNoop.render(<App value={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+
+      if (__DEV__) {
+        expect(console.error).not.toHaveBeenCalled();
+      }
+    });
+
     it('provider bails out if children and value are unchanged (like sCU)', () => {
       const Context = React.createContext(0);
 

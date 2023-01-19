@@ -46,7 +46,7 @@ import type {
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cStore %c${methodName}`,
@@ -1146,7 +1146,7 @@ export default class Store extends EventEmitter<{
             debug(`Remove root ${id}`);
           }
 
-          const recursivelyDeleteElements = elementID => {
+          const recursivelyDeleteElements = (elementID: number) => {
             const element = this._idToElement.get(elementID);
             this._idToElement.delete(elementID);
             if (element) {
@@ -1431,7 +1431,7 @@ export default class Store extends EventEmitter<{
   // but the downstream errors they cause will be reported as bugs.
   // For example, https://github.com/facebook/react/issues/21402
   // Emitting an error event allows the ErrorBoundary to show the original error.
-  _throwAndEmitError(error: Error) {
+  _throwAndEmitError(error: Error): empty {
     this.emit('error', error);
 
     // Throwing is still valuable for local development

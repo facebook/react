@@ -117,6 +117,7 @@ export default function getListeners(
       // all imperative event listeners in a function to unwrap the SyntheticEvent
       // and pass them an Event.
       // When this API is more stable and used more frequently, we can revisit.
+      // $FlowFixMe[missing-local-annot]
       const listenerFnWrapper = function(syntheticEvent, ...args) {
         const eventInst = new CustomEvent(mangledImperativeRegistrationName, {
           detail: syntheticEvent.nativeEvent,

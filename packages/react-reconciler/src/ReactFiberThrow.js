@@ -123,6 +123,7 @@ function createClassErrorUpdate(
 
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
+    // $FlowFixMe[missing-this-annot]
     update.callback = function callback() {
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);

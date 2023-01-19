@@ -201,7 +201,6 @@ function getRootNode(container: Container): FloatRoot {
 
 function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
-  // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
   return currentContainer ? getRootNode(currentContainer) : null;
 }
 
@@ -792,6 +791,7 @@ export function getResource(
 function preloadPropsFromRawProps(
   rawBorrowedProps: PreloadQualifyingProps,
 ): PreloadProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   return Object.assign({}, rawBorrowedProps);
 }
 
@@ -805,6 +805,7 @@ function titlePropsFromRawProps(
 }
 
 function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   const props: StyleProps = Object.assign({}, rawProps);
   props['data-precedence'] = rawProps.precedence;
   props.precedence = null;
@@ -813,6 +814,7 @@ function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
 }
 
 function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   const props: ScriptProps = Object.assign({}, rawProps);
   return props;
 }
@@ -1318,7 +1320,9 @@ function acquireScriptResource(resource: ScriptResource): Instance {
 }
 
 function attachLoadListeners(instance: Instance, resource: StyleResource) {
-  const listeners = {};
+  const listeners: {
+    [string]: () => mixed,
+  } = {};
   listeners.load = onResourceLoad.bind(
     null,
     instance,

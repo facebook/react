@@ -10,6 +10,7 @@ import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {Wall} from 'react-devtools-shared/src/types';
 
 function startActivation(contentWindow: any, bridge: BackendBridge) {
+  // $FlowFixMe[missing-local-annot]
   const onSavedPreferences = data => {
     // This is the only message we're listening for,
     // so it's safe to cleanup after we've received it.
@@ -80,7 +81,6 @@ export function activate(
     bridge,
   }: {
     bridge?: BackendBridge,
-    // $FlowFixMe[incompatible-exact]
   } = {},
 ): void {
   if (bridge == null) {
@@ -96,6 +96,7 @@ export function createBridge(contentWindow: any, wall?: Wall): BackendBridge {
   if (wall == null) {
     wall = {
       listen(fn) {
+        // $FlowFixMe[missing-local-annot]
         const onMessage = ({data}) => {
           fn(data);
         };

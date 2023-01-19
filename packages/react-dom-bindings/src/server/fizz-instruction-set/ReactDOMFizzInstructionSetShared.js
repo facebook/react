@@ -1,12 +1,15 @@
 /* eslint-disable dot-notation */
 
-const COMMENT_NODE = 8;
-const SUSPENSE_START_DATA = '$';
-const SUSPENSE_END_DATA = '/$';
-const SUSPENSE_PENDING_START_DATA = '$?';
-const SUSPENSE_FALLBACK_START_DATA = '$!';
-const LOADED = 'l';
-const ERRORED = 'e';
+// Shared implementation and constants between the inline script and external
+// runtime instruction sets.
+
+export const COMMENT_NODE = 8;
+export const SUSPENSE_START_DATA = '$';
+export const SUSPENSE_END_DATA = '/$';
+export const SUSPENSE_PENDING_START_DATA = '$?';
+export const SUSPENSE_FALLBACK_START_DATA = '$!';
+export const LOADED = 'l';
+export const ERRORED = 'e';
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
@@ -40,106 +43,6 @@ export function clientRenderBoundary(
   if (suspenseNode['_reactRetry']) {
     suspenseNode['_reactRetry']();
   }
-}
-
-export function completeBoundaryWithStyles(
-  suspenseBoundaryID,
-  contentID,
-  styles,
-) {
-  // TODO: In the non-inline version of the runtime, these don't need to be read
-  // from the global scope.
-  const completeBoundaryImpl = window['$RC'];
-  const resourceMap = window['$RM'];
-
-  const precedences = new Map();
-  const thisDocument = document;
-  let lastResource, node;
-
-  // Seed the precedence list with existing resources
-  const nodes = thisDocument.querySelectorAll(
-    'link[data-precedence],style[data-precedence]',
-  );
-  for (let i = 0; (node = nodes[i++]); ) {
-    precedences.set(node.dataset['precedence'], (lastResource = node));
-  }
-
-  let i = 0;
-  const dependencies = [];
-  let style, href, precedence, attr, loadingState, resourceEl;
-
-  function setStatus(s) {
-    this['s'] = s;
-  }
-
-  while ((style = styles[i++])) {
-    let j = 0;
-    href = style[j++];
-    // We check if this resource is already in our resourceMap and reuse it if so.
-    // If it is already loaded we don't return it as a depenendency since there is nothing
-    // to wait for
-    loadingState = resourceMap.get(href);
-    if (loadingState) {
-      if (loadingState['s'] !== 'l') {
-        dependencies.push(loadingState);
-      }
-      continue;
-    }
-
-    // We construct our new resource element, looping over remaining attributes if any
-    // setting them to the Element.
-    resourceEl = thisDocument.createElement('link');
-    resourceEl.href = href;
-    resourceEl.rel = 'stylesheet';
-    resourceEl.dataset['precedence'] = precedence = style[j++];
-    while ((attr = style[j++])) {
-      resourceEl.setAttribute(attr, style[j++]);
-    }
-
-    // We stash a pending promise in our map by href which will resolve or reject
-    // when the underlying resource loads or errors. We add it to the dependencies
-    // array to be returned.
-    loadingState = resourceEl['_p'] = new Promise((re, rj) => {
-      resourceEl.onload = re;
-      resourceEl.onerror = rj;
-    });
-    loadingState.then(
-      setStatus.bind(loadingState, LOADED),
-      setStatus.bind(loadingState, ERRORED),
-    );
-    resourceMap.set(href, loadingState);
-    dependencies.push(loadingState);
-
-    // The prior style resource is the last one placed at a given
-    // precedence or the last resource itself which may be null.
-    // We grab this value and then update the last resource for this
-    // precedence to be the inserted element, updating the lastResource
-    // pointer if needed.
-    const prior = precedences.get(precedence) || lastResource;
-    if (prior === lastResource) {
-      lastResource = resourceEl;
-    }
-    precedences.set(precedence, resourceEl);
-
-    // Finally, we insert the newly constructed instance at an appropriate location
-    // in the Document.
-    if (prior) {
-      prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
-    } else {
-      const head = thisDocument.head;
-      head.insertBefore(resourceEl, head.firstChild);
-    }
-  }
-
-  Promise.all(dependencies).then(
-    completeBoundaryImpl.bind(null, suspenseBoundaryID, contentID, ''),
-    completeBoundaryImpl.bind(
-      null,
-      suspenseBoundaryID,
-      contentID,
-      'Resource failed to load',
-    ),
-  );
 }
 
 export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {

@@ -249,7 +249,7 @@ function mapChildren(
   if (children == null) {
     return children;
   }
-  const result = [];
+  const result: Array<React$Node> = [];
   let count = 0;
   mapIntoArray(children, result, '', '', function(child) {
     return func.call(context, child, count++);
@@ -296,6 +296,7 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
+    // $FlowFixMe[missing-this-annot]
     function() {
       forEachFunc.apply(this, arguments);
       // Don't return anything.

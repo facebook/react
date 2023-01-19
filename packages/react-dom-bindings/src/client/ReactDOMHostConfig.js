@@ -445,7 +445,7 @@ export const scheduleMicrotask: any =
           .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
-function handleErrorInNextTick(error) {
+function handleErrorInNextTick(error: any) {
   setTimeout(() => {
     throw error;
   });
@@ -913,7 +913,7 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
-function getNextHydratable(node) {
+function getNextHydratable(node: ?Node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;

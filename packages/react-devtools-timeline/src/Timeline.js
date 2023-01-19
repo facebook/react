@@ -117,6 +117,7 @@ const ProcessingData = () => (
   </div>
 );
 
+// $FlowFixMe[missing-local-annot]
 const CouldNotLoadProfile = ({error, onFileSelect}) => (
   <div className={styles.EmptyStateContainer}>
     <div className={styles.Header}>Could not load profile</div>

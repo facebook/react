@@ -29,6 +29,7 @@ function EmptySuspense() {
   return <Suspense />;
 }
 
+// $FlowFixMe[missing-local-annot]
 function PrimaryFallbackTest({initialSuspend}) {
   const [suspend, setSuspend] = useState(initialSuspend);
   const fallbackStep = useTestSequence('fallback', Fallback1, Fallback2);
@@ -51,7 +52,7 @@ function PrimaryFallbackTest({initialSuspend}) {
   );
 }
 
-function useTestSequence(label, T1, T2) {
+function useTestSequence(label: string, T1: any => any, T2: any => any) {
   const [step, setStep] = useState(0);
   const next = (
     <button onClick={() => setStep(s => (s + 1) % allSteps.length)}>

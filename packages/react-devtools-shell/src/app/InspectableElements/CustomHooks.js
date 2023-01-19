@@ -103,7 +103,7 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 const MemoWithHooks = memo(FunctionWithHooks);
 const ForwardRefWithHooks = forwardRef(FunctionWithHooks);
 
-function wrapWithHoc(Component) {
+function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
   function Hoc() {
     return <Component />;
   }
@@ -127,7 +127,7 @@ export default function CustomHooks(): React.Node {
 }
 
 // Below copied from https://usehooks.com/
-function useDebounce(value, delay) {
+function useDebounce(value: number, delay: number) {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
 

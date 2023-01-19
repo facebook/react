@@ -434,7 +434,7 @@ if (__DEV__) {
     return null;
   };
 
-  const didWarn = {};
+  const didWarn: {[string]: boolean} = {};
 
   validateDOMNesting = function(
     childTag: ?string,

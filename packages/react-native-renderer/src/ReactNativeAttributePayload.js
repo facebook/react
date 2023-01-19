@@ -30,7 +30,7 @@ const emptyObject = {};
 type NestedNode = Array<NestedNode> | Object;
 
 // Tracks removed keys
-let removedKeys = null;
+let removedKeys: {[string]: boolean} | null = null;
 let removedKeyCount = 0;
 
 const deepDifferOptions = {
@@ -345,7 +345,9 @@ function diffProperties(
       // case: !Object is the default case
       if (defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
-        (updatePayload || (updatePayload = {}))[propKey] = nextProp;
+        (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
+          propKey
+        ] = nextProp;
       }
     } else if (
       typeof attributeConfig.diff === 'function' ||
@@ -363,7 +365,9 @@ function diffProperties(
             ? // $FlowFixMe[incompatible-use] found when upgrading Flow
               attributeConfig.process(nextProp)
             : nextProp;
-        (updatePayload || (updatePayload = {}))[propKey] = nextValue;
+        (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
+          propKey
+        ] = nextValue;
       }
     } else {
       // default: fallthrough case when nested properties are defined
@@ -417,9 +421,11 @@ function diffProperties(
     ) {
       // case: CustomAttributeConfiguration | !Object
       // Flag the leaf property for removal by sending a sentinel.
-      (updatePayload || (updatePayload = {}))[propKey] = null;
+      (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
+        propKey
+      ] = null;
       if (!removedKeys) {
-        removedKeys = {};
+        removedKeys = ({}: {[string]: boolean});
       }
       if (!removedKeys[propKey]) {
         removedKeys[propKey] = true;

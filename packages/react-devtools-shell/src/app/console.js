@@ -11,6 +11,7 @@ function ignoreStrings(
   methodName: string,
   stringsToIgnore: Array<string>,
 ): void {
+  // $FlowFixMe[prop-missing] index access only allowed for objects with index keys
   console[methodName] = (...args) => {
     const maybeString = args[0];
     if (typeof maybeString === 'string') {

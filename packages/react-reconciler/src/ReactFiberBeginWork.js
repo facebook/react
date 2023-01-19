@@ -97,7 +97,6 @@ import {
   disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
@@ -303,15 +302,15 @@ let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
 
 if (__DEV__) {
-  didWarnAboutBadClass = {};
-  didWarnAboutModulePatternComponent = {};
-  didWarnAboutContextTypeOnFunctionComponent = {};
-  didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutFunctionRefs = {};
+  didWarnAboutBadClass = ({}: {[string]: boolean});
+  didWarnAboutModulePatternComponent = ({}: {[string]: boolean});
+  didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
-  didWarnAboutRevealOrder = {};
-  didWarnAboutTailOptions = {};
-  didWarnAboutDefaultPropsOnFunctionComponent = {};
+  didWarnAboutRevealOrder = ({}: {[empty]: boolean});
+  didWarnAboutTailOptions = ({}: {[string]: boolean});
+  didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
 }
 
 export function reconcileChildren(
@@ -506,10 +505,7 @@ function updateMemoComponent(
           getComponentNameFromType(type),
         );
       }
-      if (
-        warnAboutDefaultPropsOnFunctionComponents &&
-        Component.defaultProps !== undefined
-      ) {
+      if (Component.defaultProps !== undefined) {
         const componentName = getComponentNameFromType(type) || 'Unknown';
         if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
           console.error(
@@ -599,7 +595,6 @@ function updateSimpleMemoComponent(
         try {
           outerMemoType = init(payload);
         } catch (x) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           outerMemoType = null;
         }
         // Inner propTypes will be validated in the function component path.
@@ -1085,11 +1080,11 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
 }
 
 function updateFunctionComponent(
-  current,
-  workInProgress,
-  Component,
+  current: null | Fiber,
+  workInProgress: Fiber,
+  Component: any,
   nextProps: any,
-  renderLanes,
+  renderLanes: Lanes,
 ) {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
@@ -1425,7 +1420,7 @@ function finishClassComponent(
   return workInProgress.child;
 }
 
-function pushHostRootContext(workInProgress) {
+function pushHostRootContext(workInProgress: Fiber) {
   const root = (workInProgress.stateNode: FiberRoot);
   if (root.pendingContext) {
     pushTopLevelContextObject(
@@ -1440,7 +1435,11 @@ function pushHostRootContext(workInProgress) {
   pushHostContainer(workInProgress, root.containerInfo);
 }
 
-function updateHostRoot(current, workInProgress, renderLanes) {
+function updateHostRoot(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   pushHostRootContext(workInProgress);
 
   if (current === null) {
@@ -1625,7 +1624,11 @@ function updateHostComponent(
   return workInProgress.child;
 }
 
-function updateHostResource(current, workInProgress, renderLanes) {
+function updateHostResource(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   pushHostContext(workInProgress);
   markRef(current, workInProgress);
   const currentProps = current === null ? null : current.memoizedProps;
@@ -1673,7 +1676,7 @@ function updateHostSingleton(
   return workInProgress.child;
 }
 
-function updateHostText(current, workInProgress) {
+function updateHostText(current: null | Fiber, workInProgress: Fiber) {
   if (current === null) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
@@ -1683,10 +1686,10 @@ function updateHostText(current, workInProgress) {
 }
 
 function mountLazyComponent(
-  _current,
-  workInProgress,
-  elementType,
-  renderLanes,
+  _current: null | Fiber,
+  workInProgress: Fiber,
+  elementType: any,
+  renderLanes: Lanes,
 ) {
   resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
@@ -1792,11 +1795,11 @@ function mountLazyComponent(
 }
 
 function mountIncompleteClassComponent(
-  _current,
-  workInProgress,
-  Component,
-  nextProps,
-  renderLanes,
+  _current: null | Fiber,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderLanes: Lanes,
 ) {
   resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
@@ -1831,10 +1834,10 @@ function mountIncompleteClassComponent(
 }
 
 function mountIndeterminateComponent(
-  _current,
-  workInProgress,
-  Component,
-  renderLanes,
+  _current: null | Fiber,
+  workInProgress: Fiber,
+  Component: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
@@ -2051,10 +2054,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       }
     }
 
-    if (
-      warnAboutDefaultPropsOnFunctionComponents &&
-      Component.defaultProps !== undefined
-    ) {
+    if (Component.defaultProps !== undefined) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -2171,12 +2171,16 @@ function shouldRemainOnFallback(
   );
 }
 
-function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes) {
+function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes: Lanes) {
   // TODO: Should not remove render lanes that were pinged during this render
   return removeLanes(current.childLanes, renderLanes);
 }
 
-function updateSuspenseComponent(current, workInProgress, renderLanes) {
+function updateSuspenseComponent(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   const nextProps = workInProgress.pendingProps;
 
   // This is used by DevTools to force a boundary to suspend.
@@ -2423,9 +2427,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
 }
 
 function mountSuspensePrimaryChildren(
-  workInProgress,
-  primaryChildren,
-  renderLanes,
+  workInProgress: Fiber,
+  primaryChildren: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   const mode = workInProgress.mode;
   const primaryChildProps: OffscreenProps = {
@@ -2443,10 +2447,10 @@ function mountSuspensePrimaryChildren(
 }
 
 function mountSuspenseFallbackChildren(
-  workInProgress,
-  primaryChildren,
-  fallbackChildren,
-  renderLanes,
+  workInProgress: Fiber,
+  primaryChildren: $FlowFixMe,
+  fallbackChildren: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   const mode = workInProgress.mode;
   const progressedPrimaryFragment: Fiber | null = workInProgress.child;
@@ -2526,10 +2530,10 @@ function updateWorkInProgressOffscreenFiber(
 }
 
 function updateSuspensePrimaryChildren(
-  current,
-  workInProgress,
-  primaryChildren,
-  renderLanes,
+  current: Fiber,
+  workInProgress: Fiber,
+  primaryChildren: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   const currentPrimaryChildFragment: Fiber = (current.child: any);
   const currentFallbackChildFragment: Fiber | null =
@@ -2563,11 +2567,11 @@ function updateSuspensePrimaryChildren(
 }
 
 function updateSuspenseFallbackChildren(
-  current,
-  workInProgress,
-  primaryChildren,
-  fallbackChildren,
-  renderLanes,
+  current: Fiber,
+  workInProgress: Fiber,
+  primaryChildren: $FlowFixMe,
+  fallbackChildren: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   const mode = workInProgress.mode;
   const currentPrimaryChildFragment: Fiber = (current.child: any);
@@ -2688,11 +2692,11 @@ function retrySuspenseComponentWithoutHydrating(
 }
 
 function mountSuspenseFallbackAfterRetryWithoutHydrating(
-  current,
-  workInProgress,
-  primaryChildren,
-  fallbackChildren,
-  renderLanes,
+  current: Fiber,
+  workInProgress: Fiber,
+  primaryChildren: $FlowFixMe,
+  fallbackChildren: $FlowFixMe,
+  renderLanes: Lanes,
 ) {
   const fiberMode = workInProgress.mode;
   const primaryChildProps: OffscreenProps = {
@@ -3550,7 +3554,11 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-function updateScopeComponent(current, workInProgress, renderLanes) {
+function updateScopeComponent(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
 
@@ -3566,7 +3574,10 @@ export function checkIfWorkInProgressReceivedUpdate(): boolean {
   return didReceiveUpdate;
 }
 
-function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
+function resetSuspendedCurrentOnMountInLegacyMode(
+  current: null | Fiber,
+  workInProgress: Fiber,
+) {
   if ((workInProgress.mode & ConcurrentMode) === NoMode) {
     if (current !== null) {
       // A lazy component only mounts if it suspended inside a non-

@@ -144,6 +144,7 @@ import {
   createThenableState,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1801,7 +1802,7 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
   }
 }
 
-function forceStoreRerender(fiber) {
+function forceStoreRerender(fiber: Fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
@@ -1934,7 +1935,7 @@ function mountRef<T>(initialValue: T): {current: T} {
           }
           return current;
         },
-        set current(value) {
+        set current(value: any) {
           if (currentlyRenderingFiber !== null && !didWarnAboutWrite) {
             if (hasBeenInitialized || !didCheckForLazyInit) {
               didWarnAboutWrite = true;
@@ -2383,7 +2384,7 @@ function startTransition(
   setPending(true);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (enableTransitionTracing) {
@@ -2408,6 +2409,7 @@ function startTransition(
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -2415,7 +2417,6 @@ function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        currentTransition._updatedFibers.clear();
       }
     }
   }
@@ -2736,7 +2737,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools<A>(fiber, lane, action: A): void {
+function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
@@ -2805,7 +2806,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useId: mountId,
 };
 if (enableCache) {
-  // $FlowFixMe[escaped-generic] discovered when updating Flow
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
 if (enableUseHook) {

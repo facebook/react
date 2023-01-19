@@ -201,6 +201,7 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function onRecoverableError(error) {
   // TODO: Expose onRecoverableError option to userspace
   // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
@@ -236,6 +237,7 @@ function render(
   return getPublicRootInstance(root);
 }
 
+// $FlowFixMe[missing-this-annot]
 function unmountComponentAtNode(containerTag: number) {
   this.stopSurface(containerTag);
 }

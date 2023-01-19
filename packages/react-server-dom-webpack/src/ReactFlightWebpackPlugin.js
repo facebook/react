@@ -144,6 +144,7 @@ export default class ReactFlightWebpackPlugin {
           new NullDependency.Template(),
         );
 
+        // $FlowFixMe[missing-local-annot]
         const handler = parser => {
           // We need to add all client references as dependency of something in the graph so
           // Webpack knows which entries need to know about the relevant chunks and include the
@@ -214,13 +215,18 @@ export default class ReactFlightWebpackPlugin {
             return;
           }
 
-          const json = {};
+          const json: {
+            [string]: {
+              [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
+            },
+          } = {};
           compilation.chunkGroups.forEach(function(chunkGroup) {
             const chunkIds = chunkGroup.chunks.map(function(c) {
               return c.id;
             });
 
-            function recordModule(id, module) {
+            // $FlowFixMe[missing-local-annot]
+            function recordModule(id: $FlowFixMe, module) {
               // TODO: Hook into deps instead of the target module.
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.
@@ -233,7 +239,9 @@ export default class ReactFlightWebpackPlugin {
                 .getExportsInfo(module)
                 .getProvidedExports();
 
-              const moduleExports = {};
+              const moduleExports: {
+                [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
+              } = {};
               ['', '*']
                 .concat(
                   Array.isArray(moduleProvidedExports)
@@ -350,7 +358,7 @@ export default class ReactFlightWebpackPlugin {
         result: $ReadOnlyArray<$ReadOnlyArray<ClientReferenceDependency>>,
       ): void => {
         if (err) return callback(err);
-        const flat = [];
+        const flat: Array<any> = [];
         for (let i = 0; i < result.length; i++) {
           // $FlowFixMe[method-unbinding]
           flat.push.apply(flat, result[i]);

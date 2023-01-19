@@ -13,7 +13,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let act;
 
 describe('ReactES6Class', () => {
@@ -32,7 +31,6 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('jest-react').act;
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -587,17 +585,13 @@ describe('ReactES6Class', () => {
     const ref = React.createRef();
     expect(() => {
       test(<Foo ref={ref} />, 'DIV', 'foo');
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Foo" contains the string ref "inner". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Foo (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "Foo" contains the string ref "inner". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Foo (at **)',
+    ]);
     expect(ref.current.refs.inner.getName()).toBe('foo');
   });
 

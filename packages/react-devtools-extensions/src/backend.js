@@ -8,6 +8,7 @@
 
 let welcomeHasInitialized = false;
 
+// $FlowFixMe[missing-local-annot]
 function welcome(event) {
   if (
     event.source !== window ||
@@ -42,7 +43,7 @@ function welcome(event) {
 
 window.addEventListener('message', welcome);
 
-function setup(hook) {
+function setup(hook: any) {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
@@ -55,6 +56,7 @@ function setup(hook) {
 
   const bridge = new Bridge({
     listen(fn) {
+      // $FlowFixMe[missing-local-annot]
       const listener = event => {
         if (
           event.source !== window ||

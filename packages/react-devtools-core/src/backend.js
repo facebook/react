@@ -44,7 +44,7 @@ const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
 
-function debug(methodName: string, ...args) {
+function debug(methodName: string, ...args: Array<mixed>) {
   if (__DEBUG__) {
     console.log(
       `%c[core/backend] %c${methodName}`,
@@ -148,7 +148,6 @@ export function connectToDevTools(options: ?ConnectOptions) {
         }
       },
     });
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     bridge.addListener(
       'updateComponentFilters',
       (componentFilters: Array<ComponentFilter>) => {
@@ -276,7 +275,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     scheduleRetry();
   }
 
-  function handleMessage(event) {
+  function handleMessage(event: MessageEvent) {
     let data;
     try {
       if (typeof event.data === 'string') {
