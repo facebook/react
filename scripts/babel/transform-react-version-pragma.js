@@ -1,5 +1,5 @@
 'use strict';
-const { declare } = require('@babel/helper-plugin-utils')
+const {declare} = require('@babel/helper-plugin-utils');
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 const getComments = require('./getComments');

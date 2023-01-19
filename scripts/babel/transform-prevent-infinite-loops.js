@@ -9,7 +9,7 @@
 'use strict';
 
 // Based on https://repl.it/site/blog/infinite-loops.
-const { declare } = require('@babel/helper-plugin-utils')
+const {declare} = require('@babel/helper-plugin-utils');
 // This should be reasonable for all loops in the source.
 // Note that if the numbers are too large, the tests will take too long to fail
 // for this to be useful (each individual test case might hit an infinite loop).

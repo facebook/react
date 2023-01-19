@@ -3,7 +3,7 @@
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 const getComments = require('./getComments');
-const { declare } = require('@babel/helper-plugin-utils')
+const {declare} = require('@babel/helper-plugin-utils');
 function transform(babel) {
   const {types: t} = babel;
 
