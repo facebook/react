@@ -24,8 +24,15 @@ export default function (babel: typeof BabelCore): PluginObj {
     visitor: {
       FunctionDeclaration: {
         enter(fn, pass) {
+          if (fn.scope.getProgramParent() !== fn.scope.parent) {
+            return;
+          }
           const ast = compile(fn);
+
+          // We are generating a new FunctionDeclaration node, so we must skip over it or this
+          // traversal will loop infinitely.
           fn.replaceWith(ast);
+          fn.skip();
         },
       },
     },
