@@ -608,7 +608,7 @@ function codegenInstructionValue(
       );
       break;
     }
-    case "OtherStatement": {
+    case "UnsupportedNode": {
       const node = instrValue.node;
       if (!t.isExpression(node)) {
         return node as any; // TODO handle statements, jsx fragments

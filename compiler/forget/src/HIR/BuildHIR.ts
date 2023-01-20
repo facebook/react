@@ -336,7 +336,7 @@ function lowerStatement(
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
           });
-          return { kind: "error", id: makeInstructionId(0) };
+          return { kind: "unsupported", id: makeInstructionId(0) };
         }
         lowerStatement(builder, init);
         return {
@@ -355,7 +355,7 @@ function lowerStatement(
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
           });
-          return { kind: "error", id: makeInstructionId(0) };
+          return { kind: "unsupported", id: makeInstructionId(0) };
         }
         lowerExpressionToVoid(builder, update);
         return {
@@ -758,7 +758,7 @@ function lowerStatement(
         },
         loc: stmtPath.node.loc ?? GeneratedSource,
         value: {
-          kind: "OtherStatement",
+          kind: "UnsupportedNode",
           loc: stmtPath.node.loc ?? GeneratedSource,
           node: stmtPath.node,
         },
@@ -1221,8 +1221,8 @@ function lowerExpression(
       if (lowering.isErr()) {
         lowering.unwrapErr().forEach((e) => builder.pushError(e));
         return {
-          kind: "OtherStatement",
-          node: expr.node,
+          kind: "UnsupportedNode",
+          node: exprNode,
           loc: exprLoc,
         };
       }
@@ -1413,7 +1413,7 @@ function lowerJsxElement(
     builder.push({
       id: makeInstructionId(0),
       value: {
-        kind: "OtherStatement",
+        kind: "UnsupportedNode",
         node: exprNode,
         loc: exprLoc,
       },

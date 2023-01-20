@@ -185,7 +185,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "JsxFragment":
     case "NewExpression":
     case "ObjectExpression":
-    case "OtherStatement":
+    case "UnsupportedNode":
     case "FunctionExpression":
     case "UnaryExpression": {
       return true;

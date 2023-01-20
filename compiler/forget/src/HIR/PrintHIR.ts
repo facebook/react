@@ -82,7 +82,7 @@ export function printMixedHIR(
     case "throw":
     case "while":
     case "for":
-    case "error":
+    case "unsupported":
     case "goto": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
@@ -180,8 +180,8 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `[${terminal.id}] For init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} update=bb${terminal.update} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "error": {
-      value = `Error`;
+    case "unsupported": {
+      value = `Unsupported`;
       break;
     }
     default: {
@@ -278,8 +278,8 @@ export function printInstructionValue(instrValue: InstructionValue): string {
         .join(", ")})`;
       break;
     }
-    case "OtherStatement": {
-      value = `OtherStatement(${generate(instrValue.node).code})`;
+    case "UnsupportedNode": {
+      value = `UnsupportedNode(${generate(instrValue.node).code})`;
       break;
     }
     case "Identifier": {

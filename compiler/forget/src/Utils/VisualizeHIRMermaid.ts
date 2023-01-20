@@ -105,7 +105,7 @@ function printTerminalLabel(terminal: Terminal): string {
     case "for":
       buffer.push("For");
       break;
-    case "error": {
+    case "unsupported": {
       break;
     }
     default:
@@ -172,7 +172,7 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
     }
     case "throw":
     case "return":
-    case "error": {
+    case "unsupported": {
       break;
     }
     default:

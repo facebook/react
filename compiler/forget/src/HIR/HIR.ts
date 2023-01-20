@@ -209,7 +209,7 @@ export type BasicBlock = {
  * for-of, if-else, return, etc.
  */
 export type Terminal =
-  | ErrorTerminal
+  | UnsupportedTerminal
   | ThrowTerminal
   | ReturnTerminal
   | GotoTerminal
@@ -224,7 +224,7 @@ export type Terminal =
  */
 export type ValueTerminal = IfTerminal | GotoTerminal;
 // A terminal that couldn't be lowered correctly.
-export type ErrorTerminal = { kind: "error"; id: InstructionId };
+export type UnsupportedTerminal = { kind: "unsupported"; id: InstructionId };
 export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
 export type Case = { test: Place | null; block: BlockId };
 
@@ -416,12 +416,8 @@ export type InstructionData =
    * passing through in codegen.
    */
   | {
-      kind: "OtherStatement";
-      node:
-        | t.Statement
-        | t.JSXSpreadChild
-        | t.JSXFragment
-        | t.FunctionExpression;
+      kind: "UnsupportedNode";
+      node: t.Node;
     };
 
 /**

@@ -564,7 +564,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         effectKind = Effect.Read;
         break;
       }
-      case "OtherStatement": {
+      case "UnsupportedNode": {
         // TODO: handle other statement kinds
         valueKind = ValueKind.Mutable;
         break;

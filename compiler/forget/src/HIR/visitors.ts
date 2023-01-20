@@ -102,7 +102,7 @@ export function* eachInstructionValueOperand(
       yield* instrValue.dependencies;
       break;
     }
-    case "OtherStatement":
+    case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
       break;
@@ -203,7 +203,7 @@ export function mapInstructionOperands(
       instrValue.dependencies = instrValue.dependencies.map((d) => fn(d));
       break;
     }
-    case "OtherStatement":
+    case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
       break;
@@ -314,7 +314,7 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "error": {
+    case "unsupported": {
       return terminal;
     }
     default: {
@@ -366,7 +366,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.init;
       break;
     }
-    case "error":
+    case "unsupported":
       break;
     default: {
       assertExhaustive(
@@ -407,7 +407,7 @@ export function mapTerminalOperands(
     case "while":
     case "for":
     case "goto":
-    case "error": {
+    case "unsupported": {
       // no-op
       break;
     }
@@ -447,7 +447,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "while":
     case "for":
     case "goto":
-    case "error": {
+    case "unsupported": {
       // no-op
       break;
     }

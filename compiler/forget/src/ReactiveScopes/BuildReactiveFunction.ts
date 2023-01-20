@@ -388,8 +388,8 @@ class Driver {
         }
         break;
       }
-      case "error": {
-        invariant(false, "Unexpected error terminal");
+      case "unsupported": {
+        invariant(false, "Unexpected unsupported terminal");
       }
       default: {
         assertExhaustive(terminal, "Unexpected terminal");
