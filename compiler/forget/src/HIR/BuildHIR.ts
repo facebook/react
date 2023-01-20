@@ -811,84 +811,140 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.ObjectExpression>;
       const propertyPaths = expr.get("properties");
       const properties: Map<string, Place> = new Map();
+      let hasError = false;
       for (const propertyPath of propertyPaths) {
-        todoInvariant(
-          propertyPath.isObjectProperty(),
-          "Handle object property spread"
-        );
+        if (!propertyPath.isObjectProperty()) {
+          builder.pushError({
+            reason: "Handle object property spread",
+            severity: ErrorSeverity.Todo,
+            nodePath: propertyPath,
+          });
+          hasError = true;
+          continue;
+        }
         const key = propertyPath.node.key;
-        invariant(key.type === "Identifier", "Unexpected private name");
+        if (key.type !== "Identifier") {
+          builder.pushError({
+            reason: "Unexpected private name",
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: propertyPath,
+          });
+          hasError = true;
+          continue;
+        }
         const valuePath = propertyPath.get("value");
-        todoInvariant(
-          valuePath.isExpression(),
-          "Handle non-expression object values"
-        );
+        if (!valuePath.isExpression()) {
+          builder.pushError({
+            reason: "Handle non-expression object values",
+            severity: ErrorSeverity.Todo,
+            nodePath: valuePath,
+          });
+          hasError = true;
+          continue;
+        }
         const value = lowerExpressionToPlace(builder, valuePath);
         properties.set(key.name, value);
       }
-      return {
-        kind: "ObjectExpression",
-        properties,
-        loc: exprLoc,
-      };
+      return hasError
+        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+        : {
+            kind: "ObjectExpression",
+            properties,
+            loc: exprLoc,
+          };
     }
     case "ArrayExpression": {
       const expr = exprPath as NodePath<t.ArrayExpression>;
-      const elements = expr.get("elements").map((element) => {
-        todoInvariant(
-          element.hasNode() && element.isExpression(),
-          "todo: handle non-expression array elements"
-        );
-        return lowerExpressionToPlace(builder, element);
-      });
-      return {
-        kind: "ArrayExpression",
-        elements,
-        loc: exprLoc,
-      };
+      let hasError = false;
+      let elements: Place[] = [];
+      for (const element of expr.get("elements")) {
+        if (!element.hasNode() || !element.isExpression()) {
+          builder.pushError({
+            reason: "Handle non-expression array elements",
+            severity: ErrorSeverity.Todo,
+            nodePath: element,
+          });
+          hasError = true;
+          continue;
+        }
+        elements.push(lowerExpressionToPlace(builder, element));
+      }
+      return hasError
+        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+        : {
+            kind: "ArrayExpression",
+            elements,
+            loc: exprLoc,
+          };
     }
     case "NewExpression": {
       const expr = exprPath as NodePath<t.NewExpression>;
       const calleePath = expr.get("callee");
-      invariant(
-        calleePath.isExpression(),
-        "Call expressions only support callees that are expressions (v8 intrinsics not supported)"
-      );
+      if (!calleePath.isExpression()) {
+        builder.pushError({
+          reason:
+            "Call expressions only support callees that are expressions (v8 intrinsics not supported)",
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: calleePath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       const callee = lowerExpressionToPlace(builder, calleePath);
-      const argPaths = expr.get("arguments");
-      const args = argPaths.map((arg) => {
-        todoInvariant(
-          arg.isExpression(),
-          "todo: support non-expression call arguments"
-        );
-        return lowerExpressionToPlace(builder, arg);
-      });
-      return {
-        kind: "NewExpression",
-        callee,
-        args,
-        loc: exprLoc,
-      };
+      let args: Place[] = [];
+      let hasError = false;
+      for (const argPath of expr.get("arguments")) {
+        if (!argPath.isExpression()) {
+          builder.pushError({
+            reason: "Support non-expression arguments to NewExpression",
+            severity: ErrorSeverity.Todo,
+            nodePath: argPath,
+          });
+          hasError = true;
+          continue;
+        }
+        args.push(lowerExpressionToPlace(builder, argPath));
+      }
+
+      return hasError
+        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+        : {
+            kind: "NewExpression",
+            callee,
+            args,
+            loc: exprLoc,
+          };
     }
     case "CallExpression": {
       const expr = exprPath as NodePath<t.CallExpression>;
       const calleePath = expr.get("callee");
-      invariant(
-        calleePath.isExpression(),
-        "Call expressions only support callees that are expressions (v8 intrinsics not supported)"
-      );
+      let hasError = false;
+      if (!calleePath.isExpression()) {
+        builder.pushError({
+          reason:
+            "Call expressions only support callees that are expressions (v8 intrinsics not supported)",
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: calleePath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       if (calleePath.isMemberExpression()) {
         const { object, property, value } = lowerMemberExpression(
           builder,
           calleePath
         );
-        const args = expr.get("arguments").map((arg) => {
-          todoInvariant(
-            arg.isExpression(),
-            "todo: support non-expression call arguments"
-          );
-          return lowerExpressionToPlace(builder, arg);
-        });
+        let args: Place[] = [];
+        for (const argPath of expr.get("arguments")) {
+          if (!argPath.isExpression()) {
+            builder.pushError({
+              reason: "Support non-expression arguments to CallExpression",
+              severity: ErrorSeverity.Todo,
+              nodePath: argPath,
+            });
+            hasError = true;
+            continue;
+          }
+          args.push(lowerExpressionToPlace(builder, argPath));
+        }
         if (typeof property === "string") {
           return {
             kind: "PropertyCall",
@@ -908,28 +964,41 @@ function lowerExpression(
         }
       } else {
         const callee = lowerExpressionToPlace(builder, calleePath);
-        const args = expr.get("arguments").map((arg) => {
-          todoInvariant(
-            arg.isExpression(),
-            "todo: support non-expression call arguments"
-          );
-          return lowerExpressionToPlace(builder, arg);
-        });
-        return {
-          kind: "CallExpression",
-          callee,
-          args,
-          loc: exprLoc,
-        };
+        let args: Place[] = [];
+        for (const argPath of expr.get("arguments")) {
+          if (!argPath.isExpression()) {
+            builder.pushError({
+              reason: "Support non-expression arguments to CallExpression",
+              severity: ErrorSeverity.Todo,
+              nodePath: argPath,
+            });
+            hasError = true;
+            continue;
+          }
+          args.push(lowerExpressionToPlace(builder, argPath));
+        }
+        return hasError
+          ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+          : {
+              kind: "CallExpression",
+              callee,
+              args,
+              loc: exprLoc,
+            };
       }
     }
     case "BinaryExpression": {
       const expr = exprPath as NodePath<t.BinaryExpression>;
       const leftPath = expr.get("left");
-      invariant(
-        leftPath.isExpression(),
-        "Private names may not appear as the left hand side of a binary expression"
-      );
+      if (!leftPath.isExpression()) {
+        builder.pushError({
+          reason:
+            "Private names may not appear as the left hand side of a binary expression",
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: leftPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       const left = lowerExpressionToPlace(builder, leftPath);
       const right = lowerExpressionToPlace(builder, expr.get("right"));
       const operator = expr.node.operator;
@@ -944,10 +1013,15 @@ function lowerExpression(
     case "LogicalExpression": {
       const expr = exprPath as NodePath<t.LogicalExpression>;
       const leftPath = expr.get("left");
-      invariant(
-        leftPath.isExpression(),
-        "Private names may not appear as the left hand side of a binary expression"
-      );
+      if (!leftPath.isExpression()) {
+        builder.pushError({
+          reason:
+            "Private names may not appear as the left hand side of a logical expression",
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: leftPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       const operator = expr.node.operator;
       switch (operator) {
         case "||": {
@@ -1050,11 +1124,14 @@ function lowerExpression(
         "^=": "^",
       };
       const binaryOperator = operators[operator];
-      invariant(
-        binaryOperator != null,
-        `Unhandled assignment operator '${operator}'`
-      );
-
+      if (binaryOperator == null) {
+        builder.pushError({
+          reason: `Unhandled assignment operator '${operator}'`,
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: expr.get("operator"),
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       const left = expr.get("left");
       const leftNode = left.node;
       switch (leftNode.type) {
@@ -1086,10 +1163,19 @@ function lowerExpression(
           );
           // Extract the final property to be read from and re-assigned, eg 'c'
           const property = leftExpr.get("property");
-          invariant(
-            property.isIdentifier(),
-            "Assignment expression to dynamic properties is not yet supported"
-          );
+          if (!property.isIdentifier()) {
+            builder.pushError({
+              reason:
+                "Assignment expression to dynamic properties is not yet supported",
+              severity: ErrorSeverity.Todo,
+              nodePath: property,
+            });
+            return {
+              kind: "UnsupportedNode",
+              node: leftExpr.node,
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            };
+          }
           // Store the previous value to a temporary
           const previousValuePlace: Place = buildTemporaryPlace(
             builder,
@@ -1137,10 +1223,13 @@ function lowerExpression(
           };
         }
         default: {
-          invariant(
-            false,
-            "Assignment update expressions require the lvalue to be an identifier or member expression"
-          );
+          builder.pushError({
+            reason:
+              "Assignment update expressions require the lvalue to be an identifier or member expression",
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: expr,
+          });
+          return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
         }
       }
     }
@@ -1164,36 +1253,65 @@ function lowerExpression(
         .get("children")
         .map((child) => lowerJsxElement(builder, child));
       const props: Map<string, Place> = new Map();
-      opening.get("attributes").forEach((attribute) => {
-        todoInvariant(attribute.isJSXAttribute(), "handle spread attributes");
+      let hasError = false;
+      for (const attribute of opening.get("attributes")) {
+        if (!attribute.isJSXAttribute()) {
+          builder.pushError({
+            reason: "Handle spread attributes",
+            severity: ErrorSeverity.Todo,
+            nodePath: attribute,
+          });
+          hasError = true;
+          continue;
+        }
         const name = attribute.get("name");
-        todoInvariant(
-          name.isJSXIdentifier(),
-          "handle non-identifier jsx attribute names"
-        );
+        if (!name.isJSXIdentifier()) {
+          builder.pushError({
+            reason: "Handle non-identifier jsx attribute names",
+            severity: ErrorSeverity.Todo,
+            nodePath: name,
+          });
+          hasError = true;
+          continue;
+        }
         const valueExpr = attribute.get("value");
         let value;
         if (valueExpr.isJSXElement() || valueExpr.isStringLiteral()) {
           value = lowerExpressionToPlace(builder, valueExpr);
         } else {
-          todoInvariant(
-            valueExpr.isJSXExpressionContainer(),
-            "handle other non expr containers"
-          );
+          if (!valueExpr.isJSXExpressionContainer()) {
+            builder.pushError({
+              reason: "Handle other non expr containers",
+              severity: ErrorSeverity.Todo,
+              nodePath: valueExpr,
+            });
+            hasError = true;
+            continue;
+          }
           const expression = valueExpr.get("expression");
-          todoInvariant(expression.isExpression(), "handle empty expressions");
+          if (!expression.isExpression()) {
+            builder.pushError({
+              reason: "Handle empty expressions",
+              severity: ErrorSeverity.Todo,
+              nodePath: valueExpr,
+            });
+            hasError = true;
+            continue;
+          }
           value = lowerExpressionToPlace(builder, expression);
         }
         const prop: string = name.node.name;
         props.set(prop, value);
-      });
-      return {
-        kind: "JsxExpression",
-        tag,
-        props,
-        children,
-        loc: exprLoc,
-      };
+      }
+      return hasError
+        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+        : {
+            kind: "JsxExpression",
+            tag,
+            props,
+            children,
+            loc: exprLoc,
+          };
     }
     case "JSXFragment": {
       const expr = exprPath as NodePath<t.JSXFragment>;
@@ -1228,27 +1346,40 @@ function lowerExpression(
       }
       loweredFunc = lowering.unwrap();
 
-      const params: Array<string> = expr.get("params").map((p) => {
-        todoInvariant(p.isIdentifier(), "handle non identifier params");
-        return p.node.name;
-      });
-      return {
-        kind: "FunctionExpression",
-        name,
-        body,
-        params,
-        loweredFunc,
-        dependencies,
-        mutatedDeps: [],
-        loc: exprLoc,
-      };
+      let hasError = false;
+      const params: Array<string> = [];
+      for (const p of expr.get("params")) {
+        if (!p.isIdentifier()) {
+          builder.pushError({
+            reason: "Handle non identifier params",
+            severity: ErrorSeverity.Todo,
+            nodePath: p,
+          });
+          hasError = true;
+          continue;
+        }
+        params.push(p.node.name);
+      }
+      return hasError
+        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
+        : {
+            kind: "FunctionExpression",
+            name,
+            body,
+            params,
+            loweredFunc,
+            dependencies,
+            mutatedDeps: [],
+            loc: exprLoc,
+          };
     }
     default: {
-      todo(`lowerExpression(${exprNode.type})`);
-      //   assertExhaustive(
-      //     exprNode,
-      //     `Unexpected expression kind '${exprNode.type}'`
-      //   );
+      builder.pushError({
+        reason: `Unhandled expression type: ${exprPath.type}`,
+        severity: ErrorSeverity.Todo,
+        nodePath: exprPath,
+      });
+      return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
     }
   }
 }
