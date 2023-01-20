@@ -7,10 +7,8 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
-import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../lib/Result";
-import todo, { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import {
   BlockId,
@@ -1724,7 +1722,14 @@ function lowerAssignment(
         });
       }
       if (!lvalue.node.computed) {
-        todoInvariant(property.isIdentifier(), "Support private names");
+        if (!property.isIdentifier()) {
+          builder.pushError({
+            reason: "Support private names",
+            severity: ErrorSeverity.Todo,
+            nodePath: property,
+          });
+          return { kind: "UnsupportedNode", node: lvalueNode, loc };
+        }
         return {
           kind: "PropertyStore",
           object,
@@ -1733,10 +1738,15 @@ function lowerAssignment(
           loc,
         };
       } else {
-        invariant(
-          property.isExpression(),
-          "Expected private name to appear as a non-computed property"
-        );
+        if (!property.isExpression()) {
+          builder.pushError({
+            reason:
+              "Expected private name to appear as a non-computed property",
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: property,
+          });
+          return { kind: "UnsupportedNode", node: lvalueNode, loc };
+        }
         const propertyPlace = lowerExpressionToPlace(builder, property);
         return {
           kind: "ComputedStore",
@@ -1757,15 +1767,21 @@ function lowerAssignment(
         loc,
       });
       const elements = lvalue.get("elements");
+      let hasError = false;
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
         if (!element.hasNode()) {
           continue;
         }
-        todoInvariant(
-          element.node.type !== "RestElement",
-          "Rest elements are not supported yet"
-        );
+        if (element.node.type === "RestElement") {
+          builder.pushError({
+            reason: "Rest elements are not supported yet",
+            severity: ErrorSeverity.Todo,
+            nodePath: element,
+          });
+          hasError = true;
+          continue;
+        }
         const property = buildTemporaryPlace(
           builder,
           element.node.loc ?? GeneratedSource
@@ -1788,7 +1804,9 @@ function lowerAssignment(
         };
         lowerAssignment(builder, loc, kind, element, value);
       }
-      return arrayPlace;
+      return hasError
+        ? { kind: "UnsupportedNode", node: lvalueNode, loc }
+        : arrayPlace;
     }
     case "ObjectPattern": {
       const lvalue = lvaluePath as NodePath<t.ObjectPattern>;
@@ -1800,22 +1818,38 @@ function lowerAssignment(
         loc,
       });
       const properties = lvalue.get("properties");
+      let hasError = false;
       for (let i = 0; i < properties.length; i++) {
         const property = properties[i];
-        invariant(
-          property.isObjectProperty(),
-          "Rest elements are not supported yet"
-        );
+        if (!property.isObjectProperty()) {
+          builder.pushError({
+            reason: "Rest elements are not supported yet",
+            severity: ErrorSeverity.Todo,
+            nodePath: property,
+          });
+          hasError = true;
+          continue;
+        }
         const key = property.get("key");
-        invariant(
-          key.isIdentifier(),
-          "TODO: support non-identifier object property keys"
-        );
+        if (!key.isIdentifier()) {
+          builder.pushError({
+            reason: "Support non-identifier object property keys",
+            severity: ErrorSeverity.Todo,
+            nodePath: key,
+          });
+          hasError = true;
+          continue;
+        }
         const element = property.get("value");
-        invariant(
-          element.isLVal(),
-          "Expected object property value to be an lvalue"
-        );
+        if (!element.isLVal()) {
+          builder.pushError({
+            reason: "Expected object property value to be an lvalue",
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: element,
+          });
+          hasError = true;
+          continue;
+        }
         const value: InstructionValue = {
           kind: "PropertyLoad",
           loc,
@@ -1824,10 +1858,17 @@ function lowerAssignment(
         };
         lowerAssignment(builder, loc, kind, element, value);
       }
-      return objectPlace;
+      return hasError
+        ? { kind: "UnsupportedNode", node: lvalueNode, loc }
+        : objectPlace;
     }
     default: {
-      todo("Support other lvalue types beyond identifier");
+      builder.pushError({
+        reason: "Support other lvalue types beyond identifier",
+        severity: ErrorSeverity.Todo,
+        nodePath: lvaluePath,
+      });
+      return { kind: "UnsupportedNode", node: lvalueNode, loc };
     }
   }
 }
