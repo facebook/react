@@ -1351,7 +1351,7 @@ function lowerExpression(
       for (const p of expr.get("params")) {
         if (!p.isIdentifier()) {
           builder.pushError({
-            reason: "Handle non identifier params",
+            reason: `Support non identifier params: ${p.type}`,
             severity: ErrorSeverity.Todo,
             nodePath: p,
           });
@@ -1563,7 +1563,25 @@ function lowerJsxElement(
     return lowerExpressionToPlace(builder, exprPath);
   } else if (exprPath.isJSXExpressionContainer()) {
     const expression = exprPath.get("expression");
-    todoInvariant(expression.isExpression(), "handle empty expressions");
+    if (!expression.isExpression()) {
+      builder.pushError({
+        reason: "Handle empty expressions",
+        severity: ErrorSeverity.Todo,
+        nodePath: expression,
+      });
+      const place: Place = buildTemporaryPlace(builder, exprLoc);
+      builder.push({
+        id: makeInstructionId(0),
+        value: {
+          kind: "UnsupportedNode",
+          node: exprNode,
+          loc: exprLoc,
+        },
+        loc: exprLoc,
+        lvalue: { place: { ...place }, kind: InstructionKind.Const },
+      });
+      return { ...place };
+    }
     return lowerExpressionToPlace(builder, expression);
   } else if (exprPath.isJSXText()) {
     const place: Place = buildTemporaryPlace(builder, exprLoc);
@@ -1579,10 +1597,13 @@ function lowerJsxElement(
     });
     return place;
   } else {
-    invariant(
-      t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode),
-      "Expected refinement to work"
-    );
+    if (!(t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode))) {
+      builder.pushError({
+        reason: "Expected refinement to work",
+        severity: ErrorSeverity.InvalidInput,
+        nodePath: exprPath,
+      });
+    }
     const place: Place = buildTemporaryPlace(builder, exprLoc);
     builder.push({
       id: makeInstructionId(0),

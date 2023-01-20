@@ -21,6 +21,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   <Button {...args}></Button>;
   <Button xlink:href="localhost:3000"></Button>;
   <Button haha={1}></Button>;
+  <Button>{/** empty */}</Button>;
   <DesignSystem.Button />;
 
   const j = function bar([quz, qux], ...args) {};
