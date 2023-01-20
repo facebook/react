@@ -1216,6 +1216,18 @@ function lowerExpression(
         componentScope
       );
       const body = expr.get("body").node;
+      const lowering = lower(expr);
+      let loweredFunc: HIRFunction;
+      if (lowering.isErr()) {
+        lowering.unwrapErr().forEach((e) => builder.pushError(e));
+        return {
+          kind: "OtherStatement",
+          node: expr.node,
+          loc: exprLoc,
+        };
+      }
+      loweredFunc = lowering.unwrap();
+
       const params: Array<string> = expr.get("params").map((p) => {
         todoInvariant(p.isIdentifier(), "handle non identifier params");
         return p.node.name;
@@ -1225,7 +1237,9 @@ function lowerExpression(
         name,
         body,
         params,
+        loweredFunc,
         dependencies,
+        mutatedDeps: [],
         loc: exprLoc,
       };
     }

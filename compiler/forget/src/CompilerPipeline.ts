@@ -13,7 +13,11 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
 } from "./HIR";
-import { inferMutableRanges, inferReferenceEffects } from "./Inference";
+import {
+  analyseFunctions,
+  inferMutableRanges,
+  inferReferenceEffects,
+} from "./Inference";
 import { constantPropagation } from "./Optimization";
 import {
   alignReactiveScopesToBlockScopes,
@@ -64,6 +68,9 @@ export function* run(
 
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
+
+  analyseFunctions(hir);
+  yield log({ kind: "hir", name: "analyseFunctions", value: hir });
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
@@ -163,7 +170,7 @@ export function compile(func: NodePath<t.FunctionDeclaration>): t.Function {
   }
 }
 
-function log(value: CompilerPipelineValue): CompilerPipelineValue {
+export function log(value: CompilerPipelineValue): CompilerPipelineValue {
   switch (value.kind) {
     case "ast": {
       break;

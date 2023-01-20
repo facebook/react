@@ -46,6 +46,11 @@ export function inferAliasForStores(
           maybeAlias(aliases, value.object, value.value, instr.id);
           break;
         }
+        case "FunctionExpression": {
+          for (const dep of value.mutatedDeps) {
+            maybeAlias(aliases, lvalue.place, dep, instr.id);
+          }
+        }
       }
     }
   }

@@ -403,6 +403,10 @@ export type InstructionData =
       name: string | null;
       params: Array<string>;
       dependencies: Array<Place>;
+      // TODO(gsn): Remove this mutatedDeps array and use dependencies as single
+      // source of truth.
+      mutatedDeps: Array<Place>;
+      loweredFunc: HIRFunction;
       body: t.BlockStatement;
     }
 
@@ -413,7 +417,11 @@ export type InstructionData =
    */
   | {
       kind: "OtherStatement";
-      node: t.Statement | t.JSXSpreadChild | t.JSXFragment;
+      node:
+        | t.Statement
+        | t.JSXSpreadChild
+        | t.JSXFragment
+        | t.FunctionExpression;
     };
 
 /**

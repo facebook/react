@@ -6,4 +6,5 @@
  */
 
 export { inferMutableRanges } from "./InferMutableRanges";
+export { default as analyseFunctions } from "./AnalyseFunctions";
 export { default as inferReferenceEffects } from "./InferReferenceEffects";
