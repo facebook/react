@@ -185,20 +185,26 @@ describe('ReactIncrementalErrorLogging', () => {
         <Foo />
       </ErrorBoundary>,
     );
-    expect(Scheduler).toFlushAndYield(
-      [
-        'render: 0',
+    expect(Scheduler).toFlushAndYield([
+      'render: 0',
 
-        'render: 1',
-        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
+      ...gate(flags =>
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? // replay due to invokeGuardedCallback
+            ['render: 1', 'render: 1']
+          : ['render: 1'],
+      ),
 
-        // Retry one more time before handling error
-        'render: 1',
-        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
+      // Retry one more time before handling error
+      ...gate(flags =>
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? // replay due to invokeGuardedCallback
+            ['render: 1', 'render: 1']
+          : ['render: 1'],
+      ),
 
-        'componentWillUnmount: 0',
-      ].filter(Boolean),
-    );
+      'componentWillUnmount: 0',
+    ]);
 
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(

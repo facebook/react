@@ -351,7 +351,10 @@ describe('ReactDOMServerPartialHydration', () => {
         'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
       );
 
-      if (__DEV__) {
+      if (
+        __DEV__ &&
+        gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)
+      ) {
         const secondToLastCall =
           mockError.mock.calls[mockError.mock.calls.length - 2];
         expect(secondToLastCall).toEqual([

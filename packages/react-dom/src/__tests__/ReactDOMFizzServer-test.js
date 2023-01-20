@@ -2940,15 +2940,27 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // Partially render A, but yield before the render has finished
-    expect(Scheduler).toFlushAndYieldThrough(['Oops!', 'Oops!']);
+    expect(Scheduler).toFlushAndYieldThrough(
+      gate(flags =>
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? ['Oops!', 'Oops!']
+          : ['Oops!', 'B'],
+      ),
+    );
 
     // React will try rendering again synchronously. During the retry, A will
     // not throw. This simulates a concurrent data race that is fixed by
     // blocking the main thread.
     shouldThrow = false;
     expect(Scheduler).toFlushAndYield([
-      // Finish initial render attempt
-      'B',
+      ...gate(flags =>
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? [
+              // Finish initial render attempt
+              'B',
+            ]
+          : [],
+      ),
 
       // Render again, synchronously
       'A',
@@ -4075,11 +4087,15 @@ describe('ReactDOMFizzServer', () => {
       ]);
       // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
       // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
-      expect(mockError.mock.calls).toEqual([
-        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
-        // suspense boundary
-        ['Error: Uncaught [Error: first error]'],
-      ]);
+      expect(mockError.mock.calls).toEqual(
+        gate(flags =>
+          // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
+          // suspense boundary
+          flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+            ? [['Error: Uncaught [Error: first error]']]
+            : [],
+        ),
+      );
       mockError.mockClear();
 
       expect(getVisibleChildren(container)).toEqual(

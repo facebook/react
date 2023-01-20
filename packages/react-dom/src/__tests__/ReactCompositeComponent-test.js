@@ -1669,14 +1669,23 @@ describe('ReactCompositeComponent', () => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
       }).toThrow();
-    }).toErrorDev([
-      // Expect two errors because invokeGuardedCallback will dispatch an error event,
-      // Causing the warning to be logged again.
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
-        'did you accidentally return an object from the constructor?',
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
-        'did you accidentally return an object from the constructor?',
-    ]);
+    }).toErrorDev(
+      gate(flags =>
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? [
+              // Expect two errors because invokeGuardedCallback will dispatch an error event,
+              // Causing the warning to be logged again.
+              'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+                'did you accidentally return an object from the constructor?',
+              'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+                'did you accidentally return an object from the constructor?',
+            ]
+          : [
+              'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+                'did you accidentally return an object from the constructor?',
+            ],
+      ),
+    );
   });
 
   it('should warn about reassigning this.props while rendering', () => {
@@ -1701,18 +1710,22 @@ describe('ReactCompositeComponent', () => {
   it('should return error if render is not defined', () => {
     class RenderTestUndefinedRender extends React.Component {}
 
+    const message =
+      'Warning: RenderTestUndefinedRender(...): No `render` method found on ' +
+      'the returned component instance: you may have forgotten to define `render`.';
     expect(() => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
       }).toThrow();
-    }).toErrorDev([
-      // Expect two errors because invokeGuardedCallback will dispatch an error event,
-      // Causing the warning to be logged again.
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-    ]);
+    }).toErrorDev(
+      gate(flags =>
+        // Expect two errors because invokeGuardedCallback will dispatch an error event,
+        // Causing the warning to be logged again.
+        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? [message, message]
+          : [message],
+      ),
+    );
   });
 
   // Regression test for accidental breaking change

@@ -17,6 +17,7 @@ import ReactDOMClient = require('react-dom/client');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
 import internalAct = require('jest-react');
+import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // Before Each
 
@@ -329,21 +330,20 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
+    const message =
+      'Warning: Empty(...): No `render` method found on the returned ' +
+      'component instance: you may have forgotten to define `render`.'
     expect(() => {
       expect(() =>
         act(() => root.render(React.createElement(Empty)))
       ).toThrow();
-    }).toErrorDev([
-      // A failed component renders four times in DEV in concurrent mode
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-    ]);
+    }).toErrorDev(
+        // A failed component renders twice in DEV in concurrent mode and
+        // double that with replayFailedUnitOfWorkWithInvokeGuardedCallback.
+        ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+          ? [message, message, message, message]
+          : [message, message],
+    );
   });
 
   it('renders a simple stateless component with prop', function() {

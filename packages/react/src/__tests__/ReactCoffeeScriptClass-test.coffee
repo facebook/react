@@ -10,6 +10,7 @@ React = null
 ReactDOM = null
 ReactDOMClient = null
 act = null
+ReactFeatureFlags = null
 
 describe 'ReactCoffeeScriptClass', ->
   container = null
@@ -24,6 +25,8 @@ describe 'ReactCoffeeScriptClass', ->
     ReactDOMClient = require 'react-dom/client'
     act = require('jest-react').act
     PropTypes = require 'prop-types'
+    ReactFeatureFlags = require 'shared/ReactFeatureFlags';
+
     container = document.createElement 'div'
     root = ReactDOMClient.createRoot container
     attachedListener = null
@@ -48,18 +51,21 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'throws if no render function is defined', ->
     class Foo extends React.Component
+    message =
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+      'instance: you may have forgotten to define `render`.';
     expect(->
       expect(->
         act ->
           root.render React.createElement(Foo)
       ).toThrow()
-    ).toErrorDev([
-      # A failed component renders four times in DEV in concurrent mode
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-    ])
+    ).toErrorDev(
+      # A failed component renders twice in DEV in concurrent mode and
+      # double that with replayFailedUnitOfWorkWithInvokeGuardedCallback.
+      if ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+      then [message, message, message, message]
+      else [message, message]
+    )
 
   it 'renders a simple stateless component with prop', ->
     class Foo extends React.Component

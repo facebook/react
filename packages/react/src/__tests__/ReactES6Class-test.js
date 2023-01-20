@@ -14,6 +14,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let act;
+let ReactFeatureFlags;
 
 describe('ReactES6Class', () => {
   let container;
@@ -32,6 +33,8 @@ describe('ReactES6Class', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -68,13 +71,11 @@ describe('ReactES6Class', () => {
     expect(() => {
       expect(() => act(() => root.render(<Foo />))).toThrow();
     }).toErrorDev(
-      gate(flags =>
-        // A failed component renders twice in DEV in concurrent mode and
-        // double that with replayFailedUnitOfWorkWithInvokeGuardedCallback.
-        flags.replayFailedUnitOfWorkWithInvokeGuardedCallback
-          ? [message, message, message, message]
-          : [message, message],
-      ),
+      // A failed component renders twice in DEV in concurrent mode and
+      // double that with replayFailedUnitOfWorkWithInvokeGuardedCallback.
+      ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback
+        ? [message, message, message, message]
+        : [message, message],
     );
   });
 

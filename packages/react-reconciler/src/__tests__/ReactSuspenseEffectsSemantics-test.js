@@ -1985,7 +1985,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
 
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect creation', async () => {
         let useLayoutEffectShouldThrow = false;
 
@@ -2124,7 +2123,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
 
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect destruction', async () => {
         function ThrowsInLayoutEffectDestroy() {
           Scheduler.unstable_yieldValue('ThrowsInLayoutEffectDestroy render');
@@ -3053,7 +3051,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     describe('that throw errors', () => {
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled in ref callbacks', async () => {
         let useRefCallbackShouldThrow = false;
 
