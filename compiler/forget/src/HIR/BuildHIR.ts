@@ -1388,11 +1388,23 @@ function lowerMemberExpression(
   builder: HIRBuilder,
   expr: NodePath<t.MemberExpression>
 ): { object: Place; property: Place | string; value: InstructionValue } {
-  const exprLoc = expr.node.loc ?? GeneratedSource;
+  const exprNode = expr.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
   const object = lowerExpressionToPlace(builder, expr.get("object"));
   const property = expr.get("property");
   if (!expr.node.computed) {
-    todoInvariant(property.isIdentifier(), "Support private names");
+    if (!property.isIdentifier()) {
+      builder.pushError({
+        reason: "Support private names",
+        severity: ErrorSeverity.Todo,
+        nodePath: property,
+      });
+      return {
+        object,
+        property: property.toString(),
+        value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc },
+      };
+    }
     const value: InstructionValue = {
       kind: "PropertyLoad",
       object: { ...object },
@@ -1401,10 +1413,22 @@ function lowerMemberExpression(
     };
     return { object, property: property.node.name, value };
   } else {
-    invariant(
-      property.isExpression(),
-      "Expected private names to be non-computed"
-    );
+    if (!property.isExpression()) {
+      builder.pushError({
+        reason: "Expected private names to be non-computed",
+        severity: ErrorSeverity.InvalidInput,
+        nodePath: property,
+      });
+      return {
+        object,
+        property: property.toString(),
+        value: {
+          kind: "UnsupportedNode",
+          node: exprNode,
+          loc: exprLoc,
+        },
+      };
+    }
     const propertyPlace = lowerExpressionToPlace(builder, property);
     const value: InstructionValue = {
       kind: "ComputedLoad",

@@ -6,7 +6,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   let i = 0;
   var x = [];
 
-  class Bar {}
+  class Bar {
+    #secretSauce = 42;
+    constructor() {
+      console.log(this.#secretSauce);
+    }
+  }
 
   with (true) {
   }
@@ -70,158 +75,158 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 > 3 |   var x = [];
     |   ^^^^^^^^^^^
   4 |
-  5 |   class Bar {}
-  6 |
+  5 |   class Bar {
+  6 |     #secretSauce = 42;
 
 [ReactForget] TodoError: Unhandled statement type: ClassDeclaration
   3 |   var x = [];
   4 |
-> 5 |   class Bar {}
-    |   ^^^^^^^^^^^^
-  6 |
-  7 |   with (true) {
-  8 |   }
+> 5 |   class Bar {
+    |   ^
+  6 |     #secretSauce = 42;
+  7 |     constructor() {
+  8 |       console.log(this.#secretSauce);
 
 [ReactForget] TodoError: Unhandled statement type: WithStatement
-   5 |   class Bar {}
-   6 |
->  7 |   with (true) {
+  10 |   }
+  11 |
+> 12 |   with (true) {
      |   ^
-   8 |   }
-   9 |
-  10 |   const g = { ...a };
+  13 |   }
+  14 |
+  15 |   const g = { ...a };
 
 [ReactForget] TodoError: Handle object property spread
-   8 |   }
-   9 |
-> 10 |   const g = { ...a };
+  13 |   }
+  14 |
+> 15 |   const g = { ...a };
      |               ^^^^
-  11 |   const h = [...b];
-  12 |   new c(...args);
-  13 |   c(...args);
+  16 |   const h = [...b];
+  17 |   new c(...args);
+  18 |   c(...args);
 
 [ReactForget] TodoError: Handle non-expression array elements
-   9 |
-  10 |   const g = { ...a };
-> 11 |   const h = [...b];
+  14 |
+  15 |   const g = { ...a };
+> 16 |   const h = [...b];
      |              ^^^^
-  12 |   new c(...args);
-  13 |   c(...args);
-  14 |   g["e"] += 1;
+  17 |   new c(...args);
+  18 |   c(...args);
+  19 |   g["e"] += 1;
 
 [ReactForget] TodoError: Support non-expression arguments to NewExpression
-  10 |   const g = { ...a };
-  11 |   const h = [...b];
-> 12 |   new c(...args);
+  15 |   const g = { ...a };
+  16 |   const h = [...b];
+> 17 |   new c(...args);
      |         ^^^^^^^
-  13 |   c(...args);
-  14 |   g["e"] += 1;
-  15 |
+  18 |   c(...args);
+  19 |   g["e"] += 1;
+  20 |
 
 [ReactForget] TodoError: Support non-expression arguments to CallExpression
-  11 |   const h = [...b];
-  12 |   new c(...args);
-> 13 |   c(...args);
+  16 |   const h = [...b];
+  17 |   new c(...args);
+> 18 |   c(...args);
      |     ^^^^^^^
-  14 |   g["e"] += 1;
-  15 |
-  16 |   <Button {...args}></Button>;
+  19 |   g["e"] += 1;
+  20 |
+  21 |   <Button {...args}></Button>;
 
 [ReactForget] TodoError: Assignment expression to dynamic properties is not yet supported
-  12 |   new c(...args);
-  13 |   c(...args);
-> 14 |   g["e"] += 1;
+  17 |   new c(...args);
+  18 |   c(...args);
+> 19 |   g["e"] += 1;
      |     ^^^
-  15 |
-  16 |   <Button {...args}></Button>;
-  17 |   <Button xlink:href="localhost:3000"></Button>;
+  20 |
+  21 |   <Button {...args}></Button>;
+  22 |   <Button xlink:href="localhost:3000"></Button>;
 
 [ReactForget] TodoError: Handle spread attributes
-  14 |   g["e"] += 1;
-  15 |
-> 16 |   <Button {...args}></Button>;
+  19 |   g["e"] += 1;
+  20 |
+> 21 |   <Button {...args}></Button>;
      |           ^^^^^^^^^
-  17 |   <Button xlink:href="localhost:3000"></Button>;
-  18 |   <Button haha={1}></Button>;
-  19 |
+  22 |   <Button xlink:href="localhost:3000"></Button>;
+  23 |   <Button haha={1}></Button>;
+  24 |
 
 [ReactForget] TodoError: Handle non-identifier jsx attribute names
-  15 |
-  16 |   <Button {...args}></Button>;
-> 17 |   <Button xlink:href="localhost:3000"></Button>;
+  20 |
+  21 |   <Button {...args}></Button>;
+> 22 |   <Button xlink:href="localhost:3000"></Button>;
      |           ^^^^^^^^^^
-  18 |   <Button haha={1}></Button>;
-  19 |
-  20 |   const j = function bar([quz, qux], ...args) {};
+  23 |   <Button haha={1}></Button>;
+  24 |
+  25 |   const j = function bar([quz, qux], ...args) {};
 
 [ReactForget] TodoError: Handle non identifier params
-  18 |   <Button haha={1}></Button>;
-  19 |
-> 20 |   const j = function bar([quz, qux], ...args) {};
+  23 |   <Button haha={1}></Button>;
+  24 |
+> 25 |   const j = function bar([quz, qux], ...args) {};
      |                          ^^^^^^^^^^
-  21 |
-  22 |   for (; i < 3; i += 1) {
-  23 |     x.push(i);
+  26 |
+  27 |   for (; i < 3; i += 1) {
+  28 |     x.push(i);
 
 [ReactForget] TodoError: Handle non identifier params
-  18 |   <Button haha={1}></Button>;
-  19 |
-> 20 |   const j = function bar([quz, qux], ...args) {};
+  23 |   <Button haha={1}></Button>;
+  24 |
+> 25 |   const j = function bar([quz, qux], ...args) {};
      |                                      ^^^^^^^
-  21 |
-  22 |   for (; i < 3; i += 1) {
-  23 |     x.push(i);
+  26 |
+  27 |   for (; i < 3; i += 1) {
+  28 |     x.push(i);
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  20 |   const j = function bar([quz, qux], ...args) {};
-  21 |
-> 22 |   for (; i < 3; i += 1) {
+  25 |   const j = function bar([quz, qux], ...args) {};
+  26 |
+> 27 |   for (; i < 3; i += 1) {
      |   ^
-  23 |     x.push(i);
-  24 |   }
-  25 |   for (; i < 3; ) {}
+  28 |     x.push(i);
+  29 |   }
+  30 |   for (; i < 3; ) {}
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  23 |     x.push(i);
-  24 |   }
-> 25 |   for (; i < 3; ) {}
+  28 |     x.push(i);
+  29 |   }
+> 30 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  26 |   for (;;) {}
-  27 | }
-  28 |
+  31 |   for (;;) {}
+  32 | }
+  33 |
 
 [ReactForget] TodoError: Handle empty for updater
-  23 |     x.push(i);
-  24 |   }
-> 25 |   for (; i < 3; ) {}
+  28 |     x.push(i);
+  29 |   }
+> 30 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  26 |   for (;;) {}
-  27 | }
-  28 |
+  31 |   for (;;) {}
+  32 | }
+  33 |
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  24 |   }
-  25 |   for (; i < 3; ) {}
-> 26 |   for (;;) {}
+  29 |   }
+  30 |   for (; i < 3; ) {}
+> 31 |   for (;;) {}
      |   ^^^^^^^^^^^
-  27 | }
-  28 |
+  32 | }
+  33 |
 
 [ReactForget] TodoError: Handle empty for updater
-  24 |   }
-  25 |   for (; i < 3; ) {}
-> 26 |   for (;;) {}
+  29 |   }
+  30 |   for (; i < 3; ) {}
+> 31 |   for (;;) {}
      |   ^^^^^^^^^^^
-  27 | }
-  28 |
+  32 | }
+  33 |
 
 [ReactForget] TodoError: ForStatement without test
-  24 |   }
-  25 |   for (; i < 3; ) {}
-> 26 |   for (;;) {}
+  29 |   }
+  30 |   for (; i < 3; ) {}
+> 31 |   for (;;) {}
      |   ^^^^^^^^^^^
-  27 | }
-  28 |
+  32 | }
+  33 |
 ```
           
       

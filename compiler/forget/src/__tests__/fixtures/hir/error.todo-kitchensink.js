@@ -2,7 +2,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   let i = 0;
   var x = [];
 
-  class Bar {}
+  class Bar {
+    #secretSauce = 42;
+    constructor() {
+      console.log(this.#secretSauce);
+    }
+  }
 
   with (true) {
   }
