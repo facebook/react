@@ -25,6 +25,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   <Button {...args}></Button>;
   <Button xlink:href="localhost:3000"></Button>;
   <Button haha={1}></Button>;
+  <DesignSystem.Button />;
 
   const j = function bar([quz, qux], ...args) {};
 
@@ -148,7 +149,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
      |           ^^^^^^^^^
   22 |   <Button xlink:href="localhost:3000"></Button>;
   23 |   <Button haha={1}></Button>;
-  24 |
+  24 |   <DesignSystem.Button />;
 
 [ReactForget] TodoError: Handle non-identifier jsx attribute names
   20 |
@@ -156,77 +157,86 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 > 22 |   <Button xlink:href="localhost:3000"></Button>;
      |           ^^^^^^^^^^
   23 |   <Button haha={1}></Button>;
-  24 |
-  25 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+
+[ReactForget] TodoError: Handle non-identifier tags
+  22 |   <Button xlink:href="localhost:3000"></Button>;
+  23 |   <Button haha={1}></Button>;
+> 24 |   <DesignSystem.Button />;
+     |    ^^^^^^^^^^^^^^^^^^^
+  25 |
+  26 |   const j = function bar([quz, qux], ...args) {};
+  27 |
 
 [ReactForget] TodoError: Handle non identifier params
-  23 |   <Button haha={1}></Button>;
-  24 |
-> 25 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+> 26 |   const j = function bar([quz, qux], ...args) {};
      |                          ^^^^^^^^^^
-  26 |
-  27 |   for (; i < 3; i += 1) {
-  28 |     x.push(i);
+  27 |
+  28 |   for (; i < 3; i += 1) {
+  29 |     x.push(i);
 
 [ReactForget] TodoError: Handle non identifier params
-  23 |   <Button haha={1}></Button>;
-  24 |
-> 25 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+> 26 |   const j = function bar([quz, qux], ...args) {};
      |                                      ^^^^^^^
-  26 |
-  27 |   for (; i < 3; i += 1) {
-  28 |     x.push(i);
+  27 |
+  28 |   for (; i < 3; i += 1) {
+  29 |     x.push(i);
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  25 |   const j = function bar([quz, qux], ...args) {};
-  26 |
-> 27 |   for (; i < 3; i += 1) {
+  26 |   const j = function bar([quz, qux], ...args) {};
+  27 |
+> 28 |   for (; i < 3; i += 1) {
      |   ^
-  28 |     x.push(i);
-  29 |   }
-  30 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+  31 |   for (; i < 3; ) {}
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  28 |     x.push(i);
-  29 |   }
-> 30 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+> 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  31 |   for (;;) {}
-  32 | }
-  33 |
+  32 |   for (;;) {}
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Handle empty for updater
-  28 |     x.push(i);
-  29 |   }
-> 30 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+> 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  31 |   for (;;) {}
-  32 | }
-  33 |
+  32 |   for (;;) {}
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  29 |   }
-  30 |   for (; i < 3; ) {}
-> 31 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  32 | }
-  33 |
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Handle empty for updater
-  29 |   }
-  30 |   for (; i < 3; ) {}
-> 31 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  32 | }
-  33 |
+  33 | }
+  34 |
 
 [ReactForget] TodoError: ForStatement without test
-  29 |   }
-  30 |   for (; i < 3; ) {}
-> 31 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  32 | }
-  33 |
+  33 | }
+  34 |
 ```
           
       

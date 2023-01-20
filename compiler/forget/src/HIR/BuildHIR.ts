@@ -1500,8 +1500,27 @@ function lowerJsxElementName(
     t.JSXIdentifier | t.JSXMemberExpression | t.JSXNamespacedName
   >
 ): Place {
-  todoInvariant(exprPath.isJSXIdentifier(), "handle non-identifier tags");
-  const exprLoc = exprPath.node.loc ?? GeneratedSource;
+  const exprNode = exprPath.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
+  if (!exprPath.isJSXIdentifier()) {
+    builder.pushError({
+      reason: "Handle non-identifier tags",
+      severity: ErrorSeverity.Todo,
+      nodePath: exprPath,
+    });
+    const place: Place = buildTemporaryPlace(builder, exprLoc);
+    builder.push({
+      id: makeInstructionId(0),
+      value: {
+        kind: "UnsupportedNode",
+        node: exprNode,
+        loc: exprLoc,
+      },
+      loc: exprLoc,
+      lvalue: { place: { ...place }, kind: InstructionKind.Const },
+    });
+    return { ...place };
+  }
   const tag: string = exprPath.node.name;
   if (tag.match(/^[A-Z]/)) {
     const identifier = builder.resolveIdentifier(exprPath);
