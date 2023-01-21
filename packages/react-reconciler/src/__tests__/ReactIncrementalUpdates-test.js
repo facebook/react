@@ -162,17 +162,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
@@ -189,14 +183,8 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
-      expect(ReactNoop.getChildren()).toEqual([span('def')]);
-    } else {
-      // Update d was dropped and replaced by e.
-      expect(Scheduler).toHaveYielded(['e', 'f']);
-      expect(ReactNoop.getChildren()).toEqual([span('ef')]);
-    }
+    expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
+    expect(ReactNoop.getChildren()).toEqual([span('def')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
@@ -245,17 +233,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
@@ -275,18 +257,22 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
-    } else {
-      // Update d was dropped and replaced by e.
-      expect(Scheduler).toHaveYielded(['e', 'f']);
-    }
+    expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
     expect(ReactNoop.getChildren()).toEqual([span('f')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    expect(Scheduler).toFlushAndYield(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(Scheduler).toFlushAndYield([
+      // Then we'll re-process everything for 'g'.
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+      'f',
+      'g',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span('fg')]);
   });
 
@@ -629,14 +615,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          pushToLog('A');
-        });
-      } else {
+      React.startTransition(() => {
         pushToLog('A');
-      }
-
+      });
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );
@@ -688,13 +669,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          pushToLog('A');
-        });
-      } else {
+      React.startTransition(() => {
         pushToLog('A');
-      }
+      });
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );
