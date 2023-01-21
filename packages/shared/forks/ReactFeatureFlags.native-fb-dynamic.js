@@ -24,7 +24,6 @@ export const enableComponentStackLocations = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
-export const enableUnifiedSyncLane = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const useModernStrictMode = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
