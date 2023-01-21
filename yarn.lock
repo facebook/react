@@ -10169,13 +10169,6 @@ isurl@^1.0.0-alpha5:
     has-to-string-tag-x "^1.2.0"
     is-object "^1.0.1"
 
-jasmine-check@^1.0.0-rc.0:
-  version "1.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/jasmine-check/-/jasmine-check-1.0.0-rc.0.tgz#117728c150078ecf211986c5f164275b71e937a4"
-  integrity sha1-EXcowVAHjs8hGYbF8WQnW3HpN6Q=
-  dependencies:
-    testcheck "^1.0.0-rc"
-
 jed@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/jed/-/jed-1.1.1.tgz#7a549bbd9ffe1585b0cd0a191e203055bee574b4"
@@ -15898,11 +15891,6 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
-
-testcheck@^1.0.0-rc:
-  version "1.0.0-rc.2"
-  resolved "https://registry.yarnpkg.com/testcheck/-/testcheck-1.0.0-rc.2.tgz#11356a25b84575efe0b0857451e85b5fa74ee4e4"
-  integrity sha1-ETVqJbhFde/gsIV0UehbX6dO5OQ=
 
 text-table@^0.2.0:
   version "0.2.0"
