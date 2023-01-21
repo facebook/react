@@ -30,5 +30,5 @@ module.exports = {
 
   testEnvironment: 'jsdom',
 
-  testRunner: 'jasmine2',
+  testRunner: 'jest-circus/runner',
 };
