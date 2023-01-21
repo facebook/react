@@ -91,6 +91,10 @@ describe('ReactFlight', () => {
     };
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function clientReference(value) {
     return Object.defineProperties(
       function () {
@@ -240,7 +244,7 @@ describe('ReactFlight', () => {
       ReactNoop.render(rootModel);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -322,7 +326,7 @@ describe('ReactFlight', () => {
       ReactNoop.render(rootModel);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
     expect(console.error).toHaveBeenCalledTimes(1);
   });

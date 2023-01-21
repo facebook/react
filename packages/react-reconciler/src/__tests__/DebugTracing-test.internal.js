@@ -33,14 +33,14 @@ describe('DebugTracing', () => {
 
     const groups = [];
 
-    spyOnDevAndProd(console, 'log').and.callFake(message => {
+    spyOnDevAndProd(console, 'log').mockImplementation(message => {
       logs.push(`log: ${message.replace(/%c/g, '')}`);
     });
-    spyOnDevAndProd(console, 'group').and.callFake(message => {
+    spyOnDevAndProd(console, 'group').mockImplementation(message => {
       logs.push(`group: ${message.replace(/%c/g, '')}`);
       groups.push(message);
     });
-    spyOnDevAndProd(console, 'groupEnd').and.callFake(() => {
+    spyOnDevAndProd(console, 'groupEnd').mockImplementation(() => {
       const message = groups.pop();
       logs.push(`groupEnd: ${message.replace(/%c/g, '')}`);
     });

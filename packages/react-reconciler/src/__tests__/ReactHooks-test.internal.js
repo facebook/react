@@ -1724,7 +1724,7 @@ describe('ReactHooks', () => {
   // Regression test for #14674
   it('does not swallow original error when updating another component in render phase', async () => {
     const {useState} = React;
-    spyOnDev(console, 'error');
+    spyOnDev(console, 'error').mockImplementation(() => {});
 
     let _setState;
     function A() {
@@ -1754,7 +1754,7 @@ describe('ReactHooks', () => {
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'Warning: Cannot update a component (`%s`) while rendering ' +
           'a different component (`%s`).',
       );

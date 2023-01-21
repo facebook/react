@@ -47,6 +47,10 @@ describe('Timeline profiler', () => {
     store = global.store;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('User Timing API', () => {
     let clearedMarks;
     let featureDetectionMarkName = null;
@@ -517,7 +521,7 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
@@ -571,7 +575,7 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
@@ -1697,7 +1701,7 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
@@ -1766,7 +1770,7 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
