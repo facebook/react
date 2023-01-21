@@ -8,41 +8,51 @@
  */
 
 import ReactVersion from 'shared/ReactVersion';
-import {
-  REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
-  REACT_PROFILER_TYPE,
-  REACT_STRICT_MODE_TYPE,
-  REACT_SUSPENSE_TYPE,
-  REACT_SUSPENSE_LIST_TYPE,
-  REACT_LEGACY_HIDDEN_TYPE,
-  REACT_OFFSCREEN_TYPE,
-  REACT_SCOPE_TYPE,
-  REACT_CACHE_TYPE,
-  REACT_TRACING_MARKER_TYPE,
-} from 'shared/ReactSymbols';
-
-import {Component, PureComponent} from './ReactBaseClasses';
-import {createRef} from './ReactCreateRef';
+import ReactSharedInternals from './ReactSharedInternals';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
   createElement as createElementProd,
   createFactory as createFactoryProd,
   cloneElement as cloneElementProd,
-  isValidElement,
 } from './ReactElement';
-import {createContext} from './ReactContext';
-import {lazy} from './ReactLazy';
-import {forwardRef} from './ReactForwardRef';
-import {memo} from './ReactMemo';
-import {cache} from './ReactCache';
 import {
-  getCacheSignal,
-  getCacheForType,
+  createElementWithValidation,
+  createFactoryWithValidation,
+  cloneElementWithValidation,
+} from './ReactElementValidator';
+
+export {
+  REACT_FRAGMENT_TYPE as Fragment,
+  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
+  REACT_PROFILER_TYPE as Profiler,
+  REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_SUSPENSE_TYPE as Suspense,
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
+  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
+  // enableScopeAPI
+  REACT_SCOPE_TYPE as unstable_Scope,
+  REACT_CACHE_TYPE as unstable_Cache,
+  // enableTransitionTracing
+  REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
+} from 'shared/ReactSymbols';
+
+export {Component, PureComponent} from './ReactBaseClasses';
+export {createRef} from './ReactCreateRef';
+export {isValidElement} from './ReactElement';
+export {createContext} from './ReactContext';
+export {lazy} from './ReactLazy';
+export {forwardRef} from './ReactForwardRef';
+export {memo} from './ReactMemo';
+export {cache} from './ReactCache';
+export {
+  getCacheSignal as unstable_getCacheSignal,
+  getCacheForType as unstable_getCacheForType,
+  useCacheRefresh as unstable_useCacheRefresh,
   useCallback,
   useContext,
   useEffect,
-  useEffectEvent,
+  useEffectEvent as experimental_useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -53,23 +63,18 @@ import {
   useReducer,
   useRef,
   useState,
+  // Concurrent Mode
   useTransition,
   useDeferredValue,
   useId,
-  useCacheRefresh,
   use,
-  useMemoCache,
+  useMemoCache as unstable_useMemoCache,
 } from './ReactHooks';
-import {
-  createElementWithValidation,
-  createFactoryWithValidation,
-  cloneElementWithValidation,
-} from './ReactElementValidator';
-import {createServerContext} from './ReactServerContext';
-import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
-import {startTransition} from './ReactStartTransition';
-import {act} from './ReactAct';
+
+export {createServerContext} from './ReactServerContext';
+export {createMutableSource} from './ReactMutableSource';
+export {startTransition} from './ReactStartTransition';
+export {act} from './ReactAct';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement: any = __DEV__
@@ -92,59 +97,10 @@ const Children = {
 
 export {
   Children,
-  createMutableSource,
-  createRef,
-  Component,
-  PureComponent,
-  createContext,
-  createServerContext,
-  forwardRef,
-  lazy,
-  memo,
-  cache,
-  useCallback,
-  useContext,
-  useEffect,
-  useEffectEvent as experimental_useEffectEvent,
-  useImperativeHandle,
-  useDebugValue,
-  useInsertionEffect,
-  useLayoutEffect,
-  useMemo,
-  useMutableSource,
-  useSyncExternalStore,
-  useReducer,
-  useRef,
-  useState,
-  REACT_FRAGMENT_TYPE as Fragment,
-  REACT_PROFILER_TYPE as Profiler,
-  REACT_STRICT_MODE_TYPE as StrictMode,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
-  REACT_SUSPENSE_TYPE as Suspense,
-  createElement,
-  cloneElement,
-  isValidElement,
   ReactVersion as version,
   ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  createElement,
+  cloneElement,
   // Deprecated behind disableCreateFactory
   createFactory,
-  // Concurrent Mode
-  useTransition,
-  startTransition,
-  useDeferredValue,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
-  getCacheSignal as unstable_getCacheSignal,
-  getCacheForType as unstable_getCacheForType,
-  useCacheRefresh as unstable_useCacheRefresh,
-  REACT_CACHE_TYPE as unstable_Cache,
-  use,
-  useMemoCache as unstable_useMemoCache,
-  // enableScopeAPI
-  REACT_SCOPE_TYPE as unstable_Scope,
-  // enableTransitionTracing
-  REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
-  useId,
-  act,
 };
