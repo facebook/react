@@ -14,7 +14,7 @@ import type {
   KnownReactSyntheticEvent,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
-import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {allNativeEvents} from './EventRegistry';
 import {
@@ -44,10 +44,7 @@ import {
   getEventHandlerListeners,
 } from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE, DOCUMENT_NODE} from '../shared/HTMLNodeType';
-import {
-  batchedUpdates,
-  flushPendingContinuousUpdates,
-} from './ReactDOMUpdateBatching';
+import {batchedUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
@@ -75,10 +72,6 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
-import {
-  DiscreteEventPriority,
-  getCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities';
 
 type DispatchListener = {
   instance: null | Fiber,
@@ -643,18 +636,6 @@ export function dispatchEventForPluginEventSystem(
           }
         }
         node = node.return;
-      }
-
-      // Special case: Flush continuous updates before the capture phase of a discrete event.
-      if (
-        eventSystemFlags & IS_CAPTURE_PHASE &&
-        node !== null &&
-        getCurrentUpdatePriority() === DiscreteEventPriority
-      ) {
-        const root: ?FiberRoot = node.stateNode;
-        if (root != null) {
-          flushPendingContinuousUpdates(root);
-        }
       }
     }
   }

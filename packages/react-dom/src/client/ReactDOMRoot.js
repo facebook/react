@@ -61,6 +61,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
+import {listenToCapturePhaseDiscreteEvents} from 'react-dom-bindings/src/events/ReactDOMEventLIstener';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -256,6 +257,7 @@ export function createRoot(
     container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
       : container;
+  listenToCapturePhaseDiscreteEvents(rootContainerElement, root);
   listenToAllSupportedEvents(rootContainerElement);
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -344,6 +346,7 @@ export function hydrateRoot(
     Dispatcher.current = ReactDOMClientDispatcher;
   }
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
+  listenToCapturePhaseDiscreteEvents(container, root);
   listenToAllSupportedEvents(container);
 
   if (mutableSources) {

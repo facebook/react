@@ -1287,18 +1287,16 @@ describe('DOMPluginEventSystem', () => {
           const buttonElement = buttonRef.current;
 
           // Expect the click event to be able to get the latest state value set by mouse over events
-          await act(async () => {
-            buttonElement.dispatchEvent(
-              new MouseEvent('mouseover', {
-                bubbles: true,
-                capture: true,
-                cancelable: true,
-                relatedTarget: null,
-                clientX: 5,
-              }),
-            );
-            dispatchClickEvent(buttonElement);
-          });
+          buttonElement.dispatchEvent(
+            new MouseEvent('mouseover', {
+              bubbles: true,
+              capture: true,
+              cancelable: true,
+              relatedTarget: null,
+              clientX: 5,
+            }),
+          );
+          dispatchClickEvent(buttonElement);
           expect(Scheduler).toHaveYielded(['Render:5', 'Click:5']);
         });
 

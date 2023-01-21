@@ -27,7 +27,9 @@ import {
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {flushPendingContinuousUpdates} from './ReactDOMUpdateBatching';
 import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
+import {allNativeEvents} from './EventRegistry';
 
 import getEventTarget from './getEventTarget';
 import {
@@ -109,6 +111,38 @@ export function createEventListenerWrapperWithPriority(
     eventSystemFlags,
     targetContainer,
   );
+}
+
+const listeningMarker =
+  '_reactListening' +
+  Math.random()
+    .toString(36)
+    .slice(2);
+
+// For flushing continuous events before a discrete event in capture phase
+// this function needs to be called before `listenToAllSupportedEvents` so
+// that it runs before event system's capture phase callback.
+export function listenToCapturePhaseDiscreteEvents(
+  rootContainerElement: EventTarget,
+  root: FiberRoot,
+) {
+  if ((rootContainerElement: any)[listeningMarker]) {
+    return;
+  }
+  (rootContainerElement: any)[listeningMarker] = true;
+
+  function onEvent() {
+    flushPendingContinuousUpdates(root);
+  }
+  allNativeEvents.forEach(domEventName => {
+    const eventPriority = getEventPriority(domEventName);
+    if (eventPriority !== DiscreteEventPriority) {
+      return;
+    }
+    rootContainerElement.addEventListener(domEventName, onEvent, {
+      capture: true,
+    });
+  });
 }
 
 function dispatchDiscreteEvent(
