@@ -508,13 +508,9 @@ describe('ReactExpiration', () => {
 
     // First demonstrate what happens when there's no starvation
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateNormalPri();
-        });
-      } else {
+      React.startTransition(() => {
         updateNormalPri();
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
       updateSyncPri();
       expect(Scheduler).toHaveYielded(['Sync pri: 1', 'Normal pri: 0']);
@@ -532,13 +528,9 @@ describe('ReactExpiration', () => {
 
     // Do the same thing, but starve the first update
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateNormalPri();
-        });
-      } else {
+      React.startTransition(() => {
         updateNormalPri();
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
 
       // This time, a lot of time has elapsed since the normal pri update

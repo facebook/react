@@ -171,15 +171,10 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     // Schedule some updates
     act(() => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          counter.current.updateCount(1);
-          counter.current.updateCount(count => count + 10);
-        });
-      } else {
+      React.startTransition(() => {
         counter.current.updateCount(1);
         counter.current.updateCount(count => count + 10);
-      }
+      });
 
       // Partially flush without committing
       expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
@@ -815,13 +810,9 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            setRow(20);
-          });
-        } else {
+        React.startTransition(() => {
           setRow(20);
-        }
+        });
       });
       expect(Scheduler).toHaveYielded(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);

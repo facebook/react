@@ -439,13 +439,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual([]);
 

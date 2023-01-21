@@ -215,17 +215,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.unstable_yieldValue('setState1');
-            return {text: 'bar'};
-          },
-          () => Scheduler.unstable_yieldValue('callback1'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState1');
@@ -233,24 +223,14 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.unstable_yieldValue('callback1'),
       );
-    }
+    });
 
     // Flush part of the work
     expect(Scheduler).toFlushAndYieldThrough(['setState1']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.unstable_yieldValue('setState2');
-            return {text2: 'baz'};
-          },
-          () => Scheduler.unstable_yieldValue('callback2'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState2');
@@ -258,7 +238,7 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.unstable_yieldValue('callback2'),
       );
-    }
+    });
 
     // Flush the rest of the work which now includes the low priority
     expect(Scheduler).toFlushAndYield([

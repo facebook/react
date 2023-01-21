@@ -454,13 +454,9 @@ describe('useMutableSource', () => {
 
       // Changing values should schedule an update with React.
       // Start working on this update but don't finish it.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          source.value = 'two';
-        });
-      } else {
+      React.startTransition(() => {
         source.value = 'two';
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['a:two']);
 
       // Re-renders that occur before the update is processed

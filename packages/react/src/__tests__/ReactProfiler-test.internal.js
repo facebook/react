@@ -1065,13 +1065,9 @@ describe(`onRender`, () => {
 
       // Render a partially update, but don't finish.
       // This partial render will take 10ms of actual render time.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          first.setState({renderTime: 10});
-        });
-      } else {
+      React.startTransition(() => {
         first.setState({renderTime: 10});
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['FirstComponent:10']);
       expect(callback).toHaveBeenCalledTimes(0);
 
