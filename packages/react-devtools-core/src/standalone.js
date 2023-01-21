@@ -262,6 +262,7 @@ function initialize(socket: WebSocket) {
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsNativeInspection: true,
+    supportsTraceUpdates: true,
   });
 
   log('Connected');

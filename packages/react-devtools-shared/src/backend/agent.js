@@ -148,6 +148,8 @@ export default class Agent extends EventEmitter<{
   stopInspectingNative: [],
   shutdown: [],
   traceUpdates: [Set<NativeType>],
+  drawTraceUpdates: [Array<NativeType>],
+  disableTraceUpdates: [],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
