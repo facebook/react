@@ -23,7 +23,6 @@ import {
   enableUpdaterTracking,
   allowConcurrentByDefault,
   enableTransitionTracing,
-  enableUnifiedSyncLane,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -136,11 +135,9 @@ let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
-  if (enableUnifiedSyncLane) {
-    const pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (pendingSyncLanes !== 0) {
-      return pendingSyncLanes;
-    }
+  const pendingSyncLanes = lanes & SyncUpdateLanes;
+  if (pendingSyncLanes !== NoLanes) {
+    return pendingSyncLanes;
   }
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
@@ -759,7 +756,7 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+  if ((renderLane & SyncUpdateLanes) !== NoLane) {
     lane = SyncHydrationLane;
   } else {
     switch (renderLane) {

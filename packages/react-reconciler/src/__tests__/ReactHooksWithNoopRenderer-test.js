@@ -961,15 +961,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        expect(Scheduler).toHaveYielded(['Count: 4']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
-      } else {
-        expect(Scheduler).toHaveYielded(['Count: 1']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-        expect(Scheduler).toFlushAndYield(['Count: 4']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
-      }
+      expect(Scheduler).toHaveYielded(['Count: 4']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
     });
   });
 
@@ -1727,15 +1720,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // As a result we, somewhat surprisingly, commit them in the opposite order.
       // This should be fine because any non-discrete set of work doesn't guarantee order
       // and easily could've happened slightly later too.
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        expect(Scheduler).toHaveYielded(['Will set count to 1', 'Count: 1']);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Will set count to 1',
-          'Count: 2',
-          'Count: 1',
-        ]);
-      }
+      expect(Scheduler).toHaveYielded(['Will set count to 1', 'Count: 1']);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });

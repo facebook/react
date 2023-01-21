@@ -35,17 +35,11 @@ describe('ReactClassSetStateCallback', () => {
     expect(Scheduler).toHaveYielded([0]);
 
     await act(async () => {
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          app.setState({step: 1}, () =>
-            Scheduler.unstable_yieldValue('Callback 1'),
-          );
-        });
-      } else {
+      React.startTransition(() => {
         app.setState({step: 1}, () =>
           Scheduler.unstable_yieldValue('Callback 1'),
         );
-      }
+      });
       ReactNoop.flushSync(() => {
         app.setState({step: 2}, () =>
           Scheduler.unstable_yieldValue('Callback 2'),

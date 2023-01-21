@@ -1558,15 +1558,10 @@ describe('useMutableSource', () => {
         expect(Scheduler).toFlushAndYieldThrough(['a0', 'b0']);
         // Mutate in an event. This schedules a subscription update on a, which
         // already mounted, but not b, which hasn't subscribed yet.
-        if (gate(flags => flags.enableUnifiedSyncLane)) {
-          React.startTransition(() => {
-            mutateA('a1');
-            mutateB('b1');
-          });
-        } else {
+        React.startTransition(() => {
           mutateA('a1');
           mutateB('b1');
-        }
+        });
 
         // Mutate again at lower priority. This will schedule another subscription
         // update on a, but not b. When b mounts and subscriptions, the value it

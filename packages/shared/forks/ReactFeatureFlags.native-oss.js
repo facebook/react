@@ -59,7 +59,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const enableSyncDefaultUpdates = true;
-export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
