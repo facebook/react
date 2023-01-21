@@ -335,7 +335,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOnDevAndProd(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler');
       const container = document.createElement('div');
       const node = ReactDOM.render(
         <input type="text" onChange={obj.handler} />,
@@ -371,7 +371,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOnDevAndProd(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler');
       const container = document.createElement('div');
       const instance = ReactDOM.render(
         <SomeComponent handleChange={obj.handler} />,

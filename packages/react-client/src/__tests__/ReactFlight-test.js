@@ -91,6 +91,10 @@ describe('ReactFlight', () => {
     };
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function moduleReference(value) {
     return {
       $$typeof: Symbol.for('react.module.reference'),
@@ -235,7 +239,7 @@ describe('ReactFlight', () => {
       ReactNoop.render(rootModel);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -317,7 +321,7 @@ describe('ReactFlight', () => {
       ReactNoop.render(rootModel);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
     expect(console.error).toHaveBeenCalledTimes(1);
   });

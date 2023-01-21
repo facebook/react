@@ -29,6 +29,10 @@ describe('ReactIncrementalErrorHandling', () => {
     act = require('jest-react').act;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
     return {type: 'div', children, prop: undefined, hidden: false};
@@ -1507,8 +1511,8 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('error boundaries capture non-errors', () => {
-    spyOnProd(console, 'error');
-    spyOnDev(console, 'error');
+    spyOnProd(console, 'error').mockImplementation(() => {});
+    spyOnDev(console, 'error').mockImplementation(() => {});
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1568,12 +1572,12 @@ describe('ReactIncrementalErrorHandling', () => {
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'The above error occurred in the <BadRender> component:',
       );
     } else {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(notAnError);
+      expect(console.error.mock.calls[0][0]).toBe(notAnError);
     }
   });
 
@@ -1925,7 +1929,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // point to prevent an infinite loop in the case where there is (by
     // accident) a render phase triggered from userspace.
 
-    spyOnDev(console, 'error');
+    spyOnDev(console, 'error').mockImplementation(() => {});
 
     let numberOfThrows = 0;
 
@@ -1965,10 +1969,10 @@ describe('ReactIncrementalErrorHandling', () => {
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'Cannot update a component (`%s`) while rendering a different component',
       );
-      expect(console.error.calls.argsFor(1)[0]).toContain(
+      expect(console.error.mock.calls[1][0]).toContain(
         'The above error occurred in the <App> component',
       );
     }

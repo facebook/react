@@ -28,6 +28,10 @@ function sleep(period) {
 }
 
 describe('ReactTestUtils.act()', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   // first we run all the tests with concurrent mode
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
@@ -488,13 +492,13 @@ function runActTests(label, render, unmount, rerender) {
 
       // @gate __DEV__
       it('warns if you do not await an act call', async () => {
-        spyOnDevAndProd(console, 'error');
+        spyOnDevAndProd(console, 'error').mockImplementation(() => {});
         act(async () => {});
         // it's annoying that we have to wait a tick before this warning comes in
         await sleep(0);
         if (__DEV__) {
-          expect(console.error.calls.count()).toEqual(1);
-          expect(console.error.calls.argsFor(0)[0]).toMatch(
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error.mock.calls[0][0]).toMatch(
             'You called act(async () => ...) without await.',
           );
         }
@@ -502,7 +506,7 @@ function runActTests(label, render, unmount, rerender) {
 
       // @gate __DEV__
       it('warns if you try to interleave multiple act calls', async () => {
-        spyOnDevAndProd(console, 'error');
+        spyOnDevAndProd(console, 'error').mockImplementation(() => {});
 
         await Promise.all([
           act(async () => {
@@ -516,10 +520,10 @@ function runActTests(label, render, unmount, rerender) {
         await sleep(150);
         if (__DEV__) {
           expect(console.error).toHaveBeenCalledTimes(2);
-          expect(console.error.calls.argsFor(0)[0]).toMatch(
+          expect(console.error.mock.calls[0][0]).toMatch(
             'You seem to have overlapping act() calls',
           );
-          expect(console.error.calls.argsFor(1)[0]).toMatch(
+          expect(console.error.mock.calls[1][0]).toMatch(
             'You seem to have overlapping act() calls',
           );
         }

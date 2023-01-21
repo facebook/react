@@ -9,6 +9,10 @@ describe('ReactDOMRoot', () => {
     ReactDOM = require('react-dom');
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   test('deprecation warning for ReactDOM.render', () => {
     spyOnDev(console, 'error');
 
@@ -16,7 +20,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.render is no longer supported',
       );
     }
@@ -30,7 +34,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.hydrate is no longer supported',
       );
     }
