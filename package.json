@@ -74,7 +74,6 @@
     "jest-cli": "^29.3.1",
     "jest-diff": "^29.3.1",
     "jest-environment-jsdom": "^29.3.1",
-    "jest-jasmine2": "^29.3.1",
     "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.3",
