@@ -1,4 +1,4 @@
-function Component(props) {
+function ComponentA(props) {
   const a = [];
   const b = [];
   if (b) {
@@ -10,7 +10,7 @@ function Component(props) {
   return <Foo a={a} b={b} />;
 }
 
-function Component(props) {
+function ComponentB(props) {
   const a = [];
   const b = [];
   if (mayMutate(b)) {

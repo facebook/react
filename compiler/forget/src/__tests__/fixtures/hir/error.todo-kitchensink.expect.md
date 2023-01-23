@@ -13,9 +13,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  with (true) {
-  }
-
   const g = { ...a };
   const h = [...b];
   new c(...args);
@@ -91,191 +88,182 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   7 |     constructor() {
   8 |       console.log(this.#secretSauce);
 
-[ReactForget] TodoError: Unhandled statement type: WithStatement
+[ReactForget] TodoError: Handle object property spread
   10 |   }
   11 |
-> 12 |   with (true) {
-     |   ^
-  13 |   }
-  14 |
-  15 |   const g = { ...a };
-
-[ReactForget] TodoError: Handle object property spread
-  13 |   }
-  14 |
-> 15 |   const g = { ...a };
+> 12 |   const g = { ...a };
      |               ^^^^
-  16 |   const h = [...b];
-  17 |   new c(...args);
-  18 |   c(...args);
+  13 |   const h = [...b];
+  14 |   new c(...args);
+  15 |   c(...args);
 
 [ReactForget] TodoError: Handle non-expression array elements
-  14 |
-  15 |   const g = { ...a };
-> 16 |   const h = [...b];
+  11 |
+  12 |   const g = { ...a };
+> 13 |   const h = [...b];
      |              ^^^^
-  17 |   new c(...args);
-  18 |   c(...args);
-  19 |   g["e"] += 1;
+  14 |   new c(...args);
+  15 |   c(...args);
+  16 |   g["e"] += 1;
 
 [ReactForget] TodoError: Support non-expression arguments to NewExpression
-  15 |   const g = { ...a };
-  16 |   const h = [...b];
-> 17 |   new c(...args);
+  12 |   const g = { ...a };
+  13 |   const h = [...b];
+> 14 |   new c(...args);
      |         ^^^^^^^
-  18 |   c(...args);
-  19 |   g["e"] += 1;
-  20 |   const [y, ...yy] = useState(0);
+  15 |   c(...args);
+  16 |   g["e"] += 1;
+  17 |   const [y, ...yy] = useState(0);
 
 [ReactForget] TodoError: Support non-expression arguments to CallExpression
-  16 |   const h = [...b];
-  17 |   new c(...args);
-> 18 |   c(...args);
+  13 |   const h = [...b];
+  14 |   new c(...args);
+> 15 |   c(...args);
      |     ^^^^^^^
-  19 |   g["e"] += 1;
-  20 |   const [y, ...yy] = useState(0);
-  21 |   const { z, aa = "aa", ...zz } = useCustom();
+  16 |   g["e"] += 1;
+  17 |   const [y, ...yy] = useState(0);
+  18 |   const { z, aa = "aa", ...zz } = useCustom();
 
 [ReactForget] TodoError: Assignment expression to dynamic properties is not yet supported
-  17 |   new c(...args);
-  18 |   c(...args);
-> 19 |   g["e"] += 1;
+  14 |   new c(...args);
+  15 |   c(...args);
+> 16 |   g["e"] += 1;
      |     ^^^
-  20 |   const [y, ...yy] = useState(0);
-  21 |   const { z, aa = "aa", ...zz } = useCustom();
-  22 |
+  17 |   const [y, ...yy] = useState(0);
+  18 |   const { z, aa = "aa", ...zz } = useCustom();
+  19 |
 
 [ReactForget] TodoError: Rest elements are not supported yet
-  18 |   c(...args);
-  19 |   g["e"] += 1;
-> 20 |   const [y, ...yy] = useState(0);
+  15 |   c(...args);
+  16 |   g["e"] += 1;
+> 17 |   const [y, ...yy] = useState(0);
      |             ^^^^^
-  21 |   const { z, aa = "aa", ...zz } = useCustom();
-  22 |
-  23 |   <Button {...args}></Button>;
+  18 |   const { z, aa = "aa", ...zz } = useCustom();
+  19 |
+  20 |   <Button {...args}></Button>;
 
 [ReactForget] TodoError: Support other lvalue types beyond identifier
-  19 |   g["e"] += 1;
-  20 |   const [y, ...yy] = useState(0);
-> 21 |   const { z, aa = "aa", ...zz } = useCustom();
+  16 |   g["e"] += 1;
+  17 |   const [y, ...yy] = useState(0);
+> 18 |   const { z, aa = "aa", ...zz } = useCustom();
      |              ^^^^^^^^^
-  22 |
-  23 |   <Button {...args}></Button>;
-  24 |   <Button xlink:href="localhost:3000"></Button>;
+  19 |
+  20 |   <Button {...args}></Button>;
+  21 |   <Button xlink:href="localhost:3000"></Button>;
 
 [ReactForget] TodoError: Rest elements are not supported yet
-  19 |   g["e"] += 1;
-  20 |   const [y, ...yy] = useState(0);
-> 21 |   const { z, aa = "aa", ...zz } = useCustom();
+  16 |   g["e"] += 1;
+  17 |   const [y, ...yy] = useState(0);
+> 18 |   const { z, aa = "aa", ...zz } = useCustom();
      |                         ^^^^^
-  22 |
-  23 |   <Button {...args}></Button>;
-  24 |   <Button xlink:href="localhost:3000"></Button>;
+  19 |
+  20 |   <Button {...args}></Button>;
+  21 |   <Button xlink:href="localhost:3000"></Button>;
 
 [ReactForget] TodoError: Handle spread attributes
-  21 |   const { z, aa = "aa", ...zz } = useCustom();
-  22 |
-> 23 |   <Button {...args}></Button>;
+  18 |   const { z, aa = "aa", ...zz } = useCustom();
+  19 |
+> 20 |   <Button {...args}></Button>;
      |           ^^^^^^^^^
-  24 |   <Button xlink:href="localhost:3000"></Button>;
-  25 |   <Button haha={1}></Button>;
-  26 |   <Button>{/** empty */}</Button>;
+  21 |   <Button xlink:href="localhost:3000"></Button>;
+  22 |   <Button haha={1}></Button>;
+  23 |   <Button>{/** empty */}</Button>;
 
 [ReactForget] TodoError: Handle non-identifier jsx attribute names
-  22 |
-  23 |   <Button {...args}></Button>;
-> 24 |   <Button xlink:href="localhost:3000"></Button>;
+  19 |
+  20 |   <Button {...args}></Button>;
+> 21 |   <Button xlink:href="localhost:3000"></Button>;
      |           ^^^^^^^^^^
-  25 |   <Button haha={1}></Button>;
-  26 |   <Button>{/** empty */}</Button>;
-  27 |   <DesignSystem.Button />;
+  22 |   <Button haha={1}></Button>;
+  23 |   <Button>{/** empty */}</Button>;
+  24 |   <DesignSystem.Button />;
 
 [ReactForget] TodoError: Handle empty expressions
-  24 |   <Button xlink:href="localhost:3000"></Button>;
-  25 |   <Button haha={1}></Button>;
-> 26 |   <Button>{/** empty */}</Button>;
+  21 |   <Button xlink:href="localhost:3000"></Button>;
+  22 |   <Button haha={1}></Button>;
+> 23 |   <Button>{/** empty */}</Button>;
      |            ^^^^^^^^^^^^
-  27 |   <DesignSystem.Button />;
-  28 |
-  29 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+  26 |   const j = function bar([quz, qux], ...args) {};
 
 [ReactForget] TodoError: Handle non-identifier tags
-  25 |   <Button haha={1}></Button>;
-  26 |   <Button>{/** empty */}</Button>;
-> 27 |   <DesignSystem.Button />;
+  22 |   <Button haha={1}></Button>;
+  23 |   <Button>{/** empty */}</Button>;
+> 24 |   <DesignSystem.Button />;
      |    ^^^^^^^^^^^^^^^^^^^
-  28 |
-  29 |   const j = function bar([quz, qux], ...args) {};
-  30 |
+  25 |
+  26 |   const j = function bar([quz, qux], ...args) {};
+  27 |
 
 [ReactForget] TodoError: Support non-identifier params: ArrayPattern
-  27 |   <DesignSystem.Button />;
-  28 |
-> 29 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+> 26 |   const j = function bar([quz, qux], ...args) {};
      |                          ^^^^^^^^^^
-  30 |
-  31 |   for (; i < 3; i += 1) {
-  32 |     x.push(i);
+  27 |
+  28 |   for (; i < 3; i += 1) {
+  29 |     x.push(i);
 
 [ReactForget] TodoError: Support non-identifier params: RestElement
-  27 |   <DesignSystem.Button />;
-  28 |
-> 29 |   const j = function bar([quz, qux], ...args) {};
+  24 |   <DesignSystem.Button />;
+  25 |
+> 26 |   const j = function bar([quz, qux], ...args) {};
      |                                      ^^^^^^^
-  30 |
-  31 |   for (; i < 3; i += 1) {
-  32 |     x.push(i);
+  27 |
+  28 |   for (; i < 3; i += 1) {
+  29 |     x.push(i);
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  29 |   const j = function bar([quz, qux], ...args) {};
-  30 |
-> 31 |   for (; i < 3; i += 1) {
+  26 |   const j = function bar([quz, qux], ...args) {};
+  27 |
+> 28 |   for (; i < 3; i += 1) {
      |   ^
-  32 |     x.push(i);
-  33 |   }
-  34 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+  31 |   for (; i < 3; ) {}
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  32 |     x.push(i);
-  33 |   }
-> 34 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+> 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  35 |   for (;;) {}
-  36 | }
-  37 |
+  32 |   for (;;) {}
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Handle empty for updater
-  32 |     x.push(i);
-  33 |   }
-> 34 |   for (; i < 3; ) {}
+  29 |     x.push(i);
+  30 |   }
+> 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
-  35 |   for (;;) {}
-  36 | }
-  37 |
+  32 |   for (;;) {}
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Support non-variable initialization in for
-  33 |   }
-  34 |   for (; i < 3; ) {}
-> 35 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  36 | }
-  37 |
+  33 | }
+  34 |
 
 [ReactForget] TodoError: Handle empty for updater
-  33 |   }
-  34 |   for (; i < 3; ) {}
-> 35 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  36 | }
-  37 |
+  33 | }
+  34 |
 
 [ReactForget] TodoError: ForStatement without test
-  33 |   }
-  34 |   for (; i < 3; ) {}
-> 35 |   for (;;) {}
+  30 |   }
+  31 |   for (; i < 3; ) {}
+> 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  36 | }
-  37 |
+  33 | }
+  34 |
 ```
           
       

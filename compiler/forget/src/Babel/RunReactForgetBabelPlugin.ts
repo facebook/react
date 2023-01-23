@@ -18,12 +18,14 @@ export default function runReactForgetBabelPlugin(
   const ast = parser.parse(text, {
     sourceFilename: file,
     plugins: ["typescript", "jsx"],
+    sourceType: "module",
   });
   const result = transformFromAstSync(ast, text, {
     filename: file,
     highlightCode: false,
     retainLines: true,
     plugins: [ReactForgetBabelPlugin],
+    sourceType: "module",
   });
   invariant(
     result?.code != null,

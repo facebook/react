@@ -5,7 +5,7 @@
 /**
  * props.b does *not* influence `a`
  */
-function Component(props) {
+function ComponentA(props) {
   const a_DEBUG = [];
   a_DEBUG.push(props.a);
   if (props.b) {
@@ -18,7 +18,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`
  */
-function Component(props) {
+function ComponentB(props) {
   const a = [];
   a.push(props.a);
   if (props.b) {
@@ -31,7 +31,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`, but only in a way that is never observable
  */
-function Component(props) {
+function ComponentC(props) {
   const a = [];
   a.push(props.a);
   if (props.b) {
@@ -45,7 +45,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`
  */
-function Component(props) {
+function ComponentD(props) {
   const a = [];
   a.push(props.a);
   if (props.b) {
@@ -64,7 +64,7 @@ function Component(props) {
 /**
  * props.b does *not* influence `a`
  */
-function Component(props) {
+function ComponentA(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
@@ -91,7 +91,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`
  */
-function Component(props) {
+function ComponentB(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
@@ -120,7 +120,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`, but only in a way that is never observable
  */
-function Component(props) {
+function ComponentC(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
@@ -150,7 +150,7 @@ function Component(props) {
 /**
  * props.b *does* influence `a`
  */
-function Component(props) {
+function ComponentD(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Component(props) {
+function ComponentA(props) {
   const a = [];
   const b = [];
   if (b) {
@@ -14,7 +14,7 @@ function Component(props) {
   return <Foo a={a} b={b} />;
 }
 
-function Component(props) {
+function ComponentB(props) {
   const a = [];
   const b = [];
   if (mayMutate(b)) {
@@ -34,7 +34,7 @@ function mayMutate() {}
 ## Code
 
 ```javascript
-function Component(props) {
+function ComponentA(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.p0;
   const c_1 = $[1] !== props.p1;
@@ -73,7 +73,7 @@ function Component(props) {
   return t7;
 }
 
-function Component(props) {
+function ComponentB(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props.p0;
   const c_1 = $[1] !== props.p1;

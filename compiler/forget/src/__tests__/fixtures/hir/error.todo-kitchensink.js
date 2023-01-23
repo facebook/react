@@ -9,9 +9,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  with (true) {
-  }
-
   const g = { ...a };
   const h = [...b];
   new c(...args);

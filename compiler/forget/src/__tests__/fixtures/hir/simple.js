@@ -1,4 +1,4 @@
-function foo(x, y) {
+export default function foo(x, y) {
   if (x) {
     return foo(false, y);
   }

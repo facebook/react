@@ -37,6 +37,7 @@ function parseFunctions(
   try {
     const ast = parse(source, {
       plugins: ["typescript", "jsx"],
+      sourceType: "module",
     });
     const items: Array<NodePath<t.FunctionDeclaration>> = [];
     traverse(ast, {

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function foo(x, y) {
+export default function foo(x, y) {
   if (x) {
     return foo(false, y);
   }
@@ -14,7 +14,7 @@ function foo(x, y) {
 ## Code
 
 ```javascript
-function foo(x, y) {
+export default function foo(x, y) {
   const $ = React.useMemoCache();
   if (x) {
     const c_0 = $[0] !== y;
