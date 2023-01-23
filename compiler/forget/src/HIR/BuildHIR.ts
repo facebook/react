@@ -1334,16 +1334,21 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "ArrowFunctionExpression":
     case "FunctionExpression": {
-      const expr = exprPath as NodePath<t.FunctionExpression>;
-      const name: string | null = expr.get("id")?.node?.name ?? null;
+      const expr = exprPath as NodePath<
+        t.FunctionExpression | t.ArrowFunctionExpression
+      >;
+      let name: string | null = null;
+      if (expr.isFunctionExpression()) {
+        name = expr.get("id")?.node?.name ?? null;
+      }
       const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
       const dependencies: Array<Place> = gatherCapturedDeps(
         builder,
         expr,
         componentScope
       );
-      const body = expr.get("body").node;
       const lowering = lower(expr);
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {
@@ -1375,11 +1380,11 @@ function lowerExpression(
         : {
             kind: "FunctionExpression",
             name,
-            body,
             params,
             loweredFunc,
             dependencies,
             mutatedDeps: [],
+            expr: expr.node,
             loc: exprLoc,
           };
     }
@@ -1901,7 +1906,7 @@ function captureScopes({ from, to }: { from: Scope; to: Scope }): Set<Scope> {
 
 function gatherCapturedDeps(
   builder: HIRBuilder,
-  fn: NodePath<t.FunctionExpression>,
+  fn: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>,
   componentScope: Scope
 ): Array<Place> {
   const captured: Set<Place> = new Set();

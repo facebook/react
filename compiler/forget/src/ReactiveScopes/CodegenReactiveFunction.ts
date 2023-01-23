@@ -662,7 +662,7 @@ function codegenInstructionValue(
       const id =
         instrValue.name !== null ? t.identifier(instrValue.name) : null;
       const params = instrValue.params.map((p) => t.identifier(p));
-      value = t.functionExpression(id, params, instrValue.body);
+      value = instrValue.expr;
       break;
     }
     default: {

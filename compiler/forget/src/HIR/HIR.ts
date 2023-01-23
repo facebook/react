@@ -407,7 +407,7 @@ export type InstructionData =
       // source of truth.
       mutatedDeps: Array<Place>;
       loweredFunc: HIRFunction;
-      body: t.BlockStatement;
+      expr: t.ArrowFunctionExpression | t.FunctionExpression;
     }
 
   /**

@@ -312,7 +312,7 @@ export function printInstructionValue(instrValue: InstructionValue): string {
     }
     case "FunctionExpression": {
       const params = instrValue.params.join(",");
-      const body = generate(instrValue.body).code;
+      const body = generate(instrValue.expr).code;
       const deps = instrValue.dependencies
         .map((i) => printIdentifier(i.identifier))
         .join(",");
