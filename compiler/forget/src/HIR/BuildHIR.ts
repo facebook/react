@@ -7,7 +7,6 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
-import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../lib/Result";
 import { assertExhaustive } from "../Utils/utils";
@@ -25,7 +24,7 @@ import {
   Place,
   ReturnTerminal,
   SourceLocation,
-  ThrowTerminal
+  ThrowTerminal,
 } from "./HIR";
 import HIRBuilder, { Environment } from "./HIRBuilder";
 
@@ -52,11 +51,8 @@ export function lower(
   const env = new Environment();
   const builder = new HIRBuilder(env);
 
-  // Internal babel is on an older version that does not have hasNode (v7.17)
-  // See https://github.com/babel/babel/pull/13940/files for impl
-  // TODO: write helper function for NodePath.node != null
   const id =
-    func.isFunctionDeclaration() && (func.get("id").node != null)
+    func.isFunctionDeclaration() && func.get("id").hasNode()
       ? builder.resolveIdentifier(func.get("id") as NodePath<t.Identifier>)
       : null;
 
@@ -136,8 +132,8 @@ function lowerStatement(
     case "ReturnStatement": {
       const stmt = stmtPath as NodePath<t.ReturnStatement>;
       const argument = stmt.get("argument");
-      const value = (argument.node != null)
-        ? lowerExpressionToPlace(builder, argument as NodePath<t.Expression>)
+      const value = argument.hasNode()
+        ? lowerExpressionToPlace(builder, argument)
         : null;
       const fallthrough = builder.reserve();
       const terminal: ReturnTerminal = {
@@ -166,9 +162,9 @@ function lowerStatement(
       //  Block for the alternate (if the test is not truthy)
       let alternateBlock: BlockId;
       const alternate = stmt.get("alternate");
-      if (alternate.node != null) {
+      if (alternate.hasNode()) {
         alternateBlock = builder.enter("block", (blockId) => {
-          lowerStatement(builder, alternate as NodePath<t.Statement>);
+          lowerStatement(builder, alternate);
           return {
             kind: "goto",
             block: continuationBlock.id,
@@ -351,7 +347,7 @@ function lowerStatement(
 
       const updateBlock = builder.enter("value", (blockId) => {
         const update = stmt.get("update");
-        if (!(update.node != null)) {
+        if (!update.hasNode()) {
           builder.pushError({
             reason: "Handle empty for updater",
             severity: ErrorSeverity.Todo,
@@ -359,7 +355,7 @@ function lowerStatement(
           });
           return { kind: "unsupported", id: makeInstructionId(0) };
         }
-        lowerExpressionToVoid(builder, update as NodePath<t.Expression>);
+        lowerExpressionToVoid(builder, update);
         return {
           kind: "goto",
           block: testBlock.id,
@@ -395,7 +391,7 @@ function lowerStatement(
       );
 
       const test = stmt.get("test");
-      if (!(test.node != null)) {
+      if (!test.hasNode()) {
         builder.pushError({
           reason: "ForStatement without test",
           severity: ErrorSeverity.Todo,
@@ -406,7 +402,7 @@ function lowerStatement(
           "value",
           {
             kind: "if",
-            test: lowerExpressionToPlace(builder, test as NodePath<t.Expression>),
+            test: lowerExpressionToPlace(builder, test),
             consequent: bodyBlock,
             alternate: continuationBlock.id,
             fallthrough: continuationBlock.id,
@@ -574,7 +570,7 @@ function lowerStatement(
       for (let ii = stmt.get("cases").length - 1; ii >= 0; ii--) {
         const case_: NodePath<t.SwitchCase> = stmt.get("cases")[ii];
         const test = case_.get("test");
-        if (!(test.node != null)) {
+        if (!test.hasNode()) {
           if (hasDefault) {
             builder.pushError({
               reason:
@@ -604,7 +600,7 @@ function lowerStatement(
           });
         });
         cases.push({
-          test: (test.node != null) ? lowerExpressionToPlace(builder, test as NodePath<t.Expression>) : null,
+          test: test.hasNode() ? lowerExpressionToPlace(builder, test) : null,
           block,
         });
         fallthrough = block;
@@ -646,13 +642,13 @@ function lowerStatement(
        */
       lowerStatement(builder, stmt.get("block"));
       const handler = stmt.get("handler");
-      if (handler.node != null) {
+      if (handler.hasNode()) {
         //  TODO: consider whether we need to track the param
-        lowerStatement(builder, handler.get("body") as NodePath<t.Statement>);
+        lowerStatement(builder, handler.get("body"));
       }
       const finalizer = stmt.get("finalizer");
-      if (finalizer.node != null) {
-        lowerStatement(builder, finalizer as NodePath<t.Statement>);
+      if (finalizer.hasNode()) {
+        lowerStatement(builder, finalizer);
       }
       return;
     }
@@ -674,8 +670,8 @@ function lowerStatement(
         const id = declaration.get("id");
         const init = declaration.get("init");
         let value: InstructionValue;
-        if (init.node != null) {
-          value = lowerExpression(builder, init as NodePath<t.Expression>);
+        if (init.hasNode()) {
+          value = lowerExpression(builder, init);
         } else {
           value = {
             kind: "Primitive",
@@ -860,7 +856,7 @@ function lowerExpression(
       let hasError = false;
       let elements: Place[] = [];
       for (const element of expr.get("elements")) {
-        if (!(element.node != null) || !element.isExpression()) {
+        if (!element.hasNode() || !element.isExpression()) {
           builder.pushError({
             reason: "Handle non-expression array elements",
             severity: ErrorSeverity.Todo,
@@ -869,7 +865,7 @@ function lowerExpression(
           hasError = true;
           continue;
         }
-        elements.push(lowerExpressionToPlace(builder, element as NodePath<t.Expression>));
+        elements.push(lowerExpressionToPlace(builder, element));
       }
       return hasError
         ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
@@ -1774,7 +1770,7 @@ function lowerAssignment(
       let hasError = false;
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
-        if (!(element.node != null)) {
+        if (!element.hasNode()) {
           continue;
         }
         if (element.node.type === "RestElement") {
@@ -1806,7 +1802,7 @@ function lowerAssignment(
           object: { ...arrayPlace },
           property,
         };
-        lowerAssignment(builder, loc, kind, element as NodePath<t.LVal>, value);
+        lowerAssignment(builder, loc, kind, element, value);
       }
       return hasError
         ? { kind: "UnsupportedNode", node: lvalueNode, loc }
