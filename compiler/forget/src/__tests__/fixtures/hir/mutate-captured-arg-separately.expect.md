@@ -19,18 +19,20 @@ function component(a) {
 ```javascript
 function component(a) {
   const $ = React.useMemoCache();
+  const c_0 = $[0] !== a;
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_0) {
     y = function () {
       m(x);
     };
-    $[0] = y;
-  } else {
-    y = $[0];
-  }
 
-  const x = { a: a };
-  m(x);
+    const x = { a: a };
+    m(x);
+    $[0] = a;
+    $[1] = y;
+  } else {
+    y = $[1];
+  }
   return y;
 }
 

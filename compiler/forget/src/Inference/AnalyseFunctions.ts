@@ -86,6 +86,11 @@ function buildMutatedDeps(
       }
 
       mutatedDeps.push(dep);
+    } else if (
+      dep.identifier.name !== null &&
+      mutatedIds.has(dep.identifier.name)
+    ) {
+      mutatedDeps.push(dep);
     }
   }
 
