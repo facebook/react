@@ -226,4 +226,12 @@ export default function enterSSA(func: HIRFunction) {
       }
     }
   }
+
+  for (const [_, block] of func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === "FunctionExpression") {
+        mapInstructionOperands(instr, (place) => builder.getPlace(place));
+      }
+    }
+  }
 }
