@@ -25,7 +25,7 @@ let didWarn = false;
 let didError = false;
 
 const files = glob
-  .sync("**/*.js", {
+  .sync("**/*.{js,ts}", {
     ignore: [
       "**/node_modules/**",
       "packages/demo-2021Q3/**",
