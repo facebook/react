@@ -81,11 +81,14 @@ export function lower(
 
   const body = func.get("body");
   if (body.isExpression()) {
-    builder.pushError({
-      reason: "Support arrow functions",
-      severity: ErrorSeverity.Todo,
-      nodePath: body,
-    });
+    const fallthrough = builder.reserve();
+    const terminal: ReturnTerminal = {
+      kind: "return",
+      loc: GeneratedSource,
+      value: lowerExpressionToPlace(builder, body),
+      id: makeInstructionId(0),
+    };
+    builder.terminateWithContinuation("block", terminal, fallthrough);
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
   } else {
