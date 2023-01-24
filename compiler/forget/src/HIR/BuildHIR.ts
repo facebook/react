@@ -72,7 +72,7 @@ export function lower(
       params.push(place);
     } else {
       builder.pushError({
-        reason: `Support non-identifier params: ${param.node.type}`,
+        reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
         severity: ErrorSeverity.Todo,
         nodePath: param,
       });
@@ -93,7 +93,7 @@ export function lower(
     lowerStatement(builder, body);
   } else {
     builder.pushError({
-      reason: `Unexpected function body kind: ${body.type}}`,
+      reason: `(BuildHIR::lower) Unexpected function body kind: ${body.type}}`,
       severity: ErrorSeverity.InvalidInput,
       nodePath: body,
     });
@@ -337,7 +337,8 @@ function lowerStatement(
         const init = stmt.get("init");
         if (!init.isVariableDeclaration()) {
           builder.pushError({
-            reason: "Support non-variable initialization in for",
+            reason:
+              "(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement",
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
           });
@@ -356,7 +357,7 @@ function lowerStatement(
         const update = stmt.get("update");
         if (update.node == null) {
           builder.pushError({
-            reason: "Handle empty for updater",
+            reason: `(BuildHIR::lowerStatement) Handle empty update in ForStatement`,
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
           });
@@ -400,7 +401,7 @@ function lowerStatement(
       const test = stmt.get("test");
       if (test.node == null) {
         builder.pushError({
-          reason: "ForStatement without test",
+          reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
           severity: ErrorSeverity.Todo,
           nodePath: stmt,
         });
@@ -490,7 +491,7 @@ function lowerStatement(
       const loc = stmt.node.loc;
       if (loc == null) {
         builder.pushError({
-          reason: "while statement must have a location",
+          reason: `(BuildHIR::lowerStatement) Expected WhileStatement to have a location, got ${loc}`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: stmt,
         });
@@ -584,7 +585,7 @@ function lowerStatement(
           if (hasDefault) {
             builder.pushError({
               reason:
-                "Expected at most one `default` branch, this code should have failed to parse",
+                "(BuildHIR::lowerStatement) Expected at most one `default` branch in SwitchStatement, this code should have failed to parse",
               severity: ErrorSeverity.InvalidInput,
               nodePath: case_,
             });
@@ -670,11 +671,10 @@ function lowerStatement(
       const nodeKind: string = stmt.node.kind;
       if (nodeKind === "var") {
         builder.pushError({
-          reason: "`var` declarations are not supported, use let or const",
+          reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
           severity: ErrorSeverity.Todo,
           nodePath: stmt,
         });
-        // TODO: should we lower this to an error variant
         return;
       }
       const kind =
@@ -754,7 +754,7 @@ function lowerStatement(
     case "TSTypeAliasDeclaration":
     case "WithStatement": {
       builder.pushError({
-        reason: `Unhandled statement type: ${stmtPath.type}`,
+        reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
         severity: ErrorSeverity.Todo,
         nodePath: stmtPath,
       });
@@ -826,7 +826,7 @@ function lowerExpression(
       for (const propertyPath of propertyPaths) {
         if (!propertyPath.isObjectProperty()) {
           builder.pushError({
-            reason: "Handle object property spread",
+            reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: propertyPath,
           });
@@ -836,7 +836,7 @@ function lowerExpression(
         const key = propertyPath.node.key;
         if (key.type !== "Identifier") {
           builder.pushError({
-            reason: "Unexpected private name",
+            reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: propertyPath,
           });
@@ -846,7 +846,7 @@ function lowerExpression(
         const valuePath = propertyPath.get("value");
         if (!valuePath.isExpression()) {
           builder.pushError({
-            reason: "Handle non-expression object values",
+            reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: valuePath,
           });
@@ -871,7 +871,7 @@ function lowerExpression(
       for (const element of expr.get("elements")) {
         if (element.node == null || !element.isExpression()) {
           builder.pushError({
-            reason: "Handle non-expression array elements",
+            reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: element,
           });
@@ -895,8 +895,7 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.pushError({
-          reason:
-            "Call expressions only support callees that are expressions (v8 intrinsics not supported)",
+          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: calleePath,
         });
@@ -908,7 +907,7 @@ function lowerExpression(
       for (const argPath of expr.get("arguments")) {
         if (!argPath.isExpression()) {
           builder.pushError({
-            reason: "Support non-expression arguments to NewExpression",
+            reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in NewExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: argPath,
           });
@@ -933,8 +932,7 @@ function lowerExpression(
       let hasError = false;
       if (!calleePath.isExpression()) {
         builder.pushError({
-          reason:
-            "Call expressions only support callees that are expressions (v8 intrinsics not supported)",
+          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: calleePath,
         });
@@ -949,7 +947,7 @@ function lowerExpression(
         for (const argPath of expr.get("arguments")) {
           if (!argPath.isExpression()) {
             builder.pushError({
-              reason: "Support non-expression arguments to CallExpression",
+              reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
             });
@@ -981,7 +979,7 @@ function lowerExpression(
         for (const argPath of expr.get("arguments")) {
           if (!argPath.isExpression()) {
             builder.pushError({
-              reason: "Support non-expression arguments to CallExpression",
+              reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
             });
@@ -1005,8 +1003,7 @@ function lowerExpression(
       const leftPath = expr.get("left");
       if (!leftPath.isExpression()) {
         builder.pushError({
-          reason:
-            "Private names may not appear as the left hand side of a binary expression",
+          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: leftPath,
         });
@@ -1026,15 +1023,6 @@ function lowerExpression(
     case "LogicalExpression": {
       const expr = exprPath as NodePath<t.LogicalExpression>;
       const leftPath = expr.get("left");
-      if (!leftPath.isExpression()) {
-        builder.pushError({
-          reason:
-            "Private names may not appear as the left hand side of a logical expression",
-          severity: ErrorSeverity.InvalidInput,
-          nodePath: leftPath,
-        });
-        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
-      }
       const operator = expr.node.operator;
       switch (operator) {
         case "||": {
@@ -1139,8 +1127,8 @@ function lowerExpression(
       const binaryOperator = operators[operator];
       if (binaryOperator == null) {
         builder.pushError({
-          reason: `Unhandled assignment operator '${operator}'`,
-          severity: ErrorSeverity.InvalidInput,
+          reason: `(BuildHIR::lowerExpression) Handle ${operator} operaators in AssignmentExpression`,
+          severity: ErrorSeverity.Todo,
           nodePath: expr.get("operator"),
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
@@ -1178,8 +1166,7 @@ function lowerExpression(
           const property = leftExpr.get("property");
           if (!property.isIdentifier()) {
             builder.pushError({
-              reason:
-                "Assignment expression to dynamic properties is not yet supported",
+              reason: `(BuildHIR::lowerExpression) Handle ${property.type} properties in MemberExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: property,
             });
@@ -1237,8 +1224,7 @@ function lowerExpression(
         }
         default: {
           builder.pushError({
-            reason:
-              "Assignment update expressions require the lvalue to be an identifier or member expression",
+            reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: expr,
           });
@@ -1270,7 +1256,7 @@ function lowerExpression(
       for (const attribute of opening.get("attributes")) {
         if (!attribute.isJSXAttribute()) {
           builder.pushError({
-            reason: "Handle spread attributes",
+            reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
             severity: ErrorSeverity.Todo,
             nodePath: attribute,
           });
@@ -1280,7 +1266,7 @@ function lowerExpression(
         const name = attribute.get("name");
         if (!name.isJSXIdentifier()) {
           builder.pushError({
-            reason: "Handle non-identifier jsx attribute names",
+            reason: `(BuildHIR::lowerExpression) Handle ${name.type} attribute names in JSXElement`,
             severity: ErrorSeverity.Todo,
             nodePath: name,
           });
@@ -1294,7 +1280,7 @@ function lowerExpression(
         } else {
           if (!valueExpr.isJSXExpressionContainer()) {
             builder.pushError({
-              reason: "Handle other non expr containers",
+              reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
             });
@@ -1304,7 +1290,7 @@ function lowerExpression(
           const expression = valueExpr.get("expression");
           if (!expression.isExpression()) {
             builder.pushError({
-              reason: "Handle empty expressions",
+              reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
             });
@@ -1369,7 +1355,7 @@ function lowerExpression(
       for (const p of expr.get("params")) {
         if (!p.isIdentifier()) {
           builder.pushError({
-            reason: `Support non identifier params: ${p.type}`,
+            reason: `(BuildHIR::lowerExpression) Handle ${p.type} params in FunctionExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: p,
           });
@@ -1393,7 +1379,7 @@ function lowerExpression(
     }
     default: {
       builder.pushError({
-        reason: `Unhandled expression type: ${exprPath.type}`,
+        reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
         severity: ErrorSeverity.Todo,
         nodePath: exprPath,
       });
@@ -1413,7 +1399,7 @@ function lowerMemberExpression(
   if (!expr.node.computed) {
     if (!property.isIdentifier()) {
       builder.pushError({
-        reason: "Support private names",
+        reason: `(BuildHIR::lowerExpression) Handle ${property.type} property`,
         severity: ErrorSeverity.Todo,
         nodePath: property,
       });
@@ -1433,7 +1419,7 @@ function lowerMemberExpression(
   } else {
     if (!property.isExpression()) {
       builder.pushError({
-        reason: "Expected private names to be non-computed",
+        reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${property.type} property`,
         severity: ErrorSeverity.InvalidInput,
         nodePath: property,
       });
@@ -1522,7 +1508,7 @@ function lowerJsxElementName(
   const exprLoc = exprNode.loc ?? GeneratedSource;
   if (!exprPath.isJSXIdentifier()) {
     builder.pushError({
-      reason: "Handle non-identifier tags",
+      reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
       severity: ErrorSeverity.Todo,
       nodePath: exprPath,
     });
@@ -1583,7 +1569,7 @@ function lowerJsxElement(
     const expression = exprPath.get("expression");
     if (!expression.isExpression()) {
       builder.pushError({
-        reason: "Handle empty expressions",
+        reason: `(BuildHIR::lowerJsxElement) Handle ${expression.type} expressions`,
         severity: ErrorSeverity.Todo,
         nodePath: expression,
       });
@@ -1617,7 +1603,7 @@ function lowerJsxElement(
   } else {
     if (!(t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode))) {
       builder.pushError({
-        reason: "Expected refinement to work",
+        reason: `(BuildHIR::lowerJsxElement) Expected refinement to work, got: ${exprPath.type}`,
         severity: ErrorSeverity.InvalidInput,
         nodePath: exprPath,
       });
@@ -1744,7 +1730,7 @@ function lowerAssignment(
       if (!lvalue.node.computed) {
         if (!property.isIdentifier()) {
           builder.pushError({
-            reason: "Support private names",
+            reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: property,
           });
@@ -1795,7 +1781,7 @@ function lowerAssignment(
         }
         if (element.node.type === "RestElement") {
           builder.pushError({
-            reason: "Rest elements are not supported yet",
+            reason: `(BuildHIR::lowerAssignment) Handle ${element.type} in ArrayPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: element,
           });
@@ -1843,7 +1829,7 @@ function lowerAssignment(
         const property = properties[i];
         if (!property.isObjectProperty()) {
           builder.pushError({
-            reason: "Rest elements are not supported yet",
+            reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: property,
           });
@@ -1853,7 +1839,7 @@ function lowerAssignment(
         const key = property.get("key");
         if (!key.isIdentifier()) {
           builder.pushError({
-            reason: "Support non-identifier object property keys",
+            reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: key,
           });
@@ -1863,7 +1849,7 @@ function lowerAssignment(
         const element = property.get("value");
         if (!element.isLVal()) {
           builder.pushError({
-            reason: "Expected object property value to be an lvalue",
+            reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: element,
           });
@@ -1884,7 +1870,7 @@ function lowerAssignment(
     }
     default: {
       builder.pushError({
-        reason: "Support other lvalue types beyond identifier",
+        reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
         severity: ErrorSeverity.Todo,
         nodePath: lvaluePath,
       });

@@ -13,7 +13,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  const g = { ...a };
+  const g = { ...a, b() {}, c: () => {} };
   const h = [...b];
   new c(...args);
   c(...args);
@@ -42,35 +42,35 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 ## Error
 
 ```
-[ReactForget] TodoError: Support non-identifier params: ArrayPattern
+[ReactForget] TodoError: (BuildHIR::lower) Handle ArrayPattern params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |              ^^^^^^
   2 |   let i = 0;
   3 |   var x = [];
   4 |
 
-[ReactForget] TodoError: Support non-identifier params: ObjectPattern
+[ReactForget] TodoError: (BuildHIR::lower) Handle ObjectPattern params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                      ^^^^^^^^^^^^^^^^^
   2 |   let i = 0;
   3 |   var x = [];
   4 |
 
-[ReactForget] TodoError: Support non-identifier params: AssignmentPattern
+[ReactForget] TodoError: (BuildHIR::lower) Handle AssignmentPattern params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                                         ^^^^^^^
   2 |   let i = 0;
   3 |   var x = [];
   4 |
 
-[ReactForget] TodoError: Support non-identifier params: RestElement
+[ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                                                  ^^^^^^^
   2 |   let i = 0;
   3 |   var x = [];
   4 |
 
-[ReactForget] TodoError: `var` declarations are not supported, use let or const
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
   1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   2 |   let i = 0;
 > 3 |   var x = [];
@@ -79,7 +79,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   5 |   class Bar {
   6 |     #secretSauce = 42;
 
-[ReactForget] TodoError: Unhandled statement type: ClassDeclaration
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ClassDeclaration statements
   3 |   var x = [];
   4 |
 > 5 |   class Bar {
@@ -88,26 +88,35 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   7 |     constructor() {
   8 |       console.log(this.#secretSauce);
 
-[ReactForget] TodoError: Handle object property spread
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement properties in ObjectExpression
   10 |   }
   11 |
-> 12 |   const g = { ...a };
+> 12 |   const g = { ...a, b() {}, c: () => {} };
      |               ^^^^
   13 |   const h = [...b];
   14 |   new c(...args);
   15 |   c(...args);
 
-[ReactForget] TodoError: Handle non-expression array elements
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression
+  10 |   }
   11 |
-  12 |   const g = { ...a };
+> 12 |   const g = { ...a, b() {}, c: () => {} };
+     |                     ^^^^^^
+  13 |   const h = [...b];
+  14 |   new c(...args);
+  15 |   c(...args);
+
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement elements in ArrayExpression
+  11 |
+  12 |   const g = { ...a, b() {}, c: () => {} };
 > 13 |   const h = [...b];
      |              ^^^^
   14 |   new c(...args);
   15 |   c(...args);
   16 |   g["e"] += 1;
 
-[ReactForget] TodoError: Support non-expression arguments to NewExpression
-  12 |   const g = { ...a };
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement arguments in NewExpression
+  12 |   const g = { ...a, b() {}, c: () => {} };
   13 |   const h = [...b];
 > 14 |   new c(...args);
      |         ^^^^^^^
@@ -115,7 +124,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   16 |   g["e"] += 1;
   17 |   const [y, ...yy] = useState(0);
 
-[ReactForget] TodoError: Support non-expression arguments to CallExpression
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement arguments in CallExpression
   13 |   const h = [...b];
   14 |   new c(...args);
 > 15 |   c(...args);
@@ -124,7 +133,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   17 |   const [y, ...yy] = useState(0);
   18 |   const { z, aa = "aa", ...zz } = useCustom();
 
-[ReactForget] TodoError: Assignment expression to dynamic properties is not yet supported
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle StringLiteral properties in MemberExpression
   14 |   new c(...args);
   15 |   c(...args);
 > 16 |   g["e"] += 1;
@@ -133,7 +142,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   18 |   const { z, aa = "aa", ...zz } = useCustom();
   19 |
 
-[ReactForget] TodoError: Rest elements are not supported yet
+[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle RestElement in ArrayPattern
   15 |   c(...args);
   16 |   g["e"] += 1;
 > 17 |   const [y, ...yy] = useState(0);
@@ -142,7 +151,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   19 |
   20 |   <Button {...args}></Button>;
 
-[ReactForget] TodoError: Support other lvalue types beyond identifier
+[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
   16 |   g["e"] += 1;
   17 |   const [y, ...yy] = useState(0);
 > 18 |   const { z, aa = "aa", ...zz } = useCustom();
@@ -151,7 +160,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   20 |   <Button {...args}></Button>;
   21 |   <Button xlink:href="localhost:3000"></Button>;
 
-[ReactForget] TodoError: Rest elements are not supported yet
+[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle RestElement properties in ObjectPattern
   16 |   g["e"] += 1;
   17 |   const [y, ...yy] = useState(0);
 > 18 |   const { z, aa = "aa", ...zz } = useCustom();
@@ -160,7 +169,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   20 |   <Button {...args}></Button>;
   21 |   <Button xlink:href="localhost:3000"></Button>;
 
-[ReactForget] TodoError: Handle spread attributes
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle JSXSpreadAttribute attributes in JSXElement
   18 |   const { z, aa = "aa", ...zz } = useCustom();
   19 |
 > 20 |   <Button {...args}></Button>;
@@ -169,7 +178,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   22 |   <Button haha={1}></Button>;
   23 |   <Button>{/** empty */}</Button>;
 
-[ReactForget] TodoError: Handle non-identifier jsx attribute names
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle JSXNamespacedName attribute names in JSXElement
   19 |
   20 |   <Button {...args}></Button>;
 > 21 |   <Button xlink:href="localhost:3000"></Button>;
@@ -178,7 +187,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   23 |   <Button>{/** empty */}</Button>;
   24 |   <DesignSystem.Button />;
 
-[ReactForget] TodoError: Handle empty expressions
+[ReactForget] TodoError: (BuildHIR::lowerJsxElement) Handle JSXEmptyExpression expressions
   21 |   <Button xlink:href="localhost:3000"></Button>;
   22 |   <Button haha={1}></Button>;
 > 23 |   <Button>{/** empty */}</Button>;
@@ -187,7 +196,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   25 |
   26 |   const j = function bar([quz, qux], ...args) {};
 
-[ReactForget] TodoError: Handle non-identifier tags
+[ReactForget] TodoError: (BuildHIR::lowerJsxElementName) Handle JSXMemberExpression tags
   22 |   <Button haha={1}></Button>;
   23 |   <Button>{/** empty */}</Button>;
 > 24 |   <DesignSystem.Button />;
@@ -196,7 +205,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   26 |   const j = function bar([quz, qux], ...args) {};
   27 |
 
-[ReactForget] TodoError: Support non-identifier params: ArrayPattern
+[ReactForget] TodoError: (BuildHIR::lower) Handle ArrayPattern params
   24 |   <DesignSystem.Button />;
   25 |
 > 26 |   const j = function bar([quz, qux], ...args) {};
@@ -205,7 +214,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   28 |   for (; i < 3; i += 1) {
   29 |     x.push(i);
 
-[ReactForget] TodoError: Support non-identifier params: RestElement
+[ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
   24 |   <DesignSystem.Button />;
   25 |
 > 26 |   const j = function bar([quz, qux], ...args) {};
@@ -214,7 +223,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   28 |   for (; i < 3; i += 1) {
   29 |     x.push(i);
 
-[ReactForget] TodoError: Support non-variable initialization in for
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
   26 |   const j = function bar([quz, qux], ...args) {};
   27 |
 > 28 |   for (; i < 3; i += 1) {
@@ -223,7 +232,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   30 |   }
   31 |   for (; i < 3; ) {}
 
-[ReactForget] TodoError: Support non-variable initialization in for
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
   29 |     x.push(i);
   30 |   }
 > 31 |   for (; i < 3; ) {}
@@ -232,7 +241,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   33 | }
   34 |
 
-[ReactForget] TodoError: Handle empty for updater
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
   29 |     x.push(i);
   30 |   }
 > 31 |   for (; i < 3; ) {}
@@ -241,7 +250,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   33 | }
   34 |
 
-[ReactForget] TodoError: Support non-variable initialization in for
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}
@@ -249,7 +258,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   33 | }
   34 |
 
-[ReactForget] TodoError: Handle empty for updater
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}
@@ -257,7 +266,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   33 | }
   34 |
 
-[ReactForget] TodoError: ForStatement without test
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty test in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}

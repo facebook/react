@@ -9,7 +9,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  const g = { ...a };
+  const g = { ...a, b() {}, c: () => {} };
   const h = [...b];
   new c(...args);
   c(...args);
