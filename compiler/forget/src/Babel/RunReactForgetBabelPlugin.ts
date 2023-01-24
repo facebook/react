@@ -13,11 +13,12 @@ type ReactForgetBabelPluginResult = {
 
 export default function runReactForgetBabelPlugin(
   text: string,
-  file: string
+  file: string,
+  language: "flow" | "typescript"
 ): ReactForgetBabelPluginResult {
   const ast = parser.parse(text, {
     sourceFilename: file,
-    plugins: ["typescript", "jsx"],
+    plugins: ["jsx", language],
     sourceType: "module",
   });
   const result = transformFromAstSync(ast, text, {

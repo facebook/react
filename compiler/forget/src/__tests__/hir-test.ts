@@ -28,6 +28,7 @@ wasmFolder(
 );
 
 const Pragma_RE = /\/\/\s*@enable\((\w+)\)$/gm;
+const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
 
 describe("React Forget (HIR version)", () => {
   generateTestsFromFixtures(
@@ -46,13 +47,21 @@ describe("React Forget (HIR version)", () => {
         }
       }
 
+      let useFlow: boolean = false;
+      for (const flowPragma of FlowPragmas) {
+        useFlow ||= !!input.match(flowPragma);
+      }
+
+      let language: "flow" | "typescript" = useFlow ? "flow" : "typescript";
       let items: Array<TestOutput> = [];
       let error: Error | null = null;
       if (options.debug) {
         toggleLogging(options.debug);
       }
       try {
-        items.push({ js: runReactForgetBabelPlugin(input, file).code });
+        items.push({
+          js: runReactForgetBabelPlugin(input, file, language).code,
+        });
       } catch (e) {
         error = e;
       }
