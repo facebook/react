@@ -30,4 +30,10 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   }
   for (; i < 3; ) {}
   for (;;) {}
+
+  graphql`
+    ${g}
+  `;
+
+  graphql`\\t\n`;
 }

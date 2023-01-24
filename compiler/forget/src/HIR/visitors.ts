@@ -102,6 +102,10 @@ export function* eachInstructionValueOperand(
       yield* instrValue.dependencies;
       break;
     }
+    case "TaggedTemplateExpression": {
+      yield instrValue.tag;
+      break;
+    }
     case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
@@ -201,6 +205,10 @@ export function mapInstructionOperands(
     }
     case "FunctionExpression": {
       instrValue.dependencies = instrValue.dependencies.map((d) => fn(d));
+      break;
+    }
+    case "TaggedTemplateExpression": {
+      instrValue.tag = fn(instrValue.tag);
       break;
     }
     case "UnsupportedNode":

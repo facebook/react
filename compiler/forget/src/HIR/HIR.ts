@@ -409,6 +409,11 @@ export type InstructionData =
       loweredFunc: HIRFunction;
       expr: t.ArrowFunctionExpression | t.FunctionExpression;
     }
+  | {
+      kind: "TaggedTemplateExpression";
+      tag: Place;
+      value: { raw: string; cooked?: string };
+    }
 
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc

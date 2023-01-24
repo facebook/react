@@ -34,6 +34,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   }
   for (; i < 3; ) {}
   for (;;) {}
+
+  graphql`
+    ${g}
+  `;
+
+  graphql`\\t\n`;
 }
 
 ```
@@ -238,8 +244,8 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 > 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
   32 |   for (;;) {}
-  33 | }
-  34 |
+  33 |
+  34 |   graphql`
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
   29 |     x.push(i);
@@ -247,32 +253,52 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 > 31 |   for (; i < 3; ) {}
      |   ^^^^^^^^^^^^^^^^^^
   32 |   for (;;) {}
-  33 | }
-  34 |
+  33 |
+  34 |   graphql`
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  33 | }
-  34 |
+  33 |
+  34 |   graphql`
+  35 |     ${g}
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  33 | }
-  34 |
+  33 |
+  34 |   graphql`
+  35 |     ${g}
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty test in ForStatement
   30 |   }
   31 |   for (; i < 3; ) {}
 > 32 |   for (;;) {}
      |   ^^^^^^^^^^^
-  33 | }
-  34 |
+  33 |
+  34 |   graphql`
+  35 |     ${g}
+
+[ReactForget] TodoError: Unhandled tagged template with interpolations
+  32 |   for (;;) {}
+  33 |
+> 34 |   graphql`
+     |   ^
+  35 |     ${g}
+  36 |   `;
+  37 |
+
+[ReactForget] TodoError: Unhandled tagged template where cooked value is different from raw value
+  36 |   `;
+  37 |
+> 38 |   graphql`\\t\n`;
+     |   ^^^^^^^^^^^^^^
+  39 | }
+  40 |
 ```
           
       

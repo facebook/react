@@ -579,6 +579,11 @@ function inferBlock(env: Environment, block: BasicBlock) {
         effectKind = Effect.Freeze;
         break;
       }
+      case "TaggedTemplateExpression": {
+        valueKind = ValueKind.Mutable;
+        effectKind = Effect.Mutate;
+        break;
+      }
       case "JSXText":
       case "Primitive": {
         valueKind = ValueKind.Immutable;

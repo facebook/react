@@ -7,6 +7,7 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
+import invariant from "invariant";
 import { CompilerErrorDetail, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../lib/Result";
 import { assertExhaustive } from "../Utils/utils";
@@ -1376,6 +1377,39 @@ function lowerExpression(
             expr: expr.node,
             loc: exprLoc,
           };
+    }
+    case "TaggedTemplateExpression": {
+      const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
+      if (expr.get("quasi").get("expressions").length !== 0) {
+        builder.pushError({
+          reason: "Unhandled tagged template with interpolations",
+          severity: ErrorSeverity.Todo,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+      invariant(
+        expr.get("quasi").get("quasis").length == 1,
+        "there should be only one quasi as we don't support interpolations yet"
+      );
+
+      const value = expr.get("quasi").get("quasis").at(0)!.node.value;
+      if (value.raw !== value.cooked) {
+        builder.pushError({
+          reason:
+            "Unhandled tagged template where cooked value is different from raw value",
+          severity: ErrorSeverity.Todo,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+
+      return {
+        kind: "TaggedTemplateExpression",
+        tag: lowerExpressionToPlace(builder, expr.get("tag")),
+        value,
+        loc: exprLoc,
+      };
     }
     default: {
       builder.pushError({

@@ -187,6 +187,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "ObjectExpression":
     case "UnsupportedNode":
     case "FunctionExpression":
+    case "TaggedTemplateExpression":
     case "UnaryExpression": {
       return true;
     }

@@ -321,6 +321,10 @@ export function printInstructionValue(instrValue: InstructionValue): string {
       }){${body}}`;
       break;
     }
+    case "TaggedTemplateExpression": {
+      value = `${instrValue.tag}\`${instrValue.value.raw}\``;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

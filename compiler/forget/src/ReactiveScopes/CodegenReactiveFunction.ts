@@ -429,6 +429,7 @@ const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
 const createWhileStatement = withLoc(t.whileStatement);
+const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 
 type Temporaries = Map<IdentifierId, t.Expression>;
 
@@ -665,6 +666,14 @@ function codegenInstructionValue(
         instrValue.name !== null ? t.identifier(instrValue.name) : null;
       const params = instrValue.params.map((p) => t.identifier(p));
       value = instrValue.expr;
+      break;
+    }
+    case "TaggedTemplateExpression": {
+      value = createTaggedTemplateExpression(
+        instrValue.loc,
+        codegenPlace(temp, instrValue.tag),
+        t.templateLiteral([t.templateElement(instrValue.value)], [])
+      );
       break;
     }
     default: {
