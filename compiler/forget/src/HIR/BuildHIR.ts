@@ -7,7 +7,7 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
-import { CompilerError, ErrorSeverity } from "../CompilerError";
+import { CompilerErrorDetail, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../lib/Result";
 import { assertExhaustive } from "../Utils/utils";
 import {
@@ -47,7 +47,7 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
  */
 export function lower(
   func: NodePath<t.Function>
-): Result<HIRFunction, CompilerError[]> {
+): Result<HIRFunction, CompilerErrorDetail[]> {
   const env = new Environment();
   const builder = new HIRBuilder(env);
 

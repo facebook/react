@@ -6,8 +6,8 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import { CompilerError } from "./CompilerError";
 import {
-  Environment,
   HIRFunction,
   lower,
   mergeConsecutiveBlocks,
@@ -46,9 +46,8 @@ export type CompilerPipelineValue =
 export function* run(
   func: NodePath<t.FunctionDeclaration>
 ): Generator<CompilerPipelineValue, t.Function> {
-  const lowering = lower(func).orElse((errors) => {
-    const msg = errors.map((error) => error.toString()).join("\n\n");
-    throw new Error(msg);
+  const lowering = lower(func).orElse((details) => {
+    throw new CompilerError(details);
   });
 
   const hir = lowering.unwrap();

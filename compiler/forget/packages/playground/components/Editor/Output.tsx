@@ -146,8 +146,12 @@ function Output({ store }: Props) {
   const compilerOutput = useMemo(() => compile(store.source), [store.source]);
 
   if (typeof compilerOutput === "string") {
-    if (compilerOutput === "") return <div></div>;
-    return <div>error: ${compilerOutput}</div>;
+    if (compilerOutput === "") return <></>;
+    return (
+      <pre>
+        <code>${compilerOutput}</code>
+      </pre>
+    );
   }
 
   return (

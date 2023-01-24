@@ -8,7 +8,7 @@
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
-import { CompilerError, CompilerErrorOptions } from "../CompilerError";
+import { CompilerErrorDetail, CompilerErrorOptions } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getOrAddGlobal } from "./Globals";
@@ -87,7 +87,7 @@ export default class HIRBuilder {
   #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
     new Map();
   #env: Environment;
-  errors: CompilerError[] = [];
+  errors: CompilerErrorDetail[] = [];
 
   get nextIdentifierId() {
     return this.#env.nextIdentifierId;
@@ -415,10 +415,10 @@ export default class HIRBuilder {
     invariant(false, "Expected a loop to be in scope");
   }
 
-  pushError(options: CompilerErrorOptions): CompilerError {
-    const error = new CompilerError(options);
-    this.errors.push(error);
-    return error;
+  pushError(options: CompilerErrorOptions): CompilerErrorDetail {
+    const detail = new CompilerErrorDetail(options);
+    this.errors.push(detail);
+    return detail;
   }
 
   hasErrors(): boolean {
