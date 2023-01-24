@@ -5,7 +5,11 @@ const runReactForgetBabelPlugin =
 // circuit test execution and report an error immediately.
 module.exports = (test) => {
   try {
-    test.contents = runReactForgetBabelPlugin(test.contents, test.file).code;
+    test.contents = runReactForgetBabelPlugin(
+      test.contents,
+      test.file,
+      "typescript"
+    ).code;
   } catch (error) {
     // We use the `stderr` output to group errors so we can count them, so we need to dedupe errors
     // that are the same but differ slightly.
