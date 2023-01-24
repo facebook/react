@@ -6,121 +6,104 @@
  */
 
 import generate from "@babel/generator";
-import { parse } from "@babel/parser";
-import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import MonacoEditor from "@monaco-editor/react";
 import {
   printHIR,
   printReactiveFunction,
-  run,
+  type CompilerError,
+  type CompilerPipelineValue,
 } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo, useState } from "react";
-import type { Store } from "../../lib/stores";
+import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
 
+export type CompilerOutput =
+  | { kind: "ok"; results: Map<string, CompilerPipelineValue[]> }
+  | { kind: "err"; error: CompilerError };
+
 type Props = {
   store: Store;
+  compilerOutput: CompilerOutput;
 };
 
-type CompilerError = string;
-
-function parseFunctions(
-  source: string
-): Array<NodePath<t.FunctionDeclaration>> {
-  try {
-    const ast = parse(source, {
-      plugins: ["typescript", "jsx"],
-      sourceType: "module",
-    });
-    const items: Array<NodePath<t.FunctionDeclaration>> = [];
-    traverse(ast, {
-      FunctionDeclaration: {
-        enter(nodePath) {
-          items.push(nodePath);
-        },
-      },
-    });
-    return items;
-  } catch (e) {
-    return [];
-  }
-}
-
-function compile(source: string): Map<string, React.ReactNode> | CompilerError {
-  try {
-    const astFunctions = parseFunctions(source);
-    if (astFunctions.length === 0) {
-      return "";
-    }
-
-    // TODO: Handle multiple functions
-    const func = astFunctions[0];
-    const tabs = new Map<string, React.ReactNode>();
-    let ast: t.Function | null = null;
-    for (const result of run(func)) {
+function tabify(source: string, compilerOutput: CompilerOutput) {
+  const tabs = new Map<string, React.ReactNode>();
+  const reorderedTabs = new Map<string, React.ReactNode>();
+  const concattedResults = new Map<string, string>();
+  let topLevelFnDecls: Array<t.FunctionDeclaration> = [];
+  if (compilerOutput.kind === "err") return reorderedTabs;
+  // Concat all top level function declaration results into a single tab for each pass
+  for (const [passName, results] of compilerOutput.results) {
+    for (const result of results) {
       switch (result.kind) {
-        case "ast": {
-          ast = result.value;
-          break;
-        }
         case "hir": {
-          const text = printHIR(result.value.body);
-          tabs.set(
-            result.name,
-            <TextTabContent output={text}></TextTabContent>
-          );
+          const prev = concattedResults.get(result.name);
+          const next = printHIR(result.value.body);
+          const identName = `function ${result.value.id?.name}`;
+          if (prev != null) {
+            concattedResults.set(passName, `${prev}\n\n${identName}\n${next}`);
+          } else {
+            concattedResults.set(passName, `${identName}\n${next}`);
+          }
           break;
         }
         case "reactive": {
-          const text = printReactiveFunction(result.value);
-          tabs.set(
-            result.name,
-            <TextTabContent output={text}></TextTabContent>
-          );
+          const prev = concattedResults.get(passName);
+          const next = printReactiveFunction(result.value);
+          if (prev != null) {
+            concattedResults.set(passName, `${prev}\n\n${next}`);
+          } else {
+            concattedResults.set(passName, next);
+          }
           break;
         }
+        case "ast":
+          topLevelFnDecls.push(result.value);
+          break;
         default: {
           throw new Error("Unexpected result kind");
         }
       }
     }
-    // Ensure that JS and the JS source map come first
-    const reorderedTabs = new Map();
-    if (ast !== null) {
-      const { code, sourceMapUrl } = codegen(ast, source);
-      reorderedTabs.set("JS", <TextTabContent output={code}></TextTabContent>);
-      if (sourceMapUrl) {
-        reorderedTabs.set(
-          "SourceMap",
-          <>
-            <iframe
-              src={sourceMapUrl}
-              className="w-full h-96"
-              title="Generated Code"
-            />
-          </>
-        );
-      }
-    }
-    tabs.forEach((tab, name) => {
-      reorderedTabs.set(name, tab);
-    });
-    return reorderedTabs;
-  } catch (e: any) {
-    console.error(e);
-    return e.toString();
   }
+  for (const [passName, text] of concattedResults) {
+    tabs.set(passName, <TextTabContent output={text}></TextTabContent>);
+  }
+  // Ensure that JS and the JS source map come first
+  if (topLevelFnDecls.length > 0) {
+    // Make a synthetic Program so we can have a single AST with all the top level
+    // FunctionDeclarations
+    const ast = t.program(topLevelFnDecls);
+    const { code, sourceMapUrl } = codegen(ast, source);
+    reorderedTabs.set("JS", <TextTabContent output={code}></TextTabContent>);
+    if (sourceMapUrl) {
+      reorderedTabs.set(
+        "SourceMap",
+        <>
+          <iframe
+            src={sourceMapUrl}
+            className="w-full h-96"
+            title="Generated Code"
+          />
+        </>
+      );
+    }
+  }
+  tabs.forEach((tab, name) => {
+    reorderedTabs.set(name, tab);
+  });
+  return reorderedTabs;
 }
 
 function codegen(
-  ast: any,
+  ast: t.Program,
   source: string
 ): { code: any; sourceMapUrl: string | null } {
   const generated = generate(
@@ -140,30 +123,6 @@ function codegen(
   return { code: codegenOutput, sourceMapUrl };
 }
 
-// TODO(gsn: Update diagnostics ƒrom HIR output
-function Output({ store }: Props) {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set());
-  const compilerOutput = useMemo(() => compile(store.source), [store.source]);
-
-  if (typeof compilerOutput === "string") {
-    if (compilerOutput === "") return <></>;
-    return (
-      <pre>
-        <code>${compilerOutput}</code>
-      </pre>
-    );
-  }
-
-  return (
-    <TabbedWindow
-      defaultTab="HIR"
-      setTabsOpen={setTabsOpen}
-      tabsOpen={tabsOpen}
-      tabs={compilerOutput}
-    />
-  );
-}
-
 function utf16ToUTF8(s: string): string {
   return unescape(encodeURIComponent(s));
 }
@@ -174,6 +133,31 @@ function getSourceMapUrl(code: string, map: string): string | null {
   return `https://evanw.github.io/source-map-visualization/#${btoa(
     `${code.length}\0${code}${map.length}\0${map}`
   )}`;
+}
+
+function Output({ store, compilerOutput }: Props) {
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set());
+  const tabs = useMemo(
+    () => tabify(store.source, compilerOutput),
+    [store.source, compilerOutput]
+  );
+
+  if (compilerOutput.kind === "err") {
+    return (
+      <pre>
+        <code>{compilerOutput.error.toString()}</code>
+      </pre>
+    );
+  }
+
+  return (
+    <TabbedWindow
+      defaultTab="HIR"
+      setTabsOpen={setTabsOpen}
+      tabsOpen={tabsOpen}
+      tabs={tabs}
+    />
+  );
 }
 
 function TextTabContent({ output }: { output: string }) {

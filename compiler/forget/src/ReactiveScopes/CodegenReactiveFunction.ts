@@ -28,7 +28,9 @@ import {
 import { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
-export function codegenReactiveFunction(fn: ReactiveFunction): t.Function {
+export function codegenReactiveFunction(
+  fn: ReactiveFunction
+): t.FunctionDeclaration {
   const cx = new Context();
   const params = fn.params.map((param) => convertIdentifier(param.identifier));
   const body = codegenBlock(cx, fn.body);

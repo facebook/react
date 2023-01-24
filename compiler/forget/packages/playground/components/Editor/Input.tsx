@@ -3,16 +3,22 @@
  */
 
 import MonacoEditor, { type Monaco } from "@monaco-editor/react";
+import { CompilerErrorDetail } from "babel-plugin-react-forget";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import { useEffect, useState } from "react";
+import { renderForgetMarkers } from "../../lib/forgetMonacoDiagnostics";
 import { useStore, useStoreDispatch } from "../StoreContext";
 import { monacoOptions } from "./monacoOptions";
 // TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 // @ts-ignore
 import React$Types from "../../node_modules/@types/react/index.d.ts";
 
-export default function Input({}: {}) {
+type Props = {
+  errors: CompilerErrorDetail[];
+};
+
+export default function Input({ errors }: Props) {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -23,10 +29,11 @@ export default function Input({}: {}) {
     const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, "Model must exist for the selected input file.");
+    renderForgetMarkers({ monaco, model, details: errors });
     // N.B. that `tabSize` is a model property, not an editor property.
     // So, the tab size has to be set per model.
     model.updateOptions({ tabSize: 2 });
-  }, [monaco]);
+  }, [monaco, errors]);
 
   const handleChange = (value: string | undefined) => {
     if (!value) return;

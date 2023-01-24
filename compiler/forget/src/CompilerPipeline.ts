@@ -39,7 +39,7 @@ import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
 import { assertExhaustive } from "./Utils/utils";
 
 export type CompilerPipelineValue =
-  | { kind: "ast"; name: string; value: t.Function }
+  | { kind: "ast"; name: string; value: t.FunctionDeclaration }
   | { kind: "hir"; name: string; value: HIRFunction }
   | { kind: "reactive"; name: string; value: ReactiveFunction };
 

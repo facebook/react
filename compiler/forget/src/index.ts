@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 export { default as BabelPlugin } from "./Babel/BabelPlugin";
-export { ErrorSeverity } from "./CompilerError";
-export { compile, run } from "./CompilerPipeline";
+export {
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorSeverity,
+} from "./CompilerError";
+export { compile, CompilerPipelineValue, run } from "./CompilerPipeline";
 export { printHIR } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
