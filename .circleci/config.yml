@@ -104,7 +104,7 @@ aliases:
     at: build
 
 # The CircleCI API doesn't yet support triggering a specific workflow, but it
-# does support triggering a pipeline. So as a workaround you can triggger the
+# does support triggering a pipeline. So as a workaround you can trigger the
 # entire pipeline and use parameters to disable everything except the workflow
 # you want. CircleCI recommends this workaround here:
 # https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
