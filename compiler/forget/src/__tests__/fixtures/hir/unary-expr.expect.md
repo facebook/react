@@ -93,28 +93,14 @@ function component(a) {
   } else {
     f = $[15];
   }
-  const c_16 = $[16] !== z;
-  const c_17 = $[17] !== p;
-  const c_18 = $[18] !== q;
-  const c_19 = $[19] !== n;
-  const c_20 = $[20] !== m;
-  const c_21 = $[21] !== e;
-  const c_22 = $[22] !== f;
-  let t23;
-  if (c_16 || c_17 || c_18 || c_19 || c_20 || c_21 || c_22) {
-    t23 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
-    $[16] = z;
-    $[17] = p;
-    $[18] = q;
-    $[19] = n;
-    $[20] = m;
-    $[21] = e;
-    $[22] = f;
-    $[23] = t23;
+  let t16;
+  if ($[16] === Symbol.for("react.memo_cache_sentinel")) {
+    t16 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
+    $[16] = t16;
   } else {
-    t23 = $[23];
+    t16 = $[16];
   }
-  return t23;
+  return t16;
 }
 
 ```

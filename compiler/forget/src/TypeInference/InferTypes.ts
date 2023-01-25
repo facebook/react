@@ -103,6 +103,11 @@ function generateTypeEquation(instr: Instruction): Array<TypeEquation> {
       break;
     }
 
+    case "UnaryExpression": {
+      add(left, { kind: "Primitive" });
+      break;
+    }
+
     case "Identifier": {
       add(left, value.identifier.type);
       break;
