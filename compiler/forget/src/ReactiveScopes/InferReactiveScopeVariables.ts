@@ -172,6 +172,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "PropertyLoad":
     case "ComputedLoad":
     case "JSXText":
+    case "UnaryExpression":
     case "Primitive": {
       return false;
     }
@@ -187,8 +188,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "ObjectExpression":
     case "UnsupportedNode":
     case "FunctionExpression":
-    case "TaggedTemplateExpression":
-    case "UnaryExpression": {
+    case "TaggedTemplateExpression": {
       return true;
     }
     default: {

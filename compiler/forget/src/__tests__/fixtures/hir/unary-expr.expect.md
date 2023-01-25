@@ -30,77 +30,21 @@ function component(a) {
   } else {
     t = $[1];
   }
-  const c_2 = $[2] !== t.t;
-  let z;
-  if (c_2) {
-    z = +t.t;
-    $[2] = t.t;
-    $[3] = z;
+  const z = +t.t;
+  const q = -t.t;
+  const p = void t.t;
+  const n = delete t.t;
+  const m = !t.t;
+  const e = ~t.t;
+  const f = typeof t.t;
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
+    $[2] = t2;
   } else {
-    z = $[3];
+    t2 = $[2];
   }
-  const c_4 = $[4] !== t.t;
-  let q;
-  if (c_4) {
-    q = -t.t;
-    $[4] = t.t;
-    $[5] = q;
-  } else {
-    q = $[5];
-  }
-  const c_6 = $[6] !== t.t;
-  let p;
-  if (c_6) {
-    p = void t.t;
-    $[6] = t.t;
-    $[7] = p;
-  } else {
-    p = $[7];
-  }
-  const c_8 = $[8] !== t.t;
-  let n;
-  if (c_8) {
-    n = delete t.t;
-    $[8] = t.t;
-    $[9] = n;
-  } else {
-    n = $[9];
-  }
-  const c_10 = $[10] !== t.t;
-  let m;
-  if (c_10) {
-    m = !t.t;
-    $[10] = t.t;
-    $[11] = m;
-  } else {
-    m = $[11];
-  }
-  const c_12 = $[12] !== t.t;
-  let e;
-  if (c_12) {
-    e = ~t.t;
-    $[12] = t.t;
-    $[13] = e;
-  } else {
-    e = $[13];
-  }
-  const c_14 = $[14] !== t.t;
-  let f;
-  if (c_14) {
-    f = typeof t.t;
-    $[14] = t.t;
-    $[15] = f;
-  } else {
-    f = $[15];
-  }
-  let t16;
-  if ($[16] === Symbol.for("react.memo_cache_sentinel")) {
-    t16 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
-    $[16] = t16;
-  } else {
-    t16 = $[16];
-  }
-  return t16;
+  return t2;
 }
 
 ```
