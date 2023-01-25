@@ -253,6 +253,17 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "branch": {
+      const consequent = fn(terminal.consequent);
+      const alternate = fn(terminal.alternate);
+      return {
+        kind: "branch",
+        test: terminal.test,
+        consequent,
+        alternate,
+        id: makeInstructionId(0),
+      };
+    }
     case "switch": {
       const cases = terminal.cases.map((case_) => {
         const target = fn(case_.block);
@@ -350,6 +361,11 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.alternate;
       break;
     }
+    case "branch": {
+      yield terminal.consequent;
+      yield terminal.alternate;
+      break;
+    }
     case "switch": {
       for (const case_ of terminal.cases) {
         yield case_.block;
@@ -394,6 +410,10 @@ export function mapTerminalOperands(
       terminal.test = fn(terminal.test);
       break;
     }
+    case "branch": {
+      terminal.test = fn(terminal.test);
+      break;
+    }
     case "switch": {
       terminal.test = fn(terminal.test);
       for (const case_ of terminal.cases) {
@@ -431,6 +451,10 @@ export function mapTerminalOperands(
 export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
   switch (terminal.kind) {
     case "if": {
+      yield terminal.test;
+      break;
+    }
+    case "branch": {
       yield terminal.test;
       break;
     }

@@ -360,6 +360,9 @@ class Driver {
         }
         break;
       }
+      case "branch": {
+        todo("Implement tree visitor for branch terminal");
+      }
       case "logical": {
         todo("Implement tree visitor for logical terminal");
       }

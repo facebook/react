@@ -553,6 +553,12 @@ export function reversePostorderBlocks(func: HIR): void {
         visit(consequent);
         break;
       }
+      case "branch": {
+        const { consequent, alternate } = terminal;
+        visit(alternate);
+        visit(consequent);
+        break;
+      }
       case "switch": {
         // can ignore fallthrough, if its reachable it will be reached through
         // a case

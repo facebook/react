@@ -77,6 +77,10 @@ function printTerminalLabel(terminal: Terminal): string {
       buffer.push(`If (${printPlace(terminal.test)})`);
       break;
     }
+    case "branch": {
+      buffer.push(`Branch (${printPlace(terminal.test)})`);
+      break;
+    }
     case "goto": {
       buffer.push("Goto");
       break;
@@ -128,6 +132,11 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
           printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
+      break;
+    }
+    case "branch": {
+      buffer.push(printJumpArrow(blockId, terminal.consequent, "then"));
+      buffer.push(printJumpArrow(blockId, terminal.alternate, "else"));
       break;
     }
     case "logical": {

@@ -214,6 +214,7 @@ export type Terminal =
   | ReturnTerminal
   | GotoTerminal
   | IfTerminal
+  | BranchTerminal
   | SwitchTerminal
   | ForTerminal
   | WhileTerminal
@@ -253,6 +254,14 @@ export type IfTerminal = {
   consequent: BlockId;
   alternate: BlockId;
   fallthrough: BlockId | null;
+  id: InstructionId;
+};
+
+export type BranchTerminal = {
+  kind: "branch";
+  test: Place;
+  consequent: BlockId;
+  alternate: BlockId;
   id: InstructionId;
 };
 
