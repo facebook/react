@@ -67,6 +67,11 @@ function compile(source: string): CompilerOutput {
     return { kind: "ok", results };
   } catch (error: any) {
     console.error(error);
+    // error might be an invariant violation or other runtime error
+    // (i.e. object shape that is not CompilerError)
+    if (error.details == null) {
+      error.details = [];
+    }
     return { kind: "err", error };
   }
 }
