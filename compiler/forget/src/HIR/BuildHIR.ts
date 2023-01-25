@@ -1193,6 +1193,7 @@ function lowerExpression(
               object: { ...object },
               property: property.node.name,
               loc: leftExpr.node.loc ?? GeneratedSource,
+              optional: false, // LVal cannot be optional
             },
             loc: leftExpr.node.loc ?? GeneratedSource,
           });
@@ -1233,8 +1234,11 @@ function lowerExpression(
         }
       }
     }
+    case "OptionalMemberExpression":
     case "MemberExpression": {
-      const expr = exprPath as NodePath<t.MemberExpression>;
+      const expr = exprPath as NodePath<
+        t.MemberExpression | t.OptionalMemberExpression
+      >;
       const { value } = lowerMemberExpression(builder, expr);
       const place: Place = buildTemporaryPlace(builder, exprLoc);
       builder.push({
@@ -1424,7 +1428,7 @@ function lowerExpression(
 
 function lowerMemberExpression(
   builder: HIRBuilder,
-  expr: NodePath<t.MemberExpression>
+  expr: NodePath<t.MemberExpression | t.OptionalMemberExpression>
 ): { object: Place; property: Place | string; value: InstructionValue } {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -1448,6 +1452,7 @@ function lowerMemberExpression(
       object: { ...object },
       property: property.node.name,
       loc: exprLoc,
+      optional: t.isOptionalMemberExpression(expr),
     };
     return { object, property: property.node.name, value };
   } else {
@@ -1895,6 +1900,7 @@ function lowerAssignment(
           loc,
           object: { ...objectPlace },
           property: key.node.name,
+          optional: false, // Key of ObjectPattern (evaluation of LVal) cannot be optional.
         };
         lowerAssignment(builder, loc, kind, element, value);
       }

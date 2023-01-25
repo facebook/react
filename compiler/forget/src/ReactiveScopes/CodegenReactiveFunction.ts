@@ -631,10 +631,19 @@ function codegenInstructionValue(
       break;
     }
     case "PropertyLoad": {
-      value = t.memberExpression(
-        codegenPlace(temp, instrValue.object),
-        t.identifier(instrValue.property)
-      );
+      if (instrValue.optional) {
+        value = t.optionalMemberExpression(
+          codegenPlace(temp, instrValue.object),
+          t.identifier(instrValue.property),
+          undefined,
+          true
+        );
+      } else {
+        value = t.memberExpression(
+          codegenPlace(temp, instrValue.object),
+          t.identifier(instrValue.property)
+        );
+      }
       break;
     }
     case "ComputedStore": {

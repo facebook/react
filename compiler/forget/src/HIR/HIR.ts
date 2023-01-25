@@ -392,7 +392,7 @@ export type InstructionData =
   // store `object.property = value`
   | { kind: "PropertyStore"; object: Place; property: string; value: Place }
   // load `object.property`
-  | { kind: "PropertyLoad"; object: Place; property: string }
+  | { kind: "PropertyLoad"; object: Place; property: string; optional: boolean }
 
   // store `object[index] = value` - like PropertyStore but with a dynamic property
   | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
