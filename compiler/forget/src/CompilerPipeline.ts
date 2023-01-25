@@ -69,7 +69,7 @@ export function* run(
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
   analyseFunctions(hir);
-  yield log({ kind: "hir", name: "analyseFunctions", value: hir });
+  yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
