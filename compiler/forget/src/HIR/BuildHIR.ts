@@ -1415,6 +1415,15 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "UnaryExpression": {
+      let expr = exprPath as NodePath<t.UnaryExpression>;
+      return {
+        kind: "UnaryExpression",
+        operator: expr.node.operator,
+        value: lowerExpressionToPlace(builder, expr.get("argument")),
+        loc: exprLoc,
+      };
+    }
     default: {
       builder.pushError({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

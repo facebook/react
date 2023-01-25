@@ -559,7 +559,6 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "UnaryExpression": {
-        // TODO check that value must be a primitive, or make conditional based on the operator
         valueKind = ValueKind.Immutable;
         effectKind = Effect.Read;
         break;
