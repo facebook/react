@@ -25,7 +25,7 @@ let didWarn = false;
 let didError = false;
 
 const files = glob
-  .sync("**/*.{js,ts}", {
+  .sync("**/*.{js,ts,tsx,jsx}", {
     ignore: [
       "**/node_modules/**",
       "packages/demo-2021Q3/**",
@@ -37,7 +37,6 @@ const files = glob
     ],
   })
   .filter((f) => !onlyChanged || changedFiles.has(f));
-
 if (!files.length) {
   return;
 }
