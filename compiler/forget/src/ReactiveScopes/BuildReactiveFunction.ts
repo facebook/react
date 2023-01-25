@@ -247,7 +247,7 @@ class Driver {
         const testBlock = this.cx.ir.blocks.get(terminal.test)!;
         const testTerminal = testBlock.terminal;
         invariant(
-          testTerminal.kind === "if",
+          testTerminal.kind === "branch",
           "Expected while loop test block to end in an if"
         );
         const testValue = this.visitValueBlock(blockValue, testBlock, {
@@ -314,7 +314,7 @@ class Driver {
         const testBlock = this.cx.ir.blocks.get(terminal.test)!;
         const testTerminal = testBlock.terminal;
         invariant(
-          testTerminal.kind === "if",
+          testTerminal.kind === "branch",
           "Expected for loop test block to end in an if"
         );
         const testValue = this.visitValueBlock(blockValue, testBlock, {

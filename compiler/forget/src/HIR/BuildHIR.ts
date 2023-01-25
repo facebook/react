@@ -13,6 +13,7 @@ import { Err, Ok, Result } from "../lib/Result";
 import { assertExhaustive } from "../Utils/utils";
 import {
   BlockId,
+  BranchTerminal,
   Case,
   Effect,
   GeneratedSource,
@@ -411,14 +412,13 @@ function lowerStatement(
       } else {
         builder.terminateWithContinuation(
           {
-            kind: "if",
+            kind: "branch",
             test: lowerExpressionToPlace(
               builder,
               test as NodePath<t.Expression>
             ),
             consequent: bodyBlock,
             alternate: continuationBlock.id,
-            fallthrough: continuationBlock.id,
             id: makeInstructionId(0),
           },
           continuationBlock
@@ -489,37 +489,28 @@ function lowerStatement(
        * The code leading up to the loop must jump to the conditional block,
        * to evaluate whether to enter the loop or bypass to the continuation.
        */
-      const loc = stmt.node.loc;
-      if (loc == null) {
-        builder.pushError({
-          reason: `(BuildHIR::lowerStatement) Expected WhileStatement to have a location, got ${loc}`,
-          severity: ErrorSeverity.InvalidInput,
-          nodePath: stmt,
-        });
-      } else {
-        builder.terminateWithContinuation(
-          {
-            kind: "while",
-            loc,
-            test: conditionalBlock.id,
-            loop: loopBlock,
-            fallthrough: continuationBlock.id,
-            id: makeInstructionId(0),
-          },
-          conditionalBlock
-        );
-      }
+      const loc = stmt.node.loc ?? GeneratedSource;
+      builder.terminateWithContinuation(
+        {
+          kind: "while",
+          loc,
+          test: conditionalBlock.id,
+          loop: loopBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+        },
+        conditionalBlock
+      );
       /**
        * The conditional block is empty and exists solely as conditional for
        * (re)entering or exiting the loop
        */
       const test = lowerExpressionToPlace(builder, stmt.get("test"));
-      const terminal: IfTerminal = {
-        kind: "if",
+      const terminal: BranchTerminal = {
+        kind: "branch",
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id,
         id: makeInstructionId(0),
       };
       //  Complete the conditional and continue with code after the loop
