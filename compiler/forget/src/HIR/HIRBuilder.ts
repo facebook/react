@@ -40,7 +40,11 @@ import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
 /**
  * A work-in-progress block that does not yet have a terminator
  */
-export type WipBlock = { id: BlockId; instructions: Array<Instruction> };
+export type WipBlock = {
+  id: BlockId;
+  instructions: Array<Instruction>;
+  kind: BlockKind;
+};
 
 type Scope = LoopScope | LabelScope | SwitchScope;
 
@@ -63,8 +67,8 @@ type LabelScope = {
   breakBlock: BlockId;
 };
 
-function newBlock(id: BlockId): WipBlock {
-  return { id, instructions: [] };
+function newBlock(id: BlockId, kind: BlockKind): WipBlock {
+  return { id, kind, instructions: [] };
 }
 
 export class Environment {
@@ -81,7 +85,7 @@ export class Environment {
 export default class HIRBuilder {
   #completed: Map<BlockId, BasicBlock> = new Map();
   #nextId: BlockId = makeBlockId(1);
-  #current: WipBlock = newBlock(makeBlockId(0));
+  #current: WipBlock = newBlock(makeBlockId(0), "block");
   #entry: BlockId = makeBlockId(0);
   #scopes: Array<Scope> = [];
   #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
@@ -228,8 +232,8 @@ export default class HIRBuilder {
   /**
    * Terminate the current block w the given terminal, and start a new block
    */
-  terminate(kind: BlockKind, terminal: Terminal) {
-    const { id: blockId, instructions } = this.#current;
+  terminate(terminal: Terminal, nextBlockKind: BlockKind) {
+    const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind,
       id: blockId,
@@ -239,19 +243,15 @@ export default class HIRBuilder {
       phis: new Set(),
     });
     const nextId = makeBlockId(this.#nextId++);
-    this.#current = newBlock(nextId);
+    this.#current = newBlock(nextId, nextBlockKind);
   }
 
   /**
    * Terminate the current block w the given terminal, and set the previously
    * reserved block as the new current block
    */
-  terminateWithContinuation(
-    kind: BlockKind,
-    terminal: Terminal,
-    continuation: WipBlock
-  ) {
-    const { id: blockId, instructions } = this.#current;
+  terminateWithContinuation(terminal: Terminal, continuation: WipBlock) {
+    const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind: kind,
       id: blockId,
@@ -268,15 +268,15 @@ export default class HIRBuilder {
    * Make this the current block with `terminateWithContinuation()` or
    * call `complete()` to save it without setting it as the current block.
    */
-  reserve(): WipBlock {
-    return newBlock(makeBlockId(this.#nextId++));
+  reserve(kind: BlockKind): WipBlock {
+    return newBlock(makeBlockId(this.#nextId++), kind);
   }
 
   /**
    * Save a previously reserved block as completed
    */
-  complete(kind: BlockKind, block: WipBlock, terminal: Terminal) {
-    const { id: blockId, instructions } = block;
+  complete(block: WipBlock, terminal: Terminal) {
+    const { id: blockId, kind, instructions } = block;
     this.#completed.set(blockId, {
       kind,
       id: blockId,
@@ -293,12 +293,12 @@ export default class HIRBuilder {
    * The lambda must return a terminal node, which is used to terminate the
    * newly constructed block.
    */
-  enter(kind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
+  enter(nextBlockKind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
     const current = this.#current;
     const nextId = makeBlockId(this.#nextId++);
-    this.#current = newBlock(nextId);
+    this.#current = newBlock(nextId, nextBlockKind);
     const terminal = fn(nextId);
-    const { id: blockId, instructions } = this.#current;
+    const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind,
       id: blockId,
