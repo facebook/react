@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import chalk from "chalk";
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
 import { printFunction, printHIR } from "../HIR/PrintHIR";
 import { printReactiveFunction } from "../ReactiveScopes";
@@ -22,9 +23,9 @@ export function logHIR(step: string, ir: HIR): void {
     const printed = printHIR(ir);
     if (printed !== lastLogged) {
       lastLogged = printed;
-      process.stdout.write(`${step}:\n${printed}\n\n`);
+      process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
     } else {
-      process.stdout.write(`${step}: (no change)\n\n`);
+      process.stdout.write(`${chalk.blue(step)}: (no change)\n\n`);
     }
   }
 }
@@ -34,9 +35,9 @@ export function logHIRFunction(step: string, fn: HIRFunction): void {
     const printed = printFunction(fn);
     if (printed !== lastLogged) {
       lastLogged = printed;
-      process.stdout.write(`${step}:\n${printed}\n\n`);
+      process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
     } else {
-      process.stdout.write(`${step}: (no change)\n\n`);
+      process.stdout.write(`${chalk.blue(step)}: (no change)\n\n`);
     }
   }
 }
@@ -46,9 +47,9 @@ export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
     const printed = printReactiveFunction(fn);
     if (printed !== lastLogged) {
       lastLogged = printed;
-      process.stdout.write(`${step}:\n${printed}\n\n`);
+      process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
     } else {
-      process.stdout.write(`${step}: (no change)\n\n`);
+      process.stdout.write(`${chalk.blue(step)}: (no change)\n\n`);
     }
   }
 }

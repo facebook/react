@@ -29,6 +29,7 @@
     "@babel/generator": "7.2.0",
     "@babel/plugin-syntax-jsx": "^7.18.6",
     "@babel/types": "^7.19.0",
+    "chalk": "4",
     "invariant": "^2.2.4",
     "prettier": "2.7.1",
     "pretty-format": "^24"
@@ -50,7 +51,6 @@
     "@types/jest": "^29.0.3",
     "@types/node": "^18.7.18",
     "babel-jest": "^29.0.3",
-    "chalk": "^3.0.0",
     "concurrently": "^7.4.0",
     "eslint": "^8.25.0",
     "glob": "^7.1.6",
