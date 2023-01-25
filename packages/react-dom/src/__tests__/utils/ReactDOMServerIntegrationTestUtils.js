@@ -76,7 +76,11 @@ module.exports = function(initModules) {
     }
 
     const result = await fn();
-    if (console.error.mock.calls && console.error.mock.calls.length !== 0) {
+    if (
+      console.error.mock &&
+      console.error.mock.calls &&
+      console.error.mock.calls.length !== 0
+    ) {
       const filteredWarnings = [];
       for (let i = 0; i < console.error.mock.calls.length; i++) {
         const args = console.error.mock.calls[i];
