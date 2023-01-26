@@ -16,11 +16,11 @@ function component(t) {
 function component(t) {
   const $ = React.useMemoCache();
   const a = t.a;
-  const c_0 = $[0] !== t6.a;
+  const c_0 = $[0] !== a;
   let y;
   if (c_0) {
     y = { a: a };
-    $[0] = t6.a;
+    $[0] = a;
     $[1] = y;
   } else {
     y = $[1];

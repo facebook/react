@@ -110,8 +110,12 @@ class Context {
     } else {
       // Otherwise if this operand is a temporary created for a property load, resolve it to
       // the expanded Place. Fall back to using the operand as-is.
-      maybeDependency =
-        this.#properties.get(dependency.place.identifier) ?? dependency;
+      let propDep = this.#properties.get(dependency.place.identifier);
+      if (dependency.place.identifier.name === null && propDep !== undefined) {
+        maybeDependency = propDep;
+      } else {
+        maybeDependency = dependency;
+      }
     }
 
     const decl = this.#declarations.get(maybeDependency.place.identifier);
