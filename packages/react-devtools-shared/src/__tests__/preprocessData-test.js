@@ -1140,7 +1140,7 @@ describe('Timeline profiler', () => {
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = jest.spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
@@ -1158,7 +1158,7 @@ describe('Timeline profiler', () => {
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = jest.spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
