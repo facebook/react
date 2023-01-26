@@ -246,7 +246,7 @@ export async function transformSource(
     );
 
     let newSrc =
-      "const MODULE_REFERENCE = Symbol.for('react.module.reference');\n";
+      "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
     for (let i = 0; i < names.length; i++) {
       const name = names[i];
       if (name === 'default') {
@@ -254,7 +254,7 @@ export async function transformSource(
       } else {
         newSrc += 'export const ' + name + ' = ';
       }
-      newSrc += '{ $$typeof: MODULE_REFERENCE, filepath: ';
+      newSrc += '{ $$typeof: CLIENT_REFERENCE, filepath: ';
       newSrc += JSON.stringify(context.url);
       newSrc += ', name: ';
       newSrc += JSON.stringify(name);

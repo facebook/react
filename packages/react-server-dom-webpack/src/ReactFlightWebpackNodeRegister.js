@@ -12,7 +12,7 @@ const url = require('url');
 const Module = require('module');
 
 module.exports = function register() {
-  const MODULE_REFERENCE = Symbol.for('react.module.reference');
+  const CLIENT_REFERENCE = Symbol.for('react.client.reference');
   const PROMISE_PROTOTYPE = Promise.prototype;
 
   const proxyHandlers = {
@@ -41,7 +41,7 @@ module.exports = function register() {
           // Something is conditionally checking which export to use. We'll pretend to be
           // an ESM compat module but then we'll check again on the client.
           target.default = {
-            $$typeof: MODULE_REFERENCE,
+            $$typeof: CLIENT_REFERENCE,
             filepath: target.filepath,
             // This a placeholder value that tells the client to conditionally use the
             // whole object or just the default export.
@@ -57,7 +57,7 @@ module.exports = function register() {
             // $FlowFixMe[missing-local-annot]
             const then = function then(resolve, reject: any) {
               const moduleReference: {[string]: any, ...} = {
-                $$typeof: MODULE_REFERENCE,
+                $$typeof: CLIENT_REFERENCE,
                 filepath: target.filepath,
                 name: '*', // Represents the whole object instead of a particular import.
                 async: true,
@@ -69,7 +69,7 @@ module.exports = function register() {
             };
             // If this is not used as a Promise but is treated as a reference to a `.then`
             // export then we should treat it as a reference to that name.
-            then.$$typeof = MODULE_REFERENCE;
+            then.$$typeof = CLIENT_REFERENCE;
             then.filepath = target.filepath;
             // then.name is conveniently already "then" which is the export name we need.
             // This will break if it's minified though.
@@ -79,7 +79,7 @@ module.exports = function register() {
       let cachedReference = target[name];
       if (!cachedReference) {
         cachedReference = target[name] = {
-          $$typeof: MODULE_REFERENCE,
+          $$typeof: CLIENT_REFERENCE,
           filepath: target.filepath,
           name: name,
           async: target.async,
@@ -100,7 +100,7 @@ module.exports = function register() {
   Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
     const moduleReference: {[string]: any, ...} = {
-      $$typeof: MODULE_REFERENCE,
+      $$typeof: CLIENT_REFERENCE,
       filepath: moduleId,
       name: '*', // Represents the whole object instead of a particular import.
       async: false,

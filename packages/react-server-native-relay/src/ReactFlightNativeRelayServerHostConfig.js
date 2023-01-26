@@ -14,7 +14,7 @@ import isArray from 'shared/isArray';
 import type {JSResourceReference} from 'JSResourceReference';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
-export type ModuleReference<T> = JSResourceReference<T>;
+export type ClientReference<T> = JSResourceReference<T>;
 
 import type {
   Destination,
@@ -36,13 +36,15 @@ export type {
   ModuleMetaData,
 } from 'ReactFlightNativeRelayServerIntegration';
 
-export function isModuleReference(reference: Object): boolean {
+export function isClientReference(reference: Object): boolean {
   return reference instanceof JSResourceReferenceImpl;
 }
 
-export type ModuleKey = ModuleReference<any>;
+export type ClientReferenceKey = ClientReference<any>;
 
-export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+export function getClientReferenceKey(
+  reference: ClientReference<any>,
+): ClientReferenceKey {
   // We use the reference object itself as the key because we assume the
   // object will be cached by the bundler runtime.
   return reference;
@@ -50,7 +52,7 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  resource: ModuleReference<T>,
+  resource: ClientReference<T>,
 ): ModuleMetaData {
   return resolveModuleMetaDataImpl(config, resource);
 }

@@ -57,7 +57,7 @@ declare module 'ReactFlightDOMRelayClientIntegration' {
   import type {JSResourceReference} from 'JSResourceReference';
 
   declare export opaque type ModuleMetaData;
-  declare export function resolveModuleReference<T>(
+  declare export function resolveClientReference<T>(
     moduleData: ModuleMetaData,
   ): JSResourceReference<T>;
   declare export function preloadModule<T>(
@@ -90,7 +90,7 @@ declare module 'ReactFlightNativeRelayClientIntegration' {
   import type {JSResourceReference} from 'JSResourceReference';
 
   declare export opaque type ModuleMetaData;
-  declare export function resolveModuleReference<T>(
+  declare export function resolveClientReference<T>(
     moduleData: ModuleMetaData,
   ): JSResourceReference<T>;
   declare export function preloadModule<T>(
