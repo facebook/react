@@ -99,7 +99,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults.length).toBe(0);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with className contains n', () => {
+  it('can scryRenderedDOMComponentsWithClass with className contains \\n', () => {
     class Wrapper extends React.Component {
       render() {
         return (

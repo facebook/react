@@ -583,20 +583,20 @@ describe('ReactDOMServerIntegration', () => {
 
     describe('newline-eating elements', function() {
       itRenders(
-        'a newline-eating tag with content not starting with n',
+        'a newline-eating tag with content not starting with \\n',
         async render => {
           const e = await render(<pre>Hello</pre>);
           expect(e.textContent).toBe('Hello');
         },
       );
       itRenders(
-        'a newline-eating tag with content starting with n',
+        'a newline-eating tag with content starting with \\n',
         async render => {
           const e = await render(<pre>{'\nHello'}</pre>);
           expect(e.textContent).toBe('\nHello');
         },
       );
-      itRenders('a normal tag with content starting with n', async render => {
+      itRenders('a normal tag with content starting with \\n', async render => {
         const e = await render(<div>{'\nHello'}</div>);
         expect(e.textContent).toBe('\nHello');
       });
