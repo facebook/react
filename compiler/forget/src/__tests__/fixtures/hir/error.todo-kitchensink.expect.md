@@ -55,9 +55,9 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   3 |   var x = [];
   4 |
 
-[ReactForget] TodoError: (BuildHIR::lower) Handle ObjectPattern params
+[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-    |                      ^^^^^^^^^^^^^^^^^
+    |                              ^^^^^^^
   2 |   let i = 0;
   3 |   var x = [];
   4 |

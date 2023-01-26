@@ -72,6 +72,21 @@ export function lower(
         loc: param.node.loc ?? GeneratedSource,
       };
       params.push(place);
+    } else if (param.isObjectPattern()) {
+      const place: Place = {
+        kind: "Identifier",
+        identifier: builder.makeTemporary(),
+        effect: Effect.Unknown,
+        loc: param.node.loc ?? GeneratedSource,
+      };
+      params.push(place);
+      lowerAssignment(
+        builder,
+        param.node.loc ?? GeneratedSource,
+        InstructionKind.Let,
+        param,
+        place
+      );
     } else {
       builder.recordError({
         reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
