@@ -10,7 +10,6 @@
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
-import { CompilerError } from "../CompilerError";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -99,13 +98,7 @@ ${outputs.join("\n")}
 });
 
 function formatErrorOutput(error: Error): string {
-  if (error instanceof CompilerError) {
-    error.message = error.details
-      .map((detail) => `[ReactForget] ${detail.codeFrame}`)
-      .join("\n\n");
-  } else {
-    error.message = error.message.replace(/^\/.*?:\s/, "");
-  }
+  error.message = error.message.replace(/^\/.*?:\s/, "");
   return `
 ## Error
 

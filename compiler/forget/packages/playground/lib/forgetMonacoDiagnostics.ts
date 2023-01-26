@@ -23,18 +23,18 @@ function mapForgetDiagnosticToMonacoMarker(
   detail: CompilerErrorDetail,
   monaco: Monaco
 ): editor.IMarkerData | null {
-  if (detail.nodePath == null || detail.nodePath.node?.loc == null) {
+  if (detail.loc == null) {
     return null;
   }
   const severity = mapForgetSeverityToMonaco(detail.severity, monaco);
-  let message = detail.errorMessage;
+  let message = detail.printErrorMessage();
   return {
     severity,
     message,
-    startLineNumber: detail.nodePath.node.loc.start.line,
-    startColumn: detail.nodePath.node.loc.start.column + 1,
-    endLineNumber: detail.nodePath.node.loc.end.line,
-    endColumn: detail.nodePath.node.loc.end.column + 1,
+    startLineNumber: detail.loc.start.line,
+    startColumn: detail.loc.start.column + 1,
+    endLineNumber: detail.loc.end.line,
+    endColumn: detail.loc.end.column + 1,
   };
 }
 

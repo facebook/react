@@ -1,4 +1,6 @@
-import { Node, NodePath } from "@babel/core";
+import { Node, NodePath } from "@babel/traverse";
+import { SourceLocation } from "@babel/types";
+import { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
@@ -9,10 +11,11 @@ export enum ErrorSeverity {
 export type CompilerErrorOptions = {
   reason: string;
   severity: ErrorSeverity;
-  nodePath: AnyNodePath | null;
+  nodePath: AnyNodePath;
 };
 type AnyNodePath = NodePath<Node | null | undefined>;
 type CompilerErrorKind = typeof InvalidInputError | typeof TodoError;
+type CompilerErrorDetailOptions = ExtractClassProperties<CompilerErrorDetail>;
 
 function mapSeverityToErrorCtor(severity: ErrorSeverity): CompilerErrorKind {
   switch (severity) {
@@ -37,6 +40,22 @@ class TodoError extends Error {
   }
 }
 
+export function tryPrintCodeFrame(
+  options: CompilerErrorOptions
+): string | null {
+  if (options.nodePath == null) return null;
+  try {
+    return options.nodePath
+      .buildCodeFrameError(
+        options.reason,
+        mapSeverityToErrorCtor(options.severity)
+      )
+      .toString();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
@@ -44,43 +63,29 @@ class TodoError extends Error {
 export class CompilerErrorDetail {
   reason: string;
   severity: ErrorSeverity;
-  /**
-   * If a NodePath is provided, we will prefer Babel's built in codeframe error generation which
-   * will print error markers in the correct location.
-   */
-  nodePath: AnyNodePath | null;
+  codeframe: string | null;
+  loc: SourceLocation | null;
 
-  constructor(options: CompilerErrorOptions) {
+  constructor(options: CompilerErrorDetailOptions) {
     this.reason = options.reason;
     this.severity = options.severity;
-    this.nodePath = options.nodePath;
+    this.codeframe = options.codeframe;
+    this.loc = options.loc;
   }
 
-  get errorMessage(): string {
+  printErrorMessage(): string {
+    if (this.codeframe != null) {
+      return this.codeframe;
+    }
     const buffer = [`${this.severity}: ${this.reason}`];
-    if (this.nodePath != null && this.nodePath.node?.loc != null) {
-      buffer.push(
-        ` (${this.nodePath.node.loc.start.line}:${this.nodePath.node.loc.end.line})`
-      );
+    if (this.loc != null) {
+      buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
     }
     return buffer.join("");
   }
 
-  get codeFrame() {
-    if (this.nodePath == null) {
-      return this.errorMessage;
-    }
-    try {
-      return this.nodePath
-        .buildCodeFrameError(this.reason, mapSeverityToErrorCtor(this.severity))
-        .toString();
-    } catch {
-      return this.errorMessage;
-    }
-  }
-
   toString(): string {
-    return `[ReactForget] ${this.errorMessage}`;
+    return `[ReactForget] ${this.printErrorMessage()}`;
   }
 }
 
