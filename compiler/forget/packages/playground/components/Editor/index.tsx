@@ -8,7 +8,11 @@
 import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { CompilerPipelineValue, run } from "babel-plugin-react-forget";
+import {
+  printHIR,
+  printReactiveFunction,
+  run,
+} from "babel-plugin-react-forget";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";
@@ -24,7 +28,11 @@ import {
 } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
 import Input from "./Input";
-import { CompilerOutput, default as Output } from "./Output";
+import {
+  CompilerOutput,
+  default as Output,
+  PrintedCompilerPipelineValue,
+} from "./Output";
 
 function parseFunctions(
   source: string
@@ -50,8 +58,8 @@ function parseFunctions(
 
 function compile(source: string): CompilerOutput {
   try {
-    const results = new Map<string, CompilerPipelineValue[]>();
-    const upsert = (result: CompilerPipelineValue) => {
+    const results = new Map<string, PrintedCompilerPipelineValue[]>();
+    const upsert = (result: PrintedCompilerPipelineValue) => {
       const entry = results.get(result.name);
       if (Array.isArray(entry)) {
         entry.push(result);
@@ -61,7 +69,39 @@ function compile(source: string): CompilerOutput {
     };
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn)) {
-        upsert(result);
+        const fnName = fn.node.id?.name ?? null;
+        switch (result.kind) {
+          case "ast": {
+            upsert({
+              kind: "ast",
+              fnName,
+              name: result.name,
+              value: result.value,
+            });
+            break;
+          }
+          case "hir": {
+            upsert({
+              kind: "hir",
+              fnName,
+              name: result.name,
+              value: printHIR(result.value.body),
+            });
+            break;
+          }
+          case "reactive": {
+            upsert({
+              kind: "reactive",
+              fnName,
+              name: result.name,
+              value: printReactiveFunction(result.value),
+            });
+            break;
+          }
+          default: {
+            throw new Error(`Unhandled result ${result}`);
+          }
+        }
       }
     }
     return { kind: "ok", results };

@@ -8,12 +8,7 @@
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 import MonacoEditor from "@monaco-editor/react";
-import {
-  printHIR,
-  printReactiveFunction,
-  type CompilerError,
-  type CompilerPipelineValue,
-} from "babel-plugin-react-forget";
+import { type CompilerError } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo, useState } from "react";
@@ -24,8 +19,23 @@ const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
 
+export type PrintedCompilerPipelineValue =
+  | {
+      kind: "ast";
+      name: string;
+      fnName: string | null;
+      value: t.FunctionDeclaration;
+    }
+  | {
+      kind: "hir";
+      name: string;
+      fnName: string | null;
+      value: string;
+    }
+  | { kind: "reactive"; name: string; fnName: string | null; value: string };
+
 export type CompilerOutput =
-  | { kind: "ok"; results: Map<string, CompilerPipelineValue[]> }
+  | { kind: "ok"; results: Map<string, PrintedCompilerPipelineValue[]> }
   | { kind: "err"; error: CompilerError };
 
 type Props = {
@@ -45,8 +55,8 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
       switch (result.kind) {
         case "hir": {
           const prev = concattedResults.get(result.name);
-          const next = printHIR(result.value.body);
-          const identName = `function ${result.value.id?.name}`;
+          const next = result.value;
+          const identName = `function ${result.fnName}`;
           if (prev != null) {
             concattedResults.set(passName, `${prev}\n\n${identName}\n${next}`);
           } else {
@@ -56,7 +66,7 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
         }
         case "reactive": {
           const prev = concattedResults.get(passName);
-          const next = printReactiveFunction(result.value);
+          const next = result.value;
           if (prev != null) {
             concattedResults.set(passName, `${prev}\n\n${next}`);
           } else {
