@@ -190,6 +190,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   }
 
+  function removeNonEnumerableProperties(input) {
+    if (Array.isArray(input)) {
+      input = input.map(item => removeNonEnumerableProperties(item));
+    } else if (typeof input === 'object') {
+      input = Object.keys(input).reduce((obj, key) => {
+        obj[key] = removeNonEnumerableProperties(input[key]);
+        return obj;
+      }, {});
+    }
+    return input;
+  }
+
   // @gate enableLegacyCache
   it('does not restart rendering for initial render', async () => {
     function Bar(props) {
@@ -2428,7 +2440,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Loading B...',
     ]);
     // Still suspended.
-    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+    expect(removeNonEnumerableProperties(ReactNoop.getChildren())).toEqual([
+      span('A'),
+    ]);
 
     // Flush to skip suspended time.
     Scheduler.unstable_advanceTime(600);
@@ -2436,9 +2450,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
       // Transitions never fall back.
-      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+      expect(removeNonEnumerableProperties(ReactNoop.getChildren())).toEqual([
+        span('A'),
+      ]);
     } else {
-      expect(ReactNoop.getChildren()).toEqual([
+      expect(removeNonEnumerableProperties(ReactNoop.getChildren())).toEqual([
         span('A'),
         span('Loading B...'),
       ]);
@@ -2954,7 +2970,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Hi!', 'Suspend! [B]', 'Loading B...']);
 
     // Suspended
-    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+    expect(removeNonEnumerableProperties(ReactNoop.getChildren())).toEqual([
+      span('Hi!'),
+      span('A'),
+    ]);
     Scheduler.unstable_advanceTime(1800);
     await advanceTimers(1800);
     expect(Scheduler).toFlushAndYield([]);
