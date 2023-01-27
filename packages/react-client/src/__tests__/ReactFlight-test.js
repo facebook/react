@@ -707,6 +707,20 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('should warn in DEV if a a client reference is passed to useContext()', () => {
+    const Context = React.createContext();
+    const ClientContext = clientReference(Context);
+    function ServerComponent() {
+      return React.useContext(ClientContext);
+    }
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(<ServerComponent />);
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev('Cannot read a Client Context from a Server Component.', {
+      withoutStack: true,
+    });
+  });
+
   describe('Hooks', () => {
     function DivWithId({children}) {
       const id = React.useId();

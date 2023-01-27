@@ -81,12 +81,10 @@ exports.clientExports = function clientExports(moduleExports) {
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
-          webpackMap[path] = {
-            [name]: {
-              id: idx,
-              chunks: [],
-              name: name,
-            },
+          webpackMap[path][name] = {
+            id: idx,
+            chunks: [],
+            name: name,
           };
         }
       },
@@ -94,12 +92,10 @@ exports.clientExports = function clientExports(moduleExports) {
     );
   }
   for (const name in moduleExports) {
-    webpackMap[path] = {
-      [name]: {
-        id: idx,
-        chunks: [],
-        name: name,
-      },
+    webpackMap[path][name] = {
+      id: idx,
+      chunks: [],
+      name: name,
     };
   }
   const mod = {exports: {}};

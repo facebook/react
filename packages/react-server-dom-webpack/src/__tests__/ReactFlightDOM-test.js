@@ -287,6 +287,45 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableUseHook
+  it('should unwrap async module references using use', async () => {
+    const AsyncModule = Promise.resolve('Async Text');
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = clientExports(AsyncModule);
+
+    function ServerComponent() {
+      const text = use(AsyncModuleRef);
+      return <p>{text}</p>;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async Text</p>');
+  });
+
+  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
