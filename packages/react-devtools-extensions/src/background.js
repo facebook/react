@@ -51,7 +51,9 @@ chrome.runtime.onConnect.addListener(function(port) {
   ports[tab][name] = port;
 
   if (ports[tab].devtools && ports[tab]['content-script']) {
-    doublePipe(ports[tab].devtools, ports[tab]['content-script']);
+    doublePipe(ports[tab].devtools, ports[tab]['content-script'], tab);
+    // clean up so that we can rebuild the double pipe if the page is reloaded
+    ports[tab] = null;
   }
 });
 
@@ -70,14 +72,28 @@ function installProxy(tabId: number) {
   }
 }
 
-function doublePipe(one, two) {
+function doublePipe(one, two, tabId) {
   one.onMessage.addListener(lOne);
   function lOne(message) {
-    two.postMessage(message);
+    try {
+      two.postMessage(message);
+    } catch(e) {
+      if (__DEV__) {
+        console.log(`Broken pipe ${tabId}: `, e);
+      }
+      shutdown();
+    }
   }
   two.onMessage.addListener(lTwo);
   function lTwo(message) {
-    one.postMessage(message);
+    try {
+      one.postMessage(message);
+    } catch (e) {
+      if (__DEV__) {
+        console.log(`Broken pipe ${tabId}: `, e);
+      }
+      shutdown();
+    }
   }
   function shutdown() {
     one.onMessage.removeListener(lOne);
