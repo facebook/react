@@ -13,7 +13,9 @@ type WebpackMap = {
   },
 };
 
-export type BundlerConfig = WebpackMap;
+export type BundlerConfig = {
+  clientManifest: WebpackMap,
+};
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
@@ -54,7 +56,7 @@ export function resolveModuleMetaData<T>(
   clientReference: ClientReference<T>,
 ): ModuleMetaData {
   const resolvedModuleData =
-    config[clientReference.filepath][clientReference.name];
+    config.clientManifest[clientReference.filepath][clientReference.name];
   if (clientReference.async) {
     return {
       id: resolvedModuleData.id,
