@@ -34,8 +34,8 @@ const customDirectEventTypes: {
 exports.customBubblingEventTypes = customBubblingEventTypes;
 exports.customDirectEventTypes = customDirectEventTypes;
 
-const viewConfigCallbacks = new Map();
-const viewConfigs = new Map();
+const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();
+const viewConfigs = new Map<string, ViewConfig>();
 
 function processEventTypes(viewConfig: ViewConfig): void {
   const {bubblingEventTypes, directEventTypes} = viewConfig;
