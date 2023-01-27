@@ -363,6 +363,35 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>and then</p>');
   });
 
+  it('throws when accessing a member below the client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function dotting() {
+      return ClientModule.Component.deep;
+    }
+    expect(dotting).toThrowError(
+      'Cannot access Component.deep on the server. ' +
+        'You cannot dot into a client module from a server component. ' +
+        'You can only pass the imported name through.',
+    );
+  });
+
+  it('throws when accessing a Context.Provider below the client exports', () => {
+    const Context = React.createContext();
+    const ClientModule = clientExports({
+      Context,
+    });
+    function dotting() {
+      return ClientModule.Context.Provider;
+    }
+    expect(dotting).toThrowError(
+      `Cannot render a Client Context Provider on the Server. ` +
+        `Instead, you can export a Client Component wrapper ` +
+        `that itself renders a Client Context Provider.`,
+    );
+  });
+
   // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];

@@ -15,12 +15,8 @@ module.exports = function register() {
   const CLIENT_REFERENCE = Symbol.for('react.client.reference');
   const PROMISE_PROTOTYPE = Promise.prototype;
 
-  const proxyHandlers = {
-    get: function(
-      target: {[string]: $FlowFixMe},
-      name: string,
-      receiver: Proxy<{[string]: $FlowFixMe}>,
-    ) {
+  const deepProxyHandlers = {
+    get: function(target: Function, name: string, receiver: Proxy<Function>) {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -43,6 +39,65 @@ module.exports = function register() {
         case 'toJSON':
           return undefined;
         case Symbol.toPrimitive:
+          // $FlowFixMe[prop-missing]
+          return Object.prototype[Symbol.toPrimitive];
+        case 'Provider':
+          throw new Error(
+            `Cannot render a Client Context Provider on the Server. ` +
+              `Instead, you can export a Client Component wrapper ` +
+              `that itself renders a Client Context Provider.`,
+          );
+      }
+      let expression;
+      switch (target.name) {
+        case '':
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          expression = String(name);
+          break;
+        case '*':
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          expression = String(name);
+          break;
+        default:
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          expression = String(target.name) + '.' + String(name);
+      }
+      throw new Error(
+        `Cannot access ${expression} on the server. ` +
+          'You cannot dot into a client module from a server component. ' +
+          'You can only pass the imported name through.',
+      );
+    },
+    set: function() {
+      throw new Error('Cannot assign to a client module from a server module.');
+    },
+  };
+
+  const proxyHandlers = {
+    get: function(target: Function, name: string, receiver: Proxy<Function>) {
+      switch (name) {
+        // These names are read by the Flight runtime if you end up using the exports object.
+        case '$$typeof':
+          // These names are a little too common. We should probably have a way to
+          // have the Flight runtime extract the inner target instead.
+          return target.$$typeof;
+        case 'filepath':
+          return target.filepath;
+        case 'name':
+          return target.name;
+        case 'async':
+          return target.async;
+        // We need to special case this because createElement reads it if we pass this
+        // reference.
+        case 'defaultProps':
+          return undefined;
+        case 'getDefaultProps':
+          return undefined;
+        // Avoid this attempting to be serialized.
+        case 'toJSON':
+          return undefined;
+        case Symbol.toPrimitive:
+          // $FlowFixMe[prop-missing]
           return Object.prototype[Symbol.toPrimitive];
         case '__esModule':
           // Something is conditionally checking which export to use. We'll pretend to be
@@ -78,10 +133,7 @@ module.exports = function register() {
             // the client.
 
             const innerModuleId = target.filepath;
-            const clientReference: {
-              [string]: any,
-              ...,
-            } = Object.defineProperties(
+            const clientReference: Function = Object.defineProperties(
               (function() {
                 throw new Error(
                   `Attempted to call the module exports of ${innerModuleId} from the server` +
@@ -132,7 +184,7 @@ module.exports = function register() {
       }
       let cachedReference = target[name];
       if (!cachedReference) {
-        cachedReference = target[name] = Object.defineProperties(
+        const reference = Object.defineProperties(
           (function() {
             throw new Error(
               // eslint-disable-next-line react-internal/safe-string-coercion
@@ -150,10 +202,14 @@ module.exports = function register() {
             async: {value: target.async},
           },
         );
+        cachedReference = target[name] = new Proxy(
+          reference,
+          deepProxyHandlers,
+        );
       }
       return cachedReference;
     },
-    getPrototypeOf(target: {[string]: $FlowFixMe}) {
+    getPrototypeOf(target: Function): Object {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },
