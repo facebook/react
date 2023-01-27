@@ -77,7 +77,7 @@ function doublePipe(one, two, tabId) {
   function lOne(message) {
     try {
       two.postMessage(message);
-    } catch(e) {
+    } catch (e) {
       if (__DEV__) {
         console.log(`Broken pipe ${tabId}: `, e);
       }
