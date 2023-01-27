@@ -251,14 +251,34 @@ export async function transformSource(
       const name = names[i];
       if (name === 'default') {
         newSrc += 'export default ';
+        newSrc += 'Object.defineProperties(function() {';
+        newSrc +=
+          'throw new Error(' +
+          JSON.stringify(
+            `Attempted to call the default export of ${context.url} from the server` +
+              `but it's on the client. It's not possible to invoke a client function from ` +
+              `the server, it can only be rendered as a Component or passed to props of a` +
+              `Client Component.`,
+          ) +
+          ');';
       } else {
         newSrc += 'export const ' + name + ' = ';
+        newSrc += 'export default ';
+        newSrc += 'Object.defineProperties(function() {';
+        newSrc +=
+          'throw new Error(' +
+          JSON.stringify(
+            `Attempted to call ${name}() from the server but ${name} is on the client. ` +
+              `It's not possible to invoke a client function from the server, it can ` +
+              `only be rendered as a Component or passed to props of a Client Component.`,
+          ) +
+          ');';
       }
-      newSrc += '{ $$typeof: CLIENT_REFERENCE, filepath: ';
-      newSrc += JSON.stringify(context.url);
-      newSrc += ', name: ';
-      newSrc += JSON.stringify(name);
-      newSrc += '};\n';
+      newSrc += '},{';
+      newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
+      newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
+      newSrc += 'filepath: {value: ' + JSON.stringify(context.url) + '}';
+      newSrc += '});\n';
     }
 
     return {source: newSrc};

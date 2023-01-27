@@ -92,10 +92,15 @@ describe('ReactFlight', () => {
   });
 
   function clientReference(value) {
-    return {
-      $$typeof: Symbol.for('react.client.reference'),
-      value: value,
-    };
+    return Object.defineProperties(
+      function() {
+        throw new Error('Cannot call a client function from the server.');
+      },
+      {
+        $$typeof: {value: Symbol.for('react.client.reference')},
+        value: {value: value},
+      },
+    );
   }
 
   it('can render a Server Component', async () => {

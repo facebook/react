@@ -37,17 +37,33 @@ module.exports = function register() {
         // reference.
         case 'defaultProps':
           return undefined;
+        case 'getDefaultProps':
+          return undefined;
+        // Avoid this attempting to be serialized.
+        case 'toJSON':
+          return undefined;
         case '__esModule':
           // Something is conditionally checking which export to use. We'll pretend to be
           // an ESM compat module but then we'll check again on the client.
-          target.default = {
-            $$typeof: CLIENT_REFERENCE,
-            filepath: target.filepath,
-            // This a placeholder value that tells the client to conditionally use the
-            // whole object or just the default export.
-            name: '',
-            async: target.async,
-          };
+          const moduleId = target.filepath;
+          target.default = Object.defineProperties(
+            (function() {
+              throw new Error(
+                `Attempted to call the default export of ${moduleId} from the server` +
+                  `but it's on the client. It's not possible to invoke a client function from ` +
+                  `the server, it can only be rendered as a Component or passed to props of a` +
+                  `Client Component.`,
+              );
+            }: any),
+            {
+              // This a placeholder value that tells the client to conditionally use the
+              // whole object or just the default export.
+              name: {value: ''},
+              $$typeof: {value: CLIENT_REFERENCE},
+              filepath: {value: target.filepath},
+              async: {value: target.async},
+            },
+          );
           return true;
         case 'then':
           if (!target.async) {
@@ -55,35 +71,68 @@ module.exports = function register() {
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
             // $FlowFixMe[missing-local-annot]
-            const then = function then(resolve, reject: any) {
-              const moduleReference: {[string]: any, ...} = {
-                $$typeof: CLIENT_REFERENCE,
-                filepath: target.filepath,
-                name: '*', // Represents the whole object instead of a particular import.
-                async: true,
-              };
-              return Promise.resolve(
-                // $FlowFixMe[incompatible-call] found when upgrading Flow
-                resolve(new Proxy(moduleReference, proxyHandlers)),
-              );
-            };
+            const then = Object.defineProperties(
+              (function then(resolve, reject: any) {
+                const innerModuleId = target.filepath;
+                const clientReference: {
+                  [string]: any,
+                  ...,
+                } = Object.defineProperties(
+                  (function() {
+                    throw new Error(
+                      `Attempted to call the module exports of ${innerModuleId} from the server` +
+                        `but it's on the client. It's not possible to invoke a client function from ` +
+                        `the server, it can only be rendered as a Component or passed to props of a` +
+                        `Client Component.`,
+                    );
+                  }: any),
+                  {
+                    // Represents the whole object instead of a particular import.
+                    name: {value: '*'},
+                    $$typeof: {value: CLIENT_REFERENCE},
+                    filepath: {value: target.filepath},
+                    async: {value: true},
+                  },
+                );
+                return Promise.resolve(
+                  // $FlowFixMe[incompatible-call] found when upgrading Flow
+                  resolve(new Proxy(clientReference, proxyHandlers)),
+                );
+              }: any),
+              {
+                name: {value: 'then'},
+                $$typeof: {value: CLIENT_REFERENCE},
+                filepath: {value: target.filepath},
+                async: {value: false},
+              },
+            );
             // If this is not used as a Promise but is treated as a reference to a `.then`
             // export then we should treat it as a reference to that name.
-            then.$$typeof = CLIENT_REFERENCE;
-            then.filepath = target.filepath;
-            // then.name is conveniently already "then" which is the export name we need.
-            // This will break if it's minified though.
             return then;
+          } else {
+            // Since typeof .then === 'function' is a feature test we'd continue recursing
+            // indefinitely if we return a function. Instead, we return an object reference
+            // if we check further.
+            return undefined;
           }
       }
       let cachedReference = target[name];
       if (!cachedReference) {
-        cachedReference = target[name] = {
-          $$typeof: CLIENT_REFERENCE,
-          filepath: target.filepath,
-          name: name,
-          async: target.async,
-        };
+        cachedReference = target[name] = Object.defineProperties(
+          (function() {
+            throw new Error(
+              `Attempted to call ${name}() from the server but ${name} is on the client. ` +
+                `It's not possible to invoke a client function from the server, it can ` +
+                `only be rendered as a Component or passed to props of a Client Component.`,
+            );
+          }: any),
+          {
+            name: {value: name},
+            $$typeof: {value: CLIENT_REFERENCE},
+            filepath: {value: target.filepath},
+            async: {value: target.async},
+          },
+        );
       }
       return cachedReference;
     },
@@ -98,15 +147,26 @@ module.exports = function register() {
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._extensions['.client.js'] = function(module, path) {
-    const moduleId = url.pathToFileURL(path).href;
-    const moduleReference: {[string]: any, ...} = {
-      $$typeof: CLIENT_REFERENCE,
-      filepath: moduleId,
-      name: '*', // Represents the whole object instead of a particular import.
-      async: false,
-    };
+    const moduleId: string = (url.pathToFileURL(path).href: any);
+    const clientReference: Function = Object.defineProperties(
+      (function() {
+        throw new Error(
+          `Attempted to call the module exports of ${moduleId} from the server` +
+            `but it's on the client. It's not possible to invoke a client function from ` +
+            `the server, it can only be rendered as a Component or passed to props of a` +
+            `Client Component.`,
+        );
+      }: any),
+      {
+        // Represents the whole object instead of a particular import.
+        name: {value: '*'},
+        $$typeof: {value: CLIENT_REFERENCE},
+        filepath: {value: moduleId},
+        async: {value: false},
+      },
+    );
     // $FlowFixMe[incompatible-call] found when upgrading Flow
-    module.exports = new Proxy(moduleReference, proxyHandlers);
+    module.exports = new Proxy(clientReference, proxyHandlers);
   };
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
