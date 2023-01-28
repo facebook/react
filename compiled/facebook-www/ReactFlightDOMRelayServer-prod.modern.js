@@ -432,7 +432,10 @@ function useId() {
   return ":" + currentRequest.identifierPrefix + "S" + id.toString(32) + ":";
 }
 function use(usable) {
-  if (null !== usable && "object" === typeof usable) {
+  if (
+    (null !== usable && "object" === typeof usable) ||
+    "function" === typeof usable
+  ) {
     if ("function" === typeof usable.then) {
       var index = thenableIndexCounter;
       thenableIndexCounter += 1;
@@ -621,7 +624,7 @@ function createTask(request, model, context, abortSet) {
   abortSet.add(task);
   return task;
 }
-function serializeModuleReference(request, parent, key, moduleReference) {
+function serializeClientReference(request, parent, key, moduleReference) {
   var writtenModules = request.writtenModules,
     existingId = writtenModules.get(moduleReference);
   if (void 0 !== existingId)
@@ -812,7 +815,7 @@ function resolveModelToJSON(request, parent, key, value) {
   if (null === value) return null;
   if ("object" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
-      return serializeModuleReference(request, parent, key, value);
+      return serializeClientReference(request, parent, key, value);
     if (value.$$typeof === REACT_PROVIDER_TYPE)
       return (
         (value = value._context._globalName),
@@ -854,7 +857,7 @@ function resolveModelToJSON(request, parent, key, value) {
     return value;
   if ("function" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
-      return serializeModuleReference(request, parent, key, value);
+      return serializeClientReference(request, parent, key, value);
     if (/^on[A-Z]/.test(key))
       throw Error(
         "Event handlers cannot be passed to Client Component props." +

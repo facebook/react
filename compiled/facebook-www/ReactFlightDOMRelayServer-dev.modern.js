@@ -73,10 +73,10 @@ function isArray(a) {
   return isArrayImpl(a);
 }
 
-function isModuleReference(reference) {
+function isClientReference(reference) {
   return reference instanceof JSResourceReferenceImpl;
 }
-function getModuleKey(reference) {
+function getClientReferenceKey(reference) {
   // We use the reference object itself as the key because we assume the
   // object will be cached by the bundler runtime.
   return reference;
@@ -1077,7 +1077,11 @@ function getThenableStateAfterSuspending() {
 function readContext$1(context) {
   {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      error("Only createServerContext is supported in Server Components.");
+      if (isClientReference(context)) {
+        error("Cannot read a Client Context from a Server Component.");
+      } else {
+        error("Only createServerContext is supported in Server Components.");
+      }
     }
 
     if (currentRequest === null) {
@@ -1151,7 +1155,10 @@ function useId() {
 }
 
 function use(usable) {
-  if (usable !== null && typeof usable === "object") {
+  if (
+    (usable !== null && typeof usable === "object") ||
+    typeof usable === "function"
+  ) {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === "function") {
       // This is a thenable.
@@ -1168,6 +1175,12 @@ function use(usable) {
     } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
       var context = usable;
       return readContext$1(context);
+    }
+  }
+
+  {
+    if (isClientReference(usable)) {
+      error("Cannot use() an already resolved Client Reference.");
     }
   } // eslint-disable-next-line react-internal/safe-string-coercion
 
@@ -1385,7 +1398,7 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
   }
 
   if (typeof type === "function") {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     } // This is a server-side component.
@@ -1417,7 +1430,7 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
 
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === "object") {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
@@ -1526,8 +1539,8 @@ function serializeByRefID(id) {
   return "@" + id.toString(16);
 }
 
-function serializeModuleReference(request, parent, key, moduleReference) {
-  var moduleKey = getModuleKey(moduleReference);
+function serializeClientReference(request, parent, key, moduleReference) {
+  var moduleKey = getClientReferenceKey(moduleReference);
   var writtenModules = request.writtenModules;
   var existingId = writtenModules.get(moduleKey);
 
@@ -2046,8 +2059,8 @@ function resolveModelToJSON(request, parent, key, value) {
   }
 
   if (typeof value === "object") {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, value);
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, value);
     } else if (value.$$typeof === REACT_PROVIDER_TYPE) {
       var providerKey = value._context._globalName;
       var writtenProviders = request.writtenProviders;
@@ -2119,8 +2132,8 @@ function resolveModelToJSON(request, parent, key, value) {
   }
 
   if (typeof value === "function") {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, value);
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, value);
     }
 
     if (/^on[A-Z]/.test(key)) {

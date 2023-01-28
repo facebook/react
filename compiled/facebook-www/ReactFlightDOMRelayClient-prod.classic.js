@@ -266,7 +266,7 @@ function resolveModule(response, id, model) {
   var chunks = response._chunks,
     chunk = chunks.get(id);
   model = parseModelRecursively(response, dummy, "", model);
-  var moduleReference = ReactFlightDOMRelayClientIntegration.resolveModuleReference(
+  var moduleReference = ReactFlightDOMRelayClientIntegration.resolveClientReference(
     model
   );
   if (

@@ -25,8 +25,8 @@ function isArray(a) {
   return isArrayImpl(a);
 }
 
-function resolveModuleReference(bundlerConfig, moduleData) {
-  return ReactFlightDOMRelayClientIntegration.resolveModuleReference(
+function resolveClientReference(bundlerConfig, moduleData) {
+  return ReactFlightDOMRelayClientIntegration.resolveClientReference(
     moduleData
   );
 } // $FlowFixMe[missing-local-annot]
@@ -544,7 +544,7 @@ function resolveModule(response, id, model) {
   var chunks = response._chunks;
   var chunk = chunks.get(id);
   var moduleMetaData = parseModel(response, model);
-  var moduleReference = resolveModuleReference(
+  var moduleReference = resolveClientReference(
     response._bundlerConfig,
     moduleMetaData
   ); // TODO: Add an option to encode modules that are lazy loaded.

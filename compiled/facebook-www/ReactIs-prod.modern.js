@@ -33,7 +33,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  REACT_MODULE_REFERENCE = Symbol.for("react.module.reference");
+  REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
   if ("object" === typeof object && null !== object) {
     var $$typeof = object.$$typeof;
@@ -143,7 +143,7 @@ exports.isValidElementType = function(type) {
         type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        type.$$typeof === REACT_MODULE_REFERENCE ||
+        type.$$typeof === REACT_CLIENT_REFERENCE ||
         void 0 !== type.getModuleId))
     ? !0
     : !1;

@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-78c4bec20-20230127";
+var ReactVersion = "18.3.0-www-classic-ce09ace9a-20230127";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1685,7 +1685,7 @@ function forwardRef(render) {
   return elementType;
 }
 
-var REACT_MODULE_REFERENCE = Symbol.for("react.module.reference");
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function isValidElementType(type) {
   if (typeof type === "string" || typeof type === "function") {
     return true;
@@ -1717,7 +1717,7 @@ function isValidElementType(type) {
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_MODULE_REFERENCE ||
+      type.$$typeof === REACT_CLIENT_REFERENCE ||
       type.getModuleId !== undefined
     ) {
       return true;
