@@ -287,6 +287,45 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableUseHook
+  it('should unwrap async module references using use', async () => {
+    const AsyncModule = Promise.resolve('Async Text');
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = clientExports(AsyncModule);
+
+    function ServerComponent() {
+      const text = use(AsyncModuleRef);
+      return <p>{text}</p>;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async Text</p>');
+  });
+
+  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
@@ -322,6 +361,35 @@ describe('ReactFlightDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>and then</p>');
+  });
+
+  it('throws when accessing a member below the client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function dotting() {
+      return ClientModule.Component.deep;
+    }
+    expect(dotting).toThrowError(
+      'Cannot access Component.deep on the server. ' +
+        'You cannot dot into a client module from a server component. ' +
+        'You can only pass the imported name through.',
+    );
+  });
+
+  it('throws when accessing a Context.Provider below the client exports', () => {
+    const Context = React.createContext();
+    const ClientModule = clientExports({
+      Context,
+    });
+    function dotting() {
+      return ClientModule.Context.Provider;
+    }
+    expect(dotting).toThrowError(
+      `Cannot render a Client Context Provider on the Server. ` +
+        `Instead, you can export a Client Component wrapper ` +
+        `that itself renders a Client Context Provider.`,
+    );
   });
 
   // @gate enableUseHook

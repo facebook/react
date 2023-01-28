@@ -29,12 +29,12 @@ export opaque type ModuleMetaData = {
 };
 
 // eslint-disable-next-line no-unused-vars
-export opaque type ModuleReference<T> = ModuleMetaData;
+export opaque type ClientReference<T> = ModuleMetaData;
 
-export function resolveModuleReference<T>(
+export function resolveClientReference<T>(
   bundlerConfig: BundlerConfig,
   moduleData: ModuleMetaData,
-): ModuleReference<T> {
+): ClientReference<T> {
   if (bundlerConfig) {
     const resolvedModuleData = bundlerConfig[moduleData.id][moduleData.name];
     if (moduleData.async) {
@@ -64,7 +64,7 @@ function ignoreReject() {
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
 export function preloadModule<T>(
-  moduleData: ModuleReference<T>,
+  moduleData: ClientReference<T>,
 ): null | Thenable<any> {
   const chunks = moduleData.chunks;
   const promises = [];
@@ -117,7 +117,7 @@ export function preloadModule<T>(
 
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
-export function requireModule<T>(moduleData: ModuleReference<T>): T {
+export function requireModule<T>(moduleData: ClientReference<T>): T {
   let moduleExports;
   if (moduleData.async) {
     // We assume that preloadModule has been called before, which

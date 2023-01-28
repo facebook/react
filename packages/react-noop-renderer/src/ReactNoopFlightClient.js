@@ -22,7 +22,7 @@ type Source = Array<string>;
 
 const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
   supportsBinaryStreams: false,
-  resolveModuleReference(bundlerConfig: null, idx: string) {
+  resolveClientReference(bundlerConfig: null, idx: string) {
     return idx;
   },
   preloadModule(idx: string) {},

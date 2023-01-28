@@ -33,7 +33,7 @@ import {
   enableLegacyHidden,
 } from './ReactFeatureFlags';
 
-const REACT_MODULE_REFERENCE: symbol = Symbol.for('react.module.reference');
+const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
 export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
@@ -68,7 +68,7 @@ export default function isValidElementType(type: mixed): boolean {
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_MODULE_REFERENCE ||
+      type.$$typeof === REACT_CLIENT_REFERENCE ||
       type.getModuleId !== undefined
     ) {
       return true;

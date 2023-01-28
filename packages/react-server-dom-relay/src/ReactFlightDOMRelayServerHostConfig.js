@@ -17,7 +17,7 @@ import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
 
-export type ModuleReference<T> = JSResourceReference<T>;
+export type ClientReference<T> = JSResourceReference<T>;
 
 import type {
   Destination,
@@ -39,13 +39,15 @@ export type {
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
 
-export function isModuleReference(reference: Object): boolean {
+export function isClientReference(reference: Object): boolean {
   return reference instanceof JSResourceReferenceImpl;
 }
 
-export type ModuleKey = ModuleReference<any>;
+export type ClientReferenceKey = ClientReference<any>;
 
-export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+export function getClientReferenceKey(
+  reference: ClientReference<any>,
+): ClientReferenceKey {
   // We use the reference object itself as the key because we assume the
   // object will be cached by the bundler runtime.
   return reference;
@@ -53,7 +55,7 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  resource: ModuleReference<T>,
+  resource: ClientReference<T>,
 ): ModuleMetaData {
   return resolveModuleMetaDataImpl(config, resource);
 }
