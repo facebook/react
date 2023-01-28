@@ -67,8 +67,8 @@ module.exports = function(initModules) {
   // performs fn asynchronously and expects count errors logged to console.error.
   // will fail the test if the count of errors logged is not equal to count.
   async function expectErrors(fn, count) {
-    if (console.error.mockReset) {
-      console.error.mockReset();
+    if (console.error.mockClear) {
+      console.error.mockClear();
     } else {
       // TODO: Rewrite tests that use this helper to enumerate expected errors.
       // This will enable the helper to use the .toErrorDev() matcher instead of spying.
