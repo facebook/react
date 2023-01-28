@@ -12,8 +12,8 @@ import type {
   Chunk,
   BundlerConfig,
   ModuleMetaData,
-  ModuleReference,
-  ModuleKey,
+  ClientReference,
+  ClientReferenceKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -44,8 +44,8 @@ import {
   processErrorChunkDev,
   processReferenceChunk,
   resolveModuleMetaData,
-  getModuleKey,
-  isModuleReference,
+  getClientReferenceKey,
+  isClientReference,
   supportsRequestStorage,
   requestStorage,
 } from './ReactFlightServerConfig';
@@ -135,7 +135,7 @@ export type Request = {
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
-  writtenModules: Map<ModuleKey, number>,
+  writtenModules: Map<ClientReferenceKey, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
@@ -293,7 +293,7 @@ function attemptResolveElement(
     }
   }
   if (typeof type === 'function') {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
@@ -323,7 +323,7 @@ function attemptResolveElement(
     // Any built-in works as long as its props are serializable.
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
@@ -420,13 +420,13 @@ function serializeByRefID(id: number): string {
   return '@' + id.toString(16);
 }
 
-function serializeModuleReference(
+function serializeClientReference(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
-  moduleReference: ModuleReference<any>,
+  moduleReference: ClientReference<any>,
 ): string {
-  const moduleKey: ModuleKey = getModuleKey(moduleReference);
+  const moduleKey: ClientReferenceKey = getClientReferenceKey(moduleReference);
   const writtenModules = request.writtenModules;
   const existingId = writtenModules.get(moduleKey);
   if (existingId !== undefined) {
@@ -891,8 +891,8 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'object') {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, (value: any));
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, (value: any));
     } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
       const providerKey = ((value: any): ReactProviderType<any>)._context
         ._globalName;
@@ -961,8 +961,8 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, (value: any));
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, (value: any));
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(

@@ -91,11 +91,16 @@ describe('ReactFlight', () => {
     };
   });
 
-  function moduleReference(value) {
-    return {
-      $$typeof: Symbol.for('react.module.reference'),
-      value: value,
-    };
+  function clientReference(value) {
+    return Object.defineProperties(
+      function() {
+        throw new Error('Cannot call a client function from the server.');
+      },
+      {
+        $$typeof: {value: Symbol.for('react.client.reference')},
+        value: {value: value},
+      },
+    );
   }
 
   it('can render a Server Component', async () => {
@@ -136,7 +141,7 @@ describe('ReactFlight', () => {
         </span>
       );
     }
-    const User = moduleReference(UserClient);
+    const User = clientReference(UserClient);
 
     function Greeting({firstName, lastName}) {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;
@@ -327,7 +332,7 @@ describe('ReactFlight', () => {
       return <div>I am client</div>;
     }
 
-    const ClientComponentReference = moduleReference(ClientComponent);
+    const ClientComponentReference = clientReference(ClientComponent);
 
     let load = null;
     const loadClientComponentReference = () => {
@@ -369,7 +374,7 @@ describe('ReactFlight', () => {
     function ClientImpl({children}) {
       return children;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
 
     function EventHandlerProp() {
       return (
@@ -488,7 +493,7 @@ describe('ReactFlight', () => {
       );
     }
 
-    const ClientComponentReference = moduleReference(ClientComponent);
+    const ClientComponentReference = clientReference(ClientComponent);
 
     function Server() {
       return (
@@ -576,7 +581,7 @@ describe('ReactFlight', () => {
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
         <Client value={new Date()} />,
@@ -593,7 +598,7 @@ describe('ReactFlight', () => {
     function ClientImpl({children}) {
       return <div>{children}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
         <Client>Current date: {new Date()}</Client>,
@@ -612,7 +617,7 @@ describe('ReactFlight', () => {
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(<Client value={Math} />);
       ReactNoopFlightClient.read(transport);
@@ -629,7 +634,7 @@ describe('ReactFlight', () => {
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
         <Client value={{[Symbol.iterator]: {}}} />,
@@ -646,7 +651,7 @@ describe('ReactFlight', () => {
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
         <Client value={{hello: Math, title: <h1>hi</h1>}} />,
@@ -665,7 +670,7 @@ describe('ReactFlight', () => {
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
-    const Client = moduleReference(ClientImpl);
+    const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
         <Client
@@ -700,6 +705,20 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ',
       {withoutStack: true},
     );
+  });
+
+  it('should warn in DEV if a a client reference is passed to useContext()', () => {
+    const Context = React.createContext();
+    const ClientContext = clientReference(Context);
+    function ServerComponent() {
+      return React.useContext(ClientContext);
+    }
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(<ServerComponent />);
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev('Cannot read a Client Context from a Server Component.', {
+      withoutStack: true,
+    });
   });
 
   describe('Hooks', () => {
@@ -776,7 +795,7 @@ describe('ReactFlight', () => {
         );
       }
 
-      const ClientDoublerModuleRef = moduleReference(ClientDoubler);
+      const ClientDoublerModuleRef = clientReference(ClientDoubler);
 
       const transport = ReactNoopFlightServer.render(<App />);
       expect(Scheduler).toHaveYielded([]);
@@ -1000,7 +1019,7 @@ describe('ReactFlight', () => {
         return <span>{context}</span>;
       }
 
-      const Bar = moduleReference(ClientBar);
+      const Bar = clientReference(ClientBar);
 
       function Foo() {
         return (
@@ -1077,7 +1096,7 @@ describe('ReactFlight', () => {
         return <div>{value}</div>;
       }
 
-      const Baz = moduleReference(ClientBaz);
+      const Baz = clientReference(ClientBaz);
 
       function Bar() {
         return (

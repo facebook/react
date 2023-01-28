@@ -11,7 +11,7 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
-  ModuleReference,
+  ClientReference,
   ModuleMetaData,
   UninitializedModel,
   Response,
@@ -19,7 +19,7 @@ import type {
 } from './ReactFlightClientHostConfig';
 
 import {
-  resolveModuleReference,
+  resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
@@ -67,7 +67,7 @@ type ResolvedModelChunk<T> = {
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
   reason: null,
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
@@ -262,7 +262,7 @@ function createResolvedModelChunk<T>(
 
 function createResolvedModuleChunk<T>(
   response: Response,
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
@@ -293,7 +293,7 @@ function resolveModelChunk<T>(
 
 function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
 ): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // We already resolved. We didn't expect to see this.
@@ -589,7 +589,7 @@ export function resolveModule(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveModuleReference(
+  const moduleReference = resolveClientReference(
     response._bundlerConfig,
     moduleMetaData,
   );
