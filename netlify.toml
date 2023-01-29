@@ -1,3 +1,4 @@
+#NETLIFY.TOML
 [build]
   base    = ""
   publish = "fixtures/dom/build"
