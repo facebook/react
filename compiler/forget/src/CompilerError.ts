@@ -92,13 +92,36 @@ export class CompilerErrorDetail {
 export class CompilerError extends Error {
   details: CompilerErrorDetail[] = [];
 
-  constructor(details: CompilerErrorDetail[], ...args: any[]) {
+  constructor(...args: any[]) {
     super(...args);
-    this.details = details;
-    this.message = this.toString();
   }
+
+  override get message(): string {
+    return this.toString();
+  }
+
+  override set message(_message: string) {}
 
   override toString() {
     return this.details.map((detail) => detail.toString()).join("\n\n");
+  }
+
+  push(options: CompilerErrorOptions): CompilerErrorDetail {
+    const detail = new CompilerErrorDetail({
+      reason: options.reason,
+      severity: options.severity,
+      codeframe: tryPrintCodeFrame(options),
+      loc: options.nodePath?.node?.loc ?? null,
+    });
+    return this.pushErrorDetail(detail);
+  }
+
+  pushErrorDetail(detail: CompilerErrorDetail): CompilerErrorDetail {
+    this.details.push(detail);
+    return detail;
+  }
+
+  hasErrors(): boolean {
+    return this.details.length > 0;
   }
 }

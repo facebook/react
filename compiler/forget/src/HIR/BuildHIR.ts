@@ -8,7 +8,7 @@
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
-import { CompilerErrorDetail, ErrorSeverity } from "../CompilerError";
+import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../lib/Result";
 import { assertExhaustive } from "../Utils/utils";
 import {
@@ -49,7 +49,7 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
  */
 export function lower(
   func: NodePath<t.Function>
-): Result<HIRFunction, CompilerErrorDetail[]> {
+): Result<HIRFunction, CompilerError> {
   const env = new Environment();
   const builder = new HIRBuilder(env);
 
@@ -88,7 +88,7 @@ export function lower(
         place
       );
     } else {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
         severity: ErrorSeverity.Todo,
         nodePath: param,
@@ -109,14 +109,14 @@ export function lower(
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
   } else {
-    builder.recordError({
+    builder.errors.push({
       reason: `(BuildHIR::lower) Unexpected function body kind: ${body.type}}`,
       severity: ErrorSeverity.InvalidInput,
       nodePath: body,
     });
   }
 
-  if (builder.hasErrors()) {
+  if (builder.errors.hasErrors()) {
     return Err(builder.errors);
   }
 
@@ -356,7 +356,7 @@ function lowerStatement(
       const initBlock = builder.enter("value", (blockId) => {
         const init = stmt.get("init");
         if (!init.isVariableDeclaration()) {
-          builder.recordError({
+          builder.errors.push({
             reason:
               "(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement",
             severity: ErrorSeverity.Todo,
@@ -376,7 +376,7 @@ function lowerStatement(
       const updateBlock = builder.enter("value", (blockId) => {
         const update = stmt.get("update");
         if (update.node == null) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerStatement) Handle empty update in ForStatement`,
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
@@ -419,7 +419,7 @@ function lowerStatement(
 
       const test = stmt.get("test");
       if (test.node == null) {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
           severity: ErrorSeverity.Todo,
           nodePath: stmt,
@@ -588,7 +588,7 @@ function lowerStatement(
         const test = case_.get("test");
         if (test.node == null) {
           if (hasDefault) {
-            builder.recordError({
+            builder.errors.push({
               reason:
                 "(BuildHIR::lowerStatement) Expected at most one `default` branch in SwitchStatement, this code should have failed to parse",
               severity: ErrorSeverity.InvalidInput,
@@ -674,7 +674,7 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
       const nodeKind: string = stmt.node.kind;
       if (nodeKind === "var") {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
           severity: ErrorSeverity.Todo,
           nodePath: stmt,
@@ -757,7 +757,7 @@ function lowerStatement(
     case "TSNamespaceExportDeclaration":
     case "TSTypeAliasDeclaration":
     case "WithStatement": {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
         severity: ErrorSeverity.Todo,
         nodePath: stmtPath,
@@ -829,7 +829,7 @@ function lowerExpression(
       let hasError = false;
       for (const propertyPath of propertyPaths) {
         if (!propertyPath.isObjectProperty()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: propertyPath,
@@ -839,7 +839,7 @@ function lowerExpression(
         }
         const key = propertyPath.node.key;
         if (key.type !== "Identifier") {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: propertyPath,
@@ -849,7 +849,7 @@ function lowerExpression(
         }
         const valuePath = propertyPath.get("value");
         if (!valuePath.isExpression()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: valuePath,
@@ -874,7 +874,7 @@ function lowerExpression(
       let elements: Place[] = [];
       for (const element of expr.get("elements")) {
         if (element.node == null || !element.isExpression()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: element,
@@ -898,7 +898,7 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.NewExpression>;
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: calleePath,
@@ -910,7 +910,7 @@ function lowerExpression(
       let hasError = false;
       for (const argPath of expr.get("arguments")) {
         if (!argPath.isExpression()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in NewExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: argPath,
@@ -935,7 +935,7 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       let hasError = false;
       if (!calleePath.isExpression()) {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: calleePath,
@@ -950,7 +950,7 @@ function lowerExpression(
         let args: Place[] = [];
         for (const argPath of expr.get("arguments")) {
           if (!argPath.isExpression()) {
-            builder.recordError({
+            builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
@@ -982,7 +982,7 @@ function lowerExpression(
         let args: Place[] = [];
         for (const argPath of expr.get("arguments")) {
           if (!argPath.isExpression()) {
-            builder.recordError({
+            builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
@@ -1006,7 +1006,7 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.BinaryExpression>;
       const leftPath = expr.get("left");
       if (!leftPath.isExpression()) {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: leftPath,
@@ -1130,7 +1130,7 @@ function lowerExpression(
       };
       const binaryOperator = operators[operator];
       if (binaryOperator == null) {
-        builder.recordError({
+        builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle ${operator} operaators in AssignmentExpression`,
           severity: ErrorSeverity.Todo,
           nodePath: expr.get("operator"),
@@ -1169,7 +1169,7 @@ function lowerExpression(
           // Extract the final property to be read from and re-assigned, eg 'c'
           const property = leftExpr.get("property");
           if (!property.isIdentifier()) {
-            builder.recordError({
+            builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${property.type} properties in MemberExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: property,
@@ -1228,7 +1228,7 @@ function lowerExpression(
           };
         }
         default: {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: expr,
@@ -1263,7 +1263,7 @@ function lowerExpression(
       let hasError = false;
       for (const attribute of opening.get("attributes")) {
         if (!attribute.isJSXAttribute()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
             severity: ErrorSeverity.Todo,
             nodePath: attribute,
@@ -1273,7 +1273,7 @@ function lowerExpression(
         }
         const name = attribute.get("name");
         if (!name.isJSXIdentifier()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${name.type} attribute names in JSXElement`,
             severity: ErrorSeverity.Todo,
             nodePath: name,
@@ -1287,7 +1287,7 @@ function lowerExpression(
           value = lowerExpressionToPlace(builder, valueExpr);
         } else {
           if (!valueExpr.isJSXExpressionContainer()) {
-            builder.recordError({
+            builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
@@ -1297,7 +1297,7 @@ function lowerExpression(
           }
           const expression = valueExpr.get("expression");
           if (!expression.isExpression()) {
-            builder.recordError({
+            builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
@@ -1349,7 +1349,9 @@ function lowerExpression(
       const lowering = lower(expr);
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {
-        lowering.unwrapErr().forEach((e) => builder.pushErrorDetail(e));
+        lowering
+          .unwrapErr()
+          .details.forEach((detail) => builder.errors.pushErrorDetail(detail));
         return {
           kind: "UnsupportedNode",
           node: exprNode,
@@ -1362,7 +1364,7 @@ function lowerExpression(
       const params: Array<string> = [];
       for (const p of expr.get("params")) {
         if (!p.isIdentifier()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${p.type} params in FunctionExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: p,
@@ -1388,7 +1390,7 @@ function lowerExpression(
     case "TaggedTemplateExpression": {
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
       if (expr.get("quasi").get("expressions").length !== 0) {
-        builder.recordError({
+        builder.errors.push({
           reason: "Unhandled tagged template with interpolations",
           severity: ErrorSeverity.Todo,
           nodePath: exprPath,
@@ -1402,7 +1404,7 @@ function lowerExpression(
 
       const value = expr.get("quasi").get("quasis").at(0)!.node.value;
       if (value.raw !== value.cooked) {
-        builder.recordError({
+        builder.errors.push({
           reason:
             "Unhandled tagged template where cooked value is different from raw value",
           severity: ErrorSeverity.Todo,
@@ -1428,7 +1430,7 @@ function lowerExpression(
       };
     }
     default: {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
         severity: ErrorSeverity.Todo,
         nodePath: exprPath,
@@ -1448,7 +1450,7 @@ function lowerMemberExpression(
   const property = expr.get("property");
   if (!expr.node.computed) {
     if (!property.isIdentifier()) {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${property.type} property`,
         severity: ErrorSeverity.Todo,
         nodePath: property,
@@ -1469,7 +1471,7 @@ function lowerMemberExpression(
     return { object, property: property.node.name, value };
   } else {
     if (!property.isExpression()) {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${property.type} property`,
         severity: ErrorSeverity.InvalidInput,
         nodePath: property,
@@ -1558,7 +1560,7 @@ function lowerJsxElementName(
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   if (!exprPath.isJSXIdentifier()) {
-    builder.recordError({
+    builder.errors.push({
       reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
       severity: ErrorSeverity.Todo,
       nodePath: exprPath,
@@ -1619,7 +1621,7 @@ function lowerJsxElement(
   } else if (exprPath.isJSXExpressionContainer()) {
     const expression = exprPath.get("expression");
     if (!expression.isExpression()) {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerJsxElement) Handle ${expression.type} expressions`,
         severity: ErrorSeverity.Todo,
         nodePath: expression,
@@ -1653,7 +1655,7 @@ function lowerJsxElement(
     return place;
   } else {
     if (!(t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode))) {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerJsxElement) Expected refinement to work, got: ${exprPath.type}`,
         severity: ErrorSeverity.InvalidInput,
         nodePath: exprPath,
@@ -1780,7 +1782,7 @@ function lowerAssignment(
       }
       if (!lvalue.node.computed) {
         if (!property.isIdentifier()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
             severity: ErrorSeverity.Todo,
             nodePath: property,
@@ -1796,7 +1798,7 @@ function lowerAssignment(
         };
       } else {
         if (!property.isExpression()) {
-          builder.recordError({
+          builder.errors.push({
             reason:
               "Expected private name to appear as a non-computed property",
             severity: ErrorSeverity.InvalidInput,
@@ -1831,7 +1833,7 @@ function lowerAssignment(
           continue;
         }
         if (element.node.type === "RestElement") {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${element.type} in ArrayPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: element,
@@ -1879,7 +1881,7 @@ function lowerAssignment(
       for (let i = 0; i < properties.length; i++) {
         const property = properties[i];
         if (!property.isObjectProperty()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: property,
@@ -1889,7 +1891,7 @@ function lowerAssignment(
         }
         const key = property.get("key");
         if (!key.isIdentifier()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
             severity: ErrorSeverity.Todo,
             nodePath: key,
@@ -1899,7 +1901,7 @@ function lowerAssignment(
         }
         const element = property.get("value");
         if (!element.isLVal()) {
-          builder.recordError({
+          builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
             severity: ErrorSeverity.InvalidInput,
             nodePath: element,
@@ -1921,7 +1923,7 @@ function lowerAssignment(
         : objectPlace;
     }
     default: {
-      builder.recordError({
+      builder.errors.push({
         reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
         severity: ErrorSeverity.Todo,
         nodePath: lvaluePath,

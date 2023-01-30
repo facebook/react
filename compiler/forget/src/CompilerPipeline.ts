@@ -46,8 +46,8 @@ export type CompilerPipelineValue =
 export function* run(
   func: NodePath<t.FunctionDeclaration>
 ): Generator<CompilerPipelineValue, t.Function> {
-  const lowering = lower(func).orElse((details) => {
-    throw new CompilerError(details);
+  const lowering = lower(func).orElse((error) => {
+    throw error;
   });
 
   const hir = lowering.unwrap();
