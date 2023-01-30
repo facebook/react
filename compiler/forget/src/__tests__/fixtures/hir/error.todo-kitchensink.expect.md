@@ -44,6 +44,14 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   `;
 
   graphql`\\t\n`;
+
+  for (const c of [1, 2]) {
+  }
+
+  for (let x in { a: 1 }) {
+  }
+
+  do {} while (i < 3);
 }
 
 ```
@@ -301,8 +309,35 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   41 |
 > 42 |   graphql`\\t\n`;
      |   ^^^^^^^^^^^^^^
-  43 | }
-  44 |
+  43 |
+  44 |   for (const c of [1, 2]) {
+  45 |   }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForOfStatement statements
+  42 |   graphql`\\t\n`;
+  43 |
+> 44 |   for (const c of [1, 2]) {
+     |   ^
+  45 |   }
+  46 |
+  47 |   for (let x in { a: 1 }) {
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForInStatement statements
+  45 |   }
+  46 |
+> 47 |   for (let x in { a: 1 }) {
+     |   ^
+  48 |   }
+  49 |
+  50 |   do {} while (i < 3);
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle DoWhileStatement statements
+  48 |   }
+  49 |
+> 50 |   do {} while (i < 3);
+     |   ^^^^^^^^^^^^^^^^^^^^
+  51 | }
+  52 |
 ```
           
       

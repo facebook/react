@@ -244,108 +244,6 @@ function lowerStatement(
       );
       return;
     }
-    case "ForInStatement": {
-      const stmt = stmtPath as NodePath<t.ForInStatement>;
-      //  Block used to evaluate whether to (re)enter or exit the loop
-      const conditionalBlock = builder.reserve("block");
-      //  Block for code following the loop
-      const continuationBlock = builder.reserve("block");
-      const loopBlock = builder.enter("block", (blockId) => {
-        return builder.loop(
-          label,
-          conditionalBlock.id,
-          continuationBlock.id,
-          () => {
-            lowerStatement(builder, stmt.get("body"));
-            return {
-              kind: "goto",
-              block: conditionalBlock.id,
-              variant: GotoVariant.Continue,
-              id: makeInstructionId(0),
-            };
-          }
-        );
-      });
-      //  End the block leading up to the loop and jump to the conditional block
-      builder.terminateWithContinuation(
-        {
-          kind: "goto",
-          block: conditionalBlock.id,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-        },
-        conditionalBlock
-      );
-      /**
-       * Terminate the conditional block using the <right> value as the test condition:
-       * this conceptually represents that the value of <right> influences which branch
-       * is taken (if it has properties enter the loop, if no properties exit to the continuation)
-       */
-      const test = lowerExpressionToPlace(builder, stmt.get("right"));
-      const terminal: IfTerminal = {
-        kind: "if",
-        test,
-        consequent: loopBlock,
-        alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id,
-        id: makeInstructionId(0),
-      };
-      builder.terminateWithContinuation(terminal, continuationBlock);
-      return;
-    }
-    case "ForOfStatement": {
-      const stmt = stmtPath as NodePath<t.ForOfStatement>;
-      //  Block used to evaluate whether to (re)enter or exit the loop
-      const conditionalBlock = builder.reserve("block");
-      //  Block for code following the loop
-      const continuationBlock = builder.reserve("block");
-      /**
-       * Build the loop body, each iteration loops back to the conditional block
-       * to check whether to continue or exit
-       */
-      const loopBlock = builder.enter("block", (blockId) => {
-        return builder.loop(
-          label,
-          conditionalBlock.id,
-          continuationBlock.id,
-          () => {
-            lowerStatement(builder, stmt.get("body"));
-            return {
-              kind: "goto",
-              block: conditionalBlock.id,
-              variant: GotoVariant.Continue,
-              id: makeInstructionId(0),
-            };
-          }
-        );
-      });
-      //  End the block leading up to the loop and jump to the conditional block
-      builder.terminateWithContinuation(
-        {
-          kind: "goto",
-          block: conditionalBlock.id,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-        },
-        conditionalBlock
-      );
-      /**
-       * Terminate the conditional block using the <right> value as the test condition:
-       * this conceptually represents that the value of <right> influences which branch
-       * is taken (even though it isn't actually a boolean check in practice)
-       */
-      const test = lowerExpressionToPlace(builder, stmt.get("right"));
-      const terminal: IfTerminal = {
-        kind: "if",
-        test,
-        consequent: loopBlock,
-        alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id,
-        id: makeInstructionId(0),
-      };
-      builder.terminateWithContinuation(terminal, continuationBlock);
-      return;
-    }
     case "ForStatement": {
       const stmt = stmtPath as NodePath<t.ForStatement>;
 
@@ -439,42 +337,6 @@ function lowerStatement(
           continuationBlock
         );
       }
-      return;
-    }
-    case "DoWhileStatement": {
-      const stmt = stmtPath as NodePath<t.DoWhileStatement>;
-      //  Block for code following the loop
-      const continuationBlock = builder.reserve("block");
-      //  Loop body
-      const loopBlock = builder.enter("block", (loopBlock) => {
-        return builder.loop(label, loopBlock, continuationBlock.id, () => {
-          lowerStatement(builder, stmt.get("body"));
-          /**
-           * the loop terminates with the while condition, either looping
-           * around (consequent) or exiting to the continuation (alternate)
-           */
-          const test = lowerExpressionToPlace(builder, stmt.get("test"));
-          const terminal: IfTerminal = {
-            kind: "if",
-            test,
-            consequent: loopBlock,
-            alternate: continuationBlock.id,
-            fallthrough: continuationBlock.id,
-            id: makeInstructionId(0),
-          };
-          return terminal;
-        });
-      });
-      //  do-while unconditionally enters the loop
-      builder.terminateWithContinuation(
-        {
-          kind: "goto",
-          block: loopBlock,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-        },
-        continuationBlock
-      );
       return;
     }
     case "WhileStatement": {
@@ -726,6 +588,9 @@ function lowerStatement(
       });
       return;
     }
+    case "ForOfStatement":
+    case "ForInStatement":
+    case "DoWhileStatement":
     case "ClassDeclaration":
     case "DebuggerStatement":
     case "DeclareClass":

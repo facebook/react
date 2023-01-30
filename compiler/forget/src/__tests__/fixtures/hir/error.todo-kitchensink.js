@@ -40,4 +40,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   `;
 
   graphql`\\t\n`;
+
+  for (const c of [1, 2]) {
+  }
+
+  for (let x in { a: 1 }) {
+  }
+
+  do {} while (i < 3);
 }

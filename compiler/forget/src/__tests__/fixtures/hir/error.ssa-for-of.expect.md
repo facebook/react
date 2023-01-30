@@ -19,7 +19,14 @@ function foo(cond) {
 ## Error
 
 ```
-Expected a break target
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForOfStatement statements
+  1 | function foo(cond) {
+  2 |   let items = [];
+> 3 |   for (const item of items) {
+    |   ^
+  4 |     let y = 0;
+  5 |     if (cond) {
+  6 |       y = 1;
 ```
           
       
