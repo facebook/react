@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-48b687fc9-20230130";
+var ReactVersion = "18.3.0-www-modern-1f5ce59dd-20230130";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -221,7 +221,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
     dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM =

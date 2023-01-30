@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-48b687fc9-20230130";
+var ReactVersion = "18.3.0-www-modern-1f5ce59dd-20230130";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -482,7 +482,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
     dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM =
@@ -4079,36 +4078,34 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
       }
     }
 
-    if (warnAboutSpreadingKeyToJSX) {
-      if (hasOwnProperty.call(props, "key")) {
-        var componentName = getComponentNameFromType(type);
-        var keys = Object.keys(props).filter(function(k) {
-          return k !== "key";
-        });
-        var beforeExample =
-          keys.length > 0
-            ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
-            : "{key: someKey}";
+    if (hasOwnProperty.call(props, "key")) {
+      var componentName = getComponentNameFromType(type);
+      var keys = Object.keys(props).filter(function(k) {
+        return k !== "key";
+      });
+      var beforeExample =
+        keys.length > 0
+          ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
+          : "{key: someKey}";
 
-        if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-          var afterExample =
-            keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
+      if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+        var afterExample =
+          keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
 
-          error(
-            'A props object containing a "key" prop is being spread into JSX:\n' +
-              "  let props = %s;\n" +
-              "  <%s {...props} />\n" +
-              "React keys must be passed directly to JSX without using spread:\n" +
-              "  let props = %s;\n" +
-              "  <%s key={someKey} {...props} />",
-            beforeExample,
-            componentName,
-            afterExample,
-            componentName
-          );
+        error(
+          'A props object containing a "key" prop is being spread into JSX:\n' +
+            "  let props = %s;\n" +
+            "  <%s {...props} />\n" +
+            "React keys must be passed directly to JSX without using spread:\n" +
+            "  let props = %s;\n" +
+            "  <%s key={someKey} {...props} />",
+          beforeExample,
+          componentName,
+          afterExample,
+          componentName
+        );
 
-          didWarnAboutKeySpread[componentName + beforeExample] = true;
-        }
+        didWarnAboutKeySpread[componentName + beforeExample] = true;
       }
     }
 
