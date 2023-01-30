@@ -21,7 +21,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
-import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'shared/checkPropTypes';
 import isArray from 'shared/isArray';
 
@@ -365,13 +364,11 @@ export function jsxWithValidation(
               Object.freeze(children);
             }
           } else {
-            if (__DEV__) {
-              console.error(
-                'React.jsx: Static children should always be an array. ' +
-                  'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-                  'Use the Babel transform instead.',
-              );
-            }
+            console.error(
+              'React.jsx: Static children should always be an array. ' +
+                'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+                'Use the Babel transform instead.',
+            );
           }
         } else {
           validateChildKeys(children, type);
@@ -379,31 +376,29 @@ export function jsxWithValidation(
       }
     }
 
-    if (warnAboutSpreadingKeyToJSX) {
-      if (hasOwnProperty.call(props, 'key')) {
-        const componentName = getComponentNameFromType(type);
-        const keys = Object.keys(props).filter(k => k !== 'key');
-        const beforeExample =
-          keys.length > 0
-            ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
-            : '{key: someKey}';
-        if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-          const afterExample =
-            keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
-          console.error(
-            'A props object containing a "key" prop is being spread into JSX:\n' +
-              '  let props = %s;\n' +
-              '  <%s {...props} />\n' +
-              'React keys must be passed directly to JSX without using spread:\n' +
-              '  let props = %s;\n' +
-              '  <%s key={someKey} {...props} />',
-            beforeExample,
-            componentName,
-            afterExample,
-            componentName,
-          );
-          didWarnAboutKeySpread[componentName + beforeExample] = true;
-        }
+    if (hasOwnProperty.call(props, 'key')) {
+      const componentName = getComponentNameFromType(type);
+      const keys = Object.keys(props).filter(k => k !== 'key');
+      const beforeExample =
+        keys.length > 0
+          ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
+          : '{key: someKey}';
+      if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+        const afterExample =
+          keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
+        console.error(
+          'A props object containing a "key" prop is being spread into JSX:\n' +
+            '  let props = %s;\n' +
+            '  <%s {...props} />\n' +
+            'React keys must be passed directly to JSX without using spread:\n' +
+            '  let props = %s;\n' +
+            '  <%s key={someKey} {...props} />',
+          beforeExample,
+          componentName,
+          afterExample,
+          componentName,
+        );
+        didWarnAboutKeySpread[componentName + beforeExample] = true;
       }
     }
 

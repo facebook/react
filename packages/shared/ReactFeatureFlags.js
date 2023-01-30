@@ -196,7 +196,6 @@ export const disableTextareaChildren = false;
 
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
