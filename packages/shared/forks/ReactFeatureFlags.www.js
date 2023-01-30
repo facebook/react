@@ -29,7 +29,6 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
-  enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
 } = dynamicFeatureFlags;

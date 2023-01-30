@@ -3796,7 +3796,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  // @gate !enableSyncDefaultUpdates
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;
 
@@ -3863,10 +3862,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       expect(Scheduler).toFlushAndYield([
-        'B',
         'Suspend! [A1]',
         'Loading...',
-
+        'B',
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',
@@ -3882,6 +3880,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await resolveText('A1');
       expect(Scheduler).toFlushAndYield([
         'A1',
+        'B',
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',

@@ -2549,13 +2549,9 @@ describe('ReactSuspenseList', () => {
 
     await act(async () => {
       // Add a few items at the end.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateLowPri(true);
-        });
-      } else {
+      React.startTransition(() => {
         updateLowPri(true);
-      }
+      });
 
       // Flush partially through.
       expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);

@@ -439,13 +439,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -454,13 +450,9 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableA} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableA} />);
-      }
+      });
 
       // Flush everything and ensure that the correct subscribable is used
       expect(Scheduler).toFlushAndYield([

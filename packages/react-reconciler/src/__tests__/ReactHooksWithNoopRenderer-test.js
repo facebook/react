@@ -171,15 +171,10 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     // Schedule some updates
     act(() => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          counter.current.updateCount(1);
-          counter.current.updateCount(count => count + 10);
-        });
-      } else {
+      React.startTransition(() => {
         counter.current.updateCount(1);
         counter.current.updateCount(count => count + 10);
-      }
+      });
 
       // Partially flush without committing
       expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
@@ -815,13 +810,9 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            setRow(20);
-          });
-        } else {
+        React.startTransition(() => {
           setRow(20);
-        }
+        });
       });
       expect(Scheduler).toHaveYielded(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);
@@ -961,15 +952,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        expect(Scheduler).toHaveYielded(['Count: 4']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
-      } else {
-        expect(Scheduler).toHaveYielded(['Count: 1']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-        expect(Scheduler).toFlushAndYield(['Count: 4']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
-      }
+      expect(Scheduler).toHaveYielded(['Count: 4']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
     });
   });
 
@@ -1727,15 +1711,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // As a result we, somewhat surprisingly, commit them in the opposite order.
       // This should be fine because any non-discrete set of work doesn't guarantee order
       // and easily could've happened slightly later too.
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        expect(Scheduler).toHaveYielded(['Will set count to 1', 'Count: 1']);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Will set count to 1',
-          'Count: 2',
-          'Count: 1',
-        ]);
-      }
+      expect(Scheduler).toHaveYielded(['Will set count to 1', 'Count: 1']);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });

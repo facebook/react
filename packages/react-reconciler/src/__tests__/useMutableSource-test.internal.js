@@ -454,13 +454,9 @@ describe('useMutableSource', () => {
 
       // Changing values should schedule an update with React.
       // Start working on this update but don't finish it.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          source.value = 'two';
-        });
-      } else {
+      React.startTransition(() => {
         source.value = 'two';
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['a:two']);
 
       // Re-renders that occur before the update is processed
@@ -1558,15 +1554,10 @@ describe('useMutableSource', () => {
         expect(Scheduler).toFlushAndYieldThrough(['a0', 'b0']);
         // Mutate in an event. This schedules a subscription update on a, which
         // already mounted, but not b, which hasn't subscribed yet.
-        if (gate(flags => flags.enableUnifiedSyncLane)) {
-          React.startTransition(() => {
-            mutateA('a1');
-            mutateB('b1');
-          });
-        } else {
+        React.startTransition(() => {
           mutateA('a1');
           mutateB('b1');
-        }
+        });
 
         // Mutate again at lower priority. This will schedule another subscription
         // update on a, but not b. When b mounts and subscriptions, the value it
