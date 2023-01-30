@@ -1391,7 +1391,8 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
       if (expr.get("quasi").get("expressions").length !== 0) {
         builder.errors.push({
-          reason: "Unhandled tagged template with interpolations",
+          reason:
+            "(BuildHIR::lowerAssignment) Handle tagged template with interpolations",
           severity: ErrorSeverity.Todo,
           nodePath: exprPath,
         });
@@ -1401,12 +1402,11 @@ function lowerExpression(
         expr.get("quasi").get("quasis").length == 1,
         "there should be only one quasi as we don't support interpolations yet"
       );
-
       const value = expr.get("quasi").get("quasis").at(0)!.node.value;
       if (value.raw !== value.cooked) {
         builder.errors.push({
           reason:
-            "Unhandled tagged template where cooked value is different from raw value",
+            "(BuildHIR::lowerAssignment) Handle tagged template where cooked value is different from raw value",
           severity: ErrorSeverity.Todo,
           nodePath: exprPath,
         });
@@ -1800,7 +1800,7 @@ function lowerAssignment(
         if (!property.isExpression()) {
           builder.errors.push({
             reason:
-              "Expected private name to appear as a non-computed property",
+              "(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property",
             severity: ErrorSeverity.InvalidInput,
             nodePath: property,
           });

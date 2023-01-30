@@ -28,8 +28,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   for (; i < 3; i += 1) {
     x.push(i);
   }
-  for (; i < 3; ) {}
-  for (;;) {}
+  for (; i < 3; ) {
+    break;
+  }
+  for (;;) {
+    break;
+  }
 
   graphql`
     ${g}
