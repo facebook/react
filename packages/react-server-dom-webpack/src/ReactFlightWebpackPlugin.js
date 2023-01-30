@@ -119,7 +119,7 @@ export default class ReactFlightWebpackPlugin {
           contextResolver,
           compiler.inputFileSystem,
           contextModuleFactory,
-          function(err, resolvedClientRefs) {
+          function (err, resolvedClientRefs) {
             if (err) {
               callback(err);
               return;
@@ -205,7 +205,7 @@ export default class ReactFlightWebpackPlugin {
           name: PLUGIN_NAME,
           stage: Compilation.PROCESS_ASSETS_STAGE_REPORT,
         },
-        function() {
+        function () {
           if (clientFileNameFound === false) {
             compilation.warnings.push(
               new WebpackError(
@@ -220,8 +220,8 @@ export default class ReactFlightWebpackPlugin {
               [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
             },
           } = {};
-          compilation.chunkGroups.forEach(function(chunkGroup) {
-            const chunkIds = chunkGroup.chunks.map(function(c) {
+          compilation.chunkGroups.forEach(function (chunkGroup) {
+            const chunkIds = chunkGroup.chunks.map(function (c) {
               return c.id;
             });
 
@@ -248,7 +248,7 @@ export default class ReactFlightWebpackPlugin {
                     ? moduleProvidedExports
                     : [],
                 )
-                .forEach(function(name) {
+                .forEach(function (name) {
                   moduleExports[name] = {
                     id,
                     chunks: chunkIds,
@@ -262,12 +262,11 @@ export default class ReactFlightWebpackPlugin {
               }
             }
 
-            chunkGroup.chunks.forEach(function(chunk) {
-              const chunkModules = compilation.chunkGraph.getChunkModulesIterable(
-                chunk,
-              );
+            chunkGroup.chunks.forEach(function (chunk) {
+              const chunkModules =
+                compilation.chunkGraph.getChunkModulesIterable(chunk);
 
-              Array.from(chunkModules).forEach(function(module) {
+              Array.from(chunkModules).forEach(function (module) {
                 const moduleId = compilation.chunkGraph.getModuleId(module);
 
                 recordModule(moduleId, module);
@@ -316,7 +315,8 @@ export default class ReactFlightWebpackPlugin {
           cb(null, [new ClientReferenceDependency(clientReferencePath)]);
           return;
         }
-        const clientReferenceSearch: ClientReferenceSearchPath = clientReferencePath;
+        const clientReferenceSearch: ClientReferenceSearchPath =
+          clientReferencePath;
         contextResolver.resolve(
           {},
           context,

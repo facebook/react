@@ -23,7 +23,7 @@ function dumpSubtree(info, indent) {
 }
 
 const RCTFabricUIManager = {
-  __dumpChildSetForJestTestsOnly: function(childSet) {
+  __dumpChildSetForJestTestsOnly: function (childSet) {
     const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const child of childSet) {
@@ -31,7 +31,7 @@ const RCTFabricUIManager = {
     }
     return result.join('\n');
   },
-  __dumpHierarchyForJestTestsOnly: function() {
+  __dumpHierarchyForJestTestsOnly: function () {
     const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [rootTag, childSet] of roots) {

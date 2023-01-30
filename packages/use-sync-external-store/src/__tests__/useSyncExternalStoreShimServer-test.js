@@ -45,8 +45,8 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    useSyncExternalStore = require('use-sync-external-store/shim')
-      .useSyncExternalStore;
+    useSyncExternalStore =
+      require('use-sync-external-store/shim').useSyncExternalStore;
   });
 
   function Text({text}) {

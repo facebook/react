@@ -39,7 +39,7 @@ function initServer() {
   const host = 'localhost';
   const port = 8000;
 
-  const requestListener = function(request, response) {
+  const requestListener = function (request, response) {
     let contents;
     switch (request.url) {
       case '/react.js':

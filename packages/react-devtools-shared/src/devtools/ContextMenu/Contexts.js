@@ -83,10 +83,9 @@ export type RegistryContextType = {
   registerMenu: typeof registerMenu,
 };
 
-export const RegistryContext: ReactContext<RegistryContextType> = createContext<RegistryContextType>(
-  {
+export const RegistryContext: ReactContext<RegistryContextType> =
+  createContext<RegistryContextType>({
     hideMenu,
     showMenu,
     registerMenu,
-  },
-);
+  });

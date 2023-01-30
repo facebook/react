@@ -85,7 +85,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
   // $FlowFixMe[prop-missing] found when upgrading Flow
   assign(SyntheticBaseEvent.prototype, {
     // $FlowFixMe[missing-this-annot]
-    preventDefault: function() {
+    preventDefault: function () {
       this.defaultPrevented = true;
       const event = this.nativeEvent;
       if (!event) {
@@ -102,7 +102,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
     },
 
     // $FlowFixMe[missing-this-annot]
-    stopPropagation: function() {
+    stopPropagation: function () {
       const event = this.nativeEvent;
       if (!event) {
         return;
@@ -128,7 +128,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
      * them back into the pool. This allows a way to hold onto a reference that
      * won't be added back into the pool.
      */
-    persist: function() {
+    persist: function () {
       // Modern event system doesn't use pooling.
     },
 
@@ -150,7 +150,7 @@ const EventInterface = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
-  timeStamp: function(event: {[propName: string]: mixed}) {
+  timeStamp: function (event: {[propName: string]: mixed}) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: 0,
@@ -163,9 +163,8 @@ const UIEventInterface: EventInterfaceType = {
   view: 0,
   detail: 0,
 };
-export const SyntheticUIEvent: $FlowFixMe = createSyntheticEvent(
-  UIEventInterface,
-);
+export const SyntheticUIEvent: $FlowFixMe =
+  createSyntheticEvent(UIEventInterface);
 
 let lastMovementX;
 let lastMovementY;
@@ -205,7 +204,7 @@ const MouseEventInterface: EventInterfaceType = {
   getModifierState: getEventModifierState,
   button: 0,
   buttons: 0,
-  relatedTarget: function(event) {
+  relatedTarget: function (event) {
     if (event.relatedTarget === undefined)
       return event.fromElement === event.srcElement
         ? event.toElement
@@ -213,14 +212,14 @@ const MouseEventInterface: EventInterfaceType = {
 
     return event.relatedTarget;
   },
-  movementX: function(event) {
+  movementX: function (event) {
     if ('movementX' in event) {
       return event.movementX;
     }
     updateMouseMovementPolyfillState(event);
     return lastMovementX;
   },
-  movementY: function(event) {
+  movementY: function (event) {
     if ('movementY' in event) {
       return event.movementY;
     }
@@ -230,9 +229,8 @@ const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
-export const SyntheticMouseEvent: $FlowFixMe = createSyntheticEvent(
-  MouseEventInterface,
-);
+export const SyntheticMouseEvent: $FlowFixMe =
+  createSyntheticEvent(MouseEventInterface);
 
 /**
  * @interface DragEvent
@@ -242,9 +240,8 @@ const DragEventInterface: EventInterfaceType = {
   ...MouseEventInterface,
   dataTransfer: 0,
 };
-export const SyntheticDragEvent: $FlowFixMe = createSyntheticEvent(
-  DragEventInterface,
-);
+export const SyntheticDragEvent: $FlowFixMe =
+  createSyntheticEvent(DragEventInterface);
 
 /**
  * @interface FocusEvent
@@ -254,9 +251,8 @@ const FocusEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   relatedTarget: 0,
 };
-export const SyntheticFocusEvent: $FlowFixMe = createSyntheticEvent(
-  FocusEventInterface,
-);
+export const SyntheticFocusEvent: $FlowFixMe =
+  createSyntheticEvent(FocusEventInterface);
 
 /**
  * @interface Event
@@ -279,7 +275,7 @@ export const SyntheticAnimationEvent: $FlowFixMe = createSyntheticEvent(
  */
 const ClipboardEventInterface: EventInterfaceType = {
   ...EventInterface,
-  clipboardData: function(event) {
+  clipboardData: function (event) {
     return 'clipboardData' in event
       ? event.clipboardData
       : window.clipboardData;
@@ -458,7 +454,7 @@ const KeyboardEventInterface = {
   locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
-  charCode: function(event: {[propName: string]: mixed}) {
+  charCode: function (event: {[propName: string]: mixed}) {
     // `charCode` is the result of a KeyPress event and represents the value of
     // the actual printable character.
 
@@ -472,7 +468,7 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-  keyCode: function(event: {[propName: string]: mixed}) {
+  keyCode: function (event: {[propName: string]: mixed}) {
     // `keyCode` is the result of a KeyDown/Up event and represents the value of
     // physical keyboard key.
 
@@ -485,7 +481,7 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-  which: function(event: {[propName: string]: mixed}) {
+  which: function (event: {[propName: string]: mixed}) {
     // `which` is an alias for either `keyCode` or `charCode` depending on the
     // type of the event.
     if (event.type === 'keypress') {
@@ -540,9 +536,8 @@ const TouchEventInterface = {
   shiftKey: 0,
   getModifierState: getEventModifierState,
 };
-export const SyntheticTouchEvent: $FlowFixMe = createSyntheticEvent(
-  TouchEventInterface,
-);
+export const SyntheticTouchEvent: $FlowFixMe =
+  createSyntheticEvent(TouchEventInterface);
 
 /**
  * @interface Event
@@ -595,6 +590,5 @@ const WheelEventInterface = {
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: 0,
 };
-export const SyntheticWheelEvent: $FlowFixMe = createSyntheticEvent(
-  WheelEventInterface,
-);
+export const SyntheticWheelEvent: $FlowFixMe =
+  createSyntheticEvent(WheelEventInterface);

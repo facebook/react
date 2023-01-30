@@ -794,9 +794,9 @@ function AutoSizedCanvas({
                 <ContextMenuItem
                   onClick={() =>
                     copy(
-                      `line ${flamechartStackFrame.locationLine ??
-                        ''}, column ${flamechartStackFrame.locationColumn ??
-                        ''}`,
+                      `line ${
+                        flamechartStackFrame.locationLine ?? ''
+                      }, column ${flamechartStackFrame.locationColumn ?? ''}`,
                     )
                   }
                   title="Copy location">

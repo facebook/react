@@ -22,7 +22,7 @@ export function setExtraStackFrame(stack: null | string): void {
 }
 
 if (__DEV__) {
-  ReactDebugCurrentFrame.setExtraStackFrame = function(stack: null | string) {
+  ReactDebugCurrentFrame.setExtraStackFrame = function (stack: null | string) {
     if (__DEV__) {
       currentExtraStackFrame = stack;
     }
@@ -30,7 +30,7 @@ if (__DEV__) {
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
 
-  ReactDebugCurrentFrame.getStackAddendum = function(): string {
+  ReactDebugCurrentFrame.getStackAddendum = function (): string {
     let stack = '';
 
     // Add an extra top frame while an element is being validated

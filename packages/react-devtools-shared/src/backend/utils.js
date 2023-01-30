@@ -119,9 +119,10 @@ export function copyWithSet(
   return updated;
 }
 
-export function getEffectDurations(
-  root: Object,
-): {effectDuration: any | null, passiveEffectDuration: any | null} {
+export function getEffectDurations(root: Object): {
+  effectDuration: any | null,
+  passiveEffectDuration: any | null,
+} {
   // Profiling durations are only available for certain builds.
   // If available, they'll be stored on the HostRoot.
   let effectDuration = null;

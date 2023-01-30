@@ -8,8 +8,7 @@
  */
 'use strict';
 
-/*:: import type { ErrorMap } from './Types' */
-
+import type {ErrorMap} from './Types';
 /**
  * turns
  *   { 'MUCH ERROR': '0', 'SUCH WRONG': '1' }

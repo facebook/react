@@ -14,7 +14,7 @@ let webpackModuleIdx = 0;
 const webpackModules = {};
 const webpackErroredModules = {};
 const webpackMap = {};
-global.__webpack_require__ = function(id) {
+global.__webpack_require__ = function (id) {
   if (webpackErroredModules[id]) {
     throw webpackErroredModules[id];
   }

@@ -15,7 +15,7 @@ export function mountSafeCallback_NOT_REALLY_SAFE(
   context: any,
   callback: ?Function,
 ): any {
-  return function() {
+  return function () {
     if (!callback) {
       return undefined;
     }

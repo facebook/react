@@ -5,17 +5,18 @@ if (!window.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
   installHook(window);
 
   // detect react
-  window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({
-    reactBuildType,
-  }) {
-    window.postMessage(
-      {
-        source: 'react-devtools-detector',
-        reactBuildType,
-      },
-      '*',
-    );
-  });
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on(
+    'renderer',
+    function ({reactBuildType}) {
+      window.postMessage(
+        {
+          source: 'react-devtools-detector',
+          reactBuildType,
+        },
+        '*',
+      );
+    },
+  );
 
   // save native values
   window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeObjectCreate = Object.create;

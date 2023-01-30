@@ -28,7 +28,7 @@ spawn(
       DANGER_GITHUB_API_TOKEN: token,
     },
   }
-).on('close', function(code) {
+).on('close', function (code) {
   if (code !== 0) {
     console.error('Danger failed');
   } else {

@@ -132,7 +132,8 @@ export function inspectElement(
         InspectedElementFrontend,
         InspectedElementResponseType,
       ]) => {
-        const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
+        const resolvedRecord =
+          ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
 

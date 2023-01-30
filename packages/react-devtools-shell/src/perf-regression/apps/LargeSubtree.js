@@ -24,9 +24,9 @@ export default function LargeSubtree(): React.Node {
     window.requestAnimationFrame(() => {
       const afterRenderTime = performance.now();
       console.log(
-        `Time spent on ${
-          showList ? 'unmounting' : 'mounting'
-        } the subtree: ${afterRenderTime - startTime}ms`,
+        `Time spent on ${showList ? 'unmounting' : 'mounting'} the subtree: ${
+          afterRenderTime - startTime
+        }ms`,
       );
     });
   };

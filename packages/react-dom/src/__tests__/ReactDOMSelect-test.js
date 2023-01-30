@@ -15,7 +15,7 @@ describe('ReactDOMSelect', () => {
   let ReactDOMServer;
   let ReactTestUtils;
 
-  const noop = function() {};
+  const noop = function () {};
 
   beforeEach(() => {
     jest.resetModules();
@@ -269,7 +269,7 @@ describe('ReactDOMSelect', () => {
   it('should allow setting `value` with `objectToString`', () => {
     const objectToString = {
       animal: 'giraffe',
-      toString: function() {
+      toString: function () {
         return this.animal;
       },
     };

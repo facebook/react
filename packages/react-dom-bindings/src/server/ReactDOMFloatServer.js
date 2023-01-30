@@ -697,10 +697,7 @@ export function resourcesFromElement(type: string, props: Props): boolean {
           const {property} = props;
           key = 'property::' + property + contentKey;
           propertyPath = property;
-          const parentPath = property
-            .split(':')
-            .slice(0, -1)
-            .join(':');
+          const parentPath = property.split(':').slice(0, -1).join(':');
           const parentResource = resources.structuredMetaKeys.get(parentPath);
           if (parentResource) {
             key = parentResource.key + '::child::' + key;

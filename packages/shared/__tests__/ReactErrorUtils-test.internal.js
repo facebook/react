@@ -19,7 +19,7 @@ describe('ReactErrorUtils', () => {
 
   it(`it should rethrow caught errors`, () => {
     const err = new Error('foo');
-    const callback = function() {
+    const callback = function () {
       throw err;
     };
     ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
@@ -47,7 +47,7 @@ describe('ReactErrorUtils', () => {
     const context = {didCall: false};
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
-      function() {
+      function () {
         this.didCall = true;
       },
       context,
@@ -59,7 +59,7 @@ describe('ReactErrorUtils', () => {
     const error = new Error();
     const returnValue = ReactErrorUtils.invokeGuardedCallback(
       'foo',
-      function() {
+      function () {
         throw error;
       },
       null,
@@ -84,10 +84,10 @@ describe('ReactErrorUtils', () => {
     const err3 = new Error();
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
-      function() {
+      function () {
         ReactErrorUtils.invokeGuardedCallback(
           'foo',
-          function() {
+          function () {
             throw err1;
           },
           null,
@@ -108,10 +108,10 @@ describe('ReactErrorUtils', () => {
     let err2;
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
-      function() {
+      function () {
         ReactErrorUtils.invokeGuardedCallback(
           'foo',
-          function() {
+          function () {
             throw err1;
           },
           null,
@@ -163,7 +163,7 @@ describe('ReactErrorUtils', () => {
     it('catches null values', () => {
       ReactErrorUtils.invokeGuardedCallback(
         null,
-        function() {
+        function () {
           throw null; // eslint-disable-line no-throw-literal
         },
         null,
@@ -192,7 +192,7 @@ describe('ReactErrorUtils', () => {
 
     try {
       const err = new Error('foo');
-      const callback = function() {
+      const callback = function () {
         throw err;
       };
       ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
