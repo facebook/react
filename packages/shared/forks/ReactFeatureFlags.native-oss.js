@@ -35,7 +35,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
-export const warnAboutSpreadingKeyToJSX = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;

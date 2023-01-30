@@ -18,7 +18,6 @@ export const {
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,

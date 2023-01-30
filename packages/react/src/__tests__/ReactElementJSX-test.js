@@ -264,33 +264,31 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  if (require('shared/ReactFeatureFlags').warnAboutSpreadingKeyToJSX) {
-    it('should warn when keys are passed as part of props', () => {
-      const container = document.createElement('div');
-      class Child extends React.Component {
-        render() {
-          return JSXRuntime.jsx('div', {});
-        }
+  it('should warn when keys are passed as part of props', () => {
+    const container = document.createElement('div');
+    class Child extends React.Component {
+      render() {
+        return JSXRuntime.jsx('div', {});
       }
-      class Parent extends React.Component {
-        render() {
-          return JSXRuntime.jsx('div', {
-            children: [JSXRuntime.jsx(Child, {key: '0', prop: 'hi'})],
-          });
-        }
+    }
+    class Parent extends React.Component {
+      render() {
+        return JSXRuntime.jsx('div', {
+          children: [JSXRuntime.jsx(Child, {key: '0', prop: 'hi'})],
+        });
       }
-      expect(() =>
-        ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-      ).toErrorDev(
-        'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
-          '  let props = {key: someKey, prop: ...};\n' +
-          '  <Child {...props} />\n' +
-          'React keys must be passed directly to JSX without using spread:\n' +
-          '  let props = {prop: ...};\n' +
-          '  <Child key={someKey} {...props} />',
-      );
-    });
-  }
+    }
+    expect(() =>
+      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
+    ).toErrorDev(
+      'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+        '  let props = {key: someKey, prop: ...};\n' +
+        '  <Child {...props} />\n' +
+        'React keys must be passed directly to JSX without using spread:\n' +
+        '  let props = {prop: ...};\n' +
+        '  <Child key={someKey} {...props} />',
+    );
+  });
 
   it('should not warn when unkeyed children are passed to jsxs', () => {
     const container = document.createElement('div');
