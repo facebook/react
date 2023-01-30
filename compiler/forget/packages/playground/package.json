@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "preinstall": "./scripts/setup.sh",
-    "dev": "next dev",
+    "dev": "NODE_ENV=development && next dev",
     "build": "next build && node ./scripts/downloadFonts.js",
     "start": "next start",
     "lint": "next lint"

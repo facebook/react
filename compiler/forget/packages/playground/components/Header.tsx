@@ -4,6 +4,7 @@
 
 import { RefreshIcon, ShareIcon, TrashIcon } from "@heroicons/react/outline";
 import { CheckIcon } from "@heroicons/react/solid";
+import clsx from "clsx";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { defaultStore, minimalStore } from "../lib/defaultStore";
@@ -47,13 +48,23 @@ export default function Header() {
   return (
     <div className="flex items-center justify-between w-screen px-5 py-3 border-b border-gray-200">
       <div className="flex items-center flex-none h-full gap-2 text-lg">
-        <Logo className="w-8 h-8 text-link" />
+        <Logo
+          className={clsx(
+            "w-8 h-8 text-link",
+            process.env.NODE_ENV === "development" && "text-yellow-600"
+          )}
+        />
         <p className="hidden select-none sm:block">React Forget Playground</p>
         <div
           title="Do not share this outside of Meta"
-          className="px-1 mb-px text-sm font-bold tracking-wide text-red-600 uppercase rounded bg-highlight dark:bg-highlight-dark whitespace-nowrap"
+          className={clsx(
+            "px-1 mb-px text-sm font-bold tracking-wide uppercase rounded bg-highlight dark:bg-highlight-dark whitespace-nowrap",
+            process.env.NODE_ENV === "development"
+              ? "text-yellow-600"
+              : "text-red-600"
+          )}
         >
-          Private
+          {process.env.NODE_ENV === "development" ? "DEV" : "Private"}
         </div>
       </div>
       <div className="flex items-center text-[15px] gap-4">

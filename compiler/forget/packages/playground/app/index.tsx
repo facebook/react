@@ -15,7 +15,11 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col w-screen h-screen font-light">
       <Head>
-        <title>React Forget Playground</title>
+        <title>
+          {process.env.NODE_ENV === "development"
+            ? "[DEV] React Forget Playground"
+            : "React Forget Playground"}
+        </title>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
