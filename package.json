@@ -79,7 +79,7 @@
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "pacote": "^10.3.0",
-    "prettier": "1.19.1",
+    "prettier": "2.8.3",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.4",
