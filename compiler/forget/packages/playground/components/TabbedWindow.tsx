@@ -15,8 +15,18 @@ export default function TabbedWindow(props: {
   tabsOpen: Set<string>;
   setTabsOpen: (newTab: Set<string>) => void;
 }): React.ReactElement {
+  if (props.tabs.size === 0) {
+    return (
+      <div
+        className="flex items-center justify-center"
+        style={{ width: "calc(100vw - 650px)" }}
+      >
+        No compiler output detected, see errors below
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-row h-full">
+    <div className="flex flex-row">
       {Array.from(props.tabs.keys()).map((name) => {
         return (
           <TabbedWindowItem
@@ -58,7 +68,7 @@ function TabbedWindowItem({
   return (
     <div key={name} className="flex flex-row">
       {isShow ? (
-        <div style={{ minWidth: 550 }}>
+        <div style={{ minWidth: 550, overflow: "hidden" }}>
           <h2
             onClick={toggleTabs}
             className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 text-secondary hover:text-link"

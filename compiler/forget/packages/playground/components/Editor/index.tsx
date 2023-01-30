@@ -57,16 +57,16 @@ function parseFunctions(
 }
 
 function compile(source: string): CompilerOutput {
+  const results = new Map<string, PrintedCompilerPipelineValue[]>();
+  const upsert = (result: PrintedCompilerPipelineValue) => {
+    const entry = results.get(result.name);
+    if (Array.isArray(entry)) {
+      entry.push(result);
+    } else {
+      results.set(result.name, [result]);
+    }
+  };
   try {
-    const results = new Map<string, PrintedCompilerPipelineValue[]>();
-    const upsert = (result: PrintedCompilerPipelineValue) => {
-      const entry = results.get(result.name);
-      if (Array.isArray(entry)) {
-        entry.push(result);
-      } else {
-        results.set(result.name, [result]);
-      }
-    };
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn)) {
         const fnName = fn.node.id?.name ?? null;
@@ -112,7 +112,7 @@ function compile(source: string): CompilerOutput {
     if (error.details == null) {
       error.details = [];
     }
-    return { kind: "err", error };
+    return { kind: "err", results, error };
   }
 }
 
@@ -150,7 +150,7 @@ export default function Editor() {
 
   return (
     <>
-      <div className="flex basis">
+      <div className="flex basis h-full">
         <div
           style={{ minWidth: 650 }}
           className={clsx("relative sm:basis-1/4")}
@@ -161,7 +161,7 @@ export default function Editor() {
             }
           />
         </div>
-        <div className={clsx("flex sm:flex")}>
+        <div className={clsx("flex sm:flex flex-wrap")}>
           <Output store={deferredStore} compilerOutput={compilerOutput} />
         </div>
       </div>

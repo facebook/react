@@ -36,7 +36,11 @@ export type PrintedCompilerPipelineValue =
 
 export type CompilerOutput =
   | { kind: "ok"; results: Map<string, PrintedCompilerPipelineValue[]> }
-  | { kind: "err"; error: CompilerError };
+  | {
+      kind: "err";
+      results: Map<string, PrintedCompilerPipelineValue[]>;
+      error: CompilerError;
+    };
 
 type Props = {
   store: Store;
@@ -48,7 +52,6 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
   let topLevelFnDecls: Array<t.FunctionDeclaration> = [];
-  if (compilerOutput.kind === "err") return reorderedTabs;
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
@@ -152,21 +155,28 @@ function Output({ store, compilerOutput }: Props) {
     [store.source, compilerOutput]
   );
 
-  if (compilerOutput.kind === "err") {
-    return (
-      <pre>
-        <code>{compilerOutput.error.toString()}</code>
-      </pre>
-    );
-  }
-
   return (
-    <TabbedWindow
-      defaultTab="HIR"
-      setTabsOpen={setTabsOpen}
-      tabsOpen={tabsOpen}
-      tabs={tabs}
-    />
+    <>
+      <TabbedWindow
+        defaultTab="HIR"
+        setTabsOpen={setTabsOpen}
+        tabsOpen={tabsOpen}
+        tabs={tabs}
+      />
+      {compilerOutput.kind === "err" ? (
+        <div className="flex flex-wrap w-full absolute bottom-0 bg-white grow w-screen border-y border-grey-200 transition-all	ease-in">
+          <div className="w-full p-4 basis-full border-b">
+            <h2>COMPILER ERRORS</h2>
+          </div>
+          <pre
+            className="p-4 basis-full text-red-600"
+            style={{ maxHeight: "20vh", overflowY: "scroll" }}
+          >
+            {compilerOutput.error.toString()}
+          </pre>
+        </div>
+      ) : null}
+    </>
   );
 }
 
