@@ -24,6 +24,7 @@ let discreteUpdatesImpl = function(fn, a, b, c, d) {
   return fn(a, b, c, d);
 };
 let flushSyncImpl = function() {};
+let flushPendingContinuousUpdatesImpl = function() {};
 
 let isInsideEventHandler = false;
 
@@ -64,12 +65,18 @@ export function discreteUpdates(fn, a, b, c, d) {
   return discreteUpdatesImpl(fn, a, b, c, d);
 }
 
+export function flushPendingContinuousUpdates(root) {
+  return flushPendingContinuousUpdatesImpl(root);
+}
+
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
   _flushSyncImpl,
+  _flushPendingContinuousUpdatesImpl,
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
   flushSyncImpl = _flushSyncImpl;
+  flushPendingContinuousUpdatesImpl = _flushPendingContinuousUpdatesImpl;
 }

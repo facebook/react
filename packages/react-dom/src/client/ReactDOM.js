@@ -35,6 +35,7 @@ import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHand
 import {
   batchedUpdates,
   discreteUpdates,
+  flushPendingContinuousUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   flushControlled,
@@ -108,6 +109,7 @@ setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
   flushSyncWithoutWarningIfAlreadyRendering,
+  flushPendingContinuousUpdates,
 );
 
 function createPortal(

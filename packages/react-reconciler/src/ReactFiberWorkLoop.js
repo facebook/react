@@ -134,10 +134,12 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
+  InputContinuousLane,
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
+  includesSomeLane,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -1539,6 +1541,12 @@ export function flushRoot(root: FiberRoot, lanes: Lanes) {
       resetRenderTimer();
       flushSyncCallbacks();
     }
+  }
+}
+
+export function flushPendingContinuousUpdates(root: FiberRoot) {
+  if (includesSomeLane(root.pendingLanes, InputContinuousLane)) {
+    flushRoot(root, InputContinuousLane);
   }
 }
 
