@@ -40,6 +40,8 @@ function formatProdErrorMessage(code) {
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
+  enableTrustedTypesIntegration =
+    dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
@@ -359,7 +361,10 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       isAttributeNameSafe(name) &&
         (null === value
           ? node.removeAttribute(name)
-          : node.setAttribute(name, "" + value));
+          : node.setAttribute(
+              name,
+              enableTrustedTypesIntegration ? value : "" + value
+            ));
     else if (JSCompiler_inline_result.mustUseProperty)
       node[JSCompiler_inline_result.propertyName] =
         null === value
@@ -377,7 +382,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
       eventName = JSCompiler_inline_result.type;
       if (3 === eventName || (4 === eventName && !0 === value)) value = "";
       else if (
-        ((value = "" + value),
+        ((value = enableTrustedTypesIntegration ? value : "" + value),
         JSCompiler_inline_result.sanitizeURL &&
           isJavaScriptProtocol.test(value.toString()))
       )
@@ -15090,7 +15095,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1718 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-9b1423cc0-20230130",
+  version: "18.3.0-www-modern-48b687fc9-20230130",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2109 = {
@@ -15121,7 +15126,7 @@ var internals$jscomp$inline_2109 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-9b1423cc0-20230130"
+  reconcilerVersion: "18.3.0-next-48b687fc9-20230130"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15309,4 +15314,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-9b1423cc0-20230130";
+exports.version = "18.3.0-next-48b687fc9-20230130";

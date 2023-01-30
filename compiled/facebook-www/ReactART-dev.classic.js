@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-9b1423cc0-20230130";
+var ReactVersion = "18.3.0-www-classic-48b687fc9-20230130";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -167,6 +167,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
+  enableTrustedTypesIntegration =
+    dynamicFeatureFlags.enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime =
     dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX = dynamicFeatureFlags.warnAboutSpreadingKeyToJSX,
