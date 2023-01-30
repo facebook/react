@@ -23,4 +23,6 @@ export const monacoOptions: Partial<EditorProps["options"]> = {
   autoClosingOvertype: "always",
 
   automaticLayout: true,
+  wordWrap: "on",
+  wrappingIndent: "deepIndent",
 };
