@@ -179,6 +179,7 @@ type SavedPreferencesParams = {
   hideConsoleLogsInStrictMode: boolean,
 };
 
+// Events emitted by the back-end and received by the front-end
 export type BackendEvents = {
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
@@ -194,6 +195,7 @@ export type BackendEvents = {
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
+  reloadAndProfileOverride: [],
   selectFiber: [number],
   shutdown: [],
   stopInspectingNative: [boolean],
@@ -208,6 +210,7 @@ export type BackendEvents = {
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
 };
 
+// Events emitted by the front-end and received by the back-end
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForFiberID: [ElementAndRendererID],

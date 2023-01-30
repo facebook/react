@@ -190,6 +190,8 @@ export default class ProfilerStore extends EventEmitter<{
     // Wait for onProfilingStatus() to confirm the status has changed.
     // This ensures the frontend and backend are in sync wrt which commits were profiled.
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
+    //
+    // Instead, wait for the message 'profilingStatus'
   }
 
   stopProfiling(): void {
@@ -199,6 +201,8 @@ export default class ProfilerStore extends EventEmitter<{
     // Wait for onProfilingStatus() to confirm the status has changed.
     // This ensures the frontend and backend are in sync wrt which commits were profiled.
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
+    //
+    // Instead, wait for the message 'profilingStatus'
   }
 
   _takeProfilingSnapshotRecursive: (
