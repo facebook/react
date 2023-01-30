@@ -97,8 +97,8 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
 }
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
-// $FlowFixMe[missing-this-annot]
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
+  // $FlowFixMe[missing-this-annot]
   function (children: ReactNodeList): void {
     const root = this._internalRoot;
     if (root === null) {
@@ -147,8 +147,8 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
   };
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
-// $FlowFixMe[missing-this-annot]
 ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
+  // $FlowFixMe[missing-this-annot]
   function (): void {
     if (__DEV__) {
       if (typeof arguments[0] === 'function') {
