@@ -37,7 +37,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="font-sans h-screen overflow-hidden">{children}</body>
+      <body className="font-sans h-screen overflow-y-hidden">{children}</body>
     </html>
   );
 }
