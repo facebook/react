@@ -6,18 +6,163 @@
  */
 
 import {
+  InstructionId,
   InstructionValue,
+  LValue,
   Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
+  ReactiveScopeBlock,
   ReactiveTerminal,
+  ReactiveTerminalStatement,
   ReactiveValue,
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+
+export function visitReactiveFunction<TState>(
+  fn: ReactiveFunction,
+  visitor: ReactiveFunctionVisitor<TState>,
+  state: TState
+): void {
+  visitor.visitBlock(fn.body, state);
+}
+
+export class ReactiveFunctionVisitor<TState = void> {
+  visitID(id: InstructionId, state: TState): void {}
+  visitLValue(id: InstructionId, lvalue: LValue, state: TState): void {}
+  visitPlace(id: InstructionId, place: Place, state: TState): void {}
+
+  visitValue(id: InstructionId, value: ReactiveValue, state: TState): void {
+    this.traverseValue(id, value, state);
+  }
+  traverseValue(id: InstructionId, value: ReactiveValue, state: TState): void {
+    for (const place of eachReactiveValueOperand(value)) {
+      this.visitPlace(id, place, state);
+    }
+  }
+
+  visitInstruction(instruction: ReactiveInstruction, state: TState): void {
+    this.traverseInstruction(instruction, state);
+  }
+  traverseInstruction(instruction: ReactiveInstruction, state: TState): void {
+    this.visitID(instruction.id, state);
+    if (instruction.lvalue !== null) {
+      this.visitLValue(instruction.id, instruction.lvalue, state);
+    }
+    this.visitValue(instruction.id, instruction.value, state);
+  }
+
+  visitTerminal(stmt: ReactiveTerminalStatement, state: TState): void {
+    this.traverseTerminal(stmt, state);
+  }
+  traverseTerminal(stmt: ReactiveTerminalStatement, state: TState): void {
+    const { terminal } = stmt;
+    if (terminal.id !== null) {
+      this.visitID(terminal.id, state);
+    }
+    switch (terminal.kind) {
+      case "break":
+      case "continue": {
+        break;
+      }
+      case "return": {
+        if (terminal.value !== null) {
+          this.visitValue(terminal.id, terminal.value, state);
+        }
+        break;
+      }
+      case "throw": {
+        this.visitValue(terminal.id, terminal.value, state);
+        break;
+      }
+      case "for": {
+        this.visitValueBlock(terminal.init, state);
+        this.visitValueBlock(terminal.test, state);
+        this.visitValueBlock(terminal.update, state);
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "while": {
+        this.visitValueBlock(terminal.test, state);
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "if": {
+        this.visitValue(terminal.id, terminal.test, state);
+        this.visitBlock(terminal.consequent, state);
+        if (terminal.alternate !== null) {
+          this.visitBlock(terminal.alternate, state);
+        }
+        break;
+      }
+      case "switch": {
+        this.visitValue(terminal.id, terminal.test, state);
+        for (const case_ of terminal.cases) {
+          if (case_.test !== null) {
+            this.visitPlace(terminal.id, case_.test, state);
+          }
+          if (case_.block !== undefined) {
+            this.visitBlock(case_.block, state);
+          }
+        }
+        break;
+      }
+      default: {
+        assertExhaustive(
+          terminal,
+          `Unexpected terminal kind '${(terminal as any).kind}'`
+        );
+      }
+    }
+  }
+
+  visitValueBlock(block: ReactiveValueBlock, state: TState): void {
+    // NOTE: intentionally bypass calling visitBlock
+    this.traverseBlock(block.instructions, state);
+    if (block.last !== null) {
+      this.visitPlace(block.last.id, block.last.value, state);
+    }
+  }
+
+  visitScope(scope: ReactiveScopeBlock, state: TState): void {
+    this.traverseScope(scope, state);
+  }
+  traverseScope(scope: ReactiveScopeBlock, state: TState): void {
+    this.visitBlock(scope.instructions, state);
+  }
+
+  visitBlock(block: ReactiveBlock, state: TState): void {
+    this.traverseBlock(block, state);
+  }
+  traverseBlock(block: ReactiveBlock, state: TState): void {
+    for (const instr of block) {
+      switch (instr.kind) {
+        case "instruction": {
+          this.visitInstruction(instr.instruction, state);
+          break;
+        }
+        case "scope": {
+          this.visitScope(instr, state);
+          break;
+        }
+        case "terminal": {
+          this.visitTerminal(instr, state);
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instr,
+            `Unexpected instruction kind '${(instr as any).kind}'`
+          );
+        }
+      }
+    }
+  }
+}
 
 export function visitFunction(
   fn: ReactiveFunction,
