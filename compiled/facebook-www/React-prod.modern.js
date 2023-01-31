@@ -41,12 +41,12 @@ function getIteratorFn(maybeIterable) {
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
 var ReactNoopUpdateQueue = {
-    isMounted: function() {
+    isMounted: function () {
       return !1;
     },
-    enqueueForceUpdate: function() {},
-    enqueueReplaceState: function() {},
-    enqueueSetState: function() {}
+    enqueueForceUpdate: function () {},
+    enqueueReplaceState: function () {},
+    enqueueSetState: function () {}
   },
   assign = Object.assign,
   emptyObject = {};
@@ -57,7 +57,7 @@ function Component(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 Component.prototype.isReactComponent = {};
-Component.prototype.setState = function(partialState, callback) {
+Component.prototype.setState = function (partialState, callback) {
   if (
     "object" !== typeof partialState &&
     "function" !== typeof partialState &&
@@ -68,7 +68,7 @@ Component.prototype.setState = function(partialState, callback) {
     );
   this.updater.enqueueSetState(this, partialState, callback, "setState");
 };
-Component.prototype.forceUpdate = function(callback) {
+Component.prototype.forceUpdate = function (callback) {
   this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
 };
 function ComponentDummy() {}
@@ -84,8 +84,8 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  enableTransitionTracing = require("ReactFeatureFlags")
-    .enableTransitionTracing,
+  enableTransitionTracing =
+    require("ReactFeatureFlags").enableTransitionTracing,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner = { current: null },
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
@@ -110,7 +110,7 @@ function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
     "$" +
-    key.replace(/[=:]/g, function(match) {
+    key.replace(/[=:]/g, function (match) {
       return escaperLookup[match];
     })
   );
@@ -150,7 +150,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           null != children &&
             (escapedPrefix =
               children.replace(userProvidedKeyEscapeRegex, "$&/") + "/"),
-          mapIntoArray(callback, array, escapedPrefix, "", function(c) {
+          mapIntoArray(callback, array, escapedPrefix, "", function (c) {
             return c;
           }))
         : null != callback &&
@@ -202,21 +202,23 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           callback
         ));
   else if ("object" === type)
-    throw ((array = String(children)),
-    Error(
-      "Objects are not valid as a React child (found: " +
-        ("[object Object]" === array
-          ? "object with keys {" + Object.keys(children).join(", ") + "}"
-          : array) +
-        "). If you meant to render a collection of children, use an array instead."
-    ));
+    throw (
+      ((array = String(children)),
+      Error(
+        "Objects are not valid as a React child (found: " +
+          ("[object Object]" === array
+            ? "object with keys {" + Object.keys(children).join(", ") + "}"
+            : array) +
+          "). If you meant to render a collection of children, use an array instead."
+      ))
+    );
   return invokeCallback;
 }
 function mapChildren(children, func, context) {
   if (null == children) return children;
   var result = [],
     count = 0;
-  mapIntoArray(children, result, "", "", function(child) {
+  mapIntoArray(children, result, "", "", function (child) {
     return func.call(context, child, count++);
   });
   return result;
@@ -226,11 +228,11 @@ function lazyInitializer(payload) {
     var ctor = payload._result;
     ctor = ctor();
     ctor.then(
-      function(moduleObject) {
+      function (moduleObject) {
         if (0 === payload._status || -1 === payload._status)
           (payload._status = 1), (payload._result = moduleObject);
       },
-      function(error) {
+      function (error) {
         if (0 === payload._status || -1 === payload._status)
           (payload._status = 2), (payload._result = error);
       }
@@ -320,30 +322,30 @@ function jsx(type, config, maybeKey) {
 }
 exports.Children = {
   map: mapChildren,
-  forEach: function(children, forEachFunc, forEachContext) {
+  forEach: function (children, forEachFunc, forEachContext) {
     mapChildren(
       children,
-      function() {
+      function () {
         forEachFunc.apply(this, arguments);
       },
       forEachContext
     );
   },
-  count: function(children) {
+  count: function (children) {
     var n = 0;
-    mapChildren(children, function() {
+    mapChildren(children, function () {
       n++;
     });
     return n;
   },
-  toArray: function(children) {
+  toArray: function (children) {
     return (
-      mapChildren(children, function(child) {
+      mapChildren(children, function (child) {
         return child;
       }) || []
     );
   },
-  only: function(children) {
+  only: function (children) {
     if (!isValidElement(children))
       throw Error(
         "React.Children.only expected to receive a single React element child."
@@ -358,9 +360,10 @@ exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactSharedInternals;
-exports.cache = function(fn) {
-  return function() {
+exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+  ReactSharedInternals;
+exports.cache = function (fn) {
+  return function () {
     var dispatcher = ReactCurrentCache.current;
     if (!dispatcher) return fn.apply(null, arguments);
     var fnMap = dispatcher.getCacheForType(createCacheRoot);
@@ -399,7 +402,7 @@ exports.cache = function(fn) {
     }
   };
 };
-exports.cloneElement = function(element, config, children) {
+exports.cloneElement = function (element, config, children) {
   if (null === element || void 0 === element)
     throw Error(
       "React.cloneElement(...): The argument must be a React element, but you passed " +
@@ -440,7 +443,7 @@ exports.cloneElement = function(element, config, children) {
     _owner: owner
   };
 };
-exports.createContext = function(defaultValue) {
+exports.createContext = function (defaultValue) {
   defaultValue = {
     $$typeof: REACT_CONTEXT_TYPE,
     _currentValue: defaultValue,
@@ -457,7 +460,7 @@ exports.createContext = function(defaultValue) {
   };
   return (defaultValue.Consumer = defaultValue);
 };
-exports.createElement = function(type, config, children) {
+exports.createElement = function (type, config, children) {
   var propName,
     props = {},
     key = null,
@@ -490,10 +493,10 @@ exports.createElement = function(type, config, children) {
   };
 };
 exports.createMutableSource = createMutableSource;
-exports.createRef = function() {
+exports.createRef = function () {
   return { current: null };
 };
-exports.createServerContext = function(globalName, defaultValue) {
+exports.createServerContext = function (globalName, defaultValue) {
   var wasDefined = !0;
   if (!ContextRegistry$1[globalName]) {
     wasDefined = !1;
@@ -523,24 +526,24 @@ exports.createServerContext = function(globalName, defaultValue) {
     throw Error("ServerContext: " + globalName + " already defined");
   return context$1;
 };
-exports.experimental_useEffectEvent = function(callback) {
+exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
-exports.forwardRef = function(render) {
+exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
 exports.isValidElement = isValidElement;
 exports.jsx = jsx;
 exports.jsxDEV = void 0;
 exports.jsxs = jsx;
-exports.lazy = function(ctor) {
+exports.lazy = function (ctor) {
   return {
     $$typeof: REACT_LAZY_TYPE,
     _payload: { _status: -1, _result: ctor },
     _init: lazyInitializer
   };
 };
-exports.memo = function(type, compare) {
+exports.memo = function (type, compare) {
   return {
     $$typeof: REACT_MEMO_TYPE,
     type: type,
@@ -554,15 +557,15 @@ exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Offscreen = REACT_OFFSCREEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.unstable_act = function() {
+exports.unstable_act = function () {
   throw Error("act(...) is not supported in production builds of React.");
 };
 exports.unstable_createMutableSource = createMutableSource;
-exports.unstable_getCacheForType = function(resourceType) {
+exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
-exports.unstable_getCacheSignal = function() {
+exports.unstable_getCacheSignal = function () {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher
     ? dispatcher.getCacheSignal()
@@ -575,55 +578,55 @@ exports.unstable_getCacheSignal = function() {
       dispatcher.signal);
 };
 exports.unstable_startTransition = startTransition;
-exports.unstable_useCacheRefresh = function() {
+exports.unstable_useCacheRefresh = function () {
   return ReactCurrentDispatcher.current.useCacheRefresh();
 };
 exports.unstable_useDeferredValue = useDeferredValue;
-exports.unstable_useMemoCache = function(size) {
+exports.unstable_useMemoCache = function (size) {
   return ReactCurrentDispatcher.current.useMemoCache(size);
 };
 exports.unstable_useMutableSource = useMutableSource;
 exports.unstable_useTransition = useTransition;
-exports.use = function(usable) {
+exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
-exports.useCallback = function(callback, deps) {
+exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
-exports.useContext = function(Context) {
+exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
-exports.useDebugValue = function() {};
+exports.useDebugValue = function () {};
 exports.useDeferredValue = useDeferredValue;
-exports.useEffect = function(create, deps) {
+exports.useEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useEffect(create, deps);
 };
-exports.useId = function() {
+exports.useId = function () {
   return ReactCurrentDispatcher.current.useId();
 };
-exports.useImperativeHandle = function(ref, create, deps) {
+exports.useImperativeHandle = function (ref, create, deps) {
   return ReactCurrentDispatcher.current.useImperativeHandle(ref, create, deps);
 };
-exports.useInsertionEffect = function(create, deps) {
+exports.useInsertionEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useInsertionEffect(create, deps);
 };
-exports.useLayoutEffect = function(create, deps) {
+exports.useLayoutEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useLayoutEffect(create, deps);
 };
-exports.useMemo = function(create, deps) {
+exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
 exports.useMutableSource = useMutableSource;
-exports.useReducer = function(reducer, initialArg, init) {
+exports.useReducer = function (reducer, initialArg, init) {
   return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
 };
-exports.useRef = function(initialValue) {
+exports.useRef = function (initialValue) {
   return ReactCurrentDispatcher.current.useRef(initialValue);
 };
-exports.useState = function(initialState) {
+exports.useState = function (initialState) {
   return ReactCurrentDispatcher.current.useState(initialState);
 };
-exports.useSyncExternalStore = function(
+exports.useSyncExternalStore = function (
   subscribe,
   getSnapshot,
   getServerSnapshot
@@ -635,4 +638,4 @@ exports.useSyncExternalStore = function(
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-modern-1f5ce59dd-20230130";
+exports.version = "18.3.0-www-modern-6b3083266-20230131";

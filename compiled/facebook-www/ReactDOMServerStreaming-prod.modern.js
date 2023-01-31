@@ -20,10 +20,11 @@ function writeChunkAndReturn(destination, chunk) {
   destination.buffer += chunk;
   return !0;
 }
-var enableFilterEmptyStringAttributesDOM = require("ReactFeatureFlags")
-    .enableFilterEmptyStringAttributesDOM,
+var enableFilterEmptyStringAttributesDOM =
+    require("ReactFeatureFlags").enableFilterEmptyStringAttributesDOM,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  VALID_ATTRIBUTE_NAME_REGEX = /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
+  VALID_ATTRIBUTE_NAME_REGEX =
+    /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
   illegalAttributeNameCache = {},
   validatedAttributeNameCache = {};
 function isAttributeNameSafe(attributeName) {
@@ -54,11 +55,12 @@ function PropertyInfoRecord(
   this.removeEmptyString = removeEmptyString;
 }
 var properties = {},
-  reservedProps = "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
-    " "
-  );
+  reservedProps =
+    "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
+      " "
+    );
 reservedProps.push("innerText", "textContent");
-reservedProps.forEach(function(name) {
+reservedProps.forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
 });
 [
@@ -66,11 +68,13 @@ reservedProps.forEach(function(name) {
   ["className", "class"],
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
-].forEach(function(_ref) {
+].forEach(function (_ref) {
   var name = _ref[0];
   properties[name] = new PropertyInfoRecord(name, 1, !1, _ref[1], null, !1, !1);
 });
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function(name) {
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
   properties[name] = new PropertyInfoRecord(
     name,
     2,
@@ -86,12 +90,12 @@ reservedProps.forEach(function(name) {
   "externalResourcesRequired",
   "focusable",
   "preserveAlpha"
-].forEach(function(name) {
+].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 2, !1, name, null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
-  .forEach(function(name) {
+  .forEach(function (name) {
     properties[name] = new PropertyInfoRecord(
       name,
       3,
@@ -102,16 +106,16 @@ reservedProps.forEach(function(name) {
       !1
     );
   });
-["checked", "multiple", "muted", "selected"].forEach(function(name) {
+["checked", "multiple", "muted", "selected"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 3, !0, name, null, !1, !1);
 });
-["capture", "download"].forEach(function(name) {
+["capture", "download"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 4, !1, name, null, !1, !1);
 });
-["cols", "rows", "size", "span"].forEach(function(name) {
+["cols", "rows", "size", "span"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 6, !1, name, null, !1, !1);
 });
-["rowSpan", "start"].forEach(function(name) {
+["rowSpan", "start"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(
     name,
     5,
@@ -128,7 +132,7 @@ function capitalize(token) {
 }
 "accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
   .split(" ")
-  .forEach(function(attributeName) {
+  .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     properties[name] = new PropertyInfoRecord(
       name,
@@ -142,7 +146,7 @@ function capitalize(token) {
   });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
   .split(" ")
-  .forEach(function(attributeName) {
+  .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     properties[name] = new PropertyInfoRecord(
       name,
@@ -154,7 +158,7 @@ function capitalize(token) {
       !1
     );
   });
-["xml:base", "xml:lang", "xml:space"].forEach(function(attributeName) {
+["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
     name,
@@ -166,7 +170,7 @@ function capitalize(token) {
     !1
   );
 });
-["tabIndex", "crossOrigin"].forEach(function(attributeName) {
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     1,
@@ -186,7 +190,7 @@ properties.xlinkHref = new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function(attributeName) {
+["src", "href", "action", "formAction"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     1,
@@ -243,8 +247,8 @@ var isUnitlessNumber = {
     strokeWidth: !0
   },
   prefixes = ["Webkit", "ms", "Moz", "O"];
-Object.keys(isUnitlessNumber).forEach(function(prop) {
-  prefixes.forEach(function(prefix) {
+Object.keys(isUnitlessNumber).forEach(function (prop) {
+  prefixes.forEach(function (prefix) {
     prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
     isUnitlessNumber[prefix] = isUnitlessNumber[prop];
   });
@@ -288,7 +292,8 @@ function escapeTextForBrowser(text) {
 }
 var uppercasePattern = /([A-Z])/g,
   msPattern = /^ms-/,
-  isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+  isJavaScriptProtocol =
+    /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
 function sanitizeURL(url) {
   if (isJavaScriptProtocol.test(url))
     throw Error(
@@ -491,10 +496,7 @@ function resourcesFromElement(type, props) {
           var property = props.property;
           children = "property::" + property + type;
           key = property;
-          type = property
-            .split(":")
-            .slice(0, -1)
-            .join(":");
+          type = property.split(":").slice(0, -1).join(":");
           (type = resources.structuredMetaKeys.get(type)) &&
             (children = type.key + "::child::" + children);
         }
@@ -630,13 +632,13 @@ function resourcesFromLink(props) {
 function hoistResources(resources, source) {
   var currentBoundaryResources = resources.boundaryResources;
   currentBoundaryResources &&
-    (source.forEach(function(resource) {
+    (source.forEach(function (resource) {
       return currentBoundaryResources.add(resource);
     }),
     source.clear());
 }
 function hoistResourcesToRoot(resources, boundaryResources) {
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     return resource.set.add(resource);
   });
   boundaryResources.clear();
@@ -828,7 +830,7 @@ function pushInnerHTML(target, innerHTML, children) {
 }
 function flattenOptionChildren(children) {
   var content = "";
-  React.Children.forEach(children, function(child) {
+  React.Children.forEach(children, function (child) {
     null != child && (content += child);
   });
   return content;
@@ -1477,7 +1479,7 @@ var regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
 function escapeJSStringsForInstructionScripts(input) {
   return JSON.stringify(input).replace(
     regexForJSStringsInInstructionScripts,
-    function(match) {
+    function (match) {
       switch (match) {
         case "<":
           return "\\u003c";
@@ -1495,26 +1497,27 @@ function escapeJSStringsForInstructionScripts(input) {
 }
 var regexForJSStringsInScripts = /[&><\u2028\u2029]/g;
 function escapeJSObjectForInstructionScripts(input) {
-  return JSON.stringify(input).replace(regexForJSStringsInScripts, function(
-    match
-  ) {
-    switch (match) {
-      case "&":
-        return "\\u0026";
-      case ">":
-        return "\\u003e";
-      case "<":
-        return "\\u003c";
-      case "\u2028":
-        return "\\u2028";
-      case "\u2029":
-        return "\\u2029";
-      default:
-        throw Error(
-          "escapeJSObjectForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
-        );
+  return JSON.stringify(input).replace(
+    regexForJSStringsInScripts,
+    function (match) {
+      switch (match) {
+        case "&":
+          return "\\u0026";
+        case ">":
+          return "\\u003e";
+        case "<":
+          return "\\u003c";
+        case "\u2028":
+          return "\\u2028";
+        case "\u2029":
+          return "\\u2029";
+        default:
+          throw Error(
+            "escapeJSObjectForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+          );
+      }
     }
-  });
+  );
 }
 function writeInitialResources(
   destination,
@@ -1550,24 +1553,24 @@ function writeInitialResources(
     (pushSelfClosing(target, willFlushAllSegments.props, "meta", responseState),
     (willFlushAllSegments.flushed = !0),
     (resources.charset = null));
-  bases.forEach(function(r) {
+  bases.forEach(function (r) {
     pushSelfClosing(target, r.props, "base", responseState);
     r.flushed = !0;
   });
   bases.clear();
-  preconnects.forEach(function(r) {
+  preconnects.forEach(function (r) {
     pushLinkImpl(target, r.props, responseState);
     r.flushed = !0;
   });
   preconnects.clear();
-  fontPreloads.forEach(function(r) {
+  fontPreloads.forEach(function (r) {
     pushLinkImpl(target, r.props, responseState);
     r.flushed = !0;
   });
   fontPreloads.clear();
-  precedences.forEach(function(p, precedence) {
+  precedences.forEach(function (p, precedence) {
     p.size
-      ? (p.forEach(function(r) {
+      ? (p.forEach(function (r) {
           pushLinkImpl(target, r.props, responseState);
           r.flushed = !0;
           r.inShell = !0;
@@ -1582,7 +1585,7 @@ function writeInitialResources(
   });
   usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
-  scripts.forEach(function(r) {
+  scripts.forEach(function (r) {
     pushScriptImpl(target, r.props, responseState);
     r.flushed = !0;
     r.hint.flushed = !0;
@@ -1594,7 +1597,7 @@ function writeInitialResources(
   explicitStylePreloads.clear();
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
-  headResources.forEach(function(r) {
+  headResources.forEach(function (r) {
     switch (r.type) {
       case "title":
         pushTitleImpl(target, r.props, responseState);
@@ -1638,19 +1641,19 @@ function writeImmediateResources(destination, resources, responseState) {
     (pushSelfClosing(target, charset.props, "meta", responseState),
     (charset.flushed = !0),
     (resources.charset = null));
-  preconnects.forEach(function(r) {
+  preconnects.forEach(function (r) {
     pushLinkImpl(target, r.props, responseState);
     r.flushed = !0;
   });
   preconnects.clear();
-  fontPreloads.forEach(function(r) {
+  fontPreloads.forEach(function (r) {
     pushLinkImpl(target, r.props, responseState);
     r.flushed = !0;
   });
   fontPreloads.clear();
   usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
-  scripts.forEach(function(r) {
+  scripts.forEach(function (r) {
     pushStartGenericElement(target, r.props, "script", responseState);
     pushEndInstance(target, target, "script", r.props);
     r.flushed = !0;
@@ -1663,7 +1666,7 @@ function writeImmediateResources(destination, resources, responseState) {
   explicitStylePreloads.clear();
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
-  headResources.forEach(function(r) {
+  headResources.forEach(function (r) {
     switch (r.type) {
       case "title":
         pushTitleImpl(target, r.props, responseState);
@@ -1687,7 +1690,7 @@ function writeImmediateResources(destination, resources, responseState) {
 function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     if (!resource.inShell)
       if (resource.flushed)
         (destination.buffer += nextArrayOpenBrackChunk),
@@ -1765,14 +1768,12 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
                     )
                       (propValue = "" + propValue),
                         (precedence.buffer += ","),
-                        (coercedHref = escapeJSObjectForInstructionScripts(
-                          coercedHref
-                        )),
+                        (coercedHref =
+                          escapeJSObjectForInstructionScripts(coercedHref)),
                         (precedence.buffer += coercedHref),
                         (precedence.buffer += ","),
-                        (coercedHref = escapeJSObjectForInstructionScripts(
-                          propValue
-                        )),
+                        (coercedHref =
+                          escapeJSObjectForInstructionScripts(propValue)),
                         (precedence.buffer += coercedHref);
                   }
               }
@@ -1788,7 +1789,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     if (!resource.inShell)
       if (resource.flushed)
         (destination.buffer += nextArrayOpenBrackChunk),
@@ -1979,19 +1980,19 @@ function switchContext(newSnapshot) {
     (currentActiveSnapshot = newSnapshot));
 }
 var classComponentUpdater = {
-    isMounted: function() {
+    isMounted: function () {
       return !1;
     },
-    enqueueSetState: function(inst, payload) {
+    enqueueSetState: function (inst, payload) {
       inst = inst._reactInternals;
       null !== inst.queue && inst.queue.push(payload);
     },
-    enqueueReplaceState: function(inst, payload) {
+    enqueueReplaceState: function (inst, payload) {
       inst = inst._reactInternals;
       inst.replace = !0;
       inst.queue = [payload];
     },
-    enqueueForceUpdate: function() {}
+    enqueueForceUpdate: function () {}
   },
   emptyTreeContext = { id: 1, overflow: "" };
 function pushTreeContext(baseContext, totalChildren, index) {
@@ -2049,14 +2050,14 @@ function trackUsedThenable(thenableState, thenable, index) {
           ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
-            function(fulfilledValue) {
+            function (fulfilledValue) {
               if ("pending" === thenable.status) {
                 var fulfilledThenable = thenable;
                 fulfilledThenable.status = "fulfilled";
                 fulfilledThenable.value = fulfilledValue;
               }
             },
-            function(error) {
+            function (error) {
               if ("pending" === thenable.status) {
                 var rejectedThenable = thenable;
                 rejectedThenable.status = "rejected";
@@ -2241,16 +2242,16 @@ function unsupportedRefresh() {
 }
 function noop$1() {}
 var HooksDispatcher = {
-    readContext: function(context) {
+    readContext: function (context) {
       return context._currentValue;
     },
-    useContext: function(context) {
+    useContext: function (context) {
       resolveCurrentlyRenderingComponent();
       return context._currentValue;
     },
     useMemo: useMemo,
     useReducer: useReducer,
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
       workInProgressHook = createWorkInProgressHook();
       var previousRef = workInProgressHook.memoizedState;
@@ -2259,28 +2260,28 @@ var HooksDispatcher = {
           (workInProgressHook.memoizedState = initialValue))
         : previousRef;
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       return useReducer(basicStateReducer, initialState);
     },
     useInsertionEffect: noop$1,
-    useLayoutEffect: function() {},
-    useCallback: function(callback, deps) {
-      return useMemo(function() {
+    useLayoutEffect: function () {},
+    useCallback: function (callback, deps) {
+      return useMemo(function () {
         return callback;
       }, deps);
     },
     useImperativeHandle: noop$1,
     useEffect: noop$1,
     useDebugValue: noop$1,
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       resolveCurrentlyRenderingComponent();
       return value;
     },
-    useTransition: function() {
+    useTransition: function () {
       resolveCurrentlyRenderingComponent();
       return [!1, unsupportedStartTransition];
     },
-    useId: function() {
+    useId: function () {
       var JSCompiler_inline_result = currentlyRenderingTask.treeContext;
       var overflow = JSCompiler_inline_result.overflow;
       JSCompiler_inline_result = JSCompiler_inline_result.id;
@@ -2300,29 +2301,29 @@ var HooksDispatcher = {
       0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
       return JSCompiler_inline_result + ":";
     },
-    useMutableSource: function(source, getSnapshot) {
+    useMutableSource: function (source, getSnapshot) {
       resolveCurrentlyRenderingComponent();
       return getSnapshot(source._source);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       if (void 0 === getServerSnapshot)
         throw Error(
           "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering."
         );
       return getServerSnapshot();
     },
-    useCacheRefresh: function() {
+    useCacheRefresh: function () {
       return unsupportedRefresh;
     },
-    useEffectEvent: function() {
+    useEffectEvent: function () {
       return throwOnUseEffectEventCall;
     },
-    useMemoCache: function(size) {
+    useMemoCache: function (size) {
       for (var data = Array(size), i = 0; i < size; i++)
         data[i] = REACT_MEMO_CACHE_SENTINEL;
       return data;
     },
-    use: function(usable) {
+    use: function (usable) {
       if (null !== usable && "object" === typeof usable) {
         if ("function" === typeof usable.then) {
           var index = thenableIndexCounter;
@@ -2341,10 +2342,10 @@ var HooksDispatcher = {
   },
   currentResponseState = null,
   DefaultCacheDispatcher = {
-    getCacheSignal: function() {
+    getCacheSignal: function () {
       throw Error("Not implemented.");
     },
-    getCacheForType: function() {
+    getCacheForType: function () {
       throw Error("Not implemented.");
     }
   },
@@ -2372,7 +2373,7 @@ function createTask(
     : blockedBoundary.pendingTasks++;
   var task = {
     node: node,
-    ping: function() {
+    ping: function () {
       request.pingedTasks.push(task);
     },
     blockedBoundary: blockedBoundary,
@@ -2864,11 +2865,13 @@ function renderNode(request, task, node) {
       task.context = previousContext;
       switchContext(previousContext);
     } else
-      throw ((task.blockedSegment.formatContext = previousFormatContext),
-      (task.legacyContext = previousLegacyContext),
-      (task.context = previousContext),
-      switchContext(previousContext),
-      node);
+      throw (
+        ((task.blockedSegment.formatContext = previousFormatContext),
+        (task.legacyContext = previousLegacyContext),
+        (task.context = previousContext),
+        switchContext(previousContext),
+        node)
+      );
   }
 }
 function abortTaskSoft(task) {
@@ -2891,7 +2894,7 @@ function abortTask(task, request, error) {
         (boundary.errorDigest = request.onError(error)),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
-      boundary.fallbackAbortableTasks.forEach(function(fallbackTask) {
+      boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
         return abortTask(fallbackTask, request, error);
       }),
       boundary.fallbackAbortableTasks.clear(),
@@ -3246,9 +3249,8 @@ function flushCompletedQueues(request, destination) {
       if (errorComponentStack)
         if (scriptFormat) {
           bootstrapChunks.buffer += ",";
-          var chunk$jscomp$3 = escapeJSStringsForInstructionScripts(
-            errorComponentStack
-          );
+          var chunk$jscomp$3 =
+            escapeJSStringsForInstructionScripts(errorComponentStack);
           bootstrapChunks.buffer += chunk$jscomp$3;
         } else {
           bootstrapChunks.buffer += '" data-stck="';
@@ -3346,7 +3348,7 @@ function abort(request, reason) {
         void 0 === reason
           ? Error("The render was aborted by the server without a reason.")
           : reason;
-      abortableTasks.forEach(function(task) {
+      abortableTasks.forEach(function (task) {
         return abortTask(task, request, error);
       });
       abortableTasks.clear();
@@ -3357,10 +3359,10 @@ function abort(request, reason) {
     logRecoverableError(request, error$21), fatalError(request, error$21);
   }
 }
-exports.abortStream = function(stream) {
+exports.abortStream = function (stream) {
   abort(stream.request);
 };
-exports.debug = function(stream) {
+exports.debug = function (stream) {
   stream = stream.request;
   return {
     pendingRootTasks: stream.pendingRootTasks,
@@ -3371,10 +3373,10 @@ exports.debug = function(stream) {
     pingedTasks: stream.pingedTasks.length
   };
 };
-exports.hasFinished = function(stream) {
+exports.hasFinished = function (stream) {
   return stream.destination.done;
 };
-exports.renderNextChunk = function(stream) {
+exports.renderNextChunk = function (stream) {
   var request = stream.request;
   stream = stream.destination;
   if (2 !== request.status) {
@@ -3489,7 +3491,7 @@ exports.renderNextChunk = function(stream) {
   stream.buffer = "";
   return request;
 };
-exports.renderToStream = function(children, options) {
+exports.renderToStream = function (children, options) {
   var destination = { buffer: "", done: !1, fatal: !1, error: null },
     identifierPrefix = options ? options.identifierPrefix : void 0,
     bootstrapScriptContent = options ? options.bootstrapScriptContent : void 0,

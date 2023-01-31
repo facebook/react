@@ -121,13 +121,13 @@ function stopLoggingProfilingEvents() {
 }
 if ("object" === typeof performance && "function" === typeof performance.now) {
   var localPerformance = performance;
-  exports.unstable_now = function() {
+  exports.unstable_now = function () {
     return localPerformance.now();
   };
 } else {
   var localDate = Date,
     initialTime = localDate.now();
-  exports.unstable_now = function() {
+  exports.unstable_now = function () {
     return localDate.now() - initialTime;
   };
 }
@@ -304,18 +304,18 @@ function performWorkUntilDeadline() {
 }
 var schedulePerformWorkUntilDeadline;
 if ("function" === typeof localSetImmediate)
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     localSetImmediate(performWorkUntilDeadline);
   };
 else if ("undefined" !== typeof MessageChannel) {
   var channel = new MessageChannel(),
     port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     port.postMessage(null);
   };
 } else
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     localSetTimeout(performWorkUntilDeadline, 0);
   };
 function requestHostCallback(callback) {
@@ -324,7 +324,7 @@ function requestHostCallback(callback) {
     ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline());
 }
 function requestHostTimeout(callback, ms) {
-  taskTimeoutID = localSetTimeout(function() {
+  taskTimeoutID = localSetTimeout(function () {
     callback(exports.unstable_now());
   }, ms);
 }
@@ -340,7 +340,7 @@ exports.unstable_LowPriority = 4;
 exports.unstable_NormalPriority = 3;
 exports.unstable_Profiling = unstable_Profiling;
 exports.unstable_UserBlockingPriority = 2;
-exports.unstable_cancelCallback = function(task) {
+exports.unstable_cancelCallback = function (task) {
   if (enableProfilingFeatureFlag && task.isQueued) {
     var currentTime = exports.unstable_now();
     enableProfilingFeatureFlag &&
@@ -350,26 +350,26 @@ exports.unstable_cancelCallback = function(task) {
   }
   task.callback = null;
 };
-exports.unstable_continueExecution = function() {
+exports.unstable_continueExecution = function () {
   isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
     ((isHostCallbackScheduled = !0), requestHostCallback(flushWork));
 };
-exports.unstable_forceFrameRate = function(fps) {
+exports.unstable_forceFrameRate = function (fps) {
   0 > fps || 125 < fps
     ? console.error(
         "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
       )
     : (frameInterval = 0 < fps ? Math.floor(1e3 / fps) : frameYieldMs);
 };
-exports.unstable_getCurrentPriorityLevel = function() {
+exports.unstable_getCurrentPriorityLevel = function () {
   return currentPriorityLevel;
 };
-exports.unstable_getFirstCallbackNode = function() {
+exports.unstable_getFirstCallbackNode = function () {
   return peek(taskQueue);
 };
-exports.unstable_next = function(eventHandler) {
+exports.unstable_next = function (eventHandler) {
   switch (currentPriorityLevel) {
     case 1:
     case 2:
@@ -387,17 +387,17 @@ exports.unstable_next = function(eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_pauseExecution = function() {
+exports.unstable_pauseExecution = function () {
   isSchedulerPaused = !0;
 };
-exports.unstable_requestPaint = function() {
+exports.unstable_requestPaint = function () {
   enableIsInputPending &&
     void 0 !== navigator &&
     void 0 !== navigator.scheduling &&
     void 0 !== navigator.scheduling.isInputPending &&
     (needsPaint = !0);
 };
-exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
+exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case 1:
     case 2:
@@ -416,7 +416,11 @@ exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
+exports.unstable_scheduleCallback = function (
+  priorityLevel,
+  callback,
+  options
+) {
   var currentTime = exports.unstable_now();
   "object" === typeof options && null !== options
     ? ((options = options.delay),
@@ -478,9 +482,9 @@ exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
   return priorityLevel;
 };
 exports.unstable_shouldYield = shouldYieldToHost;
-exports.unstable_wrapCallback = function(callback) {
+exports.unstable_wrapCallback = function (callback) {
   var parentPriorityLevel = currentPriorityLevel;
-  return function() {
+  return function () {
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
     try {

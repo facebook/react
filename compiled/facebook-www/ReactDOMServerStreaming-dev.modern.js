@@ -389,7 +389,7 @@ var reservedProps = [
   reservedProps.push("innerText", "textContent");
 }
 
-reservedProps.forEach(function(name) {
+reservedProps.forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -408,7 +408,7 @@ reservedProps.forEach(function(name) {
   ["className", "class"],
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
-].forEach(function(_ref) {
+].forEach(function (_ref) {
   var name = _ref[0],
     attributeName = _ref[1];
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -425,7 +425,9 @@ reservedProps.forEach(function(name) {
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function(name) {
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -446,7 +448,7 @@ reservedProps.forEach(function(name) {
   "externalResourcesRequired",
   "focusable",
   "preserveAlpha"
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -484,7 +486,7 @@ reservedProps.forEach(function(name) {
   "scoped",
   "seamless", // Microdata
   "itemScope"
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -506,7 +508,7 @@ reservedProps.forEach(function(name) {
   "selected" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -525,7 +527,7 @@ reservedProps.forEach(function(name) {
   "download" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -545,7 +547,7 @@ reservedProps.forEach(function(name) {
   "span" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -558,7 +560,7 @@ reservedProps.forEach(function(name) {
   );
 }); // These are HTML attributes that must be numbers.
 
-["rowSpan", "start"].forEach(function(name) {
+["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -572,7 +574,7 @@ reservedProps.forEach(function(name) {
 });
 var CAMELIZE = /[\-\:]([a-z])/g;
 
-var capitalize = function(token) {
+var capitalize = function (token) {
   return token[1].toUpperCase();
 }; // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings
@@ -656,7 +658,7 @@ var capitalize = function(token) {
   "x-height" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -679,7 +681,7 @@ var capitalize = function(token) {
   "xlink:type" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -699,7 +701,7 @@ var capitalize = function(token) {
   "xml:space" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -715,7 +717,7 @@ var capitalize = function(token) {
 // The attribute name is case-sensitive in SVG so we can't just use
 // the React name like we do for attributes that exist only in HTML.
 
-["tabIndex", "crossOrigin"].forEach(function(attributeName) {
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
@@ -740,7 +742,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
   true, // sanitizeURL
   false
 );
-["src", "href", "action", "formAction"].forEach(function(attributeName) {
+["src", "href", "action", "formAction"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
@@ -820,8 +822,8 @@ function prefixKey(prefix, key) {
 var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
 // infinite loop, because it iterates over the newly added props too.
 
-Object.keys(isUnitlessNumber).forEach(function(prop) {
-  prefixes.forEach(function(prefix) {
+Object.keys(isUnitlessNumber).forEach(function (prop) {
+  prefixes.forEach(function (prefix) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
@@ -1038,7 +1040,7 @@ function warnInvalidARIAProps(type, props) {
     }
 
     var unknownPropString = invalidProps
-      .map(function(prop) {
+      .map(function (prop) {
         return "`" + prop + "`";
       })
       .join(", ");
@@ -1592,7 +1594,7 @@ var possibleStandardNames = {
   zoomandpan: "zoomAndPan"
 };
 
-var validateProperty$1 = function() {};
+var validateProperty$1 = function () {};
 
 {
   var warnedProperties$1 = {};
@@ -1601,7 +1603,7 @@ var validateProperty$1 = function() {};
   var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
   var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-  validateProperty$1 = function(tagName, name, value, eventRegistry) {
+  validateProperty$1 = function (tagName, name, value, eventRegistry) {
     if (
       hasOwnProperty.call(warnedProperties$1, name) &&
       warnedProperties$1[name]
@@ -1826,7 +1828,7 @@ var validateProperty$1 = function() {};
   };
 }
 
-var warnUnknownProperties = function(type, props, eventRegistry) {
+var warnUnknownProperties = function (type, props, eventRegistry) {
   {
     var unknownProps = [];
 
@@ -1839,7 +1841,7 @@ var warnUnknownProperties = function(type, props, eventRegistry) {
     }
 
     var unknownPropString = unknownProps
-      .map(function(prop) {
+      .map(function (prop) {
         return "`" + prop + "`";
       })
       .join(", ");
@@ -1872,7 +1874,7 @@ function validateProperties$2(type, props, eventRegistry) {
   warnUnknownProperties(type, props, eventRegistry);
 }
 
-var warnValidStyle = function() {};
+var warnValidStyle = function () {};
 
 {
   // 'msTransform' is correct, but the other prefixes should be capitalized
@@ -1886,13 +1888,13 @@ var warnValidStyle = function() {};
   var warnedForNaNValue = false;
   var warnedForInfinityValue = false;
 
-  var camelize = function(string) {
-    return string.replace(hyphenPattern, function(_, character) {
+  var camelize = function (string) {
+    return string.replace(hyphenPattern, function (_, character) {
       return character.toUpperCase();
     });
   };
 
-  var warnHyphenatedStyleName = function(name) {
+  var warnHyphenatedStyleName = function (name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -1908,7 +1910,7 @@ var warnValidStyle = function() {};
     );
   };
 
-  var warnBadVendoredStyleName = function(name) {
+  var warnBadVendoredStyleName = function (name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -1922,7 +1924,7 @@ var warnValidStyle = function() {};
     );
   };
 
-  var warnStyleValueWithSemicolon = function(name, value) {
+  var warnStyleValueWithSemicolon = function (name, value) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -1937,7 +1939,7 @@ var warnValidStyle = function() {};
     );
   };
 
-  var warnStyleValueIsNaN = function(name, value) {
+  var warnStyleValueIsNaN = function (name, value) {
     if (warnedForNaNValue) {
       return;
     }
@@ -1947,7 +1949,7 @@ var warnValidStyle = function() {};
     error("`NaN` is an invalid value for the `%s` css style property.", name);
   };
 
-  var warnStyleValueIsInfinity = function(name, value) {
+  var warnStyleValueIsInfinity = function (name, value) {
     if (warnedForInfinityValue) {
       return;
     }
@@ -1960,7 +1962,7 @@ var warnValidStyle = function() {};
     );
   };
 
-  warnValidStyle = function(name, value) {
+  warnValidStyle = function (name, value) {
     if (name.indexOf("-") > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
@@ -2102,7 +2104,8 @@ function hyphenateStyleName(name) {
 
 /* eslint-disable max-len */
 
-var isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
+var isJavaScriptProtocol =
+  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
 function sanitizeURL(url) {
   {
@@ -3264,10 +3267,7 @@ function resourcesFromElement(type, props) {
           var property = props.property;
           _key = "property::" + property + contentKey;
           propertyPath = property;
-          var parentPath = property
-            .split(":")
-            .slice(0, -1)
-            .join(":");
+          var parentPath = property.split(":").slice(0, -1).join(":");
           var parentResource = resources.structuredMetaKeys.get(parentPath);
 
           if (parentResource) {
@@ -3581,14 +3581,14 @@ function hoistResources(resources, source) {
   var currentBoundaryResources = resources.boundaryResources;
 
   if (currentBoundaryResources) {
-    source.forEach(function(resource) {
+    source.forEach(function (resource) {
       return currentBoundaryResources.add(resource);
     });
     source.clear();
   }
 }
 function hoistResourcesToRoot(resources, boundaryResources) {
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     return resource.set.add(resource);
   });
   boundaryResources.clear();
@@ -3651,7 +3651,7 @@ function escapeBootstrapScriptContent(scriptText) {
 
 var scriptRegex = /(<\/|<)(s)(cript)/gi;
 
-var scriptReplacer = function(match, prefix, s, suffix) {
+var scriptReplacer = function (match, prefix, s, suffix) {
   return "" + prefix + (s === "s" ? "\\u0073" : "\\u0053") + suffix;
 }; // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
@@ -4356,7 +4356,7 @@ function flattenOptionChildren(children) {
   var content = ""; // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
 
-  React.Children.forEach(children, function(child) {
+  React.Children.forEach(children, function (child) {
     if (child == null) {
       return;
     }
@@ -5585,24 +5585,18 @@ var startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
 var startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
 var startClientRenderedSuspenseBoundary = stringToPrecomputedChunk("<!--$!-->");
 var endSuspenseBoundary = stringToPrecomputedChunk("<!--/$-->");
-var clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  "<template"
-);
-var clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
-  '"'
-);
-var clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  ' data-dgst="'
-);
-var clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  ' data-msg="'
-);
-var clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
-  ' data-stck="'
-);
-var clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  "></template>"
-);
+var clientRenderedSuspenseBoundaryError1 =
+  stringToPrecomputedChunk("<template");
+var clientRenderedSuspenseBoundaryErrorAttrInterstitial =
+  stringToPrecomputedChunk('"');
+var clientRenderedSuspenseBoundaryError1A =
+  stringToPrecomputedChunk(' data-dgst="');
+var clientRenderedSuspenseBoundaryError1B =
+  stringToPrecomputedChunk(' data-msg="');
+var clientRenderedSuspenseBoundaryError1C =
+  stringToPrecomputedChunk(' data-stck="');
+var clientRenderedSuspenseBoundaryError2 =
+  stringToPrecomputedChunk("></template>");
 function writeStartCompletedSuspenseBoundary(destination, responseState) {
   return writeChunkAndReturn(destination, startCompletedSuspenseBoundary);
 }
@@ -5870,9 +5864,8 @@ var completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
 var completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   completeBoundaryWithStyles + ';$RR("'
 );
-var completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
-  '$RR("'
-);
+var completeBoundaryWithStylesScript1Partial =
+  stringToPrecomputedChunk('$RR("');
 var completeBoundaryScript2 = stringToPrecomputedChunk('","');
 var completeBoundaryScript3a = stringToPrecomputedChunk('",');
 var completeBoundaryScript3b = stringToPrecomputedChunk('"');
@@ -6098,35 +6091,36 @@ var regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
 
 function escapeJSStringsForInstructionScripts(input) {
   var escaped = JSON.stringify(input);
-  return escaped.replace(regexForJSStringsInInstructionScripts, function(
-    match
-  ) {
-    switch (match) {
-      // santizing breaking out of strings and script tags
-      case "<":
-        return "\\u003c";
+  return escaped.replace(
+    regexForJSStringsInInstructionScripts,
+    function (match) {
+      switch (match) {
+        // santizing breaking out of strings and script tags
+        case "<":
+          return "\\u003c";
 
-      case "\u2028":
-        return "\\u2028";
+        case "\u2028":
+          return "\\u2028";
 
-      case "\u2029":
-        return "\\u2029";
+        case "\u2029":
+          return "\\u2029";
 
-      default: {
-        // eslint-disable-next-line react-internal/prod-error-codes
-        throw new Error(
-          "escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
-        );
+        default: {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          throw new Error(
+            "escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+          );
+        }
       }
     }
-  });
+  );
 }
 
 var regexForJSStringsInScripts = /[&><\u2028\u2029]/g;
 
 function escapeJSObjectForInstructionScripts(input) {
   var escaped = JSON.stringify(input);
-  return escaped.replace(regexForJSStringsInScripts, function(match) {
+  return escaped.replace(regexForJSStringsInScripts, function (match) {
     switch (match) {
       // santizing breaking out of strings and script tags
       case "&":
@@ -6206,27 +6200,27 @@ function writeInitialResources(
     resources.charset = null;
   }
 
-  bases.forEach(function(r) {
+  bases.forEach(function (r) {
     pushSelfClosing(target, r.props, "base", responseState);
     r.flushed = true;
   });
   bases.clear();
-  preconnects.forEach(function(r) {
+  preconnects.forEach(function (r) {
     // font preload Resources should not already be flushed so we elide this check
     pushLinkImpl(target, r.props, responseState);
     r.flushed = true;
   });
   preconnects.clear();
-  fontPreloads.forEach(function(r) {
+  fontPreloads.forEach(function (r) {
     // font preload Resources should not already be flushed so we elide this check
     pushLinkImpl(target, r.props, responseState);
     r.flushed = true;
   });
   fontPreloads.clear(); // Flush stylesheets first by earliest precedence
 
-  precedences.forEach(function(p, precedence) {
+  precedences.forEach(function (p, precedence) {
     if (p.size) {
-      p.forEach(function(r) {
+      p.forEach(function (r) {
         // resources should not already be flushed so we elide this check
         pushLinkImpl(target, r.props, responseState);
         r.flushed = true;
@@ -6244,7 +6238,7 @@ function writeInitialResources(
   });
   usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
-  scripts.forEach(function(r) {
+  scripts.forEach(function (r) {
     // should never be flushed already
     pushScriptImpl(target, r.props, responseState);
     r.flushed = true;
@@ -6257,7 +6251,7 @@ function writeInitialResources(
   explicitStylePreloads.clear();
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
-  headResources.forEach(function(r) {
+  headResources.forEach(function (r) {
     switch (r.type) {
       case "title": {
         pushTitleImpl(target, r.props, responseState);
@@ -6317,13 +6311,13 @@ function writeImmediateResources(destination, resources, responseState) {
     resources.charset = null;
   }
 
-  preconnects.forEach(function(r) {
+  preconnects.forEach(function (r) {
     // font preload Resources should not already be flushed so we elide this check
     pushLinkImpl(target, r.props, responseState);
     r.flushed = true;
   });
   preconnects.clear();
-  fontPreloads.forEach(function(r) {
+  fontPreloads.forEach(function (r) {
     // font preload Resources should not already be flushed so we elide this check
     pushLinkImpl(target, r.props, responseState);
     r.flushed = true;
@@ -6331,7 +6325,7 @@ function writeImmediateResources(destination, resources, responseState) {
   fontPreloads.clear();
   usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
-  scripts.forEach(function(r) {
+  scripts.forEach(function (r) {
     // should never be flushed already
     pushStartGenericElement(target, r.props, "script", responseState);
     pushEndInstance(target, target, "script", r.props);
@@ -6345,7 +6339,7 @@ function writeImmediateResources(destination, resources, responseState) {
   explicitStylePreloads.clear();
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
-  headResources.forEach(function(r) {
+  headResources.forEach(function (r) {
     switch (r.type) {
       case "title": {
         pushTitleImpl(target, r.props, responseState);
@@ -6409,7 +6403,7 @@ var arrayCloseBracket = stringToPrecomputedChunk("]"); // This function writes a
 function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   writeChunk(destination, arrayFirstOpenBracket);
   var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     if (resource.inShell);
     else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
@@ -6598,7 +6592,7 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   writeChunk(destination, arrayFirstOpenBracket);
   var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.forEach(function(resource) {
+  boundaryResources.forEach(function (resource) {
     if (resource.inShell);
     else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
@@ -7101,12 +7095,12 @@ function describeNativeComponentFrame(fn, construct) {
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      var Fake = function() {
+      var Fake = function () {
         throw Error();
       }; // $FlowFixMe
 
       Object.defineProperty(Fake.prototype, "props", {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();
@@ -7512,7 +7506,7 @@ var didWarnAboutInvalidateContextType;
   didWarnAboutInvalidateContextType = new Set();
   var didWarnOnInvalidCallback = new Set();
 
-  warnOnInvalidCallback = function(callback, callerName) {
+  warnOnInvalidCallback = function (callback, callerName) {
     if (callback === null || typeof callback === "function") {
       return;
     }
@@ -7531,7 +7525,7 @@ var didWarnAboutInvalidateContextType;
     }
   };
 
-  warnOnUndefinedDerivedState = function(type, partialState) {
+  warnOnUndefinedDerivedState = function (type, partialState) {
     if (partialState === undefined) {
       var componentName = getComponentNameFromType(type) || "Component";
 
@@ -7573,11 +7567,11 @@ function warnNoop(publicInstance, callerName) {
 }
 
 var classComponentUpdater = {
-  isMounted: function(inst) {
+  isMounted: function (inst) {
     return false;
   },
   // $FlowFixMe[missing-local-annot]
-  enqueueSetState: function(inst, payload, callback) {
+  enqueueSetState: function (inst, payload, callback) {
     var internals = get(inst);
 
     if (internals.queue === null) {
@@ -7592,7 +7586,7 @@ var classComponentUpdater = {
       }
     }
   },
-  enqueueReplaceState: function(inst, payload, callback) {
+  enqueueReplaceState: function (inst, payload, callback) {
     var internals = get(inst);
     internals.replace = true;
     internals.queue = [payload];
@@ -7604,7 +7598,7 @@ var classComponentUpdater = {
     }
   },
   // $FlowFixMe[missing-local-annot]
-  enqueueForceUpdate: function(inst, callback) {
+  enqueueForceUpdate: function (inst, callback) {
     var internals = get(inst);
 
     if (internals.queue === null) {
@@ -8367,14 +8361,14 @@ function trackUsedThenable(thenableState, thenable, index) {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
         pendingThenable.then(
-          function(fulfilledValue) {
+          function (fulfilledValue) {
             if (thenable.status === "pending") {
               var fulfilledThenable = thenable;
               fulfilledThenable.status = "fulfilled";
               fulfilledThenable.value = fulfilledValue;
             }
           },
-          function(error) {
+          function (error) {
             if (thenable.status === "pending") {
               var rejectedThenable = thenable;
               rejectedThenable.status = "rejected";
@@ -8869,7 +8863,7 @@ function dispatchAction(componentIdentity, queue, action) {
 }
 
 function useCallback(callback, deps) {
-  return useMemo(function() {
+  return useMemo(function () {
     return callback;
   }, deps);
 }
@@ -9212,7 +9206,7 @@ function createTask(
 
   var task = {
     node: node,
-    ping: function() {
+    ping: function () {
       return pingTask(request, task);
     },
     blockedBoundary: blockedBoundary,
@@ -10453,7 +10447,7 @@ function abortTask(task, request, error) {
     } // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
 
-    boundary.fallbackAbortableTasks.forEach(function(fallbackTask) {
+    boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
       return abortTask(fallbackTask, request, error);
     });
     boundary.fallbackAbortableTasks.clear();
@@ -11153,7 +11147,7 @@ function abort(request, reason) {
         reason === undefined
           ? new Error("The render was aborted by the server without a reason.")
           : reason;
-      abortableTasks.forEach(function(task) {
+      abortableTasks.forEach(function (task) {
         return abortTask(task, request, error);
       });
       abortableTasks.clear();

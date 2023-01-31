@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-1f5ce59dd-20230130";
+var ReactVersion = "18.3.0-www-modern-6b3083266-20230131";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -171,7 +171,7 @@ var ReactNoopUpdateQueue = {
    * @protected
    * @final
    */
-  isMounted: function(publicInstance) {
+  isMounted: function (publicInstance) {
     return false;
   },
 
@@ -190,7 +190,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
-  enqueueForceUpdate: function(publicInstance, callback, callerName) {
+  enqueueForceUpdate: function (publicInstance, callback, callerName) {
     warnNoop(publicInstance, "forceUpdate");
   },
 
@@ -207,7 +207,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(
+  enqueueReplaceState: function (
     publicInstance,
     completeState,
     callback,
@@ -228,7 +228,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(
+  enqueueSetState: function (
     publicInstance,
     partialState,
     callback,
@@ -286,7 +286,7 @@ Component.prototype.isReactComponent = {};
  * @protected
  */
 
-Component.prototype.setState = function(partialState, callback) {
+Component.prototype.setState = function (partialState, callback) {
   if (
     typeof partialState !== "object" &&
     typeof partialState !== "function" &&
@@ -315,7 +315,7 @@ Component.prototype.setState = function(partialState, callback) {
  * @protected
  */
 
-Component.prototype.forceUpdate = function(callback) {
+Component.prototype.forceUpdate = function (callback) {
   this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
 };
 /**
@@ -338,9 +338,9 @@ Component.prototype.forceUpdate = function(callback) {
     ]
   };
 
-  var defineDeprecationWarning = function(methodName, info) {
+  var defineDeprecationWarning = function (methodName, info) {
     Object.defineProperty(Component.prototype, methodName, {
-      get: function() {
+      get: function () {
         warn(
           "%s(...) is deprecated in plain JavaScript React classes. %s",
           info[0],
@@ -685,7 +685,7 @@ function hasValidKey(config) {
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
-  var warnAboutAccessingKey = function() {
+  var warnAboutAccessingKey = function () {
     {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
@@ -709,7 +709,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 }
 
 function defineRefPropWarningGetter(props, displayName) {
-  var warnAboutAccessingRef = function() {
+  var warnAboutAccessingRef = function () {
     {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
@@ -782,7 +782,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
  * @internal
  */
 
-var ReactElement = function(type, key, ref, self, source, owner, props) {
+var ReactElement = function (type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -1062,7 +1062,7 @@ function escape(key) {
     "=": "=0",
     ":": "=2"
   };
-  var escapedString = key.replace(escapeRegex, function(match) {
+  var escapedString = key.replace(escapeRegex, function (match) {
     return escaperLookup[match];
   });
   return "$" + escapedString;
@@ -1144,7 +1144,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         escapedChildKey = escapeUserProvidedKey(childKey) + "/";
       }
 
-      mapIntoArray(mappedChild, array, escapedChildKey, "", function(c) {
+      mapIntoArray(mappedChild, array, escapedChildKey, "", function (c) {
         return c;
       });
     } else if (mappedChild != null) {
@@ -1165,7 +1165,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
             (mappedChild.key && (!_child || _child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
                   // eslint-disable-next-line react-internal/safe-string-coercion
-                  "" + mappedChild.key // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                  "" + // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                    mappedChild.key
                 ) + "/"
               : "") +
             childKey
@@ -1269,7 +1270,7 @@ function mapChildren(children, func, context) {
 
   var result = [];
   var count = 0;
-  mapIntoArray(children, result, "", "", function(child) {
+  mapIntoArray(children, result, "", "", function (child) {
     return func.call(context, child, count++);
   });
   return result;
@@ -1286,7 +1287,7 @@ function mapChildren(children, func, context) {
 
 function countChildren(children) {
   var n = 0;
-  mapChildren(children, function() {
+  mapChildren(children, function () {
     n++; // Don't return anything
   });
   return n;
@@ -1307,7 +1308,7 @@ function countChildren(children) {
 function forEachChildren(children, forEachFunc, forEachContext) {
   mapChildren(
     children, // $FlowFixMe[missing-this-annot]
-    function() {
+    function () {
       forEachFunc.apply(this, arguments); // Don't return anything.
     },
     forEachContext
@@ -1322,7 +1323,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
 
 function toArray(children) {
   return (
-    mapChildren(children, function(child) {
+    mapChildren(children, function (child) {
       return child;
     }) || []
   );
@@ -1393,7 +1394,7 @@ function createContext(defaultValue) {
 
     Object.defineProperties(Consumer, {
       Provider: {
-        get: function() {
+        get: function () {
           if (!hasWarnedAboutUsingConsumerProvider) {
             hasWarnedAboutUsingConsumerProvider = true;
 
@@ -1405,36 +1406,36 @@ function createContext(defaultValue) {
 
           return context.Provider;
         },
-        set: function(_Provider) {
+        set: function (_Provider) {
           context.Provider = _Provider;
         }
       },
       _currentValue: {
-        get: function() {
+        get: function () {
           return context._currentValue;
         },
-        set: function(_currentValue) {
+        set: function (_currentValue) {
           context._currentValue = _currentValue;
         }
       },
       _currentValue2: {
-        get: function() {
+        get: function () {
           return context._currentValue2;
         },
-        set: function(_currentValue2) {
+        set: function (_currentValue2) {
           context._currentValue2 = _currentValue2;
         }
       },
       _threadCount: {
-        get: function() {
+        get: function () {
           return context._threadCount;
         },
-        set: function(_threadCount) {
+        set: function (_threadCount) {
           context._threadCount = _threadCount;
         }
       },
       Consumer: {
-        get: function() {
+        get: function () {
           if (!hasWarnedAboutUsingNestedContextConsumers) {
             hasWarnedAboutUsingNestedContextConsumers = true;
 
@@ -1448,10 +1449,10 @@ function createContext(defaultValue) {
         }
       },
       displayName: {
-        get: function() {
+        get: function () {
           return context.displayName;
         },
-        set: function(displayName) {
+        set: function (displayName) {
           if (!hasWarnedAboutDisplayNameOnConsumer) {
             warn(
               "Setting `displayName` on Context.Consumer has no effect. " +
@@ -1491,7 +1492,7 @@ function lazyInitializer(payload) {
     // end up fixing it if the resolution was a concurrency bug.
 
     thenable.then(
-      function(moduleObject) {
+      function (moduleObject) {
         if (payload._status === Pending || payload._status === Uninitialized) {
           // Transition to the next state.
           var resolved = payload;
@@ -1499,7 +1500,7 @@ function lazyInitializer(payload) {
           resolved._result = moduleObject;
         }
       },
-      function(error) {
+      function (error) {
         if (payload._status === Pending || payload._status === Uninitialized) {
           // Transition to the next state.
           var rejected = payload;
@@ -1525,8 +1526,8 @@ function lazyInitializer(payload) {
       if (moduleObject === undefined) {
         error(
           "lazy: Expected the result of a dynamic imp" +
-          "ort() call. " +
-          "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+            "ort() call. " +
+            "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
             "const MyComponent = lazy(() => imp" +
             "ort('./MyComponent'))\n\n" +
             "Did you accidentally put curly braces around the import?",
@@ -1539,8 +1540,8 @@ function lazyInitializer(payload) {
       if (!("default" in moduleObject)) {
         error(
           "lazy: Expected the result of a dynamic imp" +
-          "ort() call. " +
-          "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+            "ort() call. " +
+            "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
             "const MyComponent = lazy(() => imp" +
             "ort('./MyComponent'))",
           moduleObject
@@ -1574,11 +1575,11 @@ function lazy(ctor) {
     Object.defineProperties(lazyType, {
       defaultProps: {
         configurable: true,
-        get: function() {
+        get: function () {
           return defaultProps;
         },
         // $FlowFixMe[missing-local-annot]
-        set: function(newDefaultProps) {
+        set: function (newDefaultProps) {
           error(
             "React.lazy(...): It is not supported to assign `defaultProps` to " +
               "a lazy component import. Either specify them where the component " +
@@ -1595,11 +1596,11 @@ function lazy(ctor) {
       },
       propTypes: {
         configurable: true,
-        get: function() {
+        get: function () {
           return propTypes;
         },
         // $FlowFixMe[missing-local-annot]
-        set: function(newPropTypes) {
+        set: function (newPropTypes) {
           error(
             "React.lazy(...): It is not supported to assign `propTypes` to " +
               "a lazy component import. Either specify them where the component " +
@@ -1664,10 +1665,10 @@ function forwardRef(render) {
     Object.defineProperty(elementType, "displayName", {
       enumerable: false,
       configurable: true,
-      get: function() {
+      get: function () {
         return ownName;
       },
-      set: function(name) {
+      set: function (name) {
         ownName = name; // The inner component shouldn't inherit this display name in most cases,
         // because the component may be used elsewhere.
         // But it's nice for anonymous functions to inherit the name,
@@ -1750,10 +1751,10 @@ function memo(type, compare) {
     Object.defineProperty(elementType, "displayName", {
       enumerable: false,
       configurable: true,
-      get: function() {
+      get: function () {
         return ownName;
       },
-      set: function(name) {
+      set: function (name) {
         ownName = name; // The inner component shouldn't inherit this display name in most cases,
         // because the component may be used elsewhere.
         // But it's nice for anonymous functions to inherit the name,
@@ -1800,7 +1801,7 @@ function createCacheNode() {
 }
 
 function cache(fn) {
-  return function() {
+  return function () {
     var dispatcher = ReactCurrentCache.current;
 
     if (!dispatcher) {
@@ -2183,7 +2184,7 @@ function setExtraStackFrame(stack) {
 }
 
 {
-  ReactDebugCurrentFrame.setExtraStackFrame = function(stack) {
+  ReactDebugCurrentFrame.setExtraStackFrame = function (stack) {
     {
       currentExtraStackFrame = stack;
     }
@@ -2191,7 +2192,7 @@ function setExtraStackFrame(stack) {
 
   ReactDebugCurrentFrame.getCurrentStack = null;
 
-  ReactDebugCurrentFrame.getStackAddendum = function() {
+  ReactDebugCurrentFrame.getStackAddendum = function () {
     var stack = ""; // Add an extra top frame while an element is being validated
 
     if (currentExtraStackFrame) {
@@ -2284,12 +2285,12 @@ function describeNativeComponentFrame(fn, construct) {
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      var Fake = function() {
+      var Fake = function () {
         throw Error();
       }; // $FlowFixMe
 
       Object.defineProperty(Fake.prototype, "props", {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();
@@ -2962,7 +2963,7 @@ function createServerContext(globalName, defaultValue) {
       _context._currentRenderer2 = null;
       Object.defineProperties(_context, {
         Consumer: {
-          get: function() {
+          get: function () {
             if (!hasWarnedAboutUsingConsumer) {
               error("Consumer pattern is not supported by ReactServerContext");
 
@@ -3078,7 +3079,7 @@ function enqueueTask(task) {
       // we're in a browser
       // we can't use regular timers because they may still be faked
       // so we try MessageChannel+postMessage instead
-      enqueueTaskImpl = function(callback) {
+      enqueueTaskImpl = function (callback) {
         {
           if (didWarnAboutMessageChannel === false) {
             didWarnAboutMessageChannel = true;
@@ -3179,7 +3180,7 @@ function act(callback) {
       var thenable = result; // Warn if the an `act` call with an async scope is not awaited. In a
       // future release, consider making this an error.
 
-      queueSeveralMicrotasks(function() {
+      queueSeveralMicrotasks(function () {
         if (!didAwaitActCall && !didWarnNoAwaitAct) {
           didWarnNoAwaitAct = true;
 
@@ -3193,17 +3194,17 @@ function act(callback) {
         }
       });
       return {
-        then: function(resolve, reject) {
+        then: function (resolve, reject) {
           didAwaitActCall = true;
           thenable.then(
-            function(returnValue) {
+            function (returnValue) {
               popActScope(prevActQueue, prevActScopeDepth);
 
               if (prevActScopeDepth === 0) {
                 // We're exiting the outermost `act` scope. Flush the queue.
                 try {
                   flushActQueue(queue);
-                  enqueueTask(function() {
+                  enqueueTask(function () {
                     return (
                       // Recursively flush tasks scheduled by a microtask.
                       recursivelyFlushAsyncActWork(returnValue, resolve, reject)
@@ -3219,7 +3220,7 @@ function act(callback) {
                 resolve(returnValue);
               }
             },
-            function(error) {
+            function (error) {
               popActScope(prevActQueue, prevActScopeDepth);
               reject(error);
             }
@@ -3242,7 +3243,7 @@ function act(callback) {
         // In a future release, consider making this an error.
 
         if (queue.length !== 0) {
-          queueSeveralMicrotasks(function() {
+          queueSeveralMicrotasks(function () {
             if (!didAwaitActCall && !didWarnNoAwaitAct) {
               didWarnNoAwaitAct = true;
 
@@ -3275,14 +3276,14 @@ function act(callback) {
       }
 
       return {
-        then: function(resolve, reject) {
+        then: function (resolve, reject) {
           didAwaitActCall = true;
 
           if (prevActScopeDepth === 0) {
             // If the `act` call is awaited, restore the queue we were
             // using before (see long comment above) so we can flush it.
             ReactCurrentActQueue.current = queue;
-            enqueueTask(function() {
+            enqueueTask(function () {
               return (
                 // Recursively flush tasks scheduled by a microtask.
                 recursivelyFlushAsyncActWork(returnValue, resolve, reject)
@@ -3323,7 +3324,7 @@ function recursivelyFlushAsyncActWork(returnValue, resolve, reject) {
           flushActQueue(queue); // The work we just performed may have schedule additional async
           // tasks. Wait a macrotask and check again.
 
-          enqueueTask(function() {
+          enqueueTask(function () {
             return recursivelyFlushAsyncActWork(returnValue, resolve, reject);
           });
         } catch (error) {
@@ -3398,8 +3399,8 @@ function flushActQueue(queue) {
 
 var queueSeveralMicrotasks =
   typeof queueMicrotask === "function"
-    ? function(callback) {
-        queueMicrotask(function() {
+    ? function (callback) {
+        queueMicrotask(function () {
           return queueMicrotask(callback);
         });
       }
@@ -3490,7 +3491,7 @@ function warnIfStringRefCannotBeAutoConverted$1(config, self) {
 
 function defineKeyPropWarningGetter$1(props, displayName) {
   {
-    var warnAboutAccessingKey = function() {
+    var warnAboutAccessingKey = function () {
       if (!specialPropKeyWarningShown$1) {
         specialPropKeyWarningShown$1 = true;
 
@@ -3514,7 +3515,7 @@ function defineKeyPropWarningGetter$1(props, displayName) {
 
 function defineRefPropWarningGetter$1(props, displayName) {
   {
-    var warnAboutAccessingRef = function() {
+    var warnAboutAccessingRef = function () {
       if (!specialPropRefWarningShown$1) {
         specialPropRefWarningShown$1 = true;
 
@@ -3556,7 +3557,7 @@ function defineRefPropWarningGetter$1(props, displayName) {
  * @internal
  */
 
-var ReactElement$1 = function(type, key, ref, self, source, owner, props) {
+var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -4080,7 +4081,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
 
     if (hasOwnProperty.call(props, "key")) {
       var componentName = getComponentNameFromType(type);
-      var keys = Object.keys(props).filter(function(k) {
+      var keys = Object.keys(props).filter(function (k) {
         return k !== "key";
       });
       var beforeExample =
@@ -4147,7 +4148,8 @@ exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactSharedInternals;
+exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+  ReactSharedInternals;
 exports.cache = cache;
 exports.cloneElement = cloneElement$1;
 exports.createContext = createContext;

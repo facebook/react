@@ -76,53 +76,53 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.isAsyncMode = function() {
+exports.isAsyncMode = function () {
   return !1;
 };
-exports.isConcurrentMode = function() {
+exports.isConcurrentMode = function () {
   return !1;
 };
-exports.isContextConsumer = function(object) {
+exports.isContextConsumer = function (object) {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 };
-exports.isContextProvider = function(object) {
+exports.isContextProvider = function (object) {
   return typeOf(object) === REACT_PROVIDER_TYPE;
 };
-exports.isElement = function(object) {
+exports.isElement = function (object) {
   return (
     "object" === typeof object &&
     null !== object &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
-exports.isForwardRef = function(object) {
+exports.isForwardRef = function (object) {
   return typeOf(object) === REACT_FORWARD_REF_TYPE;
 };
-exports.isFragment = function(object) {
+exports.isFragment = function (object) {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
 };
-exports.isLazy = function(object) {
+exports.isLazy = function (object) {
   return typeOf(object) === REACT_LAZY_TYPE;
 };
-exports.isMemo = function(object) {
+exports.isMemo = function (object) {
   return typeOf(object) === REACT_MEMO_TYPE;
 };
-exports.isPortal = function(object) {
+exports.isPortal = function (object) {
   return typeOf(object) === REACT_PORTAL_TYPE;
 };
-exports.isProfiler = function(object) {
+exports.isProfiler = function (object) {
   return typeOf(object) === REACT_PROFILER_TYPE;
 };
-exports.isStrictMode = function(object) {
+exports.isStrictMode = function (object) {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
 };
-exports.isSuspense = function(object) {
+exports.isSuspense = function (object) {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 };
-exports.isSuspenseList = function(object) {
+exports.isSuspenseList = function (object) {
   return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
 };
-exports.isValidElementType = function(type) {
+exports.isValidElementType = function (type) {
   return "string" === typeof type ||
     "function" === typeof type ||
     type === REACT_FRAGMENT_TYPE ||

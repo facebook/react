@@ -37,7 +37,7 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
         .catch(handleAbortError);
     }
   } catch (error) {
-    setTimeout(function() {
+    setTimeout(function () {
       throw error;
     });
   } finally {
@@ -51,18 +51,18 @@ exports.unstable_LowPriority = 4;
 exports.unstable_NormalPriority = 3;
 exports.unstable_Profiling = null;
 exports.unstable_UserBlockingPriority = 2;
-exports.unstable_cancelCallback = function(node) {
+exports.unstable_cancelCallback = function (node) {
   node._controller.abort();
 };
-exports.unstable_continueExecution = function() {};
-exports.unstable_forceFrameRate = function() {};
-exports.unstable_getCurrentPriorityLevel = function() {
+exports.unstable_continueExecution = function () {};
+exports.unstable_forceFrameRate = function () {};
+exports.unstable_getCurrentPriorityLevel = function () {
   return currentPriorityLevel_DEPRECATED;
 };
-exports.unstable_getFirstCallbackNode = function() {
+exports.unstable_getFirstCallbackNode = function () {
   return null;
 };
-exports.unstable_next = function(callback) {
+exports.unstable_next = function (callback) {
   switch (currentPriorityLevel_DEPRECATED) {
     case 1:
     case 2:
@@ -81,9 +81,9 @@ exports.unstable_next = function(callback) {
   }
 };
 exports.unstable_now = getCurrentTime;
-exports.unstable_pauseExecution = function() {};
-exports.unstable_requestPaint = function() {};
-exports.unstable_runWithPriority = function(priorityLevel, callback) {
+exports.unstable_pauseExecution = function () {};
+exports.unstable_requestPaint = function () {};
+exports.unstable_runWithPriority = function (priorityLevel, callback) {
   var previousPriorityLevel = currentPriorityLevel_DEPRECATED;
   currentPriorityLevel_DEPRECATED = priorityLevel;
   try {
@@ -92,7 +92,11 @@ exports.unstable_runWithPriority = function(priorityLevel, callback) {
     currentPriorityLevel_DEPRECATED = previousPriorityLevel;
   }
 };
-exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
+exports.unstable_scheduleCallback = function (
+  priorityLevel,
+  callback,
+  options
+) {
   switch (priorityLevel) {
     case 1:
     case 2:
@@ -123,12 +127,12 @@ exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
     .catch(handleAbortError);
   return controller;
 };
-exports.unstable_shouldYield = function() {
+exports.unstable_shouldYield = function () {
   return getCurrentTime() >= deadline;
 };
-exports.unstable_wrapCallback = function(callback) {
+exports.unstable_wrapCallback = function (callback) {
   var parentPriorityLevel = currentPriorityLevel_DEPRECATED;
-  return function() {
+  return function () {
     var previousPriorityLevel = currentPriorityLevel_DEPRECATED;
     currentPriorityLevel_DEPRECATED = parentPriorityLevel;
     try {

@@ -124,7 +124,7 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
     // (non-Promise) tasks get for unhandled errors.
     //
     // So we'll re-throw the error inside a regular browser task.
-    setTimeout(function() {
+    setTimeout(function () {
       throw error;
     });
   } finally {
@@ -184,7 +184,7 @@ function unstable_next(callback) {
 }
 function unstable_wrapCallback(callback) {
   var parentPriorityLevel = currentPriorityLevel_DEPRECATED;
-  return function() {
+  return function () {
     var previousPriorityLevel = currentPriorityLevel_DEPRECATED;
     currentPriorityLevel_DEPRECATED = parentPriorityLevel;
 

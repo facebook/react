@@ -262,14 +262,14 @@ var hasPerformanceNow = // $FlowFixMe[method-unbinding]
 if (hasPerformanceNow) {
   var localPerformance = performance;
 
-  exports.unstable_now = function() {
+  exports.unstable_now = function () {
     return localPerformance.now();
   };
 } else {
   var localDate = Date;
   var initialTime = localDate.now();
 
-  exports.unstable_now = function() {
+  exports.unstable_now = function () {
     return localDate.now() - initialTime;
   };
 } // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
@@ -544,7 +544,7 @@ function unstable_wrapCallback(callback) {
   var parentPriorityLevel = currentPriorityLevel; // $FlowFixMe[incompatible-return]
   // $FlowFixMe[missing-this-annot]
 
-  return function() {
+  return function () {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
@@ -769,7 +769,7 @@ function forceFrameRate(fps) {
   }
 }
 
-var performWorkUntilDeadline = function() {
+var performWorkUntilDeadline = function () {
   if (scheduledHostCallback !== null) {
     var currentTime = exports.unstable_now(); // Keep track of the start time so we can measure how long the main thread
     // has been blocked.
@@ -819,7 +819,7 @@ if (typeof localSetImmediate === "function") {
   // But also, it runs earlier which is the semantic we want.
   // If other browsers ever implement it, it's better to use it.
   // Although both of these would be inferior to native scheduling.
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     localSetImmediate(performWorkUntilDeadline);
   };
 } else if (typeof MessageChannel !== "undefined") {
@@ -829,12 +829,12 @@ if (typeof localSetImmediate === "function") {
   var port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
 
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     port.postMessage(null);
   };
 } else {
   // We should only fallback here in non-browser environments.
-  schedulePerformWorkUntilDeadline = function() {
+  schedulePerformWorkUntilDeadline = function () {
     // $FlowFixMe[not-a-function] nullable value
     localSetTimeout(performWorkUntilDeadline, 0);
   };
@@ -851,7 +851,7 @@ function requestHostCallback(callback) {
 
 function requestHostTimeout(callback, ms) {
   // $FlowFixMe[not-a-function] nullable value
-  taskTimeoutID = localSetTimeout(function() {
+  taskTimeoutID = localSetTimeout(function () {
     callback(exports.unstable_now());
   }, ms);
 }

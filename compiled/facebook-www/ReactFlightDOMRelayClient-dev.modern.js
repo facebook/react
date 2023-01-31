@@ -102,7 +102,7 @@ function Chunk(status, value, reason, response) {
 
 Chunk.prototype = Object.create(Promise.prototype); // TODO: This doesn't return a new Promise chain unlike the real .then
 
-Chunk.prototype.then = function(resolve, reject) {
+Chunk.prototype.then = function (resolve, reject) {
   var chunk = this; // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
 
@@ -346,7 +346,7 @@ function initializeModuleChunk(chunk) {
 // error upon read. Also notify any pending promises.
 
 function reportGlobalError(response, error) {
-  response._chunks.forEach(function(chunk) {
+  response._chunks.forEach(function (chunk) {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
     // because we won't be getting any new data to resolve it.
@@ -431,7 +431,7 @@ function createModelResolver(chunk, parentObject, key) {
     };
   } // $FlowFixMe[missing-local-annot]
 
-  return function(value) {
+  return function (value) {
     parentObject[key] = value;
     blocked.deps--;
 
@@ -453,7 +453,7 @@ function createModelResolver(chunk, parentObject, key) {
 }
 
 function createModelReject(chunk) {
-  return function(error) {
+  return function (error) {
     return triggerErrorOnChunk(chunk, error);
   };
 }
@@ -551,9 +551,8 @@ function resolveModule(response, id, model) {
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
 
-  var promise = ReactFlightDOMRelayClientIntegration.preloadModule(
-    moduleReference
-  );
+  var promise =
+    ReactFlightDOMRelayClientIntegration.preloadModule(moduleReference);
 
   if (promise) {
     var blockedChunk;
@@ -571,10 +570,10 @@ function resolveModule(response, id, model) {
     }
 
     promise.then(
-      function() {
+      function () {
         return resolveModuleChunk(blockedChunk, moduleReference);
       },
-      function(error) {
+      function (error) {
         return triggerErrorOnChunk(blockedChunk, error);
       }
     );

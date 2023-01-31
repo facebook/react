@@ -141,7 +141,7 @@ function resolveFamily(type) {
 
 function cloneMap(map) {
   var clone = new Map();
-  map.forEach(function(value, key) {
+  map.forEach(function (value, key) {
     clone.set(key, value);
   });
   return clone;
@@ -149,7 +149,7 @@ function cloneMap(map) {
 
 function cloneSet(set) {
   var clone = new Set();
-  set.forEach(function(value) {
+  set.forEach(function (value) {
     clone.add(value);
   });
   return clone;
@@ -180,7 +180,7 @@ function performReactRefresh() {
     var updatedFamilies = new Set();
     var updates = pendingUpdates;
     pendingUpdates = [];
-    updates.forEach(function(_ref) {
+    updates.forEach(function (_ref) {
       var family = _ref[0],
         nextType = _ref[1];
       // Now that we got a real edit, we can create associations
@@ -202,7 +202,7 @@ function performReactRefresh() {
       // Families that will re-render preserving state
       staleFamilies: staleFamilies // Families that will be remounted
     };
-    helpersByRendererID.forEach(function(helpers) {
+    helpersByRendererID.forEach(function (helpers) {
       // Even if there are no roots, set the handler on first update.
       // This ensures that if *new* roots are mounted, they'll use the resolve handler.
       helpers.setRefreshHandler(resolveFamily);
@@ -216,7 +216,7 @@ function performReactRefresh() {
     var failedRootsSnapshot = cloneSet(failedRoots);
     var mountedRootsSnapshot = cloneSet(mountedRoots);
     var helpersByRootSnapshot = cloneMap(helpersByRoot);
-    failedRootsSnapshot.forEach(function(root) {
+    failedRootsSnapshot.forEach(function (root) {
       var helpers = helpersByRootSnapshot.get(root);
 
       if (helpers === undefined) {
@@ -248,7 +248,7 @@ function performReactRefresh() {
         } // Keep trying other roots.
       }
     });
-    mountedRootsSnapshot.forEach(function(root) {
+    mountedRootsSnapshot.forEach(function (root) {
       var helpers = helpersByRootSnapshot.get(root);
 
       if (helpers === undefined) {
@@ -337,7 +337,7 @@ function setSignature(type, key) {
         fullKey: null,
         getCustomHooks:
           getCustomHooks ||
-          function() {
+          function () {
             return [];
           }
       });
@@ -380,7 +380,7 @@ function getFamilyByType(type) {
 function findAffectedHostInstances(families) {
   {
     var affectedInstances = new Set();
-    mountedRoots.forEach(function(root) {
+    mountedRoots.forEach(function (root) {
       var helpers = helpersByRoot.get(root);
 
       if (helpers === undefined) {
@@ -393,7 +393,7 @@ function findAffectedHostInstances(families) {
         root,
         families
       );
-      instancesForRoot.forEach(function(inst) {
+      instancesForRoot.forEach(function (inst) {
         affectedInstances.add(inst);
       });
     });
@@ -416,12 +416,12 @@ function injectIntoGlobalHook(globalObject) {
       globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
         renderers: new Map(),
         supportsFiber: true,
-        inject: function(injected) {
+        inject: function (injected) {
           return nextID++;
         },
-        onScheduleFiberRoot: function(id, root, children) {},
-        onCommitFiberRoot: function(id, root, maybePriorityLevel, didError) {},
-        onCommitFiberUnmount: function() {}
+        onScheduleFiberRoot: function (id, root, children) {},
+        onCommitFiberRoot: function (id, root, maybePriorityLevel, didError) {},
+        onCommitFiberUnmount: function () {}
       };
     }
 
@@ -438,7 +438,7 @@ function injectIntoGlobalHook(globalObject) {
 
     var oldInject = hook.inject;
 
-    hook.inject = function(injected) {
+    hook.inject = function (injected) {
       var id = oldInject.apply(this, arguments);
 
       if (
@@ -454,7 +454,7 @@ function injectIntoGlobalHook(globalObject) {
     // This is useful if ReactDOM has already been initialized.
     // https://github.com/facebook/react/issues/17626
 
-    hook.renderers.forEach(function(injected, id) {
+    hook.renderers.forEach(function (injected, id) {
       if (
         typeof injected.scheduleRefresh === "function" &&
         typeof injected.setRefreshHandler === "function"
@@ -466,9 +466,9 @@ function injectIntoGlobalHook(globalObject) {
 
     var oldOnCommitFiberRoot = hook.onCommitFiberRoot;
 
-    var oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || function() {};
+    var oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || function () {};
 
-    hook.onScheduleFiberRoot = function(id, root, children) {
+    hook.onScheduleFiberRoot = function (id, root, children) {
       if (!isPerformingRefresh) {
         // If it was intentionally scheduled, don't attempt to restore.
         // This includes intentionally scheduled unmounts.
@@ -482,7 +482,7 @@ function injectIntoGlobalHook(globalObject) {
       return oldOnScheduleFiberRoot.apply(this, arguments);
     };
 
-    hook.onCommitFiberRoot = function(id, root, maybePriorityLevel, didError) {
+    hook.onCommitFiberRoot = function (id, root, maybePriorityLevel, didError) {
       var helpers = helpersByRendererID.get(id);
 
       if (helpers !== undefined) {
@@ -569,7 +569,7 @@ function createSignatureFunctionForTransform() {
     var savedType;
     var hasCustomHooks;
     var didCollectHooks = false;
-    return function(type, key, forceReset, getCustomHooks) {
+    return function (type, key, forceReset, getCustomHooks) {
       if (typeof key === "string") {
         // We're in the initial phase that associates signatures
         // with the functions. Note this may be called multiple times
@@ -657,7 +657,8 @@ function isLikelyComponentType(type) {
 
 exports._getMountedRootCount = _getMountedRootCount;
 exports.collectCustomHooksForSignature = collectCustomHooksForSignature;
-exports.createSignatureFunctionForTransform = createSignatureFunctionForTransform;
+exports.createSignatureFunctionForTransform =
+  createSignatureFunctionForTransform;
 exports.findAffectedHostInstances = findAffectedHostInstances;
 exports.getFamilyByID = getFamilyByID;
 exports.getFamilyByType = getFamilyByType;

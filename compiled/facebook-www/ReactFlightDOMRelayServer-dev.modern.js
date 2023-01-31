@@ -284,7 +284,7 @@ var reservedProps = [
   reservedProps.push("innerText", "textContent");
 }
 
-reservedProps.forEach(function(name) {
+reservedProps.forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -303,7 +303,7 @@ reservedProps.forEach(function(name) {
   ["className", "class"],
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
-].forEach(function(_ref) {
+].forEach(function (_ref) {
   var name = _ref[0],
     attributeName = _ref[1];
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -320,7 +320,9 @@ reservedProps.forEach(function(name) {
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function(name) {
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -341,7 +343,7 @@ reservedProps.forEach(function(name) {
   "externalResourcesRequired",
   "focusable",
   "preserveAlpha"
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -379,7 +381,7 @@ reservedProps.forEach(function(name) {
   "scoped",
   "seamless", // Microdata
   "itemScope"
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -401,7 +403,7 @@ reservedProps.forEach(function(name) {
   "selected" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -420,7 +422,7 @@ reservedProps.forEach(function(name) {
   "download" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -440,7 +442,7 @@ reservedProps.forEach(function(name) {
   "span" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(name) {
+].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -453,7 +455,7 @@ reservedProps.forEach(function(name) {
   );
 }); // These are HTML attributes that must be numbers.
 
-["rowSpan", "start"].forEach(function(name) {
+["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
@@ -467,7 +469,7 @@ reservedProps.forEach(function(name) {
 });
 var CAMELIZE = /[\-\:]([a-z])/g;
 
-var capitalize = function(token) {
+var capitalize = function (token) {
   return token[1].toUpperCase();
 }; // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings
@@ -551,7 +553,7 @@ var capitalize = function(token) {
   "x-height" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -574,7 +576,7 @@ var capitalize = function(token) {
   "xlink:type" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -594,7 +596,7 @@ var capitalize = function(token) {
   "xml:space" // NOTE: if you add a camelCased prop to this list,
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
-].forEach(function(attributeName) {
+].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
@@ -610,7 +612,7 @@ var capitalize = function(token) {
 // The attribute name is case-sensitive in SVG so we can't just use
 // the React name like we do for attributes that exist only in HTML.
 
-["tabIndex", "crossOrigin"].forEach(function(attributeName) {
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
@@ -635,7 +637,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
   true, // sanitizeURL
   false
 );
-["src", "href", "action", "formAction"].forEach(function(attributeName) {
+["src", "href", "action", "formAction"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
@@ -715,8 +717,8 @@ function prefixKey(prefix, key) {
 var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
 // infinite loop, because it iterates over the newly added props too.
 
-Object.keys(isUnitlessNumber).forEach(function(prop) {
-  prefixes.forEach(function(prefix) {
+Object.keys(isUnitlessNumber).forEach(function (prop) {
+  prefixes.forEach(function (prefix) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
@@ -995,14 +997,14 @@ function trackUsedThenable(thenableState, thenable, index) {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
         pendingThenable.then(
-          function(fulfilledValue) {
+          function (fulfilledValue) {
             if (thenable.status === "pending") {
               var fulfilledThenable = thenable;
               fulfilledThenable.status = "fulfilled";
               fulfilledThenable.value = fulfilledValue;
             }
           },
-          function(error) {
+          function (error) {
             if (thenable.status === "pending") {
               var rejectedThenable = thenable;
               rejectedThenable.status = "rejected";
@@ -1099,13 +1101,13 @@ function readContext$1(context) {
 }
 
 var HooksDispatcher = {
-  useMemo: function(nextCreate) {
+  useMemo: function (nextCreate) {
     return nextCreate();
   },
-  useCallback: function(callback) {
+  useCallback: function (callback) {
     return callback;
   },
-  useDebugValue: function() {},
+  useDebugValue: function () {},
   useDeferredValue: unsupportedHook,
   useTransition: unsupportedHook,
   readContext: readContext$1,
@@ -1120,10 +1122,10 @@ var HooksDispatcher = {
   useId: useId,
   useMutableSource: unsupportedHook,
   useSyncExternalStore: unsupportedHook,
-  useCacheRefresh: function() {
+  useCacheRefresh: function () {
     return unsupportedRefresh;
   },
-  useMemoCache: function(size) {
+  useMemoCache: function (size) {
     var data = new Array(size);
 
     for (var i = 0; i < size; i++) {
@@ -1201,7 +1203,7 @@ function resolveCache() {
 }
 
 var DefaultCacheDispatcher = {
-  getCacheSignal: function() {
+  getCacheSignal: function () {
     var cache = resolveCache();
     var entry = cache.get(createSignal);
 
@@ -1212,7 +1214,7 @@ var DefaultCacheDispatcher = {
 
     return entry;
   },
-  getCacheForType: function(resourceType) {
+  getCacheForType: function (resourceType) {
     var cache = resolveCache();
     var entry = cache.get(resourceType);
 
@@ -1301,7 +1303,7 @@ function createRequest(
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     // $FlowFixMe[missing-this-annot]
-    toJSON: function(key, value) {
+    toJSON: function (key, value) {
       return resolveModelToJSON(request, this, key, value);
     }
   };
@@ -1353,14 +1355,14 @@ function createLazyWrapperAroundWakeable(wakeable) {
       var pendingThenable = thenable;
       pendingThenable.status = "pending";
       pendingThenable.then(
-        function(fulfilledValue) {
+        function (fulfilledValue) {
           if (thenable.status === "pending") {
             var fulfilledThenable = thenable;
             fulfilledThenable.status = "fulfilled";
             fulfilledThenable.value = fulfilledValue;
           }
         },
-        function(error) {
+        function (error) {
           if (thenable.status === "pending") {
             var rejectedThenable = thenable;
             rejectedThenable.status = "rejected";
@@ -1470,7 +1472,7 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
         pushProvider(type._context, props.value);
 
         {
-          var extraKeys = Object.keys(props).filter(function(value) {
+          var extraKeys = Object.keys(props).filter(function (value) {
             if (value === "children" || value === "value") {
               return false;
             }
@@ -1510,7 +1512,7 @@ function pingTask(request, task) {
   pingedTasks.push(task);
 
   if (pingedTasks.length === 1) {
-    scheduleWork(function() {
+    scheduleWork(function () {
       return performWork(request);
     });
   }
@@ -1523,7 +1525,7 @@ function createTask(request, model, context, abortSet) {
     status: PENDING,
     model: model,
     context: context,
-    ping: function() {
+    ping: function () {
       return pingTask(request, task);
     },
     thenableState: null
@@ -1667,7 +1669,7 @@ function isSimpleObject(object) {
 function objectName(object) {
   // $FlowFixMe[method-unbinding]
   var name = Object.prototype.toString.call(object);
-  return name.replace(/^\[object (.*)\]$/, function(m, p0) {
+  return name.replace(/^\[object (.*)\]$/, function (m, p0) {
     return p0;
   });
 }
@@ -2464,7 +2466,7 @@ function flushCompletedChunks(request, destination) {
 
 function startWork(request) {
   {
-    scheduleWork(function() {
+    scheduleWork(function () {
       return performWork(request);
     });
   }

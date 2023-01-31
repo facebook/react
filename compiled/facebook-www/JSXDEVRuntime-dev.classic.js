@@ -456,12 +456,12 @@ function describeNativeComponentFrame(fn, construct) {
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      var Fake = function() {
+      var Fake = function () {
         throw Error();
       }; // $FlowFixMe
 
       Object.defineProperty(Fake.prototype, "props", {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();
@@ -901,7 +901,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
 
 function defineKeyPropWarningGetter(props, displayName) {
   {
-    var warnAboutAccessingKey = function() {
+    var warnAboutAccessingKey = function () {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
 
@@ -925,7 +925,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 
 function defineRefPropWarningGetter(props, displayName) {
   {
-    var warnAboutAccessingRef = function() {
+    var warnAboutAccessingRef = function () {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
 
@@ -967,7 +967,7 @@ function defineRefPropWarningGetter(props, displayName) {
  * @internal
  */
 
-var ReactElement = function(type, key, ref, self, source, owner, props) {
+var ReactElement = function (type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -1488,7 +1488,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
 
     if (hasOwnProperty.call(props, "key")) {
       var componentName = getComponentNameFromType(type);
-      var keys = Object.keys(props).filter(function(k) {
+      var keys = Object.keys(props).filter(function (k) {
         return k !== "key";
       });
       var beforeExample =

@@ -79,11 +79,12 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var reservedProps = "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
-  " "
-);
+var reservedProps =
+  "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
+    " "
+  );
 reservedProps.push("innerText", "textContent");
-reservedProps.forEach(function(name) {
+reservedProps.forEach(function (name) {
   new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
 });
 [
@@ -91,10 +92,12 @@ reservedProps.forEach(function(name) {
   ["className", "class"],
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
-].forEach(function(_ref) {
+].forEach(function (_ref) {
   new PropertyInfoRecord(_ref[0], 1, !1, _ref[1], null, !1, !1);
 });
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function(name) {
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
   new PropertyInfoRecord(name, 2, !1, name.toLowerCase(), null, !1, !1);
 });
 [
@@ -102,24 +105,24 @@ reservedProps.forEach(function(name) {
   "externalResourcesRequired",
   "focusable",
   "preserveAlpha"
-].forEach(function(name) {
+].forEach(function (name) {
   new PropertyInfoRecord(name, 2, !1, name, null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
-  .forEach(function(name) {
+  .forEach(function (name) {
     new PropertyInfoRecord(name, 3, !1, name.toLowerCase(), null, !1, !1);
   });
-["checked", "multiple", "muted", "selected"].forEach(function(name) {
+["checked", "multiple", "muted", "selected"].forEach(function (name) {
   new PropertyInfoRecord(name, 3, !0, name, null, !1, !1);
 });
-["capture", "download"].forEach(function(name) {
+["capture", "download"].forEach(function (name) {
   new PropertyInfoRecord(name, 4, !1, name, null, !1, !1);
 });
-["cols", "rows", "size", "span"].forEach(function(name) {
+["cols", "rows", "size", "span"].forEach(function (name) {
   new PropertyInfoRecord(name, 6, !1, name, null, !1, !1);
 });
-["rowSpan", "start"].forEach(function(name) {
+["rowSpan", "start"].forEach(function (name) {
   new PropertyInfoRecord(name, 5, !1, name.toLowerCase(), null, !1, !1);
 });
 var CAMELIZE = /[\-:]([a-z])/g;
@@ -128,13 +131,13 @@ function capitalize(token) {
 }
 "accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
   .split(" ")
-  .forEach(function(attributeName) {
+  .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     new PropertyInfoRecord(name, 1, !1, attributeName, null, !1, !1);
   });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
   .split(" ")
-  .forEach(function(attributeName) {
+  .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     new PropertyInfoRecord(
       name,
@@ -146,7 +149,7 @@ function capitalize(token) {
       !1
     );
   });
-["xml:base", "xml:lang", "xml:space"].forEach(function(attributeName) {
+["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize);
   new PropertyInfoRecord(
     name,
@@ -158,7 +161,7 @@ function capitalize(token) {
     !1
   );
 });
-["tabIndex", "crossOrigin"].forEach(function(attributeName) {
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   new PropertyInfoRecord(
     attributeName,
     1,
@@ -178,7 +181,7 @@ new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function(attributeName) {
+["src", "href", "action", "formAction"].forEach(function (attributeName) {
   new PropertyInfoRecord(
     attributeName,
     1,
@@ -235,8 +238,8 @@ var isUnitlessNumber = {
     strokeWidth: !0
   },
   prefixes = ["Webkit", "ms", "Moz", "O"];
-Object.keys(isUnitlessNumber).forEach(function(prop) {
-  prefixes.forEach(function(prefix) {
+Object.keys(isUnitlessNumber).forEach(function (prop) {
+  prefixes.forEach(function (prefix) {
     prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
     isUnitlessNumber[prefix] = isUnitlessNumber[prop];
   });
@@ -312,13 +315,14 @@ function pushProvider(context, nextValue) {
   var prevValue = context._currentValue;
   context._currentValue = nextValue;
   var prevNode = currentActiveSnapshot;
-  return (currentActiveSnapshot = context = {
-    parent: prevNode,
-    depth: null === prevNode ? 0 : prevNode.depth + 1,
-    context: context,
-    parentValue: prevValue,
-    value: nextValue
-  });
+  return (currentActiveSnapshot = context =
+    {
+      parent: prevNode,
+      depth: null === prevNode ? 0 : prevNode.depth + 1,
+      context: context,
+      parentValue: prevValue,
+      value: nextValue
+    });
 }
 var SuspenseException = Error(
   "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
@@ -340,14 +344,14 @@ function trackUsedThenable(thenableState, thenable, index) {
           ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
-            function(fulfilledValue) {
+            function (fulfilledValue) {
               if ("pending" === thenable.status) {
                 var fulfilledThenable = thenable;
                 fulfilledThenable.status = "fulfilled";
                 fulfilledThenable.value = fulfilledValue;
               }
             },
-            function(error) {
+            function (error) {
               if ("pending" === thenable.status) {
                 var rejectedThenable = thenable;
                 rejectedThenable.status = "rejected";
@@ -388,13 +392,13 @@ function readContext$1(context) {
   return context._currentValue;
 }
 var HooksDispatcher = {
-  useMemo: function(nextCreate) {
+  useMemo: function (nextCreate) {
     return nextCreate();
   },
-  useCallback: function(callback) {
+  useCallback: function (callback) {
     return callback;
   },
-  useDebugValue: function() {},
+  useDebugValue: function () {},
   useDeferredValue: unsupportedHook,
   useTransition: unsupportedHook,
   readContext: readContext$1,
@@ -409,10 +413,10 @@ var HooksDispatcher = {
   useId: useId,
   useMutableSource: unsupportedHook,
   useSyncExternalStore: unsupportedHook,
-  useCacheRefresh: function() {
+  useCacheRefresh: function () {
     return unsupportedRefresh;
   },
-  useMemoCache: function(size) {
+  useMemoCache: function (size) {
     for (var data = Array(size), i = 0; i < size; i++)
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     return data;
@@ -451,14 +455,14 @@ function createSignal() {
   return new AbortController().signal;
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function() {
+    getCacheSignal: function () {
       var cache = currentCache ? currentCache : new Map(),
         entry = cache.get(createSignal);
       void 0 === entry &&
         ((entry = createSignal()), cache.set(createSignal, entry));
       return entry;
     },
-    getCacheForType: function(resourceType) {
+    getCacheForType: function (resourceType) {
       var cache = currentCache ? currentCache : new Map(),
         entry = cache.get(resourceType);
       void 0 === entry &&
@@ -509,7 +513,7 @@ function createRequest(
       identifierPrefix: identifierPrefix || "",
       identifierCount: 1,
       onError: void 0 === onError ? defaultErrorHandler : onError,
-      toJSON: function(key, value) {
+      toJSON: function (key, value) {
         return resolveModelToJSON(request, this, key, value);
       }
     };
@@ -534,12 +538,12 @@ function createLazyWrapperAroundWakeable(wakeable) {
       "string" !== typeof wakeable.status &&
         ((wakeable.status = "pending"),
         wakeable.then(
-          function(fulfilledValue) {
+          function (fulfilledValue) {
             "pending" === wakeable.status &&
               ((wakeable.status = "fulfilled"),
               (wakeable.value = fulfilledValue));
           },
-          function(error) {
+          function (error) {
             "pending" === wakeable.status &&
               ((wakeable.status = "rejected"), (wakeable.reason = error));
           }
@@ -614,7 +618,7 @@ function createTask(request, model, context, abortSet) {
     status: 0,
     model: model,
     context: context,
-    ping: function() {
+    ping: function () {
       var pingedTasks = request.pingedTasks;
       pingedTasks.push(task);
       1 === pingedTasks.length && performWork(request);
@@ -632,10 +636,11 @@ function serializeClientReference(request, parent, key, moduleReference) {
       ? "@" + existingId.toString(16)
       : "$" + existingId.toString(16);
   try {
-    var moduleMetaData = ReactFlightDOMRelayServerIntegration.resolveModuleMetaData(
-      request.bundlerConfig,
-      moduleReference
-    );
+    var moduleMetaData =
+      ReactFlightDOMRelayServerIntegration.resolveModuleMetaData(
+        request.bundlerConfig,
+        moduleReference
+      );
     request.pendingChunks++;
     var moduleId = request.nextChunkId++;
     request.completedModuleChunks.push(["M", moduleId, moduleMetaData]);
@@ -656,7 +661,7 @@ function serializeClientReference(request, parent, key, moduleReference) {
 function objectName(object) {
   return Object.prototype.toString
     .call(object)
-    .replace(/^\[object (.*)\]$/, function(m, p0) {
+    .replace(/^\[object (.*)\]$/, function (m, p0) {
       return p0;
     });
 }
@@ -1067,7 +1072,7 @@ function importServerContexts(contexts) {
   }
   return null;
 }
-exports.render = function(model, destination, config, options) {
+exports.render = function (model, destination, config, options) {
   model = createRequest(
     model,
     config,

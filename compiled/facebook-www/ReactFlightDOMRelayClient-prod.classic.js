@@ -77,7 +77,7 @@ function Chunk(status, value, reason, response) {
   this._response = response;
 }
 Chunk.prototype = Object.create(Promise.prototype);
-Chunk.prototype.then = function(resolve, reject) {
+Chunk.prototype.then = function (resolve, reject) {
   switch (this.status) {
     case "resolved_model":
       initializeModelChunk(this);
@@ -190,7 +190,7 @@ function initializeModuleChunk(chunk) {
   }
 }
 function reportGlobalError(response, error) {
-  response._chunks.forEach(function(chunk) {
+  response._chunks.forEach(function (chunk) {
     "pending" === chunk.status && triggerErrorOnChunk(chunk, error);
   });
 }
@@ -207,7 +207,7 @@ function createModelResolver(chunk, parentObject, key) {
     var blocked = initializingChunkBlockedModel;
     blocked.deps++;
   } else blocked = initializingChunkBlockedModel = { deps: 1, value: null };
-  return function(value) {
+  return function (value) {
     parentObject[key] = value;
     blocked.deps--;
     0 === blocked.deps &&
@@ -219,7 +219,7 @@ function createModelResolver(chunk, parentObject, key) {
   };
 }
 function createModelReject(chunk) {
-  return function(error) {
+  return function (error) {
     return triggerErrorOnChunk(chunk, error);
   };
 }
@@ -266,13 +266,11 @@ function resolveModule(response, id, model) {
   var chunks = response._chunks,
     chunk = chunks.get(id);
   model = parseModelRecursively(response, dummy, "", model);
-  var moduleReference = ReactFlightDOMRelayClientIntegration.resolveClientReference(
-    model
-  );
+  var moduleReference =
+    ReactFlightDOMRelayClientIntegration.resolveClientReference(model);
   if (
-    (model = ReactFlightDOMRelayClientIntegration.preloadModule(
-      moduleReference
-    ))
+    (model =
+      ReactFlightDOMRelayClientIntegration.preloadModule(moduleReference))
   ) {
     if (chunk) {
       var blockedChunk = chunk;
@@ -281,10 +279,10 @@ function resolveModule(response, id, model) {
       (blockedChunk = new Chunk("blocked", null, null, response)),
         chunks.set(id, blockedChunk);
     model.then(
-      function() {
+      function () {
         return resolveModuleChunk(blockedChunk, moduleReference);
       },
-      function(error) {
+      function (error) {
         return triggerErrorOnChunk(blockedChunk, error);
       }
     );
@@ -296,17 +294,17 @@ function resolveModule(response, id, model) {
           new Chunk("resolved_module", moduleReference, null, response)
         );
 }
-exports.close = function(response) {
+exports.close = function (response) {
   reportGlobalError(response, Error(formatProdErrorMessage(412)));
 };
-exports.createResponse = function(bundlerConfig) {
+exports.createResponse = function (bundlerConfig) {
   var chunks = new Map();
   return { _bundlerConfig: bundlerConfig, _chunks: chunks };
 };
-exports.getRoot = function(response) {
+exports.getRoot = function (response) {
   return getChunk(response, 0);
 };
-exports.resolveRow = function(response, chunk) {
+exports.resolveRow = function (response, chunk) {
   if ("J" === chunk[0]) {
     var id = chunk[1],
       model = chunk[2],

@@ -462,7 +462,7 @@ function createSyntheticEvent(Interface) {
 
   assign(SyntheticBaseEvent.prototype, {
     // $FlowFixMe[missing-this-annot]
-    preventDefault: function() {
+    preventDefault: function () {
       this.defaultPrevented = true;
       var event = this.nativeEvent;
 
@@ -479,7 +479,7 @@ function createSyntheticEvent(Interface) {
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
     // $FlowFixMe[missing-this-annot]
-    stopPropagation: function() {
+    stopPropagation: function () {
       var event = this.nativeEvent;
 
       if (!event) {
@@ -505,7 +505,7 @@ function createSyntheticEvent(Interface) {
      * them back into the pool. This allows a way to hold onto a reference that
      * won't be added back into the pool.
      */
-    persist: function() {
+    persist: function () {
       // Modern event system doesn't use pooling.
     },
 
@@ -527,7 +527,7 @@ var EventInterface = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
-  timeStamp: function(event) {
+  timeStamp: function (event) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: 0,
@@ -579,14 +579,14 @@ var MouseEventInterface = assign({}, UIEventInterface, {
   getModifierState: getEventModifierState,
   button: 0,
   buttons: 0,
-  relatedTarget: function(event) {
+  relatedTarget: function (event) {
     if (event.relatedTarget === undefined)
       return event.fromElement === event.srcElement
         ? event.toElement
         : event.fromElement;
     return event.relatedTarget;
   },
-  movementX: function(event) {
+  movementX: function (event) {
     if ("movementX" in event) {
       return event.movementX;
     }
@@ -594,7 +594,7 @@ var MouseEventInterface = assign({}, UIEventInterface, {
     updateMouseMovementPolyfillState(event);
     return lastMovementX;
   },
-  movementY: function(event) {
+  movementY: function (event) {
     if ("movementY" in event) {
       return event.movementY;
     } // Don't need to call updateMouseMovementPolyfillState() here
@@ -645,7 +645,7 @@ var SyntheticAnimationEvent = createSyntheticEvent(AnimationEventInterface);
  */
 
 var ClipboardEventInterface = assign({}, EventInterface, {
-  clipboardData: function(event) {
+  clipboardData: function (event) {
     return "clipboardData" in event
       ? event.clipboardData
       : window.clipboardData;
@@ -811,7 +811,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
   locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
-  charCode: function(event) {
+  charCode: function (event) {
     // `charCode` is the result of a KeyPress event and represents the value of
     // the actual printable character.
     // KeyPress is deprecated, but its replacement is not yet final and not
@@ -825,7 +825,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
 
     return 0;
   },
-  keyCode: function(event) {
+  keyCode: function (event) {
     // `keyCode` is the result of a KeyDown/Up event and represents the value of
     // physical keyboard key.
     // The actual meaning of the value depends on the users' keyboard layout
@@ -838,7 +838,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
 
     return 0;
   },
-  which: function(event) {
+  which: function (event) {
     // `which` is an alias for either `keyCode` or `charCode` depending on the
     // type of the event.
     if (event.type === "keypress") {
@@ -912,14 +912,14 @@ var SyntheticTransitionEvent = createSyntheticEvent(TransitionEventInterface);
  */
 
 var WheelEventInterface = assign({}, MouseEventInterface, {
-  deltaX: function(event) {
+  deltaX: function (event) {
     return "deltaX" in event
       ? event.deltaX // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
       : "wheelDeltaX" in event // $FlowFixMe assuming this is a number
       ? -event.wheelDeltaX
       : 0;
   },
-  deltaY: function(event) {
+  deltaY: function (event) {
     return "deltaY" in event
       ? event.deltaY // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
       : "wheelDeltaY" in event // $FlowFixMe assuming this is a number
@@ -952,7 +952,7 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
   );
 }
 
-var invokeGuardedCallbackImpl = function(
+var invokeGuardedCallbackImpl = function (
   name,
   func,
   context,
@@ -973,7 +973,7 @@ var caughtError = null; // Used by event system to capture/rethrow the first err
 var hasRethrowError = false;
 var rethrowError = null;
 var reporter = {
-  onError: function(error) {
+  onError: function (error) {
     hasError = true;
     caughtError = error;
   }
@@ -1241,7 +1241,7 @@ function findAllInRenderedTree(inst, test) {
 
 function scryRenderedDOMComponentsWithClass(root, classNames) {
   validateClassInstance(root, "scryRenderedDOMComponentsWithClass");
-  return findAllInRenderedTree(root, function(inst) {
+  return findAllInRenderedTree(root, function (inst) {
     if (isDOMComponent(inst)) {
       var className = inst.className;
 
@@ -1263,7 +1263,7 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
         classNames = classNames.split(/\s+/);
       }
 
-      return classNames.every(function(name) {
+      return classNames.every(function (name) {
         return classList.indexOf(name) !== -1;
       });
     }
@@ -1302,7 +1302,7 @@ function findRenderedDOMComponentWithClass(root, className) {
 
 function scryRenderedDOMComponentsWithTag(root, tagName) {
   validateClassInstance(root, "scryRenderedDOMComponentsWithTag");
-  return findAllInRenderedTree(root, function(inst) {
+  return findAllInRenderedTree(root, function (inst) {
     return (
       isDOMComponent(inst) &&
       inst.tagName.toUpperCase() === tagName.toUpperCase()
@@ -1339,7 +1339,7 @@ function findRenderedDOMComponentWithTag(root, tagName) {
 
 function scryRenderedComponentsWithType(root, componentType) {
   validateClassInstance(root, "scryRenderedComponentsWithType");
-  return findAllInRenderedTree(root, function(inst) {
+  return findAllInRenderedTree(root, function (inst) {
     return isCompositeComponentWithType(inst, componentType);
   });
 }
@@ -1394,7 +1394,7 @@ function mockComponent(module, mockTagName) {
   }
 
   mockTagName = mockTagName || module.mockTagName || "div";
-  module.prototype.render.mockImplementation(function() {
+  module.prototype.render.mockImplementation(function () {
     return React.createElement(mockTagName, null, this.props.children);
   });
   return this;
@@ -1456,7 +1456,7 @@ function executeDispatchesInOrder(event) {
  * @private
  */
 
-var executeDispatchesAndRelease = function(
+var executeDispatchesAndRelease = function (
   event
   /* ReactSyntheticEvent */
 ) {
@@ -1665,7 +1665,7 @@ var directDispatchEventTypes = new Set([
  */
 
 function makeSimulator(eventType) {
-  return function(domNode, eventData) {
+  return function (domNode, eventData) {
     if (React.isValidElement(domNode)) {
       throw new Error(
         "TestUtils.Simulate expected a DOM node as the first argument but received " +
@@ -1704,7 +1704,7 @@ function makeSimulator(eventType) {
       accumulateTwoPhaseDispatchesSingle(event);
     }
 
-    ReactDOM.unstable_batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function () {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
@@ -1804,7 +1804,7 @@ var simulatedEventTypes = [
 ];
 
 function buildSimulators() {
-  simulatedEventTypes.forEach(function(eventType) {
+  simulatedEventTypes.forEach(function (eventType) {
     Simulate[eventType] = makeSimulator(eventType);
   });
 }

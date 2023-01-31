@@ -2205,12 +2205,12 @@ function describeNativeComponentFrame(fn, construct) {
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      var Fake = function() {
+      var Fake = function () {
         throw Error();
       }; // $FlowFixMe
 
       Object.defineProperty(Fake.prototype, "props", {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();
@@ -3851,9 +3851,8 @@ function deferHiddenCallbacks(updateQueue) {
     if (existingHiddenCallbacks === null) {
       updateQueue.shared.hiddenCallbacks = newHiddenCallbacks;
     } else {
-      updateQueue.shared.hiddenCallbacks = existingHiddenCallbacks.concat(
-        newHiddenCallbacks
-      );
+      updateQueue.shared.hiddenCallbacks =
+        existingHiddenCallbacks.concat(newHiddenCallbacks);
     }
   }
 }
@@ -4034,15 +4033,15 @@ function setIsRendering(rendering) {
 }
 
 var ReactStrictModeWarnings = {
-  recordUnsafeLifecycleWarnings: function(fiber, instance) {},
-  flushPendingUnsafeLifecycleWarnings: function() {},
-  recordLegacyContextWarning: function(fiber, instance) {},
-  flushLegacyContextWarning: function() {},
-  discardPendingWarnings: function() {}
+  recordUnsafeLifecycleWarnings: function (fiber, instance) {},
+  flushPendingUnsafeLifecycleWarnings: function () {},
+  recordLegacyContextWarning: function (fiber, instance) {},
+  flushLegacyContextWarning: function () {},
+  discardPendingWarnings: function () {}
 };
 
 {
-  var findStrictRoot = function(fiber) {
+  var findStrictRoot = function (fiber) {
     var maybeStrictRoot = null;
     var node = fiber;
 
@@ -4057,9 +4056,9 @@ var ReactStrictModeWarnings = {
     return maybeStrictRoot;
   };
 
-  var setToSortedString = function(set) {
+  var setToSortedString = function (set) {
     var array = [];
-    set.forEach(function(value) {
+    set.forEach(function (value) {
       array.push(value);
     });
     return array.sort().join(", ");
@@ -4074,7 +4073,7 @@ var ReactStrictModeWarnings = {
 
   var didWarnAboutUnsafeLifecycles = new Set();
 
-  ReactStrictModeWarnings.recordUnsafeLifecycleWarnings = function(
+  ReactStrictModeWarnings.recordUnsafeLifecycleWarnings = function (
     fiber,
     instance
   ) {
@@ -4126,12 +4125,12 @@ var ReactStrictModeWarnings = {
     }
   };
 
-  ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = function() {
+  ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = function () {
     // We do an initial pass to gather component names
     var componentWillMountUniqueNames = new Set();
 
     if (pendingComponentWillMountWarnings.length > 0) {
-      pendingComponentWillMountWarnings.forEach(function(fiber) {
+      pendingComponentWillMountWarnings.forEach(function (fiber) {
         componentWillMountUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4143,7 +4142,7 @@ var ReactStrictModeWarnings = {
     var UNSAFE_componentWillMountUniqueNames = new Set();
 
     if (pendingUNSAFE_ComponentWillMountWarnings.length > 0) {
-      pendingUNSAFE_ComponentWillMountWarnings.forEach(function(fiber) {
+      pendingUNSAFE_ComponentWillMountWarnings.forEach(function (fiber) {
         UNSAFE_componentWillMountUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4155,7 +4154,7 @@ var ReactStrictModeWarnings = {
     var componentWillReceivePropsUniqueNames = new Set();
 
     if (pendingComponentWillReceivePropsWarnings.length > 0) {
-      pendingComponentWillReceivePropsWarnings.forEach(function(fiber) {
+      pendingComponentWillReceivePropsWarnings.forEach(function (fiber) {
         componentWillReceivePropsUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4167,7 +4166,7 @@ var ReactStrictModeWarnings = {
     var UNSAFE_componentWillReceivePropsUniqueNames = new Set();
 
     if (pendingUNSAFE_ComponentWillReceivePropsWarnings.length > 0) {
-      pendingUNSAFE_ComponentWillReceivePropsWarnings.forEach(function(fiber) {
+      pendingUNSAFE_ComponentWillReceivePropsWarnings.forEach(function (fiber) {
         UNSAFE_componentWillReceivePropsUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4179,7 +4178,7 @@ var ReactStrictModeWarnings = {
     var componentWillUpdateUniqueNames = new Set();
 
     if (pendingComponentWillUpdateWarnings.length > 0) {
-      pendingComponentWillUpdateWarnings.forEach(function(fiber) {
+      pendingComponentWillUpdateWarnings.forEach(function (fiber) {
         componentWillUpdateUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4191,7 +4190,7 @@ var ReactStrictModeWarnings = {
     var UNSAFE_componentWillUpdateUniqueNames = new Set();
 
     if (pendingUNSAFE_ComponentWillUpdateWarnings.length > 0) {
-      pendingUNSAFE_ComponentWillUpdateWarnings.forEach(function(fiber) {
+      pendingUNSAFE_ComponentWillUpdateWarnings.forEach(function (fiber) {
         UNSAFE_componentWillUpdateUniqueNames.add(
           getComponentNameFromFiber(fiber) || "Component"
         );
@@ -4304,7 +4303,7 @@ var ReactStrictModeWarnings = {
 
   var didWarnAboutLegacyContext = new Set();
 
-  ReactStrictModeWarnings.recordLegacyContextWarning = function(
+  ReactStrictModeWarnings.recordLegacyContextWarning = function (
     fiber,
     instance
   ) {
@@ -4339,15 +4338,15 @@ var ReactStrictModeWarnings = {
     }
   };
 
-  ReactStrictModeWarnings.flushLegacyContextWarning = function() {
-    pendingLegacyContextWarning.forEach(function(fiberArray, strictRoot) {
+  ReactStrictModeWarnings.flushLegacyContextWarning = function () {
+    pendingLegacyContextWarning.forEach(function (fiberArray, strictRoot) {
       if (fiberArray.length === 0) {
         return;
       }
 
       var firstFiber = fiberArray[0];
       var uniqueNames = new Set();
-      fiberArray.forEach(function(fiber) {
+      fiberArray.forEach(function (fiber) {
         uniqueNames.add(getComponentNameFromFiber(fiber) || "Component");
         didWarnAboutLegacyContext.add(fiber.type);
       });
@@ -4370,7 +4369,7 @@ var ReactStrictModeWarnings = {
     });
   };
 
-  ReactStrictModeWarnings.discardPendingWarnings = function() {
+  ReactStrictModeWarnings.discardPendingWarnings = function () {
     pendingComponentWillMountWarnings = [];
     pendingUNSAFE_ComponentWillMountWarnings = [];
     pendingComponentWillReceivePropsWarnings = [];
@@ -4462,7 +4461,7 @@ var didWarnAboutStringRefs;
 var ownerHasKeyUseWarning;
 var ownerHasFunctionTypeWarning;
 
-var warnForMissingKey = function(child, returnFiber) {};
+var warnForMissingKey = function (child, returnFiber) {};
 
 {
   didWarnAboutMaps = false;
@@ -4477,7 +4476,7 @@ var warnForMissingKey = function(child, returnFiber) {};
   ownerHasKeyUseWarning = {};
   ownerHasFunctionTypeWarning = {};
 
-  warnForMissingKey = function(child, returnFiber) {
+  warnForMissingKey = function (child, returnFiber) {
     if (child === null || typeof child !== "object") {
       return;
     }
@@ -4600,7 +4599,7 @@ function coerceRef(returnFiber, current, element) {
         return current.ref;
       }
 
-      var ref = function(value) {
+      var ref = function (value) {
         var refs = resolvedInst.refs;
 
         if (value === null) {
@@ -5296,7 +5295,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (shouldTrackSideEffects) {
       // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
-      existingChildren.forEach(function(child) {
+      existingChildren.forEach(function (child) {
         return deleteChild(returnFiber, child);
       });
     }
@@ -5503,7 +5502,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (shouldTrackSideEffects) {
       // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
-      existingChildren.forEach(function(child) {
+      existingChildren.forEach(function (child) {
         return deleteChild(returnFiber, child);
       });
     }
@@ -6165,14 +6164,14 @@ function trackUsedThenable(thenableState, thenable, index) {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
         pendingThenable.then(
-          function(fulfilledValue) {
+          function (fulfilledValue) {
             if (thenable.status === "pending") {
               var fulfilledThenable = thenable;
               fulfilledThenable.status = "fulfilled";
               fulfilledThenable.value = fulfilledValue;
             }
           },
-          function(error) {
+          function (error) {
             if (thenable.status === "pending") {
               var rejectedThenable = thenable;
               rejectedThenable.status = "rejected";
@@ -6489,7 +6488,8 @@ function renderWithHooks(
       // We want to match the production code behavior (which will use HooksDispatcherOnMount),
       // but with the extra DEV validation to ensure hooks ordering hasn't changed.
       // This dispatcher does that.
-      ReactCurrentDispatcher$1.current = HooksDispatcherOnMountWithHookTypesInDEV;
+      ReactCurrentDispatcher$1.current =
+        HooksDispatcherOnMountWithHookTypesInDEV;
     } else {
       ReactCurrentDispatcher$1.current = HooksDispatcherOnMountInDEV;
     }
@@ -6860,7 +6860,7 @@ function updateWorkInProgressHook() {
 var createFunctionComponentUpdateQueue;
 
 {
-  createFunctionComponentUpdateQueue = function() {
+  createFunctionComponentUpdateQueue = function () {
     return {
       lastEffect: null,
       events: null,
@@ -7227,7 +7227,7 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
   var version = getVersion(source._source);
   var dispatcher = ReactCurrentDispatcher$1.current; // eslint-disable-next-line prefer-const
 
-  var _dispatcher$useState = dispatcher.useState(function() {
+  var _dispatcher$useState = dispatcher.useState(function () {
       return readFromUnsubscribedMutableSource(root, source, getSnapshot);
     }),
     currentSnapshot = _dispatcher$useState[0],
@@ -7250,7 +7250,7 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
   }; // Sync the values needed by our subscription handler after each commit.
 
   dispatcher.useEffect(
-    function() {
+    function () {
       refs.getSnapshot = getSnapshot; // Normally the dispatch function for a state hook never changes,
       // but this hook recreates the queue in certain cases  to avoid updates from stale sources.
       // handleChange() below needs to reference the dispatch function without re-subscribing,
@@ -7287,8 +7287,8 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
   ); // If we got a new source or subscribe function, re-subscribe in a passive effect.
 
   dispatcher.useEffect(
-    function() {
-      var handleChange = function() {
+    function () {
+      var handleChange = function () {
         var latestGetSnapshot = refs.getSnapshot;
         var latestSetSnapshot = refs.setSnapshot;
 
@@ -7302,7 +7302,7 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
           // e.g. it might try to read from a part of the store that no longer exists.
           // In this case we should still schedule an update with React.
           // Worst case the selector will throw again and then an error boundary will handle it.
-          latestSetSnapshot(function() {
+          latestSetSnapshot(function () {
             throw error;
           });
         }
@@ -7558,7 +7558,7 @@ function updateStoreInstance(fiber, inst, nextSnapshot, getSnapshot) {
 }
 
 function subscribeToStore(fiber, inst, subscribe) {
-  var handleStoreChange = function() {
+  var handleStoreChange = function () {
     // The store changed. Check if the snapshot changed since the last time we
     // read from the store.
     if (checkIfSnapshotChanged(inst)) {
@@ -7755,7 +7755,7 @@ function imperativeHandleEffect(create, ref) {
     var refCallback = ref;
     var inst = create();
     refCallback(inst);
-    return function() {
+    return function () {
       refCallback(null);
     };
   } else if (ref !== null && ref !== undefined) {
@@ -7774,7 +7774,7 @@ function imperativeHandleEffect(create, ref) {
     var _inst = create();
 
     refObject.current = _inst;
-    return function() {
+    return function () {
       refObject.current = null;
     };
   }
@@ -8195,7 +8195,8 @@ function dispatchSetState(fiber, queue, action) {
 
         {
           prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+          ReactCurrentDispatcher$1.current =
+            InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
 
         try {
@@ -8249,7 +8250,8 @@ function enqueueRenderPhaseUpdate(queue, update) {
   // This is a render phase update. Stash it in a lazily-created map of
   // queue -> linked list of updates. After this render pass, we'll restart
   // and apply the stashed updates on top of the work-in-progress hook.
-  didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+  didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate =
+    true;
   var pending = queue.pending;
 
   if (pending === null) {
@@ -8319,7 +8321,7 @@ var InvalidNestedHooksDispatcherOnUpdateInDEV = null;
 var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
 
 {
-  var warnInvalidContextAccess = function() {
+  var warnInvalidContextAccess = function () {
     error(
       "Context can only be read while React is rendering. " +
         "In classes, you can read it in the render method or getDerivedStateFromProps. " +
@@ -8328,7 +8330,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     );
   };
 
-  var warnInvalidHookAccess = function() {
+  var warnInvalidHookAccess = function () {
     error(
       "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. " +
         "You can only call Hooks at the top level of your React function. " +
@@ -8338,50 +8340,51 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   HooksDispatcherOnMountInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       mountHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountMemo(create, deps);
@@ -8389,11 +8392,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       mountHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountReducer(reducer, initialArg, init);
@@ -8401,16 +8405,17 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       mountHookTypesDev();
       return mountRef(initialValue);
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       mountHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountState(initialState);
@@ -8418,32 +8423,32 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       mountHookTypesDev();
       return mountId();
@@ -8463,44 +8468,45 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       updateHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       updateHookTypesDev();
       return mountEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       updateHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       updateHookTypesDev();
       return mountInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       updateHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountMemo(create, deps);
@@ -8508,11 +8514,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountReducer(reducer, initialArg, init);
@@ -8520,16 +8527,17 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       updateHookTypesDev();
       return mountRef(initialValue);
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountState(initialState);
@@ -8537,32 +8545,32 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       updateHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       updateHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       updateHookTypesDev();
       return mountId();
@@ -8570,11 +8578,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    HooksDispatcherOnMountWithHookTypesInDEV.useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = "useCacheRefresh";
-      updateHookTypesDev();
-      return mountRefresh();
-    };
+    HooksDispatcherOnMountWithHookTypesInDEV.useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = "useCacheRefresh";
+        updateHookTypesDev();
+        return mountRefresh();
+      };
   }
 
   {
@@ -8582,44 +8591,45 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   HooksDispatcherOnUpdateInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       updateHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       updateHookTypesDev();
       return updateInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateMemo(create, deps);
@@ -8627,11 +8637,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateReducer(reducer, initialArg, init);
@@ -8639,16 +8650,17 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       updateHookTypesDev();
       return updateRef();
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateState(initialState);
@@ -8656,32 +8668,32 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       updateHookTypesDev();
       return updateId();
@@ -8701,44 +8713,45 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   HooksDispatcherOnRerenderInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       updateHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       updateHookTypesDev();
       return updateInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
 
       try {
         return updateMemo(create, deps);
@@ -8746,11 +8759,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
 
       try {
         return rerenderReducer(reducer, initialArg, init);
@@ -8758,16 +8772,17 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       updateHookTypesDev();
       return updateRef();
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
 
       try {
         return rerenderState(initialState);
@@ -8775,32 +8790,32 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return rerenderTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       updateHookTypesDev();
       return updateId();
@@ -8808,11 +8823,12 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    HooksDispatcherOnRerenderInDEV.useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = "useCacheRefresh";
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    HooksDispatcherOnRerenderInDEV.useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = "useCacheRefresh";
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
 
   {
@@ -8820,52 +8836,53 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       warnInvalidHookAccess();
       mountHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountMemo(create, deps);
@@ -8873,12 +8890,13 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       warnInvalidHookAccess();
       mountHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountReducer(reducer, initialArg, init);
@@ -8886,18 +8904,19 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountRef(initialValue);
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       warnInvalidHookAccess();
       mountHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnMountInDEV;
 
       try {
         return mountState(initialState);
@@ -8905,37 +8924,37 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -8944,67 +8963,69 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    InvalidNestedHooksDispatcherOnMountInDEV.useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = "useCacheRefresh";
-      mountHookTypesDev();
-      return mountRefresh();
-    };
+    InvalidNestedHooksDispatcherOnMountInDEV.useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = "useCacheRefresh";
+        mountHookTypesDev();
+        return mountRefresh();
+      };
   }
 
   {
-    InvalidNestedHooksDispatcherOnMountInDEV.use = function(usable) {
+    InvalidNestedHooksDispatcherOnMountInDEV.use = function (usable) {
       warnInvalidHookAccess();
       return use(usable);
     };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateMemo(create, deps);
@@ -9012,12 +9033,13 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateReducer(reducer, initialArg, init);
@@ -9025,18 +9047,19 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateRef();
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateState(initialState);
@@ -9044,37 +9067,37 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -9083,67 +9106,69 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = "useCacheRefresh";
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    InvalidNestedHooksDispatcherOnUpdateInDEV.useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = "useCacheRefresh";
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
 
   {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.use = function(usable) {
+    InvalidNestedHooksDispatcherOnUpdateInDEV.use = function (usable) {
       warnInvalidHookAccess();
       return use(usable);
     };
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readContext: function(context) {
+    readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-    useCallback: function(callback, deps) {
+    useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext: function(context) {
+    useContext: function (context) {
       currentHookNameInDev = "useContext";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
     },
-    useEffect: function(create, deps) {
+    useEffect: function (create, deps) {
       currentHookNameInDev = "useEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
-    useImperativeHandle: function(ref, create, deps) {
+    useImperativeHandle: function (ref, create, deps) {
       currentHookNameInDev = "useImperativeHandle";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
-    useInsertionEffect: function(create, deps) {
+    useInsertionEffect: function (create, deps) {
       currentHookNameInDev = "useInsertionEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateInsertionEffect(create, deps);
     },
-    useLayoutEffect: function(create, deps) {
+    useLayoutEffect: function (create, deps) {
       currentHookNameInDev = "useLayoutEffect";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
-    useMemo: function(create, deps) {
+    useMemo: function (create, deps) {
       currentHookNameInDev = "useMemo";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return updateMemo(create, deps);
@@ -9151,12 +9176,13 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useReducer: function(reducer, initialArg, init) {
+    useReducer: function (reducer, initialArg, init) {
       currentHookNameInDev = "useReducer";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return rerenderReducer(reducer, initialArg, init);
@@ -9164,18 +9190,19 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useRef: function(initialValue) {
+    useRef: function (initialValue) {
       currentHookNameInDev = "useRef";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateRef();
     },
-    useState: function(initialState) {
+    useState: function (initialState) {
       currentHookNameInDev = "useState";
       warnInvalidHookAccess();
       updateHookTypesDev();
       var prevDispatcher = ReactCurrentDispatcher$1.current;
-      ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher$1.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
 
       try {
         return rerenderState(initialState);
@@ -9183,37 +9210,37 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         ReactCurrentDispatcher$1.current = prevDispatcher;
       }
     },
-    useDebugValue: function(value, formatterFn) {
+    useDebugValue: function (value, formatterFn) {
       currentHookNameInDev = "useDebugValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function(value) {
+    useDeferredValue: function (value) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition: function() {
+    useTransition: function () {
       currentHookNameInDev = "useTransition";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderTransition();
     },
-    useMutableSource: function(source, getSnapshot, subscribe) {
+    useMutableSource: function (source, getSnapshot, subscribe) {
       currentHookNameInDev = "useMutableSource";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useSyncExternalStore: function(subscribe, getSnapshot, getServerSnapshot) {
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot);
     },
-    useId: function() {
+    useId: function () {
       currentHookNameInDev = "useId";
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -9222,15 +9249,16 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = "useCacheRefresh";
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    InvalidNestedHooksDispatcherOnRerenderInDEV.useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = "useCacheRefresh";
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
 
   {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.use = function(usable) {
+    InvalidNestedHooksDispatcherOnRerenderInDEV.use = function (usable) {
       warnInvalidHookAccess();
       return use(usable);
     };
@@ -9445,7 +9473,7 @@ var didWarnAboutInvalidateContextType;
   didWarnAboutInvalidateContextType = new Set();
   var didWarnOnInvalidCallback = new Set();
 
-  warnOnInvalidCallback = function(callback, callerName) {
+  warnOnInvalidCallback = function (callback, callerName) {
     if (callback === null || typeof callback === "function") {
       return;
     }
@@ -9464,7 +9492,7 @@ var didWarnAboutInvalidateContextType;
     }
   };
 
-  warnOnUndefinedDerivedState = function(type, partialState) {
+  warnOnUndefinedDerivedState = function (type, partialState) {
     if (partialState === undefined) {
       var componentName = getComponentNameFromType(type) || "Component";
 
@@ -9486,7 +9514,7 @@ var didWarnAboutInvalidateContextType;
 
   Object.defineProperty(fakeInternalInstance, "_processChildContext", {
     enumerable: false,
-    value: function() {
+    value: function () {
       throw new Error(
         "_processChildContext is not available in React 16+. This likely " +
           "means you have multiple copies of React and are attempting to nest " +
@@ -9530,7 +9558,7 @@ function applyDerivedStateFromProps(
 var classComponentUpdater = {
   isMounted: isMounted,
   // $FlowFixMe[missing-local-annot]
-  enqueueSetState: function(inst, payload, callback) {
+  enqueueSetState: function (inst, payload, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
@@ -9552,7 +9580,7 @@ var classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
   },
-  enqueueReplaceState: function(inst, payload, callback) {
+  enqueueReplaceState: function (inst, payload, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
@@ -9576,7 +9604,7 @@ var classComponentUpdater = {
     }
   },
   // $FlowFixMe[missing-local-annot]
-  enqueueForceUpdate: function(inst, callback) {
+  enqueueForceUpdate: function (inst, callback) {
     var fiber = get(inst);
     var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
@@ -10619,7 +10647,7 @@ function logCapturedError(boundary, errorInfo) {
     // If console.error is overridden, or logCapturedError() shows a dialog that throws,
     // we want to report this error outside of the normal stack as a last resort.
     // https://github.com/facebook/react/issues/13188
-    setTimeout(function() {
+    setTimeout(function () {
       throw e;
     });
   }
@@ -10636,7 +10664,7 @@ function createRootErrorUpdate(fiber, errorInfo, lane) {
   };
   var error = errorInfo.value;
 
-  update.callback = function() {
+  update.callback = function () {
     onUncaughtError(error);
     logCapturedError(fiber, errorInfo);
   };
@@ -10652,11 +10680,11 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
   if (typeof getDerivedStateFromError === "function") {
     var error$1 = errorInfo.value;
 
-    update.payload = function() {
+    update.payload = function () {
       return getDerivedStateFromError(error$1);
     };
 
-    update.callback = function() {
+    update.callback = function () {
       {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
@@ -11519,9 +11547,8 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
       // Schedule this fiber to re-render at Offscreen priority
-      workInProgress.lanes = workInProgress.childLanes = laneToLanes(
-        OffscreenLane
-      ); // Include the base lanes from the last render
+      workInProgress.lanes = workInProgress.childLanes =
+        laneToLanes(OffscreenLane); // Include the base lanes from the last render
 
       var _nextBaseLanes =
         prevState !== null
@@ -12135,9 +12162,8 @@ function mountLazyComponent(
     case FunctionComponent: {
       {
         validateFunctionComponentInDev(workInProgress, Component);
-        workInProgress.type = Component = resolveFunctionForHotReloading(
-          Component
-        );
+        workInProgress.type = Component =
+          resolveFunctionForHotReloading(Component);
       }
 
       child = updateFunctionComponent(
@@ -12152,9 +12178,8 @@ function mountLazyComponent(
 
     case ClassComponent: {
       {
-        workInProgress.type = Component = resolveClassForHotReloading(
-          Component
-        );
+        workInProgress.type = Component =
+          resolveClassForHotReloading(Component);
       }
 
       child = updateClassComponent(
@@ -12169,9 +12194,8 @@ function mountLazyComponent(
 
     case ForwardRef: {
       {
-        workInProgress.type = Component = resolveForwardRefForHotReloading(
-          Component
-        );
+        workInProgress.type = Component =
+          resolveForwardRefForHotReloading(Component);
       }
 
       child = updateForwardRef(
@@ -12574,9 +12598,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes
       );
       var primaryChildFragment = workInProgress.child;
-      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-        renderLanes
-      );
+      primaryChildFragment.memoizedState =
+        mountSuspenseOffscreenState(renderLanes);
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
       return fallbackFragment;
@@ -13128,17 +13151,17 @@ function updateDehydratedSuspenseComponent(
       pushFallbackTreeSuspenseHandler(workInProgress);
       var nextPrimaryChildren = nextProps.children;
       var nextFallbackChildren = nextProps.fallback;
-      var fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
-        current,
-        workInProgress,
-        nextPrimaryChildren,
-        nextFallbackChildren,
-        renderLanes
-      );
+      var fallbackChildFragment =
+        mountSuspenseFallbackAfterRetryWithoutHydrating(
+          current,
+          workInProgress,
+          nextPrimaryChildren,
+          nextFallbackChildren,
+          renderLanes
+        );
       var _primaryChildFragment4 = workInProgress.child;
-      _primaryChildFragment4.memoizedState = mountSuspenseOffscreenState(
-        renderLanes
-      );
+      _primaryChildFragment4.memoizedState =
+        mountSuspenseOffscreenState(renderLanes);
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackChildFragment;
     }
@@ -14629,14 +14652,14 @@ var AbortControllerLocal =
         var listeners = [];
         var signal = (this.signal = {
           aborted: false,
-          addEventListener: function(type, listener) {
+          addEventListener: function (type, listener) {
             listeners.push(listener);
           }
         });
 
-        this.abort = function() {
+        this.abort = function () {
           signal.aborted = true;
-          listeners.forEach(function(listener) {
+          listeners.forEach(function (listener) {
             return listener();
           });
         };
@@ -14699,7 +14722,7 @@ function releaseCache(cache) {
   }
 
   if (cache.refCount === 0) {
-    scheduleCallback$1(NormalPriority$1, function() {
+    scheduleCallback$1(NormalPriority$1, function () {
       cache.controller.abort();
     });
   }
@@ -15023,7 +15046,7 @@ var updateHostText$1;
 
 {
   // Mutation mode
-  appendAllChildren = function(
+  appendAllChildren = function (
     parent,
     workInProgress,
     needsVisibilityToggle,
@@ -15061,11 +15084,11 @@ var updateHostText$1;
     }
   };
 
-  updateHostContainer = function(current, workInProgress) {
+  updateHostContainer = function (current, workInProgress) {
     // Noop
   };
 
-  updateHostComponent$1 = function(current, workInProgress, type, newProps) {
+  updateHostComponent$1 = function (current, workInProgress, type, newProps) {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
     var oldProps = current.memoizedProps;
@@ -15094,7 +15117,7 @@ var updateHostText$1;
     }
   };
 
-  updateHostText$1 = function(current, workInProgress, oldText, newText) {
+  updateHostText$1 = function (current, workInProgress, oldText, newText) {
     // If the text differs, mark it as an update. All the work in done in commitWork.
     if (oldText !== newText) {
       markUpdate(workInProgress);
@@ -15585,11 +15608,12 @@ function completeWork(current, workInProgress, renderLanes) {
         (current.memoizedState !== null &&
           current.memoizedState.dehydrated !== null)
       ) {
-        var fallthroughToNormalSuspensePath = completeDehydratedSuspenseBoundary(
-          current,
-          workInProgress,
-          nextState
-        );
+        var fallthroughToNormalSuspensePath =
+          completeDehydratedSuspenseBoundary(
+            current,
+            workInProgress,
+            nextState
+          );
 
         if (!fallthroughToNormalSuspensePath) {
           if (workInProgress.flags & ShouldCapture) {
@@ -15929,9 +15953,8 @@ function completeWork(current, workInProgress, renderLanes) {
             ForceSuspenseFallback
           );
         } else {
-          suspenseContext = setDefaultShallowSuspenseListContext(
-            suspenseContext
-          );
+          suspenseContext =
+            setDefaultShallowSuspenseListContext(suspenseContext);
         }
 
         pushSuspenseListContext(workInProgress, suspenseContext); // Do a pass over the next row.
@@ -16308,7 +16331,7 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
   );
 }
 
-var invokeGuardedCallbackImpl = function(
+var invokeGuardedCallbackImpl = function (
   name,
   func,
   context,
@@ -16326,7 +16349,7 @@ var invokeGuardedCallbackImpl = function(
 var hasError = false;
 var caughtError = null; // Used by event system to capture/rethrow the first error.
 var reporter = {
-  onError: function(error) {
+  onError: function (error) {
     hasError = true;
     caughtError = error;
   }
@@ -16390,14 +16413,14 @@ function reportUncaughtErrorInDEV(error) {
   // (https://github.com/facebook/react/issues/21712).
   // As a compromise, rethrow only caught errors in a guard.
   {
-    invokeGuardedCallback(null, function() {
+    invokeGuardedCallback(null, function () {
       throw error;
     });
     clearCaughtError();
   }
 }
 
-var callComponentWillUnmountWithTimer = function(current, instance) {
+var callComponentWillUnmountWithTimer = function (current, instance) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
 
@@ -18090,7 +18113,7 @@ function attachSuspenseRetryListeners(finishedWork, wakeables) {
   // For each wakeable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.
   var retryCache = getRetryCache(finishedWork);
-  wakeables.forEach(function(wakeable) {
+  wakeables.forEach(function (wakeable) {
     // Memoize using the boundary fiber to prevent redundant listeners.
     var retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
 
@@ -21277,7 +21300,7 @@ function renderRootConcurrent(root, lanes) {
             // `status` field, but if the promise already has a status, we won't
             // have added a listener until right here.
 
-            var onResolution = function() {
+            var onResolution = function () {
               ensureRootIsScheduled(root, now());
             };
 
@@ -21748,7 +21771,7 @@ function commitRootImpl(
       // with setTimeout
 
       pendingPassiveTransitions = transitions;
-      scheduleCallback$2(NormalPriority, function() {
+      scheduleCallback$2(NormalPriority, function () {
         flushPassiveEffects(); // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
@@ -21937,7 +21960,7 @@ function makeErrorInfo(digest, componentStack) {
     Object.defineProperty(errorInfo, "digest", {
       configurable: false,
       enumerable: true,
-      get: function() {
+      get: function () {
         error(
           'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
             " This property is deprecated and will be removed in a future version of React." +
@@ -22011,7 +22034,7 @@ function enqueuePendingPassiveProfilerEffect(fiber) {
 
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback$2(NormalPriority, function() {
+      scheduleCallback$2(NormalPriority, function () {
         flushPassiveEffects();
         return null;
       });
@@ -22715,7 +22738,7 @@ function setIsRunningInsertionEffect(isRunning) {
 
 var resolveFamily = null;
 var failedBoundaries = null;
-var setRefreshHandler = function(handler) {
+var setRefreshHandler = function (handler) {
   {
     resolveFamily = handler;
   }
@@ -22881,7 +22904,7 @@ function markFailedErrorBoundaryForHotReloading(fiber) {
     failedBoundaries.add(fiber);
   }
 }
-var scheduleRefresh = function(root, update) {
+var scheduleRefresh = function (root, update) {
   {
     if (resolveFamily === null) {
       // Hot reloading is disabled.
@@ -22891,7 +22914,7 @@ var scheduleRefresh = function(root, update) {
     var staleFamilies = update.staleFamilies,
       updatedFamilies = update.updatedFamilies;
     flushPassiveEffects();
-    flushSync(function() {
+    flushSync(function () {
       scheduleFibersWithFamiliesRecursively(
         root.current,
         updatedFamilies,
@@ -22900,7 +22923,7 @@ var scheduleRefresh = function(root, update) {
     });
   }
 };
-var scheduleRoot = function(root, element) {
+var scheduleRoot = function (root, element) {
   {
     if (root.context !== emptyContextObject) {
       // Super edge case: root has a legacy _renderSubtree context
@@ -22910,7 +22933,7 @@ var scheduleRoot = function(root, element) {
     }
 
     flushPassiveEffects();
-    flushSync(function() {
+    flushSync(function () {
       updateContainer(element, root, null, null);
     });
   }
@@ -23003,11 +23026,11 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-var findHostInstancesForRefresh = function(root, families) {
+var findHostInstancesForRefresh = function (root, families) {
   {
     var hostInstances = new Set();
     var types = new Set(
-      families.map(function(family) {
+      families.map(function (family) {
         return family.current;
       })
     );
@@ -23249,7 +23272,7 @@ function FiberNode(tag, pendingProps, key, mode) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 
-var createFiber = function(tag, pendingProps, key, mode) {
+var createFiber = function (tag, pendingProps, key, mode) {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 };
@@ -23725,10 +23748,10 @@ function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
     _retryCache: null,
     _transitions: null,
     _current: null,
-    detach: function() {
+    detach: function () {
       return detachOffscreenInstance(primaryChildInstance);
     },
-    attach: function() {
+    attach: function () {
       return attachOffscreenInstance(primaryChildInstance);
     }
   };
@@ -23882,7 +23905,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1f5ce59dd-20230130";
+var ReactVersion = "18.3.0-www-modern-6b3083266-20230131";
 
 // Might add PROFILE later.
 
@@ -24014,7 +24037,7 @@ function getPublicRootInstance(container) {
   }
 }
 
-var shouldErrorImpl = function(fiber) {
+var shouldErrorImpl = function (fiber) {
   return null;
 };
 
@@ -24022,7 +24045,7 @@ function shouldError(fiber) {
   return shouldErrorImpl(fiber);
 }
 
-var shouldSuspendImpl = function(fiber) {
+var shouldSuspendImpl = function (fiber) {
   return false;
 };
 
@@ -24040,7 +24063,7 @@ var setErrorHandler = null;
 var setSuspenseHandler = null;
 
 {
-  var copyWithDeleteImpl = function(obj, path, index) {
+  var copyWithDeleteImpl = function (obj, path, index) {
     var key = path[index];
     var updated = isArray(obj) ? obj.slice() : assign({}, obj);
 
@@ -24058,11 +24081,11 @@ var setSuspenseHandler = null;
     return updated;
   };
 
-  var copyWithDelete = function(obj, path) {
+  var copyWithDelete = function (obj, path) {
     return copyWithDeleteImpl(obj, path, 0);
   };
 
-  var copyWithRenameImpl = function(obj, oldPath, newPath, index) {
+  var copyWithRenameImpl = function (obj, oldPath, newPath, index) {
     var oldKey = oldPath[index];
     var updated = isArray(obj) ? obj.slice() : assign({}, obj);
 
@@ -24090,7 +24113,7 @@ var setSuspenseHandler = null;
     return updated;
   };
 
-  var copyWithRename = function(obj, oldPath, newPath) {
+  var copyWithRename = function (obj, oldPath, newPath) {
     if (oldPath.length !== newPath.length) {
       warn("copyWithRename() expects paths of the same length");
 
@@ -24110,7 +24133,7 @@ var setSuspenseHandler = null;
     return copyWithRenameImpl(obj, oldPath, newPath, 0);
   };
 
-  var copyWithSetImpl = function(obj, path, index, value) {
+  var copyWithSetImpl = function (obj, path, index, value) {
     if (index >= path.length) {
       return value;
     }
@@ -24122,11 +24145,11 @@ var setSuspenseHandler = null;
     return updated;
   };
 
-  var copyWithSet = function(obj, path, value) {
+  var copyWithSet = function (obj, path, value) {
     return copyWithSetImpl(obj, path, 0, value);
   };
 
-  var findHook = function(fiber, id) {
+  var findHook = function (fiber, id) {
     // For now, the "id" of stateful hooks is just the stateful hook index.
     // This may change in the future with e.g. nested hooks.
     var currentHook = fiber.memoizedState;
@@ -24139,7 +24162,7 @@ var setSuspenseHandler = null;
     return currentHook;
   }; // Support DevTools editable values for useState and useReducer.
 
-  overrideHookState = function(fiber, id, path, value) {
+  overrideHookState = function (fiber, id, path, value) {
     var hook = findHook(fiber, id);
 
     if (hook !== null) {
@@ -24160,7 +24183,7 @@ var setSuspenseHandler = null;
     }
   };
 
-  overrideHookStateDeletePath = function(fiber, id, path) {
+  overrideHookStateDeletePath = function (fiber, id, path) {
     var hook = findHook(fiber, id);
 
     if (hook !== null) {
@@ -24181,7 +24204,7 @@ var setSuspenseHandler = null;
     }
   };
 
-  overrideHookStateRenamePath = function(fiber, id, oldPath, newPath) {
+  overrideHookStateRenamePath = function (fiber, id, oldPath, newPath) {
     var hook = findHook(fiber, id);
 
     if (hook !== null) {
@@ -24202,7 +24225,7 @@ var setSuspenseHandler = null;
     }
   }; // Support DevTools props for function components, forwardRef, memo, host components, etc.
 
-  overrideProps = function(fiber, path, value) {
+  overrideProps = function (fiber, path, value) {
     fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
 
     if (fiber.alternate) {
@@ -24216,7 +24239,7 @@ var setSuspenseHandler = null;
     }
   };
 
-  overridePropsDeletePath = function(fiber, path) {
+  overridePropsDeletePath = function (fiber, path) {
     fiber.pendingProps = copyWithDelete(fiber.memoizedProps, path);
 
     if (fiber.alternate) {
@@ -24230,7 +24253,7 @@ var setSuspenseHandler = null;
     }
   };
 
-  overridePropsRenamePath = function(fiber, oldPath, newPath) {
+  overridePropsRenamePath = function (fiber, oldPath, newPath) {
     fiber.pendingProps = copyWithRename(fiber.memoizedProps, oldPath, newPath);
 
     if (fiber.alternate) {
@@ -24244,7 +24267,7 @@ var setSuspenseHandler = null;
     }
   };
 
-  scheduleUpdate = function(fiber) {
+  scheduleUpdate = function (fiber) {
     var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
     if (root !== null) {
@@ -24252,11 +24275,11 @@ var setSuspenseHandler = null;
     }
   };
 
-  setErrorHandler = function(newShouldErrorImpl) {
+  setErrorHandler = function (newShouldErrorImpl) {
     shouldErrorImpl = newShouldErrorImpl;
   };
 
-  setSuspenseHandler = function(newShouldSuspendImpl) {
+  setSuspenseHandler = function (newShouldSuspendImpl) {
     shouldSuspendImpl = newShouldSuspendImpl;
   };
 }
@@ -24316,7 +24339,7 @@ function injectIntoDevTools(devToolsConfig) {
 var act = React.unstable_act; // TODO: Remove from public bundle
 
 var defaultTestOptions = {
-  createNodeMock: function() {
+  createNodeMock: function () {
     return null;
   }
 };
@@ -24557,7 +24580,7 @@ function getChildren(parent) {
   return children;
 }
 
-var ReactTestInstance = /*#__PURE__*/ (function() {
+var ReactTestInstance = /*#__PURE__*/ (function () {
   var _proto = ReactTestInstance.prototype;
 
   _proto._currentFiber = function _currentFiber() {
@@ -24628,7 +24651,7 @@ var ReactTestInstance = /*#__PURE__*/ (function() {
       arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return _findAll(
       this,
-      function(node) {
+      function (node) {
         return node.type === type;
       },
       options
@@ -24640,7 +24663,7 @@ var ReactTestInstance = /*#__PURE__*/ (function() {
       arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return _findAll(
       this,
-      function(node) {
+      function (node) {
         return node.props && propsMatch(node.props, props);
       },
       options
@@ -24650,7 +24673,7 @@ var ReactTestInstance = /*#__PURE__*/ (function() {
   _createClass(ReactTestInstance, [
     {
       key: "instance",
-      get: function() {
+      get: function () {
         var tag = this._fiber.tag;
 
         if (
@@ -24666,19 +24689,19 @@ var ReactTestInstance = /*#__PURE__*/ (function() {
     },
     {
       key: "type",
-      get: function() {
+      get: function () {
         return this._fiber.type;
       }
     },
     {
       key: "props",
-      get: function() {
+      get: function () {
         return this._currentFiber().memoizedProps;
       }
     },
     {
       key: "parent",
-      get: function() {
+      get: function () {
         var parent = this._fiber.return;
 
         while (parent !== null) {
@@ -24702,7 +24725,7 @@ var ReactTestInstance = /*#__PURE__*/ (function() {
     },
     {
       key: "children",
-      get: function() {
+      get: function () {
         return getChildren(this._currentFiber());
       }
     }
@@ -24723,7 +24746,7 @@ function _findAll(root, predicate, options) {
     }
   }
 
-  root.children.forEach(function(child) {
+  root.children.forEach(function (child) {
     if (typeof child === "string") {
       return;
     }
@@ -24814,7 +24837,7 @@ function create(element, options) {
     root: undefined,
     // makes flow happy
     // we define a 'getter' for 'root' below using 'Object.defineProperty'
-    toJSON: function() {
+    toJSON: function () {
       if (root == null || root.current == null || container == null) {
         return null;
       }
@@ -24855,21 +24878,21 @@ function create(element, options) {
 
       return renderedChildren;
     },
-    toTree: function() {
+    toTree: function () {
       if (root == null || root.current == null) {
         return null;
       }
 
       return toTree(root.current);
     },
-    update: function(newElement) {
+    update: function (newElement) {
       if (root == null || root.current == null) {
         return;
       }
 
       updateContainer(newElement, root, null, null);
     },
-    unmount: function() {
+    unmount: function () {
       if (root == null || root.current == null) {
         return;
       }
@@ -24879,7 +24902,7 @@ function create(element, options) {
       container = null;
       root = null;
     },
-    getInstance: function() {
+    getInstance: function () {
       if (root == null || root.current == null) {
         return null;
       }
@@ -24891,7 +24914,7 @@ function create(element, options) {
   Object.defineProperty(entry, "root", {
     configurable: true,
     enumerable: true,
-    get: function() {
+    get: function () {
       if (root === null) {
         throw new Error("Can't access .root on unmounted test renderer");
       }
@@ -24932,7 +24955,7 @@ function wrapFiber(fiber) {
 } // Enable ReactTestRenderer to be used to test DevTools integration.
 
 injectIntoDevTools({
-  findFiberByHostInstance: function() {
+  findFiberByHostInstance: function () {
     throw new Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 1,

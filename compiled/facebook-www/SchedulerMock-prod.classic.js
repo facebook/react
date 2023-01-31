@@ -11,8 +11,8 @@
  */
 
 "use strict";
-var enableSchedulerDebugging = require("SchedulerFeatureFlags")
-  .enableSchedulerDebugging;
+var enableSchedulerDebugging =
+  require("SchedulerFeatureFlags").enableSchedulerDebugging;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -193,7 +193,7 @@ function unstable_flushAllWithoutAsserting() {
     }
   } else return !1;
 }
-exports.reset = function() {
+exports.reset = function () {
   if (isFlushing) throw Error("Cannot reset while already flushing work.");
   currentMockTime = 0;
   scheduledTimeout = scheduledCallback = null;
@@ -208,7 +208,7 @@ exports.unstable_LowPriority = 4;
 exports.unstable_NormalPriority = 3;
 exports.unstable_Profiling = null;
 exports.unstable_UserBlockingPriority = 2;
-exports.unstable_advanceTime = function(ms) {
+exports.unstable_advanceTime = function (ms) {
   "disabledLog" === console.log.name ||
     disableYieldValue ||
     ((currentMockTime += ms),
@@ -218,22 +218,22 @@ exports.unstable_advanceTime = function(ms) {
       (timeoutTime = -1),
       (scheduledTimeout = null)));
 };
-exports.unstable_cancelCallback = function(task) {
+exports.unstable_cancelCallback = function (task) {
   task.callback = null;
 };
-exports.unstable_clearYields = function() {
+exports.unstable_clearYields = function () {
   if (null === yieldedValues) return [];
   var values = yieldedValues;
   yieldedValues = null;
   return values;
 };
-exports.unstable_continueExecution = function() {
+exports.unstable_continueExecution = function () {
   isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
     ((isHostCallbackScheduled = !0), (scheduledCallback = flushWork));
 };
-exports.unstable_flushAll = function() {
+exports.unstable_flushAll = function () {
   if (null !== yieldedValues)
     throw Error(
       "Log is not empty. Assert on the log of yielded values before flushing additional work."
@@ -245,7 +245,7 @@ exports.unstable_flushAll = function() {
     );
 };
 exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
-exports.unstable_flushExpired = function() {
+exports.unstable_flushExpired = function () {
   if (isFlushing) throw Error("Already flushing work.");
   if (null !== scheduledCallback) {
     isFlushing = !0;
@@ -256,7 +256,7 @@ exports.unstable_flushExpired = function() {
     }
   }
 };
-exports.unstable_flushNumberOfYields = function(count) {
+exports.unstable_flushNumberOfYields = function (count) {
   if (isFlushing) throw Error("Already flushing work.");
   if (null !== scheduledCallback) {
     var cb = scheduledCallback;
@@ -272,7 +272,7 @@ exports.unstable_flushNumberOfYields = function(count) {
     }
   }
 };
-exports.unstable_flushUntilNextPaint = function() {
+exports.unstable_flushUntilNextPaint = function () {
   if (isFlushing) throw Error("Already flushing work.");
   if (null !== scheduledCallback) {
     var cb = scheduledCallback;
@@ -290,17 +290,17 @@ exports.unstable_flushUntilNextPaint = function() {
   }
   return !1;
 };
-exports.unstable_forceFrameRate = function() {};
-exports.unstable_getCurrentPriorityLevel = function() {
+exports.unstable_forceFrameRate = function () {};
+exports.unstable_getCurrentPriorityLevel = function () {
   return currentPriorityLevel;
 };
-exports.unstable_getFirstCallbackNode = function() {
+exports.unstable_getFirstCallbackNode = function () {
   return peek(taskQueue);
 };
-exports.unstable_hasPendingWork = function() {
+exports.unstable_hasPendingWork = function () {
   return null !== scheduledCallback;
 };
-exports.unstable_next = function(eventHandler) {
+exports.unstable_next = function (eventHandler) {
   switch (currentPriorityLevel) {
     case 1:
     case 2:
@@ -318,16 +318,16 @@ exports.unstable_next = function(eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_now = function() {
+exports.unstable_now = function () {
   return currentMockTime;
 };
-exports.unstable_pauseExecution = function() {
+exports.unstable_pauseExecution = function () {
   isSchedulerPaused = !0;
 };
-exports.unstable_requestPaint = function() {
+exports.unstable_requestPaint = function () {
   needsPaint = !0;
 };
-exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
+exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case 1:
     case 2:
@@ -346,7 +346,11 @@ exports.unstable_runWithPriority = function(priorityLevel, eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
+exports.unstable_scheduleCallback = function (
+  priorityLevel,
+  callback,
+  options
+) {
   var currentTime = currentMockTime;
   "object" === typeof options && null !== options
     ? ((options = options.delay),
@@ -397,13 +401,13 @@ exports.unstable_scheduleCallback = function(priorityLevel, callback, options) {
         ((isHostCallbackScheduled = !0), (scheduledCallback = flushWork)));
   return priorityLevel;
 };
-exports.unstable_setDisableYieldValue = function(newValue) {
+exports.unstable_setDisableYieldValue = function (newValue) {
   disableYieldValue = newValue;
 };
 exports.unstable_shouldYield = shouldYieldToHost;
-exports.unstable_wrapCallback = function(callback) {
+exports.unstable_wrapCallback = function (callback) {
   var parentPriorityLevel = currentPriorityLevel;
-  return function() {
+  return function () {
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
     try {
@@ -413,7 +417,7 @@ exports.unstable_wrapCallback = function(callback) {
     }
   };
 };
-exports.unstable_yieldValue = function(value) {
+exports.unstable_yieldValue = function (value) {
   "disabledLog" === console.log.name ||
     disableYieldValue ||
     (null === yieldedValues
