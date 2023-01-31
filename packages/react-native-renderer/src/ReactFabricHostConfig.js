@@ -392,7 +392,13 @@ export function createTextInstance(
 ): TextInstance {
   if (__DEV__) {
     if (!hostContext.isInAParentText) {
-      console.error('Text strings must be rendered within a <Text> component.');
+      console.error(
+        // Opt-in detailed error messages
+        // Learn More: https://github.com/facebook/react/pull/22725#issuecomment-1006023545
+        global.debugInvalidTextStrings
+          ? `Text string "${text}" must be rendered within a <Text> component.`
+          : `Text strings must be rendered within a <Text> component.`,
+      );
     }
   }
 
