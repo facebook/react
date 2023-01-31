@@ -291,6 +291,7 @@ export function mapTerminalSuccessors(
         fallthrough,
         operator: terminal.operator,
         id: makeInstructionId(0),
+        loc: terminal.loc,
       };
     }
     case "return": {

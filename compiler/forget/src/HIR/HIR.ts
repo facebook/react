@@ -89,7 +89,17 @@ export type ReactiveTerminalStatement<
 export type ReactiveInstruction = {
   id: InstructionId;
   lvalue: LValue | null;
-  value: InstructionValue;
+  value: ReactiveValue;
+  loc: SourceLocation;
+};
+
+export type ReactiveValue = InstructionValue | ReactiveLogicalValue;
+
+export type ReactiveLogicalValue = {
+  kind: "LogicalExpression";
+  operator: t.LogicalExpression["operator"];
+  left: ReactiveValue;
+  right: ReactiveValue;
   loc: SourceLocation;
 };
 
@@ -298,6 +308,7 @@ export type LogicalTerminal = {
   test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 /**

@@ -9,7 +9,6 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
-  InstructionValue,
   isPrimitiveType,
   LValue,
   makeInstructionId,
@@ -19,10 +18,11 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeDependency,
+  ReactiveValue,
   ReactiveValueBlock,
 } from "../HIR/HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+import { eachReactiveValueOperand } from "./visitors";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -266,19 +266,19 @@ function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
     }
   }
   if (block.last !== null) {
-    visitInstructionValue(context, block.last.value, null);
+    visitReactiveValue(context, block.last.value, null);
   }
 }
 
-function visitInstructionValue(
+function visitReactiveValue(
   context: Context,
-  value: InstructionValue,
+  value: ReactiveValue,
   lvalue: LValue | null
 ): void {
   if (value.kind === "PropertyLoad" && lvalue !== null) {
     context.declareProperty(lvalue.place, value.object, value.property);
   } else {
-    for (const operand of eachInstructionValueOperand(value)) {
+    for (const operand of eachReactiveValueOperand(value)) {
       context.visitOperand(operand);
     }
   }
@@ -286,7 +286,7 @@ function visitInstructionValue(
 
 function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
-  visitInstructionValue(context, instr.value, lvalue);
+  visitReactiveValue(context, instr.value, lvalue);
   if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {
     const range = lvalue.place.identifier.mutableRange;
     // TODO: only assign Const if the value is never reassigned

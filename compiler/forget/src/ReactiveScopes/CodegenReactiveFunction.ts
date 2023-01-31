@@ -13,7 +13,6 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
-  InstructionValue,
   LValue,
   Place,
   ReactiveBlock,
@@ -22,6 +21,7 @@ import {
   ReactiveScope,
   ReactiveScopeDependency,
   ReactiveTerminal,
+  ReactiveValue,
   ReactiveValueBlock,
   SourceLocation,
 } from "../HIR/HIR";
@@ -430,6 +430,7 @@ const createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
 const createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
+const createLogicalExpression = withLoc(t.logicalExpression);
 
 type Temporaries = Map<IdentifierId, t.Expression>;
 
@@ -482,7 +483,7 @@ function codegenInstruction(
 
 function codegenInstructionValue(
   temp: Temporaries,
-  instrValue: InstructionValue
+  instrValue: ReactiveValue
 ): t.Expression {
   let value: t.Expression;
   switch (instrValue.kind) {
@@ -682,6 +683,15 @@ function codegenInstructionValue(
         instrValue.loc,
         codegenPlace(temp, instrValue.tag),
         t.templateLiteral([t.templateElement(instrValue.value)], [])
+      );
+      break;
+    }
+    case "LogicalExpression": {
+      value = createLogicalExpression(
+        instrValue.loc,
+        instrValue.operator,
+        codegenInstructionValue(temp, instrValue.left),
+        codegenInstructionValue(temp, instrValue.right)
       );
       break;
     }

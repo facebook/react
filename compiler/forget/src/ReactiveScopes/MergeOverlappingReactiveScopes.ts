@@ -8,21 +8,24 @@
 import invariant from "invariant";
 import {
   InstructionId,
-  InstructionValue,
   makeInstructionId,
   Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
+  ReactiveValue,
   ReactiveValueBlock,
   ScopeId,
 } from "../HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 import { retainWhere } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
-import { eachTerminalBlock, eachTerminalOperand } from "./visitors";
+import {
+  eachReactiveValueOperand,
+  eachTerminalBlock,
+  eachTerminalOperand,
+} from "./visitors";
 
 /**
  * Note: this is the 3rd of 4 passes that determine how to break a function into discrete
@@ -184,10 +187,10 @@ function visitInstruction(
 function visitValue(
   context: Context,
   id: InstructionId,
-  value: InstructionValue
+  value: ReactiveValue
 ): void {
   context.visitId(id);
-  for (const operand of eachInstructionValueOperand(value)) {
+  for (const operand of eachReactiveValueOperand(value)) {
     context.visitPlace(id, operand);
   }
 }

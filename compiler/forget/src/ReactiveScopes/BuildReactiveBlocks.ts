@@ -19,9 +19,12 @@ import {
   ReactiveValueBlock,
   ScopeId,
 } from "../HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import { eachTerminalBlock, mapTerminalBlocks } from "./visitors";
+import {
+  eachReactiveValueOperand,
+  eachTerminalBlock,
+  mapTerminalBlocks,
+} from "./visitors";
 
 /**
  * Note: this is the 4th of 4 passes that determine how to break a function into discrete
@@ -222,7 +225,7 @@ export function getInstructionScope({
   if (lvalueScope !== null) {
     return lvalueScope;
   }
-  for (const operand of eachInstructionValueOperand(value)) {
+  for (const operand of eachReactiveValueOperand(value)) {
     const operandScope = getPlaceScope(id, operand);
     if (operandScope !== null) {
       return operandScope;

@@ -13,6 +13,7 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveTerminal,
+  ReactiveValue,
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
@@ -33,7 +34,7 @@ export function visitFunction(
       switch (item.kind) {
         case "instruction": {
           if (visitValue) {
-            for (const operand of eachInstructionValueOperand(
+            for (const operand of eachReactiveValueOperand(
               item.instruction.value
             )) {
               visitValue(operand);
@@ -79,6 +80,21 @@ export function visitFunction(
     }
   }
   visitBlock(fn.body);
+}
+
+export function* eachReactiveValueOperand(
+  instrValue: ReactiveValue
+): Iterable<Place> {
+  switch (instrValue.kind) {
+    case "LogicalExpression": {
+      yield* eachReactiveValueOperand(instrValue.left);
+      yield* eachReactiveValueOperand(instrValue.right);
+      break;
+    }
+    default: {
+      yield* eachInstructionValueOperand(instrValue);
+    }
+  }
 }
 
 export function mapTerminalBlocks(

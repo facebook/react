@@ -934,6 +934,7 @@ function lowerExpression(
           id: makeInstructionId(0),
           test: testBlock.id,
           operator: expr.node.operator,
+          loc: exprLoc,
         },
         testBlock
       );

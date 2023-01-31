@@ -16,6 +16,7 @@ import {
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+import { eachReactiveValueOperand } from "./visitors";
 
 /**
  * Ensures that each named variable in the given function has a unique name
@@ -46,7 +47,7 @@ function visitBlockInner(scopes: Scopes, block: ReactiveBlock): void {
   for (const stmt of block) {
     switch (stmt.kind) {
       case "instruction": {
-        for (const operand of eachInstructionValueOperand(
+        for (const operand of eachReactiveValueOperand(
           stmt.instruction.value
         )) {
           scopes.visit(operand.identifier);
@@ -76,7 +77,7 @@ function visitValueBlock(scopes: Scopes, block: ReactiveValueBlock): void {
       stmt.kind === "instruction",
       "Value blocks may only contain instructions"
     );
-    for (const operand of eachInstructionValueOperand(stmt.instruction.value)) {
+    for (const operand of eachReactiveValueOperand(stmt.instruction.value)) {
       scopes.visit(operand.identifier);
     }
     if (stmt.instruction.lvalue !== null) {

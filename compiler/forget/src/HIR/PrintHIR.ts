@@ -22,6 +22,7 @@ import {
   Place,
   ReactiveInstruction,
   ReactiveScope,
+  ReactiveValue,
   SourceLocation,
   Terminal,
   Type,
@@ -201,7 +202,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
   return value;
 }
 
-export function printInstructionValue(instrValue: InstructionValue): string {
+export function printInstructionValue(instrValue: ReactiveValue): string {
   let value = "";
   switch (instrValue.kind) {
     case "ArrayExpression": {
@@ -330,6 +331,12 @@ export function printInstructionValue(instrValue: InstructionValue): string {
     }
     case "TaggedTemplateExpression": {
       value = `${instrValue.tag}\`${instrValue.value.raw}\``;
+      break;
+    }
+    case "LogicalExpression": {
+      value = `Logical ${printInstructionValue(instrValue.left)} ${
+        instrValue.operator
+      } ${printInstructionValue(instrValue.right)}`;
       break;
     }
     default: {
