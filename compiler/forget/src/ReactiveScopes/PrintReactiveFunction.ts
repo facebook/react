@@ -235,7 +235,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       writer.writeLine(";");
       printReactiveValue(writer, terminal.test);
       writer.writeLine(";");
-      printValueBlock(writer, terminal.update);
+      printReactiveValue(writer, terminal.update);
       writer.writeLine(") {");
       printReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");

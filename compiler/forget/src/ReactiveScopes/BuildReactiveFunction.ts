@@ -320,13 +320,10 @@ class Driver {
           terminal.loc
         ).value;
 
-        const updateBlock = this.cx.ir.blocks.get(terminal.update)!;
-        const updateTerminal = updateBlock.terminal;
-        invariant(
-          updateTerminal.kind === "goto",
-          "Expected for loop update block to end in a goto"
-        );
-        const updateValue = this.visitValueBlock(blockValue, updateBlock);
+        const updateValue = this.visitValueBlockNew(
+          terminal.update,
+          terminal.loc
+        ).value;
 
         let loopBody: ReactiveBlock;
         if (loopId) {

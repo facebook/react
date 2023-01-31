@@ -104,7 +104,7 @@ export class ReactiveFunctionVisitor<TState = void> {
       case "for": {
         this.visitValueBlock(terminal.init, state);
         this.visitValue(terminal.id, terminal.test, state);
-        this.visitValueBlock(terminal.update, state);
+        this.visitValue(terminal.id, terminal.update, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
@@ -336,7 +336,7 @@ export function eachTerminalBlock(
       visitValueBlock(terminal.init);
       // TODO
       // visitValueBlock(terminal.test);
-      visitValueBlock(terminal.update);
+      // visitValueBlock(terminal.update);
       visitBlock(terminal.loop);
       break;
     }
