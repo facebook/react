@@ -91,6 +91,13 @@ export function* eachReactiveValueOperand(
       yield* eachReactiveValueOperand(instrValue.right);
       break;
     }
+    case "SequenceExpression": {
+      for (const instr of instrValue.instructions) {
+        yield* eachReactiveValueOperand(instr.value);
+      }
+      yield* eachReactiveValueOperand(instrValue.value);
+      break;
+    }
     default: {
       yield* eachInstructionValueOperand(instrValue);
     }

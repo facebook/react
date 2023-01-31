@@ -339,6 +339,16 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       } ${printInstructionValue(instrValue.right)}`;
       break;
     }
+    case "SequenceExpression": {
+      value = [
+        `Sequence`,
+        ...instrValue.instructions.map(
+          (instr) => `    ${printInstruction(instr)}`
+        ),
+        `    ${printInstructionValue(instrValue.value)}`,
+      ].join("\n");
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

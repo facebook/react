@@ -2,8 +2,9 @@
 ## Input
 
 ```javascript
+// @only
 function component(props) {
-  let a = props.a && props.b;
+  let a = (props.a && props.b && props.c) || props.d;
   return a;
   // let b = props.c || props.d;
   // let c = props.e ?? props.f;
@@ -15,25 +16,19 @@ function component(props) {
 ## Code
 
 ```javascript
+// @only
 function component(props) {
   const $ = React.useMemoCache();
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  let t2;
-  if (c_0 || c_1) {
-    t2 = undefined;
-    if (props.a) {
-      t2 = props.a;
-    } else {
-      t2 = props.b;
-    }
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = t2;
+  const c_0 = $[0] !== props;
+  let t1;
+  if (c_0) {
+    t1 = (props.a && props.b && props.c) || props.d;
+    $[0] = props;
+    $[1] = t1;
   } else {
-    t2 = $[2];
+    t1 = $[1];
   }
-  const a = t2;
+  const a = t1;
   return a;
 }
 

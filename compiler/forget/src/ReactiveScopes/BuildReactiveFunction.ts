@@ -19,11 +19,24 @@ import {
 } from "../HIR";
 import {
   HIRFunction,
+  Instruction,
+  InstructionKind,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
+  ReactiveInstruction,
+  ReactiveLogicalValue,
+  ReactiveSequenceValue,
   ReactiveTerminalStatement,
+  ReactiveValue,
+  Terminal,
 } from "../HIR/HIR";
+import {
+  printInstructionValue,
+  printPlace,
+  printTerminal,
+} from "../HIR/PrintHIR";
+import { mapInstructionOperands } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -407,7 +420,16 @@ class Driver {
         const scheduleId = this.cx.schedule(fallthroughId, "if");
         scheduleIds.push(scheduleId);
 
-        this.visitBlock(this.cx.ir.blocks.get(terminal.test)!, blockValue);
+        const { place, value } = this.visitValueTerminal(terminal);
+        blockValue.push({
+          kind: "instruction",
+          instruction: {
+            id: terminal.id,
+            lvalue: { kind: InstructionKind.Const, place },
+            value,
+            loc: terminal.loc,
+          },
+        });
 
         this.cx.unschedule(scheduleId);
         this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -443,6 +465,119 @@ class Driver {
       }
       default: {
         assertExhaustive(terminal, "Unexpected terminal");
+      }
+    }
+  }
+
+  visitValueTerminal(terminal: Terminal): {
+    value: ReactiveValue;
+    place: Place;
+    fallthrough: BlockId;
+  } {
+    switch (terminal.kind) {
+      case "logical": {
+        let testBlock: BasicBlock;
+        let leftValue: ReactiveValue | null = null;
+        let leftPlace: Place | null = null;
+        const defaultTestBlock = this.cx.ir.blocks.get(terminal.test)!;
+        if (defaultTestBlock.terminal.kind === "branch") {
+          testBlock = defaultTestBlock;
+        } else {
+          const leftResult = this.visitValueTerminal(defaultTestBlock.terminal);
+          testBlock = this.cx.ir.blocks.get(leftResult.fallthrough)!;
+          leftValue = leftResult.value;
+          leftPlace = leftResult.place;
+        }
+
+        invariant(
+          testBlock.terminal.kind === "branch",
+          "Unexpected terminal kind '%s' for logical test block",
+          testBlock.terminal.kind
+        );
+        const leftInstructions: Array<ReactiveInstruction> =
+          testBlock.instructions;
+        const leftBlock = this.cx.ir.blocks.get(testBlock.terminal.consequent)!;
+        leftInstructions.push(...leftBlock.instructions);
+        // TODO: If right block ends in a value terminal, recursively process with visitValueTerminal
+        // similar to handling for the compound lhs case.
+        const rightBlock = this.cx.ir.blocks.get(testBlock.terminal.alternate)!;
+        const rightInstructions: Array<ReactiveInstruction> =
+          rightBlock.instructions;
+        const place = leftInstructions.at(-1)!.lvalue!.place;
+        invariant(
+          place.identifier ===
+            rightInstructions.at(-1)!.lvalue!.place.identifier,
+          "Expected both branches of a logical expression to store to the same temporary"
+        );
+        if (leftPlace !== null) {
+          leftInstructions.forEach((instr) =>
+            mapInstructionOperands(instr as Instruction, (place) => {
+              return place.identifier === leftPlace!.identifier
+                ? (leftValue! as Place)
+                : place;
+            })
+          );
+          rightInstructions.forEach((instr) =>
+            mapInstructionOperands(instr as Instruction, (place) => {
+              return place.identifier === leftPlace!.identifier
+                ? (leftValue! as Place)
+                : place;
+            })
+          );
+        }
+
+        let left: ReactiveValue;
+        if (leftInstructions.length === 1) {
+          left = leftInstructions[0]!.value;
+        } else {
+          const sequence: ReactiveSequenceValue = {
+            kind: "SequenceExpression",
+            instructions: leftInstructions.slice(0, -1),
+            value: leftInstructions.at(-1)!.value,
+            loc: terminal.loc,
+          };
+          left = sequence;
+        }
+        let right: ReactiveValue;
+        if (rightInstructions.length === 1) {
+          right = rightInstructions[0]!.value;
+        } else {
+          const sequence: ReactiveSequenceValue = {
+            kind: "SequenceExpression",
+            instructions: rightInstructions.slice(0, -1),
+            value: rightInstructions.at(-1)!.value,
+            loc: terminal.loc,
+          };
+          right = sequence;
+        }
+        const value: ReactiveLogicalValue = {
+          kind: "LogicalExpression",
+          operator: terminal.operator,
+          left,
+          right,
+          loc: terminal.loc,
+        };
+        console.log(
+          printTerminal(terminal) +
+            " testBlock=" +
+            testBlock.id +
+            " " +
+            printPlace(place) +
+            "=" +
+            printInstructionValue(value)
+        );
+        return {
+          place: { ...place },
+          value,
+          fallthrough: terminal.fallthrough,
+        };
+      }
+      default: {
+        invariant(
+          false,
+          "Unexpected value block terminal kind '%s'",
+          terminal.kind
+        );
       }
     }
   }

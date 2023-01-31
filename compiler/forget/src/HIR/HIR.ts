@@ -93,13 +93,23 @@ export type ReactiveInstruction = {
   loc: SourceLocation;
 };
 
-export type ReactiveValue = InstructionValue | ReactiveLogicalValue;
+export type ReactiveValue =
+  | InstructionValue
+  | ReactiveLogicalValue
+  | ReactiveSequenceValue;
 
 export type ReactiveLogicalValue = {
   kind: "LogicalExpression";
   operator: t.LogicalExpression["operator"];
   left: ReactiveValue;
   right: ReactiveValue;
+  loc: SourceLocation;
+};
+
+export type ReactiveSequenceValue = {
+  kind: "SequenceExpression";
+  instructions: Array<ReactiveInstruction>;
+  value: ReactiveValue;
   loc: SourceLocation;
 };
 

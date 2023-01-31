@@ -123,7 +123,6 @@ export function leaveSSA(fn: HIRFunction) {
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
         terminal.kind === "while" ||
-        terminal.kind === "logical" ||
         terminal.kind === "for") &&
       terminal.fallthrough !== null
     ) {
@@ -148,6 +147,11 @@ export function leaveSSA(fn: HIRFunction) {
       const update = fn.body.blocks.get(terminal.update)!;
       pushPhis(rewritePhis, update);
       update.phis.clear();
+    }
+    if (terminal.kind === "logical") {
+      const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
+      pushPhis(rewritePhis, fallthrough);
+      fallthrough.phis.clear();
     }
 
     for (const { phi, block: phiBlock } of reassignmentPhis) {
