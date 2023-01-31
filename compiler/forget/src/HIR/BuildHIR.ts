@@ -889,6 +889,24 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "SequenceExpression": {
+      const expr = exprPath as NodePath<t.SequenceExpression>;
+      const exprLoc = expr.node.loc ?? GeneratedSource;
+
+      let last: Place | null = null;
+      for (const item of expr.get("expressions")) {
+        last = lowerExpressionToPlace(builder, item);
+      }
+      if (last === null) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Expected SequenceExpression to have at least one expression`,
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: expr,
+        });
+        return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
+      }
+      return last;
+    }
     case "ConditionalExpression": {
       const expr = exprPath as NodePath<t.ConditionalExpression>;
       const exprLoc = expr.node.loc ?? GeneratedSource;
