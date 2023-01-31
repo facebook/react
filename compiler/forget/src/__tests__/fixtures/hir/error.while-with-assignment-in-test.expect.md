@@ -19,7 +19,7 @@ function f(reader) {
 ## Error
 
 ```
-TODO: Handle conversion of VariableDeclaration to expression
+TODO: Cannot declare variables in a value block, tried to declare 'value$0'
 ```
           
       

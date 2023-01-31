@@ -192,7 +192,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "while": {
       writer.writeLine(`[${terminal.id}] while (`);
-      printValueBlock(writer, terminal.test);
+      printReactiveValue(writer, terminal.test);
       writer.writeLine(") {");
       printReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");

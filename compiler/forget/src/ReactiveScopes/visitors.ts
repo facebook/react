@@ -40,8 +40,30 @@ export class ReactiveFunctionVisitor<TState = void> {
     this.traverseValue(id, value, state);
   }
   traverseValue(id: InstructionId, value: ReactiveValue, state: TState): void {
-    for (const place of eachReactiveValueOperand(value)) {
-      this.visitPlace(id, place, state);
+    switch (value.kind) {
+      case "LogicalExpression": {
+        this.visitValue(id, value.left, state);
+        this.visitValue(id, value.right, state);
+        break;
+      }
+      case "ConditionalExpression": {
+        this.visitValue(id, value.test, state);
+        this.visitValue(id, value.consequent, state);
+        this.visitValue(id, value.alternate, state);
+        break;
+      }
+      case "SequenceExpression": {
+        for (const instr of value.instructions) {
+          this.visitInstruction(instr, state);
+        }
+        this.visitValue(id, value.value, state);
+        break;
+      }
+      default: {
+        for (const place of eachReactiveValueOperand(value)) {
+          this.visitPlace(id, place, state);
+        }
+      }
     }
   }
 
@@ -87,7 +109,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         break;
       }
       case "while": {
-        this.visitValueBlock(terminal.test, state);
+        this.visitValue(terminal.id, terminal.test, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
@@ -318,7 +340,8 @@ export function eachTerminalBlock(
       break;
     }
     case "while": {
-      visitValueBlock(terminal.test);
+      // TODO
+      // visitValueBlock(terminal.test);
       visitBlock(terminal.loop);
       break;
     }

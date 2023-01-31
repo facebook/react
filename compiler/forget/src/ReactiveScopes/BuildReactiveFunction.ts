@@ -253,16 +253,11 @@ class Driver {
         );
         scheduleIds.push(scheduleId);
 
-        const testBlock = this.cx.ir.blocks.get(terminal.test)!;
-        const testTerminal = testBlock.terminal;
-        invariant(
-          testTerminal.kind === "branch",
-          "Expected while loop test block to end in an if"
-        );
-        const testValue = this.visitValueBlock(blockValue, testBlock, {
-          value: testTerminal.test,
-          id: testTerminal.id,
-        });
+        const testValue = this.visitValueBlockNew(
+          terminal.test,
+          terminal.loc
+        ).value;
+
         let loopBody: ReactiveBlock;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);

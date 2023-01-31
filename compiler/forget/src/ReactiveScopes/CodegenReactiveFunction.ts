@@ -299,7 +299,7 @@ function codegenTerminal(
       return t.throwStatement(codegenPlace(cx, terminal.value));
     }
     case "while": {
-      const test = codegenValueBlock(cx, terminal.test);
+      const test = codegenInstructionValue(cx, terminal.test);
       return t.whileStatement(test, codegenBlock(cx, terminal.loop));
     }
     default: {

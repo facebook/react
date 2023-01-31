@@ -165,7 +165,7 @@ export type ReactiveSwitchTerminal = {
 };
 export type ReactiveWhileTerminal = {
   kind: "while";
-  test: ReactiveValueBlock;
+  test: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
 };

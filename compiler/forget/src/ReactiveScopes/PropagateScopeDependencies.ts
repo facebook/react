@@ -21,6 +21,7 @@ import {
   ReactiveValue,
   ReactiveValueBlock,
 } from "../HIR/HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import { eachReactiveValueOperand } from "./visitors";
 
@@ -99,6 +100,20 @@ class Context {
 
   visitOperand(place: Place): void {
     this.visitDependency({ place, path: null });
+  }
+
+  visitProperty(object: Place, property: string): void {
+    const objectDependency = this.#properties.get(object.identifier);
+    let nextDependency: ReactiveScopeDependency;
+    if (objectDependency === undefined) {
+      nextDependency = { place: object, path: [property] };
+    } else {
+      nextDependency = {
+        place: objectDependency.place,
+        path: [...(objectDependency.path ?? []), property],
+      };
+    }
+    this.visitDependency(nextDependency);
   }
 
   visitDependency(dependency: ReactiveScopeDependency): void {
@@ -222,7 +237,7 @@ function visit(context: Context, block: ReactiveBlock): void {
             break;
           }
           case "while": {
-            visitValueBlock(context, terminal.test);
+            visitReactiveValue(context, terminal.test);
             visit(context, terminal.loop);
             break;
           }
@@ -266,17 +281,49 @@ function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
     }
   }
   if (block.last !== null) {
-    visitReactiveValue(context, block.last.value, null);
+    visitInstructionValue(context, block.last.value, null);
   }
 }
 
-function visitReactiveValue(
+function visitReactiveValue(context: Context, value: ReactiveValue): void {
+  switch (value.kind) {
+    case "LogicalExpression": {
+      visitReactiveValue(context, value.left);
+      visitReactiveValue(context, value.right);
+      break;
+    }
+    case "ConditionalExpression": {
+      visitReactiveValue(context, value.test);
+      visitReactiveValue(context, value.consequent);
+      visitReactiveValue(context, value.alternate);
+      break;
+    }
+    case "SequenceExpression": {
+      for (const instr of value.instructions) {
+        visitInstruction(context, instr);
+      }
+      visitInstructionValue(context, value.value, null);
+      break;
+    }
+    default: {
+      for (const operand of eachInstructionValueOperand(value)) {
+        context.visitOperand(operand);
+      }
+    }
+  }
+}
+
+function visitInstructionValue(
   context: Context,
   value: ReactiveValue,
   lvalue: LValue | null
 ): void {
-  if (value.kind === "PropertyLoad" && lvalue !== null) {
-    context.declareProperty(lvalue.place, value.object, value.property);
+  if (value.kind === "PropertyLoad") {
+    if (lvalue !== null) {
+      context.declareProperty(lvalue.place, value.object, value.property);
+    } else {
+      context.visitProperty(value.object, value.property);
+    }
   } else {
     for (const operand of eachReactiveValueOperand(value)) {
       context.visitOperand(operand);
@@ -286,7 +333,7 @@ function visitReactiveValue(
 
 function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
-  visitReactiveValue(context, instr.value, lvalue);
+  visitInstructionValue(context, instr.value, lvalue);
   if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {
     const range = lvalue.place.identifier.mutableRange;
     // TODO: only assign Const if the value is never reassigned

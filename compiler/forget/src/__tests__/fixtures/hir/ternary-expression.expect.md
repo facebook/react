@@ -39,7 +39,7 @@ function ternary(props) {
   const c_5 = $[5] !== b;
   let t6;
   if (c_4 || c_5) {
-    t6 = a ? b : null;
+    t6 = a ? b : (null, null);
     $[4] = a;
     $[5] = b;
     $[6] = t6;
