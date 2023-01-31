@@ -13,7 +13,6 @@ import {
   ReactiveStatement,
   ReactiveTerminal,
   ReactiveValue,
-  ReactiveValueBlock,
 } from "../HIR/HIR";
 import {
   printIdentifier,
@@ -109,17 +108,6 @@ function printReactiveInstruction(
       );
     }
   }
-}
-
-function printValueBlock(writer: Writer, block: ReactiveValueBlock): void {
-  writer.indented(() => {
-    for (const instr of block.instructions) {
-      printReactiveInstruction(writer, instr);
-    }
-    if (block.last !== null) {
-      writer.writeLine(printInstructionValue(block.last.value));
-    }
-  });
 }
 
 function printReactiveValue(writer: Writer, value: ReactiveValue): void {

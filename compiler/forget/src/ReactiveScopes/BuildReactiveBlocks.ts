@@ -16,15 +16,10 @@ import {
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveStatement,
-  ReactiveValueBlock,
   ScopeId,
 } from "../HIR";
 import { assertExhaustive } from "../Utils/utils";
-import {
-  eachReactiveValueOperand,
-  eachTerminalBlock,
-  mapTerminalBlocks,
-} from "./visitors";
+import { eachReactiveValueOperand, mapTerminalBlocks } from "./visitors";
 
 /**
  * Note: this is the 4th of 4 passes that determine how to break a function into discrete
@@ -164,13 +159,6 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
             visitBlock(context, block);
           });
         });
-        eachTerminalBlock(
-          stmt.terminal,
-          (_) => {},
-          (valueBlock) => {
-            visitValueBlock(context, valueBlock);
-          }
-        );
         context.append(stmt, stmt.label);
         break;
       }
@@ -187,27 +175,6 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         );
       }
     }
-  }
-}
-
-function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
-  for (const stmt of block.instructions) {
-    switch (stmt.kind) {
-      case "instruction": {
-        context.visitId(stmt.instruction.id);
-        const scope = getInstructionScope(stmt.instruction);
-        if (scope !== null) {
-          context.visitScope(scope);
-        }
-        break;
-      }
-      default: {
-        invariant(false, "Unexpected terminal or scope in value block");
-      }
-    }
-  }
-  if (block.last !== null) {
-    context.visitId(block.last.id);
   }
 }
 

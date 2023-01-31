@@ -22,7 +22,6 @@ import {
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
-  ReactiveValueBlock,
   SourceLocation,
 } from "../HIR/HIR";
 import { todoInvariant } from "../Utils/todo";
@@ -358,33 +357,6 @@ function codegenForInit(
     return declaration;
   } else {
     return codegenInstructionValue(cx, init);
-  }
-}
-
-function codegenValueBlock(
-  cx: Context,
-  block: ReactiveValueBlock
-): t.Expression {
-  const body = codegenBlock(cx, block.instructions).body;
-  const expressions = body.map((stmt) => {
-    if (stmt.type === "ExpressionStatement") {
-      return stmt.expression;
-    } else {
-      todoInvariant(false, `Handle conversion of ${stmt.type} to expression`);
-    }
-  });
-  if (block.last !== null) {
-    const value = codegenInstructionValue(cx, block.last.value);
-    expressions.push(value);
-  }
-  invariant(
-    expressions.length !== 0,
-    "Expected a value block to produce one or more expressions"
-  );
-  if (expressions.length === 1) {
-    return expressions[0];
-  } else {
-    return t.sequenceExpression(expressions);
   }
 }
 

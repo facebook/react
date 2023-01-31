@@ -7,18 +7,15 @@
 
 import {
   InstructionId,
-  InstructionValue,
   LValue,
   Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
-  ReactiveScope,
   ReactiveScopeBlock,
   ReactiveTerminal,
   ReactiveTerminalStatement,
   ReactiveValue,
-  ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
@@ -142,14 +139,6 @@ export class ReactiveFunctionVisitor<TState = void> {
     }
   }
 
-  visitValueBlock(block: ReactiveValueBlock, state: TState): void {
-    // NOTE: intentionally bypass calling visitBlock
-    this.traverseBlock(block.instructions, state);
-    if (block.last !== null) {
-      this.visitPlace(block.last.id, block.last.value, state);
-    }
-  }
-
   visitScope(scope: ReactiveScopeBlock, state: TState): void {
     this.traverseScope(scope, state);
   }
@@ -184,69 +173,6 @@ export class ReactiveFunctionVisitor<TState = void> {
       }
     }
   }
-}
-
-export function visitFunction(
-  fn: ReactiveFunction,
-  visitors: {
-    visitValue?: (value: InstructionValue) => void;
-    visitInstruction?: (instr: ReactiveInstruction) => void;
-    visitTerminal?: (terminal: ReactiveTerminal) => void;
-    visitScope?: (scope: ReactiveScope) => void;
-  }
-): void {
-  const { visitValue, visitInstruction, visitTerminal, visitScope } = visitors;
-  function visitBlock(block: ReactiveBlock): void {
-    for (const item of block) {
-      switch (item.kind) {
-        case "instruction": {
-          if (visitValue) {
-            for (const operand of eachReactiveValueOperand(
-              item.instruction.value
-            )) {
-              visitValue(operand);
-            }
-          }
-          if (visitInstruction) {
-            visitInstruction(item.instruction);
-          }
-          break;
-        }
-        case "terminal": {
-          if (visitValue) {
-            eachTerminalOperand(item.terminal, (operand) => {
-              visitValue(operand);
-            });
-          }
-          if (visitTerminal) {
-            visitTerminal(item.terminal);
-          }
-          eachTerminalBlock(item.terminal, visitBlock, visitValueBlock);
-          break;
-        }
-        case "scope": {
-          if (visitScope) {
-            visitScope(item.scope);
-          }
-          visitBlock(item.instructions);
-          break;
-        }
-        default: {
-          assertExhaustive(
-            item,
-            `Unexpected item kind '${(item as any).kind}'`
-          );
-        }
-      }
-    }
-  }
-  function visitValueBlock(block: ReactiveValueBlock): void {
-    visitBlock(block.instructions);
-    if (block.last !== null && visitValue) {
-      visitValue(block.last.value);
-    }
-  }
-  visitBlock(fn.body);
 }
 
 export function* eachReactiveValueOperand(
@@ -307,103 +233,6 @@ export function mapTerminalBlocks(
       for (const case_ of terminal.cases) {
         if (case_.block !== undefined) {
           case_.block = fn(case_.block);
-        }
-      }
-      break;
-    }
-    default: {
-      assertExhaustive(
-        terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
-      );
-    }
-  }
-}
-
-export function eachTerminalBlock(
-  terminal: ReactiveTerminal,
-  visitBlock: (block: ReactiveBlock) => void,
-  visitValueBlock: (block: ReactiveValueBlock) => void
-): void {
-  switch (terminal.kind) {
-    case "break":
-    case "continue":
-    case "return":
-    case "throw": {
-      break;
-    }
-    case "for": {
-      // TODO
-      // visitValueBlock(terminal.init);
-      // visitValueBlock(terminal.test);
-      // visitValueBlock(terminal.update);
-      visitBlock(terminal.loop);
-      break;
-    }
-    case "while": {
-      // TODO
-      // visitValueBlock(terminal.test);
-      visitBlock(terminal.loop);
-      break;
-    }
-    case "if": {
-      visitBlock(terminal.consequent);
-      if (terminal.alternate !== null) {
-        visitBlock(terminal.alternate);
-      }
-      break;
-    }
-    case "switch": {
-      for (const case_ of terminal.cases) {
-        if (case_.block !== undefined) {
-          visitBlock(case_.block);
-        }
-      }
-      break;
-    }
-    default: {
-      assertExhaustive(
-        terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
-      );
-    }
-  }
-}
-
-export function eachTerminalOperand(
-  terminal: ReactiveTerminal,
-  fn: (place: Place) => void
-): void {
-  switch (terminal.kind) {
-    case "break":
-    case "continue": {
-      break;
-    }
-    case "return": {
-      if (terminal.value !== null) {
-        fn(terminal.value);
-      }
-      break;
-    }
-    case "throw": {
-      fn(terminal.value);
-      break;
-    }
-    case "for": {
-      break;
-    }
-    case "while": {
-      break;
-    }
-    case "if": {
-      fn(terminal.test);
-      break;
-    }
-    case "switch": {
-      fn(terminal.test);
-      for (const case_ of terminal.cases) {
-        if (case_.test !== null) {
-          fn(case_.test);
         }
       }
       break;

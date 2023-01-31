@@ -12,7 +12,6 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScope,
-  ReactiveValueBlock,
   ScopeId,
 } from "../HIR/HIR";
 import { getPlaceScope } from "./BuildReactiveBlocks";
@@ -89,11 +88,6 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
     state.enter(() => {
       this.traverseBlock(block, state);
     }, "block");
-  }
-  override visitValueBlock(block: ReactiveValueBlock, state: Context): void {
-    state.enter(() => {
-      super.visitValueBlock(block, state);
-    }, "value");
   }
 }
 

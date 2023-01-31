@@ -59,15 +59,6 @@ export type ReactiveScopeBlock = {
 
 export type ReactiveBlock = Array<ReactiveStatement>;
 
-export type ReactiveValueBlock = {
-  kind: "value-block";
-  instructions: ReactiveBlock;
-  last: {
-    value: Place;
-    id: InstructionId;
-  } | null;
-};
-
 export type ReactiveStatement =
   | ReactiveInstructionStatement
   | ReactiveTerminalStatement

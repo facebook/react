@@ -19,7 +19,6 @@ import {
   ReactiveScope,
   ReactiveScopeDependency,
   ReactiveValue,
-  ReactiveValueBlock,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
@@ -271,17 +270,6 @@ function visit(context: Context, block: ReactiveBlock): void {
         assertExhaustive(item, `Unexpected item`);
       }
     }
-  }
-}
-
-function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
-  for (const initItem of block.instructions) {
-    if (initItem.kind === "instruction") {
-      visitInstruction(context, initItem.instruction);
-    }
-  }
-  if (block.last !== null) {
-    visitInstructionValue(context, block.last.value, null);
   }
 }
 

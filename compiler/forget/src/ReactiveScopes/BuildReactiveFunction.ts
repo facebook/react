@@ -12,10 +12,8 @@ import {
   GotoVariant,
   HIR,
   InstructionId,
-  InstructionValue,
   Place,
   ReactiveBlock,
-  ReactiveValueBlock,
   SourceLocation,
 } from "../HIR";
 import {
@@ -253,7 +251,7 @@ class Driver {
         );
         scheduleIds.push(scheduleId);
 
-        const testValue = this.visitValueBlockNew(
+        const testValue = this.visitValueBlock(
           terminal.test,
           terminal.loc
         ).value;
@@ -307,7 +305,7 @@ class Driver {
         );
         scheduleIds.push(scheduleId);
 
-        const init = this.visitValueBlockNew(terminal.init, terminal.loc);
+        const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
         if (initValue.kind === "SequenceExpression") {
@@ -331,12 +329,12 @@ class Driver {
           };
         }
 
-        const testValue = this.visitValueBlockNew(
+        const testValue = this.visitValueBlock(
           terminal.test,
           terminal.loc
         ).value;
 
-        const updateValue = this.visitValueBlockNew(
+        const updateValue = this.visitValueBlock(
           terminal.update,
           terminal.loc
         ).value;
@@ -420,7 +418,7 @@ class Driver {
         const scheduleId = this.cx.schedule(fallthroughId, "if");
         scheduleIds.push(scheduleId);
 
-        const { place, value } = this.visitValueTerminal(terminal);
+        const { place, value } = this.visitValueBlockTerminal(terminal);
         blockValue.push({
           kind: "instruction",
           instruction: {
@@ -469,7 +467,7 @@ class Driver {
     }
   }
 
-  visitValueBlockNew(
+  visitValueBlock(
     id: BlockId,
     loc: SourceLocation
   ): { block: BlockId; value: ReactiveValue; place: Place } {
@@ -483,7 +481,7 @@ class Driver {
     ) {
       block = defaultBlock;
     } else {
-      const result = this.visitValueTerminal(defaultBlock.terminal);
+      const result = this.visitValueBlockTerminal(defaultBlock.terminal);
       block = this.cx.ir.blocks.get(result.fallthrough)!;
       place = result.place;
       value = result.value;
@@ -531,7 +529,7 @@ class Driver {
     }
   }
 
-  visitValueTerminal(terminal: Terminal): {
+  visitValueBlockTerminal(terminal: Terminal): {
     value: ReactiveValue;
     place: Place;
     fallthrough: BlockId;
@@ -545,7 +543,9 @@ class Driver {
         if (defaultTestBlock.terminal.kind === "branch") {
           testBlock = defaultTestBlock;
         } else {
-          const leftResult = this.visitValueTerminal(defaultTestBlock.terminal);
+          const leftResult = this.visitValueBlockTerminal(
+            defaultTestBlock.terminal
+          );
           testBlock = this.cx.ir.blocks.get(leftResult.fallthrough)!;
           leftPlace = leftResult.place;
           leftValue = leftResult.value;
@@ -583,7 +583,7 @@ class Driver {
           };
           left = sequence;
         }
-        const right = this.visitValueBlockNew(
+        const right = this.visitValueBlock(
           testBlock.terminal.alternate,
           terminal.loc
         );
@@ -605,18 +605,18 @@ class Driver {
         };
       }
       case "ternary": {
-        const test = this.visitValueBlockNew(terminal.test, terminal.loc);
+        const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         invariant(
           testBlock.terminal.kind === "branch",
           "Unexpected terminal kind '%s' for ternary test block",
           testBlock.terminal.kind
         );
-        const consequent = this.visitValueBlockNew(
+        const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
           terminal.loc
         );
-        const alternate = this.visitValueBlockNew(
+        const alternate = this.visitValueBlock(
           testBlock.terminal.alternate,
           terminal.loc
         );
@@ -645,44 +645,6 @@ class Driver {
         );
       }
     }
-  }
-
-  visitInitBlock(parent: ReactiveBlock, block: BasicBlock): ReactiveValueBlock {
-    const initBlock: ReactiveValueBlock = {
-      kind: "value-block",
-      instructions: [],
-      last: null,
-    };
-    for (const instruction of block.instructions) {
-      initBlock.instructions.push({
-        kind: "instruction",
-        instruction,
-      });
-    }
-    return initBlock;
-  }
-
-  visitValueBlock(
-    parent: ReactiveBlock,
-    block: BasicBlock,
-    terminalValue?: { value: Place; id: InstructionId }
-  ): ReactiveValueBlock {
-    const valueBlock: ReactiveValueBlock = {
-      kind: "value-block",
-      instructions: [],
-      last: terminalValue ?? null,
-    };
-    let lastValue: { value: InstructionValue; id: InstructionId } | null = null;
-    if (terminalValue != null) {
-      lastValue = terminalValue;
-    }
-    for (const instruction of block.instructions) {
-      valueBlock.instructions.push({
-        kind: "instruction",
-        instruction,
-      });
-    }
-    return valueBlock;
   }
 
   emptyBlock(): ReactiveBlock {
