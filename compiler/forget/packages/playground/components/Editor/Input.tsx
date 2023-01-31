@@ -98,7 +98,7 @@ export default function Input({ errors }: Props) {
     <div className="relative flex flex-col flex-none border-r border-gray-200">
       {/* Restrict MonacoEditor's height, since the config autoLayout:true
           will grow the editor to fit within parent element */}
-      <div className="w-full h-screen">
+      <div className="w-full" style={{ height: "calc(100vh - 3.5rem)" }}>
         <MonacoEditor
           path={"index.js"}
           // .js and .jsx files are specified to be TS so that Monaco can actually

@@ -150,7 +150,7 @@ export default function Editor() {
 
   return (
     <>
-      <div className="flex basis h-full">
+      <div className="flex basis relative top-14">
         <div
           style={{ minWidth: 650 }}
           className={clsx("relative sm:basis-1/4")}

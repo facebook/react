@@ -46,7 +46,7 @@ export default function Header() {
   };
 
   return (
-    <div className="flex items-center justify-between w-screen px-5 py-3 border-b border-gray-200">
+    <div className="flex items-center justify-between w-screen px-5 py-3 border-b border-gray-200 fixed bg-white z-10 h-14">
       <div className="flex items-center flex-none h-full gap-2 text-lg">
         <Logo
           className={clsx(
