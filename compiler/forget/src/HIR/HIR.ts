@@ -171,7 +171,7 @@ export type ReactiveWhileTerminal = {
 };
 export type ReactiveForTerminal = {
   kind: "for";
-  init: ReactiveValueBlock;
+  init: ReactiveValue;
   test: ReactiveValue;
   update: ReactiveValue;
   loop: ReactiveBlock;

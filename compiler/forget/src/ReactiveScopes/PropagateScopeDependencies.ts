@@ -230,7 +230,7 @@ function visit(context: Context, block: ReactiveBlock): void {
             break;
           }
           case "for": {
-            visitValueBlock(context, terminal.init);
+            visitReactiveValue(context, terminal.init);
             visitReactiveValue(context, terminal.test);
             visitReactiveValue(context, terminal.update);
             visit(context, terminal.loop);

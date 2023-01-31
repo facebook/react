@@ -340,26 +340,24 @@ function codegenInstructionNullable(
 
 function codegenForInit(
   cx: Context,
-  init: ReactiveValueBlock
+  init: ReactiveValue
 ): t.Expression | t.VariableDeclaration | null {
-  const body = codegenBlock(cx, init.instructions).body;
-  if (init.last !== null) {
-    invariant(
-      body.length === 0,
-      "Expected for init block to produce only temporaries"
-    );
-    return codegenInstructionValue(cx, init.last.value);
-  } else {
-    invariant(
-      body.length === 1,
-      "Expected for init to have a variable declaration"
-    );
+  if (init.kind === "SequenceExpression") {
+    const body = codegenBlock(
+      cx,
+      init.instructions.map((instruction) => ({
+        kind: "instruction",
+        instruction,
+      }))
+    ).body;
     const declaration = body[0]!;
     invariant(
       declaration.type === "VariableDeclaration",
       "Expected a variable declaration"
     );
     return declaration;
+  } else {
+    return codegenInstructionValue(cx, init);
   }
 }
 

@@ -307,13 +307,29 @@ class Driver {
         );
         scheduleIds.push(scheduleId);
 
-        const initBlock = this.cx.ir.blocks.get(terminal.init)!;
-        const initTerminal = initBlock.terminal;
-        invariant(
-          initTerminal.kind === "goto",
-          "Expected for loop init block to end in a goto"
-        );
-        const initValue = this.visitInitBlock(blockValue, initBlock);
+        const init = this.visitValueBlockNew(terminal.init, terminal.loc);
+        const initBlock = this.cx.ir.blocks.get(init.block)!;
+        let initValue = init.value;
+        if (initValue.kind === "SequenceExpression") {
+          const last = initBlock.instructions.at(-1)!;
+          initValue.instructions.push(last);
+          initValue.value = {
+            kind: "Primitive",
+            value: undefined,
+            loc: terminal.loc,
+          };
+        } else {
+          initValue = {
+            kind: "SequenceExpression",
+            instructions: [initBlock.instructions.at(-1)!],
+            loc: terminal.loc,
+            value: {
+              kind: "Primitive",
+              value: undefined,
+              loc: terminal.loc,
+            },
+          };
+        }
 
         const testValue = this.visitValueBlockNew(
           terminal.test,
