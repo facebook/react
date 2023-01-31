@@ -15,7 +15,6 @@ import {
   createResponse,
   resolveModel,
   resolveModule,
-  resolveSymbol,
   resolveErrorDev,
   resolveErrorProd,
   close,
@@ -31,9 +30,6 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
   } else if (chunk[0] === 'I') {
     // $FlowFixMe unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === 'S') {
-    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-    resolveSymbol(response, chunk[1], chunk[2]);
   } else {
     if (__DEV__) {
       resolveErrorDev(

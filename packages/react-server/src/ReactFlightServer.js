@@ -39,7 +39,6 @@ import {
   processModelChunk,
   processModuleChunk,
   processProviderChunk,
-  processSymbolChunk,
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
@@ -418,6 +417,10 @@ function serializeByValueID(id: number): string {
 
 function serializeByRefID(id: number): string {
   return '$L' + id.toString(16);
+}
+
+function serializeSymbolReference(name: string): string {
+  return '$S' + name;
 }
 
 function serializeClientReference(
@@ -1109,7 +1112,8 @@ function emitModuleChunk(
 }
 
 function emitSymbolChunk(request: Request, id: number, name: string): void {
-  const processedChunk = processSymbolChunk(request, id, name);
+  const symbolReference = serializeSymbolReference(name);
+  const processedChunk = processReferenceChunk(request, id, symbolReference);
   request.completedModuleChunks.push(processedChunk);
 }
 

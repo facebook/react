@@ -179,14 +179,6 @@ export function processProviderChunk(
   return ['P', id, contextName];
 }
 
-export function processSymbolChunk(
-  request: Request,
-  id: number,
-  name: string,
-): Chunk {
-  return ['S', id, name];
-}
-
 export function scheduleWork(callback: () => void) {
   callback();
 }

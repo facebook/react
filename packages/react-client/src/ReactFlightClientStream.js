@@ -15,7 +15,6 @@ import {
   resolveModule,
   resolveModel,
   resolveProvider,
-  resolveSymbol,
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
@@ -50,10 +49,6 @@ function processFullRow(response: Response, row: string): void {
     }
     case 'P': {
       resolveProvider(response, id, row.substring(colon + 2));
-      return;
-    }
-    case 'S': {
-      resolveSymbol(response, id, JSON.parse(row.substring(colon + 2)));
       return;
     }
     case 'E': {

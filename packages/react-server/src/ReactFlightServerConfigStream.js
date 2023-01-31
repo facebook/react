@@ -160,16 +160,6 @@ export function processProviderChunk(
   return stringToChunk(row);
 }
 
-export function processSymbolChunk(
-  request: Request,
-  id: number,
-  name: string,
-): Chunk {
-  const json = stringify(name);
-  const row = serializeRowHeader('S', id) + json + '\n';
-  return stringToChunk(row);
-}
-
 export {
   scheduleWork,
   flushBuffered,

@@ -501,6 +501,9 @@ export function parseModelString(
         // When passed into React, we'll know how to suspend on this.
         return createLazyChunkWrapper(chunk);
       }
+      case 'S': {
+        return Symbol.for(value.substring(2));
+      }
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
@@ -629,17 +632,6 @@ export function resolveModule(
       resolveModuleChunk(chunk, moduleReference);
     }
   }
-}
-
-export function resolveSymbol(
-  response: Response,
-  id: number,
-  name: string,
-): void {
-  const chunks = response._chunks;
-  // We assume that we'll always emit the symbol before anything references it
-  // to save a few bytes.
-  chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
 type ErrorWithDigest = Error & {digest?: string};
