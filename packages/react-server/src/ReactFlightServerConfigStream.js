@@ -127,7 +127,7 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json: string = stringify(model, request.toJSON);
-  const row = serializeRowHeader('J', id) + json + '\n';
+  const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
 }
 
@@ -137,7 +137,7 @@ export function processReferenceChunk(
   reference: string,
 ): Chunk {
   const json = stringify(reference);
-  const row = serializeRowHeader('J', id) + json + '\n';
+  const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
 }
 

@@ -18,7 +18,7 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 export type RowEncoding =
-  | ['J', number, JSONValue]
+  | ['O', number, JSONValue]
   | ['M', number, ModuleMetaData]
   | ['P', number, string]
   | ['S', number, string]

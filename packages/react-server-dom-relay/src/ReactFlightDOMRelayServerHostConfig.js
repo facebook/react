@@ -151,7 +151,7 @@ export function processModelChunk(
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);
-  return ['J', id, json];
+  return ['O', id, json];
 }
 
 export function processReferenceChunk(
@@ -159,7 +159,7 @@ export function processReferenceChunk(
   id: number,
   reference: string,
 ): Chunk {
-  return ['J', id, reference];
+  return ['O', id, reference];
 }
 
 export function processModuleChunk(

@@ -43,26 +43,21 @@ function processFullRow(response: Response, row: string): void {
   // parsing the row as text.
   // switch (tag) {
   // }
-  const text = row.substring(colon + 2);
   switch (tag) {
-    case 'J': {
-      resolveModel(response, id, text);
-      return;
-    }
     case 'M': {
-      resolveModule(response, id, text);
+      resolveModule(response, id, row.substring(colon + 2));
       return;
     }
     case 'P': {
-      resolveProvider(response, id, text);
+      resolveProvider(response, id, row.substring(colon + 2));
       return;
     }
     case 'S': {
-      resolveSymbol(response, id, JSON.parse(text));
+      resolveSymbol(response, id, JSON.parse(row.substring(colon + 2)));
       return;
     }
     case 'E': {
-      const errorInfo = JSON.parse(text);
+      const errorInfo = JSON.parse(row.substring(colon + 2));
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -77,9 +72,9 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     default: {
-      throw new Error(
-        "Error parsing the data. It's probably an error code or network corruption.",
-      );
+      // We assume anything else is JSON.
+      resolveModel(response, id, row.substring(colon + 1));
+      return;
     }
   }
 }
