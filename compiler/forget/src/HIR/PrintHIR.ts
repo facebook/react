@@ -79,6 +79,7 @@ export function printMixedHIR(
     case "branch":
     case "if":
     case "logical":
+    case "ternary":
     case "return":
     case "switch":
     case "throw":
@@ -144,6 +145,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "logical": {
       value = `[${terminal.id}] Logical ${terminal.operator} test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "ternary": {
+      value = `[${terminal.id}] Ternary test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "throw": {

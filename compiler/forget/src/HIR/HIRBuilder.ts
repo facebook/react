@@ -562,6 +562,7 @@ export function reversePostorderBlocks(func: HIR): void {
         }
         break;
       }
+      case "ternary":
       case "logical": {
         visit(terminal.test);
         break;

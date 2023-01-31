@@ -406,6 +406,7 @@ class Driver {
 
         break;
       }
+      case "ternary":
       case "logical": {
         const fallthroughId = terminal.fallthrough;
         invariant(
