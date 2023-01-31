@@ -80,7 +80,7 @@ export {
 const stringify = JSON.stringify;
 
 function serializeRowHeader(tag: string, id: number) {
-  return tag + id.toString(16) + ':';
+  return id.toString(16) + ':' + tag;
 }
 
 export function processErrorChunkProd(

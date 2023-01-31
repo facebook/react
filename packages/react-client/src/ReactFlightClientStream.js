@@ -36,14 +36,14 @@ function processFullRow(response: Response, row: string): void {
   if (row === '') {
     return;
   }
-  const tag = row[0];
+  const colon = row.indexOf(':', 0);
+  const id = parseInt(row.substring(0, colon), 16);
+  const tag = row[colon + 1];
   // When tags that are not text are added, check them here before
   // parsing the row as text.
   // switch (tag) {
   // }
-  const colon = row.indexOf(':', 1);
-  const id = parseInt(row.substring(1, colon), 16);
-  const text = row.substring(colon + 1);
+  const text = row.substring(colon + 2);
   switch (tag) {
     case 'J': {
       resolveModel(response, id, text);
