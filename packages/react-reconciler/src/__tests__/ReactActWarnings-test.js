@@ -311,9 +311,7 @@ describe('act warnings', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       // This is a retry, not a ping, because we already showed a fallback.
-      expect(() =>
-        resolveText('Async'),
-      ).toErrorDev(
+      expect(() => resolveText('Async')).toErrorDev(
         'A suspended resource finished loading inside a test, but the event ' +
           'was not wrapped in act(...)',
         {withoutStack: true},
@@ -349,9 +347,7 @@ describe('act warnings', () => {
       expect(root).toMatchRenderedOutput('(empty)');
 
       // This is a ping, not a retry, because no fallback is showing.
-      expect(() =>
-        resolveText('Async'),
-      ).toErrorDev(
+      expect(() => resolveText('Async')).toErrorDev(
         'A suspended resource finished loading inside a test, but the event ' +
           'was not wrapped in act(...)',
         {withoutStack: true},

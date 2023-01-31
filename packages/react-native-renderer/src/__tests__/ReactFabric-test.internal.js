@@ -37,8 +37,9 @@ describe('ReactFabric', () => {
     React = require('react');
     StrictMode = React.StrictMode;
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
 
     act = require('jest-react').act;
   });
@@ -241,9 +242,11 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
     ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
     expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
-    expect(
-      nativeFabricUIManager.dispatchCommand,
-    ).toHaveBeenCalledWith(expect.any(Object), 'updateCommand', [10, 20]);
+    expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledWith(
+      expect.any(Object),
+      'updateCommand',
+      [10, 20],
+    );
   });
 
   it('should warn and no-op if calling dispatchCommand on non native refs', () => {
@@ -350,7 +353,7 @@ describe('ReactFabric', () => {
     const c = ReactFabric.render(
       <View foo="foo" ref={v => (a = v)} />,
       11,
-      function() {
+      function () {
         b = this;
       },
     );
@@ -471,7 +474,7 @@ describe('ReactFabric', () => {
     }));
 
     const snapshots = [];
-    nativeFabricUIManager.completeRoot.mockImplementation(function(
+    nativeFabricUIManager.completeRoot.mockImplementation(function (
       rootTag,
       newChildSet,
     ) {
@@ -597,16 +600,10 @@ describe('ReactFabric', () => {
       1,
     );
 
-    const [
-      ,
-      ,
-      ,
-      ,
-      instanceHandle,
-    ] = nativeFabricUIManager.createNode.mock.calls[0];
-    const [
-      dispatchEvent,
-    ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
+    const [, , , , instanceHandle] =
+      nativeFabricUIManager.createNode.mock.calls[0];
+    const [dispatchEvent] =
+      nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
     const touchEvent = {
       touches: [],
@@ -694,16 +691,10 @@ describe('ReactFabric', () => {
       expect(nativeFabricUIManager.registerEventHandler.mock.calls.length).toBe(
         1,
       );
-      const [
-        ,
-        ,
-        ,
-        ,
-        childInstance,
-      ] = nativeFabricUIManager.createNode.mock.calls[0];
-      const [
-        dispatchEvent,
-      ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
+      const [, , , , childInstance] =
+        nativeFabricUIManager.createNode.mock.calls[0];
+      const [dispatchEvent] =
+        nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
       dispatchEvent(childInstance, 'topDefaultBubblingEvent', event);
       expect(targetBubble).toHaveBeenCalledTimes(1);
@@ -750,15 +741,10 @@ describe('ReactFabric', () => {
     }));
 
     function getViewById(id) {
-      const [
-        reactTag,
-        ,
-        ,
-        ,
-        instanceHandle,
-      ] = nativeFabricUIManager.createNode.mock.calls.find(
-        args => args[3] && args[3].id === id,
-      );
+      const [reactTag, , , , instanceHandle] =
+        nativeFabricUIManager.createNode.mock.calls.find(
+          args => args[3] && args[3].id === id,
+        );
 
       return {reactTag, instanceHandle};
     }
@@ -796,9 +782,8 @@ describe('ReactFabric', () => {
       );
     });
 
-    const [
-      dispatchEvent,
-    ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
+    const [dispatchEvent] =
+      nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
     dispatchEvent(getViewById('one').instanceHandle, 'topTouchStart', {
       target: getViewById('one').reactTag,

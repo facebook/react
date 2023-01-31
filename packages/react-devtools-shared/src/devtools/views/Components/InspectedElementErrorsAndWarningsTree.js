@@ -40,10 +40,8 @@ export default function InspectedElementErrorsAndWarningsTree({
 }: Props): React.Node {
   const refresh = useCacheRefresh();
 
-  const [
-    isErrorsTransitionPending,
-    startClearErrorsTransition,
-  ] = useTransition();
+  const [isErrorsTransitionPending, startClearErrorsTransition] =
+    useTransition();
   const clearErrorsForInspectedElement = () => {
     const {id} = inspectedElement;
     const rendererID = store.getRendererIDForElement(id);
@@ -59,10 +57,8 @@ export default function InspectedElementErrorsAndWarningsTree({
     }
   };
 
-  const [
-    isWarningsTransitionPending,
-    startClearWarningsTransition,
-  ] = useTransition();
+  const [isWarningsTransitionPending, startClearWarningsTransition] =
+    useTransition();
   const clearWarningsForInspectedElement = () => {
     const {id} = inspectedElement;
     const rendererID = store.getRendererIDForElement(id);

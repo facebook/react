@@ -66,10 +66,10 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
         ),
       );
     }
-    useSyncExternalStore = require('use-sync-external-store/shim')
-      .useSyncExternalStore;
-    useSyncExternalStoreWithSelector = require('use-sync-external-store/shim/with-selector')
-      .useSyncExternalStoreWithSelector;
+    useSyncExternalStore =
+      require('use-sync-external-store/shim').useSyncExternalStore;
+    useSyncExternalStoreWithSelector =
+      require('use-sync-external-store/shim/with-selector').useSyncExternalStoreWithSelector;
   });
 
   function Text({text}) {

@@ -40,7 +40,7 @@ describe('SelectEventPlugin', () => {
 
     // Pass `onMouseDown` so React registers a top-level listener.
     const node = ReactDOM.render(
-      <input type="text" onMouseDown={function() {}} />,
+      <input type="text" onMouseDown={function () {}} />,
       container,
     );
 
@@ -177,7 +177,7 @@ describe('SelectEventPlugin', () => {
     expect(select).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle selectionchange events', function() {
+  it('should handle selectionchange events', function () {
     const onSelect = jest.fn();
     const node = ReactDOM.render(
       <input type="text" onSelect={onSelect} />,

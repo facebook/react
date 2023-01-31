@@ -21,13 +21,13 @@ if (__DEV__) {
   let warnedForNaNValue = false;
   let warnedForInfinityValue = false;
 
-  const camelize = function(string) {
-    return string.replace(hyphenPattern, function(_, character) {
+  const camelize = function (string) {
+    return string.replace(hyphenPattern, function (_, character) {
       return character.toUpperCase();
     });
   };
 
-  const warnHyphenatedStyleName = function(name) {
+  const warnHyphenatedStyleName = function (name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -43,7 +43,7 @@ if (__DEV__) {
     );
   };
 
-  const warnBadVendoredStyleName = function(name) {
+  const warnBadVendoredStyleName = function (name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -56,7 +56,7 @@ if (__DEV__) {
     );
   };
 
-  const warnStyleValueWithSemicolon = function(name, value) {
+  const warnStyleValueWithSemicolon = function (name, value) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -70,7 +70,7 @@ if (__DEV__) {
     );
   };
 
-  const warnStyleValueIsNaN = function(name, value) {
+  const warnStyleValueIsNaN = function (name, value) {
     if (warnedForNaNValue) {
       return;
     }
@@ -82,7 +82,7 @@ if (__DEV__) {
     );
   };
 
-  const warnStyleValueIsInfinity = function(name, value) {
+  const warnStyleValueIsInfinity = function (name, value) {
     if (warnedForInfinityValue) {
       return;
     }
@@ -94,7 +94,7 @@ if (__DEV__) {
     );
   };
 
-  warnValidStyle = function(name, value) {
+  warnValidStyle = function (name, value) {
     if (name.indexOf('-') > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {

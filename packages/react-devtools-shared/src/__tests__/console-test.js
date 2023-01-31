@@ -430,7 +430,7 @@ describe('console', () => {
   it('should be resilient to prepareStackTrace', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
 
-    Error.prepareStackTrace = function(error, callsites) {
+    Error.prepareStackTrace = function (error, callsites) {
       const stack = ['An error occurred:', error.message];
       for (let i = 0; i < callsites.length; i++) {
         const callsite = callsites[i];

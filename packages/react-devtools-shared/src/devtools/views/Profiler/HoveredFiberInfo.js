@@ -44,10 +44,8 @@ export default function HoveredFiberInfo({fiberData}: Props): React.Node {
   for (i = 0; i < commitIndices.length; i++) {
     const commitIndex = commitIndices[i];
     if (selectedCommitIndex === commitIndex) {
-      const {
-        fiberActualDurations,
-        fiberSelfDurations,
-      } = profilerStore.getCommitData(((rootID: any): number), commitIndex);
+      const {fiberActualDurations, fiberSelfDurations} =
+        profilerStore.getCommitData(((rootID: any): number), commitIndex);
       const actualDuration = fiberActualDurations.get(id) || 0;
       const selfDuration = fiberSelfDurations.get(id) || 0;
 

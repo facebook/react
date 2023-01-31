@@ -32,8 +32,9 @@ beforeEach(() => {
  */
 function mockRenderKeys(keyLists) {
   const ReactFabric = require('react-native-renderer/fabric');
-  const createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-    .ReactNativeViewConfigRegistry.register;
+  const createReactNativeComponentClass =
+    require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
   const {act} = require('jest-react');
 
   const mockContainerTag = 11;

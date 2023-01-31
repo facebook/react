@@ -24,8 +24,8 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
-    ContinuousEventPriority = require('react-reconciler/constants')
-      .ContinuousEventPriority;
+    ContinuousEventPriority =
+      require('react-reconciler/constants').ContinuousEventPriority;
   });
 
   function span(prop) {
@@ -139,13 +139,7 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return (
-          <span
-            prop={Object.keys(this.state)
-              .sort()
-              .join('')}
-          />
-        );
+        return <span prop={Object.keys(this.state).sort().join('')} />;
       }
     }
 
@@ -250,13 +244,7 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return (
-          <span
-            prop={Object.keys(this.state)
-              .sort()
-              .join('')}
-          />
-        );
+        return <span prop={Object.keys(this.state).sort().join('')} />;
       }
     }
 

@@ -108,9 +108,7 @@ export function getNestedBoundingClientRect(
   }
 }
 
-export function getElementDimensions(
-  domElement: Element,
-): {
+export function getElementDimensions(domElement: Element): {
   borderBottom: number,
   borderLeft: number,
   borderRight: number,

@@ -225,7 +225,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-const createFiber = function(
+const createFiber = function (
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,

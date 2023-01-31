@@ -187,7 +187,7 @@ function coerceRef(
       ) {
         return current.ref;
       }
-      const ref = function(value: mixed) {
+      const ref = function (value: mixed) {
         const refs = resolvedInst.refs;
         if (value === null) {
           delete refs[stringRef];
@@ -1354,9 +1354,8 @@ function createChildReconciler(
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers: ChildReconciler = createChildReconciler(
-  true,
-);
+export const reconcileChildFibers: ChildReconciler =
+  createChildReconciler(true);
 export const mountChildFibers: ChildReconciler = createChildReconciler(false);
 
 export function cloneChildFibers(

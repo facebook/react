@@ -149,7 +149,8 @@ function extractAndLoadSourceMapJSON(
   const setterPromises = [];
   locationKeyToHookSourceAndMetadata.forEach(hookSourceAndMetadata => {
     const sourceMapRegex = / ?sourceMappingURL=([^\s'"]+)/gm;
-    const runtimeSourceCode = ((hookSourceAndMetadata.runtimeSourceCode: any): string);
+    const runtimeSourceCode =
+      ((hookSourceAndMetadata.runtimeSourceCode: any): string);
 
     // TODO (named hooks) Search for our custom metadata first.
     // If it's found, we should use it rather than source maps.
@@ -415,7 +416,8 @@ function initializeHookSourceAndMetadata(
   hooksList: Array<HooksNode>,
 ): LocationKeyToHookSourceAndMetadata {
   // Create map of unique source locations (file names plus line and column numbers) to metadata about hooks.
-  const locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata = new Map();
+  const locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata =
+    new Map();
   for (let i = 0; i < hooksList.length; i++) {
     const hook = hooksList[i];
 

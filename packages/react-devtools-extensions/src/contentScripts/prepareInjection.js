@@ -8,7 +8,7 @@ import {IS_FIREFOX} from '../utils';
 function injectScriptSync(src) {
   let code = '';
   const request = new XMLHttpRequest();
-  request.addEventListener('load', function() {
+  request.addEventListener('load', function () {
     code = this.responseText;
   });
   request.open('GET', src, false);
@@ -26,7 +26,7 @@ function injectScriptSync(src) {
 function injectScriptAsync(src) {
   const script = document.createElement('script');
   script.src = src;
-  script.onload = function() {
+  script.onload = function () {
     script.remove();
   };
   nullthrows(document.documentElement).appendChild(script);
@@ -105,7 +105,7 @@ window.addEventListener('message', function onMessage({data, source}) {
 // while navigating the history to a document that has not been destroyed yet,
 // replay the last detection result if the content script is active and the
 // document has been hidden and shown again.
-window.addEventListener('pageshow', function({target}) {
+window.addEventListener('pageshow', function ({target}) {
   if (!lastDetectionResult || target !== window.document) {
     return;
   }

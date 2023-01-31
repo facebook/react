@@ -41,7 +41,7 @@ if (__DEV__) {
 
   const didWarnOnInvalidCallback = new Set();
 
-  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+  warnOnInvalidCallback = function (callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
@@ -57,7 +57,7 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
+  warnOnUndefinedDerivedState = function (type: any, partialState: any) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {

@@ -109,15 +109,11 @@ export type DOMEventName =
   | 'waiting'
   | 'wheel';
 
-export const ANIMATION_END: DOMEventName = getVendorPrefixedEventName(
-  'animationend',
-);
-export const ANIMATION_ITERATION: DOMEventName = getVendorPrefixedEventName(
-  'animationiteration',
-);
-export const ANIMATION_START: DOMEventName = getVendorPrefixedEventName(
-  'animationstart',
-);
-export const TRANSITION_END: DOMEventName = getVendorPrefixedEventName(
-  'transitionend',
-);
+export const ANIMATION_END: DOMEventName =
+  getVendorPrefixedEventName('animationend');
+export const ANIMATION_ITERATION: DOMEventName =
+  getVendorPrefixedEventName('animationiteration');
+export const ANIMATION_START: DOMEventName =
+  getVendorPrefixedEventName('animationstart');
+export const TRANSITION_END: DOMEventName =
+  getVendorPrefixedEventName('transitionend');

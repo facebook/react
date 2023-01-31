@@ -124,9 +124,8 @@ function enterHydrationState(fiber: Fiber): boolean {
   }
 
   const parentInstance: Container = fiber.stateNode.containerInfo;
-  nextHydratableInstance = getFirstHydratableChildWithinContainer(
-    parentInstance,
-  );
+  nextHydratableInstance =
+    getFirstHydratableChildWithinContainer(parentInstance);
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
@@ -142,9 +141,8 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   if (!supportsHydration) {
     return false;
   }
-  nextHydratableInstance = getFirstHydratableChildWithinSuspenseInstance(
-    suspenseInstance,
-  );
+  nextHydratableInstance =
+    getFirstHydratableChildWithinSuspenseInstance(suspenseInstance);
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
@@ -367,9 +365,8 @@ function tryHydrate(fiber: Fiber, nextInstance: any) {
       return false;
     }
     case SuspenseComponent: {
-      const suspenseInstance: null | SuspenseInstance = canHydrateSuspenseInstance(
-        nextInstance,
-      );
+      const suspenseInstance: null | SuspenseInstance =
+        canHydrateSuspenseInstance(nextInstance);
       if (suspenseInstance !== null) {
         const suspenseState: SuspenseState = {
           dehydrated: suspenseInstance,
@@ -381,9 +378,8 @@ function tryHydrate(fiber: Fiber, nextInstance: any) {
         // This simplifies the code for getHostSibling and deleting nodes,
         // since it doesn't have to consider all Suspense boundaries and
         // check if they're dehydrated ones or not.
-        const dehydratedFragment = createFiberFromDehydratedFragment(
-          suspenseInstance,
-        );
+        const dehydratedFragment =
+          createFiberFromDehydratedFragment(suspenseInstance);
         dehydratedFragment.return = fiber;
         fiber.child = dehydratedFragment;
         hydrationParentFiber = fiber;

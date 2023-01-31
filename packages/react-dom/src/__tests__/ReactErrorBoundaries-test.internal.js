@@ -2460,7 +2460,7 @@ describe('ReactErrorBoundaries', () => {
       throw evilError;
     };
     Object.defineProperty(Throws, 'displayName', {
-      get: function() {
+      get: function () {
         throw new Error('gotta catch em all');
       },
     });

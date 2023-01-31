@@ -203,7 +203,8 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 
   expect(profilerStore.profilingData).not.toBeNull();
 
-  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  const profilingDataFrontendInitial =
+    ((profilerStore.profilingData: any): ProfilingDataFrontend);
   expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
@@ -301,7 +302,7 @@ export function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
     return '\n    in ' + name + ' (at **)';
   });
 }

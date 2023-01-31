@@ -64,8 +64,9 @@ describe('ReactCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactCurrentOwner = require('react')
-      .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+    ReactCurrentOwner =
+      require('react').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentOwner;
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
 
@@ -378,7 +379,7 @@ describe('ReactCompositeComponent', () => {
 
       componentWillUnmount() {
         expect(() => {
-          this.setState({value: 2}, function() {
+          this.setState({value: 2}, function () {
             cbCalled = true;
           });
         }).not.toThrow();
@@ -874,7 +875,7 @@ describe('ReactCompositeComponent', () => {
     expect(childInstance).toBeNull();
 
     expect(parentInstance.state.flag).toBe(false);
-    ReactDOM.unstable_batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function () {
       parentInstance.setState({flag: true});
     });
     expect(parentInstance.state.flag).toBe(true);
@@ -1271,10 +1272,10 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should support objects with prototypes as state', () => {
-    const NotActuallyImmutable = function(str) {
+    const NotActuallyImmutable = function (str) {
       this.str = str;
     };
-    NotActuallyImmutable.prototype.amIImmutable = function() {
+    NotActuallyImmutable.prototype.amIImmutable = function () {
       return true;
     };
     class Moo extends React.Component {
@@ -1304,7 +1305,7 @@ describe('ReactCompositeComponent', () => {
 
     // When more than one state update is enqueued, we have the same behavior
     const fifthState = new NotActuallyImmutable('fifth');
-    ReactDOM.unstable_batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function () {
       moo.setState({str: 'fourth'});
       moo._replaceState(fifthState);
     });
@@ -1312,7 +1313,7 @@ describe('ReactCompositeComponent', () => {
 
     // When more than one state update is enqueued, we have the same behavior
     const sixthState = new NotActuallyImmutable('sixth');
-    ReactDOM.unstable_batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function () {
       moo._replaceState(sixthState);
       moo.setState({str: 'seventh'});
     });

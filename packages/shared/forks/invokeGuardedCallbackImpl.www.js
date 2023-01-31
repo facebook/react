@@ -16,7 +16,7 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== 'function') {
   );
 }
 
-const invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
+const invokeGuardedCallbackImpl = function <A, B, C, D, E, F, Context>(
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
   context: Context,

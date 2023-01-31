@@ -10,7 +10,7 @@ babelRegister({
   babelrc: false,
   ignore: [
     /\/(build|node_modules)\//,
-    function(file) {
+    function (file) {
       if ((path.dirname(file) + '/').startsWith(__dirname + '/')) {
         // Ignore everything in this folder
         // because it's a mix of CJS and ESM
@@ -28,11 +28,11 @@ const express = require('express');
 const app = express();
 
 // Application
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
   require('./handler.server.js')(req, res);
 });
 
-app.get('/todos', function(req, res) {
+app.get('/todos', function (req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json([
     {
@@ -50,7 +50,7 @@ app.listen(3001, () => {
   console.log('Flight Server listening on port 3001...');
 });
 
-app.on('error', function(error) {
+app.on('error', function (error) {
   if (error.syscall !== 'listen') {
     throw error;
   }

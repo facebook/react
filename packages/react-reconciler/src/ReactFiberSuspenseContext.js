@@ -19,9 +19,8 @@ import {OffscreenComponent} from './ReactWorkTags';
 
 // The Suspense handler is the boundary that should capture if something
 // suspends, i.e. it's the nearest `catch` block on the stack.
-const suspenseHandlerStackCursor: StackCursor<Fiber | null> = createCursor(
-  null,
-);
+const suspenseHandlerStackCursor: StackCursor<Fiber | null> =
+  createCursor(null);
 
 // Represents the outermost boundary that is not visible in the current tree.
 // Everything above this is the "shell". When this is null, it means we're
