@@ -31,11 +31,6 @@ import {
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
-import {
-  printInstructionValue,
-  printPlace,
-  printTerminal,
-} from "../HIR/PrintHIR";
 import { mapInstructionOperands } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -477,16 +472,16 @@ class Driver {
     switch (terminal.kind) {
       case "logical": {
         let testBlock: BasicBlock;
-        let leftValue: ReactiveValue | null = null;
         let leftPlace: Place | null = null;
+        let leftValue: ReactiveValue | null = null;
         const defaultTestBlock = this.cx.ir.blocks.get(terminal.test)!;
         if (defaultTestBlock.terminal.kind === "branch") {
           testBlock = defaultTestBlock;
         } else {
           const leftResult = this.visitValueTerminal(defaultTestBlock.terminal);
           testBlock = this.cx.ir.blocks.get(leftResult.fallthrough)!;
-          leftValue = leftResult.value;
           leftPlace = leftResult.place;
+          leftValue = leftResult.value;
         }
 
         invariant(
@@ -498,9 +493,32 @@ class Driver {
           testBlock.instructions;
         const leftBlock = this.cx.ir.blocks.get(testBlock.terminal.consequent)!;
         leftInstructions.push(...leftBlock.instructions);
-        // TODO: If right block ends in a value terminal, recursively process with visitValueTerminal
-        // similar to handling for the compound lhs case.
-        const rightBlock = this.cx.ir.blocks.get(testBlock.terminal.alternate)!;
+        if (leftPlace !== null && leftValue !== null) {
+          leftInstructions.forEach((instr) =>
+            mapInstructionOperands(instr as Instruction, (place) => {
+              return place.identifier === leftPlace!.identifier
+                ? (leftValue as Place)
+                : place;
+            })
+          );
+        }
+
+        let rightBlock: BasicBlock;
+        let rightValue: ReactiveValue | null = null;
+        let rightPlace: Place | null = null;
+        const defaultRightBlock = this.cx.ir.blocks.get(
+          testBlock.terminal.alternate
+        )!;
+        if (defaultRightBlock.terminal.kind === "goto") {
+          rightBlock = defaultRightBlock;
+        } else {
+          const rightResult = this.visitValueTerminal(
+            defaultRightBlock.terminal
+          );
+          rightBlock = this.cx.ir.blocks.get(rightResult.fallthrough)!;
+          rightPlace = rightResult.place;
+          rightValue = rightResult.value;
+        }
         const rightInstructions: Array<ReactiveInstruction> =
           rightBlock.instructions;
         const place = leftInstructions.at(-1)!.lvalue!.place;
@@ -509,18 +527,11 @@ class Driver {
             rightInstructions.at(-1)!.lvalue!.place.identifier,
           "Expected both branches of a logical expression to store to the same temporary"
         );
-        if (leftPlace !== null) {
-          leftInstructions.forEach((instr) =>
-            mapInstructionOperands(instr as Instruction, (place) => {
-              return place.identifier === leftPlace!.identifier
-                ? (leftValue! as Place)
-                : place;
-            })
-          );
+        if (rightPlace !== null && rightValue !== null) {
           rightInstructions.forEach((instr) =>
             mapInstructionOperands(instr as Instruction, (place) => {
-              return place.identifier === leftPlace!.identifier
-                ? (leftValue! as Place)
+              return place.identifier === rightPlace!.identifier
+                ? (rightValue as Place)
                 : place;
             })
           );
@@ -557,15 +568,6 @@ class Driver {
           right,
           loc: terminal.loc,
         };
-        console.log(
-          printTerminal(terminal) +
-            " testBlock=" +
-            testBlock.id +
-            " " +
-            printPlace(place) +
-            "=" +
-            printInstructionValue(value)
-        );
         return {
           place: { ...place },
           value,
