@@ -30,6 +30,8 @@ if (!IS_FIREFOX) {
   ]);
 }
 
+import {EXTENSION_INSTALL_CHECK_MESSAGE} from './constants';
+
 chrome.runtime.onConnect.addListener(function(port) {
   let tab = null;
   let name = null;
@@ -143,6 +145,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     checkAndHandleRestrictedPageIfSo(tab);
   }
 });
+
+chrome.runtime.onMessageExternal.addListener(
+  (request, sender, sendResponse) => {
+    if (request === EXTENSION_INSTALL_CHECK_MESSAGE) {
+      sendResponse(true);
+    }
+  },
+);
 
 chrome.runtime.onMessage.addListener((request, sender) => {
   const tab = sender.tab;
