@@ -40,10 +40,8 @@ type ModuleLoaderFunction = () => Thenable<Module>;
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // Modules are static anyway.
-const moduleLoaderFunctionToModuleMap: Map<
-  ModuleLoaderFunction,
-  Module,
-> = new Map();
+const moduleLoaderFunctionToModuleMap: Map<ModuleLoaderFunction, Module> =
+  new Map();
 
 function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   if (record.status === Resolved) {

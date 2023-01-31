@@ -33,13 +33,8 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 import styles from './Timeline.css';
 
 export function Timeline(_: {}): React.Node {
-  const {
-    file,
-    inMemoryTimelineData,
-    isTimelineSupported,
-    setFile,
-    viewState,
-  } = useContext(TimelineContext);
+  const {file, inMemoryTimelineData, isTimelineSupported, setFile, viewState} =
+    useContext(TimelineContext);
   const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
 
   const ref = useRef(null);

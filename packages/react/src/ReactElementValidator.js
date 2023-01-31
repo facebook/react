@@ -518,7 +518,7 @@ export function createFactoryWithValidation(type) {
     // Legacy hook: remove it
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
-      get: function() {
+      get: function () {
         console.warn(
           'Factory.type is deprecated. Access the class directly ' +
             'before passing it to createFactory.',

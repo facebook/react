@@ -103,7 +103,7 @@ if (__DEV__) {
 
   const didWarnOnInvalidCallback = new Set();
 
-  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+  warnOnInvalidCallback = function (callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
@@ -119,7 +119,7 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
+  warnOnUndefinedDerivedState = function (type: any, partialState: any) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -140,7 +140,7 @@ if (__DEV__) {
   // exception.
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
-    value: function(): empty {
+    value: function (): empty {
       throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +

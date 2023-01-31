@@ -43,7 +43,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
       }
     };
 
-    expectSingleChildlessDiv = function(instance) {
+    expectSingleChildlessDiv = function (instance) {
       const el = ReactDOM.findDOMNode(instance);
       expect(el.tagName).toBe('DIV');
       expect(el.children.length).toBe(0);

@@ -19,13 +19,13 @@ const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
+  currentTarget: function () {
     return null;
   },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
-  timeStamp: function(event) {
+  timeStamp: function (event) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: null,
@@ -113,7 +113,7 @@ function SyntheticEvent(
 }
 
 assign(SyntheticEvent.prototype, {
-  preventDefault: function() {
+  preventDefault: function () {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
     if (!event) {
@@ -128,7 +128,7 @@ assign(SyntheticEvent.prototype, {
     this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
-  stopPropagation: function() {
+  stopPropagation: function () {
     const event = this.nativeEvent;
     if (!event) {
       return;
@@ -153,7 +153,7 @@ assign(SyntheticEvent.prototype, {
    * them back into the pool. This allows a way to hold onto a reference that
    * won't be added back into the pool.
    */
-  persist: function() {
+  persist: function () {
     this.isPersistent = functionThatReturnsTrue;
   },
 
@@ -167,7 +167,7 @@ assign(SyntheticEvent.prototype, {
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
-  destructor: function() {
+  destructor: function () {
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
@@ -228,10 +228,10 @@ SyntheticEvent.Interface = EventInterface;
 /**
  * Helper to reduce boilerplate when creating subclasses.
  */
-SyntheticEvent.extend = function(Interface) {
+SyntheticEvent.extend = function (Interface) {
   const Super = this;
 
-  const E = function() {};
+  const E = function () {};
   E.prototype = Super.prototype;
   const prototype = new E();
 

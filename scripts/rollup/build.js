@@ -402,7 +402,7 @@ function getPlugins(
     // Add the whitespace back if necessary.
     shouldStayReadable &&
       prettier({
-        parser: 'babel',
+        parser: 'flow',
         singleQuote: false,
         trailingComma: 'none',
         bracketSpacing: true,

@@ -58,10 +58,8 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    const {
-      onMouseDown: setStateA,
-      onMouseUp: setStateB,
-    } = renderer.root.findByType('div').props;
+    const {onMouseDown: setStateA, onMouseUp: setStateB} =
+      renderer.root.findByType('div').props;
 
     act(() => setStateA('Hi'));
 
@@ -469,8 +467,8 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   it('should inspect forwardRef', () => {
-    const obj = function() {};
-    const Foo = React.forwardRef(function(props, ref) {
+    const obj = function () {};
+    const Foo = React.forwardRef(function (props, ref) {
       React.useImperativeHandle(ref, () => obj);
       return <div />;
     });

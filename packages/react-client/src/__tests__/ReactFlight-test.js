@@ -93,7 +93,7 @@ describe('ReactFlight', () => {
 
   function clientReference(value) {
     return Object.defineProperties(
-      function() {
+      function () {
         throw new Error('Cannot call a client function from the server.');
       },
       {
@@ -378,7 +378,7 @@ describe('ReactFlight', () => {
 
     function EventHandlerProp() {
       return (
-        <div className="foo" onClick={function() {}}>
+        <div className="foo" onClick={function () {}}>
           Test
         </div>
       );
@@ -397,7 +397,7 @@ describe('ReactFlight', () => {
 
     function EventHandlerPropClient() {
       return (
-        <Client className="foo" onClick={function() {}}>
+        <Client className="foo" onClick={function () {}}>
           Test
         </Client>
       );

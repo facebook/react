@@ -25,7 +25,7 @@ let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
  * @param {?object} event Synthetic event to be dispatched.
  * @private
  */
-const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
+const executeDispatchesAndRelease = function (event: ReactSyntheticEvent) {
   if (event) {
     executeDispatchesInOrder(event);
 
@@ -35,7 +35,7 @@ const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
   }
 };
 // $FlowFixMe[missing-local-annot]
-const executeDispatchesAndReleaseTopLevel = function(e) {
+const executeDispatchesAndReleaseTopLevel = function (e) {
   return executeDispatchesAndRelease(e);
 };
 

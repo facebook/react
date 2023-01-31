@@ -33,12 +33,12 @@ const eventListenersToClear = [];
 
 function startNativeEventListenerClearDown() {
   const nativeWindowEventListener = window.addEventListener;
-  window.addEventListener = function(...params) {
+  window.addEventListener = function (...params) {
     eventListenersToClear.push({target: window, params});
     return nativeWindowEventListener.apply(this, params);
   };
   const nativeDocumentEventListener = document.addEventListener;
-  document.addEventListener = function(...params) {
+  document.addEventListener = function (...params) {
     eventListenersToClear.push({target: document, params});
     return nativeDocumentEventListener.apply(this, params);
   };
@@ -2352,12 +2352,10 @@ describe('DOMPluginEventSystem', () => {
             const onBeforeBlur = jest.fn(e => log.push(e.type));
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
-            const setAfterBlurHandle = ReactDOM.unstable_createEventHandle(
-              'afterblur',
-            );
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setAfterBlurHandle =
+              ReactDOM.unstable_createEventHandle('afterblur');
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
 
             const Component = ({show}) => {
               const ref = React.useRef(null);
@@ -2411,12 +2409,10 @@ describe('DOMPluginEventSystem', () => {
             const onBeforeBlur = jest.fn(e => log.push(e.type));
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
-            const setAfterBlurHandle = ReactDOM.unstable_createEventHandle(
-              'afterblur',
-            );
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setAfterBlurHandle =
+              ReactDOM.unstable_createEventHandle('afterblur');
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
 
             const Component = ({show}) => {
               const ref = React.useRef(null);
@@ -2468,9 +2464,8 @@ describe('DOMPluginEventSystem', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
             const ref2 = React.createRef();
 
             const Component = ({show}) => {
@@ -2533,12 +2528,10 @@ describe('DOMPluginEventSystem', () => {
             const promise = new Promise(
               resolvePromise => (resolve = resolvePromise),
             );
-            const setAfterBlurHandle = ReactDOM.unstable_createEventHandle(
-              'afterblur',
-            );
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setAfterBlurHandle =
+              ReactDOM.unstable_createEventHandle('afterblur');
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
 
             function Child() {
               if (suspend) {
@@ -2608,9 +2601,8 @@ describe('DOMPluginEventSystem', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
             const ref2 = React.createRef();
             const Suspense = React.Suspense;
             let suspend = false;
@@ -2689,9 +2681,8 @@ describe('DOMPluginEventSystem', () => {
             const Suspense = React.Suspense;
             let suspend = false;
             const promise = Promise.resolve();
-            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
-              'beforeblur',
-            );
+            const setBeforeBlurHandle =
+              ReactDOM.unstable_createEventHandle('beforeblur');
             const innerRef = React.createRef();
 
             function Child() {
@@ -3208,12 +3199,10 @@ describe('DOMPluginEventSystem', () => {
               container.addEventListener('wheel', handler);
 
               const ref = React.createRef();
-              const setTouchStart = ReactDOM.unstable_createEventHandle(
-                'touchstart',
-              );
-              const setTouchMove = ReactDOM.unstable_createEventHandle(
-                'touchmove',
-              );
+              const setTouchStart =
+                ReactDOM.unstable_createEventHandle('touchstart');
+              const setTouchMove =
+                ReactDOM.unstable_createEventHandle('touchmove');
               const setWheel = ReactDOM.unstable_createEventHandle('wheel');
 
               function Component() {

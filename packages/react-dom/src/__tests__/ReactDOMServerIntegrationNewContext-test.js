@@ -39,7 +39,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('context', function() {
+  describe('context', function () {
     let Context, PurpleContextProvider, RedContextProvider, Consumer;
     beforeEach(() => {
       Context = React.createContext('none');

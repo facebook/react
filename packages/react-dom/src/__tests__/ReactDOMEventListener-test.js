@@ -401,7 +401,7 @@ describe('ReactDOMEventListener', () => {
 
     const originalDocAddEventListener = document.addEventListener;
     const originalRootAddEventListener = container.addEventListener;
-    document.addEventListener = function(type) {
+    document.addEventListener = function (type) {
       switch (type) {
         case 'selectionchange':
           break;
@@ -411,7 +411,7 @@ describe('ReactDOMEventListener', () => {
           );
       }
     };
-    container.addEventListener = function(type, fn, options) {
+    container.addEventListener = function (type, fn, options) {
       if (options && (options === true || options.capture)) {
         return;
       }
@@ -981,7 +981,7 @@ describe('ReactDOMEventListener', () => {
     const log = [];
 
     const originalDocAddEventListener = document.addEventListener;
-    document.addEventListener = function(type, fn, options) {
+    document.addEventListener = function (type, fn, options) {
       switch (type) {
         case 'selectionchange':
           log.push(options);

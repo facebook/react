@@ -34,18 +34,15 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itRenders,
-  itThrowsWhenRendering,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, itThrowsWhenRendering} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
   });
 
-  describe('legacy context', function() {
+  describe('legacy context', function () {
     let PurpleContext, RedContext;
     beforeEach(() => {
       class Parent extends React.Component {

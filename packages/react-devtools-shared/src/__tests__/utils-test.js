@@ -190,9 +190,9 @@ describe('utils', () => {
 
       // The last letter isn't gray here but I think it's not a big
       // deal, since there is a string substituion but it's incorrect
-      expect(
-        formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray'),
-      ).toEqual(['%c%s %s', 'color: gray', 'a', 'b', 'c']);
+      expect(formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray')).toEqual(
+        ['%c%s %s', 'color: gray', 'a', 'b', 'c'],
+      );
     });
 
     // @reactVersion >= 16.0

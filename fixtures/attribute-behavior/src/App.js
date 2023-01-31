@@ -902,8 +902,9 @@ class App extends React.Component {
 
     let log = '';
     for (let attribute of attributes) {
-      log += `## \`${attribute.name}\` (on \`<${attribute.tagName ||
-        'div'}>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
+      log += `## \`${attribute.name}\` (on \`<${
+        attribute.tagName || 'div'
+      }>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
       log += '| Test Case | Flags | Result |\n';
       log += '| --- | --- | --- |\n';
 

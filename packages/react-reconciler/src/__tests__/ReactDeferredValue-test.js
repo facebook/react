@@ -41,9 +41,10 @@ describe('ReactDeferredValue', () => {
       // render. A naive implementation would endlessly spawn deferred renders.
       const {value: deferredValue} = useDeferredValue({value});
 
-      const child = useMemo(() => <Text text={'Original: ' + value} />, [
-        value,
-      ]);
+      const child = useMemo(
+        () => <Text text={'Original: ' + value} />,
+        [value],
+      );
 
       const deferredChild = useMemo(
         () => <Text text={'Deferred: ' + deferredValue} />,
@@ -101,9 +102,10 @@ describe('ReactDeferredValue', () => {
     function App({value}) {
       const deferredValue = useDeferredValue(value);
 
-      const child = useMemo(() => <Text text={'Original: ' + value} />, [
-        value,
-      ]);
+      const child = useMemo(
+        () => <Text text={'Original: ' + value} />,
+        [value],
+      );
 
       const deferredChild = useMemo(
         () => <Text text={'Deferred: ' + deferredValue} />,
@@ -166,9 +168,10 @@ describe('ReactDeferredValue', () => {
 
       const deferredValue = useDeferredValue(value);
 
-      const child = useMemo(() => <Text text={'Original: ' + value} />, [
-        value,
-      ]);
+      const child = useMemo(
+        () => <Text text={'Original: ' + value} />,
+        [value],
+      );
 
       const deferredChild = useMemo(
         () => <Text text={'Deferred: ' + deferredValue} />,
@@ -231,9 +234,10 @@ describe('ReactDeferredValue', () => {
 
       const deferredValue = useDeferredValue(value);
 
-      const child = useMemo(() => <Text text={'Original: ' + value} />, [
-        value,
-      ]);
+      const child = useMemo(
+        () => <Text text={'Original: ' + value} />,
+        [value],
+      );
 
       const deferredChild = useMemo(
         () => <Text text={'Deferred: ' + deferredValue} />,

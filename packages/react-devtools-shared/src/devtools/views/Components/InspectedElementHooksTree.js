@@ -59,9 +59,8 @@ export function InspectedElementHooksTree({
 
   // Changing parseHookNames is done in a transition, because it suspends.
   // This value is done outside of the transition, so the UI toggle feels responsive.
-  const [parseHookNamesOptimistic, setParseHookNamesOptimistic] = useState(
-    parseHookNames,
-  );
+  const [parseHookNamesOptimistic, setParseHookNamesOptimistic] =
+    useState(parseHookNames);
   const handleChange = () => {
     setParseHookNamesOptimistic(!parseHookNames);
     toggleParseHookNames();
@@ -168,11 +167,8 @@ function HookView({
   inspectedElement,
   path,
 }: HookViewProps) {
-  const {
-    canEditHooks,
-    canEditHooksAndDeletePaths,
-    canEditHooksAndRenamePaths,
-  } = inspectedElement;
+  const {canEditHooks, canEditHooksAndDeletePaths, canEditHooksAndRenamePaths} =
+    inspectedElement;
   const {id: hookID, isStateEditable, subHooks, value} = hook;
 
   const isReadOnly = hookID == null || !isStateEditable;

@@ -194,7 +194,7 @@ export function createRequest(
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     // $FlowFixMe[missing-this-annot]
-    toJSON: function(key: string, value: ReactModel): ReactJSONValue {
+    toJSON: function (key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };
@@ -533,7 +533,7 @@ function isSimpleObject(object: any): boolean {
 function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
-  return name.replace(/^\[object (.*)\]$/, function(m, p0) {
+  return name.replace(/^\[object (.*)\]$/, function (m, p0) {
     return p0;
   });
 }
@@ -1031,9 +1031,10 @@ function logRecoverableError(request: Request, error: mixed): string {
   return errorDigest || '';
 }
 
-function getErrorMessageAndStackDev(
-  error: mixed,
-): {message: string, stack: string} {
+function getErrorMessageAndStackDev(error: mixed): {
+  message: string,
+  stack: string,
+} {
   if (__DEV__) {
     let message;
     let stack = '';

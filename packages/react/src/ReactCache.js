@@ -53,7 +53,7 @@ function createCacheNode<T>(): CacheNode<T> {
 }
 
 export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
-  return function() {
+  return function () {
     const dispatcher = ReactCurrentCache.current;
     if (!dispatcher) {
       // If there is no dispatcher, then we treat this as not being cached.

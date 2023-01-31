@@ -57,7 +57,7 @@ const babelOptions = {
 };
 
 module.exports = {
-  process: function(src, filePath) {
+  process: function (src, filePath) {
     if (filePath.match(/\.css$/)) {
       // Don't try to parse CSS modules; they aren't needed for tests anyway.
       return '';

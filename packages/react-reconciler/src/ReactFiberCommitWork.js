@@ -247,7 +247,7 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   }
 }
 
-const callComponentWillUnmountWithTimer = function(
+const callComponentWillUnmountWithTimer = function (
   current: Fiber,
   instance: any,
 ) {
@@ -510,7 +510,8 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
             prevState,
           );
           if (__DEV__) {
-            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
+            const didWarnSet =
+              ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
               console.error(
@@ -575,7 +576,8 @@ function commitHookEffectListUnmount(
   finishedWork: Fiber,
   nearestMountedAncestor: Fiber | null,
 ) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const updateQueue: FunctionComponentUpdateQueue | null =
+    (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
@@ -621,7 +623,8 @@ function commitHookEffectListUnmount(
 }
 
 function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const updateQueue: FunctionComponentUpdateQueue | null =
+    (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
@@ -709,7 +712,8 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 }
 
 function commitUseEffectEventMount(finishedWork: Fiber) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const updateQueue: FunctionComponentUpdateQueue | null =
+    (finishedWork.updateQueue: any);
   const eventPayloads = updateQueue !== null ? updateQueue.events : null;
   if (eventPayloads !== null) {
     for (let ii = 0; ii < eventPayloads.length; ii++) {
@@ -913,7 +917,8 @@ function commitClassLayoutLifecycles(
 function commitClassCallbacks(finishedWork: Fiber) {
   // TODO: I think this is now always non-null by the time it reaches the
   // commit phase. Consider removing the type check.
-  const updateQueue: UpdateQueue<mixed> | null = (finishedWork.updateQueue: any);
+  const updateQueue: UpdateQueue<mixed> | null =
+    (finishedWork.updateQueue: any);
   if (updateQueue !== null) {
     const instance = finishedWork.stateNode;
     if (__DEV__) {
@@ -1080,7 +1085,8 @@ function commitLayoutEffectOnFiber(
       if (flags & Callback) {
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<mixed> | null = (finishedWork.updateQueue: any);
+        const updateQueue: UpdateQueue<mixed> | null =
+          (finishedWork.updateQueue: any);
         if (updateQueue !== null) {
           let instance = null;
           if (finishedWork.child !== null) {
@@ -2166,7 +2172,8 @@ function commitDeletionEffectsOnFiber(
     case MemoComponent:
     case SimpleMemoComponent: {
       if (!offscreenSubtreeWasHidden) {
-        const updateQueue: FunctionComponentUpdateQueue | null = (deletedFiber.updateQueue: any);
+        const updateQueue: FunctionComponentUpdateQueue | null =
+          (deletedFiber.updateQueue: any);
         if (updateQueue !== null) {
           const lastEffect = updateQueue.lastEffect;
           if (lastEffect !== null) {
@@ -2588,7 +2595,8 @@ function commitMutationEffectsOnFiber(
       }
 
       if (flags & Callback && offscreenSubtreeIsHidden) {
-        const updateQueue: UpdateQueue<mixed> | null = (finishedWork.updateQueue: any);
+        const updateQueue: UpdateQueue<mixed> | null =
+          (finishedWork.updateQueue: any);
         if (updateQueue !== null) {
           deferHiddenCallbacks(updateQueue);
         }
@@ -2679,7 +2687,8 @@ function commitMutationEffectsOnFiber(
               current !== null ? current.memoizedProps : newProps;
             const type = finishedWork.type;
             // TODO: Type the updateQueue to be specific to host components.
-            const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
+            const updatePayload: null | UpdatePayload =
+              (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
             if (updatePayload !== null) {
               try {
@@ -2897,7 +2906,8 @@ function commitMutationEffectsOnFiber(
 
       // TODO: Move to passive phase
       if (flags & Update) {
-        const offscreenQueue: OffscreenQueue | null = (finishedWork.updateQueue: any);
+        const offscreenQueue: OffscreenQueue | null =
+          (finishedWork.updateQueue: any);
         if (offscreenQueue !== null) {
           const wakeables = offscreenQueue.wakeables;
           if (wakeables !== null) {
@@ -3130,7 +3140,8 @@ export function reappearLayoutEffects(
 
       // Commit any callbacks that would have fired while the component
       // was hidden.
-      const updateQueue: UpdateQueue<mixed> | null = (finishedWork.updateQueue: any);
+      const updateQueue: UpdateQueue<mixed> | null =
+        (finishedWork.updateQueue: any);
       if (updateQueue !== null) {
         commitHiddenCallbacks(updateQueue, instance);
       }

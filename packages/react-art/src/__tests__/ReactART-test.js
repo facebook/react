@@ -59,7 +59,7 @@ function testDOMNodeStructure(domNode, expectedStructure) {
     }
   }
   if (expectedStructure.children) {
-    expectedStructure.children.forEach(function(subTree, index) {
+    expectedStructure.children.forEach(function (subTree, index) {
       testDOMNodeStructure(domNode.childNodes[index], subTree);
     });
   }

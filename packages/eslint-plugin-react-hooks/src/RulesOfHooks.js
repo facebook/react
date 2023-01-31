@@ -383,9 +383,8 @@ export default {
 
         // This is a valid code path for React hooks if we are directly in a React
         // function component or we are in a hook function.
-        const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
-          codePathNode,
-        );
+        const isSomewhereInsideComponentOrHook =
+          isInsideComponentOrHook(codePathNode);
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)

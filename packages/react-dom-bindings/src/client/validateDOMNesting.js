@@ -179,7 +179,7 @@ if (__DEV__) {
     containerTagInScope: null,
   };
 
-  updatedAncestorInfoDev = function(oldInfo: ?AncestorInfoDev, tag: string) {
+  updatedAncestorInfoDev = function (oldInfo: ?AncestorInfoDev, tag: string) {
     const ancestorInfo = {...(oldInfo || emptyAncestorInfoDev)};
     const info = {tag};
 
@@ -239,7 +239,7 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  const isTagValidWithParent = function(
+  const isTagValidWithParent = function (
     tag: string,
     parentTag: ?string,
   ): boolean {
@@ -367,7 +367,7 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  const findInvalidAncestorForTag = function(
+  const findInvalidAncestorForTag = function (
     tag: string,
     ancestorInfo: AncestorInfoDev,
   ): ?Info {
@@ -436,7 +436,7 @@ if (__DEV__) {
 
   const didWarn: {[string]: boolean} = {};
 
-  validateDOMNesting = function(
+  validateDOMNesting = function (
     childTag: ?string,
     childText: ?string,
     ancestorInfo: AncestorInfoDev,

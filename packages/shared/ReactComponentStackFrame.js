@@ -97,12 +97,12 @@ export function describeNativeComponentFrame(
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      const Fake = function() {
+      const Fake = function () {
         throw Error();
       };
       // $FlowFixMe
       Object.defineProperty(Fake.prototype, 'props', {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();

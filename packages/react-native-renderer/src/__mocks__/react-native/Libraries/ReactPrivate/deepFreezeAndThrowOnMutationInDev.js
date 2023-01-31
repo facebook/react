@@ -9,6 +9,6 @@
 
 // TODO: move into react or fbjs
 
-const deepFreezeAndThrowOnMutationInDev = function() {};
+const deepFreezeAndThrowOnMutationInDev = function () {};
 
 module.exports = deepFreezeAndThrowOnMutationInDev;

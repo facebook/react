@@ -54,11 +54,11 @@ if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
   const markOptions = ({}: {startTime?: number});
   Object.defineProperty(markOptions, 'startTime', {
-    get: function() {
+    get: function () {
       supportsUserTimingV3 = true;
       return 0;
     },
-    set: function() {},
+    set: function () {},
   });
 
   try {
@@ -237,10 +237,8 @@ export function createProfilingHooks({
     currentReactMeasuresStack.push(reactMeasure);
 
     if (currentTimelineData) {
-      const {
-        batchUIDToMeasuresMap,
-        laneToReactMeasureMap,
-      } = currentTimelineData;
+      const {batchUIDToMeasuresMap, laneToReactMeasureMap} =
+        currentTimelineData;
 
       let reactMeasures = batchUIDToMeasuresMap.get(currentBatchUID);
       if (reactMeasures != null) {
