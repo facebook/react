@@ -9,14 +9,18 @@ import invariant from "invariant";
 import {
   Identifier,
   IdentifierId,
+  InstructionId,
+  Place,
   ReactiveBlock,
   ReactiveFunction,
-  ReactiveTerminal,
-  ReactiveValueBlock,
+  ReactiveInstruction,
+  ReactiveScopeBlock,
 } from "../HIR/HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
-import { eachReactiveValueOperand } from "./visitors";
+import {
+  eachReactiveValueOperand,
+  ReactiveFunctionVisitor,
+  visitReactiveFunction,
+} from "./visitors";
 
 /**
  * Ensures that each named variable in the given function has a unique name
@@ -35,121 +39,34 @@ export function renameVariables(fn: ReactiveFunction): void {
     for (const param of fn.params) {
       scopes.visit(param.identifier);
     }
-    visitBlock(scopes, fn.body);
+    visitReactiveFunction(fn, new Visitor(), scopes);
   });
 }
 
-function visitBlock(scopes: Scopes, block: ReactiveBlock): void {
-  scopes.enter(() => visitBlockInner(scopes, block));
-}
-
-function visitBlockInner(scopes: Scopes, block: ReactiveBlock): void {
-  for (const stmt of block) {
-    switch (stmt.kind) {
-      case "instruction": {
-        for (const operand of eachReactiveValueOperand(
-          stmt.instruction.value
-        )) {
-          scopes.visit(operand.identifier);
-        }
-        if (stmt.instruction.lvalue !== null) {
-          scopes.visit(stmt.instruction.lvalue.place.identifier);
-        }
-        break;
-      }
-      case "scope": {
-        // NOTE: we intentionally don't enter new block scope here,
-        // since the outputs of the scope will be in the outer block
-        visitBlockInner(scopes, stmt.instructions);
-        break;
-      }
-      case "terminal": {
-        visitTerminal(scopes, stmt.terminal);
-        break;
-      }
+class Visitor extends ReactiveFunctionVisitor<Scopes> {
+  override visitPlace(id: InstructionId, place: Place, state: Scopes): void {
+    state.visit(place.identifier);
+  }
+  override visitBlock(block: ReactiveBlock, state: Scopes): void {
+    state.enter(() => {
+      this.traverseBlock(block, state);
+    });
+  }
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: Scopes
+  ): void {
+    for (const operand of eachReactiveValueOperand(instruction.value)) {
+      state.visit(operand.identifier);
+    }
+    if (instruction.lvalue !== null) {
+      state.visit(instruction.lvalue.place.identifier);
     }
   }
-}
-
-function visitValueBlock(scopes: Scopes, block: ReactiveValueBlock): void {
-  for (const stmt of block.instructions) {
-    invariant(
-      stmt.kind === "instruction",
-      "Value blocks may only contain instructions"
-    );
-    for (const operand of eachReactiveValueOperand(stmt.instruction.value)) {
-      scopes.visit(operand.identifier);
-    }
-    if (stmt.instruction.lvalue !== null) {
-      scopes.visit(stmt.instruction.lvalue.place.identifier);
-    }
-  }
-  if (block.last !== null) {
-    for (const operand of eachInstructionValueOperand(block.last.value)) {
-      scopes.visit(operand.identifier);
-    }
-  }
-}
-
-export function visitTerminal(
-  scopes: Scopes,
-  terminal: ReactiveTerminal
-): void {
-  switch (terminal.kind) {
-    case "return": {
-      if (terminal.value !== null) {
-        scopes.visit(terminal.value.identifier);
-      }
-      break;
-    }
-    case "throw": {
-      scopes.visit(terminal.value.identifier);
-      break;
-    }
-    case "break":
-    case "continue": {
-      break;
-    }
-    case "for": {
-      scopes.enter(() => {
-        visitValueBlock(scopes, terminal.init);
-        visitValueBlock(scopes, terminal.test);
-        visitValueBlock(scopes, terminal.update);
-        visitBlock(scopes, terminal.loop);
-      });
-      break;
-    }
-    case "while": {
-      visitValueBlock(scopes, terminal.test);
-      visitBlock(scopes, terminal.loop);
-      break;
-    }
-    case "if": {
-      scopes.visit(terminal.test.identifier);
-      visitBlock(scopes, terminal.consequent);
-      if (terminal.alternate !== null) {
-        visitBlock(scopes, terminal.alternate);
-      }
-      break;
-    }
-    case "switch": {
-      scopes.visit(terminal.test.identifier);
-      for (const case_ of terminal.cases) {
-        if (case_.test !== null) {
-          scopes.visit(case_.test.identifier);
-        }
-        if (case_.block !== undefined) {
-          visitBlock(scopes, case_.block);
-        }
-      }
-      break;
-    }
-    default: {
-      assertExhaustive(
-        terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
-      );
-    }
+  override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {
+    // Intentionally bypass visitBlock() since scopes do not introduce a new
+    // block scope
+    this.traverseBlock(scope.instructions, state);
   }
 }
 

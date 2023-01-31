@@ -7,11 +7,13 @@
 
 import {
   Identifier,
+  InstructionId,
   InstructionKind,
+  Place,
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
-import { visitFunction } from "./visitors";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
  * Nulls out lvalues for temporary variables that are never accessed later. This only
@@ -19,23 +21,29 @@ import { visitFunction } from "./visitors";
  */
 export function pruneTemporaryLValues(fn: ReactiveFunction): void {
   const lvalues = new Map<Identifier, ReactiveInstruction>();
-  visitFunction(fn, {
-    visitInstruction: (instr) => {
-      if (
-        instr.lvalue !== null &&
-        instr.lvalue.kind === InstructionKind.Const &&
-        instr.lvalue.place.identifier.name === null
-      ) {
-        lvalues.set(instr.lvalue.place.identifier, instr);
-      }
-    },
-    visitValue: (value) => {
-      if (value.kind === "Identifier") {
-        lvalues.delete(value.identifier);
-      }
-    },
-  });
+  visitReactiveFunction(fn, new Visitor(), lvalues);
   for (const [, instr] of lvalues) {
     instr.lvalue = null;
+  }
+}
+
+type LValues = Map<Identifier, ReactiveInstruction>;
+
+class Visitor extends ReactiveFunctionVisitor<LValues> {
+  override visitPlace(id: InstructionId, place: Place, state: LValues): void {
+    state.delete(place.identifier);
+  }
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: LValues
+  ): void {
+    this.traverseInstruction(instruction, state);
+    if (
+      instruction.lvalue !== null &&
+      instruction.lvalue.kind === InstructionKind.Const &&
+      instruction.lvalue.place.identifier.name === null
+    ) {
+      state.set(instruction.lvalue.place.identifier, instruction);
+    }
   }
 }

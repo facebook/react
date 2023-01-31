@@ -5,27 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import {
   InstructionId,
+  LValue,
   makeInstructionId,
   Place,
   ReactiveBlock,
   ReactiveFunction,
-  ReactiveInstruction,
   ReactiveScope,
-  ReactiveValue,
-  ReactiveValueBlock,
   ScopeId,
 } from "../HIR";
 import DisjointSet from "../Utils/DisjointSet";
 import { retainWhere } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
-import {
-  eachReactiveValueOperand,
-  eachTerminalBlock,
-  eachTerminalOperand,
-} from "./visitors";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
  * Note: this is the 3rd of 4 passes that determine how to break a function into discrete
@@ -106,92 +99,31 @@ import {
  */
 export function mergeOverlappingReactiveScopes(fn: ReactiveFunction): void {
   const context = new Context();
-  context.enter(() => {
-    visitBlock(context, fn.body);
-  });
+  // context.enter(() => {
+  //   visitBlock(context, fn.body);
+  // });
+  visitReactiveFunction(fn, new Visitor(), context);
   context.complete();
 }
 
-function visitBlock(context: Context, block: ReactiveBlock): void {
-  for (const stmt of block) {
-    switch (stmt.kind) {
-      case "instruction": {
-        visitValue(context, stmt.instruction.id, stmt.instruction.value);
-        visitInstruction(context, stmt.instruction);
-        break;
-      }
-      case "terminal": {
-        const id = stmt.terminal.id;
-        if (id !== null) {
-          context.visitId(id);
-          eachTerminalOperand(stmt.terminal, (operand) => {
-            visitValue(context, id, operand);
-          });
-        }
-        eachTerminalBlock(
-          stmt.terminal,
-          (block) => {
-            context.enter(() => {
-              visitBlock(context, block);
-            });
-          },
-          (valueBlock) => {
-            context.enter(() => {
-              visitValueBlock(context, valueBlock);
-            });
-          }
-        );
-        break;
-      }
-      case "scope": {
-        invariant(false, "Expected scopes to be constructed later");
-      }
-    }
+class Visitor extends ReactiveFunctionVisitor<Context> {
+  override visitID(id: InstructionId, state: Context): void {
+    state.visitId(id);
   }
-}
-
-function visitValueBlock(context: Context, block: ReactiveValueBlock): void {
-  for (const stmt of block.instructions) {
-    switch (stmt.kind) {
-      case "instruction": {
-        visitValue(context, stmt.instruction.id, stmt.instruction.value);
-        visitInstruction(context, stmt.instruction);
-        break;
-      }
-      default: {
-        invariant(false, "Unexpected terminal or scope in value block");
-      }
-    }
+  override visitPlace(id: InstructionId, place: Place, state: Context): void {
+    state.visitPlace(id, place);
   }
-  if (block.last !== null) {
-    context.visitId(block.last.id);
-    if (block.last.value.kind === "Identifier") {
-      context.visitPlace(block.last.id, block.last.value);
-    }
+  override visitLValue(
+    id: InstructionId,
+    lvalue: LValue,
+    state: Context
+  ): void {
+    state.visitPlace(id, lvalue.place);
   }
-}
-
-function visitInstruction(
-  context: Context,
-  instruction: ReactiveInstruction
-): void {
-  context.visitId(instruction.id);
-  invariant(
-    instruction.lvalue !== null,
-    "Expected lvalues to not be null when assigning scopes. " +
-      "Pruning lvalues too early can result in missing scope information."
-  );
-  context.visitPlace(instruction.id, instruction.lvalue.place);
-}
-
-function visitValue(
-  context: Context,
-  id: InstructionId,
-  value: ReactiveValue
-): void {
-  context.visitId(id);
-  for (const operand of eachReactiveValueOperand(value)) {
-    context.visitPlace(id, operand);
+  override visitBlock(block: ReactiveBlock, state: Context): void {
+    state.enter(() => {
+      this.traverseBlock(block, state);
+    });
   }
 }
 
