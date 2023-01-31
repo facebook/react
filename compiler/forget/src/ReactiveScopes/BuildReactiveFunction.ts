@@ -16,6 +16,7 @@ import {
   Place,
   ReactiveBlock,
   ReactiveValueBlock,
+  SourceLocation,
 } from "../HIR";
 import {
   HIRFunction,
@@ -28,6 +29,7 @@ import {
   ReactiveLogicalValue,
   ReactiveSequenceValue,
   ReactiveTerminalStatement,
+  ReactiveTernaryValue,
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
@@ -465,6 +467,68 @@ class Driver {
     }
   }
 
+  visitValueBlockNew(
+    id: BlockId,
+    loc: SourceLocation
+  ): { block: BlockId; value: ReactiveValue; place: Place } {
+    let block: BasicBlock;
+    let value: ReactiveValue | null = null;
+    let place: Place | null = null;
+    const defaultBlock = this.cx.ir.blocks.get(id)!;
+    if (
+      defaultBlock.terminal.kind === "goto" ||
+      defaultBlock.terminal.kind === "branch"
+    ) {
+      block = defaultBlock;
+    } else {
+      const result = this.visitValueTerminal(defaultBlock.terminal);
+      block = this.cx.ir.blocks.get(result.fallthrough)!;
+      place = result.place;
+      value = result.value;
+    }
+    const instructions: Array<ReactiveInstruction> = block.instructions;
+    if (place !== null && value !== null) {
+      instructions.forEach((instr) =>
+        mapInstructionOperands(instr as Instruction, (place) => {
+          return place.identifier === place.identifier
+            ? (value as Place)
+            : place;
+        })
+      );
+    }
+    if (instructions.length === 0) {
+      invariant(
+        block.terminal.kind === "branch",
+        "Expected instructions for non-branch terminal"
+      );
+      return {
+        block: block.id,
+        place: block.terminal.test,
+        value: value ?? block.terminal.test,
+      };
+    } else if (instructions.length === 1) {
+      const instr = instructions[0]!;
+      return {
+        block: block.id,
+        place: instr.lvalue!.place,
+        value: instr.value,
+      };
+    } else {
+      const instr = instructions.at(-1)!;
+      const sequence: ReactiveSequenceValue = {
+        kind: "SequenceExpression",
+        instructions: instructions.slice(0, -1),
+        value: instr.value,
+        loc: loc,
+      };
+      return {
+        block: block.id,
+        place: instr.lvalue!.place,
+        value: sequence,
+      };
+    }
+  }
+
   visitValueTerminal(terminal: Terminal): {
     value: ReactiveValue;
     place: Place;
@@ -503,40 +567,7 @@ class Driver {
             })
           );
         }
-
-        let rightBlock: BasicBlock;
-        let rightValue: ReactiveValue | null = null;
-        let rightPlace: Place | null = null;
-        const defaultRightBlock = this.cx.ir.blocks.get(
-          testBlock.terminal.alternate
-        )!;
-        if (defaultRightBlock.terminal.kind === "goto") {
-          rightBlock = defaultRightBlock;
-        } else {
-          const rightResult = this.visitValueTerminal(
-            defaultRightBlock.terminal
-          );
-          rightBlock = this.cx.ir.blocks.get(rightResult.fallthrough)!;
-          rightPlace = rightResult.place;
-          rightValue = rightResult.value;
-        }
-        const rightInstructions: Array<ReactiveInstruction> =
-          rightBlock.instructions;
         const place = leftInstructions.at(-1)!.lvalue!.place;
-        invariant(
-          place.identifier ===
-            rightInstructions.at(-1)!.lvalue!.place.identifier,
-          "Expected both branches of a logical expression to store to the same temporary"
-        );
-        if (rightPlace !== null && rightValue !== null) {
-          rightInstructions.forEach((instr) =>
-            mapInstructionOperands(instr as Instruction, (place) => {
-              return place.identifier === rightPlace!.identifier
-                ? (rightValue as Place)
-                : place;
-            })
-          );
-        }
 
         let left: ReactiveValue;
         if (leftInstructions.length === 1) {
@@ -550,27 +581,56 @@ class Driver {
           };
           left = sequence;
         }
-        let right: ReactiveValue;
-        if (rightInstructions.length === 1) {
-          right = rightInstructions[0]!.value;
-        } else {
-          const sequence: ReactiveSequenceValue = {
-            kind: "SequenceExpression",
-            instructions: rightInstructions.slice(0, -1),
-            value: rightInstructions.at(-1)!.value,
-            loc: terminal.loc,
-          };
-          right = sequence;
-        }
+        const right = this.visitValueBlockNew(
+          testBlock.terminal.alternate,
+          terminal.loc
+        );
+        invariant(
+          place.identifier === right.place.identifier,
+          "Expected the left and right side of a logical expression to store a value to the same place"
+        );
         const value: ReactiveLogicalValue = {
           kind: "LogicalExpression",
           operator: terminal.operator,
           left,
-          right,
+          right: right.value,
           loc: terminal.loc,
         };
         return {
           place: { ...place },
+          value,
+          fallthrough: terminal.fallthrough,
+        };
+      }
+      case "ternary": {
+        const test = this.visitValueBlockNew(terminal.test, terminal.loc);
+        const testBlock = this.cx.ir.blocks.get(test.block)!;
+        invariant(
+          testBlock.terminal.kind === "branch",
+          "Unexpected terminal kind '%s' for ternary test block",
+          testBlock.terminal.kind
+        );
+        const consequent = this.visitValueBlockNew(
+          testBlock.terminal.consequent,
+          terminal.loc
+        );
+        const alternate = this.visitValueBlockNew(
+          testBlock.terminal.alternate,
+          terminal.loc
+        );
+        const value: ReactiveTernaryValue = {
+          kind: "ConditionalExpression",
+          test: test.value,
+          consequent: consequent.value,
+          alternate: alternate.value,
+          loc: terminal.loc,
+        };
+        invariant(
+          consequent.place.identifier === alternate.place.identifier,
+          "Expected the consquent and alternate of a ternary to store a value to the same place"
+        );
+        return {
+          place: { ...consequent.place },
           value,
           fallthrough: terminal.fallthrough,
         };

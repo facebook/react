@@ -889,6 +889,69 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "ConditionalExpression": {
+      const expr = exprPath as NodePath<t.ConditionalExpression>;
+      const exprLoc = expr.node.loc ?? GeneratedSource;
+
+      //  Block for code following the if
+      const continuationBlock = builder.reserve(builder.currentBlockKind());
+      const testBlock = builder.reserve("value");
+      const place = buildTemporaryPlace(builder, exprLoc);
+
+      //  Block for the consequent (if the test is truthy)
+      const consequentBlock = builder.enter("block", (blockId) => {
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
+          value: lowerExpressionToPlace(builder, expr.get("consequent")),
+          loc: exprLoc,
+        });
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
+      });
+      //  Block for the alternate (if the test is not truthy)
+      const alternateBlock = builder.enter("block", (blockId) => {
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
+          value: lowerExpressionToPlace(builder, expr.get("alternate")),
+          loc: exprLoc,
+        });
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
+      });
+
+      builder.terminateWithContinuation(
+        {
+          kind: "ternary",
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          test: testBlock.id,
+          loc: exprLoc,
+        },
+        testBlock
+      );
+      const testPlace = lowerExpressionToPlace(builder, expr.get("test"));
+      builder.terminateWithContinuation(
+        {
+          kind: "branch",
+          test: { ...testPlace },
+          consequent: consequentBlock,
+          alternate: alternateBlock,
+          id: makeInstructionId(0),
+        },
+        continuationBlock
+      );
+      return place;
+    }
     case "LogicalExpression": {
       const expr = exprPath as NodePath<t.LogicalExpression>;
       const exprLoc = expr.node.loc ?? GeneratedSource;

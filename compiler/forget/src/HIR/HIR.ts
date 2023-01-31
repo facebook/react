@@ -96,13 +96,22 @@ export type ReactiveInstruction = {
 export type ReactiveValue =
   | InstructionValue
   | ReactiveLogicalValue
-  | ReactiveSequenceValue;
+  | ReactiveSequenceValue
+  | ReactiveTernaryValue;
 
 export type ReactiveLogicalValue = {
   kind: "LogicalExpression";
   operator: t.LogicalExpression["operator"];
   left: ReactiveValue;
   right: ReactiveValue;
+  loc: SourceLocation;
+};
+
+export type ReactiveTernaryValue = {
+  kind: "ConditionalExpression";
+  test: ReactiveValue;
+  consequent: ReactiveValue;
+  alternate: ReactiveValue;
   loc: SourceLocation;
 };
 

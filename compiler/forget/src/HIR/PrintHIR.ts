@@ -354,6 +354,14 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       ].join("\n");
       break;
     }
+    case "ConditionalExpression": {
+      value = `Ternary ${printInstructionValue(
+        instrValue.test
+      )} ? ${printInstructionValue(
+        instrValue.consequent
+      )} : ${printInstructionValue(instrValue.alternate)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

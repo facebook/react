@@ -5,7 +5,7 @@
 function component(props) {
   let a = props.a || (props.b && props.c && props.d);
   let b = (props.a && props.b && props.c) || props.d;
-  return a ?? b;
+  return a ? b : props.c;
 }
 
 ```
@@ -37,16 +37,18 @@ function component(props) {
   const b = t3;
   const c_4 = $[4] !== a;
   const c_5 = $[5] !== b;
-  let t6;
-  if (c_4 || c_5) {
-    t6 = a ?? b;
+  const c_6 = $[6] !== props;
+  let t7;
+  if (c_4 || c_5 || c_6) {
+    t7 = a ? b : props.c;
     $[4] = a;
     $[5] = b;
-    $[6] = t6;
+    $[6] = props;
+    $[7] = t7;
   } else {
-    t6 = $[6];
+    t7 = $[7];
   }
-  return t6;
+  return t7;
 }
 
 ```

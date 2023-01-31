@@ -148,7 +148,7 @@ export function leaveSSA(fn: HIRFunction) {
       pushPhis(rewritePhis, update);
       update.phis.clear();
     }
-    if (terminal.kind === "logical") {
+    if (terminal.kind === "logical" || terminal.kind === "ternary") {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
       pushPhis(rewritePhis, fallthrough);
       fallthrough.phis.clear();

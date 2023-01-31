@@ -98,6 +98,12 @@ export function* eachReactiveValueOperand(
       yield* eachReactiveValueOperand(instrValue.value);
       break;
     }
+    case "ConditionalExpression": {
+      yield* eachReactiveValueOperand(instrValue.test);
+      yield* eachReactiveValueOperand(instrValue.consequent);
+      yield* eachReactiveValueOperand(instrValue.alternate);
+      break;
+    }
     default: {
       yield* eachInstructionValueOperand(instrValue);
     }

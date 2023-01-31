@@ -432,6 +432,7 @@ const createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
 const createSequenceExpression = withLoc(t.sequenceExpression);
+const createConditionalExpression = withLoc(t.conditionalExpression);
 
 type Temporaries = Map<IdentifierId, t.Expression>;
 
@@ -693,6 +694,15 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "ConditionalExpression": {
+      value = createConditionalExpression(
+        instrValue.loc,
+        codegenInstructionValue(cx, instrValue.test),
+        codegenInstructionValue(cx, instrValue.consequent),
+        codegenInstructionValue(cx, instrValue.alternate)
+      );
+      break;
+    }
     case "SequenceExpression": {
       const body = codegenBlock(
         cx,
@@ -705,6 +715,15 @@ function codegenInstructionValue(
         if (stmt.type === "ExpressionStatement") {
           return stmt.expression;
         } else {
+          if (t.isVariableDeclaration(stmt)) {
+            const declarator = stmt.declarations[0];
+            todoInvariant(
+              false,
+              `Cannot declare variables in a value block, tried to declare '${
+                (declarator.id as t.Identifier).name
+              }'`
+            );
+          }
           todoInvariant(
             false,
             `Handle conversion of ${stmt.type} to expression`

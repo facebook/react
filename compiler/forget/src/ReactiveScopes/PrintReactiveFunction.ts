@@ -124,6 +124,20 @@ function printValueBlock(writer: Writer, block: ReactiveValueBlock): void {
 
 function printReactiveValue(writer: Writer, value: ReactiveValue): void {
   switch (value.kind) {
+    case "ConditionalExpression": {
+      writer.append(`Ternary `);
+      printReactiveValue(writer, value.test);
+      writer.newline();
+      writer.indented(() => {
+        writer.write(`? `);
+        printReactiveValue(writer, value.consequent);
+        writer.newline();
+        writer.write(`: `);
+        printReactiveValue(writer, value.alternate);
+        writer.newline();
+      });
+      break;
+    }
     case "LogicalExpression": {
       writer.append(`Logical ${value.operator} `);
       printReactiveValue(writer, value.left);
