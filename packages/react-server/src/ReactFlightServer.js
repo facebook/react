@@ -38,8 +38,6 @@ import {
   closeWithError,
   processModelChunk,
   processModuleChunk,
-  processProviderChunk,
-  processSymbolChunk,
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
@@ -417,7 +415,15 @@ function serializeByValueID(id: number): string {
 }
 
 function serializeByRefID(id: number): string {
-  return '@' + id.toString(16);
+  return '$L' + id.toString(16);
+}
+
+function serializeSymbolReference(name: string): string {
+  return '$S' + name;
+}
+
+function serializeProviderReference(name: string): string {
+  return '$P' + name;
 }
 
 function serializeClientReference(
@@ -473,7 +479,7 @@ function serializeClientReference(
 }
 
 function escapeStringValue(value: string): string {
-  if (value[0] === '$' || value[0] === '@') {
+  if (value[0] === '$') {
     // We need to escape $ or @ prefixed strings since we use those to encode
     // references to IDs and as special symbol values.
     return '$' + value;
@@ -1110,7 +1116,8 @@ function emitModuleChunk(
 }
 
 function emitSymbolChunk(request: Request, id: number, name: string): void {
-  const processedChunk = processSymbolChunk(request, id, name);
+  const symbolReference = serializeSymbolReference(name);
+  const processedChunk = processReferenceChunk(request, id, symbolReference);
   request.completedModuleChunks.push(processedChunk);
 }
 
@@ -1119,7 +1126,8 @@ function emitProviderChunk(
   id: number,
   contextName: string,
 ): void {
-  const processedChunk = processProviderChunk(request, id, contextName);
+  const contextReference = serializeProviderReference(contextName);
+  const processedChunk = processReferenceChunk(request, id, contextReference);
   request.completedJSONChunks.push(processedChunk);
 }
 

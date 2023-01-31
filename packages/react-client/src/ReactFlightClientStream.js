@@ -14,8 +14,6 @@ import type {BundlerConfig} from './ReactFlightClientHostConfig';
 import {
   resolveModule,
   resolveModel,
-  resolveProvider,
-  resolveSymbol,
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
@@ -36,33 +34,20 @@ function processFullRow(response: Response, row: string): void {
   if (row === '') {
     return;
   }
-  const tag = row[0];
+  const colon = row.indexOf(':', 0);
+  const id = parseInt(row.substring(0, colon), 16);
+  const tag = row[colon + 1];
   // When tags that are not text are added, check them here before
   // parsing the row as text.
   // switch (tag) {
   // }
-  const colon = row.indexOf(':', 1);
-  const id = parseInt(row.substring(1, colon), 16);
-  const text = row.substring(colon + 1);
   switch (tag) {
-    case 'J': {
-      resolveModel(response, id, text);
-      return;
-    }
-    case 'M': {
-      resolveModule(response, id, text);
-      return;
-    }
-    case 'P': {
-      resolveProvider(response, id, text);
-      return;
-    }
-    case 'S': {
-      resolveSymbol(response, id, JSON.parse(text));
+    case 'I': {
+      resolveModule(response, id, row.substring(colon + 2));
       return;
     }
     case 'E': {
-      const errorInfo = JSON.parse(text);
+      const errorInfo = JSON.parse(row.substring(colon + 2));
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -77,9 +62,9 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     default: {
-      throw new Error(
-        "Error parsing the data. It's probably an error code or network corruption.",
-      );
+      // We assume anything else is JSON.
+      resolveModel(response, id, row.substring(colon + 1));
+      return;
     }
   }
 }
