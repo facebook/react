@@ -112,7 +112,7 @@ export function printInstruction(instr: ReactiveInstruction): string {
 function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
-  items.push(printMutableRange(phi.id));
+  // items.push(printMutableRange(phi.id));
   items.push(printType(phi.type));
   items.push(": phi(");
   const phis = [];
@@ -374,9 +374,7 @@ function printMutableRange(identifier: Identifier): string {
 }
 
 export function printLValue(lval: LValue): string {
-  let lvalue = `${printPlace(lval.place)}${printMutableRange(
-    lval.place.identifier
-  )}`;
+  let lvalue = `${printPlace(lval.place)}`;
 
   switch (lval.kind) {
     case InstructionKind.Let: {
@@ -395,7 +393,12 @@ export function printLValue(lval: LValue): string {
 }
 
 export function printPlace(place: Place): string {
-  const items = [place.effect, " ", printIdentifier(place.identifier)];
+  const items = [
+    place.effect,
+    " ",
+    printIdentifier(place.identifier),
+    printMutableRange(place.identifier),
+  ];
   items.push(printType(place.identifier.type));
   return items.filter((x) => x != null).join("");
 }
