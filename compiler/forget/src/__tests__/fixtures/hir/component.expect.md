@@ -55,10 +55,7 @@ function Component(props) {
     }
     for (let i = 0; i < items.length; i = i + 1, i) {
       const item = items.at(i);
-      if (item == null) {
-      } else {
-      }
-      if (seen.has(item)) {
+      if (item == null || seen.has(item)) {
         continue;
       }
 
