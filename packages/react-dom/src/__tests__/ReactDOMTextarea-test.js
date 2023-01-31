@@ -137,7 +137,9 @@ describe('ReactDOMTextarea', () => {
 
     let counter = 0;
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(function (type) {
+    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
+      type,
+    ) {
       const el = originalCreateElement.apply(this, arguments);
       let value = '';
       if (type === 'textarea') {
