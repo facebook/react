@@ -483,14 +483,26 @@ export function parseModelString(
   key: string,
   value: string,
 ): any {
-  switch (value[0]) {
-    case '$': {
-      if (value === '$') {
-        return REACT_ELEMENT_TYPE;
-      } else if (value[1] === '$' || value[1] === '@') {
+  if (value[0] === '$') {
+    if (value === '$') {
+      // A very common symbol.
+      return REACT_ELEMENT_TYPE;
+    }
+    switch (value[1]) {
+      case '$': {
         // This was an escaped string value.
         return value.substring(1);
-      } else {
+      }
+      case 'L': {
+        // Lazy node
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        // We create a React.lazy wrapper around any lazy values.
+        // When passed into React, we'll know how to suspend on this.
+        return createLazyChunkWrapper(chunk);
+      }
+      default: {
+        // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
@@ -517,13 +529,6 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
-    }
-    case '@': {
-      const id = parseInt(value.substring(1), 16);
-      const chunk = getChunk(response, id);
-      // We create a React.lazy wrapper around any lazy values.
-      // When passed into React, we'll know how to suspend on this.
-      return createLazyChunkWrapper(chunk);
     }
   }
   return value;

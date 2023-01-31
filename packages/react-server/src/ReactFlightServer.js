@@ -417,7 +417,7 @@ function serializeByValueID(id: number): string {
 }
 
 function serializeByRefID(id: number): string {
-  return '@' + id.toString(16);
+  return '$L' + id.toString(16);
 }
 
 function serializeClientReference(
@@ -473,7 +473,7 @@ function serializeClientReference(
 }
 
 function escapeStringValue(value: string): string {
-  if (value[0] === '$' || value[0] === '@') {
+  if (value[0] === '$') {
     // We need to escape $ or @ prefixed strings since we use those to encode
     // references to IDs and as special symbol values.
     return '$' + value;
