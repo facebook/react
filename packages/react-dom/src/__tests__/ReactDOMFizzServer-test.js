@@ -76,8 +76,8 @@ describe('ReactDOMFizzServer', () => {
       );
     }
     useSyncExternalStore = React.useSyncExternalStore;
-    useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
-      .useSyncExternalStoreWithSelector;
+    useSyncExternalStoreWithSelector =
+      require('use-sync-external-store/with-selector').useSyncExternalStoreWithSelector;
 
     textCache = new Map();
 
@@ -516,7 +516,7 @@ describe('ReactDOMFizzServer', () => {
 
     let bootstrapped = false;
     const errors = [];
-    window.__INIT__ = function() {
+    window.__INIT__ = function () {
       bootstrapped = true;
       // Attempt to hydrate the content.
       ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
@@ -901,7 +901,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     let bootstrapped = false;
-    window.__INIT__ = function() {
+    window.__INIT__ = function () {
       bootstrapped = true;
       // Attempt to hydrate the content.
       ReactDOMClient.hydrateRoot(container, <App />);
@@ -1509,7 +1509,7 @@ describe('ReactDOMFizzServer', () => {
   function normalizeCodeLocInfo(str) {
     return (
       str &&
-      String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
         return '\n    in ' + name + ' (at **)';
       })
     );

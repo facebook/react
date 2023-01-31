@@ -40,9 +40,7 @@ describe('ReactTestUtils', () => {
     MockedComponent.prototype.render = jest.fn();
 
     // Patch it up so it returns its children.
-    expect(() =>
-      ReactTestUtils.mockComponent(MockedComponent),
-    ).toWarnDev(
+    expect(() => ReactTestUtils.mockComponent(MockedComponent)).toWarnDev(
       'ReactTestUtils.mockComponent() is deprecated. ' +
         'Use shallow rendering or jest.mock() instead.\n\n' +
         'See https://reactjs.org/link/test-utils-mock-component for more information.',
@@ -188,7 +186,7 @@ describe('ReactTestUtils', () => {
     );
 
     const log = [];
-    ReactTestUtils.findAllInRenderedTree(tree, function(child) {
+    ReactTestUtils.findAllInRenderedTree(tree, function (child) {
       if (ReactTestUtils.isDOMComponent(child)) {
         log.push(ReactDOM.findDOMNode(child).textContent);
       }
@@ -210,7 +208,7 @@ describe('ReactTestUtils', () => {
       'textarea',
     ];
 
-    injectedDOMComponents.forEach(function(type) {
+    injectedDOMComponents.forEach(function (type) {
       const testComponent = ReactTestUtils.renderIntoDocument(
         React.createElement(type),
       );
@@ -331,7 +329,7 @@ describe('ReactTestUtils', () => {
   describe('Simulate', () => {
     it('should change the value of an input field', () => {
       const obj = {
-        handler: function(e) {
+        handler: function (e) {
           e.persist();
         },
       };
@@ -367,7 +365,7 @@ describe('ReactTestUtils', () => {
       }
 
       const obj = {
-        handler: function(e) {
+        handler: function (e) {
           e.persist();
         },
       };

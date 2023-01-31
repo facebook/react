@@ -61,10 +61,8 @@ test.describe('Components', () => {
     // Then read the inspected values.
     const [propName, propValue, sourceText] = await page.evaluate(
       isEditable => {
-        const {
-          createTestNameSelector,
-          findAllNodes,
-        } = window.REACT_DOM_DEVTOOLS;
+        const {createTestNameSelector, findAllNodes} =
+          window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
 
         // Get name of first prop
@@ -150,10 +148,8 @@ test.describe('Components', () => {
     // Make sure the expected hook names are parsed and displayed eventually.
     await page.waitForFunction(
       hookNames => {
-        const {
-          createTestNameSelector,
-          findAllNodes,
-        } = window.REACT_DOM_DEVTOOLS;
+        const {createTestNameSelector, findAllNodes} =
+          window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
 
         const hooksTree = findAllNodes(container, [
@@ -181,10 +177,8 @@ test.describe('Components', () => {
   test('should allow searching for component by name', async () => {
     async function getComponentSearchResultsCount() {
       return await page.evaluate(() => {
-        const {
-          createTestNameSelector,
-          findAllNodes,
-        } = window.REACT_DOM_DEVTOOLS;
+        const {createTestNameSelector, findAllNodes} =
+          window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
 
         const element = findAllNodes(container, [

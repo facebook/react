@@ -558,7 +558,7 @@ No matching component was found for:
     // Stub out getBoundingClientRect for the specified target.
     // This API is required by the test selectors but it isn't implemented by jsdom.
     function setBoundingClientRect(target, {x, y, width, height}) {
-      target.getBoundingClientRect = function() {
+      target.getBoundingClientRect = function () {
         return {
           width,
           height,
@@ -1134,7 +1134,7 @@ No matching component was found for:
     // Stub out getBoundingClientRect for the specified target.
     // This API is required by the test selectors but it isn't implemented by jsdom.
     function setBoundingClientRect(target, {x, y, width, height}) {
-      target.getBoundingClientRect = function() {
+      target.getBoundingClientRect = function () {
         return {
           width,
           height,

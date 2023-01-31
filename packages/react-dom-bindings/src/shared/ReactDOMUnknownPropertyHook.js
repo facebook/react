@@ -25,7 +25,7 @@ if (__DEV__) {
   const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
   const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
-  validateProperty = function(tagName, name, value, eventRegistry) {
+  validateProperty = function (tagName, name, value, eventRegistry) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -43,10 +43,8 @@ if (__DEV__) {
 
     // We can't rely on the event system being injected on the server.
     if (eventRegistry != null) {
-      const {
-        registrationNameDependencies,
-        possibleRegistrationNames,
-      } = eventRegistry;
+      const {registrationNameDependencies, possibleRegistrationNames} =
+        eventRegistry;
       if (registrationNameDependencies.hasOwnProperty(name)) {
         return true;
       }
@@ -239,7 +237,7 @@ if (__DEV__) {
   };
 }
 
-const warnUnknownProperties = function(type, props, eventRegistry) {
+const warnUnknownProperties = function (type, props, eventRegistry) {
   if (__DEV__) {
     const unknownProps = [];
     for (const key in props) {

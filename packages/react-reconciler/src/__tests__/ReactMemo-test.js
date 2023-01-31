@@ -469,9 +469,7 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is undefined', () => {
-        expect(() =>
-          memo(),
-        ).toErrorDev(
+        expect(() => memo()).toErrorDev(
           'memo: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
@@ -479,9 +477,7 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is null', () => {
-        expect(() =>
-          memo(null),
-        ).toErrorDev(
+        expect(() => memo(null)).toErrorDev(
           'memo: The first argument must be a component. Instead ' +
             'received: null',
           {withoutStack: true},

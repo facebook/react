@@ -39,16 +39,16 @@ describe('OwnersListContext', () => {
     React = require('react');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
-      .BridgeContext;
-    OwnersListContext = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
-      .OwnersListContext;
-    OwnersListContextController = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
-      .OwnersListContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context')
-      .StoreContext;
-    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
-      .TreeContextController;
+    BridgeContext =
+      require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    OwnersListContext =
+      require('react-devtools-shared/src/devtools/views/Components/OwnersListContext').OwnersListContext;
+    OwnersListContextController =
+      require('react-devtools-shared/src/devtools/views/Components/OwnersListContext').OwnersListContextController;
+    StoreContext =
+      require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeContextController;
   });
 
   const Contexts = ({children, defaultOwnerID = null}) => (

@@ -38,8 +38,8 @@ const run = async ({cwd, packages, version}, versionsMap) => {
           // We compare source packages to determine what the new scheduler dependency constraint should be.
           // To do this, we look at both the local version of the scheduler (e.g. 0.11.0),
           // and the dependency constraint in the local version of react-dom (e.g. scheduler@^0.11.0).
-          const sourceDependencyVersion = sourcePackageJSONs.get(dependencyName)
-            .version;
+          const sourceDependencyVersion =
+            sourcePackageJSONs.get(dependencyName).version;
           const sourceDependencyConstraint = sourceDependencies[dependencyName];
 
           // If the source dependency's version and the constraint match,
@@ -52,12 +52,11 @@ const run = async ({cwd, packages, version}, versionsMap) => {
             sourceDependencyVersion ===
             sourceDependencyConstraint.replace(/^[\^\~]/, '')
           ) {
-            targetDependencies[
-              dependencyName
-            ] = sourceDependencyConstraint.replace(
-              sourceDependencyVersion,
-              versionsMap.get(dependencyName)
-            );
+            targetDependencies[dependencyName] =
+              sourceDependencyConstraint.replace(
+                sourceDependencyVersion,
+                versionsMap.get(dependencyName)
+              );
           } else {
             targetDependencies[dependencyName] = sourceDependencyConstraint;
           }

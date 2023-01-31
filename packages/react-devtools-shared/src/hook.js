@@ -166,7 +166,7 @@ export function installHook(target: any): DevToolsHook | null {
 
         // Bonus: throw an exception hoping that it gets picked up by a reporting system.
         // Not synchronously so that it doesn't break the calling code.
-        setTimeout(function() {
+        setTimeout(function () {
           throw new Error(
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
@@ -303,8 +303,10 @@ export function installHook(target: any): DevToolsHook | null {
           }
         };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
+        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+          originalMethod;
+        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+          overrideMethod;
 
         targetConsole[method] = overrideMethod;
       } catch (error) {}
@@ -555,7 +557,8 @@ export function installHook(target: any): DevToolsHook | null {
   };
 
   if (__TEST__) {
-    hook.dangerous_setTargetConsoleForTesting = dangerous_setTargetConsoleForTesting;
+    hook.dangerous_setTargetConsoleForTesting =
+      dangerous_setTargetConsoleForTesting;
   }
 
   Object.defineProperty(

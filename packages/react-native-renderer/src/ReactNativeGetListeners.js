@@ -118,7 +118,7 @@ export default function getListeners(
       // and pass them an Event.
       // When this API is more stable and used more frequently, we can revisit.
       // $FlowFixMe[missing-local-annot]
-      const listenerFnWrapper = function(syntheticEvent, ...args) {
+      const listenerFnWrapper = function (syntheticEvent, ...args) {
         const eventInst = new CustomEvent(mangledImperativeRegistrationName, {
           detail: syntheticEvent.nativeEvent,
         });
@@ -133,7 +133,7 @@ export default function getListeners(
       // and by removing it from eventListeners once it is called (but only
       // when it's actually been executed).
       if (listenerObj.options.once) {
-        listeners.push(function(...args) {
+        listeners.push(function (...args) {
           // Remove from the event listener once it's been called
           stateNode.canonical.removeEventListener_unstable(
             mangledImperativeRegistrationName,

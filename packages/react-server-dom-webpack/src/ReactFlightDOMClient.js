@@ -38,18 +38,12 @@ function startReadingFromStream(
     }
     const buffer: Uint8Array = (value: any);
     processBinaryChunk(response, buffer);
-    return reader
-      .read()
-      .then(progress)
-      .catch(error);
+    return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
     reportGlobalError(response, e);
   }
-  reader
-    .read()
-    .then(progress)
-    .catch(error);
+  reader.read().then(progress).catch(error);
 }
 
 function createFromReadableStream<T>(
@@ -71,10 +65,10 @@ function createFromFetch<T>(
     options && options.moduleMap ? options.moduleMap : null,
   );
   promiseForResponse.then(
-    function(r) {
+    function (r) {
       startReadingFromStream(response, (r.body: any));
     },
-    function(e) {
+    function (e) {
       reportGlobalError(response, e);
     },
   );

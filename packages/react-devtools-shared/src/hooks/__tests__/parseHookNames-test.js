@@ -56,16 +56,16 @@ describe('parseHookNames', () => {
 
     fetchMock = initFetchMock();
 
-    inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
-      .inspectHooks;
+    inspectHooks =
+      require('react-debug-tools/src/ReactDebugHooks').inspectHooks;
 
     // Jest can't run the workerized version of this module.
     const {
       flattenHooksList,
       loadSourceAndMetadata,
     } = require('../parseHookNames/loadSourceAndMetadata');
-    const parseSourceAndMetadata = require('../parseHookNames/parseSourceAndMetadata')
-      .parseSourceAndMetadata;
+    const parseSourceAndMetadata =
+      require('../parseHookNames/parseSourceAndMetadata').parseSourceAndMetadata;
     parseHookNames = async hooksTree => {
       const hooksList = flattenHooksList(hooksTree);
 
@@ -105,22 +105,22 @@ describe('parseHookNames', () => {
   }
 
   it('should parse names for useState()', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithUseState').Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz', null]);
   });
 
   it('should parse names for useReducer()', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseReducer')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithUseReducer').Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should skip loading source files for unnamed hooks like useEffect', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseEffect')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithUseEffect').Component;
 
     // Since this component contains only unnamed hooks, the source code should not even be loaded.
     fetchMock.mockIf(/.+$/, request => {
@@ -132,8 +132,8 @@ describe('parseHookNames', () => {
   });
 
   it('should skip loading source files for unnamed hooks like useEffect (alternate)', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithExternalUseEffect')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithExternalUseEffect').Component;
 
     fetchMock.mockIf(/.+$/, request => {
       // Since the custom hook contains only unnamed hooks, the source code should not be loaded.
@@ -148,8 +148,8 @@ describe('parseHookNames', () => {
   });
 
   it('should parse names for custom hooks', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithNamedCustomHooks')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithNamedCustomHooks').Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       'foo',
@@ -159,15 +159,15 @@ describe('parseHookNames', () => {
   });
 
   it('should parse names for code using hooks indirectly', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentUsingHooksIndirectly')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentUsingHooksIndirectly').Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['count', 'darkMode', 'isDarkMode']);
   });
 
   it('should parse names for code using nested hooks', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithNestedHooks')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithNestedHooks').Component;
     let InnerComponent;
     const hookNames = await getHookNamesForComponent(Component, {
       callback: innerComponent => {
@@ -180,8 +180,8 @@ describe('parseHookNames', () => {
   });
 
   it('should return null for custom hooks without explicit names', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks').Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       null, // Custom hooks can have names, but this one does not even return a value.
@@ -923,8 +923,8 @@ describe('parseHookNames worker', () => {
       };
     });
 
-    inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
-      .inspectHooks;
+    inspectHooks =
+      require('react-debug-tools/src/ReactDebugHooks').inspectHooks;
     parseHookNames = require('../parseHookNames').parseHookNames;
   });
 
@@ -935,8 +935,8 @@ describe('parseHookNames worker', () => {
   }
 
   it('should use worker', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
-      .Component;
+    const Component =
+      require('./__source__/__untransformed__/ComponentWithUseState').Component;
 
     window.Worker = true;
 

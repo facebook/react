@@ -10,7 +10,8 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
@@ -738,7 +739,7 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 
@@ -784,7 +785,7 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 
@@ -842,7 +843,7 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 

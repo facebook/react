@@ -68,7 +68,7 @@ function processEventTypes(
  * The callback is deferred until the view is actually rendered.
  * This is done to avoid causing Prepack deopts.
  */
-exports.register = function(name: string, callback: ViewConfigGetter): string {
+exports.register = function (name: string, callback: ViewConfigGetter): string {
   if (viewConfigCallbacks.has(name)) {
     throw new Error(`Tried to register two views with the same name ${name}`);
   }
@@ -90,7 +90,7 @@ exports.register = function(name: string, callback: ViewConfigGetter): string {
  * If this is the first time the view has been used,
  * This configuration will be lazy-loaded from UIManager.
  */
-exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
+exports.get = function (name: string): ReactNativeBaseComponentViewConfig<> {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);

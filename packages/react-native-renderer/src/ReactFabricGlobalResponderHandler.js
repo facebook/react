@@ -11,7 +11,7 @@
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const ReactFabricGlobalResponderHandler = {
-  onChange: function(from: any, to: any, blockNativeResponder: boolean) {
+  onChange: function (from: any, to: any, blockNativeResponder: boolean) {
     const fromOrTo = from || to;
     const fromOrToStateNode = fromOrTo && fromOrTo.stateNode;
     const isFabric = !!(

@@ -19,7 +19,7 @@ if (canUseDOM) {
       passive?: void,
     } = {};
     Object.defineProperty(options, 'passive', {
-      get: function() {
+      get: function () {
         passiveBrowserEventsSupported = true;
       },
     });

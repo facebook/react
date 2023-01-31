@@ -27,18 +27,7 @@ export const TEXT_PADDING = 3;
 export const SNAPSHOT_SCRUBBER_SIZE = 3;
 
 export const INTERVAL_TIMES = [
-  1,
-  2,
-  5,
-  10,
-  20,
-  50,
-  100,
-  200,
-  500,
-  1000,
-  2000,
-  5000,
+  1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
 ];
 export const MIN_INTERVAL_SIZE_PX = 70;
 

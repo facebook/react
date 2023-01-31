@@ -97,86 +97,86 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
 }
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
-// $FlowFixMe[missing-this-annot]
-ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
-  children: ReactNodeList,
-): void {
-  const root = this._internalRoot;
-  if (root === null) {
-    throw new Error('Cannot update an unmounted root.');
-  }
-
-  if (__DEV__) {
-    if (typeof arguments[1] === 'function') {
-      console.error(
-        'render(...): does not support the second callback argument. ' +
-          'To execute a side effect after rendering, declare it in a component body with useEffect().',
-      );
-    } else if (isValidContainer(arguments[1])) {
-      console.error(
-        'You passed a container to the second argument of root.render(...). ' +
-          "You don't need to pass it again since you already passed it to create the root.",
-      );
-    } else if (typeof arguments[1] !== 'undefined') {
-      console.error(
-        'You passed a second argument to root.render(...) but it only accepts ' +
-          'one argument.',
-      );
+ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
+  // $FlowFixMe[missing-this-annot]
+  function (children: ReactNodeList): void {
+    const root = this._internalRoot;
+    if (root === null) {
+      throw new Error('Cannot update an unmounted root.');
     }
 
-    const container = root.containerInfo;
+    if (__DEV__) {
+      if (typeof arguments[1] === 'function') {
+        console.error(
+          'render(...): does not support the second callback argument. ' +
+            'To execute a side effect after rendering, declare it in a component body with useEffect().',
+        );
+      } else if (isValidContainer(arguments[1])) {
+        console.error(
+          'You passed a container to the second argument of root.render(...). ' +
+            "You don't need to pass it again since you already passed it to create the root.",
+        );
+      } else if (typeof arguments[1] !== 'undefined') {
+        console.error(
+          'You passed a second argument to root.render(...) but it only accepts ' +
+            'one argument.',
+        );
+      }
 
-    if (
-      !enableFloat &&
-      !enableHostSingletons &&
-      container.nodeType !== COMMENT_NODE
-    ) {
-      const hostInstance = findHostInstanceWithNoPortals(root.current);
-      if (hostInstance) {
-        if (hostInstance.parentNode !== container) {
-          console.error(
-            'render(...): It looks like the React-rendered content of the ' +
-              'root container was removed without using React. This is not ' +
-              'supported and will cause errors. Instead, call ' +
-              "root.unmount() to empty a root's container.",
-          );
+      const container = root.containerInfo;
+
+      if (
+        !enableFloat &&
+        !enableHostSingletons &&
+        container.nodeType !== COMMENT_NODE
+      ) {
+        const hostInstance = findHostInstanceWithNoPortals(root.current);
+        if (hostInstance) {
+          if (hostInstance.parentNode !== container) {
+            console.error(
+              'render(...): It looks like the React-rendered content of the ' +
+                'root container was removed without using React. This is not ' +
+                'supported and will cause errors. Instead, call ' +
+                "root.unmount() to empty a root's container.",
+            );
+          }
         }
       }
     }
-  }
-  updateContainer(children, root, null, null);
-};
+    updateContainer(children, root, null, null);
+  };
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
-// $FlowFixMe[missing-this-annot]
-ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(): void {
-  if (__DEV__) {
-    if (typeof arguments[0] === 'function') {
-      console.error(
-        'unmount(...): does not support a callback argument. ' +
-          'To execute a side effect after rendering, declare it in a component body with useEffect().',
-      );
-    }
-  }
-  const root = this._internalRoot;
-  if (root !== null) {
-    this._internalRoot = null;
-    const container = root.containerInfo;
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
+  // $FlowFixMe[missing-this-annot]
+  function (): void {
     if (__DEV__) {
-      if (isAlreadyRendering()) {
+      if (typeof arguments[0] === 'function') {
         console.error(
-          'Attempted to synchronously unmount a root while React was already ' +
-            'rendering. React cannot finish unmounting the root until the ' +
-            'current render has completed, which may lead to a race condition.',
+          'unmount(...): does not support a callback argument. ' +
+            'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       }
     }
-    flushSync(() => {
-      updateContainer(null, root, null, null);
-    });
-    unmarkContainerAsRoot(container);
-  }
-};
+    const root = this._internalRoot;
+    if (root !== null) {
+      this._internalRoot = null;
+      const container = root.containerInfo;
+      if (__DEV__) {
+        if (isAlreadyRendering()) {
+          console.error(
+            'Attempted to synchronously unmount a root while React was already ' +
+              'rendering. React cannot finish unmounting the root until the ' +
+              'current render has completed, which may lead to a race condition.',
+          );
+        }
+      }
+      flushSync(() => {
+        updateContainer(null, root, null, null);
+      });
+      unmarkContainerAsRoot(container);
+    }
+  };
 
 export function createRoot(
   container: Element | Document | DocumentFragment,

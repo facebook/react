@@ -16,7 +16,7 @@ module.exports = function register() {
   const PROMISE_PROTOTYPE = Promise.prototype;
 
   const deepProxyHandlers = {
-    get: function(target: Function, name: string, receiver: Proxy<Function>) {
+    get: function (target: Function, name: string, receiver: Proxy<Function>) {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -68,13 +68,13 @@ module.exports = function register() {
           'You can only pass the imported name through.',
       );
     },
-    set: function() {
+    set: function () {
       throw new Error('Cannot assign to a client module from a server module.');
     },
   };
 
   const proxyHandlers = {
-    get: function(target: Function, name: string, receiver: Proxy<Function>) {
+    get: function (target: Function, name: string, receiver: Proxy<Function>) {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -104,7 +104,7 @@ module.exports = function register() {
           // an ESM compat module but then we'll check again on the client.
           const moduleId = target.filepath;
           target.default = Object.defineProperties(
-            (function() {
+            (function () {
               throw new Error(
                 `Attempted to call the default export of ${moduleId} from the server` +
                   `but it's on the client. It's not possible to invoke a client function from ` +
@@ -134,7 +134,7 @@ module.exports = function register() {
 
             const innerModuleId = target.filepath;
             const clientReference: Function = Object.defineProperties(
-              (function() {
+              (function () {
                 throw new Error(
                   `Attempted to call the module exports of ${innerModuleId} from the server` +
                     `but it's on the client. It's not possible to invoke a client function from ` +
@@ -185,7 +185,7 @@ module.exports = function register() {
       let cachedReference = target[name];
       if (!cachedReference) {
         const reference = Object.defineProperties(
-          (function() {
+          (function () {
             throw new Error(
               // eslint-disable-next-line react-internal/safe-string-coercion
               `Attempted to call ${String(name)}() from the server but ${String(
@@ -213,16 +213,16 @@ module.exports = function register() {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },
-    set: function() {
+    set: function () {
       throw new Error('Cannot assign to a client module from a server module.');
     },
   };
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  Module._extensions['.client.js'] = function(module, path) {
+  Module._extensions['.client.js'] = function (module, path) {
     const moduleId: string = (url.pathToFileURL(path).href: any);
     const clientReference: Function = Object.defineProperties(
-      (function() {
+      (function () {
         throw new Error(
           `Attempted to call the module exports of ${moduleId} from the server` +
             `but it's on the client. It's not possible to invoke a client function from ` +
@@ -247,7 +247,7 @@ module.exports = function register() {
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
   // $FlowFixMe[missing-this-annot]
-  Module._resolveFilename = function(request, parent, isMain, options) {
+  Module._resolveFilename = function (request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {
       if (

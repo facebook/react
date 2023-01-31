@@ -95,12 +95,14 @@ export function preloadModule<T>(
       });
       modulePromise.then(
         value => {
-          const fulfilledThenable: FulfilledThenable<mixed> = (modulePromise: any);
+          const fulfilledThenable: FulfilledThenable<mixed> =
+            (modulePromise: any);
           fulfilledThenable.status = 'fulfilled';
           fulfilledThenable.value = value;
         },
         reason => {
-          const rejectedThenable: RejectedThenable<mixed> = (modulePromise: any);
+          const rejectedThenable: RejectedThenable<mixed> =
+            (modulePromise: any);
           rejectedThenable.status = 'rejected';
           rejectedThenable.reason = reason;
         },

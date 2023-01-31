@@ -92,7 +92,7 @@ describe('ReactElement.jsx', () => {
         const el = JSXRuntime.jsx('div', {className: 'moo'});
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe('moo');
@@ -121,7 +121,7 @@ describe('ReactElement.jsx', () => {
         const el = JSXRuntime.jsx('div', {children: this.props.sound});
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe(undefined);
@@ -200,9 +200,7 @@ describe('ReactElement.jsx', () => {
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = JSXRuntime.jsxs('div', {}, '3');
-    expect(
-      () => void element.props.key,
-    ).toErrorDev(
+    expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +

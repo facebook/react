@@ -42,7 +42,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('basic rendering', function() {
+  describe('basic rendering', function () {
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
@@ -116,10 +116,10 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('an iterable', async render => {
       const threeDivIterable = {
-        '@@iterator': function() {
+        '@@iterator': function () {
           let i = 0;
           return {
-            next: function() {
+            next: function () {
               if (i++ < 3) {
                 return {value: <div key={i} />, done: false};
               } else {

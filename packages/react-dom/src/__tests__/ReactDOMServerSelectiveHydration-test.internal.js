@@ -138,8 +138,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     Suspense = React.Suspense;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
-    ContinuousEventPriority = require('react-reconciler/constants')
-      .ContinuousEventPriority;
+    ContinuousEventPriority =
+      require('react-reconciler/constants').ContinuousEventPriority;
   });
 
   it('hydrates the target boundary synchronously during a click', async () => {
@@ -1460,7 +1460,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
-    const ChildWithBoundary = React.memo(function({text}) {
+    const ChildWithBoundary = React.memo(function ({text}) {
       return (
         <Suspense fallback="Loading...">
           <Child text={text} />
@@ -1904,7 +1904,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
-    const ChildWithBoundary = React.memo(function({text}) {
+    const ChildWithBoundary = React.memo(function ({text}) {
       return (
         <Suspense fallback="Loading...">
           <Child text={text} />
@@ -1971,7 +1971,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
-    const ChildWithBoundary = React.memo(function({text}) {
+    const ChildWithBoundary = React.memo(function ({text}) {
       return (
         <Suspense fallback="Loading...">
           <Child text={text} />

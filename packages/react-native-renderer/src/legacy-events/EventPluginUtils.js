@@ -32,7 +32,7 @@ export function setComponentTree(
 
 let validateEventDispatches;
 if (__DEV__) {
-  validateEventDispatches = function(event) {
+  validateEventDispatches = function (event) {
     const dispatchListeners = event._dispatchListeners;
     const dispatchInstances = event._dispatchInstances;
 

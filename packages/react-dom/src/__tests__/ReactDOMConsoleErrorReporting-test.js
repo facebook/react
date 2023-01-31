@@ -37,7 +37,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return this.props.children;
       }
     };
-    NoError = function() {
+    NoError = function () {
       return <h1>OK</h1>;
     };
     container = document.createElement('div');

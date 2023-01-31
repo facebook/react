@@ -14,14 +14,14 @@ let ReactDOM;
 let ReactTestUtils;
 
 let idCallOrder;
-const recordID = function(id) {
+const recordID = function (id) {
   idCallOrder.push(id);
 };
-const recordIDAndStopPropagation = function(id, event) {
+const recordIDAndStopPropagation = function (id, event) {
   recordID(id);
   event.stopPropagation();
 };
-const recordIDAndReturnFalse = function(id, event) {
+const recordIDAndReturnFalse = function (id, event) {
   recordID(id);
   return false;
 };
@@ -82,7 +82,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     renderTree();
 
-    putListener = function(node, eventName, listener) {
+    putListener = function (node, eventName, listener) {
       switch (node) {
         case CHILD:
           CHILD_PROPS[eventName] = listener;
@@ -100,7 +100,7 @@ describe('ReactBrowserEventEmitter', () => {
       // Rerender with new event listeners
       renderTree();
     };
-    deleteAllListeners = function(node) {
+    deleteAllListeners = function (node) {
       switch (node) {
         case CHILD:
           CHILD_PROPS = {};
@@ -159,12 +159,12 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should continue bubbling if an error is thrown', () => {
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function() {
+    putListener(PARENT, ON_CLICK_KEY, function () {
       recordID(PARENT);
       throw new Error('Handler interrupted');
     });
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    expect(function() {
+    expect(function () {
       ReactTestUtils.Simulate.click(CHILD);
     }).toThrow();
     expect(idCallOrder.length).toBe(3);
@@ -174,15 +174,15 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should set currentTarget', () => {
-    putListener(CHILD, ON_CLICK_KEY, function(event) {
+    putListener(CHILD, ON_CLICK_KEY, function (event) {
       recordID(CHILD);
       expect(event.currentTarget).toBe(CHILD);
     });
-    putListener(PARENT, ON_CLICK_KEY, function(event) {
+    putListener(PARENT, ON_CLICK_KEY, function (event) {
       recordID(PARENT);
       expect(event.currentTarget).toBe(PARENT);
     });
-    putListener(GRANDPARENT, ON_CLICK_KEY, function(event) {
+    putListener(GRANDPARENT, ON_CLICK_KEY, function (event) {
       recordID(GRANDPARENT);
       expect(event.currentTarget).toBe(GRANDPARENT);
     });
@@ -210,7 +210,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should support overriding .isPropagationStopped()', () => {
     // Ew. See D4504876.
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function(e) {
+    putListener(PARENT, ON_CLICK_KEY, function (e) {
       recordID(PARENT, e);
       // This stops React bubbling but avoids touching the native event
       e.isPropagationStopped = () => true;
@@ -257,7 +257,7 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should invoke handlers that were removed while bubbling', () => {
     const handleParentClick = jest.fn();
-    const handleChildClick = function(event) {
+    const handleChildClick = function (event) {
       deleteAllListeners(PARENT);
     };
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);
@@ -268,7 +268,7 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should not invoke newly inserted handlers while bubbling', () => {
     const handleParentClick = jest.fn();
-    const handleChildClick = function(event) {
+    const handleChildClick = function (event) {
       putListener(PARENT, ON_CLICK_KEY, handleParentClick);
     };
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);

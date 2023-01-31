@@ -75,11 +75,11 @@ function installFizzInstrObserver(target /*: Node */) {
 
 function handleNode(node_ /*: Node */) {
   // $FlowFixMe[incompatible-cast]
-  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement*/).dataset) {
+  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement */).dataset) {
     return;
   }
   // $FlowFixMe[incompatible-cast]
-  const node = (node_ /*: HTMLElement*/);
+  const node = (node_ /*: HTMLElement */);
   const dataset = node.dataset;
   if (dataset['rxi'] != null) {
     clientRenderBoundary(

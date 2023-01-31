@@ -24,16 +24,17 @@ describe('created with ReactFabric called with ReactNative', () => {
     ReactNative = require('react-native-renderer');
     jest.resetModules();
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
-    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .UIManager;
+    UIManager =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
     jest.mock('shared/ReactFeatureFlags', () =>
       require('shared/forks/ReactFeatureFlags.native-oss'),
     );
 
     React = require('react');
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
   });
 
   it('find Fabric instances with the RN renderer', () => {
@@ -89,9 +90,11 @@ describe('created with ReactFabric called with ReactNative', () => {
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
     ReactNative.dispatchCommand(ref.current, 'myCommand', [10, 20]);
     expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
-    expect(
-      nativeFabricUIManager.dispatchCommand,
-    ).toHaveBeenCalledWith(expect.any(Object), 'myCommand', [10, 20]);
+    expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledWith(
+      expect.any(Object),
+      'myCommand',
+      [10, 20],
+    );
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
   });
 
@@ -124,16 +127,17 @@ describe('created with ReactNative called with ReactFabric', () => {
     require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
     ReactFabric = require('react-native-renderer/fabric');
     jest.resetModules();
-    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .UIManager;
+    UIManager =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
     jest.mock('shared/ReactFeatureFlags', () =>
       require('shared/forks/ReactFeatureFlags.native-oss'),
     );
     ReactNative = require('react-native-renderer');
 
     React = require('react');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
   });
 
   it('find Paper instances with the Fabric renderer', () => {
@@ -189,9 +193,11 @@ describe('created with ReactNative called with ReactFabric', () => {
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
     ReactFabric.dispatchCommand(ref.current, 'myCommand', [10, 20]);
     expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledTimes(1);
-    expect(
-      UIManager.dispatchViewManagerCommand,
-    ).toHaveBeenCalledWith(expect.any(Number), 'myCommand', [10, 20]);
+    expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
+      expect.any(Number),
+      'myCommand',
+      [10, 20],
+    );
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
   });
