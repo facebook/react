@@ -891,78 +891,69 @@ function lowerExpression(
     }
     case "LogicalExpression": {
       const expr = exprPath as NodePath<t.LogicalExpression>;
-      const leftPath = expr.get("left");
-      const operator = expr.node.operator;
-      switch (operator) {
-        case "||": {
-          const left = lowerExpressionToPlace(builder, leftPath);
-          return lowerConditional(
-            builder,
-            left,
-            exprLoc,
-            () => left,
-            () => lowerExpression(builder, expr.get("right"))
-          );
-        }
-        case "&&": {
-          const left = lowerExpressionToPlace(builder, leftPath);
-          return lowerConditional(
-            builder,
-            left,
-            exprLoc,
-            () => lowerExpression(builder, expr.get("right")),
-            () => left
-          );
-        }
-        case "??": {
-          // generate the equivalent of
-          //   const tmp = <left>;
-          //   tmp != null ? tmp : <right>
-          const left = lowerExpressionToPlace(builder, leftPath);
-
-          const nullPlace: Place = buildTemporaryPlace(builder, left.loc);
-          builder.push({
-            id: makeInstructionId(0),
-            value: {
-              kind: "Primitive",
-              value: null,
-              loc: GeneratedSource,
-            },
-            loc: left.loc,
-            lvalue: { place: { ...nullPlace }, kind: InstructionKind.Const },
-          });
-
-          const condPlace: Place = buildTemporaryPlace(builder, left.loc);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: {
-              place: { ...condPlace },
-              kind: InstructionKind.Const,
-            },
-            value: {
-              kind: "BinaryExpression",
-              operator: "!=",
-              left,
-              right: nullPlace,
-              loc: left.loc,
-            },
-            loc: left.loc,
-          });
-          return lowerConditional(
-            builder,
-            condPlace,
-            exprLoc,
-            () => left,
-            () => lowerExpression(builder, expr.get("right"))
-          );
-        }
-        default: {
-          assertExhaustive(
-            operator,
-            `Unexpected logical operator '${operator as any}'`
-          );
-        }
-      }
+      const exprLoc = expr.node.loc ?? GeneratedSource;
+      const continuationBlock = builder.reserve(builder.currentBlockKind());
+      const testBlock = builder.reserve("value");
+      const place = buildTemporaryPlace(builder, exprLoc);
+      const leftPlace = buildTemporaryPlace(
+        builder,
+        expr.get("left").node.loc ?? GeneratedSource
+      );
+      const consequent = builder.enter("value", () => {
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
+          value: { ...leftPlace },
+          loc: exprLoc,
+        });
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
+      });
+      const alternate = builder.enter("value", () => {
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
+          value: lowerExpressionToPlace(builder, expr.get("right")),
+          loc: exprLoc,
+        });
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
+      });
+      builder.terminateWithContinuation(
+        {
+          kind: "logical",
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          test: testBlock.id,
+          operator: expr.node.operator,
+        },
+        testBlock
+      );
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { kind: InstructionKind.Reassign, place: { ...leftPlace } },
+        value: lowerExpressionToPlace(builder, expr.get("left")),
+        loc: exprLoc,
+      });
+      builder.terminateWithContinuation(
+        {
+          kind: "branch",
+          test: { ...leftPlace },
+          consequent,
+          alternate,
+          id: makeInstructionId(0),
+        },
+        continuationBlock
+      );
+      return place;
     }
     case "AssignmentExpression": {
       const expr = exprPath as NodePath<t.AssignmentExpression>;

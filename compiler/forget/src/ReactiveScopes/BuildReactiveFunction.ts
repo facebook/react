@@ -24,7 +24,6 @@ import {
   ReactiveFunction,
   ReactiveTerminalStatement,
 } from "../HIR/HIR";
-import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -361,10 +360,58 @@ class Driver {
         break;
       }
       case "branch": {
-        todo("Implement tree visitor for branch terminal");
+        let consequent: ReactiveBlock | null = null;
+        if (this.cx.isScheduled(terminal.consequent)) {
+          const break_ = this.visitBreak(terminal.consequent, null);
+          if (break_ !== null) {
+            consequent = [break_];
+          }
+        } else {
+          consequent = this.traverseBlock(
+            this.cx.ir.blocks.get(terminal.consequent)!
+          );
+        }
+
+        let alternate: ReactiveBlock | null = null;
+        if (this.cx.isScheduled(terminal.alternate)) {
+          const break_ = this.visitBreak(terminal.alternate, null);
+          if (break_ !== null) {
+            alternate = [break_];
+          }
+        } else {
+          alternate = this.traverseBlock(
+            this.cx.ir.blocks.get(terminal.alternate)!
+          );
+        }
+
+        blockValue.push({
+          kind: "terminal",
+          terminal: {
+            kind: "if",
+            test: terminal.test,
+            consequent: consequent ?? this.emptyBlock(),
+            alternate: alternate,
+            id: terminal.id,
+          },
+          label: null,
+        });
+
+        break;
       }
       case "logical": {
-        todo("Implement tree visitor for logical terminal");
+        const fallthroughId = terminal.fallthrough;
+        invariant(
+          !this.cx.isScheduled(fallthroughId),
+          "Logical terminal fallthrough cannot have been scheduled"
+        );
+        const scheduleId = this.cx.schedule(fallthroughId, "if");
+        scheduleIds.push(scheduleId);
+
+        this.visitBlock(this.cx.ir.blocks.get(terminal.test)!, blockValue);
+
+        this.cx.unschedule(scheduleId);
+        this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        break;
       }
       case "goto": {
         switch (terminal.variant) {

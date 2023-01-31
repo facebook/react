@@ -8,7 +8,6 @@
 import invariant from "invariant";
 import {
   BasicBlock,
-  BlockId,
   Effect,
   GeneratedSource,
   HIRFunction,
@@ -124,6 +123,7 @@ export function leaveSSA(fn: HIRFunction) {
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
         terminal.kind === "while" ||
+        terminal.kind === "logical" ||
         terminal.kind === "for") &&
       terminal.fallthrough !== null
     ) {

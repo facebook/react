@@ -113,6 +113,10 @@ export default class HIRBuilder {
     );
   }
 
+  currentBlockKind(): BlockKind {
+    return this.#current.kind;
+  }
+
   /**
    * Push a statement or expression onto the current block
    */
