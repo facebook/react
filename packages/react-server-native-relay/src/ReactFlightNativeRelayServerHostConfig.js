@@ -163,7 +163,7 @@ export function processModuleChunk(
   moduleMetaData: ModuleMetaData,
 ): Chunk {
   // The moduleMetaData is already a JSON serializable value.
-  return ['M', id, moduleMetaData];
+  return ['I', id, moduleMetaData];
 }
 
 export function processProviderChunk(

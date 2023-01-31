@@ -28,7 +28,7 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'O') {
     // $FlowFixMe unable to refine on array indices
     resolveModel(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === 'M') {
+  } else if (chunk[0] === 'I') {
     // $FlowFixMe unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'S') {

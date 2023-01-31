@@ -147,7 +147,7 @@ export function processModuleChunk(
   moduleMetaData: ReactModel,
 ): Chunk {
   const json: string = stringify(moduleMetaData);
-  const row = serializeRowHeader('M', id) + json + '\n';
+  const row = serializeRowHeader('I', id) + json + '\n';
   return stringToChunk(row);
 }
 

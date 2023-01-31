@@ -44,7 +44,7 @@ function processFullRow(response: Response, row: string): void {
   // switch (tag) {
   // }
   switch (tag) {
-    case 'M': {
+    case 'I': {
       resolveModule(response, id, row.substring(colon + 2));
       return;
     }
