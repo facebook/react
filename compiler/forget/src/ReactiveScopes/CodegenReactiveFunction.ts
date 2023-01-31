@@ -265,7 +265,7 @@ function codegenTerminal(
     case "for": {
       return t.forStatement(
         codegenForInit(cx, terminal.init),
-        codegenValueBlock(cx, terminal.test),
+        codegenInstructionValue(cx, terminal.test),
         codegenValueBlock(cx, terminal.update),
         codegenBlock(cx, terminal.loop)
       );

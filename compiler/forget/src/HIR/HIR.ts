@@ -172,7 +172,7 @@ export type ReactiveWhileTerminal = {
 export type ReactiveForTerminal = {
   kind: "for";
   init: ReactiveValueBlock;
-  test: ReactiveValueBlock;
+  test: ReactiveValue;
   update: ReactiveValueBlock;
   loop: ReactiveBlock;
   id: InstructionId;
@@ -314,6 +314,7 @@ export type WhileTerminal = {
 
 export type ForTerminal = {
   kind: "for";
+  loc: SourceLocation;
   init: BlockId;
   test: BlockId;
   update: BlockId;

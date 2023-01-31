@@ -305,6 +305,7 @@ function lowerStatement(
       builder.terminateWithContinuation(
         {
           kind: "for",
+          loc: stmtNode.loc ?? GeneratedSource,
           init: initBlock,
           test: testBlock.id,
           update: updateBlock,

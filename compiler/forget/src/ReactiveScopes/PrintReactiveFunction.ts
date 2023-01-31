@@ -233,7 +233,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       writer.writeLine("[${terminal.id}] for (");
       printValueBlock(writer, terminal.init);
       writer.writeLine(";");
-      printValueBlock(writer, terminal.test);
+      printReactiveValue(writer, terminal.test);
       writer.writeLine(";");
       printValueBlock(writer, terminal.update);
       writer.writeLine(") {");

@@ -337,6 +337,7 @@ export function mapTerminalSuccessors(
       const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "for",
+        loc: terminal.loc,
         init,
         test,
         update,

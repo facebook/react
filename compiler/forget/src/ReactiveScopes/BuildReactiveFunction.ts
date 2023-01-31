@@ -315,16 +315,10 @@ class Driver {
         );
         const initValue = this.visitInitBlock(blockValue, initBlock);
 
-        const testBlock = this.cx.ir.blocks.get(terminal.test)!;
-        const testTerminal = testBlock.terminal;
-        invariant(
-          testTerminal.kind === "branch",
-          "Expected for loop test block to end in an if"
-        );
-        const testValue = this.visitValueBlock(blockValue, testBlock, {
-          value: testTerminal.test,
-          id: testTerminal.id,
-        });
+        const testValue = this.visitValueBlockNew(
+          terminal.test,
+          terminal.loc
+        ).value;
 
         const updateBlock = this.cx.ir.blocks.get(terminal.update)!;
         const updateTerminal = updateBlock.terminal;
