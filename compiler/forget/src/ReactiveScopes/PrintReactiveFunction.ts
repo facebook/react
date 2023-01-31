@@ -12,12 +12,13 @@ import {
   ReactiveScopeDependency,
   ReactiveStatement,
   ReactiveTerminal,
+  ReactiveValue,
   ReactiveValueBlock,
 } from "../HIR/HIR";
 import {
   printIdentifier,
-  printInstruction,
   printInstructionValue,
+  printLValue,
   printPlace,
 } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
@@ -79,7 +80,18 @@ function printReactiveInstruction(
 ): void {
   switch (instr.kind) {
     case "instruction": {
-      writer.writeLine(printInstruction(instr.instruction));
+      const { instruction } = instr;
+      const id = `[${instruction.id}]`;
+
+      if (instruction.lvalue !== null) {
+        writer.write(`${id} ${printLValue(instruction.lvalue)} = `);
+        printReactiveValue(writer, instruction.value);
+        writer.newline();
+      } else {
+        writer.write(`${id} `);
+        printReactiveValue(writer, instruction.value);
+        writer.newline();
+      }
       break;
     }
     case "scope": {
@@ -108,6 +120,38 @@ function printValueBlock(writer: Writer, block: ReactiveValueBlock): void {
       writer.writeLine(printInstructionValue(block.last.value));
     }
   });
+}
+
+function printReactiveValue(writer: Writer, value: ReactiveValue): void {
+  switch (value.kind) {
+    case "LogicalExpression": {
+      writer.append(`Logical ${value.operator} `);
+      printReactiveValue(writer, value.left);
+      writer.newline();
+      printReactiveValue(writer, value.right);
+      break;
+    }
+    case "SequenceExpression": {
+      writer.indented(() => {
+        writer.newline();
+        writer.writeLine(`Sequence`);
+        writer.indented(() => {
+          value.instructions.forEach((instr) =>
+            printReactiveInstruction(writer, {
+              kind: "instruction",
+              instruction: instr,
+            })
+          );
+          writer.write("");
+          printReactiveValue(writer, value.value);
+        });
+      });
+      break;
+    }
+    default: {
+      writer.append(printInstructionValue(value));
+    }
+  }
 }
 
 function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
@@ -210,6 +254,14 @@ export class Writer {
 
   complete(): string {
     return this.#out.join("");
+  }
+
+  append(s: string): void {
+    this.#out.push(s);
+  }
+
+  newline(): void {
+    this.#out.push("\n");
   }
 
   write(s: string): void {
