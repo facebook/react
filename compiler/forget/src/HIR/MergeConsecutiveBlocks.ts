@@ -21,7 +21,7 @@ import {
  * (ie ends in a goto) and where the predecessor is the only predecessor
  * for that successor (ie, there is no other way to reach the successor).
  *
- * Note that this pass leaves "value" blocks alone because they cannot
+ * Note that this pass leaves value/loop blocks alone because they cannot
  * be merged without breaking the structure of the high-level terminals
  * that reference them.
  *
@@ -32,7 +32,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     // Can only merge blocks with a single predecessor, can't merge
     // value blocks
-    if (block.kind === "value" || block.preds.size !== 1) {
+    if (block.kind !== "block" || block.preds.size !== 1) {
       continue;
     }
     const originalPredecessorId = Array.from(block.preds)[0]!;

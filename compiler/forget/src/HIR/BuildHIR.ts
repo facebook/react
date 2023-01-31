@@ -247,11 +247,11 @@ function lowerStatement(
     case "ForStatement": {
       const stmt = stmtPath as NodePath<t.ForStatement>;
 
-      const testBlock = builder.reserve("value");
+      const testBlock = builder.reserve("loop");
       //  Block for code following the loop
       const continuationBlock = builder.reserve("block");
 
-      const initBlock = builder.enter("value", (blockId) => {
+      const initBlock = builder.enter("loop", (blockId) => {
         const init = stmt.get("init");
         if (!init.isVariableDeclaration()) {
           builder.errors.push({
@@ -271,7 +271,7 @@ function lowerStatement(
         };
       });
 
-      const updateBlock = builder.enter("value", (blockId) => {
+      const updateBlock = builder.enter("loop", (blockId) => {
         const update = stmt.get("update");
         if (update.node == null) {
           builder.errors.push({
@@ -342,7 +342,7 @@ function lowerStatement(
     case "WhileStatement": {
       const stmt = stmtPath as NodePath<t.WhileStatement>;
       //  Block used to evaluate whether to (re)enter or exit the loop
-      const conditionalBlock = builder.reserve("value");
+      const conditionalBlock = builder.reserve("loop");
       //  Block for code following the loop
       const continuationBlock = builder.reserve("block");
       //  Loop body
@@ -899,7 +899,7 @@ function lowerExpression(
       const place = buildTemporaryPlace(builder, exprLoc);
 
       //  Block for the consequent (if the test is truthy)
-      const consequentBlock = builder.enter("block", (blockId) => {
+      const consequentBlock = builder.enter("value", (blockId) => {
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
@@ -914,7 +914,7 @@ function lowerExpression(
         };
       });
       //  Block for the alternate (if the test is not truthy)
-      const alternateBlock = builder.enter("block", (blockId) => {
+      const alternateBlock = builder.enter("value", (blockId) => {
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
@@ -1022,6 +1022,15 @@ function lowerExpression(
     case "AssignmentExpression": {
       const expr = exprPath as NodePath<t.AssignmentExpression>;
       const operator = expr.node.operator;
+
+      if (builder.currentBlockKind() === "value") {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
+          severity: ErrorSeverity.Todo,
+          nodePath: expr,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
 
       if (operator === "=") {
         const left = expr.get("left");

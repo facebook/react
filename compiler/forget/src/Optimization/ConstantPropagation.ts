@@ -104,7 +104,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
       }
     }
 
-    if (block.kind === "value") {
+    if (block.kind !== "block") {
       // can't rewrite terminals in value blocks yet
       continue;
     }
