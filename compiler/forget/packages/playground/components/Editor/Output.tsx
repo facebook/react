@@ -7,7 +7,7 @@
 
 import generate from "@babel/generator";
 import * as t from "@babel/types";
-import MonacoEditor from "@monaco-editor/react";
+import MonacoEditor, { DiffEditor } from "@monaco-editor/react";
 import { type CompilerError } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
@@ -15,6 +15,12 @@ import { memo, useMemo, useState } from "react";
 import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
+import {
+  CodeIcon,
+  DocumentAddIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/outline";
+
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
@@ -86,8 +92,17 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
       }
     }
   }
+  let lastPassOutput: string | null = null;
   for (const [passName, text] of concattedResults) {
-    tabs.set(passName, <TextTabContent output={text}></TextTabContent>);
+    tabs.set(
+      passName,
+      <TextTabContent
+        output={text}
+        diff={lastPassOutput ?? null}
+        showInfoPanel={true}
+      ></TextTabContent>
+    );
+    lastPassOutput = text;
   }
   // Ensure that JS and the JS source map come first
   if (topLevelFnDecls.length > 0) {
@@ -95,7 +110,14 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
     // FunctionDeclarations
     const ast = t.program(topLevelFnDecls);
     const { code, sourceMapUrl } = codegen(ast, source);
-    reorderedTabs.set("JS", <TextTabContent output={code}></TextTabContent>);
+    reorderedTabs.set(
+      "JS",
+      <TextTabContent
+        output={code}
+        diff={null}
+        showInfoPanel={false}
+      ></TextTabContent>
+    );
     if (sourceMapUrl) {
       reorderedTabs.set(
         "SourceMap",
@@ -164,13 +186,16 @@ function Output({ store, compilerOutput }: Props) {
         tabs={tabs}
       />
       {compilerOutput.kind === "err" ? (
-        <div className="flex flex-wrap w-full absolute bottom-0 bg-white grow w-screen border-y border-grey-200 transition-all	ease-in">
+        <div
+          className="flex flex-wrap absolute bottom-0 bg-white grow border-y border-grey-200 transition-all ease-in"
+          style={{ width: "calc(100vw - 650px)" }}
+        >
           <div className="w-full p-4 basis-full border-b">
             <h2>COMPILER ERRORS</h2>
           </div>
           <pre
-            className="p-4 basis-full text-red-600"
-            style={{ maxHeight: "20vh", overflowY: "scroll" }}
+            className="p-4 basis-full text-red-600 overflow-x-hidden"
+            style={{ maxHeight: "20vh" }}
           >
             {compilerOutput.error.toString()}
           </pre>
@@ -180,24 +205,78 @@ function Output({ store, compilerOutput }: Props) {
   );
 }
 
-function TextTabContent({ output }: { output: string }) {
+function TextTabContent({
+  output,
+  diff,
+  showInfoPanel,
+}: {
+  output: string;
+  diff: string | null;
+  showInfoPanel: boolean;
+}) {
+  const [value, setValue] = useState(output);
   return (
     // Restrict MonacoEditor's height, since the config autoLayout:true
     // will grow the editor to fit within parent element
     <div className="w-full h-monaco_small sm:h-monaco">
-      <MonacoEditor
-        defaultLanguage="javascript"
-        value={output}
-        options={{
-          ...monacoOptions,
-          readOnly: true,
-          lineNumbers: "off",
-          glyphMargin: false,
-          // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
-          lineDecorationsWidth: 0,
-          lineNumbersMinChars: 0,
-        }}
-      />
+      {showInfoPanel ? (
+        <div className="flex items-center gap-1 bg-amber-50 p-2">
+          {diff != null && output !== diff ? (
+            <button
+              className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
+              onClick={() =>
+                value === output ? setValue(diff) : setValue(output)
+              }
+            >
+              {value === output ? (
+                <>
+                  <DocumentAddIcon className="w-5 h-5" /> Show Diff
+                </>
+              ) : (
+                <>
+                  <CodeIcon className="w-5 h-5" /> Show Output
+                </>
+              )}
+            </button>
+          ) : (
+            <>
+              <span className="flex items-center gap-1">
+                <InformationCircleIcon className="w-5 h-5" /> No changes from
+                previous pass
+              </span>
+            </>
+          )}
+        </div>
+      ) : null}
+      {diff != null && value !== output ? (
+        <DiffEditor
+          original={diff}
+          modified={output}
+          options={{
+            ...monacoOptions,
+            readOnly: true,
+            lineNumbers: "off",
+            glyphMargin: false,
+            // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
+            lineDecorationsWidth: 0,
+            lineNumbersMinChars: 0,
+          }}
+        />
+      ) : (
+        <MonacoEditor
+          defaultLanguage="javascript"
+          value={output}
+          options={{
+            ...monacoOptions,
+            readOnly: true,
+            lineNumbers: "off",
+            glyphMargin: false,
+            // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
+            lineDecorationsWidth: 0,
+            lineNumbersMinChars: 0,
+          }}
+        />
+      )}
     </div>
   );
 }

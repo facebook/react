@@ -68,7 +68,7 @@ function TabbedWindowItem({
   return (
     <div key={name} className="flex flex-row">
       {isShow ? (
-        <div style={{ minWidth: 550, overflow: "hidden" }}>
+        <div className="border-r" style={{ minWidth: 550, overflow: "hidden" }}>
           <h2
             onClick={toggleTabs}
             className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 text-secondary hover:text-link"
