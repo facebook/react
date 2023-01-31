@@ -166,14 +166,6 @@ export function processModuleChunk(
   return ['I', id, moduleMetaData];
 }
 
-export function processProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): Chunk {
-  return ['P', id, contextName];
-}
-
 export function scheduleWork(callback: () => void) {
   callback();
 }

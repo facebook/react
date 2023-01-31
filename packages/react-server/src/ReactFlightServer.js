@@ -38,7 +38,6 @@ import {
   closeWithError,
   processModelChunk,
   processModuleChunk,
-  processProviderChunk,
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
@@ -421,6 +420,10 @@ function serializeByRefID(id: number): string {
 
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
+}
+
+function serializeProviderReference(name: string): string {
+  return '$P' + name;
 }
 
 function serializeClientReference(
@@ -1122,7 +1125,8 @@ function emitProviderChunk(
   id: number,
   contextName: string,
 ): void {
-  const processedChunk = processProviderChunk(request, id, contextName);
+  const contextReference = serializeProviderReference(contextName);
+  const processedChunk = processReferenceChunk(request, id, contextReference);
   request.completedJSONChunks.push(processedChunk);
 }
 

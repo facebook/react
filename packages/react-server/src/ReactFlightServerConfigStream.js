@@ -151,15 +151,6 @@ export function processModuleChunk(
   return stringToChunk(row);
 }
 
-export function processProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): Chunk {
-  const row = serializeRowHeader('P', id) + contextName + '\n';
-  return stringToChunk(row);
-}
-
 export {
   scheduleWork,
   flushBuffered,

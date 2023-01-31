@@ -14,7 +14,6 @@ import type {BundlerConfig} from './ReactFlightClientHostConfig';
 import {
   resolveModule,
   resolveModel,
-  resolveProvider,
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
@@ -45,10 +44,6 @@ function processFullRow(response: Response, row: string): void {
   switch (tag) {
     case 'I': {
       resolveModule(response, id, row.substring(colon + 2));
-      return;
-    }
-    case 'P': {
-      resolveProvider(response, id, row.substring(colon + 2));
       return;
     }
     case 'E': {

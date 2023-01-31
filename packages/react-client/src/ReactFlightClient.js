@@ -201,14 +201,6 @@ function createErrorChunk<T>(
   return new Chunk(ERRORED, null, error, response);
 }
 
-function createInitializedChunk<T>(
-  response: Response,
-  value: T,
-): InitializedChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
-}
-
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
@@ -504,6 +496,9 @@ export function parseModelString(
       case 'S': {
         return Symbol.for(value.substring(2));
       }
+      case 'P': {
+        return getOrCreateServerContext(value.substring(2)).Provider;
+      }
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
@@ -572,21 +567,6 @@ export function resolveModel(
   } else {
     resolveModelChunk(chunk, model);
   }
-}
-
-export function resolveProvider(
-  response: Response,
-  id: number,
-  contextName: string,
-): void {
-  const chunks = response._chunks;
-  chunks.set(
-    id,
-    createInitializedChunk(
-      response,
-      getOrCreateServerContext(contextName).Provider,
-    ),
-  );
 }
 
 export function resolveModule(
