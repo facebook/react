@@ -418,7 +418,7 @@ class Driver {
   visitValueBlock(
     parent: ReactiveBlock,
     block: BasicBlock,
-    terminalValue?: { value: InstructionValue; id: InstructionId }
+    terminalValue?: { value: Place; id: InstructionId }
   ): ReactiveValueBlock {
     const valueBlock: ReactiveValueBlock = {
       kind: "value-block",

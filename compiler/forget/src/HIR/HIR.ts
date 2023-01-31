@@ -63,7 +63,7 @@ export type ReactiveValueBlock = {
   kind: "value-block";
   instructions: ReactiveBlock;
   last: {
-    value: InstructionValue;
+    value: Place;
     id: InstructionId;
   } | null;
 };
