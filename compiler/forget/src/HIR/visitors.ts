@@ -78,7 +78,24 @@ export function* eachInstructionValueOperand(
     }
     case "JsxExpression": {
       yield instrValue.tag;
-      yield* instrValue.props.values();
+      for (const attribute of instrValue.props) {
+        switch (attribute.kind) {
+          case "JsxAttribute": {
+            yield attribute.place;
+            break;
+          }
+          case "JsxSpreadAttribute": {
+            yield attribute.argument;
+            break;
+          }
+          default: {
+            assertExhaustive(
+              attribute,
+              `Unexpected attribute kind '${(attribute as any).kind}'`
+            );
+          }
+        }
+      }
       if (instrValue.children) {
         yield* instrValue.children;
       }
@@ -178,8 +195,23 @@ export function mapInstructionOperands(
     }
     case "JsxExpression": {
       instrValue.tag = fn(instrValue.tag);
-      for (const [prop, place] of instrValue.props) {
-        instrValue.props.set(prop, fn(place));
+      for (const attribute of instrValue.props) {
+        switch (attribute.kind) {
+          case "JsxAttribute": {
+            attribute.place = fn(attribute.place);
+            break;
+          }
+          case "JsxSpreadAttribute": {
+            attribute.argument = fn(attribute.argument);
+            break;
+          }
+          default: {
+            assertExhaustive(
+              attribute,
+              `Unexpected attribute kind '${(attribute as any).kind}'`
+            );
+          }
+        }
       }
       if (instrValue.children) {
         instrValue.children = instrValue.children.map((p) => fn(p));

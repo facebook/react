@@ -22,6 +22,7 @@ import {
   IfTerminal,
   InstructionKind,
   InstructionValue,
+  JsxAttribute,
   makeInstructionId,
   Place,
   ReturnTerminal,
@@ -1207,9 +1208,17 @@ function lowerExpression(
       const children = expr
         .get("children")
         .map((child) => lowerJsxElement(builder, child));
-      const props: Map<string, Place> = new Map();
+      const props: Array<JsxAttribute> = [];
       let hasError = false;
       for (const attribute of opening.get("attributes")) {
+        if (attribute.isJSXSpreadAttribute()) {
+          const argument = lowerExpressionToPlace(
+            builder,
+            attribute.get("argument")
+          );
+          props.push({ kind: "JsxSpreadAttribute", argument });
+          continue;
+        }
         if (!attribute.isJSXAttribute()) {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
@@ -1256,7 +1265,7 @@ function lowerExpression(
           value = lowerExpressionToPlace(builder, expression);
         }
         const prop: string = name.node.name;
-        props.set(prop, value);
+        props.push({ kind: "JsxAttribute", name: prop, place: value });
       }
       return hasError
         ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }

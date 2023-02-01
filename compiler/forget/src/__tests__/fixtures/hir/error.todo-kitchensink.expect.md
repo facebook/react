@@ -187,15 +187,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   20 |   <Button {...args}></Button>;
   21 |   <Button xlink:href="localhost:3000"></Button>;
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle JSXSpreadAttribute attributes in JSXElement
-  18 |   const { z, aa = "aa", ...zz } = useCustom();
-  19 |
-> 20 |   <Button {...args}></Button>;
-     |           ^^^^^^^^^
-  21 |   <Button xlink:href="localhost:3000"></Button>;
-  22 |   <Button haha={1}></Button>;
-  23 |   <Button>{/** empty */}</Button>;
-
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle JSXNamespacedName attribute names in JSXElement
   19 |
   20 |   <Button {...args}></Button>;

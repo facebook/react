@@ -419,7 +419,7 @@ export type InstructionData =
   | {
       kind: "JsxExpression";
       tag: Place;
-      props: Map<string, Place>;
+      props: Array<JsxAttribute>;
       children: Array<Place> | null; // null === no children
     }
   | {
@@ -464,6 +464,10 @@ export type InstructionData =
       kind: "UnsupportedNode";
       node: t.Node;
     };
+
+export type JsxAttribute =
+  | { kind: "JsxSpreadAttribute"; argument: Place }
+  | { kind: "JsxAttribute"; name: string; place: Place };
 
 /**
  * A place where data may be read from / written to:

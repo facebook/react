@@ -535,14 +535,31 @@ function codegenInstructionValue(
       break;
     }
     case "JsxExpression": {
-      const attributes: Array<t.JSXAttribute> = [];
-      for (const [prop, value] of instrValue.props) {
-        attributes.push(
-          t.jsxAttribute(
-            t.jsxIdentifier(prop),
-            t.jsxExpressionContainer(codegenPlace(cx, value))
-          )
-        );
+      const attributes: Array<t.JSXAttribute | t.JSXSpreadAttribute> = [];
+      for (const attribute of instrValue.props) {
+        switch (attribute.kind) {
+          case "JsxAttribute": {
+            attributes.push(
+              t.jsxAttribute(
+                t.jsxIdentifier(attribute.name),
+                t.jsxExpressionContainer(codegenPlace(cx, attribute.place))
+              )
+            );
+            break;
+          }
+          case "JsxSpreadAttribute": {
+            attributes.push(
+              t.jsxSpreadAttribute(codegenPlace(cx, attribute.argument))
+            );
+            break;
+          }
+          default: {
+            assertExhaustive(
+              attribute,
+              `Unexpected attribute kind '${(attribute as any).kind}'`
+            );
+          }
+        }
       }
       let tagValue = codegenPlace(cx, instrValue.tag);
       let tag: string;

@@ -261,8 +261,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "JsxExpression": {
       const propItems = [];
-      for (const [prop, value] of instrValue.props) {
-        propItems.push(`${prop}={${printPlace(value)}}`);
+      for (const attribute of instrValue.props) {
+        if (attribute.kind === "JsxAttribute") {
+          propItems.push(`${attribute.name}={${printPlace(attribute.place)}}`);
+        } else {
+          propItems.push(`...${printPlace(attribute.argument)}`);
+        }
       }
       const props = propItems.length !== 0 ? " " + propItems.join(" ") : "";
       if (instrValue.children !== null) {
