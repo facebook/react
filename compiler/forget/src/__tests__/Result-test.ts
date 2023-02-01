@@ -1,3 +1,4 @@
+import { CompilerError } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 
 function addMax10(a: number, b: number): Result<number, string> {
@@ -8,6 +9,8 @@ function addMax10(a: number, b: number): Result<number, string> {
 function onlyFoo(foo: string): Result<string, string> {
   return foo === "foo" ? Ok(foo) : Err(foo);
 }
+
+class CustomDummyError extends Error {}
 
 describe("Result", () => {
   test(".map", () => {
@@ -107,6 +110,9 @@ describe("Result", () => {
     }).toThrowErrorMatchingInlineSnapshot(
       `"Can't unwrap \`Err\` to \`Ok\`: 20 is too high"`
     );
+    expect(() => {
+      Err(new CustomDummyError("oops")).unwrap();
+    }).toThrowErrorMatchingInlineSnapshot(`"oops"`);
   });
 
   test(".unwrapOr", () => {
@@ -126,5 +132,8 @@ describe("Result", () => {
       `"Can't unwrap \`Ok\` to \`Err\`: 2"`
     );
     expect(addMax10(10, 10).unwrapErr()).toEqual("20 is too high");
+    expect(() => {
+      Ok(new CustomDummyError("oops")).unwrapErr();
+    }).toThrowErrorMatchingInlineSnapshot(`"oops"`);
   });
 });

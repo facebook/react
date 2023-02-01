@@ -13,7 +13,7 @@ export enum ErrorSeverity {
 export type CompilerErrorOptions = {
   reason: string;
   severity: ErrorSeverity;
-  nodePath: AnyNodePath;
+  nodePath: AnyNodePath | null;
 };
 type AnyNodePath = NodePath<Node | null | undefined>;
 type CompilerErrorKind = typeof InvalidInputError | typeof TodoError;

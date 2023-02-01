@@ -7,6 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { CompilerError, ErrorSeverity } from "../CompilerError";
 import {
   BlockId,
   GeneratedSource,
@@ -24,12 +25,12 @@ import {
   ReactiveValue,
   SourceLocation,
 } from "../HIR/HIR";
-import { todoInvariant } from "../Utils/todo";
+import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 
 export function codegenReactiveFunction(
   fn: ReactiveFunction
-): t.FunctionDeclaration {
+): Result<t.FunctionDeclaration, CompilerError> {
   const cx = new Context();
   const params = fn.params.map((param) => convertIdentifier(param.identifier));
   const body = codegenBlock(cx, fn.body);
@@ -56,13 +57,20 @@ export function codegenReactiveFunction(
       ])
     );
   }
-  return createFunctionDeclaration(
-    fn.loc,
-    fn.id !== null ? convertIdentifier(fn.id) : null,
-    params,
-    body,
-    fn.generator,
-    fn.async
+
+  if (cx.errors.hasErrors()) {
+    return Err(cx.errors);
+  }
+
+  return Ok(
+    createFunctionDeclaration(
+      fn.loc,
+      fn.id !== null ? convertIdentifier(fn.id) : null,
+      params,
+      body,
+      fn.generator,
+      fn.async
+    )
   );
 }
 
@@ -70,6 +78,7 @@ class Context {
   #nextCacheIndex: number = 0;
   #identifiers: Set<Identifier> = new Set();
   temp: Temporaries = new Map();
+  errors: CompilerError = new CompilerError();
 
   get nextCacheIndex(): number {
     return this.#nextCacheIndex++;
@@ -711,17 +720,22 @@ function codegenInstructionValue(
         } else {
           if (t.isVariableDeclaration(stmt)) {
             const declarator = stmt.declarations[0];
-            todoInvariant(
-              false,
-              `Cannot declare variables in a value block, tried to declare '${
+            cx.errors.push({
+              reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${
                 (declarator.id as t.Identifier).name
-              }'`
-            );
+              }'`,
+              severity: ErrorSeverity.Todo,
+              nodePath: null,
+            });
+            return t.stringLiteral(`TODO handle ${declarator.id}`);
+          } else {
+            cx.errors.push({
+              reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
+              severity: ErrorSeverity.Todo,
+              nodePath: null,
+            });
+            return t.stringLiteral(`TODO handle ${stmt.type}`);
           }
-          todoInvariant(
-            false,
-            `Handle conversion of ${stmt.type} to expression`
-          );
         }
       });
       if (expressions.length === 0) {
@@ -788,7 +802,6 @@ function codegenValue(
 }
 
 function codegenPlace(cx: Context, place: Place): t.Expression {
-  todoInvariant(place.kind === "Identifier", "support scope values");
   let tmp = cx.temp.get(place.identifier.id);
   if (tmp != null) {
     return tmp;

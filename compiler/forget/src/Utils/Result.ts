@@ -167,6 +167,9 @@ class OkImpl<T> implements Result<T, never> {
   }
 
   unwrapErr(): never {
+    if (this.val instanceof Error) {
+      throw this.val;
+    }
     throw new Error(`Can't unwrap \`Ok\` to \`Err\`: ${this.val}`);
   }
 }
@@ -227,6 +230,9 @@ class ErrImpl<E> implements Result<never, E> {
   }
 
   unwrap(): never {
+    if (this.val instanceof Error) {
+      throw this.val;
+    }
     throw new Error(`Can't unwrap \`Err\` to \`Ok\`: ${this.val}`);
   }
 

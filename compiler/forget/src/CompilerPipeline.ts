@@ -46,11 +46,7 @@ export type CompilerPipelineValue =
 export function* run(
   func: NodePath<t.FunctionDeclaration>
 ): Generator<CompilerPipelineValue, t.Function> {
-  const lowering = lower(func).orElse((error) => {
-    throw error;
-  });
-
-  const hir = lowering.unwrap();
+  const hir = lower(func).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   mergeConsecutiveBlocks(hir);
@@ -153,7 +149,7 @@ export function* run(
     value: reactiveFunction,
   });
 
-  const ast = codegenReactiveFunction(reactiveFunction);
+  const ast = codegenReactiveFunction(reactiveFunction).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
 
   return ast;
