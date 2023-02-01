@@ -473,12 +473,14 @@ describe('ReactFlightDOMBrowser', () => {
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.filepath]['*'].id;
+    const clientId =
+      webpackMap.clientManifest[ClientComponentOnTheClient.filepath]['*'].id;
     delete webpackModules[clientId];
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath]['*'];
+    const ssrMetaData =
+      webpackMap.clientManifest[ClientComponentOnTheServer.filepath]['*'];
     const translationMap = {
       [clientId]: {
         '*': ssrMetaData,

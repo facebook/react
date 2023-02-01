@@ -848,8 +848,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in webpackMap) {
-      Object.defineProperty(webpackMap, id, {
+    for (const id in webpackMap.clientManifest) {
+      Object.defineProperty(webpackMap.clientManifest, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },
