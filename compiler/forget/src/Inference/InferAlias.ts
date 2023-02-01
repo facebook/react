@@ -1,4 +1,3 @@
-import DisjointSet from "../Utils/DisjointSet";
 import {
   HIRFunction,
   Identifier,
@@ -7,6 +6,7 @@ import {
   LValue,
   Place,
 } from "../HIR/HIR";
+import DisjointSet from "../Utils/DisjointSet";
 
 export type AliasSet = Set<Identifier>;
 
@@ -42,6 +42,10 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
     }
     case "PropertyLoad": {
       alias = instrValue.object;
+      break;
+    }
+    case "TypeCastExpression": {
+      alias = instrValue.value;
       break;
     }
     default:

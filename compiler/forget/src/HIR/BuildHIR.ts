@@ -1386,6 +1386,15 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "TypeCastExpression": {
+      let expr = exprPath as NodePath<t.TypeCastExpression>;
+      return {
+        kind: "TypeCastExpression",
+        value: lowerExpressionToPlace(builder, expr.get("expression")),
+        type: expr.get("typeAnnotation").node,
+        loc: exprLoc,
+      };
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

@@ -123,6 +123,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.tag;
       break;
     }
+    case "TypeCastExpression": {
+      yield instrValue.value;
+      break;
+    }
     case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
@@ -241,6 +245,10 @@ export function mapInstructionOperands(
     }
     case "TaggedTemplateExpression": {
       instrValue.tag = fn(instrValue.tag);
+      break;
+    }
+    case "TypeCastExpression": {
+      instrValue.value = fn(instrValue.value);
       break;
     }
     case "UnsupportedNode":

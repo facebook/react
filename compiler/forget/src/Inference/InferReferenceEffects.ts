@@ -693,6 +693,20 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.define(lvalue.place, instrValue);
         continue;
       }
+      case "TypeCastExpression": {
+        // A type cast expression has no effect at runtime, so it's equivalent to a raw
+        // identifier:
+        // ```
+        // x = (y: type)  // is equivalent to...
+        // x = y
+        // ```
+        env.initialize(instrValue, env.kind(instrValue.value));
+        env.reference(instrValue.value, Effect.Read);
+        const lvalue = instr.lvalue;
+        lvalue.place.effect = Effect.Mutate;
+        env.alias(lvalue.place, instrValue.value);
+        continue;
+      }
       case "Identifier": {
         env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;

@@ -672,6 +672,13 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "TypeCastExpression": {
+      value = t.typeCastExpression(
+        codegenInstructionValue(cx, instrValue.value),
+        instrValue.type
+      );
+      break;
+    }
     case "LogicalExpression": {
       value = createLogicalExpression(
         instrValue.loc,

@@ -259,6 +259,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = JSON.stringify(instrValue.value);
       break;
     }
+    case "TypeCastExpression": {
+      value = `TypeCast ${printPlace(instrValue.value)}`;
+      break;
+    }
     case "JsxExpression": {
       const propItems = [];
       for (const attribute of instrValue.props) {

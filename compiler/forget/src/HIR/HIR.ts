@@ -416,6 +416,7 @@ export type InstructionData =
       args: Array<Place>;
     }
   | { kind: "UnaryExpression"; operator: string; value: Place }
+  | { kind: "TypeCastExpression"; value: Place; type: t.TypeAnnotation }
   | {
       kind: "JsxExpression";
       tag: Place;

@@ -36,7 +36,7 @@ export default function runReactForgetBabelPlugin(
     ast: result.ast,
     code: prettier.format(result.code, {
       semi: true,
-      parser: "babel-ts",
+      parser: language === "typescript" ? "babel-ts" : "flow",
     }),
     map: result.map,
   };
