@@ -80,11 +80,24 @@ function parseModel(response, json) {
 // The Symbol used to tag the ReactElement-like types.
 var REACT_ELEMENT_TYPE = Symbol.for("react.element");
 var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
+  "react.default_value"
+);
 
 var ReactSharedInternals =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var ContextRegistry = ReactSharedInternals.ContextRegistry;
+function getOrCreateServerContext(globalName) {
+  if (!ContextRegistry[globalName]) {
+    ContextRegistry[globalName] = React.createServerContext(
+      globalName, // $FlowFixMe function signature doesn't reflect the symbol value
+      REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    );
+  }
+
+  return ContextRegistry[globalName];
+}
 
 var PENDING = "pending";
 var BLOCKED = "blocked";
@@ -192,11 +205,6 @@ function createBlockedChunk(response) {
 function createErrorChunk(response, error) {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
-}
-
-function createInitializedChunk(response, value) {
-  // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
 }
 
 function wakeChunk(listeners, value) {
@@ -459,53 +467,70 @@ function createModelReject(chunk) {
 }
 
 function parseModelString(response, parentObject, key, value) {
-  switch (value[0]) {
-    case "$": {
-      if (value === "$") {
-        return REACT_ELEMENT_TYPE;
-      } else if (value[1] === "$" || value[1] === "@") {
+  if (value[0] === "$") {
+    if (value === "$") {
+      // A very common symbol.
+      return REACT_ELEMENT_TYPE;
+    }
+
+    switch (value[1]) {
+      case "$": {
         // This was an escaped string value.
         return value.substring(1);
-      } else {
-        var id = parseInt(value.substring(1), 16);
-        var chunk = getChunk(response, id);
+      }
 
-        switch (chunk.status) {
+      case "L": {
+        // Lazy node
+        var id = parseInt(value.substring(2), 16);
+        var chunk = getChunk(response, id); // We create a React.lazy wrapper around any lazy values.
+        // When passed into React, we'll know how to suspend on this.
+
+        return createLazyChunkWrapper(chunk);
+      }
+
+      case "S": {
+        return Symbol.for(value.substring(2));
+      }
+
+      case "P": {
+        return getOrCreateServerContext(value.substring(2)).Provider;
+      }
+
+      default: {
+        // We assume that anything else is a reference ID.
+        var _id = parseInt(value.substring(1), 16);
+
+        var _chunk = getChunk(response, _id);
+
+        switch (_chunk.status) {
           case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
+            initializeModelChunk(_chunk);
             break;
 
           case RESOLVED_MODULE:
-            initializeModuleChunk(chunk);
+            initializeModuleChunk(_chunk);
             break;
         } // The status might have changed after initialization.
 
-        switch (chunk.status) {
+        switch (_chunk.status) {
           case INITIALIZED:
-            return chunk.value;
+            return _chunk.value;
 
           case PENDING:
           case BLOCKED:
             var parentChunk = initializingChunk;
-            chunk.then(
+
+            _chunk.then(
               createModelResolver(parentChunk, parentObject, key),
               createModelReject(parentChunk)
             );
+
             return null;
 
           default:
-            throw chunk.reason;
+            throw _chunk.reason;
         }
       }
-    }
-
-    case "@": {
-      var _id = parseInt(value.substring(1), 16);
-
-      var _chunk = getChunk(response, _id); // We create a React.lazy wrapper around any lazy values.
-      // When passed into React, we'll know how to suspend on this.
-
-      return createLazyChunkWrapper(_chunk);
     }
   }
 
@@ -587,12 +612,6 @@ function resolveModule(response, id, model) {
     }
   }
 }
-function resolveSymbol(response, id, name) {
-  var chunks = response._chunks; // We assume that we'll always emit the symbol before anything references it
-  // to save a few bytes.
-
-  chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
-}
 function resolveErrorDev(response, id, digest, message, stack) {
   var error = new Error(
     message ||
@@ -619,15 +638,12 @@ function close(response) {
 }
 
 function resolveRow(response, chunk) {
-  if (chunk[0] === "J") {
+  if (chunk[0] === "O") {
     // $FlowFixMe unable to refine on array indices
     resolveModel(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === "M") {
+  } else if (chunk[0] === "I") {
     // $FlowFixMe unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === "S") {
-    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-    resolveSymbol(response, chunk[1], chunk[2]);
   } else {
     {
       resolveErrorDev(

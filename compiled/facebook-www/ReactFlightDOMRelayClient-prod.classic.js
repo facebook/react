@@ -11,7 +11,8 @@
  */
 
 "use strict";
-var ReactFlightDOMRelayClientIntegration = require("ReactFlightDOMRelayClientIntegration");
+var ReactFlightDOMRelayClientIntegration = require("ReactFlightDOMRelayClientIntegration"),
+  React = require("react");
 function formatProdErrorMessage(code) {
   for (
     var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
@@ -69,7 +70,12 @@ function parseModelRecursively(response, parentObj, key, value) {
 }
 var dummy = {},
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
+  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
+    "react.default_value"
+  ),
+  ContextRegistry =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ContextRegistry;
 function Chunk(status, value, reason, response) {
   this.status = status;
   this.value = value;
@@ -117,9 +123,6 @@ function readChunk(chunk) {
     default:
       throw chunk.reason;
   }
-}
-function createInitializedChunk(response, value) {
-  return new Chunk("fulfilled", value, null, response);
 }
 function wakeChunk(listeners, value) {
   for (var i = 0; i < listeners.length; i++) (0, listeners[i])(value);
@@ -224,41 +227,60 @@ function createModelReject(chunk) {
   };
 }
 function parseModelString(response, parentObject, key, value) {
-  switch (value[0]) {
-    case "$":
-      if ("$" === value) return REACT_ELEMENT_TYPE;
-      if ("$" === value[1] || "@" === value[1]) return value.substring(1);
-      value = parseInt(value.substring(1), 16);
-      response = getChunk(response, value);
-      switch (response.status) {
-        case "resolved_model":
-          initializeModelChunk(response);
-          break;
-        case "resolved_module":
-          initializeModuleChunk(response);
-      }
-      switch (response.status) {
-        case "fulfilled":
-          return response.value;
-        case "pending":
-        case "blocked":
-          return (
-            (value = initializingChunk),
-            response.then(
-              createModelResolver(value, parentObject, key),
-              createModelReject(value)
-            ),
-            null
-          );
-        default:
-          throw response.reason;
-      }
-    case "@":
-      return (
-        (parentObject = parseInt(value.substring(1), 16)),
-        (parentObject = getChunk(response, parentObject)),
-        { $$typeof: REACT_LAZY_TYPE, _payload: parentObject, _init: readChunk }
-      );
+  if ("$" === value[0]) {
+    if ("$" === value) return REACT_ELEMENT_TYPE;
+    switch (value[1]) {
+      case "$":
+        return value.substring(1);
+      case "L":
+        return (
+          (parentObject = parseInt(value.substring(2), 16)),
+          (parentObject = getChunk(response, parentObject)),
+          {
+            $$typeof: REACT_LAZY_TYPE,
+            _payload: parentObject,
+            _init: readChunk
+          }
+        );
+      case "S":
+        return Symbol.for(value.substring(2));
+      case "P":
+        return (
+          (parentObject = value.substring(2)),
+          ContextRegistry[parentObject] ||
+            (ContextRegistry[parentObject] = React.createServerContext(
+              parentObject,
+              REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+            )),
+          ContextRegistry[parentObject].Provider
+        );
+      default:
+        value = parseInt(value.substring(1), 16);
+        response = getChunk(response, value);
+        switch (response.status) {
+          case "resolved_model":
+            initializeModelChunk(response);
+            break;
+          case "resolved_module":
+            initializeModuleChunk(response);
+        }
+        switch (response.status) {
+          case "fulfilled":
+            return response.value;
+          case "pending":
+          case "blocked":
+            return (
+              (value = initializingChunk),
+              response.then(
+                createModelResolver(value, parentObject, key),
+                createModelReject(value)
+              ),
+              null
+            );
+          default:
+            throw response.reason;
+        }
+    }
   }
   return value;
 }
@@ -305,7 +327,7 @@ exports.getRoot = function (response) {
   return getChunk(response, 0);
 };
 exports.resolveRow = function (response, chunk) {
-  if ("J" === chunk[0]) {
+  if ("O" === chunk[0]) {
     var id = chunk[1],
       model = chunk[2],
       chunks = response._chunks;
@@ -320,13 +342,8 @@ exports.resolveRow = function (response, chunk) {
           wakeChunkIfInitialized(chunk, response, id)))
       : chunks.set(id, new Chunk("resolved_model", model, null, response));
   } else
-    "M" === chunk[0]
+    "I" === chunk[0]
       ? resolveModule(response, chunk[1], chunk[2])
-      : "S" === chunk[0]
-      ? response._chunks.set(
-          chunk[1],
-          createInitializedChunk(response, Symbol.for(chunk[2]))
-        )
       : ((model = chunk[1]),
         (id = chunk[2].digest),
         (chunk = Error(formatProdErrorMessage(441))),

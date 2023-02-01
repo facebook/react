@@ -137,17 +137,14 @@ function convertModelToJSON(request, parent, key, model) {
 function processModelChunk(request, id, model) {
   // $FlowFixMe no good way to define an empty exact object
   var json = convertModelToJSON(request, {}, "", model);
-  return ["J", id, json];
+  return ["O", id, json];
+}
+function processReferenceChunk(request, id, reference) {
+  return ["O", id, reference];
 }
 function processModuleChunk(request, id, moduleMetaData) {
   // The moduleMetaData is already a JSON serializable value.
-  return ["M", id, moduleMetaData];
-}
-function processProviderChunk(request, id, contextName) {
-  return ["P", id, contextName];
-}
-function processSymbolChunk(request, id, name) {
-  return ["S", id, name];
+  return ["I", id, moduleMetaData];
 }
 function scheduleWork(callback) {
   callback();
@@ -1535,7 +1532,15 @@ function serializeByValueID(id) {
 }
 
 function serializeByRefID(id) {
-  return "@" + id.toString(16);
+  return "$L" + id.toString(16);
+}
+
+function serializeSymbolReference(name) {
+  return "$S" + name;
+}
+
+function serializeProviderReference(name) {
+  return "$P" + name;
 }
 
 function serializeClientReference(request, parent, key, moduleReference) {
@@ -1594,7 +1599,7 @@ function serializeClientReference(request, parent, key, moduleReference) {
 }
 
 function escapeStringValue(value) {
-  if (value[0] === "$" || value[0] === "@") {
+  if (value[0] === "$") {
     // We need to escape $ or @ prefixed strings since we use those to encode
     // references to IDs and as special symbol values.
     return "$" + value;
@@ -2263,12 +2268,14 @@ function emitModuleChunk(request, id, moduleMetaData) {
 }
 
 function emitSymbolChunk(request, id, name) {
-  var processedChunk = processSymbolChunk(request, id, name);
+  var symbolReference = serializeSymbolReference(name);
+  var processedChunk = processReferenceChunk(request, id, symbolReference);
   request.completedModuleChunks.push(processedChunk);
 }
 
 function emitProviderChunk(request, id, contextName) {
-  var processedChunk = processProviderChunk(request, id, contextName);
+  var contextReference = serializeProviderReference(contextName);
+  var processedChunk = processReferenceChunk(request, id, contextReference);
   request.completedJSONChunks.push(processedChunk);
 }
 

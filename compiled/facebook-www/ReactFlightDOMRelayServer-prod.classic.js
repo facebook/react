@@ -630,7 +630,7 @@ function serializeClientReference(request, parent, key, moduleReference) {
     existingId = writtenModules.get(moduleReference);
   if (void 0 !== existingId)
     return parent[0] === REACT_ELEMENT_TYPE && "1" === key
-      ? "@" + existingId.toString(16)
+      ? "$L" + existingId.toString(16)
       : "$" + existingId.toString(16);
   try {
     var moduleMetaData =
@@ -640,10 +640,10 @@ function serializeClientReference(request, parent, key, moduleReference) {
       );
     request.pendingChunks++;
     var moduleId = request.nextChunkId++;
-    request.completedModuleChunks.push(["M", moduleId, moduleMetaData]);
+    request.completedModuleChunks.push(["I", moduleId, moduleMetaData]);
     writtenModules.set(moduleReference, moduleId);
     return parent[0] === REACT_ELEMENT_TYPE && "1" === key
-      ? "@" + moduleId.toString(16)
+      ? "$L" + moduleId.toString(16)
       : "$" + moduleId.toString(16);
   } catch (x) {
     return (
@@ -806,13 +806,13 @@ function resolveModelToJSON(request, parent, key, value) {
           (value = request.ping),
           key.then(value, value),
           (request.thenableState = getThenableStateAfterSuspending()),
-          "@" + request.id.toString(16)
+          "$L" + request.id.toString(16)
         );
       request.pendingChunks++;
       value = request.nextChunkId++;
       key = logRecoverableError(request, key);
       emitErrorChunkProd(request, value, key);
-      return "@" + value.toString(16);
+      return "$L" + value.toString(16);
     }
   if (null === value) return null;
   if ("object" === typeof value) {
@@ -827,7 +827,7 @@ function resolveModelToJSON(request, parent, key, value) {
           (request.pendingChunks++,
           (key = request.nextChunkId++),
           parent.set(value, key),
-          request.completedJSONChunks.push(["P", key, value])),
+          request.completedJSONChunks.push(["O", key, "$P" + value])),
         "$" + key.toString(16)
       );
     if (value === POP) {
@@ -847,10 +847,7 @@ function resolveModelToJSON(request, parent, key, value) {
     return value;
   }
   if ("string" === typeof value)
-    return (
-      (request = "$" === value[0] || "@" === value[0] ? "$" + value : value),
-      request
-    );
+    return (request = "$" === value[0] ? "$" + value : value), request;
   if (
     "boolean" === typeof value ||
     "number" === typeof value ||
@@ -884,7 +881,7 @@ function resolveModelToJSON(request, parent, key, value) {
       );
     request.pendingChunks++;
     key = request.nextChunkId++;
-    request.completedModuleChunks.push(["S", key, init]);
+    request.completedModuleChunks.push(["O", key, "$S" + init]);
     element.set(value, key);
     return "$" + key.toString(16);
   }
@@ -972,7 +969,7 @@ function performWork(request$jscomp$0) {
           }
           var id = task.id,
             json = convertModelToJSON(request, {}, "", value);
-          request.completedJSONChunks.push(["J", id, json]);
+          request.completedJSONChunks.push(["O", id, json]);
           request.abortableTasks.delete(task);
           task.status = 1;
         } catch (thrownValue) {
