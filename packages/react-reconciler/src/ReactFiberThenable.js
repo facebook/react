@@ -17,6 +17,12 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
+import {
+  getWorkInProgressRoot,
+  getWorkInProgressRootRenderLanes,
+  attachPingListener,
+} from './ReactFiberWorkLoop';
+
 export opaque type ThenableState = Array<Thenable<any>>;
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
@@ -107,17 +113,23 @@ export function trackUsedThenable<T>(
             }
           },
         );
+      }
 
-        // Check one more time in case the thenable resolved synchronously
-        switch (thenable.status) {
-          case 'fulfilled': {
-            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-            return fulfilledThenable.value;
-          }
-          case 'rejected': {
-            const rejectedThenable: RejectedThenable<T> = (thenable: any);
-            throw rejectedThenable.reason;
-          }
+      // Attach ping listeners eagerly in case this synchronously resolves.
+      const root = getWorkInProgressRoot();
+      if (root) {
+        attachPingListener(root, thenable, getWorkInProgressRootRenderLanes());
+      }
+
+      // Check one more time in case the thenable resolved synchronously.
+      switch (thenable.status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+          return fulfilledThenable.value;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<T> = (thenable: any);
+          throw rejectedThenable.reason;
         }
       }
 
