@@ -146,7 +146,7 @@ export function processModelChunk(
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);
-  return ['J', id, json];
+  return ['O', id, json];
 }
 
 export function processReferenceChunk(
@@ -154,7 +154,7 @@ export function processReferenceChunk(
   id: number,
   reference: string,
 ): Chunk {
-  return ['J', id, reference];
+  return ['O', id, reference];
 }
 
 export function processModuleChunk(
@@ -163,23 +163,7 @@ export function processModuleChunk(
   moduleMetaData: ModuleMetaData,
 ): Chunk {
   // The moduleMetaData is already a JSON serializable value.
-  return ['M', id, moduleMetaData];
-}
-
-export function processProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): Chunk {
-  return ['P', id, contextName];
-}
-
-export function processSymbolChunk(
-  request: Request,
-  id: number,
-  name: string,
-): Chunk {
-  return ['S', id, name];
+  return ['I', id, moduleMetaData];
 }
 
 export function scheduleWork(callback: () => void) {

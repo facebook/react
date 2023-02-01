@@ -201,14 +201,6 @@ function createErrorChunk<T>(
   return new Chunk(ERRORED, null, error, response);
 }
 
-function createInitializedChunk<T>(
-  response: Response,
-  value: T,
-): InitializedChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
-}
-
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
@@ -483,14 +475,32 @@ export function parseModelString(
   key: string,
   value: string,
 ): any {
-  switch (value[0]) {
-    case '$': {
-      if (value === '$') {
-        return REACT_ELEMENT_TYPE;
-      } else if (value[1] === '$' || value[1] === '@') {
+  if (value[0] === '$') {
+    if (value === '$') {
+      // A very common symbol.
+      return REACT_ELEMENT_TYPE;
+    }
+    switch (value[1]) {
+      case '$': {
         // This was an escaped string value.
         return value.substring(1);
-      } else {
+      }
+      case 'L': {
+        // Lazy node
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        // We create a React.lazy wrapper around any lazy values.
+        // When passed into React, we'll know how to suspend on this.
+        return createLazyChunkWrapper(chunk);
+      }
+      case 'S': {
+        return Symbol.for(value.substring(2));
+      }
+      case 'P': {
+        return getOrCreateServerContext(value.substring(2)).Provider;
+      }
+      default: {
+        // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
@@ -517,13 +527,6 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
-    }
-    case '@': {
-      const id = parseInt(value.substring(1), 16);
-      const chunk = getChunk(response, id);
-      // We create a React.lazy wrapper around any lazy values.
-      // When passed into React, we'll know how to suspend on this.
-      return createLazyChunkWrapper(chunk);
     }
   }
   return value;
@@ -564,21 +567,6 @@ export function resolveModel(
   } else {
     resolveModelChunk(chunk, model);
   }
-}
-
-export function resolveProvider(
-  response: Response,
-  id: number,
-  contextName: string,
-): void {
-  const chunks = response._chunks;
-  chunks.set(
-    id,
-    createInitializedChunk(
-      response,
-      getOrCreateServerContext(contextName).Provider,
-    ),
-  );
 }
 
 export function resolveModule(
@@ -624,17 +612,6 @@ export function resolveModule(
       resolveModuleChunk(chunk, moduleReference);
     }
   }
-}
-
-export function resolveSymbol(
-  response: Response,
-  id: number,
-  name: string,
-): void {
-  const chunks = response._chunks;
-  // We assume that we'll always emit the symbol before anything references it
-  // to save a few bytes.
-  chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
 type ErrorWithDigest = Error & {digest?: string};

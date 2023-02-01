@@ -18,8 +18,8 @@ export type JSONValue =
   | Array<JSONValue>;
 
 export type RowEncoding =
-  | ['J', number, JSONValue]
-  | ['M', number, ModuleMetaData]
+  | ['O', number, JSONValue]
+  | ['I', number, ModuleMetaData]
   | ['P', number, string]
   | ['S', number, string]
   | [
