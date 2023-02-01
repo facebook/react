@@ -1044,6 +1044,8 @@ function lowerExpression(
       const operator = expr.node.operator;
 
       if (builder.currentBlockKind() === "value") {
+        // try lowering the RHS in case it also contains errors
+        lowerExpressionToPlace(builder, expr.get("right"));
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
           severity: ErrorSeverity.Todo,

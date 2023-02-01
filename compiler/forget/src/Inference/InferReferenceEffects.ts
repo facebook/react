@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -199,10 +200,14 @@ class Environment {
       const kind = this.#values.get(value)!;
       mergedKind = mergedKind !== null ? mergeValues(mergedKind, kind) : kind;
     }
-    invariant(
-      mergedKind !== null,
-      `Expected at least one value at ${printPlace(place)}`
-    );
+    if (mergedKind === null) {
+      CompilerError.invariant(
+        `InferReferenceEffects::kind: Expected at least one value at '${printPlace(
+          place
+        )}'`,
+        place.loc
+      );
+    }
     return mergedKind;
   }
 

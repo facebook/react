@@ -1,11 +1,13 @@
 import { Node, NodePath } from "@babel/traverse";
-import { SourceLocation } from "@babel/types";
+import { SourceLocation as BabelSourceLocation } from "@babel/types";
+import { SourceLocation } from "./HIR";
 import { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
   InvalidInput = "InvalidInput",
   Todo = "Todo",
+  Invariant = "Invariant",
 }
 
 export type CompilerErrorOptions = {
@@ -23,6 +25,8 @@ function mapSeverityToErrorCtor(severity: ErrorSeverity): CompilerErrorKind {
       return InvalidInputError;
     case ErrorSeverity.Todo:
       return TodoError;
+    case ErrorSeverity.Invariant:
+      return InvariantError;
     default:
       assertExhaustive(severity, `Unhandled severity level: ${severity}`);
   }
@@ -37,6 +41,12 @@ class TodoError extends Error {
   constructor(message: string) {
     super(message);
     this.name = `${ErrorSeverity.Todo}Error`;
+  }
+}
+class InvariantError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = `${ErrorSeverity.Invariant}Error`;
   }
 }
 
@@ -64,7 +74,7 @@ export class CompilerErrorDetail {
   reason: string;
   severity: ErrorSeverity;
   codeframe: string | null;
-  loc: SourceLocation | null;
+  loc: BabelSourceLocation | null;
 
   constructor(options: CompilerErrorDetailOptions) {
     this.reason = options.reason;
@@ -91,6 +101,19 @@ export class CompilerErrorDetail {
 
 export class CompilerError extends Error {
   details: CompilerErrorDetail[] = [];
+
+  static invariant(reason: string, loc: SourceLocation): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        codeframe: null,
+        loc: typeof loc === "symbol" ? null : loc,
+        reason,
+        severity: ErrorSeverity.Invariant,
+      })
+    );
+    throw errors;
+  }
 
   constructor(...args: any[]) {
     super(...args);
