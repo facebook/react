@@ -17,12 +17,6 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
-import {
-  getWorkInProgressRoot,
-  getWorkInProgressRootRenderLanes,
-  attachPingListener,
-} from './ReactFiberWorkLoop';
-
 export opaque type ThenableState = Array<Thenable<any>>;
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
@@ -94,6 +88,9 @@ export function trackUsedThenable<T>(
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
       } else {
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
@@ -113,12 +110,6 @@ export function trackUsedThenable<T>(
             }
           },
         );
-      }
-
-      // Attach ping listeners eagerly in case this synchronously resolves.
-      const root = getWorkInProgressRoot();
-      if (root) {
-        attachPingListener(root, thenable, getWorkInProgressRootRenderLanes());
       }
 
       // Check one more time in case the thenable resolved synchronously.
