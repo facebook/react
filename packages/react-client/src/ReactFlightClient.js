@@ -493,6 +493,12 @@ export function parseModelString(
         // When passed into React, we'll know how to suspend on this.
         return createLazyChunkWrapper(chunk);
       }
+      case '@': {
+        // Promise
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        return chunk;
+      }
       case 'S': {
         return Symbol.for(value.substring(2));
       }
