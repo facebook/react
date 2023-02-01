@@ -9,7 +9,7 @@ import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
-import { Err, Ok, Result } from "../lib/Result";
+import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import {
   BlockId,

@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from "../lib/Result";
+import { Err, Ok, Result } from "../Utils/Result";
 
 function addMax10(a: number, b: number): Result<number, string> {
   const n = a + b;
