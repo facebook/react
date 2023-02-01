@@ -193,12 +193,12 @@ function Output({ store, compilerOutput }: Props) {
           <div className="w-full p-4 basis-full border-b">
             <h2>COMPILER ERRORS</h2>
           </div>
-          <code
-            className="p-4 basis-full text-red-600 overflow-x-hidden"
-            style={{ maxHeight: "20vh" }}
+          <pre
+            className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
+            style={{ width: "calc(100vw - 650px)", maxHeight: "20vh" }}
           >
-            {compilerOutput.error.toString()}
-          </code>
+            <code>{compilerOutput.error.toString()}</code>
+          </pre>
         </div>
       ) : null}
     </>
