@@ -1321,6 +1321,89 @@ var POP = {}; // Used for DEV messages to keep track of which parent rendered so
 var jsxPropsParents = new WeakMap();
 var jsxChildrenParents = new WeakMap();
 
+function serializeThenable(request, thenable) {
+  request.pendingChunks++;
+  var newTask = createTask(
+    request,
+    null,
+    getActiveContext(),
+    request.abortableTasks
+  );
+
+  switch (thenable.status) {
+    case "fulfilled": {
+      // We have the resolved value, we can go ahead and schedule it for serialization.
+      newTask.model = thenable.value;
+      pingTask(request, newTask);
+      return newTask.id;
+    }
+
+    case "rejected": {
+      var x = thenable.reason;
+      var digest = logRecoverableError(request, x);
+
+      {
+        var _getErrorMessageAndSt = getErrorMessageAndStackDev(x),
+          message = _getErrorMessageAndSt.message,
+          stack = _getErrorMessageAndSt.stack;
+
+        emitErrorChunkDev(request, newTask.id, digest, message, stack);
+      }
+
+      return newTask.id;
+    }
+
+    default: {
+      if (typeof thenable.status === "string") {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        break;
+      }
+
+      var pendingThenable = thenable;
+      pendingThenable.status = "pending";
+      pendingThenable.then(
+        function (fulfilledValue) {
+          if (thenable.status === "pending") {
+            var fulfilledThenable = thenable;
+            fulfilledThenable.status = "fulfilled";
+            fulfilledThenable.value = fulfilledValue;
+          }
+        },
+        function (error) {
+          if (thenable.status === "pending") {
+            var rejectedThenable = thenable;
+            rejectedThenable.status = "rejected";
+            rejectedThenable.reason = error;
+          }
+        }
+      );
+      break;
+    }
+  }
+
+  thenable.then(
+    function (value) {
+      newTask.model = value;
+      pingTask(request, newTask);
+    },
+    function (reason) {
+      // TODO: Is it safe to directly emit these without being inside a retry?
+      var digest = logRecoverableError(request, reason);
+
+      {
+        var _getErrorMessageAndSt2 = getErrorMessageAndStackDev(reason),
+          _message = _getErrorMessageAndSt2.message,
+          _stack = _getErrorMessageAndSt2.stack;
+
+        emitErrorChunkDev(request, newTask.id, digest, _message, _stack);
+      }
+    }
+  );
+  return newTask.id;
+}
+
 function readThenable(thenable) {
   if (thenable.status === "fulfilled") {
     return thenable.value;
@@ -1379,7 +1462,14 @@ function createLazyWrapperAroundWakeable(wakeable) {
   return lazyType;
 }
 
-function attemptResolveElement(type, key, ref, props, prevThenableState) {
+function attemptResolveElement(
+  request,
+  type,
+  key,
+  ref,
+  props,
+  prevThenableState
+) {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
@@ -1411,6 +1501,15 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
       result !== null &&
       typeof result.then === "function"
     ) {
+      // When the return value is in children position we can resolve it immediately,
+      // to its value without a wrapper if it's synchronously available.
+      var thenable = result;
+
+      if (thenable.status === "fulfilled") {
+        return thenable.value;
+      } // TODO: Once we accept Promises as children on the client, we can just return
+      // the thenable here.
+
       return createLazyWrapperAroundWakeable(result);
     }
 
@@ -1441,6 +1540,7 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
         var init = type._init;
         var wrappedType = init(payload);
         return attemptResolveElement(
+          request,
           wrappedType,
           key,
           ref,
@@ -1457,6 +1557,7 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
 
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(
+          request,
           type.type,
           key,
           ref,
@@ -1535,8 +1636,12 @@ function serializeByValueID(id) {
   return "$" + id.toString(16);
 }
 
-function serializeByRefID(id) {
+function serializeLazyID(id) {
   return "$L" + id.toString(16);
+}
+
+function serializePromiseID(id) {
+  return "$@" + id.toString(16);
 }
 
 function serializeSymbolReference(name) {
@@ -1559,7 +1664,7 @@ function serializeClientReference(request, parent, key, moduleReference) {
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeByRefID(existingId);
+      return serializeLazyID(existingId);
     }
 
     return serializeByValueID(existingId);
@@ -1581,7 +1686,7 @@ function serializeClientReference(request, parent, key, moduleReference) {
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeByRefID(moduleId);
+      return serializeLazyID(moduleId);
     }
 
     return serializeByValueID(moduleId);
@@ -1591,9 +1696,9 @@ function serializeClientReference(request, parent, key, moduleReference) {
     var digest = logRecoverableError(request, x);
 
     {
-      var _getErrorMessageAndSt = getErrorMessageAndStackDev(x),
-        message = _getErrorMessageAndSt.message,
-        stack = _getErrorMessageAndSt.stack;
+      var _getErrorMessageAndSt3 = getErrorMessageAndStackDev(x),
+        message = _getErrorMessageAndSt3.message,
+        stack = _getErrorMessageAndSt3.stack;
 
       emitErrorChunkDev(request, errorId, digest, message, stack);
     }
@@ -2002,6 +2107,7 @@ function resolveModelToJSON(request, parent, key, value) {
           var element = value; // Attempt to render the Server Component.
 
           value = attemptResolveElement(
+            request,
             element.type,
             element.key,
             element.ref,
@@ -2040,7 +2146,7 @@ function resolveModelToJSON(request, parent, key, value) {
         var ping = newTask.ping;
         x.then(ping, ping);
         newTask.thenableState = getThenableStateAfterSuspending();
-        return serializeByRefID(newTask.id);
+        return serializeLazyID(newTask.id);
       } else {
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
@@ -2050,14 +2156,14 @@ function resolveModelToJSON(request, parent, key, value) {
         var digest = logRecoverableError(request, x);
 
         {
-          var _getErrorMessageAndSt2 = getErrorMessageAndStackDev(x),
-            message = _getErrorMessageAndSt2.message,
-            stack = _getErrorMessageAndSt2.stack;
+          var _getErrorMessageAndSt4 = getErrorMessageAndStackDev(x),
+            message = _getErrorMessageAndSt4.message,
+            stack = _getErrorMessageAndSt4.stack;
 
           emitErrorChunkDev(request, errorId, digest, message, stack);
         }
 
-        return serializeByRefID(errorId);
+        return serializeLazyID(errorId);
       }
     }
   }
@@ -2069,6 +2175,11 @@ function resolveModelToJSON(request, parent, key, value) {
   if (typeof value === "object") {
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, value);
+    } else if (typeof value.then === "function") {
+      // We assume that any object with a .then property is a "Thenable" type,
+      // or a Promise type. Either of which can be represented by a Promise.
+      var promiseId = serializeThenable(request, value);
+      return serializePromiseID(promiseId);
     } else if (value.$$typeof === REACT_PROVIDER_TYPE) {
       var providerKey = value._context._globalName;
       var writtenProviders = request.writtenProviders;
@@ -2309,6 +2420,7 @@ function retryTask(request, task) {
 
       task.model = value;
       value = attemptResolveElement(
+        request,
         element.type,
         element.key,
         element.ref,
@@ -2330,6 +2442,7 @@ function retryTask(request, task) {
         var nextElement = value;
         task.model = value;
         value = attemptResolveElement(
+          request,
           nextElement.type,
           nextElement.key,
           nextElement.ref,
@@ -2365,9 +2478,9 @@ function retryTask(request, task) {
       var digest = logRecoverableError(request, x);
 
       {
-        var _getErrorMessageAndSt3 = getErrorMessageAndStackDev(x),
-          message = _getErrorMessageAndSt3.message,
-          stack = _getErrorMessageAndSt3.stack;
+        var _getErrorMessageAndSt5 = getErrorMessageAndStackDev(x),
+          message = _getErrorMessageAndSt5.message,
+          stack = _getErrorMessageAndSt5.stack;
 
         emitErrorChunkDev(request, task.id, digest, message, stack);
       }

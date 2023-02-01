@@ -6641,9 +6641,9 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      if ("string" !== typeof thenable.status)
-        switch (
-          ((thenableState = thenable),
+      "string" === typeof thenable.status
+        ? thenable.then(noop$1, noop$1)
+        : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
             function (fulfilledValue) {
@@ -6660,14 +6660,13 @@ function trackUsedThenable(thenableState, thenable, index) {
                 rejectedThenable.reason = error;
               }
             }
-          ),
-          thenable.status)
-        ) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw thenable.reason;
-        }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
       suspendedThenable = thenable;
       throw SuspenseException;
   }
@@ -15137,7 +15136,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1718 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0ba4698c7-20230201",
+  version: "18.3.0-www-modern-9d111ffdf-20230201",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2109 = {
@@ -15168,7 +15167,7 @@ var internals$jscomp$inline_2109 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0ba4698c7-20230201"
+  reconcilerVersion: "18.3.0-next-9d111ffdf-20230201"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15356,4 +15355,4 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-0ba4698c7-20230201";
+exports.version = "18.3.0-next-9d111ffdf-20230201";

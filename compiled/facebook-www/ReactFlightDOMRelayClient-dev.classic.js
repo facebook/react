@@ -488,6 +488,15 @@ function parseModelString(response, parentObject, key, value) {
         return createLazyChunkWrapper(chunk);
       }
 
+      case "@": {
+        // Promise
+        var _id = parseInt(value.substring(2), 16);
+
+        var _chunk = getChunk(response, _id);
+
+        return _chunk;
+      }
+
       case "S": {
         return Symbol.for(value.substring(2));
       }
@@ -498,29 +507,29 @@ function parseModelString(response, parentObject, key, value) {
 
       default: {
         // We assume that anything else is a reference ID.
-        var _id = parseInt(value.substring(1), 16);
+        var _id2 = parseInt(value.substring(1), 16);
 
-        var _chunk = getChunk(response, _id);
+        var _chunk2 = getChunk(response, _id2);
 
-        switch (_chunk.status) {
+        switch (_chunk2.status) {
           case RESOLVED_MODEL:
-            initializeModelChunk(_chunk);
+            initializeModelChunk(_chunk2);
             break;
 
           case RESOLVED_MODULE:
-            initializeModuleChunk(_chunk);
+            initializeModuleChunk(_chunk2);
             break;
         } // The status might have changed after initialization.
 
-        switch (_chunk.status) {
+        switch (_chunk2.status) {
           case INITIALIZED:
-            return _chunk.value;
+            return _chunk2.value;
 
           case PENDING:
           case BLOCKED:
             var parentChunk = initializingChunk;
 
-            _chunk.then(
+            _chunk2.then(
               createModelResolver(parentChunk, parentObject, key),
               createModelReject(parentChunk)
             );
@@ -528,7 +537,7 @@ function parseModelString(response, parentObject, key, value) {
             return null;
 
           default:
-            throw _chunk.reason;
+            throw _chunk2.reason;
         }
       }
     }

@@ -12770,8 +12770,14 @@ function trackUsedThenable(thenableState, thenable, index) {
     }
 
     default: {
-      if (typeof thenable.status === "string");
-      else {
+      if (typeof thenable.status === "string") {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop$1, noop$1);
+      } else {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
         pendingThenable.then(
@@ -12789,18 +12795,18 @@ function trackUsedThenable(thenableState, thenable, index) {
               rejectedThenable.reason = error;
             }
           }
-        ); // Check one more time in case the thenable resolved synchronously
+        );
+      } // Check one more time in case the thenable resolved synchronously.
 
-        switch (thenable.status) {
-          case "fulfilled": {
-            var fulfilledThenable = thenable;
-            return fulfilledThenable.value;
-          }
+      switch (thenable.status) {
+        case "fulfilled": {
+          var fulfilledThenable = thenable;
+          return fulfilledThenable.value;
+        }
 
-          case "rejected": {
-            var rejectedThenable = thenable;
-            throw rejectedThenable.reason;
-          }
+        case "rejected": {
+          var rejectedThenable = thenable;
+          throw rejectedThenable.reason;
         }
       } // Suspend.
       //
@@ -31206,7 +31212,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-0ba4698c7-20230201";
+var ReactVersion = "18.3.0-www-classic-9d111ffdf-20230201";
 
 function createPortal(
   children,

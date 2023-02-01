@@ -2000,9 +2000,9 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      if ("string" !== typeof thenable.status)
-        switch (
-          ((thenableState = thenable),
+      "string" === typeof thenable.status
+        ? thenable.then(noop, noop)
+        : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
             function (fulfilledValue) {
@@ -2019,14 +2019,13 @@ function trackUsedThenable(thenableState, thenable, index) {
                 rejectedThenable.reason = error;
               }
             }
-          ),
-          thenable.status)
-        ) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw thenable.reason;
-        }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
       suspendedThenable = thenable;
       throw SuspenseException;
   }
@@ -9511,7 +9510,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-0ba4698c7-20230201",
+    version: "18.3.0-www-modern-9d111ffdf-20230201",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1309 = {
@@ -9542,7 +9541,7 @@ var internals$jscomp$inline_1309 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0ba4698c7-20230201"
+  reconcilerVersion: "18.3.0-next-9d111ffdf-20230201"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1310 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

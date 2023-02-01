@@ -235,24 +235,25 @@ function parseModelString(response, parentObject, key, value) {
       case "L":
         return (
           (parentObject = parseInt(value.substring(2), 16)),
-          (parentObject = getChunk(response, parentObject)),
-          {
-            $$typeof: REACT_LAZY_TYPE,
-            _payload: parentObject,
-            _init: readChunk
-          }
+          (response = getChunk(response, parentObject)),
+          { $$typeof: REACT_LAZY_TYPE, _payload: response, _init: readChunk }
+        );
+      case "@":
+        return (
+          (parentObject = parseInt(value.substring(2), 16)),
+          getChunk(response, parentObject)
         );
       case "S":
         return Symbol.for(value.substring(2));
       case "P":
         return (
-          (parentObject = value.substring(2)),
-          ContextRegistry[parentObject] ||
-            (ContextRegistry[parentObject] = React.createServerContext(
-              parentObject,
+          (response = value.substring(2)),
+          ContextRegistry[response] ||
+            (ContextRegistry[response] = React.createServerContext(
+              response,
               REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
             )),
-          ContextRegistry[parentObject].Provider
+          ContextRegistry[response].Provider
         );
       default:
         value = parseInt(value.substring(1), 16);

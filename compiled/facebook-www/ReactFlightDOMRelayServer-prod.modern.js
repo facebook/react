@@ -524,6 +524,50 @@ function createRequest(
   return request;
 }
 var POP = {};
+function serializeThenable(request, thenable) {
+  request.pendingChunks++;
+  var newTask = createTask(
+    request,
+    null,
+    currentActiveSnapshot,
+    request.abortableTasks
+  );
+  switch (thenable.status) {
+    case "fulfilled":
+      return (
+        (newTask.model = thenable.value), pingTask(request, newTask), newTask.id
+      );
+    case "rejected":
+      var digest = logRecoverableError(request, thenable.reason);
+      emitErrorChunkProd(request, newTask.id, digest);
+      return newTask.id;
+    default:
+      "string" !== typeof thenable.status &&
+        ((thenable.status = "pending"),
+        thenable.then(
+          function (fulfilledValue) {
+            "pending" === thenable.status &&
+              ((thenable.status = "fulfilled"),
+              (thenable.value = fulfilledValue));
+          },
+          function (error) {
+            "pending" === thenable.status &&
+              ((thenable.status = "rejected"), (thenable.reason = error));
+          }
+        ));
+  }
+  thenable.then(
+    function (value) {
+      newTask.model = value;
+      pingTask(request, newTask);
+    },
+    function (reason) {
+      reason = logRecoverableError(request, reason);
+      emitErrorChunkProd(request, newTask.id, reason);
+    }
+  );
+  return newTask.id;
+}
 function readThenable(thenable) {
   if ("fulfilled" === thenable.status) return thenable.value;
   if ("rejected" === thenable.status) throw thenable.reason;
@@ -551,7 +595,14 @@ function createLazyWrapperAroundWakeable(wakeable) {
   }
   return { $$typeof: REACT_LAZY_TYPE, _payload: wakeable, _init: readThenable };
 }
-function attemptResolveElement(type, key, ref, props, prevThenableState) {
+function attemptResolveElement(
+  request,
+  type,
+  key,
+  ref,
+  props,
+  prevThenableState
+) {
   if (null !== ref && void 0 !== ref)
     throw Error(
       "Refs cannot be used in Server Components, nor passed to Client Components."
@@ -565,7 +616,9 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
     return "object" === typeof props &&
       null !== props &&
       "function" === typeof props.then
-      ? createLazyWrapperAroundWakeable(props)
+      ? "fulfilled" === props.status
+        ? props.value
+        : createLazyWrapperAroundWakeable(props)
       : props;
   }
   if ("string" === typeof type) return [REACT_ELEMENT_TYPE, type, key, props];
@@ -580,16 +633,24 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
       case REACT_LAZY_TYPE:
         var init = type._init;
         type = init(type._payload);
-        return attemptResolveElement(type, key, ref, props, prevThenableState);
+        return attemptResolveElement(
+          request,
+          type,
+          key,
+          ref,
+          props,
+          prevThenableState
+        );
       case REACT_FORWARD_REF_TYPE:
         return (
-          (key = type.render),
+          (request = type.render),
           (thenableIndexCounter = 0),
           (thenableState = prevThenableState),
-          key(props, void 0)
+          request(props, void 0)
         );
       case REACT_MEMO_TYPE:
         return attemptResolveElement(
+          request,
           type.type,
           key,
           ref,
@@ -612,6 +673,11 @@ function attemptResolveElement(type, key, ref, props, prevThenableState) {
     "Unsupported Server Component type: " + describeValueForErrorMessage(type)
   );
 }
+function pingTask(request, task) {
+  var pingedTasks = request.pingedTasks;
+  pingedTasks.push(task);
+  1 === pingedTasks.length && performWork(request);
+}
 function createTask(request, model, context, abortSet) {
   var task = {
     id: request.nextChunkId++,
@@ -619,9 +685,7 @@ function createTask(request, model, context, abortSet) {
     model: model,
     context: context,
     ping: function () {
-      var pingedTasks = request.pingedTasks;
-      pingedTasks.push(task);
-      1 === pingedTasks.length && performWork(request);
+      return pingTask(request, task);
     },
     thenableState: null
   };
@@ -777,6 +841,7 @@ function resolveModelToJSON(request, parent, key, value) {
         case REACT_ELEMENT_TYPE:
           var element = value;
           value = attemptResolveElement(
+            request,
             element.type,
             element.key,
             element.ref,
@@ -821,6 +886,8 @@ function resolveModelToJSON(request, parent, key, value) {
   if ("object" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
       return serializeClientReference(request, parent, key, value);
+    if ("function" === typeof value.then)
+      return "$@" + serializeThenable(request, value).toString(16);
     if (value.$$typeof === REACT_PROVIDER_TYPE)
       return (
         (value = value._context._globalName),
@@ -947,6 +1014,7 @@ function performWork(request$jscomp$0) {
               prevThenableState = task.thenableState;
             task.model = value;
             value = attemptResolveElement(
+              request,
               element.type,
               element.key,
               element.ref,
@@ -963,6 +1031,7 @@ function performWork(request$jscomp$0) {
               (element = value),
                 (task.model = value),
                 (value = attemptResolveElement(
+                  request,
                   element.type,
                   element.key,
                   element.ref,
