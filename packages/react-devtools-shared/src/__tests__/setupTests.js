@@ -61,8 +61,14 @@ env.beforeEach(() => {
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
   global._ignoredErrorOrWarningMessages = [];
   function shouldIgnoreConsoleErrorOrWarn(args) {
-    const firstArg = args[0];
-    if (typeof firstArg !== 'string') {
+    let firstArg = args[0];
+    if (
+      firstArg !== null &&
+      typeof firstArg === 'object' &&
+      String(firstArg).indexOf('Error: Uncaught [') === 0
+    ) {
+      firstArg = String(firstArg);
+    } else if (typeof firstArg !== 'string') {
       return false;
     }
     const shouldFilter = global._ignoredErrorOrWarningMessages.some(

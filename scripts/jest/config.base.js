@@ -20,10 +20,19 @@ module.exports = {
   rootDir: process.cwd(),
   roots: ['<rootDir>/packages', '<rootDir>/scripts'],
   collectCoverageFrom: ['packages/**/*.js'],
-  timers: 'fake',
+  fakeTimers: {
+    enableGlobally: true,
+    legacyFakeTimers: true,
+  },
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
   testSequencer: require.resolve('./jestSequencer'),
 
   testEnvironment: 'jsdom',
+
+  testRunner: 'jasmine2',
 };

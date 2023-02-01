@@ -344,6 +344,8 @@ describe('createEventTarget', () => {
         "right": 0,
         "top": 0,
         "width": 0,
+        "x": 0,
+        "y": 0,
       }
     `);
     target.setBoundingClientRect({x: 10, y: 20, width: 100, height: 200});
