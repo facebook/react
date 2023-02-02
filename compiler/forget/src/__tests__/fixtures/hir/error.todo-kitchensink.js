@@ -48,4 +48,10 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   }
 
   do {} while (i < 3);
+
+  let updateIdentifier = 0;
+  --updateIdentifier;
+  ++updateIdentifier;
+  updateIdentifier.y++;
+  updateIdentifier.y--;
 }

@@ -1405,6 +1405,55 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "UpdateExpression": {
+      let expr = exprPath as NodePath<t.UpdateExpression>;
+      const argument = expr.get("argument");
+      if (!argument.isIdentifier()) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
+          severity: ErrorSeverity.Todo,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+      if (expr.node.prefix) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Handle prefix UpdateExpression`,
+          severity: ErrorSeverity.Todo,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+      const temp = buildTemporaryPlace(
+        builder,
+        expr.node.loc ?? GeneratedSource
+      );
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...temp }, kind: InstructionKind.Const },
+        value: {
+          kind: "Primitive",
+          value: 1,
+          loc: expr.node.loc ?? GeneratedSource,
+        },
+        loc: expr.node.loc ?? GeneratedSource,
+      });
+      const identifier = argument as NodePath<t.Identifier>;
+      const place = lowerExpressionToPlace(builder, identifier);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { place: { ...place }, kind: InstructionKind.Reassign },
+        value: {
+          kind: "BinaryExpression",
+          operator: expr.node.operator === "++" ? "+" : "-",
+          left: { ...place },
+          right: { ...temp },
+          loc: exprLoc,
+        },
+        loc: exprLoc,
+      });
+      return place;
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

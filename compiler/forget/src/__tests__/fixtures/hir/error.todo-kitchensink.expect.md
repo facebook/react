@@ -52,6 +52,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   }
 
   do {} while (i < 3);
+
+  let updateIdentifier = 0;
+  --updateIdentifier;
+  ++updateIdentifier;
+  updateIdentifier.y++;
+  updateIdentifier.y--;
 }
 
 ```
@@ -327,8 +333,44 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   49 |
 > 50 |   do {} while (i < 3);
      |   ^^^^^^^^^^^^^^^^^^^^
-  51 | }
-  52 |
+  51 |
+  52 |   let updateIdentifier = 0;
+  53 |   --updateIdentifier;
+
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
+  51 |
+  52 |   let updateIdentifier = 0;
+> 53 |   --updateIdentifier;
+     |   ^^^^^^^^^^^^^^^^^^
+  54 |   ++updateIdentifier;
+  55 |   updateIdentifier.y++;
+  56 |   updateIdentifier.y--;
+
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
+  52 |   let updateIdentifier = 0;
+  53 |   --updateIdentifier;
+> 54 |   ++updateIdentifier;
+     |   ^^^^^^^^^^^^^^^^^^
+  55 |   updateIdentifier.y++;
+  56 |   updateIdentifier.y--;
+  57 | }
+
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
+  53 |   --updateIdentifier;
+  54 |   ++updateIdentifier;
+> 55 |   updateIdentifier.y++;
+     |   ^^^^^^^^^^^^^^^^^^^^
+  56 |   updateIdentifier.y--;
+  57 | }
+  58 |
+
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
+  54 |   ++updateIdentifier;
+  55 |   updateIdentifier.y++;
+> 56 |   updateIdentifier.y--;
+     |   ^^^^^^^^^^^^^^^^^^^^
+  57 | }
+  58 |
 ```
           
       
