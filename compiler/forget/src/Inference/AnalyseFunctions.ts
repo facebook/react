@@ -76,29 +76,25 @@ function infer(
   value: FunctionExpression,
   properties: Map<Identifier, Dependency>
 ) {
-  const func = value.loweredFunc;
-  const mutations = func.context.filter((dep) => isMutated(dep.identifier));
-  const mutatedVariables = new Set(
-    mutations
+  const mutations = new Set(
+    value.loweredFunc.context
+      .filter((dep) => isMutated(dep.identifier))
       .map((m) => m.identifier.name)
       .filter((m) => m !== null) as string[]
   );
+
   const mutatedDeps: Place[] = [];
-
   for (const dep of value.dependencies) {
+    let name: string | null = null;
+
     if (properties.has(dep.identifier)) {
-      let captured = properties.get(dep.identifier)!;
-      let name = captured.place.identifier.name;
+      const receiver = properties.get(dep.identifier)!;
+      name = receiver.place.identifier.name;
+    } else {
+      name = dep.identifier.name;
+    }
 
-      if (name === null || !mutatedVariables.has(name)) {
-        continue;
-      }
-
-      mutatedDeps.push(dep);
-    } else if (
-      dep.identifier.name !== null &&
-      mutatedVariables.has(dep.identifier.name)
-    ) {
+    if (name !== null && mutations.has(name)) {
       mutatedDeps.push(dep);
     }
   }
