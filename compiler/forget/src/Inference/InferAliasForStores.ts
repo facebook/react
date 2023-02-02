@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import DisjointSet from "../Utils/DisjointSet";
 import {
   Effect,
   HIRFunction,
@@ -12,6 +11,8 @@ import {
   InstructionId,
   Place,
 } from "../HIR/HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
+import DisjointSet from "../Utils/DisjointSet";
 
 export function inferAliasForStores(
   func: HIRFunction,
@@ -24,28 +25,14 @@ export function inferAliasForStores(
         continue;
       }
       switch (value.kind) {
-        case "Identifier": {
-          maybeAlias(aliases, lvalue.place, value, instr.id);
-          break;
-        }
-        case "ArrayExpression": {
-          for (const item of value.elements) {
-            maybeAlias(aliases, lvalue.place, item, instr.id);
-          }
-          break;
-        }
-        case "ObjectExpression": {
-          if (value.properties !== null) {
-            for (const [, property] of value.properties) {
-              maybeAlias(aliases, lvalue.place, property, instr.id);
-            }
-          }
-          break;
-        }
+        case "Identifier":
+        case "ArrayExpression":
+        case "ObjectExpression":
         case "ComputedStore":
         case "PropertyStore": {
-          maybeAlias(aliases, lvalue.place, value.value, instr.id);
-          maybeAlias(aliases, lvalue.place, value.object, instr.id);
+          for (const operand of eachInstructionValueOperand(value)) {
+            maybeAlias(aliases, lvalue.place, operand, instr.id);
+          }
           break;
         }
         case "FunctionExpression": {
