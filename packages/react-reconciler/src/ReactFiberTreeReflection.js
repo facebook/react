@@ -275,7 +275,7 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberImpl(node: Fiber) {
+function findCurrentHostFiberImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (
@@ -306,7 +306,7 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
+function findCurrentHostFiberWithNoPortalsImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (

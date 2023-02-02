@@ -77,7 +77,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     ) {
       const thenableResult: Thenable<T> = (result: any);
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           thenableResult.then(
             returnValue => {
               flushActWork(
@@ -108,7 +108,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
         } while (didFlushWork);
         return {
-          then(resolve, reject) {
+          then(resolve: T => mixed, reject: mixed => mixed) {
             resolve(returnValue);
           },
         };

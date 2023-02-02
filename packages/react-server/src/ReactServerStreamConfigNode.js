@@ -195,7 +195,7 @@ export function stringToChunk(content: string): Chunk {
   return content;
 }
 
-const precomputedChunkSet = __DEV__ ? new Set() : null;
+const precomputedChunkSet = __DEV__ ? new Set<PrecomputedChunk>() : null;
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);

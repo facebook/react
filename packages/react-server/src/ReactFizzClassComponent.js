@@ -31,15 +31,15 @@ let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
 
 if (__DEV__) {
-  didWarnAboutUninitializedState = new Set();
-  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
-  didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
-  didWarnAboutDirectlyAssigningPropsToState = new Set();
-  didWarnAboutUndefinedDerivedState = new Set();
-  didWarnAboutContextTypeAndContextTypes = new Set();
-  didWarnAboutInvalidateContextType = new Set();
+  didWarnAboutUninitializedState = new Set<string>();
+  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set<mixed>();
+  didWarnAboutLegacyLifecyclesAndDerivedState = new Set<string>();
+  didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
+  didWarnAboutUndefinedDerivedState = new Set<string>();
+  didWarnAboutContextTypeAndContextTypes = new Set<mixed>();
+  didWarnAboutInvalidateContextType = new Set<mixed>();
 
-  const didWarnOnInvalidCallback = new Set();
+  const didWarnOnInvalidCallback = new Set<string>();
 
   warnOnInvalidCallback = function (callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {

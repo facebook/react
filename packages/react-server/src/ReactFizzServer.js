@@ -275,10 +275,10 @@ export function createRequest(
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
 ): Request {
-  const pingedTasks = [];
+  const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const resources: Resources = createResources();
-  const request = {
+  const request: Request = {
     destination: null,
     responseState,
     progressiveChunkSize:
@@ -294,11 +294,11 @@ export function createRequest(
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
-    completedBoundaries: ([]: Array<SuspenseBoundary>),
-    partialBoundaries: ([]: Array<SuspenseBoundary>),
-    preamble: ([]: Array<Chunk | PrecomputedChunk>),
-    postamble: ([]: Array<Chunk | PrecomputedChunk>),
+    clientRenderedBoundaries: [],
+    completedBoundaries: [],
+    partialBoundaries: [],
+    preamble: [],
+    postamble: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,

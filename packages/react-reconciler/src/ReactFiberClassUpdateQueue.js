@@ -536,7 +536,7 @@ export function processUpdateQueue<State>(
 
     let newBaseState = null;
     let newFirstBaseUpdate = null;
-    let newLastBaseUpdate = null;
+    let newLastBaseUpdate: null | Update<State> = null;
 
     let update: Update<State> = firstBaseUpdate;
     do {

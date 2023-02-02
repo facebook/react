@@ -32,7 +32,7 @@ export function parseSourceAndMetadata(
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
 
-const EMPTY_MAP = new Map();
+const EMPTY_MAP: HookNames = new Map();
 
 export async function parseHookNames(
   hooksTree: HooksTree,

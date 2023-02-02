@@ -133,8 +133,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
-// $FlowFixMe[missing-local-annot]
-function childrenToTree(node) {
+function childrenToTree(node: null | Fiber) {
   if (!node) {
     return null;
   }
@@ -178,7 +177,7 @@ function flatten(arr) {
   return result;
 }
 
-function toTree(node: ?Fiber) {
+function toTree(node: null | Fiber): $FlowFixMe {
   if (node == null) {
     return null;
   }
@@ -495,7 +494,7 @@ function create(
     }
   }
   let container = {
-    children: [],
+    children: ([]: Array<Instance | TextInstance>),
     createNodeMock,
     tag: 'CONTAINER',
   };
@@ -615,7 +614,7 @@ function create(
   return entry;
 }
 
-const fiberToWrapper = new WeakMap();
+const fiberToWrapper = new WeakMap<Fiber, ReactTestInstance>();
 function wrapFiber(fiber: Fiber): ReactTestInstance {
   let wrapper = fiberToWrapper.get(fiber);
   if (wrapper === undefined && fiber.alternate !== null) {

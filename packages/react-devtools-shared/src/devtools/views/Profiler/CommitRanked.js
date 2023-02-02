@@ -45,7 +45,7 @@ export default function CommitRankedAutoSizer(_: {}): React.Node {
   const {profilingCache} = profilerStore;
 
   const deselectCurrentFiber = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       event.stopPropagation();
       selectFiber(null, null);
     },
@@ -108,7 +108,7 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
   );
 
   const handleElementMouseEnter = useCallback(
-    ({id, name}) => {
+    ({id, name}: $FlowFixMe) => {
       highlightNativeElement(id); // Highlight last hovered element.
       setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
     },

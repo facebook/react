@@ -288,7 +288,7 @@ function Field({
     <AutoSizeInput
       className={`${className} ${styles.Input}`}
       onBlur={onSubmit}
-      onChange={event => onChange(event.target.value)}
+      onChange={(event: $FlowFixMe) => onChange(event.target.value)}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
       value={value}

@@ -104,9 +104,11 @@ export function validatePreloadResourceDifference(
         originalWarningName,
       );
     } else {
-      let missingProps = null;
-      let extraProps = null;
-      let differentProps = null;
+      let missingProps: {[string]: $FlowFixMe} | null = null;
+      let extraProps: {[string]: $FlowFixMe} | null = null;
+      let differentProps: {
+        [string]: {latest: $FlowFixMe, original: $FlowFixMe},
+      } | null = null;
       if (originalProps.media != null && latestProps.media == null) {
         missingProps = missingProps || ({}: {[string]: $FlowFixMe});
         missingProps.media = originalProps.media;
@@ -164,9 +166,11 @@ export function validateStyleResourceDifference(
       latestProps,
       false,
     );
-    let missingProps = null;
-    let extraProps = null;
-    let differentProps = null;
+    let missingProps: {[string]: $FlowFixMe} | null = null;
+    let extraProps: {[string]: $FlowFixMe} | null = null;
+    let differentProps: {
+      [string]: {latest: $FlowFixMe, original: $FlowFixMe},
+    } | null = null;
     if (originalProps.media != null && latestProps.media == null) {
       missingProps = missingProps || ({}: {[string]: $FlowFixMe});
       missingProps.media = originalProps.media;
@@ -224,8 +228,10 @@ export function validateScriptResourceDifference(
       latestProps,
       false,
     );
-    let extraProps = null;
-    let differentProps = null;
+    let extraProps: {[string]: $FlowFixMe} | null = null;
+    let differentProps: {
+      [string]: {latest: $FlowFixMe, original: $FlowFixMe},
+    } | null = null;
 
     for (const propName in latestProps) {
       const propValue = latestProps[propName];
@@ -291,9 +297,11 @@ export function validateStyleAndHintProps(
       );
     }
 
-    let missingProps = null;
-    let extraProps = null;
-    let differentProps = null;
+    let missingProps: {[string]: $FlowFixMe} | null = null;
+    let extraProps: {[string]: $FlowFixMe} | null = null;
+    let differentProps: {
+      [string]: {latest: $FlowFixMe, original: $FlowFixMe},
+    } | null = null;
 
     for (const propName in styleProps) {
       const styleValue = styleProps[propName];
@@ -373,9 +381,11 @@ export function validateScriptAndHintProps(
       );
     }
 
-    let missingProps = null;
-    let extraProps = null;
-    let differentProps = null;
+    let missingProps: {[string]: $FlowFixMe} | null = null;
+    let extraProps: {[string]: $FlowFixMe} | null = null;
+    let differentProps: {
+      [string]: {latest: $FlowFixMe, original: $FlowFixMe},
+    } | null = null;
 
     for (const propName in scriptProps) {
       const scriptValue = scriptProps[propName];
@@ -505,9 +515,9 @@ export function validateURLKeyedUpdatedProps(
     // Whether they are null or undefined
     if (pendingProps[urlPropKey] === currentProps[urlPropKey]) {
       // If we have the same href/src we need all other props to be the same
-      let missingProps;
-      let extraProps;
-      let differentProps;
+      let missingProps: ?{[string]: mixed};
+      let extraProps: ?{[string]: mixed};
+      let differentProps: ?{[string]: {latest: mixed, original: mixed}};
       const allProps = Array.from(
         new Set(Object.keys(currentProps).concat(Object.keys(pendingProps))),
       );

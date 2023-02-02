@@ -55,9 +55,9 @@ export function importFile(file: File): TimelineData | Error {
   let record = fileNameToProfilerDataMap.get(fileName);
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 

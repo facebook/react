@@ -66,7 +66,7 @@ function prerenderToNodeStreams(
     const onFatalError = reject;
 
     function onAllReady() {
-      const readable = new Readable({
+      const readable: Readable = new Readable({
         read() {
           startFlowing(request, writable);
         },

@@ -74,7 +74,11 @@ module.exports = function register() {
   };
 
   const proxyHandlers = {
-    get: function (target: Function, name: string, receiver: Proxy<Function>) {
+    get: function (
+      target: Function,
+      name: string,
+      receiver: Proxy<Function>,
+    ): $FlowFixMe {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -143,14 +147,10 @@ module.exports = function register() {
             target.status = 'fulfilled';
             target.value = proxy;
 
-            // $FlowFixMe[missing-local-annot]
             const then = (target.then = Object.defineProperties(
               (function then(resolve, reject: any) {
                 // Expose to React.
-                return Promise.resolve(
-                  // $FlowFixMe[incompatible-call] found when upgrading Flow
-                  resolve(proxy),
-                );
+                return Promise.resolve(resolve(proxy));
               }: any),
               // If this is not used as a Promise but is treated as a reference to a `.then`
               // export then we should treat it as a reference to that name.
@@ -200,7 +200,7 @@ module.exports = function register() {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },
-    set: function () {
+    set: function (): empty {
       throw new Error('Cannot assign to a client module from a server module.');
     },
   };

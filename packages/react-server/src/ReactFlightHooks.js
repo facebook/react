@@ -94,7 +94,7 @@ export const HooksDispatcher: Dispatcher = {
     return unsupportedRefresh;
   },
   useMemoCache(size: number): Array<any> {
-    const data = new Array(size);
+    const data = new Array<any>(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     }

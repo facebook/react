@@ -130,7 +130,7 @@ function legacyCreateRootFromDOMContainer(
       };
     }
 
-    const root = createHydrationContainer(
+    const root: FiberRoot = createHydrationContainer(
       initialChildren,
       callback,
       container,

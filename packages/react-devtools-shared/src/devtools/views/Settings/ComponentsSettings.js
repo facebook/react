@@ -70,14 +70,14 @@ export default function ComponentsSettings(_: {}): React.Node {
   );
 
   const updateCollapseNodesByDefault = useCallback(
-    ({currentTarget}) => {
+    ({currentTarget}: $FlowFixMe) => {
       store.collapseNodesByDefault = !currentTarget.checked;
     },
     [store],
   );
 
   const updateParseHookNames = useCallback(
-    ({currentTarget}) => {
+    ({currentTarget}: $FlowFixMe) => {
       setParseHookNames(currentTarget.checked);
     },
     [setParseHookNames],
