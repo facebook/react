@@ -138,10 +138,8 @@ function mapIntoArray(
             // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
-                  // eslint-disable-next-line react-internal/safe-string-coercion
-                  '' +
-                    // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                    mappedChild.key,
+                  // $FlowFixMe[unsafe-addition]
+                  '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
                 ) + '/'
               : '') +
             childKey,
