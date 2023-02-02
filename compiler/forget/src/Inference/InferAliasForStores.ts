@@ -42,6 +42,7 @@ export function inferAliasForStores(
           }
           break;
         }
+        case "ComputedStore":
         case "PropertyStore": {
           maybeAlias(aliases, value.object, value.value, instr.id);
           break;
