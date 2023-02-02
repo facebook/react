@@ -40,6 +40,7 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
       alias = instrValue;
       break;
     }
+    case "ComputedLoad":
     case "PropertyLoad": {
       alias = instrValue.object;
       break;
