@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-9d111ffdf-20230201";
+var ReactVersion = "18.3.0-www-classic-922dd7ba5-20230202";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2572,6 +2572,8 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
   }
 }
 
+var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
+
 function setCurrentlyValidatingElement$1(element) {
   {
     if (element) {
@@ -2713,11 +2715,12 @@ function validateExplicitKey(element, parentType) {
  */
 
 function validateChildKeys(node, parentType) {
-  if (typeof node !== "object") {
+  if (typeof node !== "object" || !node) {
     return;
   }
 
-  if (isArray(node)) {
+  if (node.$$typeof === REACT_CLIENT_REFERENCE$1);
+  else if (isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
 
@@ -2730,7 +2733,7 @@ function validateChildKeys(node, parentType) {
     if (node._store) {
       node._store.validated = true;
     }
-  } else if (node) {
+  } else {
     var iteratorFn = getIteratorFn(node);
 
     if (typeof iteratorFn === "function") {
@@ -2761,6 +2764,10 @@ function validatePropTypes(element) {
     var type = element.type;
 
     if (type === null || type === undefined || typeof type === "string") {
+      return;
+    }
+
+    if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
       return;
     }
 
@@ -3734,6 +3741,7 @@ function jsxDEV(type, config, maybeKey, source, self) {
 
 var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
 var ReactDebugCurrentFrame$2 = ReactSharedInternals.ReactDebugCurrentFrame;
+var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
 
 function setCurrentlyValidatingElement$2(element) {
   {
@@ -3893,11 +3901,12 @@ function validateExplicitKey$1(element, parentType) {
 
 function validateChildKeys$1(node, parentType) {
   {
-    if (typeof node !== "object") {
+    if (typeof node !== "object" || !node) {
       return;
     }
 
-    if (isArray(node)) {
+    if (node.$$typeof === REACT_CLIENT_REFERENCE$2);
+    else if (isArray(node)) {
       for (var i = 0; i < node.length; i++) {
         var child = node[i];
 
@@ -3910,7 +3919,7 @@ function validateChildKeys$1(node, parentType) {
       if (node._store) {
         node._store.validated = true;
       }
-    } else if (node) {
+    } else {
       var iteratorFn = getIteratorFn(node);
 
       if (typeof iteratorFn === "function") {
@@ -3942,6 +3951,10 @@ function validatePropTypes$1(element) {
     var type = element.type;
 
     if (type === null || type === undefined || typeof type === "string") {
+      return;
+    }
+
+    if (type.$$typeof === REACT_CLIENT_REFERENCE$2) {
       return;
     }
 

@@ -1109,6 +1109,7 @@ function jsxDEV(type, config, maybeKey, source, self) {
 
 var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
 var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
 
 function setCurrentlyValidatingElement$1(element) {
   {
@@ -1268,11 +1269,12 @@ function validateExplicitKey(element, parentType) {
 
 function validateChildKeys(node, parentType) {
   {
-    if (typeof node !== "object") {
+    if (typeof node !== "object" || !node) {
       return;
     }
 
-    if (isArray(node)) {
+    if (node.$$typeof === REACT_CLIENT_REFERENCE$1);
+    else if (isArray(node)) {
       for (var i = 0; i < node.length; i++) {
         var child = node[i];
 
@@ -1285,7 +1287,7 @@ function validateChildKeys(node, parentType) {
       if (node._store) {
         node._store.validated = true;
       }
-    } else if (node) {
+    } else {
       var iteratorFn = getIteratorFn(node);
 
       if (typeof iteratorFn === "function") {
@@ -1317,6 +1319,10 @@ function validatePropTypes(element) {
     var type = element.type;
 
     if (type === null || type === undefined || typeof type === "string") {
+      return;
+    }
+
+    if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
       return;
     }
 
