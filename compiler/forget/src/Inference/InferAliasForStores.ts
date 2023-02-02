@@ -64,7 +64,7 @@ function maybeAlias(
   id: InstructionId
 ): void {
   if (
-    lvalue.identifier.mutableRange.end > id ||
+    lvalue.identifier.mutableRange.end > id + 1 ||
     rvalue.identifier.mutableRange.end > id
   ) {
     aliases.union([lvalue.identifier, rvalue.identifier]);

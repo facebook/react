@@ -21,22 +21,23 @@ function component(props) {
 function component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props;
-  let a;
+  let t1;
   if (c_0) {
-    a = props.a || (props.b && props.c && props.d);
-    const c_2 = $[2] !== props;
-    let t3;
-    if (c_2) {
-      t3 = (props.a && props.b && props.c) || props.d;
-      $[2] = props;
-      $[3] = t3;
-    } else {
-      t3 = $[3];
-    }
+    t1 = props.a || (props.b && props.c && props.d);
     $[0] = props;
-    $[1] = a;
+    $[1] = t1;
   } else {
-    a = $[1];
+    t1 = $[1];
+  }
+  const a = t1;
+  const c_2 = $[2] !== props;
+  let t3;
+  if (c_2) {
+    t3 = (props.a && props.b && props.c) || props.d;
+    $[2] = props;
+    $[3] = t3;
+  } else {
+    t3 = $[3];
   }
   const b = t3;
   const c_4 = $[4] !== a;
