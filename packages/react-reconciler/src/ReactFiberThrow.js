@@ -413,7 +413,8 @@ function throwException(
           //
           // When the wakeable resolves, we'll attempt to render the boundary
           // again ("retry").
-          const wakeables: Set<Wakeable> | null = (suspenseBoundary.updateQueue: any);
+          const wakeables: Set<Wakeable> | null =
+            (suspenseBoundary.updateQueue: any);
           if (wakeables === null) {
             suspenseBoundary.updateQueue = new Set([wakeable]);
           } else {
@@ -424,7 +425,8 @@ function throwException(
         case OffscreenComponent: {
           if (suspenseBoundary.mode & ConcurrentMode) {
             suspenseBoundary.flags |= ShouldCapture;
-            const offscreenQueue: OffscreenQueue | null = (suspenseBoundary.updateQueue: any);
+            const offscreenQueue: OffscreenQueue | null =
+              (suspenseBoundary.updateQueue: any);
             if (offscreenQueue === null) {
               const newOffscreenQueue: OffscreenQueue = {
                 transitions: null,

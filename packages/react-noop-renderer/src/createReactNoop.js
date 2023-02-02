@@ -956,9 +956,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_clearYields();
     },
 
-    flushWithHostCounters(
-      fn: () => void,
-    ):
+    flushWithHostCounters(fn: () => void):
       | {
           hostDiffCounter: number,
           hostUpdateCounter: number,

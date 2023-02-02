@@ -867,7 +867,7 @@ function flattenOptionChildren(children: mixed): string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  Children.forEach((children: any), function(child) {
+  Children.forEach((children: any), function (child) {
     if (child == null) {
       return;
     }
@@ -2151,29 +2151,22 @@ const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
   '<!--$?--><template id="',
 );
 const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
-const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
-  '<!--$!-->',
-);
+const startClientRenderedSuspenseBoundary =
+  stringToPrecomputedChunk('<!--$!-->');
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
-const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  '<template',
-);
-const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
-  '"',
-);
-const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  ' data-dgst="',
-);
-const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  ' data-msg="',
-);
-const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
-  ' data-stck="',
-);
-const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  '></template>',
-);
+const clientRenderedSuspenseBoundaryError1 =
+  stringToPrecomputedChunk('<template');
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial =
+  stringToPrecomputedChunk('"');
+const clientRenderedSuspenseBoundaryError1A =
+  stringToPrecomputedChunk(' data-dgst="');
+const clientRenderedSuspenseBoundaryError1B =
+  stringToPrecomputedChunk(' data-msg="');
+const clientRenderedSuspenseBoundaryError1C =
+  stringToPrecomputedChunk(' data-stck="');
+const clientRenderedSuspenseBoundaryError2 =
+  stringToPrecomputedChunk('></template>');
 
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
@@ -2472,9 +2465,8 @@ const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   styleInsertionFunction + ';$RR("',
 );
-const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
-  '$RR("',
-);
+const completeBoundaryWithStylesScript1Partial =
+  stringToPrecomputedChunk('$RR("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3a = stringToPrecomputedChunk('",');
 const completeBoundaryScript3b = stringToPrecomputedChunk('"');

@@ -127,7 +127,7 @@ class Text extends React.Component {
     // ref directly.
     ['height', 'width', 'x', 'y'].forEach(key => {
       Object.defineProperty(this, key, {
-        get: function() {
+        get: function () {
           return this._text ? this._text[key] : undefined;
         },
       });

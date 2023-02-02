@@ -80,7 +80,7 @@ export {
 const stringify = JSON.stringify;
 
 function serializeRowHeader(tag: string, id: number) {
-  return tag + id.toString(16) + ':';
+  return id.toString(16) + ':' + tag;
 }
 
 export function processErrorChunkProd(
@@ -127,7 +127,7 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json: string = stringify(model, request.toJSON);
-  const row = serializeRowHeader('J', id) + json + '\n';
+  const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
 }
 
@@ -137,7 +137,7 @@ export function processReferenceChunk(
   reference: string,
 ): Chunk {
   const json = stringify(reference);
-  const row = serializeRowHeader('J', id) + json + '\n';
+  const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
 }
 
@@ -147,26 +147,7 @@ export function processModuleChunk(
   moduleMetaData: ReactModel,
 ): Chunk {
   const json: string = stringify(moduleMetaData);
-  const row = serializeRowHeader('M', id) + json + '\n';
-  return stringToChunk(row);
-}
-
-export function processProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): Chunk {
-  const row = serializeRowHeader('P', id) + contextName + '\n';
-  return stringToChunk(row);
-}
-
-export function processSymbolChunk(
-  request: Request,
-  id: number,
-  name: string,
-): Chunk {
-  const json = stringify(name);
-  const row = serializeRowHeader('S', id) + json + '\n';
+  const row = serializeRowHeader('I', id) + json + '\n';
   return stringToChunk(row);
 }
 

@@ -30,7 +30,7 @@ if (!IS_FIREFOX) {
   ]);
 }
 
-chrome.runtime.onConnect.addListener(function(port) {
+chrome.runtime.onConnect.addListener(function (port) {
   let tab = null;
   let name = null;
   if (isNumeric(port.name)) {
@@ -61,7 +61,7 @@ function isNumeric(str: string): boolean {
 
 function installProxy(tabId: number) {
   if (IS_FIREFOX) {
-    chrome.tabs.executeScript(tabId, {file: '/build/proxy.js'}, function() {});
+    chrome.tabs.executeScript(tabId, {file: '/build/proxy.js'}, function () {});
   } else {
     chrome.scripting.executeScript({
       target: {tabId: tabId},

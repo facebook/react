@@ -552,13 +552,9 @@ function processTimelineEvent(
           type: 'thrown-error',
         });
       } else if (name.startsWith('--suspense-suspend-')) {
-        const [
-          id,
-          componentName,
-          phase,
-          laneBitmaskString,
-          promiseName,
-        ] = name.substr(19).split('-');
+        const [id, componentName, phase, laneBitmaskString, promiseName] = name
+          .substr(19)
+          .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
         const availableDepths = new Array(
@@ -978,14 +974,22 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   });
 
   const flamechart: Flamechart = speedscopeFlamechart.getLayers().map(layer =>
-    layer.map(({start, end, node: {frame: {name, file, line, col}}}) => ({
-      name,
-      timestamp: start / 1000,
-      duration: (end - start) / 1000,
-      scriptUrl: file,
-      locationLine: line,
-      locationColumn: col,
-    })),
+    layer.map(
+      ({
+        start,
+        end,
+        node: {
+          frame: {name, file, line, col},
+        },
+      }) => ({
+        name,
+        timestamp: start / 1000,
+        duration: (end - start) / 1000,
+        scriptUrl: file,
+        locationLine: line,
+        locationColumn: col,
+      }),
+    ),
   );
 
   return flamechart;

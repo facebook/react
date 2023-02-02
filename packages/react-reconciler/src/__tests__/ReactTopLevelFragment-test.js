@@ -16,15 +16,15 @@ let Scheduler;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
-describe('ReactTopLevelFragment', function() {
-  beforeEach(function() {
+describe('ReactTopLevelFragment', function () {
+  beforeEach(function () {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });
 
-  it('should render a simple fragment at the top of a component', function() {
+  it('should render a simple fragment at the top of a component', function () {
     function Fragment() {
       return [<div key="a">Hello</div>, <div key="b">World</div>];
     }
@@ -32,7 +32,7 @@ describe('ReactTopLevelFragment', function() {
     expect(Scheduler).toFlushWithoutYielding();
   });
 
-  it('should preserve state when switching from a single child', function() {
+  it('should preserve state when switching from a single child', function () {
     let instance = null;
 
     class Stateful extends React.Component {
@@ -64,7 +64,7 @@ describe('ReactTopLevelFragment', function() {
     expect(instanceB).toBe(instanceA);
   });
 
-  it('should not preserve state when switching to a nested array', function() {
+  it('should not preserve state when switching to a nested array', function () {
     let instance = null;
 
     class Stateful extends React.Component {
@@ -96,7 +96,7 @@ describe('ReactTopLevelFragment', function() {
     expect(instanceB).not.toBe(instanceA);
   });
 
-  it('preserves state if an implicit key slot switches from/to null', function() {
+  it('preserves state if an implicit key slot switches from/to null', function () {
     let instance = null;
 
     class Stateful extends React.Component {
@@ -133,7 +133,7 @@ describe('ReactTopLevelFragment', function() {
     expect(instanceC === instanceA).toBe(true);
   });
 
-  it('should preserve state in a reorder', function() {
+  it('should preserve state in a reorder', function () {
     let instance = null;
 
     class Stateful extends React.Component {

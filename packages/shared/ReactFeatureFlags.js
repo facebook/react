@@ -31,7 +31,8 @@ export const skipUnmountedBoundaries = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
+  true;
 
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
@@ -184,19 +185,6 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
-
-// -----------------------------------------------------------------------------
-// JSX Chopping Block
-//
-// Similar to main Chopping Block but only flags related to JSX. These are
-// grouped because we will likely batch all of them into a single major release.
-// -----------------------------------------------------------------------------
-
-// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-// Enables a warning when trying to spread a 'key' to an element;
-// a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools

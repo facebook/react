@@ -14,7 +14,7 @@ let ReactNoop;
 let Scheduler;
 
 describe('ReactFragment', () => {
-  beforeEach(function() {
+  beforeEach(function () {
     jest.resetModules();
 
     React = require('react');
@@ -83,7 +83,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([span(), span()]);
   });
 
-  it('should preserve state of children with 1 level nesting', function() {
+  it('should preserve state of children with 1 level nesting', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -123,7 +123,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state between top-level fragments', function() {
+  it('should preserve state between top-level fragments', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -164,7 +164,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state of children nested at same level', function() {
+  it('should preserve state of children nested at same level', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -214,7 +214,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state in non-top-level fragment nesting', function() {
+  it('should not preserve state in non-top-level fragment nesting', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -257,7 +257,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state of children if nested 2 levels without siblings', function() {
+  it('should not preserve state of children if nested 2 levels without siblings', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -298,7 +298,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state of children if nested 2 levels with siblings', function() {
+  it('should not preserve state of children if nested 2 levels with siblings', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -340,7 +340,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state between array nested in fragment and fragment', function() {
+  it('should preserve state between array nested in fragment and fragment', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -379,7 +379,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state between top level fragment and array', function() {
+  it('should preserve state between top level fragment and array', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -418,7 +418,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state between array nested in fragment and double nested fragment', function() {
+  it('should not preserve state between array nested in fragment and double nested fragment', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -459,7 +459,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state between array nested in fragment and double nested array', function() {
+  it('should not preserve state between array nested in fragment and double nested array', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -496,7 +496,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state between double nested fragment and double nested array', function() {
+  it('should preserve state between double nested fragment and double nested array', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -537,7 +537,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state of children when the keys are different', function() {
+  it('should not preserve state of children when the keys are different', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -579,7 +579,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state between unkeyed and keyed fragment', function() {
+  it('should not preserve state between unkeyed and keyed fragment', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -620,7 +620,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state with reordering in multiple levels', function() {
+  it('should preserve state with reordering in multiple levels', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -673,7 +673,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
   });
 
-  it('should not preserve state when switching to a keyed fragment to an array', function() {
+  it('should not preserve state when switching to a keyed fragment to an array', function () {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -722,7 +722,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
   });
 
-  it('should not preserve state when switching a nested unkeyed fragment to a passthrough component', function() {
+  it('should not preserve state when switching a nested unkeyed fragment to a passthrough component', function () {
     const ops = [];
 
     function Passthrough({children}) {
@@ -771,7 +771,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state when switching a nested keyed fragment to a passthrough component', function() {
+  it('should not preserve state when switching a nested keyed fragment to a passthrough component', function () {
     const ops = [];
 
     function Passthrough({children}) {
@@ -820,7 +820,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should not preserve state when switching a nested keyed array to a passthrough component', function() {
+  it('should not preserve state when switching a nested keyed array to a passthrough component', function () {
     const ops = [];
 
     function Passthrough({children}) {
@@ -865,7 +865,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('should preserve state when it does not change positions', function() {
+  it('should preserve state when it does not change positions', function () {
     const ops = [];
 
     class Stateful extends React.Component {

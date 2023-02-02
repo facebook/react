@@ -40,9 +40,8 @@ export type ItemData = {
 
 export default function CommitFlamegraphAutoSizer(_: {}): React.Node {
   const {profilerStore} = useContext(StoreContext);
-  const {rootID, selectedCommitIndex, selectFiber} = useContext(
-    ProfilerContext,
-  );
+  const {rootID, selectedCommitIndex, selectFiber} =
+    useContext(ProfilerContext);
   const {profilingCache} = profilerStore;
 
   const deselectCurrentFiber = useCallback(
@@ -98,16 +97,12 @@ type Props = {
 };
 
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
-  const [
-    hoveredFiberData,
-    setHoveredFiberData,
-  ] = useState<TooltipFiberData | null>(null);
+  const [hoveredFiberData, setHoveredFiberData] =
+    useState<TooltipFiberData | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
-  const {
-    highlightNativeElement,
-    clearHighlightNativeElement,
-  } = useHighlightNativeElement();
+  const {highlightNativeElement, clearHighlightNativeElement} =
+    useHighlightNativeElement();
 
   const selectedChartNodeIndex = useMemo<number>(() => {
     if (selectedFiberID === null) {

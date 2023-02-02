@@ -33,10 +33,10 @@ function SettingsModalContextController({
 }): React.Node {
   const [isModalShowing, setIsModalShowing] = useState<boolean>(false);
 
-  const value = useMemo(() => ({isModalShowing, setIsModalShowing}), [
-    isModalShowing,
-    setIsModalShowing,
-  ]);
+  const value = useMemo(
+    () => ({isModalShowing, setIsModalShowing}),
+    [isModalShowing, setIsModalShowing],
+  );
 
   return (
     <SettingsModalContext.Provider value={value}>

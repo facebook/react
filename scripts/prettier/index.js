@@ -37,7 +37,7 @@ const files = glob
   .filter(f => !onlyChanged || changedFiles.has(f));
 
 if (!files.length) {
-  return;
+  process.exit(0);
 }
 
 files.forEach(file => {

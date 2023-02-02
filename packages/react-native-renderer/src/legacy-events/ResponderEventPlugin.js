@@ -44,7 +44,7 @@ let responderInst = null;
  */
 let trackedTouchCount = 0;
 
-const changeResponder = function(nextResponderInst, blockHostResponder) {
+const changeResponder = function (nextResponderInst, blockHostResponder) {
   const oldResponderInst = responderInst;
   responderInst = nextResponderInst;
   if (ResponderEventPlugin.GlobalResponderHandler !== null) {
@@ -683,7 +683,7 @@ function noResponderTouches(nativeEvent) {
 
 const ResponderEventPlugin = {
   /* For unit testing only */
-  _getResponder: function() {
+  _getResponder: function () {
     return responderInst;
   },
 
@@ -694,7 +694,7 @@ const ResponderEventPlugin = {
    * `touchEnd`. On certain platforms, this means that a native scroll has
    * assumed control and the original touch targets are destroyed.
    */
-  extractEvents: function(
+  extractEvents: function (
     topLevelType,
     targetInst,
     nativeEvent,

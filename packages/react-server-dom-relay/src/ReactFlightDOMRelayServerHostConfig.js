@@ -17,7 +17,7 @@ import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
 
-export type ModuleReference<T> = JSResourceReference<T>;
+export type ClientReference<T> = JSResourceReference<T>;
 
 import type {
   Destination,
@@ -39,13 +39,15 @@ export type {
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
 
-export function isModuleReference(reference: Object): boolean {
+export function isClientReference(reference: Object): boolean {
   return reference instanceof JSResourceReferenceImpl;
 }
 
-export type ModuleKey = ModuleReference<any>;
+export type ClientReferenceKey = ClientReference<any>;
 
-export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+export function getClientReferenceKey(
+  reference: ClientReference<any>,
+): ClientReferenceKey {
   // We use the reference object itself as the key because we assume the
   // object will be cached by the bundler runtime.
   return reference;
@@ -53,7 +55,7 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  resource: ModuleReference<T>,
+  resource: ClientReference<T>,
 ): ModuleMetaData {
   return resolveModuleMetaDataImpl(config, resource);
 }
@@ -149,7 +151,7 @@ export function processModelChunk(
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);
-  return ['J', id, json];
+  return ['O', id, json];
 }
 
 export function processReferenceChunk(
@@ -157,7 +159,7 @@ export function processReferenceChunk(
   id: number,
   reference: string,
 ): Chunk {
-  return ['J', id, reference];
+  return ['O', id, reference];
 }
 
 export function processModuleChunk(
@@ -166,23 +168,7 @@ export function processModuleChunk(
   moduleMetaData: ModuleMetaData,
 ): Chunk {
   // The moduleMetaData is already a JSON serializable value.
-  return ['M', id, moduleMetaData];
-}
-
-export function processProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): Chunk {
-  return ['P', id, contextName];
-}
-
-export function processSymbolChunk(
-  request: Request,
-  id: number,
-  name: string,
-): Chunk {
-  return ['S', id, name];
+  return ['I', id, moduleMetaData];
 }
 
 export function scheduleWork(callback: () => void) {
@@ -192,9 +178,8 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = (null: any);
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  (null: any);
 
 export function beginWriting(destination: Destination) {}
 

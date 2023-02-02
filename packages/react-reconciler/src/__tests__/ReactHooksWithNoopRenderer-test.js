@@ -59,8 +59,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useTransition = React.useTransition;
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
-    ContinuousEventPriority = require('react-reconciler/constants')
-      .ContinuousEventPriority;
+    ContinuousEventPriority =
+      require('react-reconciler/constants').ContinuousEventPriority;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
@@ -2317,7 +2317,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       let LogOnlyErrorBoundary;
 
       beforeEach(() => {
-        BrokenUseEffectCleanup = function() {
+        BrokenUseEffectCleanup = function () {
           useEffect(() => {
             Scheduler.unstable_yieldValue('BrokenUseEffectCleanup useEffect');
             return () => {
@@ -3426,9 +3426,10 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter({incrementBy}) {
         const [count, updateCount] = useState(0);
-        const increment = useCallback(() => updateCount(c => c + incrementBy), [
-          incrementBy,
-        ]);
+        const increment = useCallback(
+          () => updateCount(c => c + incrementBy),
+          [incrementBy],
+        );
         return (
           <>
             <IncrementButton increment={increment} ref={button} />
@@ -3537,9 +3538,10 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     it('should not invoke memoized function during re-renders unless inputs change', () => {
       function LazyCompute(props) {
-        const computed = useMemo(() => props.compute(props.input), [
-          props.input,
-        ]);
+        const computed = useMemo(
+          () => props.compute(props.input),
+          [props.input],
+        );
         const [count, setCount] = useState(0);
         if (count < 3) {
           setCount(count + 1);

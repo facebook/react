@@ -50,9 +50,8 @@ function Profiler(_: {}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
-  const {file: timelineTraceEventData, searchInputContainerRef} = useContext(
-    TimelineContext,
-  );
+  const {file: timelineTraceEventData, searchInputContainerRef} =
+    useContext(TimelineContext);
 
   const {supportsTimeline} = useContext(StoreContext);
 

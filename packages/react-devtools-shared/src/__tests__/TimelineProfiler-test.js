@@ -112,8 +112,8 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
-      setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
-        .setPerformanceMock_ONLY_FOR_TESTING;
+      setPerformanceMock =
+        require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
     });
 

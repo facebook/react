@@ -27,18 +27,18 @@ describe('ReactComponent', () => {
   it('should throw on invalid render targets', () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
-    expect(function() {
+    expect(function () {
       ReactDOM.render(<div />, [container]);
     }).toThrowError(/Target container is not a DOM element./);
 
-    expect(function() {
+    expect(function () {
       ReactDOM.render(<div />, null);
     }).toThrowError(/Target container is not a DOM element./);
   });
 
   it('should throw when supplying a string ref outside of render method', () => {
     let instance = <div ref="badDiv" />;
-    expect(function() {
+    expect(function () {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });

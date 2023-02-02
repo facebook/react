@@ -10,7 +10,8 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
@@ -287,6 +288,45 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableUseHook
+  it('should unwrap async module references using use', async () => {
+    const AsyncModule = Promise.resolve('Async Text');
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = clientExports(AsyncModule);
+
+    function ServerComponent() {
+      const text = use(AsyncModuleRef);
+      return <p>{text}</p>;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async Text</p>');
+  });
+
+  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
@@ -322,6 +362,35 @@ describe('ReactFlightDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>and then</p>');
+  });
+
+  it('throws when accessing a member below the client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function dotting() {
+      return ClientModule.Component.deep;
+    }
+    expect(dotting).toThrowError(
+      'Cannot access Component.deep on the server. ' +
+        'You cannot dot into a client module from a server component. ' +
+        'You can only pass the imported name through.',
+    );
+  });
+
+  it('throws when accessing a Context.Provider below the client exports', () => {
+    const Context = React.createContext();
+    const ClientModule = clientExports({
+      Context,
+    });
+    function dotting() {
+      return ClientModule.Context.Provider;
+    }
+    expect(dotting).toThrowError(
+      `Cannot render a Client Context Provider on the Server. ` +
+        `Instead, you can export a Client Component wrapper ` +
+        `that itself renders a Client Context Provider.`,
+    );
   });
 
   // @gate enableUseHook
@@ -670,7 +739,7 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 
@@ -716,7 +785,7 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 
@@ -774,13 +843,13 @@ describe('ReactFlightDOM', () => {
   it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
-    const ClientComponent = clientExports(function({prop}) {
+    const ClientComponent = clientExports(function ({prop}) {
       return 'This should never render';
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in webpackMap) {
-      Object.defineProperty(webpackMap, id, {
+    for (const id in webpackMap.clientManifest) {
+      Object.defineProperty(webpackMap.clientManifest, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },
@@ -835,5 +904,51 @@ describe('ReactFlightDOM', () => {
     }
 
     expect(reportedErrors).toEqual(['bug in the bundler']);
+  });
+
+  // @gate enableUseHook
+  it('should pass a Promise through props and be able use() it on the client', async () => {
+    async function getData() {
+      return 'async hello';
+    }
+
+    function Component({data}) {
+      const text = use(data);
+      return <p>{text}</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    function ServerComponent() {
+      const data = getData(); // no await here
+      return <ClientComponent data={data} />;
+    }
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>async hello</p>');
   });
 });

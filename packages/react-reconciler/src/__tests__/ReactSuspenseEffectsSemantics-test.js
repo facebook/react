@@ -2529,13 +2529,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       React.useLayoutEffect(() => {
         Scheduler.unstable_yieldValue(
-          `RefCheckerOuter create layout refObject? ${refObject.current !=
-            null} refCallback? ${manualRef.current != null}`,
+          `RefCheckerOuter create layout refObject? ${
+            refObject.current != null
+          } refCallback? ${manualRef.current != null}`,
         );
         return () => {
           Scheduler.unstable_yieldValue(
-            `RefCheckerOuter destroy layout refObject? ${refObject.current !=
-              null} refCallback? ${manualRef.current != null}`,
+            `RefCheckerOuter destroy layout refObject? ${
+              refObject.current != null
+            } refCallback? ${manualRef.current != null}`,
           );
         };
       }, []);
@@ -2556,13 +2558,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
       Scheduler.unstable_yieldValue(`RefCheckerInner:${text} render`);
       React.useLayoutEffect(() => {
         Scheduler.unstable_yieldValue(
-          `RefCheckerInner:${text} create layout ref? ${forwardedRef.current !=
-            null}`,
+          `RefCheckerInner:${text} create layout ref? ${
+            forwardedRef.current != null
+          }`,
         );
         return () => {
           Scheduler.unstable_yieldValue(
-            `RefCheckerInner:${text} destroy layout ref? ${forwardedRef.current !=
-              null}`,
+            `RefCheckerInner:${text} destroy layout ref? ${
+              forwardedRef.current != null
+            }`,
           );
         };
       }, []);
@@ -2965,8 +2969,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
           return () => {
             Scheduler.unstable_yieldValue(
-              `RefChecker destroy layout ref? ${forwardedRef.current ===
-                'test'}`,
+              `RefChecker destroy layout ref? ${
+                forwardedRef.current === 'test'
+              }`,
             );
           };
         }, []);

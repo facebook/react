@@ -23,10 +23,8 @@ import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import isArray from 'shared/isArray';
 
-const {
-  customBubblingEventTypes,
-  customDirectEventTypes,
-} = ReactNativeViewConfigRegistry;
+const {customBubblingEventTypes, customDirectEventTypes} =
+  ReactNativeViewConfigRegistry;
 
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
@@ -187,7 +185,7 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 const ReactNativeBridgeEventPlugin = {
   eventTypes: ({}: EventTypes),
 
-  extractEvents: function(
+  extractEvents: function (
     topLevelType: TopLevelType,
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,

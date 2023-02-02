@@ -439,10 +439,7 @@ export const scheduleMicrotask: any =
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
     ? callback =>
-        localPromise
-          .resolve(null)
-          .then(callback)
-          .catch(handleErrorInNextTick)
+        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
@@ -1576,8 +1573,8 @@ export function isHostResourceType(
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
-    outsideHostContainerContext = !hostContextDev.ancestorInfo
-      .containerTagInScope;
+    outsideHostContainerContext =
+      !hostContextDev.ancestorInfo.containerTagInScope;
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);

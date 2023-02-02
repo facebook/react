@@ -44,7 +44,7 @@ const EMPTY_NATIVE_EVENT = (({}: any): AnyNativeEvent);
  * @return {Array<Touch>} Subsequence of touch objects.
  */
 // $FlowFixMe[missing-local-annot]
-const touchSubsequence = function(touches, indices) {
+const touchSubsequence = function (touches, indices) {
   const ret = [];
   for (let i = 0; i < indices.length; i++) {
     ret.push(touches[indices[i]]);
@@ -63,7 +63,7 @@ const touchSubsequence = function(touches, indices) {
  * @param {Array<number>} indices Indices to remove from `touches`.
  * @return {Array<Touch>} Subsequence of removed touch objects.
  */
-const removeTouchesAtIndices = function(
+const removeTouchesAtIndices = function (
   touches: Array<Object>,
   indices: Array<number>,
 ): Array<Object> {
@@ -110,7 +110,7 @@ function _receiveRootNodeIDEvent(
     target = inst.stateNode;
   }
 
-  batchedUpdates(function() {
+  batchedUpdates(function () {
     runExtractedPluginEventsInBatch(topLevelType, inst, nativeEvent, target);
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

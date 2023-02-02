@@ -71,13 +71,8 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const {
-      children,
-      displayName,
-      hocDisplayNames,
-      key,
-      treeBaseDuration,
-    } = node;
+    const {children, displayName, hocDisplayNames, key, treeBaseDuration} =
+      node;
 
     const actualDuration = fiberActualDurations.get(id) || 0;
     const selfDuration = fiberSelfDurations.get(id) || 0;

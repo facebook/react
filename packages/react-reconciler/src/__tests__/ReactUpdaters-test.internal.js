@@ -255,7 +255,7 @@ describe('updaters', () => {
     Scheduler.unstable_flushAll();
   });
 
-  it('should cover suspense pings', async done => {
+  it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;
     let promise = null;
@@ -312,8 +312,6 @@ describe('updaters', () => {
 
     // Verify no outstanding flushes
     Scheduler.unstable_flushAll();
-
-    done();
   });
 
   it('should cover error handling', async () => {

@@ -81,7 +81,8 @@ describe('Scheduler', () => {
   const SchedulerResumeEvent = 8;
 
   function stopProfilingAndPrintFlamegraph() {
-    const eventBuffer = Scheduler.unstable_Profiling.stopLoggingProfilingEvents();
+    const eventBuffer =
+      Scheduler.unstable_Profiling.stopLoggingProfilingEvents();
     if (eventBuffer === null) {
       return '(empty profile)';
     }

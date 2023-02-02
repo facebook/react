@@ -35,9 +35,8 @@ export function flushBuffered(destination: Destination) {
 }
 
 export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = new AsyncLocalStorage();
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;
@@ -78,9 +77,11 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   if (read < stringChunk.length) {
     writeToDestination(destination, (currentView: any));
     currentView = new Uint8Array(VIEW_SIZE);
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
-    writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
-      .written;
+    writtenBytes = textEncoder.encodeInto(
+      stringChunk.slice(read),
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
+      currentView,
+    ).written;
   }
 
   if (writtenBytes === VIEW_SIZE) {

@@ -57,9 +57,8 @@ type Context = {
   toggleParseHookNames: ToggleParseHookNames,
 };
 
-export const InspectedElementContext: ReactContext<Context> = createContext<Context>(
-  ((null: any): Context),
-);
+export const InspectedElementContext: ReactContext<Context> =
+  createContext<Context>(((null: any): Context));
 
 const POLL_INTERVAL = 1000;
 
@@ -134,10 +133,8 @@ export function InspectedElementContextController({
         if (parseHookNames || alreadyLoadedHookNames) {
           const hookNamesModule = loadModule(hookNamesModuleLoader);
           if (hookNamesModule !== null) {
-            const {
-              parseHookNames: loadHookNamesFunction,
-              purgeCachedMetadata,
-            } = hookNamesModule;
+            const {parseHookNames: loadHookNamesFunction, purgeCachedMetadata} =
+              hookNamesModule;
 
             purgeCachedMetadataRef.current = purgeCachedMetadata;
 
@@ -159,12 +156,13 @@ export function InspectedElementContextController({
     }
   }
 
-  const toggleParseHookNames: ToggleParseHookNames = useCallback<ToggleParseHookNames>(() => {
-    startTransition(() => {
-      setParseHookNames(value => !value);
-      refresh();
-    });
-  }, [setParseHookNames]);
+  const toggleParseHookNames: ToggleParseHookNames =
+    useCallback<ToggleParseHookNames>(() => {
+      startTransition(() => {
+        setParseHookNames(value => !value);
+        refresh();
+      });
+    }, [setParseHookNames]);
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
     (path: Path) => {

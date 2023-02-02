@@ -63,14 +63,8 @@ export default function WhatChanged({fiberID}: Props): React.Node {
     return null;
   }
 
-  const {
-    context,
-    didHooksChange,
-    hooks,
-    isFirstMount,
-    props,
-    state,
-  } = changeDescription;
+  const {context, didHooksChange, hooks, isFirstMount, props, state} =
+    changeDescription;
 
   if (isFirstMount) {
     return (

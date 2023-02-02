@@ -13,8 +13,8 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
-const renderSubtreeIntoContainer = require('react-dom')
-  .unstable_renderSubtreeIntoContainer;
+const renderSubtreeIntoContainer =
+  require('react-dom').unstable_renderSubtreeIntoContainer;
 
 describe('renderSubtreeIntoContainer', () => {
   it('should pass context when rendering subtree elsewhere', () => {
@@ -47,7 +47,7 @@ describe('renderSubtreeIntoContainer', () => {
 
       componentDidMount() {
         expect(
-          function() {
+          function () {
             renderSubtreeIntoContainer(this, <Component />, portal);
           }.bind(this),
         ).toErrorDev(
@@ -92,7 +92,7 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(function() {
+        expect(function () {
           renderSubtreeIntoContainer(<Parent />, <Component />, portal);
         }).toThrowError('parentComponentmust be a valid React Component');
       }

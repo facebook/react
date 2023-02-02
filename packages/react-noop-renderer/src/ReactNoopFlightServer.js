@@ -48,10 +48,10 @@ const ReactNoopFlightServer = ReactFlightServer({
   clonePrecomputedChunk(chunk: string): string {
     return chunk;
   },
-  isModuleReference(reference: Object): boolean {
-    return reference.$$typeof === Symbol.for('react.module.reference');
+  isClientReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.client.reference');
   },
-  getModuleKey(reference: Object): Object {
+  getClientReferenceKey(reference: Object): Object {
     return reference;
   },
   resolveModuleMetaData(
