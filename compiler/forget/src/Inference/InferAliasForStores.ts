@@ -44,7 +44,8 @@ export function inferAliasForStores(
         }
         case "ComputedStore":
         case "PropertyStore": {
-          maybeAlias(aliases, value.object, value.value, instr.id);
+          maybeAlias(aliases, lvalue.place, value.value, instr.id);
+          maybeAlias(aliases, lvalue.place, value.object, instr.id);
           break;
         }
         case "FunctionExpression": {
