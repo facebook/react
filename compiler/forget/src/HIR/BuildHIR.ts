@@ -461,8 +461,8 @@ function lowerStatement(
       let hasDefault = false;
       for (let ii = stmt.get("cases").length - 1; ii >= 0; ii--) {
         const case_: NodePath<t.SwitchCase> = stmt.get("cases")[ii];
-        const test = case_.get("test");
-        if (test.node == null) {
+        const testExpr = case_.get("test");
+        if (testExpr.node == null) {
           if (hasDefault) {
             builder.errors.push({
               reason:
@@ -491,11 +491,34 @@ function lowerStatement(
             };
           });
         });
+        let test: Place | null = null;
+        if (testExpr.node != null) {
+          switch (testExpr.node.type) {
+            case "Identifier":
+            case "StringLiteral":
+            case "NumericLiteral":
+            case "NullLiteral":
+            case "BooleanLiteral":
+            case "BigIntLiteral": {
+              // ok
+              break;
+            }
+            default: {
+              builder.errors.push({
+                reason:
+                  "(BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported",
+                severity: ErrorSeverity.Todo,
+                nodePath: testExpr,
+              });
+            }
+          }
+          test = lowerExpressionToPlace(
+            builder,
+            testExpr as NodePath<t.Expression>
+          );
+        }
         cases.push({
-          test:
-            test.node != null
-              ? lowerExpressionToPlace(builder, test as NodePath<t.Expression>)
-              : null,
+          test,
           block,
         });
         fallthrough = block;

@@ -2,11 +2,11 @@ function foo() {
   let x = 1;
 
   switch (x) {
-    case x === 1: {
+    case 1: {
       x = x + 1;
       break;
     }
-    case x === 2: {
+    case 2: {
       x = x + 2;
       break;
     }

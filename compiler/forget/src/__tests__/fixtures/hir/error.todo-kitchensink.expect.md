@@ -58,6 +58,17 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   ++updateIdentifier;
   updateIdentifier.y++;
   updateIdentifier.y--;
+
+  switch (i) {
+    case 1 + 1: {
+    }
+    case foo(): {
+    }
+    case x.y: {
+    }
+    default: {
+    }
+  }
 }
 
 ```
@@ -353,7 +364,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
      |   ^^^^^^^^^^^^^^^^^^
   55 |   updateIdentifier.y++;
   56 |   updateIdentifier.y--;
-  57 | }
+  57 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
   53 |   --updateIdentifier;
@@ -361,16 +372,44 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 > 55 |   updateIdentifier.y++;
      |   ^^^^^^^^^^^^^^^^^^^^
   56 |   updateIdentifier.y--;
-  57 | }
-  58 |
+  57 |
+  58 |   switch (i) {
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
   54 |   ++updateIdentifier;
   55 |   updateIdentifier.y++;
 > 56 |   updateIdentifier.y--;
      |   ^^^^^^^^^^^^^^^^^^^^
-  57 | }
-  58 |
+  57 |
+  58 |   switch (i) {
+  59 |     case 1 + 1: {
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+  61 |     case foo(): {
+  62 |     }
+> 63 |     case x.y: {
+     |          ^^^
+  64 |     }
+  65 |     default: {
+  66 |     }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+  59 |     case 1 + 1: {
+  60 |     }
+> 61 |     case foo(): {
+     |          ^^^^^
+  62 |     }
+  63 |     case x.y: {
+  64 |     }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+  57 |
+  58 |   switch (i) {
+> 59 |     case 1 + 1: {
+     |          ^^^^^
+  60 |     }
+  61 |     case foo(): {
+  62 |     }
 ```
           
       

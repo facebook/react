@@ -54,4 +54,15 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   ++updateIdentifier;
   updateIdentifier.y++;
   updateIdentifier.y--;
+
+  switch (i) {
+    case 1 + 1: {
+    }
+    case foo(): {
+    }
+    case x.y: {
+    }
+    default: {
+    }
+  }
 }
