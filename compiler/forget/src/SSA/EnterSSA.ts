@@ -195,6 +195,7 @@ export default function enterSSA(func: HIRFunction) {
     builder.startBlock(block);
 
     if (func.body.entry === blockId) {
+      func.context = func.context.map((p) => builder.definePlace(p));
       func.params = func.params.map((p) => builder.definePlace(p));
     }
 

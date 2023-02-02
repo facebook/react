@@ -172,6 +172,11 @@ export default class HIRBuilder {
     const node =
       path.scope.getBindingIdentifier(originalName) ??
       getOrAddGlobal(originalName);
+    return this.resolveBinding(node);
+  }
+
+  resolveBinding(node: t.Identifier) {
+    const originalName = node.name;
     let name = originalName;
     let index = 0;
     while (true) {

@@ -1,11 +1,4 @@
-import {
-  Effect,
-  HIRFunction,
-  Identifier,
-  mergeConsecutiveBlocks,
-  Place,
-} from "../HIR";
-import { eachInstructionOperand } from "../HIR/visitors";
+import { HIRFunction, Identifier, mergeConsecutiveBlocks, Place } from "../HIR";
 import { constantPropagation } from "../Optimization";
 import { eliminateRedundantPhi, enterSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -116,18 +109,13 @@ function analyzeMutatedPlaces(func: HIRFunction): Array<Place> {
       ) {
         mutations.push(...analyzeMutatedPlaces(instr.value.loweredFunc));
       }
-
-      for (const operand of eachInstructionOperand(instr)) {
-        if (isMutated(operand)) {
-          mutations.push(operand);
-        }
-      }
     }
   }
 
+  mutations.push(...func.context.filter((dep) => isMutated(dep.identifier)));
   return mutations;
 }
 
-function isMutated(place: Place): boolean {
-  return place.effect === Effect.Mutate || place.effect === Effect.Store;
+function isMutated(id: Identifier) {
+  return id.mutableRange.end - id.mutableRange.start > 1;
 }

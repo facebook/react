@@ -49,10 +49,21 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
  * grained reactivity.
  */
 export function lower(
-  func: NodePath<t.Function>
+  func: NodePath<t.Function>,
+  capturedRefs?: t.Identifier[]
 ): Result<HIRFunction, CompilerError> {
   const env = new Environment();
   const builder = new HIRBuilder(env);
+  const context: Place[] = [];
+
+  for (const ref of capturedRefs ?? []) {
+    context.push({
+      kind: "Identifier",
+      identifier: builder.resolveBinding(ref),
+      effect: Effect.Unknown,
+      loc: GeneratedSource,
+    });
+  }
 
   // Internal babel is on an older version that does not have hasNode (v7.17)
   // See https://github.com/babel/babel/pull/13940/files for impl
@@ -125,6 +136,7 @@ export function lower(
     id,
     params,
     body: builder.build(),
+    context,
     generator: func.node.generator === true,
     async: func.node.async === true,
     loc: func.node.loc ?? GeneratedSource,
@@ -1300,12 +1312,8 @@ function lowerExpression(
         name = expr.get("id")?.node?.name ?? null;
       }
       const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
-      const dependencies: Array<Place> = gatherCapturedDeps(
-        builder,
-        expr,
-        componentScope
-      );
-      const lowering = lower(expr);
+      const captured = gatherCapturedDeps(builder, expr, componentScope);
+      const lowering = lower(expr, captured.identifiers);
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {
         lowering
@@ -1340,7 +1348,7 @@ function lowerExpression(
             name,
             params,
             loweredFunc,
-            dependencies,
+            dependencies: captured.refs,
             mutatedDeps: [],
             expr: expr.node,
             loc: exprLoc,
@@ -1919,8 +1927,9 @@ function gatherCapturedDeps(
   builder: HIRBuilder,
   fn: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>,
   componentScope: Scope
-): Array<Place> {
-  const captured: Set<Place> = new Set();
+): { identifiers: t.Identifier[]; refs: Place[] } {
+  const capturedIds: Set<t.Identifier> = new Set();
+  const capturedRefs: Set<Place> = new Set();
 
   // Capture all the scopes from the parent of this function up to and including
   // the component scope.
@@ -1946,9 +1955,10 @@ function gatherCapturedDeps(
       }
 
       path.skip();
-      captured.add(lowerExpressionToPlace(builder, path));
+      capturedIds.add(binding.identifier);
+      capturedRefs.add(lowerExpressionToPlace(builder, path));
     },
   });
 
-  return [...captured];
+  return { identifiers: [...capturedIds], refs: [...capturedRefs] };
 }

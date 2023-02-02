@@ -93,6 +93,17 @@ export default function inferReferenceEffects(fn: HIRFunction) {
     initialEnvironment.define(id, value);
   }
 
+  for (const ref of fn.context) {
+    // TODO(gsn): This is a hack.
+    const value: InstructionValue = {
+      kind: "ObjectExpression",
+      properties: null,
+      loc: ref.loc,
+    };
+    initialEnvironment.initialize(value, ValueKind.Mutable);
+    initialEnvironment.define(ref, value);
+  }
+
   for (const param of fn.params) {
     const value: InstructionValue = {
       kind: "Primitive",

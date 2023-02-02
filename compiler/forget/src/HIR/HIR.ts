@@ -184,6 +184,7 @@ export type HIRFunction = {
   id: Identifier | null;
   env: Environment;
   params: Array<Place>;
+  context: Array<Place>;
   body: HIR;
   generator: boolean;
   async: boolean;
