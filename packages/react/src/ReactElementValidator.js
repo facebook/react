@@ -35,7 +35,7 @@ import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
-const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
+const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
