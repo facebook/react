@@ -77,49 +77,35 @@ function infer(
   properties: Map<Identifier, Dependency>
 ) {
   const func = value.loweredFunc;
-  const mutations: Array<Place> = func.context.filter((dep) =>
-    isMutated(dep.identifier)
-  );
-  value.mutatedDeps = buildMutatedDeps(
-    mutations,
-    value.dependencies,
-    properties
-  );
-}
-
-function isMutated(id: Identifier) {
-  return id.mutableRange.end - id.mutableRange.start > 1;
-}
-
-function buildMutatedDeps(
-  mutations: Place[],
-  capturedDeps: Place[],
-  properties: Map<Identifier, Dependency>
-): Place[] {
-  const mutatedIds: Set<string> = new Set(
+  const mutations = func.context.filter((dep) => isMutated(dep.identifier));
+  const mutatedVariables = new Set(
     mutations
       .map((m) => m.identifier.name)
       .filter((m) => m !== null) as string[]
   );
   const mutatedDeps: Place[] = [];
 
-  for (const dep of capturedDeps) {
+  for (const dep of value.dependencies) {
     if (properties.has(dep.identifier)) {
       let captured = properties.get(dep.identifier)!;
       let name = captured.place.identifier.name;
 
-      if (name === null || !mutatedIds.has(name)) {
+      if (name === null || !mutatedVariables.has(name)) {
         continue;
       }
 
       mutatedDeps.push(dep);
     } else if (
       dep.identifier.name !== null &&
-      mutatedIds.has(dep.identifier.name)
+      mutatedVariables.has(dep.identifier.name)
     ) {
       mutatedDeps.push(dep);
     }
   }
 
-  return mutatedDeps;
+  value.mutatedDeps = mutatedDeps;
+}
+
+function isMutated(id: Identifier) {
+  return id.mutableRange.end - id.mutableRange.start > 1;
 }
