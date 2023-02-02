@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-922dd7ba5-20230202";
+var ReactVersion = "18.3.0-www-modern-2ef24145e-20230202";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1164,9 +1164,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           escapedPrefix + // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!_child || _child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
-                  // eslint-disable-next-line react-internal/safe-string-coercion
-                  "" + // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                    mappedChild.key
+                  // $FlowFixMe[unsafe-addition]
+                  "" + mappedChild.key // eslint-disable-line react-internal/safe-string-coercion
                 ) + "/"
               : "") +
             childKey
