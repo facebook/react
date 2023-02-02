@@ -440,17 +440,7 @@ export type InstructionData =
   | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
   // load `object[index]` - like PropertyLoad but with a dynamic property
   | { kind: "ComputedLoad"; object: Place; property: Place }
-  | {
-      kind: "FunctionExpression";
-      name: string | null;
-      params: Array<string>;
-      dependencies: Array<Place>;
-      // TODO(gsn): Remove this mutatedDeps array and use dependencies as single
-      // source of truth.
-      mutatedDeps: Array<Place>;
-      loweredFunc: HIRFunction;
-      expr: t.ArrowFunctionExpression | t.FunctionExpression;
-    }
+  | FunctionExpression
   | {
       kind: "TaggedTemplateExpression";
       tag: Place;
@@ -471,6 +461,17 @@ export type JsxAttribute =
   | { kind: "JsxSpreadAttribute"; argument: Place }
   | { kind: "JsxAttribute"; name: string; place: Place };
 
+export type FunctionExpression = {
+  kind: "FunctionExpression";
+  name: string | null;
+  params: Array<string>;
+  dependencies: Array<Place>;
+  // TODO(gsn): Remove this mutatedDeps array and use dependencies as single
+  // source of truth.
+  mutatedDeps: Array<Place>;
+  loweredFunc: HIRFunction;
+  expr: t.ArrowFunctionExpression | t.FunctionExpression;
+};
 /**
  * A place where data may be read from / written to:
  * - a variable (identifier)

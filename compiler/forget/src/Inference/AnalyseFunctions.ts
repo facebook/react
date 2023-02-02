@@ -1,4 +1,10 @@
-import { HIRFunction, Identifier, mergeConsecutiveBlocks, Place } from "../HIR";
+import {
+  HIRFunction,
+  FunctionExpression,
+  Identifier,
+  mergeConsecutiveBlocks,
+  Place,
+} from "../HIR";
 import { constantPropagation } from "../Optimization";
 import { eliminateRedundantPhi, enterSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -30,18 +36,15 @@ function declareProperty(
   properties.set(lvalue.identifier, nextDependency);
 }
 
-export default function (func: HIRFunction) {
+export default function analyseFunctions(func: HIRFunction) {
   const properties: Map<Identifier, Dependency> = new Map();
 
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case "FunctionExpression": {
-          instr.value.mutatedDeps = buildMutatedDeps(
-            analyzeMutatedPlaces(instr.value.loweredFunc),
-            instr.value.dependencies,
-            properties
-          );
+          lower(instr.value.loweredFunc);
+          infer(instr.value, properties);
           break;
         }
         case "PropertyLoad": {
@@ -55,6 +58,37 @@ export default function (func: HIRFunction) {
       }
     }
   }
+}
+
+function lower(func: HIRFunction) {
+  mergeConsecutiveBlocks(func);
+  enterSSA(func);
+  eliminateRedundantPhi(func);
+  constantPropagation(func);
+  inferTypes(func);
+  analyseFunctions(func);
+  inferReferenceEffects(func);
+  inferMutableRanges(func);
+  logHIRFunction("AnalyseFunction (inner)", func);
+}
+
+function infer(
+  value: FunctionExpression,
+  properties: Map<Identifier, Dependency>
+) {
+  const func = value.loweredFunc;
+  const mutations: Array<Place> = func.context.filter((dep) =>
+    isMutated(dep.identifier)
+  );
+  value.mutatedDeps = buildMutatedDeps(
+    mutations,
+    value.dependencies,
+    properties
+  );
+}
+
+function isMutated(id: Identifier) {
+  return id.mutableRange.end - id.mutableRange.start > 1;
 }
 
 function buildMutatedDeps(
@@ -88,34 +122,4 @@ function buildMutatedDeps(
   }
 
   return mutatedDeps;
-}
-
-function analyzeMutatedPlaces(func: HIRFunction): Array<Place> {
-  mergeConsecutiveBlocks(func);
-  enterSSA(func);
-  eliminateRedundantPhi(func);
-  constantPropagation(func);
-  inferTypes(func);
-  inferReferenceEffects(func);
-  inferMutableRanges(func);
-  logHIRFunction("AnalyseFunction (inner)", func);
-
-  const mutations: Array<Place> = [];
-  for (const [_, block] of func.body.blocks) {
-    for (const instr of block.instructions) {
-      if (
-        instr.value.kind === "FunctionExpression" &&
-        instr.value.loweredFunc !== null
-      ) {
-        mutations.push(...analyzeMutatedPlaces(instr.value.loweredFunc));
-      }
-    }
-  }
-
-  mutations.push(...func.context.filter((dep) => isMutated(dep.identifier)));
-  return mutations;
-}
-
-function isMutated(id: Identifier) {
-  return id.mutableRange.end - id.mutableRange.start > 1;
 }
