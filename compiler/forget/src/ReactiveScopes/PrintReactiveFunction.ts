@@ -218,7 +218,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     case "for": {
-      writer.writeLine("[${terminal.id}] for (");
+      writer.writeLine(`[${terminal.id}] for (`);
       printReactiveValue(writer, terminal.init);
       writer.writeLine(";");
       printReactiveValue(writer, terminal.test);

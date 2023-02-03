@@ -1,4 +1,3 @@
-// @skip
 function foo(props) {
   let y = 0;
   for (
