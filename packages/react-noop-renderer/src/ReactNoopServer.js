@@ -267,8 +267,9 @@ const ReactNoopServer = ReactFizzServer({
     boundary.status = 'client-render';
   },
 
-  writeInitialResources() {},
-  writeImmediateResources() {},
+  writePreamble() {},
+  writeHoistables() {},
+  writePostamble() {},
 
   createResources(): Resources {
     return null;

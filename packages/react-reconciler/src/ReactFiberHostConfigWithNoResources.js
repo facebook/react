@@ -20,7 +20,7 @@ function shim(...args: any): empty {
 
 // Resources (when unsupported)
 export const supportsResources = false;
-export const isHostResourceType = shim;
+export const isHostHoistableType = shim;
 export const getResource = shim;
 export const acquireResource = shim;
 export const releaseResource = shim;

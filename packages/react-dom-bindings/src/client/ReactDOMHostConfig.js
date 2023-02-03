@@ -27,6 +27,7 @@ import {
   isContainerMarkedAsRoot,
   detachDeletedInstance,
   isMarkedResource,
+  markNodeAsResource,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -54,7 +55,11 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
   getEventPriority,
 } from '../events/ReactDOMEventListener';
-import {getChildNamespace, SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {
+  getChildNamespace,
+  SVG_NAMESPACE,
+  HTML_NAMESPACE,
+} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -75,7 +80,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostText,
   HostSingleton,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -89,7 +94,6 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
-  clearRootResources,
 } from './ReactDOMFloatClient';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 
@@ -133,6 +137,7 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
+export type {HoistableRoot} from './ReactDOMFloatClient';
 export interface SuspenseInstance extends Comment {
   _reactRetry?: () => void;
 }
@@ -261,6 +266,25 @@ export function resetAfterCommit(containerInfo: Container): void {
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
   selectionInformation = null;
+}
+
+export function createHoistableInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): Instance {
+  const domElement: Instance = createElement(
+    type,
+    props,
+    rootContainerInstance,
+    HTML_NAMESPACE,
+  );
+  precacheFiberNode(internalInstanceHandle, domElement);
+  updateFiberProps(domElement, props);
+  setInitialProperties(domElement, type, props);
+  markNodeAsResource(domElement);
+  return domElement;
 }
 
 export function createInstance(
@@ -716,17 +740,10 @@ export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
     const nodeType = container.nodeType;
     if (nodeType === DOCUMENT_NODE) {
-      clearRootResources(container);
       clearContainerSparingly(container);
     } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
-        case 'HEAD': {
-          // If we are clearing document.head as a container we are essentially clearing everything
-          // that was hoisted to the head and should forget the instances that will no longer be in the DOM
-          clearRootResources(container);
-          // fall through to clear child contents
-        }
-        // eslint-disable-next-line-no-fallthrough
+        case 'HEAD':
         case 'HTML':
         case 'BODY':
           clearContainerSparingly(container);
@@ -933,7 +950,6 @@ function getNextHydratable(node: ?Node) {
           // developer on how to fix.
           case 'TITLE':
           case 'META':
-          case 'BASE':
           case 'HTML':
           case 'HEAD':
           case 'BODY': {
@@ -975,8 +991,7 @@ function getNextHydratable(node: ?Node) {
         const element: Element = (node: any);
         switch (element.tagName) {
           case 'TITLE':
-          case 'META':
-          case 'BASE': {
+          case 'META': {
             continue;
           }
           case 'LINK': {
@@ -1445,7 +1460,7 @@ export function matchAccessibilityRole(node: Instance, role: string): boolean {
 
 export function getTextContent(fiber: Fiber): string | null {
   switch (fiber.tag) {
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent:
       let textContent = '';
@@ -1563,7 +1578,7 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 
 export const supportsResources = true;
 
-export function isHostResourceType(
+export function isHostHoistableType(
   type: string,
   props: RawProps,
   hostContext: HostContext,
@@ -1581,7 +1596,6 @@ export function isHostResourceType(
     namespace = hostContextProd;
   }
   switch (type) {
-    case 'base':
     case 'meta': {
       return true;
     }
@@ -1598,11 +1612,6 @@ export function isHostResourceType(
                 ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
                 ' somewhere in the <body>.',
             );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
-            );
           }
         }
         return false;
@@ -1618,23 +1627,18 @@ export function isHostResourceType(
                   'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
                     ' Consider adding precedence="default" or moving it into the root <head> tag.',
                 );
-              } else if (namespace === SVG_NAMESPACE) {
-                console.error(
-                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
-                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
-                );
               }
             }
           }
           return (
+            namespace !== SVG_NAMESPACE &&
             typeof href === 'string' &&
             typeof precedence === 'string' &&
             disabled == null
           );
         }
         default: {
-          const {rel, href} = props;
-          return typeof href === 'string' && typeof rel === 'string';
+          return true;
         }
       }
     }
@@ -1649,11 +1653,6 @@ export function isHostResourceType(
               'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
                 ' Try adding async="" or moving it into the root <head> tag.',
             );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
-                ' Try adding async="" or moving it above the ancestor <svg> element.',
-            );
           }
         } else if (onLoad || onError) {
           if (outsideHostContainerContext) {
@@ -1662,15 +1661,16 @@ export function isHostResourceType(
                 ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
                 ' somewhere in the <body>.',
             );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
-            );
           }
         }
       }
-      return (async: any) && typeof src === 'string' && !onLoad && !onError;
+      return (
+        namespace !== SVG_NAMESPACE &&
+        (async: any) &&
+        typeof src === 'string' &&
+        !onLoad &&
+        !onError
+      );
     }
     case 'noscript':
     case 'template':
@@ -1702,9 +1702,13 @@ export function resetRendererAfterRender() {
 }
 
 export {
+  getHoistableRoot,
   getResource,
   acquireResource,
   releaseResource,
+  hydrateHoistable,
+  mountHoistable,
+  unmountHoistable,
 } from './ReactDOMFloatClient';
 
 // -------------------

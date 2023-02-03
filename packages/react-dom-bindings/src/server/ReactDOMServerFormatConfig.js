@@ -8,8 +8,6 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
-export type {Resources, BoundaryResources};
 
 import {
   checkHtmlStringCoercion,
@@ -63,38 +61,38 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {
-  preinitImpl,
-  prepareToRenderResources,
-  finishRenderingResources,
-  resourcesFromElement,
-  resourcesFromLink,
-  resourcesFromScript,
-  ReactDOMServerFloatDispatcher,
-} from './ReactDOMFloatServer';
-export {
-  createResources,
-  createBoundaryResources,
-  setCurrentlyRenderingBoundaryResourcesTarget,
-  hoistResources,
-  hoistResourcesToRoot,
-} from './ReactDOMFloatServer';
-
-import {
   clientRenderBoundary as clientRenderFunction,
   completeBoundary as completeBoundaryFunction,
   completeBoundaryWithStyles as styleInsertionFunction,
   completeSegment as completeSegmentFunction,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSetInlineCodeStrings';
 
+import {
+  getValueDescriptorExpectingObjectForWarning,
+  getValueDescriptorExpectingEnumForWarning,
+  compareResourcePropsForWarning,
+  describeDifferencesForStylesheets,
+  describeDifferencesForStylesheetOverPreinit,
+  describeDifferencesForPreinitOverStylesheet,
+  describeDifferencesForPreinits,
+} from '../shared/ReactDOMResourceValidation';
+
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
 const ReactDOMServerDispatcher = enableFloat
-  ? ReactDOMServerFloatDispatcher
+  ? {
+      preload,
+      preinit,
+    }
   : {};
 
+let currentResources: null | Resources = null;
+const currentResourcesStack = [];
+
 export function prepareToRender(resources: Resources): mixed {
-  prepareToRenderResources(resources);
+  currentResourcesStack.push(currentResources);
+  currentResources = resources;
 
   const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
@@ -102,7 +100,7 @@ export function prepareToRender(resources: Resources): mixed {
 }
 
 export function cleanupAfterRender(previousDispatcher: mixed) {
-  finishRenderingResources();
+  currentResources = currentResourcesStack.pop();
   ReactDOMCurrentDispatcher.current = previousDispatcher;
 }
 
@@ -123,15 +121,30 @@ export type ResponseState = {
   idPrefix: string,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
+
   // state for script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
+
   // state for data streaming format
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
+
+  // preamble and postamble chunks and state
+  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
+  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  hasBody: boolean,
+
+  // Hoistable chunks
+  charsetChunks: Array<Chunk | PrecomputedChunk>,
+  preconnectChunks: Array<Chunk | PrecomputedChunk>,
+  preloadChunks: Array<Chunk | PrecomputedChunk>,
+  hoistableChunks: Array<Chunk | PrecomputedChunk>,
+
   // We allow the legacy renderer to extend this object.
+
   ...
 };
 
@@ -273,6 +286,13 @@ export function createResponseState(
     sentClientRenderFunction: false,
     sentStyleInsertionFunction: false,
     externalRuntimeConfig: externalRuntimeDesc,
+    htmlChunks: null,
+    headChunks: null,
+    hasBody: false,
+    charsetChunks: [],
+    preconnectChunks: [],
+    preloadChunks: [],
+    hoistableChunks: [],
   };
 }
 
@@ -280,17 +300,20 @@ export function createResponseState(
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
 const ROOT_HTML_MODE = 0; // Used for the root most element tag.
-export const HTML_MODE = 1;
-const SVG_MODE = 2;
-const MATHML_MODE = 3;
-const HTML_TABLE_MODE = 4;
-const HTML_TABLE_BODY_MODE = 5;
-const HTML_TABLE_ROW_MODE = 6;
-const HTML_COLGROUP_MODE = 7;
+// We have a less than HTML_HTML_MODE check elsewhere. If you add more cases here, make sure it
+// still makes sense
+const HTML_HTML_MODE = 1; // Used for the <html> if it is at the top level.
+export const HTML_MODE = 2;
+const SVG_MODE = 3;
+const MATHML_MODE = 4;
+const HTML_TABLE_MODE = 5;
+const HTML_TABLE_BODY_MODE = 6;
+const HTML_TABLE_ROW_MODE = 7;
+const HTML_COLGROUP_MODE = 8;
 // We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
 
-type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
@@ -392,12 +415,16 @@ export function getChildFormatContext(
     );
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
-    // We've emitted the root and is now in plain HTML mode.
-    return createFormatContext(
-      HTML_MODE,
-      null,
-      parentContext.noscriptTagInScope,
-    );
+    if (type === 'html') {
+      // We've emitted the root and is now in <html> mode.
+      return createFormatContext(HTML_HTML_MODE, null, false);
+    } else {
+      // We've emitted the root and is now in plain HTML mode.
+      return createFormatContext(HTML_MODE, null, false);
+    }
+  } else if (parentContext.insertionMode === HTML_HTML_MODE) {
+    // We've emitted the document element and is now in plain HTML mode.
+    return createFormatContext(HTML_MODE, null, false);
   }
   return parentContext;
 }
@@ -489,7 +516,6 @@ const styleSeparator = stringToPrecomputedChunk(';');
 
 function pushStyle(
   target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
   style: Object,
 ): void {
   if (typeof style !== 'object') {
@@ -577,13 +603,12 @@ const attributeEmptyString = stringToPrecomputedChunk('=""');
 
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
   name: string,
   value: string | boolean | number | Function | Object, // not null or undefined
 ): void {
   switch (name) {
     case 'style': {
-      pushStyle(target, responseState, value);
+      pushStyle(target, value);
       return;
     }
     case 'defaultValue':
@@ -804,7 +829,6 @@ function checkSelectProp(props: any, propName: string) {
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -852,7 +876,7 @@ function pushStartSelect(
           // These are set on the Context instead and applied to the nested options.
           break;
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -894,7 +918,6 @@ const selectedMarkerAttribute = stringToPrecomputedChunk(' selected=""');
 function pushStartOption(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
   const selectedValue = formatContext.selectedValue;
@@ -938,7 +961,7 @@ function pushStartOption(
         // We intentionally fallthrough to also set the attribute on the node.
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -997,7 +1020,6 @@ function pushStartOption(
 function pushInput(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -1072,21 +1094,21 @@ function pushInput(
           value = propValue;
           break;
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
   }
 
   if (checked !== null) {
-    pushAttribute(target, responseState, 'checked', checked);
+    pushAttribute(target, 'checked', checked);
   } else if (defaultChecked !== null) {
-    pushAttribute(target, responseState, 'checked', defaultChecked);
+    pushAttribute(target, 'checked', defaultChecked);
   }
   if (value !== null) {
-    pushAttribute(target, responseState, 'value', value);
+    pushAttribute(target, 'value', value);
   } else if (defaultValue !== null) {
-    pushAttribute(target, responseState, 'value', defaultValue);
+    pushAttribute(target, 'value', defaultValue);
   }
 
   target.push(endOfStartTagSelfClosing);
@@ -1096,7 +1118,6 @@ function pushInput(
 function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -1143,7 +1164,7 @@ function pushStartTextArea(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1214,83 +1235,259 @@ function pushStartTextArea(
   return null;
 }
 
-function pushBase(
-  target: Array<Chunk | PrecomputedChunk>,
-  props: Object,
-  responseState: ResponseState,
-  textEmbedded: boolean,
-  noscriptTagInScope: boolean,
-): ReactNodeList {
-  if (
-    enableFloat &&
-    !noscriptTagInScope &&
-    resourcesFromElement('base', props)
-  ) {
-    if (textEmbedded) {
-      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-      // to be safe and assume text will follow by inserting a textSeparator
-      target.push(textSeparator);
-    }
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
-    return null;
-  }
-
-  return pushSelfClosing(target, props, 'base', responseState);
-}
-
 function pushMeta(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
+  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (
-    enableFloat &&
-    !noscriptTagInScope &&
-    resourcesFromElement('meta', props)
-  ) {
-    if (textEmbedded) {
-      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-      // to be safe and assume text will follow by inserting a textSeparator
-      target.push(textSeparator);
-    }
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
-    return null;
-  }
+  if (enableFloat) {
+    if (insertionMode === SVG_MODE || noscriptTagInScope) {
+      return pushSelfClosing(target, props, 'meta');
+    } else {
+      if (textEmbedded) {
+        // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+        // to be safe and assume text will follow by inserting a textSeparator
+        target.push(textSeparator);
+      }
 
-  return pushSelfClosing(target, props, 'meta', responseState);
+      if (typeof props.charSet === 'string') {
+        return pushSelfClosing(responseState.charsetChunks, props, 'meta');
+      } else {
+        return pushSelfClosing(responseState.hoistableChunks, props, 'meta');
+      }
+    }
+  } else {
+    return pushSelfClosing(target, props, 'meta');
+  }
 }
 
 function pushLink(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  resources: Resources,
   textEmbedded: boolean,
+  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (enableFloat && !noscriptTagInScope && resourcesFromLink(props)) {
-    if (textEmbedded) {
-      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-      // to be safe and assume text will follow by inserting a textSeparator
-      target.push(textSeparator);
+  if (enableFloat) {
+    if (
+      insertionMode === SVG_MODE ||
+      noscriptTagInScope ||
+      typeof props.rel !== 'string' ||
+      typeof props.href !== 'string' ||
+      props.href === ''
+    ) {
+      if (__DEV__) {
+        if (
+          props.rel === 'stylesheet' &&
+          typeof props.precedence === 'string'
+        ) {
+          if (typeof props.href !== 'string' || !props.href) {
+            console.error(
+              'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered %s instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
+              getValueDescriptorExpectingObjectForWarning(props.href),
+            );
+          }
+        }
+      }
+      return pushLinkImpl(target, props);
     }
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
-    return null;
-  }
 
-  return pushLinkImpl(target, props, responseState);
+    switch (props.rel) {
+      case 'stylesheet': {
+        // This <link> may be convertible to a stylesheet Resource. We will either
+        // make it into a Resource or emit it in place and preload. Stylesheets are
+        // never hoisted like other link tags
+        const {onLoad, onError, precedence, disabled, href} = props;
+        const key = getResourceKey('style', href);
+        if (
+          typeof precedence !== 'string' ||
+          onLoad ||
+          onError ||
+          disabled != null
+        ) {
+          // This stylesheet is either not opted into Resource semantics or has conflicting properties which
+          // disqualify it for such. We can still create a preload resource to help it load faster on the
+          // client
+          if (__DEV__) {
+            if (typeof precedence === 'string') {
+              if (onLoad || onError) {
+                const propDescription =
+                  onLoad && onError
+                    ? '`onLoad` and `onError` props'
+                    : onLoad
+                    ? '`onLoad` prop'
+                    : '`onError` prop';
+                console.error(
+                  'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
+                  propDescription,
+                  propDescription,
+                );
+              } else if (disabled != null) {
+                console.error(
+                  'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
+                );
+              }
+            }
+          }
+          let resource = resources.preloadsMap.get(key);
+          if (!resource) {
+            resource = {
+              type: 'preload',
+              chunks: ([]: Array<Chunk | PrecomputedChunk>),
+              state: NoState,
+              props: preloadAsStylePropsFromProps(href, props),
+            };
+            if (__DEV__) {
+              const devResource: ImplicitResourceDEV = (resource: any);
+              devResource.__provenance = 'implicit';
+              devResource.__underlyingProps = props;
+              devResource.__impliedProps = resource.props;
+            }
+            resources.preloadsMap.set(key, resource);
+          }
+          pushLinkImpl(resource.chunks, resource.props);
+          resources.usedStylesheets.add(resource);
+          return pushLinkImpl(target, props);
+        } else {
+          // This stylesheet refers to a Resource and we create a new one if necessary
+          let resource = resources.stylesheetsMap.get(key);
+          if (__DEV__) {
+            if (resource) {
+              const devResource: ResourceDEV = (resource: any);
+              switch (devResource.__provenance) {
+                case 'rendered': {
+                  const differentProps = compareResourcePropsForWarning(
+                    // Diff the props from the JSX element, not the derived resource props
+                    props,
+                    devResource.__originalProps,
+                  );
+                  if (differentProps) {
+                    const differenceDescription = describeDifferencesForStylesheets(
+                      differentProps,
+                    );
+                    if (differenceDescription) {
+                      console.error(
+                        'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
+                          ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
+                          ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
+                          ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
+                        href,
+                        differenceDescription,
+                      );
+                    }
+                  }
+                  break;
+                }
+                case 'preinit': {
+                  const differentProps = compareResourcePropsForWarning(
+                    // Diff the props from the JSX element, not the derived resource props
+                    props,
+                    devResource.__propsEquivalent,
+                  );
+                  if (differentProps) {
+                    const differenceDescription = describeDifferencesForStylesheetOverPreinit(
+                      differentProps,
+                    );
+                    if (differenceDescription) {
+                      console.error(
+                        'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
+                          ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
+                          ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
+                          ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
+                          ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
+                          ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
+                          ' <link> tags only.%s',
+                        precedence,
+                        href,
+                        href,
+                        differenceDescription,
+                      );
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          if (!resource) {
+            const resourceProps = stylesheetPropsFromRawProps(props);
+            const preloadResource = resources.preloadsMap.get(key);
+            if (preloadResource) {
+              // If we already had a preload we don't want that resource to flush directly.
+              // We let the newly created resource govern flushing.
+              preloadResource.state |= Blocked;
+              adoptPreloadPropsForStylesheetProps(
+                resourceProps,
+                preloadResource.props,
+              );
+            }
+            resource = {
+              type: 'stylesheet',
+              chunks: ([]: Array<Chunk | PrecomputedChunk>),
+              state: resources.boundaryResources ? Blocked : NoState,
+              props: resourceProps,
+            };
+            if (__DEV__) {
+              const devResource: RenderedResourceDEV = (resource: any);
+              devResource.__provenance = 'rendered';
+              devResource.__originalProps = props;
+            }
+            resources.stylesheetsMap.set(key, resource);
+            let precedenceSet = resources.precedences.get(precedence);
+            if (!precedenceSet) {
+              precedenceSet = new Set();
+              resources.precedences.set(precedence, precedenceSet);
+            }
+            precedenceSet.add(resource);
+            if (resources.boundaryResources) {
+              resources.boundaryResources.add(resource);
+            }
+          }
+          if (textEmbedded) {
+            // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+            // to be safe and assume text will follow by inserting a textSeparator
+            target.push(textSeparator);
+          }
+          return null;
+        }
+      }
+      case 'preconnect':
+      case 'dns-prefetch':
+        if (textEmbedded) {
+          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+          // to be safe and assume text will follow by inserting a textSeparator
+          target.push(textSeparator);
+        }
+        return pushLinkImpl(responseState.preconnectChunks, props);
+      case 'preload':
+        if (textEmbedded) {
+          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+          // to be safe and assume text will follow by inserting a textSeparator
+          target.push(textSeparator);
+        }
+        return pushLinkImpl(responseState.preloadChunks, props);
+      default:
+        if (textEmbedded) {
+          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+          // to be safe and assume text will follow by inserting a textSeparator
+          target.push(textSeparator);
+        }
+        return pushLinkImpl(responseState.hoistableChunks, props);
+    }
+  } else {
+    return pushLinkImpl(target, props);
+  }
 }
 
 function pushLinkImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
-  const isStylesheet = props.rel === 'stylesheet';
   target.push(startChunkForTag('link'));
 
   for (const propKey in props) {
@@ -1306,16 +1503,9 @@ function pushLinkImpl(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
-        case 'precedence': {
-          if (enableFloat && isStylesheet) {
-            // precedence is a reversed property for stylesheets to opt-into resource semantcs
-            continue;
-          }
-          // intentionally fall through
-        }
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1329,7 +1519,6 @@ function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1348,7 +1537,7 @@ function pushSelfClosing(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1361,7 +1550,6 @@ function pushSelfClosing(
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -1379,7 +1567,7 @@ function pushStartMenuItem(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1436,24 +1624,21 @@ function pushTitle(
     }
   }
 
-  if (
-    enableFloat &&
-    // title is valid in SVG so we avoid resour
-    insertionMode !== SVG_MODE &&
-    !noscriptTagInScope &&
-    resourcesFromElement('title', props)
-  ) {
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
-    return null;
+  if (enableFloat) {
+    if (insertionMode !== SVG_MODE && !noscriptTagInScope) {
+      pushTitleImpl(responseState.hoistableChunks, props);
+      return null;
+    } else {
+      return pushTitleImpl(target, props);
+    }
+  } else {
+    return pushTitleImpl(target, props);
   }
-  return pushTitleImpl(target, props, responseState);
 }
 
 function pushTitleImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): null {
   target.push(startChunkForTag('title'));
 
@@ -1474,7 +1659,7 @@ function pushTitleImpl(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1502,7 +1687,6 @@ function pushTitleImpl(
 function pushStartTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag('title'));
 
@@ -1523,7 +1707,7 @@ function pushStartTitle(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1574,62 +1758,136 @@ function pushStartTitle(
 
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  tag: string,
   responseState: ResponseState,
+  insertionMode: InsertionMode,
 ): ReactNodeList {
-  return pushStartGenericElement(
-    enableFloat ? preamble : target,
-    props,
-    tag,
-    responseState,
-  );
+  if (enableFloat) {
+    if (insertionMode < HTML_MODE && responseState.headChunks === null) {
+      // This <head> is the Document.head and should be part of the preamble
+      responseState.headChunks = [];
+      return pushStartGenericElement(responseState.headChunks, props, 'head');
+    } else {
+      // This <head> is deep and is likely just an error. we emit it inline though.
+      // Validation should warn that this tag is the the wrong spot.
+      return pushStartGenericElement(target, props, 'head');
+    }
+  } else {
+    return pushStartGenericElement(target, props, 'head');
+  }
 }
 
 function pushStartHtml(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  tag: string,
   responseState: ResponseState,
-  formatContext: FormatContext,
+  insertionMode: InsertionMode,
 ): ReactNodeList {
-  target = enableFloat ? preamble : target;
-  if (formatContext.insertionMode === ROOT_HTML_MODE) {
-    // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
-    // then we also emit the DOCTYPE as part of the root content as a convenience for
-    // rendering the whole document.
-    target.push(DOCTYPE);
+  if (enableFloat) {
+    if (insertionMode === ROOT_HTML_MODE && responseState.htmlChunks === null) {
+      // This <html> is the Document.documentElement and should be part of the preamble
+      responseState.htmlChunks = [DOCTYPE];
+      return pushStartGenericElement(responseState.htmlChunks, props, 'html');
+    } else {
+      // This <html> is deep and is likely just an error. we emit it inline though.
+      // Validation should warn that this tag is the the wrong spot.
+      return pushStartGenericElement(target, props, 'html');
+    }
+  } else {
+    if (insertionMode === ROOT_HTML_MODE) {
+      // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
+      // then we also emit the DOCTYPE as part of the root content as a convenience for
+      // rendering the whole document.
+      target.push(DOCTYPE);
+    }
+    return pushStartGenericElement(target, props, 'html');
   }
-  return pushStartGenericElement(target, props, tag, responseState);
 }
 
 function pushScript(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  resources: Resources,
   textEmbedded: boolean,
+  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): null {
-  if (enableFloat && !noscriptTagInScope && resourcesFromScript(props)) {
-    if (textEmbedded) {
-      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-      // to be safe and assume text will follow by inserting a textSeparator
-      target.push(textSeparator);
-    }
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
-    return null;
-  }
+  if (enableFloat) {
+    if (
+      insertionMode !== SVG_MODE &&
+      !noscriptTagInScope &&
+      typeof props.src === 'string' &&
+      props.src &&
+      props.async === true
+    ) {
+      const key = getResourceKey('script', props.src);
+      if (props.onLoad || props.onError) {
+        // We can't resourcify scripts with load listeners. To avoid ambiguity with
+        // other Resourcified async scripts on the server we omit them from the server
+        // stream and expect them to be inserted during hydration on the client.
+        // We can still preload them however so the client can start fetching the script
+        // as soon as possible
+        let resource = resources.preloadsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'preload',
+            chunks: [],
+            state: NoState,
+            props: preloadAsScriptPropsFromProps(props.src, props),
+          };
+          if (__DEV__) {
+            const devResource: RenderedResourceDEV = (resource: any);
+            devResource.__provenance = 'rendered';
+            devResource.__originalProps = props;
+          }
+          resources.preloadsMap.set(key, resource);
+          resources.usedScripts.add(resource);
+          pushLinkImpl(resource.chunks, resource.props);
+          return null;
+        }
+      } else {
+        // We can make this <script> into a ScriptResource
+        let resource = resources.scriptsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'script',
+            chunks: [],
+            state: NoState,
+            props,
+          };
+          if (__DEV__) {
+            const devResource: RenderedResourceDEV = (resource: any);
+            devResource.__provenance = 'rendered';
+            devResource.__originalProps = props;
+          }
+          // Add to the global script cache
+          resources.scriptsMap.set(key, resource);
+          // Add to the script flushing queue
+          resources.scripts.add(resource);
 
-  return pushScriptImpl(target, props, responseState);
+          let scriptProps = props;
+          const preloadResource = resources.preloadsMap.get(key);
+          if (preloadResource) {
+            // If we already had a preload we don't want that resource to flush directly.
+            // We let the newly created resource govern flushing.
+            preloadResource.state |= Blocked;
+            scriptProps = {...props};
+            adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
+          }
+          // encode the tag as Chunks
+          return pushScriptImpl(resource.chunks, scriptProps);
+        }
+      }
+    }
+    return pushScriptImpl(target, props);
+  } else {
+    return pushScriptImpl(target, props);
+  }
 }
 
 function pushScriptImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
 ): null {
   target.push(startChunkForTag('script'));
 
@@ -1649,7 +1907,7 @@ function pushScriptImpl(
           innerHTML = propValue;
           break;
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1684,7 +1942,6 @@ function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1704,7 +1961,7 @@ function pushStartGenericElement(
           innerHTML = propValue;
           break;
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1725,7 +1982,6 @@ function pushStartCustomElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1765,7 +2021,7 @@ function pushStartCustomElement(
           innerHTML = propValue;
           break;
         case 'style':
-          pushStyle(target, responseState, propValue);
+          pushStyle(target, propValue);
           break;
         case 'suppressContentEditableWarning':
         case 'suppressHydrationWarning':
@@ -1801,7 +2057,6 @@ function pushStartPreformattedElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  responseState: ResponseState,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1821,7 +2076,7 @@ function pushStartPreformattedElement(
           innerHTML = propValue;
           break;
         default:
-          pushAttribute(target, responseState, propKey, propValue);
+          pushAttribute(target, propKey, propValue);
           break;
       }
     }
@@ -1896,9 +2151,9 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  resources: Resources,
   responseState: ResponseState,
   formatContext: FormatContext,
   textEmbedded: boolean,
@@ -1943,15 +2198,15 @@ export function pushStartInstance(
   switch (type) {
     // Special tags
     case 'select':
-      return pushStartSelect(target, props, responseState);
+      return pushStartSelect(target, props);
     case 'option':
-      return pushStartOption(target, props, responseState, formatContext);
+      return pushStartOption(target, props, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props, responseState);
+      return pushStartTextArea(target, props);
     case 'input':
-      return pushInput(target, props, responseState);
+      return pushInput(target, props);
     case 'menuitem':
-      return pushStartMenuItem(target, props, responseState);
+      return pushStartMenuItem(target, props);
     case 'title':
       return enableFloat
         ? pushTitle(
@@ -1961,13 +2216,15 @@ export function pushStartInstance(
             formatContext.insertionMode,
             formatContext.noscriptTagInScope,
           )
-        : pushStartTitle(target, props, responseState);
+        : pushStartTitle(target, props);
     case 'link':
       return pushLink(
         target,
         props,
         responseState,
+        resources,
         textEmbedded,
+        formatContext.insertionMode,
         formatContext.noscriptTagInScope,
       );
     case 'script':
@@ -1975,33 +2232,28 @@ export function pushStartInstance(
         ? pushScript(
             target,
             props,
-            responseState,
+            resources,
             textEmbedded,
+            formatContext.insertionMode,
             formatContext.noscriptTagInScope,
           )
-        : pushStartGenericElement(target, props, type, responseState);
+        : pushStartGenericElement(target, props, type);
     case 'meta':
       return pushMeta(
         target,
         props,
         responseState,
         textEmbedded,
-        formatContext.noscriptTagInScope,
-      );
-    case 'base':
-      return pushBase(
-        target,
-        props,
-        responseState,
-        textEmbedded,
+        formatContext.insertionMode,
         formatContext.noscriptTagInScope,
       );
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(target, props, type, responseState);
+      return pushStartPreformattedElement(target, props, type);
     }
     // Omitted close tags
+    case 'base':
     case 'area':
     case 'br':
     case 'col':
@@ -2013,7 +2265,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type, responseState);
+      return pushSelfClosing(target, props, type);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
@@ -2025,28 +2277,31 @@ export function pushStartInstance(
     case 'font-face-format':
     case 'font-face-name':
     case 'missing-glyph': {
-      return pushStartGenericElement(target, props, type, responseState);
+      return pushStartGenericElement(target, props, type);
     }
     // Preamble start tags
     case 'head':
-      return pushStartHead(target, preamble, props, type, responseState);
+      return pushStartHead(
+        target,
+        props,
+        responseState,
+        formatContext.insertionMode,
+      );
     case 'html': {
       return pushStartHtml(
         target,
-        preamble,
         props,
-        type,
         responseState,
-        formatContext,
+        formatContext.insertionMode,
       );
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
         // Generic element
-        return pushStartGenericElement(target, props, type, responseState);
+        return pushStartGenericElement(target, props, type);
       } else {
         // Custom element
-        return pushStartCustomElement(target, props, type, responseState);
+        return pushStartCustomElement(target, props, type);
       }
     }
   }
@@ -2057,9 +2312,10 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  responseState: ResponseState,
+  formatContext: FormatContext,
 ): void {
   switch (type) {
     // When float is on we expect title and script tags to always be pushed in
@@ -2094,16 +2350,19 @@ export function pushEndInstance(
       return;
     }
     // Postamble end tags
+    // When float is enabled we omit the end tags for body and html when
+    // they represent the Document.body and Document.documentElement Nodes.
+    // This is so we can withhold them until the postamble when we know
+    // we won't emit any more tags
     case 'body': {
-      if (enableFloat) {
-        postamble.unshift(endTag1, stringToChunk(type), endTag2);
+      if (enableFloat && formatContext.insertionMode <= HTML_HTML_MODE) {
+        responseState.hasBody = true;
         return;
       }
       break;
     }
     case 'html':
-      if (enableFloat) {
-        postamble.push(endTag1, stringToChunk(type), endTag2);
+      if (enableFloat && formatContext.insertionMode === ROOT_HTML_MODE) {
         return;
       }
       break;
@@ -2316,6 +2575,7 @@ export function writeStartSegment(
 ): boolean {
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
+    case HTML_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
@@ -2373,6 +2633,7 @@ export function writeEndSegment(
 ): boolean {
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
+    case HTML_HTML_MODE:
     case HTML_MODE: {
       return writeChunkAndReturn(destination, endSegmentHTML);
     }
@@ -2741,13 +3002,151 @@ const precedencePlaceholderStart = stringToPrecomputedChunk(
 );
 const precedencePlaceholderEnd = stringToPrecomputedChunk('"></style>');
 
-export function writeInitialResources(
+function flushResourceInPreamble<T: Resource>(this: Destination, resource: T) {
+  if ((resource.state & (Flushed | Blocked)) === NoState) {
+    const chunks = resource.chunks;
+    for (let i = 0; i < chunks.length; i++) {
+      writeChunk(this, chunks[i]);
+    }
+    resource.state |= FlushedInPreamble;
+  }
+}
+
+function flushResourceLate<T: Resource>(this: Destination, resource: T) {
+  if ((resource.state & Flushed) === NoState) {
+    const chunks = resource.chunks;
+    for (let i = 0; i < chunks.length; i++) {
+      writeChunk(this, chunks[i]);
+    }
+    resource.state |= FlushedLate;
+  }
+}
+
+function flushUnblockedStylesheet(
+  this: Destination,
+  resource: StylesheetResource,
+  key: mixed,
+  set: Set<StylesheetResource>,
+) {
+  const chunks = resource.chunks;
+  if (resource.state & Flushed) {
+    // In theory this should never happen because we clear from the
+    // Set on flush but to ensure correct semantics we don't emit
+    // anything if we are in this state.
+    set.delete(resource);
+  } else if (resource.state & Blocked) {
+    // We can't flush but we can preload. We will do this in a second pass
+  } else {
+    // We can emit this stylesheet as is. We still need to encode it's chunks
+    // because unlike most Hoistables and Resources we do not eagerly encode
+    // them during render. This is because if we flush late we have to send a
+    // different encoding and we don't want to encode multiple times
+    pushLinkImpl(chunks, resource.props);
+    for (let i = 0; i < chunks.length; i++) {
+      writeChunk(this, chunks[i]);
+    }
+    resource.state |= FlushedInPreamble;
+    set.delete(resource);
+  }
+}
+
+function flushUblockedStylesheets(
+  this: Destination,
+  set: Set<StylesheetResource>,
+  precedence: string,
+) {
+  if (set.size) {
+    set.forEach(flushUnblockedStylesheet, this);
+  } else {
+    writeChunk(this, precedencePlaceholderStart);
+    writeChunk(this, stringToChunk(escapeTextForBrowser(precedence)));
+    writeChunk(this, precedencePlaceholderEnd);
+  }
+}
+
+function preloadBlockedStylesheet(
+  this: Destination,
+  resource: StylesheetResource,
+) {
+  // The only Resources that should remain are Blocked resources
+  if (__DEV__) {
+    if ((resource.state & Blocked) === NoState) {
+      console.error(
+        'React encountered a Stylesheet Resource that was not Blocked when it was expected to be. This is a bug in React.',
+      );
+    } else if (resource.state & PreloadFlushed) {
+      console.error(
+        'React encountered a Stylesheet Resource that already flushed a Preload when it was not expected to. This is a bug in React.',
+      );
+    }
+  }
+  const chunks = resource.chunks;
+  const preloadProps = preloadAsStylePropsFromProps(
+    resource.props.href,
+    resource.props,
+  );
+  pushLinkImpl(chunks, preloadProps);
+  for (let i = 0; i < chunks.length; i++) {
+    writeChunk(this, chunks[i]);
+  }
+  resource.state |= PreloadFlushed;
+  chunks.length = 0;
+}
+
+function preloadBlockedStylesheets(
+  this: Destination,
+  set: Set<StylesheetResource>,
+  precedence: string,
+) {
+  set.forEach(preloadBlockedStylesheet, this);
+  set.clear();
+}
+
+function preloadLateStylesheet(
+  this: Destination,
+  resource: StylesheetResource,
+) {
+  if (__DEV__) {
+    if (resource.state & PreloadFlushed) {
+      console.error(
+        'React encountered a Stylesheet Resource that already flushed a Preload when it was not expected to. This is a bug in React.',
+      );
+    }
+  }
+
+  const chunks = resource.chunks;
+  const preloadProps = preloadAsStylePropsFromProps(
+    resource.props.href,
+    resource.props,
+  );
+  pushLinkImpl(chunks, preloadProps);
+  for (let i = 0; i < chunks.length; i++) {
+    writeChunk(this, chunks[i]);
+  }
+  resource.state |= PreloadFlushed;
+  chunks.length = 0;
+}
+
+function preloadLateStylesheets(
+  this: Destination,
+  set: Set<StylesheetResource>,
+  precedence: string,
+) {
+  set.forEach(preloadLateStylesheet, this);
+  set.clear();
+}
+
+// We don't bother reporting backpressure at the moment because we expect to
+// flush the entire preamble in a single pass. This probably should be modified
+// in the future to be backpressure sensitive but that requires a larger refactor
+// of the flushing code in Fizz.
+export function writePreamble(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
   willFlushAllSegments: boolean,
-): boolean {
-  // Write initially discovered resources after the shell completes
+): void {
+  // This function must be called exactly once on every request
   if (
     enableFizzExternalRuntime &&
     !willFlushAllSegments &&
@@ -2761,222 +3160,209 @@ export function writeInitialResources(
     const {src, integrity} = responseState.externalRuntimeConfig;
     preinitImpl(resources, src, {as: 'script', integrity});
   }
-  // $FlowFixMe[missing-local-annot]
-  function flushLinkResource(resource) {
-    if (!resource.flushed) {
-      pushLinkImpl(target, resource.props, responseState);
-      resource.flushed = true;
+
+  const htmlChunks = responseState.htmlChunks;
+  const headChunks = responseState.headChunks;
+
+  let i = 0;
+
+  // Emit open tags before Hoistables and Resources
+  if (htmlChunks) {
+    // We have an <html> to emit as part of the preamble
+    for (i = 0; i < htmlChunks.length; i++) {
+      writeChunk(destination, htmlChunks[i]);
     }
-  }
-
-  const target: Array<Chunk | PrecomputedChunk> = [];
-
-  const {
-    charset,
-    bases,
-    preconnects,
-    fontPreloads,
-    precedences,
-    usedStylePreloads,
-    scripts,
-    usedScriptPreloads,
-    explicitStylePreloads,
-    explicitScriptPreloads,
-    headResources,
-  } = resources;
-
-  if (charset) {
-    pushSelfClosing(target, charset.props, 'meta', responseState);
-    charset.flushed = true;
-    resources.charset = null;
-  }
-
-  bases.forEach(r => {
-    pushSelfClosing(target, r.props, 'base', responseState);
-    r.flushed = true;
-  });
-  bases.clear();
-
-  preconnects.forEach(r => {
-    // font preload Resources should not already be flushed so we elide this check
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = true;
-  });
-  preconnects.clear();
-
-  fontPreloads.forEach(r => {
-    // font preload Resources should not already be flushed so we elide this check
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = true;
-  });
-  fontPreloads.clear();
-
-  // Flush stylesheets first by earliest precedence
-  precedences.forEach((p, precedence) => {
-    if (p.size) {
-      p.forEach(r => {
-        // resources should not already be flushed so we elide this check
-        pushLinkImpl(target, r.props, responseState);
-        r.flushed = true;
-        r.inShell = true;
-        r.hint.flushed = true;
-      });
-      p.clear();
+    if (headChunks) {
+      for (i = 0; i < headChunks.length; i++) {
+        writeChunk(destination, headChunks[i]);
+      }
     } else {
-      target.push(
-        precedencePlaceholderStart,
-        stringToChunk(escapeTextForBrowser(precedence)),
-        precedencePlaceholderEnd,
-      );
+      // We did not render a head but we emitted an <html> so we emit one now
+      writeChunk(destination, startChunkForTag('head'));
+      writeChunk(destination, endOfStartTag);
+    }
+  } else if (headChunks) {
+    // We do not have an <html> but we do have a <head>
+    for (i = 0; i < headChunks.length; i++) {
+      writeChunk(destination, headChunks[i]);
+    }
+  }
+
+  // Emit high priority Hoistables
+  const charsetChunks = responseState.charsetChunks;
+  for (i = 0; i < charsetChunks.length; i++) {
+    writeChunk(destination, charsetChunks[i]);
+  }
+  charsetChunks.length = 0;
+
+  const preconnectChunks = responseState.preconnectChunks;
+  for (i = 0; i < preconnectChunks.length; i++) {
+    writeChunk(destination, preconnectChunks[i]);
+  }
+  preconnectChunks.length = 0;
+
+  resources.fontPreloads.forEach(flushResourceInPreamble, destination);
+  resources.fontPreloads.clear();
+
+  // Flush unblocked stylesheets by precedence
+  resources.precedences.forEach(flushUblockedStylesheets, destination);
+
+  // Flush preloads for Blocked stylesheets
+  resources.precedences.forEach(preloadBlockedStylesheets, destination);
+
+  resources.usedStylesheets.forEach(resource => {
+    const key = getResourceKey(resource.props.as, resource.props.href);
+    if (resources.stylesheetsMap.has(key)) {
+      // The underlying stylesheet is represented both as a used stylesheet
+      // (a regular component we will attempt to preload) and as a StylesheetResource.
+      // We don't want to emit two preloads for the same href so we defer
+      // the preload rules of the StylesheetResource when there is a conflict
+    } else {
+      const chunks = resource.chunks;
+      for (i = 0; i < chunks.length; i++) {
+        writeChunk(destination, chunks[i]);
+      }
     }
   });
+  resources.usedStylesheets.clear();
 
-  usedStylePreloads.forEach(flushLinkResource);
-  usedStylePreloads.clear();
+  resources.scripts.forEach(flushResourceInPreamble, destination);
+  resources.scripts.clear();
 
-  scripts.forEach(r => {
-    // should never be flushed already
-    pushScriptImpl(target, r.props, responseState);
-    r.flushed = true;
-    r.hint.flushed = true;
-  });
-  scripts.clear();
+  resources.usedScripts.forEach(flushResourceInPreamble, destination);
+  resources.usedScripts.clear();
 
-  usedScriptPreloads.forEach(flushLinkResource);
-  usedScriptPreloads.clear();
+  resources.explicitStylesheetPreloads.forEach(
+    flushResourceInPreamble,
+    destination,
+  );
+  resources.explicitStylesheetPreloads.clear();
 
-  explicitStylePreloads.forEach(flushLinkResource);
-  explicitStylePreloads.clear();
+  resources.explicitScriptPreloads.forEach(
+    flushResourceInPreamble,
+    destination,
+  );
+  resources.explicitScriptPreloads.clear();
 
-  explicitScriptPreloads.forEach(flushLinkResource);
-  explicitScriptPreloads.clear();
+  resources.explicitOtherPreloads.forEach(flushResourceInPreamble, destination);
+  resources.explicitOtherPreloads.clear();
 
-  headResources.forEach(r => {
-    switch (r.type) {
-      case 'title': {
-        pushTitleImpl(target, r.props, responseState);
-        break;
-      }
-      case 'meta': {
-        pushSelfClosing(target, r.props, 'meta', responseState);
-        break;
-      }
-      case 'link': {
-        pushLinkImpl(target, r.props, responseState);
-        break;
-      }
-    }
-    r.flushed = true;
-  });
-  headResources.clear();
-
-  let i;
-  let r = true;
-  for (i = 0; i < target.length - 1; i++) {
-    writeChunk(destination, target[i]);
+  // Write embedding preloadChunks
+  const preloadChunks = responseState.preloadChunks;
+  for (i = 0; i < preloadChunks.length; i++) {
+    writeChunk(destination, preloadChunks[i]);
   }
-  if (i < target.length) {
-    r = writeChunkAndReturn(destination, target[i]);
+  preloadChunks.length = 0;
+
+  // Write embedding hoistableChunks
+  const hoistableChunks = responseState.hoistableChunks;
+  for (i = 0; i < hoistableChunks.length; i++) {
+    writeChunk(destination, hoistableChunks[i]);
   }
-  return r;
+  hoistableChunks.length = 0;
+
+  // Flush closing head if necessary
+  if (htmlChunks && headChunks === null) {
+    // We have an <html> rendered but no <head> rendered. We however inserted
+    // a <head> up above so we need to emit the </head> now. This is safe because
+    // if the main content contained the </head> it would also have provided a
+    // <head>. This means that all the content inside <html> is either <body> or
+    // invalid HTML
+    writeChunk(destination, endTag1);
+    writeChunk(destination, stringToChunk('head'));
+    writeChunk(destination, endTag2);
+  }
 }
 
-export function writeImmediateResources(
+// We don't bother reporting backpressure at the moment because we expect to
+// flush the entire preamble in a single pass. This probably should be modified
+// in the future to be backpressure sensitive but that requires a larger refactor
+// of the flushing code in Fizz.
+export function writeHoistables(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
-): boolean {
-  // $FlowFixMe[missing-local-annot]
-  function flushLinkResource(resource) {
-    if (!resource.flushed) {
-      pushLinkImpl(target, resource.props, responseState);
-      resource.flushed = true;
-    }
+): void {
+  let i = 0;
+
+  // Emit high priority Hoistables
+
+  // We omit charsetChunks because we have already sent the shell and if it wasn't
+  // already sent it is too late now.
+
+  const preconnectChunks = responseState.preconnectChunks;
+  for (i = 0; i < preconnectChunks.length; i++) {
+    writeChunk(destination, preconnectChunks[i]);
   }
+  preconnectChunks.length = 0;
 
-  const target: Array<Chunk | PrecomputedChunk> = [];
+  resources.fontPreloads.forEach(flushResourceLate, destination);
+  resources.fontPreloads.clear();
 
-  const {
-    charset,
-    preconnects,
-    fontPreloads,
-    usedStylePreloads,
-    scripts,
-    usedScriptPreloads,
-    explicitStylePreloads,
-    explicitScriptPreloads,
-    headResources,
-  } = resources;
+  // Preload any stylesheets. these will emit in a render instruction that follows this
+  // but we want to kick off preloading as soon as possible
+  resources.precedences.forEach(preloadLateStylesheets, destination);
 
-  if (charset) {
-    pushSelfClosing(target, charset.props, 'meta', responseState);
-    charset.flushed = true;
-    resources.charset = null;
-  }
-
-  preconnects.forEach(r => {
-    // font preload Resources should not already be flushed so we elide this check
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = true;
-  });
-  preconnects.clear();
-
-  fontPreloads.forEach(r => {
-    // font preload Resources should not already be flushed so we elide this check
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = true;
-  });
-  fontPreloads.clear();
-
-  usedStylePreloads.forEach(flushLinkResource);
-  usedStylePreloads.clear();
-
-  scripts.forEach(r => {
-    // should never be flushed already
-    pushStartGenericElement(target, r.props, 'script', responseState);
-    pushEndInstance(target, target, 'script', r.props);
-    r.flushed = true;
-    r.hint.flushed = true;
-  });
-  scripts.clear();
-
-  usedScriptPreloads.forEach(flushLinkResource);
-  usedScriptPreloads.clear();
-
-  explicitStylePreloads.forEach(flushLinkResource);
-  explicitStylePreloads.clear();
-
-  explicitScriptPreloads.forEach(flushLinkResource);
-  explicitScriptPreloads.clear();
-
-  headResources.forEach(r => {
-    switch (r.type) {
-      case 'title': {
-        pushTitleImpl(target, r.props, responseState);
-        break;
-      }
-      case 'meta': {
-        pushSelfClosing(target, r.props, 'meta', responseState);
-        break;
-      }
-      case 'link': {
-        pushLinkImpl(target, r.props, responseState);
-        break;
+  resources.usedStylesheets.forEach(resource => {
+    const key = getResourceKey(resource.props.as, resource.props.href);
+    if (resources.stylesheetsMap.has(key)) {
+      // The underlying stylesheet is represented both as a used stylesheet
+      // (a regular component we will attempt to preload) and as a StylesheetResource.
+      // We don't want to emit two preloads for the same href so we defer
+      // the preload rules of the StylesheetResource when there is a conflict
+    } else {
+      const chunks = resource.chunks;
+      for (i = 0; i < chunks.length; i++) {
+        writeChunk(destination, chunks[i]);
       }
     }
-    r.flushed = true;
   });
-  headResources.clear();
+  resources.usedStylesheets.clear();
 
-  let i;
-  let r = true;
-  for (i = 0; i < target.length - 1; i++) {
-    writeChunk(destination, target[i]);
+  resources.scripts.forEach(flushResourceLate, destination);
+  resources.scripts.clear();
+
+  resources.usedScripts.forEach(flushResourceLate, destination);
+  resources.usedScripts.clear();
+
+  resources.explicitStylesheetPreloads.forEach(flushResourceLate, destination);
+  resources.explicitStylesheetPreloads.clear();
+
+  resources.explicitScriptPreloads.forEach(flushResourceLate, destination);
+  resources.explicitScriptPreloads.clear();
+
+  resources.explicitOtherPreloads.forEach(flushResourceLate, destination);
+  resources.explicitOtherPreloads.clear();
+
+  // Write embedding preloadChunks
+  const preloadChunks = responseState.preloadChunks;
+  for (i = 0; i < preloadChunks.length; i++) {
+    writeChunk(destination, preloadChunks[i]);
   }
-  if (i < target.length) {
-    r = writeChunkAndReturn(destination, target[i]);
+  preloadChunks.length = 0;
+
+  // Write embedding hoistableChunks
+  const hoistableChunks = responseState.hoistableChunks;
+  for (i = 0; i < hoistableChunks.length; i++) {
+    writeChunk(destination, hoistableChunks[i]);
   }
-  return r;
+  hoistableChunks.length = 0;
+}
+
+export function writePostamble(
+  destination: Destination,
+  responseState: ResponseState,
+): void {
+  if (responseState.hasBody) {
+    writeChunk(destination, endTag1);
+    writeChunk(destination, stringToChunk('body'));
+    writeChunk(destination, endTag2);
+  }
+  if (responseState.htmlChunks) {
+    writeChunk(destination, endTag1);
+    writeChunk(destination, stringToChunk('html'));
+    writeChunk(destination, endTag2);
+  }
 }
 
 function hasStyleResourceDependencies(
@@ -2991,7 +3377,7 @@ function hasStyleResourceDependencies(
 
     // If every style Resource flushed in the shell we do not need to send
     // any dependencies
-    if (!resource.inShell) {
+    if ((resource.state & FlushedInPreamble) === NoState) {
       return true;
     }
   }
@@ -3014,27 +3400,33 @@ function writeStyleResourceDependenciesInJS(
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
   boundaryResources.forEach(resource => {
-    if (resource.inShell) {
+    if (resource.state & FlushedInPreamble) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
-    } else if (resource.flushed) {
+    } else if (resource.state & Flushed) {
+      // We only need to emit the href because this resource flushed in an earlier
+      // boundary already which encoded the attributes necessary to construct
+      // the resource instance on the client.
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnlyInJS(destination, resource.href);
+      writeStyleResourceDependencyHrefOnlyInJS(
+        destination,
+        resource.props.href,
+      );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
+      // We need to emit the whole resource for insertion on the client
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyInJS(
         destination,
-        resource.href,
-        resource.precedence,
+        resource.props.href,
+        resource.props['data-precedence'],
         resource.props,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
 
-      resource.flushed = true;
-      resource.hint.flushed = true;
+      resource.state |= FlushedLate;
     }
   });
   writeChunk(destination, arrayCloseBracket);
@@ -3203,27 +3595,33 @@ function writeStyleResourceDependenciesInAttr(
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
   boundaryResources.forEach(resource => {
-    if (resource.inShell) {
+    if (resource.state & FlushedInPreamble) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
-    } else if (resource.flushed) {
+    } else if (resource.state & Flushed) {
+      // We only need to emit the href because this resource flushed in an earlier
+      // boundary already which encoded the attributes necessary to construct
+      // the resource instance on the client.
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnlyInAttr(destination, resource.href);
+      writeStyleResourceDependencyHrefOnlyInAttr(
+        destination,
+        resource.props.href,
+      );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
+      // We need to emit the whole resource for insertion on the client
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyInAttr(
         destination,
-        resource.href,
-        resource.precedence,
+        resource.props.href,
+        resource.props['data-precedence'],
         resource.props,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
 
-      resource.flushed = true;
-      resource.hint.flushed = true;
+      resource.state |= FlushedLate;
     }
   });
   writeChunk(destination, arrayCloseBracket);
@@ -3378,4 +3776,528 @@ function writeStyleResourceAttributeInAttr(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(attributeValue))),
   );
+}
+
+/**
+ * Resources
+ */
+
+type ResourceStateTag = number;
+const NoState /*            */ = 0b0000;
+// These tags indicate whether the Resource was flushed and in which phase
+const FlushedInPreamble /*  */ = 0b0001;
+const FlushedLate /*        */ = 0b0010;
+const Flushed /*            */ = 0b0011;
+// This tag indicates whether this Resource is blocked from flushing.
+// This currently is only used with stylesheets that are blocked by a Boundary
+const Blocked /*            */ = 0b0100;
+// This tag indicates whether this Resource has been preloaded.
+// This generally only makes sense for Resources other than PreloadResource
+const PreloadFlushed /*     */ = 0b1000;
+
+// It is important that the state type be a pointer type
+type TResource<T: 'stylesheet' | 'script' | 'preload'> = {
+  type: T,
+  chunks: Array<Chunk | PrecomputedChunk>,
+  state: ResourceStateTag,
+  props: any,
+};
+// Dev extensions.
+// Stylesheets and Scripts rendered with jsx
+type RenderedResourceDEV = {
+  __provenance: 'rendered',
+  __originalProps: any,
+};
+// Preloads, Stylesheets, and Scripts from ReactDOM.preload or ReactDOM.preinit
+type ImperativeResourceDEV = {
+  __provenance: 'preload' | 'preinit',
+  __originalHref: string,
+  __originalOptions: any,
+  __propsEquivalent: any,
+};
+// Preloads created for normal components we rendered but know we can preload early such as
+// sync Scripts and stylesheets without precedence or with onLoad/onError handlers
+type ImplicitResourceDEV = {
+  __provenance: 'implicit',
+  __underlyingProps: any,
+  __impliedProps: any,
+};
+type ResourceDEV =
+  | RenderedResourceDEV
+  | ImperativeResourceDEV
+  | ImplicitResourceDEV;
+
+type PreloadProps = {
+  rel: 'preload',
+  as: string,
+  href: string,
+  [string]: mixed,
+};
+type PreloadResource = TResource<'preload'>;
+
+type StylesheetProps = {
+  rel: 'stylesheet',
+  href: string,
+  'data-precedence': string,
+  [string]: mixed,
+};
+type StylesheetResource = TResource<'stylesheet'>;
+
+type ScriptProps = {
+  async: true,
+  src: string,
+  [string]: mixed,
+};
+type ScriptResource = TResource<'script'>;
+
+type Resource = StylesheetResource | ScriptResource | PreloadResource;
+
+export type Resources = {
+  // Request local cache
+  preloadsMap: Map<string, PreloadResource>,
+  stylesheetsMap: Map<string, StylesheetResource>,
+  scriptsMap: Map<string, ScriptResource>,
+
+  // Flushing queues for Resource dependencies
+  fontPreloads: Set<PreloadResource>,
+  // usedImagePreloads: Set<PreloadResource>,
+  precedences: Map<string, Set<StylesheetResource>>,
+  usedStylesheets: Set<PreloadResource>,
+  scripts: Set<ScriptResource>,
+  usedScripts: Set<PreloadResource>,
+  explicitStylesheetPreloads: Set<PreloadResource>,
+  // explicitImagePreloads: Set<PreloadResource>,
+  explicitScriptPreloads: Set<PreloadResource>,
+  explicitOtherPreloads: Set<PreloadResource>,
+
+  // Module-global-like reference for current boundary resources
+  boundaryResources: ?BoundaryResources,
+  ...
+};
+
+// @TODO add bootstrap script to implicit preloads
+export function createResources(): Resources {
+  return {
+    // persistent
+    preloadsMap: new Map(),
+    stylesheetsMap: new Map(),
+    scriptsMap: new Map(),
+
+    // cleared on flush
+    fontPreloads: new Set(),
+    // usedImagePreloads: new Set(),
+    precedences: new Map(),
+    usedStylesheets: new Set(),
+    scripts: new Set(),
+    usedScripts: new Set(),
+    explicitStylesheetPreloads: new Set(),
+    // explicitImagePreloads: new Set(),
+    explicitScriptPreloads: new Set(),
+    explicitOtherPreloads: new Set(),
+
+    // like a module global for currently rendering boundary
+    boundaryResources: null,
+  };
+}
+
+export type BoundaryResources = Set<StylesheetResource>;
+
+export function createBoundaryResources(): BoundaryResources {
+  return new Set();
+}
+
+export function setCurrentlyRenderingBoundaryResourcesTarget(
+  resources: Resources,
+  boundaryResources: null | BoundaryResources,
+) {
+  resources.boundaryResources = boundaryResources;
+}
+
+function getResourceKey(as: string, href: string): string {
+  return `[${as}]${href}`;
+}
+
+type PreloadAs = 'style' | 'font' | 'script';
+type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
+export function preload(href: string, options: PreloadOptions) {
+  if (!currentResources) {
+    // While we expect that preload calls are primarily going to be observed
+    // during render because effects and events don't run on the server it is
+    // still possible that these get called in module scope. This is valid on
+    // the client since there is still a document to interact with but on the
+    // server we need a request to associate the call to. Because of this we
+    // simply return and do not warn.
+    return;
+  }
+  const resources = currentResources;
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options == null || typeof options !== 'object') {
+      console.error(
+        'ReactDOM.preload(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preloaded but encountered %s instead.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (typeof options.as !== 'string') {
+      console.error(
+        'ReactDOM.preload(): Expected the `as` property in the `options` argument (second) to contain a string value describing the type of resource to be preloaded but encountered %s instead. Values that are valid in for the `as` attribute of a `<link rel="preload" as="..." />` tag are valid here.',
+        getValueDescriptorExpectingEnumForWarning(options.as),
+      );
+    }
+  }
+  if (
+    typeof href === 'string' &&
+    href &&
+    typeof options === 'object' &&
+    options !== null &&
+    typeof options.as === 'string'
+  ) {
+    const as = options.as;
+    const key = getResourceKey(as, href);
+    let resource = resources.preloadsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preload',
+        chunks: [],
+        state: NoState,
+        props: preloadPropsFromPreloadOptions(href, as, options),
+      };
+      if (__DEV__) {
+        const devResource: ImperativeResourceDEV = (resource: any);
+        devResource.__provenance = 'preload';
+        devResource.__originalHref = href;
+        devResource.__originalOptions = options;
+        devResource.__propsEquivalent = resource.props;
+      }
+      // Unlike on the client this key will never be used to query the DOM. We
+      // vary on `as` to mirror client behavior. It's not generally sensible that
+      // you would use the same href for two different types of assets but we allow
+      // it nonetheless.
+      resources.preloadsMap.set(key, resource);
+
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+    switch (as) {
+      case 'font': {
+        resources.fontPreloads.add(resource);
+        break;
+      }
+      case 'style': {
+        resources.explicitStylesheetPreloads.add(resource);
+        break;
+      }
+      case 'script': {
+        resources.explicitScriptPreloads.add(resource);
+        break;
+      }
+      default: {
+        resources.explicitOtherPreloads.add(resource);
+      }
+    }
+  }
+}
+
+type PreinitAs = 'style' | 'script';
+type PreinitOptions = {
+  as: PreinitAs,
+  precedence?: string,
+  crossOrigin?: string,
+  integrity?: string,
+};
+export function preinit(href: string, options: PreinitOptions): void {
+  if (!currentResources) {
+    // While we expect that preinit calls are primarily going to be observed
+    // during render because effects and events don't run on the server it is
+    // still possible that these get called in module scope. This is valid on
+    // the client since there is still a document to interact with but on the
+    // server we need a request to associate the call to. Because of this we
+    // simply return and do not warn.
+    return;
+  }
+  preinitImpl(currentResources, href, options);
+}
+
+// On the server, preinit may be called outside of render when sending an
+// external SSR runtime as part of the initial resources payload. Since this
+// is an internal React call, we do not need to use the resources stack.
+function preinitImpl(
+  resources: Resources,
+  href: string,
+  options: PreinitOptions,
+): void {
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options == null || typeof options !== 'object') {
+      console.error(
+        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered %s instead.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (options.as !== 'style' && options.as !== 'script') {
+      console.error(
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered %s instead. Valid values for `as` are "style" and "script".',
+        getValueDescriptorExpectingEnumForWarning(options.as),
+      );
+    }
+  }
+  if (
+    typeof href === 'string' &&
+    href &&
+    typeof options === 'object' &&
+    options !== null
+  ) {
+    const as = options.as;
+    switch (as) {
+      case 'style': {
+        const key = getResourceKey(as, href);
+        let resource = resources.stylesheetsMap.get(key);
+        const precedence = options.precedence || 'default';
+        if (__DEV__) {
+          if (resource) {
+            const devResource: ResourceDEV = (resource: any);
+            const resourceProps = stylePropsFromPreinitOptions(
+              href,
+              precedence,
+              options,
+            );
+            const propsEquivalent = {
+              ...resourceProps,
+              precedence: options.precedence,
+              ['data-precedence']: null,
+            };
+            switch (devResource.__provenance) {
+              case 'rendered': {
+                const differentProps = compareResourcePropsForWarning(
+                  // Diff the props from the JSX element, not the derived resource props
+                  propsEquivalent,
+                  devResource.__originalProps,
+                );
+                if (differentProps) {
+                  const differenceDescription = describeDifferencesForPreinitOverStylesheet(
+                    differentProps,
+                  );
+                  if (differenceDescription) {
+                    console.error(
+                      'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
+                        ' React will always use the props or options it first encounters for a hoistable stylesheet for a given `href` and any later props or options will be ignored if different.' +
+                        ' Generally ReactDOM.preinit() is useful when you are not yet rendering a stylesheet but you anticipate it will be used soon.' +
+                        ' In this case the stylesheet was already rendered so preinitializing it does not provide any additional benefit.' +
+                        ' To resolve, try making the props and options agree between the <link rel="stylesheet" .../> and the `ReactDOM.preinit()` call or' +
+                        ' remove the `ReactDOM.preinit()` call.%s',
+                      href,
+                      devResource.__originalProps.precedence,
+                      href,
+                      differenceDescription,
+                    );
+                  }
+                }
+                break;
+              }
+              case 'preinit': {
+                const differentProps = compareResourcePropsForWarning(
+                  // Diff the props from the JSX element, not the derived resource props
+                  propsEquivalent,
+                  devResource.__propsEquivalent,
+                );
+                if (differentProps) {
+                  const differenceDescription = describeDifferencesForPreinits(
+                    differentProps,
+                  );
+                  if (differenceDescription) {
+                    console.error(
+                      'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
+                        ' React will always use the options it first encounters when preinitializing a hoistable stylesheet for a given `href` and any later options will be ignored if different.' +
+                        ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
+                      href,
+                      href,
+                      differenceDescription,
+                    );
+                  }
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (!resource) {
+          resource = {
+            type: 'stylesheet',
+            chunks: ([]: Array<Chunk | PrecomputedChunk>),
+            state: NoState,
+            props: stylePropsFromPreinitOptions(href, precedence, options),
+          };
+          resources.stylesheetsMap.set(key, resource);
+          if (__DEV__) {
+            const devResource: ImperativeResourceDEV = (resource: any);
+            devResource.__provenance = 'preinit';
+            devResource.__originalHref = href;
+            devResource.__originalOptions = options;
+            devResource.__propsEquivalent = {
+              ...resource.props,
+              precedence,
+              ['data-precedence']: undefined,
+            };
+          }
+          let precedenceSet = resources.precedences.get(precedence);
+          if (!precedenceSet) {
+            precedenceSet = new Set();
+            resources.precedences.set(precedence, precedenceSet);
+          }
+          precedenceSet.add(resource);
+        }
+        return;
+      }
+      case 'script': {
+        const src = href;
+        const key = getResourceKey(as, src);
+        let resource = resources.scriptsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'script',
+            chunks: [],
+            state: NoState,
+            props: scriptPropsFromPreinitOptions(src, options),
+          };
+          if (__DEV__) {
+            const devResource: ImperativeResourceDEV = (resource: any);
+            devResource.__provenance = 'preinit';
+            devResource.__originalHref = href;
+            devResource.__originalOptions = options;
+            devResource.__propsEquivalent = resource.props;
+          }
+          resources.scripts.add(resource);
+          pushScriptImpl(resource.chunks, resource.props);
+        }
+        return;
+      }
+    }
+  }
+}
+
+function preloadPropsFromPreloadOptions(
+  href: string,
+  as: PreloadAs,
+  options: PreloadOptions,
+): PreloadProps {
+  return {
+    rel: 'preload',
+    as,
+    href,
+    crossOrigin: as === 'font' ? '' : options.crossOrigin,
+    integrity: options.integrity,
+  };
+}
+
+function preloadAsStylePropsFromProps(href: string, props: any): PreloadProps {
+  return {
+    rel: 'preload',
+    as: 'style',
+    href: href,
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    media: props.media,
+    hrefLang: props.hrefLang,
+    referrerPolicy: props.referrerPolicy,
+  };
+}
+
+function preloadAsScriptPropsFromProps(href: string, props: any): PreloadProps {
+  return {
+    rel: 'preload',
+    as: 'script',
+    href,
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    referrerPolicy: props.referrerPolicy,
+  };
+}
+
+function stylePropsFromPreinitOptions(
+  href: string,
+  precedence: string,
+  options: PreinitOptions,
+): StylesheetProps {
+  return {
+    rel: 'stylesheet',
+    href,
+    'data-precedence': precedence,
+    crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
+  };
+}
+
+function stylesheetPropsFromRawProps(rawProps: any): StylesheetProps {
+  return {
+    ...rawProps,
+    'data-precedence': rawProps.precedence,
+    precedence: null,
+  };
+}
+
+function adoptPreloadPropsForStylesheetProps(
+  resourceProps: StylesheetProps,
+  preloadProps: PreloadProps,
+): void {
+  if (resourceProps.crossOrigin == null)
+    resourceProps.crossOrigin = preloadProps.crossOrigin;
+  if (resourceProps.integrity == null)
+    resourceProps.integrity = preloadProps.integrity;
+}
+
+function scriptPropsFromPreinitOptions(
+  src: string,
+  options: PreinitOptions,
+): ScriptProps {
+  return {
+    src,
+    async: true,
+    crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
+  };
+}
+
+function adoptPreloadPropsForScriptProps(
+  resourceProps: ScriptProps,
+  preloadProps: PreloadProps,
+): void {
+  if (resourceProps.crossOrigin == null)
+    resourceProps.crossOrigin = preloadProps.crossOrigin;
+  if (resourceProps.integrity == null)
+    resourceProps.integrity = preloadProps.integrity;
+}
+
+function hoistStylesheetResource(
+  this: BoundaryResources,
+  resource: StylesheetResource,
+) {
+  this.add(resource);
+}
+
+export function hoistResources(
+  resources: Resources,
+  source: BoundaryResources,
+): void {
+  const currentBoundaryResources = resources.boundaryResources;
+  if (currentBoundaryResources) {
+    source.forEach(hoistStylesheetResource, currentBoundaryResources);
+    source.clear();
+  }
+}
+
+function unblockStylesheet(resource: StylesheetResource) {
+  resource.state &= ~Blocked;
+}
+
+export function hoistResourcesToRoot(
+  resources: Resources,
+  boundaryResources: BoundaryResources,
+): void {
+  boundaryResources.forEach(unblockStylesheet);
+  boundaryResources.clear();
 }

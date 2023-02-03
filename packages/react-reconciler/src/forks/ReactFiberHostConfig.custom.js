@@ -196,7 +196,7 @@ export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
 //     (optional)
 // -------------------
 export const supportsResources = $$$hostConfig.supportsResources;
-export const isHostResourceType = $$$hostConfig.isHostResourceType;
+export const isHostHoistableType = $$$hostConfig.isHostHoistableType;
 export const getResource = $$$hostConfig.getResource;
 export const acquireResource = $$$hostConfig.acquireResource;
 export const releaseResource = $$$hostConfig.releaseResource;

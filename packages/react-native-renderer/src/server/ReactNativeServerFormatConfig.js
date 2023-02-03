@@ -315,22 +315,23 @@ export function writeClientRenderBoundaryInstruction(
   return writeChunkAndReturn(destination, formatID(boundaryID));
 }
 
-export function writeInitialResources(
+export function writePreamble(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
   willFlushAllSegments: boolean,
-): boolean {
-  return true;
-}
+) {}
 
-export function writeImmediateResources(
+export function writeHoistables(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
-): boolean {
-  return true;
-}
+) {}
+
+export function writePostamble(
+  destination: Destination,
+  responseState: ResponseState,
+) {}
 
 export function hoistResources(
   resources: Resources,

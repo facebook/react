@@ -47,6 +47,13 @@ export type ResponseState = {
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
+  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
+  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  hasBody: boolean,
+  charsetChunks: Array<Chunk | PrecomputedChunk>,
+  preconnectChunks: Array<Chunk | PrecomputedChunk>,
+  preloadChunks: Array<Chunk | PrecomputedChunk>,
+  hoistableChunks: Array<Chunk | PrecomputedChunk>,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -79,6 +86,14 @@ export function createResponseState(
     sentClientRenderFunction: responseState.sentClientRenderFunction,
     sentStyleInsertionFunction: responseState.sentStyleInsertionFunction,
     externalRuntimeConfig: responseState.externalRuntimeConfig,
+    htmlChunks: responseState.htmlChunks,
+    headChunks: responseState.headChunks,
+    hasBody: responseState.hasBody,
+    charsetChunks: responseState.charsetChunks,
+    preconnectChunks: responseState.preconnectChunks,
+    preloadChunks: responseState.preloadChunks,
+    hoistableChunks: responseState.hoistableChunks,
+
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
   };
@@ -119,8 +134,9 @@ export {
   writeCompletedRoot,
   createResources,
   createBoundaryResources,
-  writeInitialResources,
-  writeImmediateResources,
+  writePreamble,
+  writeHoistables,
+  writePostamble,
   hoistResources,
   hoistResourcesToRoot,
   setCurrentlyRenderingBoundaryResourcesTarget,

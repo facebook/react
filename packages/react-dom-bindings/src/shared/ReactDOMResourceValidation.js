@@ -765,24 +765,238 @@ export function validatePreinitArguments(href: mixed, options: mixed) {
   }
 }
 
-function getValueDescriptorExpectingObjectForWarning(thing: any): string {
+export function getValueDescriptorExpectingObjectForWarning(
+  thing: any,
+): string {
   return thing === null
-    ? 'null'
+    ? '`null`'
     : thing === undefined
-    ? 'undefined'
+    ? '`undefined`'
     : thing === ''
     ? 'an empty string'
     : `something with type "${typeof thing}"`;
 }
 
-function getValueDescriptorExpectingEnumForWarning(thing: any): string {
+export function getValueDescriptorExpectingEnumForWarning(thing: any): string {
   return thing === null
-    ? 'null'
+    ? '`null`'
     : thing === undefined
-    ? 'undefined'
+    ? '`undefined`'
     : thing === ''
     ? 'an empty string'
     : typeof thing === 'string'
     ? JSON.stringify(thing)
     : `something with type "${typeof thing}"`;
+}
+
+type PropDifferences = {
+  missing: {
+    [string]: any,
+  },
+  extra: {
+    [string]: any,
+  },
+  different: {
+    [string]: {
+      original: any,
+      latest: any,
+    },
+  },
+};
+export function compareResourcePropsForWarning(
+  newProps: any,
+  currentProps: any,
+): null | PropDifferences {
+  if (__DEV__) {
+    let propDiffs: null | PropDifferences = null;
+
+    const allProps = Array.from(
+      new Set(Object.keys(currentProps).concat(Object.keys(newProps))),
+    );
+
+    for (let i = 0; i < allProps.length; i++) {
+      const propName = allProps[i];
+      const newValue = newProps[propName];
+      const currentValue = currentProps[propName];
+      if (
+        newValue !== currentValue &&
+        !(newValue == null && currentValue == null)
+      ) {
+        if (newValue == null) {
+          if (propDiffs === null) {
+            propDiffs = ({
+              missing: {},
+              extra: {},
+              different: {},
+            }: PropDifferences);
+          }
+          propDiffs.missing[propName] = currentValue;
+        } else if (currentValue == null) {
+          if (propDiffs === null) {
+            propDiffs = ({
+              missing: {},
+              extra: {},
+              different: {},
+            }: PropDifferences);
+          }
+          propDiffs.extra[propName] = newValue;
+        } else {
+          if (propDiffs === null) {
+            propDiffs = ({
+              missing: {},
+              extra: {},
+              different: {},
+            }: PropDifferences);
+          }
+          propDiffs.different[propName] = {
+            original: currentValue,
+            latest: newValue,
+          };
+        }
+      }
+    }
+
+    return propDiffs;
+  }
+  return null;
+}
+
+export function describeDifferencesForStylesheets(
+  diff: PropDifferences,
+): string {
+  let description = '';
+
+  for (const propName in diff.missing) {
+    const propValue = diff.missing[propName];
+    if (propName === 'media') {
+      description += `\n  "${propName}" missing for props, original value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}`;
+    }
+  }
+  for (const propName in diff.extra) {
+    const propValue = diff.extra[propName];
+    description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+      propValue,
+    )}, missing from original props`;
+  }
+  for (const propName in diff.different) {
+    const latestValue = diff.different[propName].latest;
+    const originalValue = diff.different[propName].original;
+    description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+      latestValue,
+    )}, original value: ${getValueDescriptorExpectingEnumForWarning(
+      originalValue,
+    )}`;
+  }
+  return description;
+}
+
+export function describeDifferencesForStylesheetOverPreinit(
+  diff: PropDifferences,
+): string {
+  let description = '';
+
+  for (const propName in diff.extra) {
+    const propValue = diff.extra[propName];
+    if (
+      propName === 'precedence' ||
+      propName === 'crossOrigin' ||
+      propName === 'integrity'
+    ) {
+      description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}, option missing`;
+    } else {
+      description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}, option not available with ReactDOM.preinit()`;
+    }
+  }
+  for (const propName in diff.different) {
+    const latestValue = diff.different[propName].latest;
+    const originalValue = diff.different[propName].original;
+    if (propName === 'precedence' && originalValue === 'default') {
+      description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+        latestValue,
+      )}, missing from options`;
+    } else {
+      description += `\n  "${propName}" prop value: ${getValueDescriptorExpectingEnumForWarning(
+        latestValue,
+      )}, option value: ${getValueDescriptorExpectingEnumForWarning(
+        originalValue,
+      )}`;
+    }
+  }
+  return description;
+}
+
+export function describeDifferencesForPreinitOverStylesheet(
+  diff: PropDifferences,
+): string {
+  let description = '';
+  for (const propName in diff.missing) {
+    const propValue = diff.missing[propName];
+    if (propName === 'precedence' && propValue !== 'default') {
+      description += `\n  "${propName}" missing from options, prop value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}`;
+    }
+  }
+  for (const propName in diff.extra) {
+    const propValue = diff.extra[propName];
+    if (
+      propName === 'precedence' ||
+      propName === 'crossOrigin' ||
+      propName === 'integrity'
+    ) {
+      description += `\n  "${propName}" option value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}, missing from props`;
+    }
+  }
+  for (const propName in diff.different) {
+    const latestValue = diff.different[propName].latest;
+    const originalValue = diff.different[propName].original;
+    description += `\n  "${propName}" option value: ${getValueDescriptorExpectingEnumForWarning(
+      latestValue,
+    )}, prop value: ${getValueDescriptorExpectingEnumForWarning(
+      originalValue,
+    )}`;
+  }
+  return description;
+}
+
+export function describeDifferencesForPreinits(diff: PropDifferences): string {
+  let description = '';
+  for (const propName in diff.missing) {
+    const propValue = diff.missing[propName];
+    if (propName === 'precedence' && propValue !== 'default') {
+      description += `\n  "${propName}" missing from options, original option value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}`;
+    }
+  }
+  for (const propName in diff.extra) {
+    const propValue = diff.extra[propName];
+    if (
+      (propName === 'precedence' && propValue !== 'default') ||
+      propName === 'crossOrigin' ||
+      propName === 'integrity'
+    ) {
+      description += `\n  "${propName}" option value: ${getValueDescriptorExpectingEnumForWarning(
+        propValue,
+      )}, missing from original options`;
+    }
+  }
+  for (const propName in diff.different) {
+    const latestValue = diff.different[propName].latest;
+    const originalValue = diff.different[propName].original;
+    description += `\n  "${propName}" option value: ${getValueDescriptorExpectingEnumForWarning(
+      latestValue,
+    )}, original option value: ${getValueDescriptorExpectingEnumForWarning(
+      originalValue,
+    )}`;
+  }
+  return description;
 }

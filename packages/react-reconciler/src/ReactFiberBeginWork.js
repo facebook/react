@@ -51,7 +51,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   HostPortal,
@@ -167,10 +167,15 @@ import {
   supportsSingletons,
   isPrimaryRenderer,
   getResource,
+  createHoistableInstance,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {
+  pushHostContext,
+  pushHostContainer,
+  getRootHostContainer,
+} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseListContext,
@@ -1624,19 +1629,33 @@ function updateHostComponent(
   return workInProgress.child;
 }
 
-function updateHostResource(
+function updateHostHoistable(
   current: null | Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  pushHostContext(workInProgress);
   markRef(current, workInProgress);
   const currentProps = current === null ? null : current.memoizedProps;
-  workInProgress.memoizedState = getResource(
+  const resource = (workInProgress.memoizedState = getResource(
     workInProgress.type,
-    workInProgress.pendingProps,
     currentProps,
-  );
+    workInProgress.pendingProps,
+  ));
+  if (current === null) {
+    if (!getIsHydrating() && resource === null) {
+      // This is not a Resource Hoistable and we aren't hydrating so we construct the
+      // We we aren't hydrating and can potentially prepare the hoistable instance now during
+      // render. Note that in some Hosts not all Hoistables will be able to produce an
+      // instance during render and they may be constructed during acquisition in the commit phase
+      workInProgress.stateNode = createHoistableInstance(
+        workInProgress.type,
+        workInProgress.pendingProps,
+        getRootHostContainer(),
+        workInProgress,
+      );
+    }
+  }
+
   // Resources never have reconciler managed children. It is possible for
   // the host implementation of getResource to consider children in the
   // resource construction but they will otherwise be discarded. In practice
@@ -3742,7 +3761,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       }
       resetHydrationState();
       break;
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
@@ -4078,9 +4097,9 @@ function beginWork(
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
-    case HostResource:
+    case HostHoistable:
       if (enableFloat && supportsResources) {
-        return updateHostResource(current, workInProgress, renderLanes);
+        return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // eslint-disable-next-line no-fallthrough
     case HostSingleton:

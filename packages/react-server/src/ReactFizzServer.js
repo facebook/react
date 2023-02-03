@@ -65,8 +65,9 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
-  writeInitialResources,
-  writeImmediateResources,
+  writePreamble,
+  writeHoistables,
+  writePostamble,
   hoistResources,
   hoistResourcesToRoot,
   prepareToRender,
@@ -221,8 +222,6 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
-  +preamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
-  +postamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -294,11 +293,9 @@ export function createRequest(
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    clientRenderedBoundaries: [],
-    completedBoundaries: [],
-    partialBoundaries: [],
-    preamble: [],
-    postamble: [],
+    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
+    completedBoundaries: ([]: Array<SuspenseBoundary>),
+    partialBoundaries: ([]: Array<SuspenseBoundary>),
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -695,9 +692,9 @@ function renderHostElement(
 
   const children = pushStartInstance(
     segment.chunks,
-    request.preamble,
     type,
     props,
+    request.resources,
     request.responseState,
     segment.formatContext,
     segment.lastPushedText,
@@ -713,7 +710,13 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, request.postamble, type, props);
+  pushEndInstance(
+    segment.chunks,
+    type,
+    props,
+    request.responseState,
+    prevContext,
+  );
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }
@@ -2123,31 +2126,6 @@ function flushSegment(
   }
 }
 
-function flushInitialResources(
-  destination: Destination,
-  resources: Resources,
-  responseState: ResponseState,
-  willFlushAllSegments: boolean,
-): void {
-  writeInitialResources(
-    destination,
-    resources,
-    responseState,
-    willFlushAllSegments,
-  );
-}
-
-function flushImmediateResources(
-  destination: Destination,
-  request: Request,
-): void {
-  writeImmediateResources(
-    destination,
-    request.resources,
-    request.responseState,
-  );
-}
-
 function flushClientRenderedBoundary(
   request: Request,
   destination: Destination,
@@ -2285,13 +2263,7 @@ function flushCompletedQueues(
     if (completedRootSegment !== null) {
       if (request.pendingRootTasks === 0) {
         if (enableFloat) {
-          const preamble = request.preamble;
-          for (i = 0; i < preamble.length; i++) {
-            // we expect the preamble to be tiny and will ignore backpressure
-            writeChunk(destination, preamble[i]);
-          }
-
-          flushInitialResources(
+          writePreamble(
             destination,
             request.resources,
             request.responseState,
@@ -2307,7 +2279,7 @@ function flushCompletedQueues(
         return;
       }
     } else if (enableFloat) {
-      flushImmediateResources(destination, request);
+      writeHoistables(destination, request.resources, request.responseState);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
@@ -2385,10 +2357,7 @@ function flushCompletedQueues(
       // either they have pending task or they're complete.
     ) {
       if (enableFloat) {
-        const postamble = request.postamble;
-        for (let i = 0; i < postamble.length; i++) {
-          writeChunk(destination, postamble[i]);
-        }
+        writePostamble(destination, request.responseState);
       }
       completeWriting(destination);
       flushBuffered(destination);
