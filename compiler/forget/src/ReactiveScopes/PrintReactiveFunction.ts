@@ -144,7 +144,7 @@ function printReactiveValue(writer: Writer, value: ReactiveValue): void {
               instruction: instr,
             })
           );
-          writer.write("");
+          writer.write(`[${value.id}] `);
           printReactiveValue(writer, value.value);
         });
       });

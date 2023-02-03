@@ -109,6 +109,7 @@ export type ReactiveTernaryValue = {
 export type ReactiveSequenceValue = {
   kind: "SequenceExpression";
   instructions: Array<ReactiveInstruction>;
+  id: InstructionId;
   value: ReactiveValue;
   loc: SourceLocation;
 };

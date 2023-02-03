@@ -53,7 +53,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
-        this.visitValue(id, value.value, state);
+        this.visitValue(value.id, value.value, state);
         break;
       }
       default: {

@@ -320,6 +320,7 @@ class Driver {
           initValue = {
             kind: "SequenceExpression",
             instructions: [initBlock.instructions.at(-1)!],
+            id: terminal.id,
             loc: terminal.loc,
             value: {
               kind: "Primitive",
@@ -518,6 +519,7 @@ class Driver {
       const sequence: ReactiveSequenceValue = {
         kind: "SequenceExpression",
         instructions: instructions.slice(0, -1),
+        id: instr.id,
         value: instr.value,
         loc: loc,
       };
@@ -569,7 +571,8 @@ class Driver {
             })
           );
         }
-        const place = leftInstructions.at(-1)!.lvalue!.place;
+        const lastInstruction = leftInstructions.at(-1)!;
+        const place = lastInstruction.lvalue!.place;
 
         let left: ReactiveValue;
         if (leftInstructions.length === 1) {
@@ -578,7 +581,8 @@ class Driver {
           const sequence: ReactiveSequenceValue = {
             kind: "SequenceExpression",
             instructions: leftInstructions.slice(0, -1),
-            value: leftInstructions.at(-1)!.value,
+            id: lastInstruction.id,
+            value: lastInstruction.value,
             loc: terminal.loc,
           };
           left = sequence;
