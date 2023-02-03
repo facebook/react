@@ -63,77 +63,73 @@ type TypeEquation = {
   right: Type;
 };
 
+function equation(left: Type, right: Type): TypeEquation {
+  return {
+    left,
+    right,
+  };
+}
+
 function* generate(
   func: HIRFunction
 ): Generator<TypeEquation, void, undefined> {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      yield {
-        left: phi.type,
-        right: {
-          kind: "Phi",
-          operands: [...phi.operands.values()].map((id) => id.type),
-        },
-      };
+      yield equation(phi.type, {
+        kind: "Phi",
+        operands: [...phi.operands.values()].map((id) => id.type),
+      });
     }
 
     for (const instr of block.instructions) {
-      yield* generateTypeEquation(instr);
+      yield* generateInstructionTypes(instr);
     }
   }
 }
 
-function generateTypeEquation(instr: Instruction): Array<TypeEquation> {
-  const equations: Array<TypeEquation> = [];
-
-  function add(left: Type, right: Type) {
-    equations.push({
-      left,
-      right,
-    });
-  }
-
+function* generateInstructionTypes(
+  instr: Instruction
+): Generator<TypeEquation, void, undefined> {
   const { lvalue, value } = instr;
   const left = lvalue.place.identifier.type;
 
   switch (value.kind) {
     case "JSXText":
     case "Primitive": {
-      add(left, { kind: "Primitive" });
+      yield equation(left, { kind: "Primitive" });
       break;
     }
 
     case "UnaryExpression": {
-      add(left, { kind: "Primitive" });
+      yield equation(left, { kind: "Primitive" });
       break;
     }
 
     case "Identifier": {
-      add(left, value.identifier.type);
+      yield equation(left, value.identifier.type);
       break;
     }
 
     case "BinaryExpression": {
       if (isPrimitiveBinaryOp(value.operator)) {
-        add(value.left.identifier.type, { kind: "Primitive" });
-        add(value.right.identifier.type, { kind: "Primitive" });
+        yield equation(value.left.identifier.type, { kind: "Primitive" });
+        yield equation(value.right.identifier.type, { kind: "Primitive" });
       }
-      add(left, { kind: "Primitive" });
+      yield equation(left, { kind: "Primitive" });
       break;
     }
 
     case "CallExpression": {
-      add(value.callee.identifier.type, { kind: "Function" });
+      yield equation(value.callee.identifier.type, { kind: "Function" });
       break;
     }
 
     case "ObjectExpression": {
       invariant(left !== null, "invald object expression");
-      add(left, { kind: "Object" });
+      yield equation(left, { kind: "Object" });
       break;
     }
   }
-  return equations;
 }
 
 type Substitution = Map<TypeId, Type>;
