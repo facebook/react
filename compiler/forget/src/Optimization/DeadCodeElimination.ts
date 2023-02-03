@@ -5,18 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  BlockId,
-  HIRFunction,
-  Identifier,
-  Instruction,
-  InstructionValue,
-} from "../HIR";
+import { HIRFunction, Identifier, InstructionValue } from "../HIR";
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
+import { assertExhaustive, retainWhere } from "../Utils/utils";
 
 /**
  * Implements dead-code elimination, eliminating instructions whose values are unused.
@@ -26,70 +20,53 @@ import { assertExhaustive } from "../Utils/utils";
 export function deadCodeElimination(fn: HIRFunction): void {
   const used = new Set<Identifier>();
 
-  // Find any phi operands involved in a loop, which might otherwise appear as dead
-  // code when using a reverse iteration.
-  //
-  // A more advanced algorithm could still prune some of these operands
-  // let's keep it simple for now
-  const seen = new Set<BlockId>();
-  for (const [, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      for (const [pred, operand] of phi.operands) {
-        if (!seen.has(pred)) {
-          used.add(operand);
-        }
-      }
-    }
-    seen.add(block.id);
-  }
+  // TODO: ensure a single iteration of the CFG if there are no back-edges,
+  // see EliminateRedundantPhi.ts for an example
+  let lastSize = -1;
+  while (used.size > lastSize) {
+    lastSize = used.size;
 
-  // Iterate blocks in postorder (successors before predecessors, excepting loops)
-  // to find usages before declarations
-  const reversedBlocks = [...fn.body.blocks.values()].reverse();
-  for (const block of reversedBlocks) {
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      used.add(operand.identifier);
-    }
-
-    let nextInstructions: Array<Instruction> | null = null;
-    for (let i = block.instructions.length - 1; i >= 0; i--) {
-      const instr = block.instructions[i]!;
-      if (
-        !used.has(instr.lvalue.place.identifier) &&
-        pruneableValue(instr.value) &&
-        // Can't prune the last value of a value block, that's its value!
-        !(block.kind !== "block" && i === block.instructions.length - 1)
-      ) {
-        continue;
-      }
-      used.add(instr.lvalue.place.identifier);
-      nextInstructions ??= [];
-      nextInstructions.push(instr);
-      for (const operand of eachInstructionValueOperand(instr.value)) {
+    // Iterate blocks in postorder (successors before predecessors, excepting loops)
+    // to find usages before declarations
+    const reversedBlocks = [...fn.body.blocks.values()].reverse();
+    for (const block of reversedBlocks) {
+      for (const operand of eachTerminalOperand(block.terminal)) {
         used.add(operand.identifier);
       }
-    }
-    if (nextInstructions !== null) {
-      nextInstructions.reverse();
-      block.instructions = nextInstructions;
-    }
-    for (const phi of block.phis) {
-      if (used.has(phi.id)) {
-        for (const [, operand] of phi.operands) {
-          used.add(operand);
+
+      for (let i = block.instructions.length - 1; i >= 0; i--) {
+        const instr = block.instructions[i]!;
+        if (
+          !used.has(instr.lvalue.place.identifier) &&
+          pruneableValue(instr.value) &&
+          // Can't prune the last value of a value block, that's its value!
+          !(block.kind !== "block" && i === block.instructions.length - 1)
+        ) {
+          continue;
         }
-      } else {
-        for (const [, operand] of phi.operands) {
-          if (used.has(operand)) {
-            used.add(phi.id);
-            for (const [, operand] of phi.operands) {
-              used.add(operand);
-            }
-            break;
+        used.add(instr.lvalue.place.identifier);
+        for (const operand of eachInstructionValueOperand(instr.value)) {
+          used.add(operand.identifier);
+        }
+      }
+      for (const phi of block.phis) {
+        if (used.has(phi.id)) {
+          for (const [pred, operand] of phi.operands) {
+            used.add(operand);
           }
         }
       }
     }
+  }
+  for (const [, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      if (!used.has(phi.id)) {
+        block.phis.delete(phi);
+      }
+    }
+    retainWhere(block.instructions, (instr) =>
+      used.has(instr.lvalue.place.identifier)
+    );
   }
 }
 

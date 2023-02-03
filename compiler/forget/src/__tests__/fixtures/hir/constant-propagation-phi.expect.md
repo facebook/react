@@ -22,23 +22,9 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const x = undefined;
-  let x$0 = undefined;
   if (a) {
-    2;
-    1;
-
-    const x$1 = 1;
-    x$0 = x$1;
   } else {
-    0;
-    1;
-
-    const x$2 = 1;
-    x$0 = x$2;
   }
-  1;
-  true;
   return b;
 }
 

@@ -12,10 +12,7 @@ function component() {
 ## Code
 
 ```javascript
-function component() {
-  const x = 1;
-  const y = 2;
-}
+function component() {}
 
 ```
       

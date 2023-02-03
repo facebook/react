@@ -25,10 +25,7 @@ function foo(a, b, c) {
   const x = 0;
   while (a) {
     while (b) {
-      while (c) {
-        1;
-        1;
-      }
+      while (c) {}
     }
   }
   return x;

@@ -30,12 +30,10 @@ function foo(cond) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== cond;
   let a;
-  let b;
-  let c;
   if (c_0) {
     a = {};
-    b = {};
-    c = {};
+    let b = {};
+    let c = {};
     while (cond) {
       const z = a;
       a = b;
@@ -45,16 +43,9 @@ function foo(cond) {
     }
     $[0] = cond;
     $[1] = a;
-    $[2] = b;
-    $[3] = c;
   } else {
     a = $[1];
-    b = $[2];
-    c = $[3];
   }
-  a;
-  b;
-  c;
   return a;
 }
 

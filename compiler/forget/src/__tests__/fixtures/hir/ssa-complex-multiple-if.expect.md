@@ -20,18 +20,7 @@ function foo() {
 ## Code
 
 ```javascript
-function foo() {
-  const x = 1;
-  const y = 2;
-  2;
-  true;
-
-  const x$0 = 3;
-  3;
-  false;
-
-  const y$1 = x$0;
-}
+function foo() {}
 
 ```
       

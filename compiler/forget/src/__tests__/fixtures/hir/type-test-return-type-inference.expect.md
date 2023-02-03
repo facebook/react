@@ -34,7 +34,6 @@ function component() {
     y = $[1];
   }
   if (x > y) {
-    const z = {};
   }
 
   const z_0 = foo();

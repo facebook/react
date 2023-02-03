@@ -45,9 +45,6 @@ function component() {
   const v = x.v;
   if (u > v) {
   }
-
-  const y = x.u;
-  const z = x.v;
 }
 
 ```

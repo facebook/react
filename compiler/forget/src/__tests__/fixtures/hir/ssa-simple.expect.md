@@ -12,10 +12,7 @@ function foo() {
 ## Code
 
 ```javascript
-function foo() {
-  const x = 1;
-  const y = 2;
-}
+function foo() {}
 
 ```
       

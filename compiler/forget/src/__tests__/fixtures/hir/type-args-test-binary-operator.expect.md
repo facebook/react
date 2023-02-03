@@ -15,7 +15,6 @@ function component(a, b) {
 ```javascript
 function component(a, b) {
   if (a > b) {
-    const m = {};
   }
 }
 

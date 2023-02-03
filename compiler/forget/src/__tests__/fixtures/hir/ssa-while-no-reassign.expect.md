@@ -18,10 +18,7 @@ function foo() {
 ```javascript
 function foo() {
   const x = 1;
-  while (true) {
-    1;
-    2;
-  }
+  while (true) {}
   return x;
 }
 

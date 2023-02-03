@@ -32,7 +32,6 @@ function component() {
     b = $[1];
   }
   if (a > b) {
-    const m = {};
   }
 }
 

@@ -27,14 +27,7 @@ function foo(a, b, c, d) {
 ## Code
 
 ```javascript
-function foo(a, b, c, d) {
-  const x = 0;
-  true;
-  true;
-
-  const x$0 = a;
-  x$0;
-}
+function foo(a, b, c, d) {}
 
 ```
       

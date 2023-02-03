@@ -21,25 +21,24 @@ function component(a) {
 ```javascript
 function component(a) {
   const $ = React.useMemoCache();
-  const x = "foo";
   const c_0 = $[0] !== a;
-  let x$0;
+  let x;
   if (c_0) {
-    x$0 = undefined;
+    x = undefined;
     if (a) {
-      const x$1 = "bar";
-      x$0 = x$1;
+      const x$0 = "bar";
+      x = x$0;
     } else {
-      const x$2 = "baz";
-      x$0 = x$2;
+      const x$1 = "baz";
+      x = x$1;
     }
     $[0] = a;
-    $[1] = x$0;
+    $[1] = x;
   } else {
-    x$0 = $[1];
+    x = $[1];
   }
 
-  const y = x$0;
+  const y = x;
   mutate(y);
   return y;
 }

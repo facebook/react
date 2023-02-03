@@ -40,7 +40,6 @@ function Component(props) {
       t0 = $[2];
     }
     if (t0) {
-      const _ = <div a={a}></div>;
     }
 
     foo(a, b);
