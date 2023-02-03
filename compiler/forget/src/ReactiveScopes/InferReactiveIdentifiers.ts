@@ -6,6 +6,7 @@
  */
 
 import {
+  Effect,
   Identifier,
   ReactiveFunction,
   ReactiveInstruction,
@@ -44,7 +45,10 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
     if (hasReactiveInput) {
       // all mutating effects must also be marked as reactive
       for (const operand of eachReactiveValueOperand(value)) {
-        if (operand.effect === "store" || operand.effect === "mutate") {
+        if (
+          operand.effect === Effect.Store ||
+          operand.effect === Effect.Mutate
+        ) {
           // Explicitly compare to `false` here, since absence from the
           // map indicates a free variable
           // todo [@mofeiZ] add knowledge about free variables
@@ -78,11 +82,15 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
  * ```
  * This an overestimate when two identifiers have overlapping scope, but
  * one is not actually reactive. However, since the same ReactiveBlock now
- * produces both identifiers, they are effectively both effective (i.e.
+ * produces both identifiers, they are effectively both reactive (i.e.
  * object creation is not stable)
  * e.g.
  * ```javascript
  * function bar(props) {
+ *   // x and y have overlapping mutableRanges, so they share a ReactiveScope
+ *   // (even though they are not aliased together)
+ *   // technically y has no reactive inputs, but it becomes non-stable due to
+ *   // sharing a ReactiveScopeBlock with x
  *   let x = {};
  *   let y = [];
  *   mutate1(x, props);
@@ -101,8 +109,7 @@ export function inferReactiveIdentifiers(
   const actuallyReactiveScopes = new Set<ReactiveScope>();
   let prevScopesSize = -1;
 
-  // TODO(mofeiZ): avoid fixpoint iteration by keeping a map of identifiers
-  // read by a ReactiveScope (that are produced outside of it)
+  // TODO(mofeiZ): avoid fixpoint iteration
   while (actuallyReactiveScopes.size > prevScopesSize) {
     prevScopesSize = actuallyReactiveScopes.size;
     visitReactiveFunction(fn, visitor, reactivityMap);
