@@ -112,6 +112,13 @@ export type StreamingFormat = 0 | 1;
 const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
+type InstructionState = number;
+const NothingSent /*                      */ = 0b0000;
+const SentCompleteSegmentFunction /*      */ = 0b0001;
+const SentCompleteBoundaryFunction /*     */ = 0b0010;
+const SentClientRenderFunction /*         */ = 0b0100;
+const SentStyleInsertionFunction /*       */ = 0b1000;
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
@@ -124,10 +131,7 @@ export type ResponseState = {
 
   // state for script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
-  sentCompleteSegmentFunction: boolean,
-  sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean,
-  sentStyleInsertionFunction: boolean,
+  instructions: InstructionState,
 
   // state for data streaming format
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
@@ -281,10 +285,7 @@ export function createResponseState(
     nextSuspenseID: 0,
     streamingFormat,
     startInlineScript: inlineScriptWithNonce,
-    sentCompleteSegmentFunction: false,
-    sentCompleteBoundaryFunction: false,
-    sentClientRenderFunction: false,
-    sentStyleInsertionFunction: false,
+    instructions: NothingSent,
     externalRuntimeConfig: externalRuntimeDesc,
     htmlChunks: null,
     headChunks: null,
@@ -2684,9 +2685,12 @@ export function writeCompletedSegmentInstruction(
     responseState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
-    if (!responseState.sentCompleteSegmentFunction) {
+    if (
+      (responseState.instructions & SentCompleteSegmentFunction) ===
+      NothingSent
+    ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.sentCompleteSegmentFunction = true;
+      responseState.instructions |= SentCompleteSegmentFunction;
       writeChunk(destination, completeSegmentScript1Full);
     } else {
       // Future calls can just reuse the same function.
@@ -2760,22 +2764,31 @@ export function writeCompletedBoundaryInstruction(
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (enableFloat && hasStyleDependencies) {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
-        responseState.sentStyleInsertionFunction = true;
+      if (
+        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        NothingSent
+      ) {
+        responseState.instructions |=
+          SentStyleInsertionFunction & SentCompleteBoundaryFunction;
         writeChunk(
           destination,
           clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
         );
-      } else if (!responseState.sentStyleInsertionFunction) {
-        responseState.sentStyleInsertionFunction = true;
+      } else if (
+        (responseState.instructions & SentStyleInsertionFunction) ===
+        NothingSent
+      ) {
+        responseState.instructions |= SentStyleInsertionFunction;
         writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
       } else {
         writeChunk(destination, completeBoundaryWithStylesScript1Partial);
       }
     } else {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
+      if (
+        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        NothingSent
+      ) {
+        responseState.instructions |= SentCompleteBoundaryFunction;
         writeChunk(destination, completeBoundaryScript1Full);
       } else {
         writeChunk(destination, completeBoundaryScript1Partial);
@@ -2860,9 +2873,12 @@ export function writeClientRenderBoundaryInstruction(
     responseState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
-    if (!responseState.sentClientRenderFunction) {
+    if (
+      (responseState.instructions & SentClientRenderFunction) ===
+      NothingSent
+    ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.sentClientRenderFunction = true;
+      responseState.instructions |= SentClientRenderFunction;
       writeChunk(destination, clientRenderScript1Full);
     } else {
       // Future calls can just reuse the same function.
