@@ -88,6 +88,7 @@ export default class HIRBuilder {
   #current: WipBlock = newBlock(makeBlockId(0), "block");
   #entry: BlockId = makeBlockId(0);
   #scopes: Array<Scope> = [];
+  #context: t.Identifier[];
   #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
     new Map();
   #env: Environment;
@@ -97,8 +98,13 @@ export default class HIRBuilder {
     return this.#env.nextIdentifierId;
   }
 
-  constructor(env: Environment) {
+  get context(): t.Identifier[] {
+    return this.#context;
+  }
+
+  constructor(env: Environment, context: t.Identifier[]) {
     this.#env = env;
+    this.#context = context;
   }
 
   debug(): string {

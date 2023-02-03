@@ -50,10 +50,10 @@ import HIRBuilder, { Environment } from "./HIRBuilder";
  */
 export function lower(
   func: NodePath<t.Function>,
-  capturedRefs?: t.Identifier[]
+  capturedRefs: t.Identifier[] = []
 ): Result<HIRFunction, CompilerError> {
   const env = new Environment();
-  const builder = new HIRBuilder(env);
+  const builder = new HIRBuilder(env, capturedRefs);
   const context: Place[] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -1336,7 +1336,17 @@ function lowerExpression(
       }
       const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
       const captured = gatherCapturedDeps(builder, expr, componentScope);
-      const lowering = lower(expr, captured.identifiers);
+
+      // TODO(gsn): In the future, we could only pass in the context identifiers
+      // that are actually used by this function and it's nested functions, rather
+      // than all context identifiers.
+      //
+      // This isn't a problem in practice because use Babel's scope analysis to
+      // identify the correct references.
+      const lowering = lower(expr, [
+        ...builder.context,
+        ...captured.identifiers,
+      ]);
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {
         lowering

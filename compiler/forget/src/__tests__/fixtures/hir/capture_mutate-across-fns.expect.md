@@ -23,16 +23,16 @@ function component(a) {
   let z;
   if (c_0) {
     z = { a: a };
+    (function () {
+      (function () {
+        z.b = 1;
+      })();
+    })();
     $[0] = a;
     $[1] = z;
   } else {
     z = $[1];
   }
-  (function () {
-    (function () {
-      z.b = 1;
-    })();
-  })();
   return z;
 }
 
