@@ -24,25 +24,21 @@ function component() {
   }
   const x = t0[0];
   const setX = t0[1];
-  const c_1 = $[1] !== setX;
   let handler;
-  if (c_1) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     handler = (v) => setX(v);
-    $[1] = setX;
-    $[2] = handler;
+    $[1] = handler;
   } else {
-    handler = $[2];
+    handler = $[1];
   }
-  const c_3 = $[3] !== handler;
-  let t4;
-  if (c_3) {
-    t4 = <Foo handler={handler}></Foo>;
-    $[3] = handler;
-    $[4] = t4;
+  let t1;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <Foo handler={handler}></Foo>;
+    $[2] = t1;
   } else {
-    t4 = $[4];
+    t1 = $[2];
   }
-  return t4;
+  return t1;
 }
 
 ```

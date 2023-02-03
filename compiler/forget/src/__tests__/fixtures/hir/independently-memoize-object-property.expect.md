@@ -25,16 +25,16 @@ function foo(a, b, c) {
     x = { a: a };
     const c_4 = $[4] !== b;
     const c_5 = $[5] !== c;
-    let t6;
+    let t0;
     if (c_4 || c_5) {
-      t6 = [b, c];
+      t0 = [b, c];
       $[4] = b;
       $[5] = c;
-      $[6] = t6;
+      $[6] = t0;
     } else {
-      t6 = $[6];
+      t0 = $[6];
     }
-    x.y = t6;
+    x.y = t0;
     $[0] = a;
     $[1] = b;
     $[2] = c;

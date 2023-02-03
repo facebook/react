@@ -27,6 +27,7 @@ import {
   flattenReactiveLoops,
   inferReactiveScopeVariables,
   mergeOverlappingReactiveScopes,
+  promoteUsedTemporaries,
   propagateScopeDependencies,
   pruneUnusedLabels,
   pruneUnusedLValues,
@@ -125,6 +126,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PruneUnusedScopes",
+    value: reactiveFunction,
+  });
+
+  promoteUsedTemporaries(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "promoteUsedTemporaries",
     value: reactiveFunction,
   });
 

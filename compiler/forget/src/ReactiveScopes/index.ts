@@ -13,6 +13,7 @@ export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";
 export { printReactiveFunction } from "./PrintReactiveFunction";
+export { promoteUsedTemporaries } from "./PromoteUsedTemporaries";
 export { propagateScopeDependencies } from "./PropagateScopeDependencies";
 export { pruneTemporaryLValues as pruneUnusedLValues } from "./PruneTemporaryLValues";
 export { pruneUnusedLabels } from "./PruneUnusedLabels";

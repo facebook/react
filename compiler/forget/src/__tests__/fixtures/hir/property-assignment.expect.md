@@ -37,16 +37,16 @@ function Component(props) {
   }
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== child;
-  let t5;
+  let t0;
   if (c_3 || c_4) {
-    t5 = <Component data={x}>{child}</Component>;
+    t0 = <Component data={x}>{child}</Component>;
     $[3] = x;
     $[4] = child;
-    $[5] = t5;
+    $[5] = t0;
   } else {
-    t5 = $[5];
+    t0 = $[5];
   }
-  return t5;
+  return t0;
 }
 
 ```

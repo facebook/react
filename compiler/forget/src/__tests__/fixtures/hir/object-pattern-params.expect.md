@@ -37,16 +37,16 @@ function component(t8) {
   }
   const c_4 = $[4] !== y;
   const c_5 = $[5] !== z;
-  let t6;
+  let t0;
   if (c_4 || c_5) {
-    t6 = { y: y, z: z };
+    t0 = { y: y, z: z };
     $[4] = y;
     $[5] = z;
-    $[6] = t6;
+    $[6] = t0;
   } else {
-    t6 = $[6];
+    t0 = $[6];
   }
-  return t6;
+  return t0;
 }
 
 ```

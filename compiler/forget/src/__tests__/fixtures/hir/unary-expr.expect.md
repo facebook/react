@@ -37,14 +37,28 @@ function component(a) {
   const m = !t.t;
   const e = ~t.t;
   const f = typeof t.t;
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
-    $[2] = t2;
+  const c_2 = $[2] !== z;
+  const c_3 = $[3] !== p;
+  const c_4 = $[4] !== q;
+  const c_5 = $[5] !== n;
+  const c_6 = $[6] !== m;
+  const c_7 = $[7] !== e;
+  const c_8 = $[8] !== f;
+  let t0;
+  if (c_2 || c_3 || c_4 || c_5 || c_6 || c_7 || c_8) {
+    t0 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
+    $[2] = z;
+    $[3] = p;
+    $[4] = q;
+    $[5] = n;
+    $[6] = m;
+    $[7] = e;
+    $[8] = f;
+    $[9] = t0;
   } else {
-    t2 = $[2];
+    t0 = $[9];
   }
-  return t2;
+  return t0;
 }
 
 ```

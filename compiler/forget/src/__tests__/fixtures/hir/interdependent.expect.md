@@ -56,16 +56,16 @@ function Component(props) {
   }
   const c_4 = $[4] !== a;
   const c_5 = $[5] !== b;
-  let t6;
+  let t0;
   if (c_4 || c_5) {
-    t6 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b}></Foo>;
     $[4] = a;
     $[5] = b;
-    $[6] = t6;
+    $[6] = t0;
   } else {
-    t6 = $[6];
+    t0 = $[6];
   }
-  return t6;
+  return t0;
 }
 
 function compute() {}

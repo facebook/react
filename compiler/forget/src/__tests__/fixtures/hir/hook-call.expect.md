@@ -34,33 +34,27 @@ function Component(props) {
   } else {
     x = $[0];
   }
-  const c_1 = $[1] !== x;
   let y;
-  if (c_1) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = useFreeze(x);
-    $[1] = x;
-    $[2] = y;
+    $[1] = y;
   } else {
-    y = $[2];
+    y = $[1];
   }
   foo(y, x);
-  const c_3 = $[3] !== x;
-  const c_4 = $[4] !== y;
-  let t5;
-  if (c_3 || c_4) {
-    t5 = (
+  let t0;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = (
       <Component>
         {x}
         {y}
       </Component>
     );
-    $[3] = x;
-    $[4] = y;
-    $[5] = t5;
+    $[2] = t0;
   } else {
-    t5 = $[5];
+    t0 = $[2];
   }
-  return t5;
+  return t0;
 }
 
 ```

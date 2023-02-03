@@ -32,14 +32,14 @@ function Component(props) {
     a = [];
     b = {};
     foo(a, b);
-    let t2;
+    let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t2 = foo();
-      $[2] = t2;
+      t0 = foo();
+      $[2] = t0;
     } else {
-      t2 = $[2];
+      t0 = $[2];
     }
-    if (t2) {
+    if (t0) {
       const _ = <div a={a}></div>;
     }
 
@@ -50,18 +50,14 @@ function Component(props) {
     a = $[0];
     b = $[1];
   }
-  const c_3 = $[3] !== a;
-  const c_4 = $[4] !== b;
-  let t5;
-  if (c_3 || c_4) {
-    t5 = <div a={a} b={b}></div>;
-    $[3] = a;
-    $[4] = b;
-    $[5] = t5;
+  let t1;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <div a={a} b={b}></div>;
+    $[3] = t1;
   } else {
-    t5 = $[5];
+    t1 = $[3];
   }
-  return t5;
+  return t1;
 }
 
 ```

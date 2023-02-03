@@ -45,18 +45,16 @@ function Component(props) {
   } else {
     y = $[2];
   }
-  const c_4 = $[4] !== x$0;
-  const c_5 = $[5] !== y;
-  let t6;
-  if (c_4 || c_5) {
-    t6 = <Component x={x$0} y={y}></Component>;
-    $[4] = x$0;
-    $[5] = y;
-    $[6] = t6;
+  const c_4 = $[4] !== y;
+  let t0;
+  if (c_4) {
+    t0 = <Component x={x$0} y={y}></Component>;
+    $[4] = y;
+    $[5] = t0;
   } else {
-    t6 = $[6];
+    t0 = $[5];
   }
-  return t6;
+  return t0;
 }
 
 ```

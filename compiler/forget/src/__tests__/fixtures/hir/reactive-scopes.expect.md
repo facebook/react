@@ -37,15 +37,15 @@ function f(a, b) {
     x = $[2];
   }
   const c_3 = $[3] !== x;
-  let t4;
+  let t0;
   if (c_3) {
-    t4 = <div>{x}</div>;
+    t0 = <div>{x}</div>;
     $[3] = x;
-    $[4] = t4;
+    $[4] = t0;
   } else {
-    t4 = $[4];
+    t0 = $[4];
   }
-  return t4;
+  return t0;
 }
 
 ```

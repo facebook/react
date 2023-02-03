@@ -38,18 +38,16 @@ function component() {
   } else {
     o = $[1];
   }
-  const c_2 = $[2] !== o;
   let x;
-  if (c_2) {
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     x.t = p;
 
     const z = x.t;
     x.t = o;
-    $[2] = o;
-    $[3] = x;
+    $[2] = x;
   } else {
-    x = $[3];
+    x = $[2];
   }
 
   const y = x.t;

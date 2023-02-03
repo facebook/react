@@ -28,19 +28,17 @@ function sequence(props) {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== t0;
   let x;
-  if (c_1) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     x = t0;
     while ((foo(), true)) {
       foo();
       2;
       x = 2;
     }
-    $[1] = t0;
-    $[2] = x;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   return x;
 }

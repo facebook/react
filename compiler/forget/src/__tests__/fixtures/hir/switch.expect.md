@@ -69,16 +69,16 @@ function Component(props) {
   y$0.push(props.p4);
   const c_7 = $[7] !== y$0;
   const c_8 = $[8] !== child;
-  let t9;
+  let t0;
   if (c_7 || c_8) {
-    t9 = <Component data={y$0}>{child}</Component>;
+    t0 = <Component data={y$0}>{child}</Component>;
     $[7] = y$0;
     $[8] = child;
-    $[9] = t9;
+    $[9] = t0;
   } else {
-    t9 = $[9];
+    t0 = $[9];
   }
-  return t9;
+  return t0;
 }
 
 ```

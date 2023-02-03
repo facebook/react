@@ -48,9 +48,9 @@ function getNativeLogFunction(level) {
 function getNativeLogFunction(level) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== level;
-  let t1;
+  let t0;
   if (c_0) {
-    t1 = function () {
+    t0 = function () {
       let str;
       if (arguments.length === 1 && typeof arguments[0] === "string") {
         str = arguments[0];
@@ -86,11 +86,11 @@ function getNativeLogFunction(level) {
       global.nativeLoggingHook(str, logLevel);
     };
     $[0] = level;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  return t1;
+  return t0;
 }
 
 ```

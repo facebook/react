@@ -27,32 +27,28 @@ function Foo(props) {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== t0;
-  let t2;
-  if (c_1) {
-    t2 = <div>{t0}</div>;
-    $[1] = t0;
-    $[2] = t2;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <div>{t0}</div>;
+    $[1] = t1;
   } else {
-    t2 = $[2];
+    t1 = $[1];
   }
-  const c_3 = $[3] !== props.greeting;
-  const c_4 = $[4] !== t2;
-  let t5;
-  if (c_3 || c_4) {
-    t5 = (
+  const c_2 = $[2] !== props.greeting;
+  let t2;
+  if (c_2) {
+    t2 = (
       <>
         Hello {props.greeting}
-        {t2}
+        {t1}
       </>
     );
-    $[3] = props.greeting;
-    $[4] = t2;
-    $[5] = t5;
+    $[2] = props.greeting;
+    $[3] = t2;
   } else {
-    t5 = $[5];
+    t2 = $[3];
   }
-  return t5;
+  return t2;
 }
 
 ```

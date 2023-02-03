@@ -39,15 +39,15 @@ function foo(a, b, c) {
         y = $[5];
       }
       const c_6 = $[6] !== y;
-      let t7;
+      let t0;
       if (c_6) {
-        t7 = <div>{y}</div>;
+        t0 = <div>{y}</div>;
         $[6] = y;
-        $[7] = t7;
+        $[7] = t0;
       } else {
-        t7 = $[7];
+        t0 = $[7];
       }
-      x.push(t7);
+      x.push(t0);
     } else {
       x.push(c);
     }

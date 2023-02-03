@@ -9,7 +9,6 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
-  isPrimitiveType,
   LValue,
   makeInstructionId,
   Place,
@@ -22,6 +21,7 @@ import {
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+import { inferReactiveIdentifiers } from "./InferReactiveIdentifiers";
 import { eachReactiveValueOperand } from "./visitors";
 
 /**
@@ -31,7 +31,7 @@ import { eachReactiveValueOperand } from "./visitors";
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
-  const context = new Context();
+  const context = new Context(inferReactiveIdentifiers(fn));
   if (fn.id !== null) {
     context.declare(fn.id, { kind: DeclKind.Const, id: makeInstructionId(0) });
   }
@@ -57,9 +57,16 @@ type Scopes = Array<ReactiveScope>;
 class Context {
   #declarations: DeclMap = new Map();
   #dependencies: Set<ReactiveScopeDependency> = new Set();
+  #reactiveIdentifiers: Set<Identifier>;
+  // Produces a de-duplicated mapping of Id -> ReactiveScopeDependency
+  // This helps with.. temporaries that are created only for property loads
+  //  but can be generalized to all non-allocating temporaries
   #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
   #scopes: Scopes = [];
 
+  constructor(reactiveIdentifiers: Set<Identifier>) {
+    this.#reactiveIdentifiers = reactiveIdentifiers;
+  }
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
     const previousDependencies = this.#dependencies;
     const scopedDependencies = new Set<ReactiveScopeDependency>();
@@ -95,6 +102,10 @@ class Context {
 
   get #currentScope(): ReactiveScope {
     return this.#scopes.at(-1)!;
+  }
+
+  isReactive(id: Identifier): boolean {
+    return this.#reactiveIdentifiers.has(id);
   }
 
   visitOperand(place: Place): void {
@@ -133,6 +144,8 @@ class Context {
     }
 
     const decl = this.#declarations.get(maybeDependency.place.identifier);
+    // if decl is undefined here, then this is a free var
+    //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
 
     // Any value used after its defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
@@ -323,19 +336,13 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
   visitInstructionValue(context, instr.value, lvalue);
   if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {
-    const range = lvalue.place.identifier.mutableRange;
     // TODO: only assign Const if the value is never reassigned
-    const kind =
-      range.end === range.start + 1
-        ? valueKind(lvalue.place.identifier)
-        : DeclKind.Dynamic;
+    const kind = context.isReactive(lvalue.place.identifier)
+      ? DeclKind.Dynamic
+      : DeclKind.Const;
     context.declare(lvalue.place.identifier, {
       kind,
       id: lvalue.place.identifier.mutableRange.start,
     });
   }
-}
-
-function valueKind(id: Identifier): DeclKind {
-  return isPrimitiveType(id) ? DeclKind.Const : DeclKind.Dynamic;
 }

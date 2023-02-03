@@ -59,16 +59,16 @@ function Component(props) {
   y.push(props.p2);
   const c_5 = $[5] !== x$0;
   const c_6 = $[6] !== y;
-  let t7;
+  let t0;
   if (c_5 || c_6) {
-    t7 = <Component x={x$0} y={y}></Component>;
+    t0 = <Component x={x$0} y={y}></Component>;
     $[5] = x$0;
     $[6] = y;
-    $[7] = t7;
+    $[7] = t0;
   } else {
-    t7 = $[7];
+    t0 = $[7];
   }
-  return t7;
+  return t0;
 }
 
 ```

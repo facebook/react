@@ -98,9 +98,9 @@ function foo(a, b, c) {
   }
   const c_11 = $[11] !== y;
   const c_12 = $[12] !== x$0;
-  let t13;
+  let t0;
   if (c_11 || c_12) {
-    t13 = (
+    t0 = (
       <div>
         {y}
         {x$0}
@@ -108,11 +108,11 @@ function foo(a, b, c) {
     );
     $[11] = y;
     $[12] = x$0;
-    $[13] = t13;
+    $[13] = t0;
   } else {
-    t13 = $[13];
+    t0 = $[13];
   }
-  return t13;
+  return t0;
 }
 
 ```

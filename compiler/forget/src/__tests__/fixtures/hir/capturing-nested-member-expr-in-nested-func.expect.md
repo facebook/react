@@ -20,19 +20,19 @@ function component(a) {
 function component(a) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== a;
-  let t1;
+  let t0;
   if (c_0) {
-    t1 = { a: a };
+    t0 = { a: a };
     $[0] = a;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  const c_2 = $[2] !== t1;
+  const c_2 = $[2] !== t0;
   let z;
   if (c_2) {
-    z = { a: t1 };
-    $[2] = t1;
+    z = { a: t0 };
+    $[2] = t0;
     $[3] = z;
   } else {
     z = $[3];

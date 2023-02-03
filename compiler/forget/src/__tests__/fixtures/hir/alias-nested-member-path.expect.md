@@ -25,25 +25,21 @@ function component() {
   } else {
     z = $[0];
   }
-  const c_1 = $[1] !== z;
   let y;
-  if (c_1) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = {};
     y.z = z;
-    $[1] = z;
-    $[2] = y;
+    $[1] = y;
   } else {
-    y = $[2];
+    y = $[1];
   }
-  const c_3 = $[3] !== y;
   let x;
-  if (c_3) {
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     x.y = y;
-    $[3] = y;
-    $[4] = x;
+    $[2] = x;
   } else {
-    x = $[4];
+    x = $[2];
   }
   return x;
 }

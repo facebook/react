@@ -44,15 +44,15 @@ function foo(a, b, c) {
         y = $[6];
       }
       const c_7 = $[7] !== y;
-      let t8;
+      let t0;
       if (c_7) {
-        t8 = <div>{y}</div>;
+        t0 = <div>{y}</div>;
         $[7] = y;
-        $[8] = t8;
+        $[8] = t0;
       } else {
-        t8 = $[8];
+        t0 = $[8];
       }
-      x.push(t8);
+      x.push(t0);
     }
     $[0] = a;
     $[1] = b;

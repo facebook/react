@@ -185,8 +185,11 @@ function codegenReactiveScope(
       firstOutputIndex = index;
     }
 
-    // TODO @josephsavona: ensure change and temp variables have non-conflicting names
-    output.name ??= `t${index}`;
+    invariant(
+      output.name != null,
+      "Expected identifier '@%s' to be named",
+      output.id
+    );
 
     const name = convertIdentifier(output);
     cx.declare(output);

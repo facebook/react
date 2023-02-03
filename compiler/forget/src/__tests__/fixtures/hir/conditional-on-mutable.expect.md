@@ -61,16 +61,16 @@ function ComponentA(props) {
   }
   const c_5 = $[5] !== a;
   const c_6 = $[6] !== b;
-  let t7;
+  let t0;
   if (c_5 || c_6) {
-    t7 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b}></Foo>;
     $[5] = a;
     $[6] = b;
-    $[7] = t7;
+    $[7] = t0;
   } else {
-    t7 = $[7];
+    t0 = $[7];
   }
-  return t7;
+  return t0;
 }
 
 function ComponentB(props) {
@@ -100,16 +100,16 @@ function ComponentB(props) {
   }
   const c_5 = $[5] !== a;
   const c_6 = $[6] !== b;
-  let t7;
+  let t0;
   if (c_5 || c_6) {
-    t7 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b}></Foo>;
     $[5] = a;
     $[6] = b;
-    $[7] = t7;
+    $[7] = t0;
   } else {
-    t7 = $[7];
+    t0 = $[7];
   }
-  return t7;
+  return t0;
 }
 
 function Foo() {}

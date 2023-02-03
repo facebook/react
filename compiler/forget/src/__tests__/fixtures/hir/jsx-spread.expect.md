@@ -16,35 +16,35 @@ function Component(props) {
 function Component(props) {
   const $ = React.useMemoCache();
   const c_0 = $[0] !== props;
-  let t1;
+  let t0;
   if (c_0) {
-    t1 = props.cond ? props.foo : props.bar;
+    t0 = props.cond ? props.foo : props.bar;
     $[0] = props;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  const c_2 = $[2] !== t1;
-  let t3;
+  const c_2 = $[2] !== t0;
+  let t1;
   if (c_2) {
-    t3 = { bar: t1 };
-    $[2] = t1;
-    $[3] = t3;
+    t1 = { bar: t0 };
+    $[2] = t0;
+    $[3] = t1;
   } else {
-    t3 = $[3];
+    t1 = $[3];
   }
   const c_4 = $[4] !== props;
-  const c_5 = $[5] !== t3;
-  let t6;
+  const c_5 = $[5] !== t1;
+  let t2;
   if (c_4 || c_5) {
-    t6 = <Component {...props} {...t3}></Component>;
+    t2 = <Component {...props} {...t1}></Component>;
     $[4] = props;
-    $[5] = t3;
-    $[6] = t6;
+    $[5] = t1;
+    $[6] = t2;
   } else {
-    t6 = $[6];
+    t2 = $[6];
   }
-  return t6;
+  return t2;
 }
 
 ```

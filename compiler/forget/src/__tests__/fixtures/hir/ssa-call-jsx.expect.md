@@ -36,18 +36,14 @@ function Component(props) {
     a = $[0];
     b = $[1];
   }
-  const c_2 = $[2] !== a;
-  const c_3 = $[3] !== b;
-  let t4;
-  if (c_2 || c_3) {
-    t4 = <div a={a} b={b}></div>;
-    $[2] = a;
-    $[3] = b;
-    $[4] = t4;
+  let t0;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <div a={a} b={b}></div>;
+    $[2] = t0;
   } else {
-    t4 = $[4];
+    t0 = $[2];
   }
-  return t4;
+  return t0;
 }
 
 ```

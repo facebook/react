@@ -74,31 +74,31 @@ function Component(props) {
 
   const count = renderedItems.length;
   const c_5 = $[5] !== count;
-  let t6;
+  let t0;
   if (c_5) {
-    t6 = <h1>{count} Items</h1>;
+    t0 = <h1>{count} Items</h1>;
     $[5] = count;
-    $[6] = t6;
+    $[6] = t0;
   } else {
-    t6 = $[6];
+    t0 = $[6];
   }
-  const c_7 = $[7] !== t6;
+  const c_7 = $[7] !== t0;
   const c_8 = $[8] !== renderedItems;
-  let t9;
+  let t1;
   if (c_7 || c_8) {
-    t9 = (
+    t1 = (
       <div>
-        {t6}
+        {t0}
         {renderedItems}
       </div>
     );
-    $[7] = t6;
+    $[7] = t0;
     $[8] = renderedItems;
-    $[9] = t9;
+    $[9] = t1;
   } else {
-    t9 = $[9];
+    t1 = $[9];
   }
-  return t9;
+  return t1;
 }
 
 ```

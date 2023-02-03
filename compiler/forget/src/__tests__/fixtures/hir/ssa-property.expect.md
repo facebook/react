@@ -23,15 +23,13 @@ function foo() {
   } else {
     x = $[0];
   }
-  const c_1 = $[1] !== x;
   let y;
-  if (c_1) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = {};
     y.x = x;
-    $[1] = x;
-    $[2] = y;
+    $[1] = y;
   } else {
-    y = $[2];
+    y = $[1];
   }
   return y;
 }
