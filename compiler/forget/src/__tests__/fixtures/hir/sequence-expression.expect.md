@@ -19,7 +19,6 @@ function foo() {}
 ```javascript
 function sequence(props) {
   const $ = React.useMemoCache();
-  null;
   Math.max(1, 2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -33,7 +32,6 @@ function sequence(props) {
     x = t0;
     while ((foo(), true)) {
       foo();
-      2;
       x = 2;
     }
     $[1] = x;

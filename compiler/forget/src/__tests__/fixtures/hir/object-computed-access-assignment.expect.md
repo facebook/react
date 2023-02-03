@@ -14,8 +14,6 @@ function foo(a, b, c) {
 ```javascript
 function foo(a, b, c) {
   a[b] = c[b];
-  1;
-  2;
   a[3] = c[b * 4];
 }
 

@@ -20,7 +20,7 @@ function foo() {
   let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     y = 0;
-    for (const x = 100; 10, false; 100) {
+    for (const x = 100; false; 100) {
       y = y + 1;
     }
     $[0] = y;

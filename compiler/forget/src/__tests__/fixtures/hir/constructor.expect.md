@@ -28,8 +28,6 @@ function Component(props) {
     a = [];
     b = {};
     new Foo(a, b);
-
-    const _ = <div a={a}></div>;
     new Foo(b);
     $[0] = a;
     $[1] = b;

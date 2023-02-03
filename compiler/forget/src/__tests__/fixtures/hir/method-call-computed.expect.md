@@ -41,10 +41,6 @@ function foo(a, b, c) {
   } else {
     y = $[3];
   }
-  <div>
-    {x}
-    {y}
-  </div>;
   const c_4 = $[4] !== x;
   const c_5 = $[5] !== y.method;
   const c_6 = $[6] !== b;

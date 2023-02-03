@@ -41,11 +41,10 @@ function Component(props) {
       case true: {
         x.push(props.p2);
         x.push(props.p3);
-        const y$1 = [];
       }
       case false: {
-        const y$2 = x;
-        y$0 = y$2;
+        const y$1 = x;
+        y$0 = y$1;
       }
     }
     $[0] = props.p0;

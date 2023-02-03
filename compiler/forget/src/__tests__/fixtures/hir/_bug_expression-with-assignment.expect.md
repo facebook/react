@@ -15,10 +15,6 @@ function f() {
 
 ```javascript
 function f() {
-  const x = 1;
-
-  const x$0 = 2;
-  4;
   return 6;
 }
 

@@ -28,13 +28,8 @@ function foo(a, b, c, d) {
 
 ```javascript
 function foo(a, b, c, d) {
-  const x = 0;
-  true;
-  true;
-
-  const x$0 = a;
-  x$0;
-  return x$0;
+  const x = a;
+  return x;
 }
 
 ```

@@ -55,7 +55,6 @@ function Component(props) {
     x$0 = $[3];
   }
 
-  const _ = <Component x={x$0}></Component>;
   y.push(props.p2);
   const c_5 = $[5] !== x$0;
   const c_6 = $[6] !== y;

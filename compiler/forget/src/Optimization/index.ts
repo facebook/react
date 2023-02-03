@@ -6,3 +6,4 @@
  */
 
 export { constantPropagation } from "./ConstantPropagation";
+export { deadCodeElimination } from "./DeadCodeElimination";

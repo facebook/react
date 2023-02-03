@@ -36,30 +36,29 @@ function foo(x) {
 
 ```javascript
 function foo(x) {
-  const y = undefined;
   bb1: switch (x) {
     case 0: {
-      const y$0 = 0;
+      const y = 0;
     }
     case 1: {
-      const y$1 = 1;
+      const y = 1;
       break bb1;
     }
     case 2: {
       break bb1;
     }
     case 3: {
-      const y$2 = 3;
+      const y = 3;
       break bb1;
     }
     case 4: {
-      const y$3 = 4;
+      const y = 4;
     }
     case 5: {
-      const y$4 = 5;
+      const y = 5;
     }
     default: {
-      const y$5 = 0;
+      const y = 0;
     }
   }
 }

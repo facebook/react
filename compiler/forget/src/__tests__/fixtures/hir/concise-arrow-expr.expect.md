@@ -22,7 +22,6 @@ function component() {
   } else {
     t0 = $[0];
   }
-  const x = t0[0];
   const setX = t0[1];
   let handler;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {

@@ -112,7 +112,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
     switch (terminal.kind) {
       case "if": {
         const testValue = read(constants, terminal.test);
-        if (testValue !== null && testValue.kind === "Primitive") {
+        if (testValue !== null) {
           hasChanges = true;
           const targetBlockId = Boolean(testValue.value)
             ? terminal.consequent

@@ -16,23 +16,15 @@ function component() {
 ```javascript
 function component() {
   const $ = React.useMemoCache();
-  let x;
+  const x = {};
+  let q;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
-    let q;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      q = {};
-      $[1] = q;
-    } else {
-      q = $[1];
-    }
-    x.t = q;
-    $[0] = x;
+    q = {};
+    $[0] = q;
   } else {
-    x = $[0];
+    q = $[0];
   }
-
-  const z = x.t;
+  x.t = q;
 }
 
 ```

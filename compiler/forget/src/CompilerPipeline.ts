@@ -6,7 +6,6 @@
  */
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { CompilerError } from "./CompilerError";
 import {
   HIRFunction,
   lower,
@@ -18,7 +17,7 @@ import {
   inferMutableRanges,
   inferReferenceEffects,
 } from "./Inference";
-import { constantPropagation } from "./Optimization";
+import { constantPropagation, deadCodeElimination } from "./Optimization";
 import {
   alignReactiveScopesToBlockScopes,
   buildReactiveBlocks,
@@ -70,6 +69,10 @@ export function* run(
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
+
+  // Note: Has to come after infer reference effects because "dead" code may still affect inference
+  deadCodeElimination(hir);
+  yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
 
   inferMutableRanges(hir);
   yield log({ kind: "hir", name: "InferMutableRanges", value: hir });

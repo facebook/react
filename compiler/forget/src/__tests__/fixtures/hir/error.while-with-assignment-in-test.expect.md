@@ -19,7 +19,7 @@ function f(reader) {
 ## Error
 
 ```
-[ReactForget] Todo: (CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare 'value$0'
+[ReactForget] Todo: (CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare 'value'
 ```
           
       

@@ -29,36 +29,35 @@ function Component(props) {
   const $ = React.useMemoCache();
   const cond = props.cond;
   const x = props.x;
-  const a = undefined;
   const c_0 = $[0] !== cond;
   const c_1 = $[1] !== x;
-  let a$0;
+  let a;
   if (c_0 || c_1) {
-    a$0 = undefined;
+    a = undefined;
     if (cond) {
-      const a$1 = x;
-      a$0 = a$1;
+      const a$0 = x;
+      a = a$0;
     } else {
-      let a$2;
+      let a$1;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        a$2 = [];
-        $[3] = a$2;
+        a$1 = [];
+        $[3] = a$1;
       } else {
-        a$2 = $[3];
+        a$1 = $[3];
       }
-      a$0 = a$2;
+      a = a$1;
     }
     $[0] = cond;
     $[1] = x;
-    $[2] = a$0;
+    $[2] = a;
   } else {
-    a$0 = $[2];
+    a = $[2];
   }
 
-  useFreeze(a$0);
-  useFreeze(a$0);
-  call(a$0);
-  return a$0;
+  useFreeze(a);
+  useFreeze(a);
+  call(a);
+  return a;
 }
 
 function useFreeze(x) {}

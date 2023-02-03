@@ -29,19 +29,18 @@ function component(a) {
   } else {
     z = $[1];
   }
-  const x = undefined;
   const c_2 = $[2] !== z;
-  let x$0;
+  let x;
   if (c_2) {
-    x$0 = function () {
+    x = function () {
       z;
     };
     $[2] = z;
-    $[3] = x$0;
+    $[3] = x;
   } else {
-    x$0 = $[3];
+    x = $[3];
   }
-  return x$0;
+  return x;
 }
 
 ```

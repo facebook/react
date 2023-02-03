@@ -29,7 +29,6 @@ function foo(a, b, c) {
   } else {
     x = $[1];
   }
-  <div>{x}</div>;
 
   const method = x.method;
   const c_2 = $[2] !== method;

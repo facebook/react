@@ -22,20 +22,19 @@ function foo() {
 function mutate() {}
 function foo() {
   const $ = React.useMemoCache();
-  const a = {};
-  let c$2;
+  let c$1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const b = {};
     const c = {};
-    const a$0 = b;
-    const b$1 = c;
-    c$2 = a$0;
-    mutate(a$0, b$1);
-    $[0] = c$2;
+    const a = b;
+    const b$0 = c;
+    c$1 = a;
+    mutate(a, b$0);
+    $[0] = c$1;
   } else {
-    c$2 = $[0];
+    c$1 = $[0];
   }
-  return c$2;
+  return c$1;
 }
 
 ```

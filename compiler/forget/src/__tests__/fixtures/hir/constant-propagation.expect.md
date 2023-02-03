@@ -27,18 +27,8 @@ function foo() {
 
 ```javascript
 function foo() {
-  const a = 1;
-  const b = 2;
-  const c = 3;
-  const d = 3;
-  const e = 9;
-  const f = 3;
-  const g = -6;
-
   console.log("foo");
 
-  const h = -6;
-  const i = -6;
   const j = -6;
   return j;
 }

@@ -30,7 +30,6 @@ function component() {
   } else {
     p = $[0];
   }
-  p + p;
   let o;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     o = {};
@@ -38,19 +37,10 @@ function component() {
   } else {
     o = $[1];
   }
-  let x;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
-    x.t = p;
 
-    const z = x.t;
-    x.t = o;
-    $[2] = x;
-  } else {
-    x = $[2];
-  }
-
-  const y = x.t;
+  const x = {};
+  x.t = p;
+  x.t = o;
 }
 
 ```

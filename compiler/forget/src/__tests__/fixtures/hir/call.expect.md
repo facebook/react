@@ -28,7 +28,7 @@ function Component(props) {
     a = [];
     b = {};
     foo(a, b);
-    const _ = <div a={a}></div>;
+
     foo(b);
     $[0] = a;
     $[1] = b;

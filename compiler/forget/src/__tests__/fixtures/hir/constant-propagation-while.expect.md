@@ -18,11 +18,10 @@ function foo() {
 ```javascript
 function foo() {
   const $ = React.useMemoCache();
-  const x = 100;
   let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     y = 0;
-    while ((10, false)) {
+    while (false) {
       y = y + 1;
     }
     $[0] = y;

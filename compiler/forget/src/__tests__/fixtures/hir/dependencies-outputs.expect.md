@@ -33,7 +33,6 @@ function foo(a, b) {
   } else {
     x = $[1];
   }
-  <div>{x}</div>;
 
   const y = [];
   if (x.length) {

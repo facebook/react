@@ -36,7 +36,6 @@ function Component(props) {
     } else {
       x$0 = $[3];
     }
-    const _ = <Component x={x$0}></Component>;
 
     y.push(props.p1);
     $[0] = props.p0;

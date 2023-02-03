@@ -28,7 +28,6 @@ function foo(a, b, c) {
   } else {
     x = $[1];
   }
-  <div>{x}</div>;
   const c_2 = $[2] !== x;
   const c_3 = $[3] !== b;
   let y;
