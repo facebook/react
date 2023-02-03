@@ -21,19 +21,17 @@ import {createCursor, push, pop} from './ReactFiberStack';
 let warnedAboutMissingGetChildContext;
 
 if (__DEV__) {
-  warnedAboutMissingGetChildContext = {};
+  warnedAboutMissingGetChildContext = ({}: {[string]: boolean});
 }
 
-// $FlowFixMe[incompatible-exact]
 export const emptyContextObject: {} = {};
 if (__DEV__) {
   Object.freeze(emptyContextObject);
 }
 
 // A cursor to the current merged context object on the stack.
-const contextStackCursor: StackCursor<Object> = createCursor(
-  emptyContextObject,
-);
+const contextStackCursor: StackCursor<Object> =
+  createCursor(emptyContextObject);
 // A cursor to a boolean indicating whether the context has changed.
 const didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
@@ -98,7 +96,7 @@ function getMaskedContext(
       return instance.__reactInternalMemoizedMaskedChildContext;
     }
 
-    const context = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
@@ -208,8 +206,9 @@ function processChildContext(
     for (const contextKey in childContext) {
       if (!(contextKey in childContextTypes)) {
         throw new Error(
-          `${getComponentNameFromFiber(fiber) ||
-            'Unknown'}.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
+          `${
+            getComponentNameFromFiber(fiber) || 'Unknown'
+          }.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
         );
       }
     }

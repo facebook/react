@@ -67,9 +67,7 @@ export function unstable_requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
-type SchedulerCallback<T> = (
-  didTimeout_DEPRECATED: boolean,
-) =>
+type SchedulerCallback<T> = (didTimeout_DEPRECATED: boolean) =>
   | T
   // May return a continuation
   | SchedulerCallback<T>;
@@ -168,7 +166,7 @@ function runTask<T>(
   }
 }
 
-function handleAbortError(error) {
+function handleAbortError(error: any) {
   // Abort errors are an implementation detail. We don't expose the
   // TaskController to the user, nor do we expose the promise that is returned
   // from `postTask`. So we should suppress them, since there's no way for the

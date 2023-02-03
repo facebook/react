@@ -10,7 +10,7 @@
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 const ReactFlightNativeRelayClientIntegration = {
-  resolveModuleReference(moduleData) {
+  resolveClientReference(moduleData) {
     return new JSResourceReferenceImpl(moduleData);
   },
   preloadModule(moduleReference) {},

@@ -143,7 +143,8 @@ export function loadHookNames(
             }
 
             if (hookNames) {
-              const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
+              const resolvedRecord =
+                ((newRecord: any): ResolvedRecord<HookNames>);
               resolvedRecord.status = Resolved;
               resolvedRecord.value = hookNames;
             } else {

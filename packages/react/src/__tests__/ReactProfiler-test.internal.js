@@ -30,9 +30,12 @@ function loadModules({
 
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
-  ReactFeatureFlags.enableProfilerNestedUpdatePhase = enableProfilerNestedUpdatePhase;
-  ReactFeatureFlags.enableProfilerNestedUpdateScheduledHook = enableProfilerNestedUpdateScheduledHook;
-  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
+  ReactFeatureFlags.enableProfilerNestedUpdatePhase =
+    enableProfilerNestedUpdatePhase;
+  ReactFeatureFlags.enableProfilerNestedUpdateScheduledHook =
+    enableProfilerNestedUpdateScheduledHook;
+  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback =
+    replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
   Scheduler = require('scheduler');

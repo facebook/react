@@ -31,7 +31,6 @@ const immutable = Immutable.fromJS({
     xyz: 1,
   },
 });
-// $FlowFixMe
 const bigInt = BigInt(123); // eslint-disable-line no-undef
 
 export default function UnserializableProps(): React.Node {

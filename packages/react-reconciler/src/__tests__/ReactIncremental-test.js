@@ -2854,7 +2854,7 @@ describe('ReactIncremental', () => {
     jest.resetModules();
     let receivedNonExtensibleObjects;
     // eslint-disable-next-line no-extend-native
-    Map.prototype.set = function(key) {
+    Map.prototype.set = function (key) {
       if (typeof key === 'object' && key !== null) {
         if (!Object.isExtensible(key)) {
           receivedNonExtensibleObjects = true;
@@ -2882,7 +2882,7 @@ describe('ReactIncremental', () => {
     // doesn't cause a failure.
     jest.resetModules();
     // eslint-disable-next-line no-extend-native
-    Map.prototype.set = function(key, value) {
+    Map.prototype.set = function (key, value) {
       if (typeof key === 'object' && key !== null) {
         // A polyfill could do something like this.
         // It would throw if an object is not extensible.

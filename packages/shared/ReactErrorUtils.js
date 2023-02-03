@@ -72,6 +72,7 @@ export function invokeGuardedCallbackAndCatchFirstError<
   F,
   Context,
 >(
+  this: mixed,
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
   context: Context,

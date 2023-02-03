@@ -155,15 +155,19 @@ const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
  * While untrusted script content should be made safe before using this api it will
  * ensure that the script cannot be early terminated or never terminated state
  */
-function escapeBootstrapScriptContent(scriptText) {
+function escapeBootstrapScriptContent(scriptText: string) {
   if (__DEV__) {
     checkHtmlStringCoercion(scriptText);
   }
   return ('' + scriptText).replace(scriptRegex, scriptReplacer);
 }
 const scriptRegex = /(<\/|<)(s)(cript)/gi;
-const scriptReplacer = (match, prefix, s, suffix) =>
-  `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
+const scriptReplacer = (
+  match: string,
+  prefix: string,
+  s: string,
+  suffix: string,
+) => `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
 
 export type BootstrapScriptDescriptor = {
   src: string,
@@ -187,7 +191,7 @@ export function createResponseState(
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
-  const bootstrapChunks = [];
+  const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeDesc = null;
   let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
@@ -737,8 +741,8 @@ const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>');
 
 function pushInnerHTML(
   target: Array<Chunk | PrecomputedChunk>,
-  innerHTML,
-  children,
+  innerHTML: any,
+  children: any,
 ) {
   if (innerHTML != null) {
     if (children != null) {
@@ -775,7 +779,7 @@ let didWarnInvalidOptionChildren = false;
 let didWarnInvalidOptionInnerHTML = false;
 let didWarnSelectedSetOnOption = false;
 
-function checkSelectProp(props, propName) {
+function checkSelectProp(props: any, propName: string) {
   if (__DEV__) {
     const value = props[propName];
     if (value != null) {
@@ -863,7 +867,7 @@ function flattenOptionChildren(children: mixed): string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  Children.forEach((children: any), function(child) {
+  Children.forEach((children: any), function (child) {
     if (child == null) {
       return;
     }
@@ -2147,29 +2151,22 @@ const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
   '<!--$?--><template id="',
 );
 const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
-const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
-  '<!--$!-->',
-);
+const startClientRenderedSuspenseBoundary =
+  stringToPrecomputedChunk('<!--$!-->');
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
-const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  '<template',
-);
-const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
-  '"',
-);
-const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  ' data-dgst="',
-);
-const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  ' data-msg="',
-);
-const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
-  ' data-stck="',
-);
-const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  '></template>',
-);
+const clientRenderedSuspenseBoundaryError1 =
+  stringToPrecomputedChunk('<template');
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial =
+  stringToPrecomputedChunk('"');
+const clientRenderedSuspenseBoundaryError1A =
+  stringToPrecomputedChunk(' data-dgst="');
+const clientRenderedSuspenseBoundaryError1B =
+  stringToPrecomputedChunk(' data-msg="');
+const clientRenderedSuspenseBoundaryError1C =
+  stringToPrecomputedChunk(' data-stck="');
+const clientRenderedSuspenseBoundaryError2 =
+  stringToPrecomputedChunk('></template>');
 
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
@@ -2468,9 +2465,8 @@ const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   styleInsertionFunction + ';$RR("',
 );
-const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
-  '$RR("',
-);
+const completeBoundaryWithStylesScript1Partial =
+  stringToPrecomputedChunk('$RR("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3a = stringToPrecomputedChunk('",');
 const completeBoundaryScript3b = stringToPrecomputedChunk('"');
@@ -2765,6 +2761,7 @@ export function writeInitialResources(
     const {src, integrity} = responseState.externalRuntimeConfig;
     preinitImpl(resources, src, {as: 'script', integrity});
   }
+  // $FlowFixMe[missing-local-annot]
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -2772,7 +2769,7 @@ export function writeInitialResources(
     }
   }
 
-  const target = [];
+  const target: Array<Chunk | PrecomputedChunk> = [];
 
   const {
     charset,
@@ -2889,6 +2886,7 @@ export function writeImmediateResources(
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
+  // $FlowFixMe[missing-local-annot]
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -2896,7 +2894,7 @@ export function writeImmediateResources(
     }
   }
 
-  const target = [];
+  const target: Array<Chunk | PrecomputedChunk> = [];
 
   const {
     charset,

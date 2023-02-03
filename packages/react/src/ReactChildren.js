@@ -34,7 +34,7 @@ function escape(key: string): string {
     '=': '=0',
     ':': '=2',
   };
-  const escapedString = key.replace(escapeRegex, function(match) {
+  const escapedString = key.replace(escapeRegex, function (match) {
     return escaperLookup[match];
   });
 
@@ -138,10 +138,8 @@ function mapIntoArray(
             // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
-                  // eslint-disable-next-line react-internal/safe-string-coercion
-                  '' +
-                    // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                    mappedChild.key,
+                  // $FlowFixMe[unsafe-addition]
+                  '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
                 ) + '/'
               : '') +
             childKey,
@@ -249,9 +247,9 @@ function mapChildren(
   if (children == null) {
     return children;
   }
-  const result = [];
+  const result: Array<React$Node> = [];
   let count = 0;
-  mapIntoArray(children, result, '', '', function(child) {
+  mapIntoArray(children, result, '', '', function (child) {
     return func.call(context, child, count++);
   });
   return result;
@@ -296,7 +294,8 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
-    function() {
+    // $FlowFixMe[missing-this-annot]
+    function () {
       forEachFunc.apply(this, arguments);
       // Don't return anything.
     },

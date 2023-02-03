@@ -115,7 +115,7 @@ if (__DEV__) {
     webview: true,
   };
 
-  validatePropertiesInDevelopment = function(type, props) {
+  validatePropertiesInDevelopment = function (type: string, props: any) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, {
@@ -134,7 +134,7 @@ if (__DEV__) {
   // See https://github.com/facebook/react/issues/11807
   canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
 
-  warnForPropDifference = function(
+  warnForPropDifference = function (
     propName: string,
     serverValue: mixed,
     clientValue: mixed,
@@ -142,12 +142,10 @@ if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
-    const normalizedClientValue = normalizeMarkupForTextOrAttribute(
-      clientValue,
-    );
-    const normalizedServerValue = normalizeMarkupForTextOrAttribute(
-      serverValue,
-    );
+    const normalizedClientValue =
+      normalizeMarkupForTextOrAttribute(clientValue);
+    const normalizedServerValue =
+      normalizeMarkupForTextOrAttribute(serverValue);
     if (normalizedServerValue === normalizedClientValue) {
       return;
     }
@@ -160,19 +158,22 @@ if (__DEV__) {
     );
   };
 
-  warnForExtraAttributes = function(attributeNames: Set<string>) {
+  warnForExtraAttributes = function (attributeNames: Set<string>) {
     if (didWarnInvalidHydration) {
       return;
     }
     didWarnInvalidHydration = true;
     const names = [];
-    attributeNames.forEach(function(name) {
+    attributeNames.forEach(function (name) {
       names.push(name);
     });
     console.error('Extra attributes from the server: %s', names);
   };
 
-  warnForInvalidEventListener = function(registrationName, listener) {
+  warnForInvalidEventListener = function (
+    registrationName: string,
+    listener: any,
+  ) {
     if (listener === false) {
       console.error(
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
@@ -193,7 +194,7 @@ if (__DEV__) {
 
   // Parse the HTML and read it back to normalize the HTML string so that it
   // can be used for comparison.
-  normalizeHTML = function(parent: Element, html: string) {
+  normalizeHTML = function (parent: Element, html: string) {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
@@ -384,9 +385,8 @@ export function createElement(
 
   // We create tags in the namespace of their parent container, except HTML
   // tags get no namespace.
-  const ownerDocument: Document = getOwnerDocumentFromRootContainer(
-    rootContainerElement,
-  );
+  const ownerDocument: Document =
+    getOwnerDocumentFromRootContainer(rootContainerElement);
   let domElement: Element;
   let namespaceURI = parentNamespace;
   if (namespaceURI === HTML_NAMESPACE) {
@@ -669,7 +669,7 @@ export function diffProperties(
       for (styleName in lastStyle) {
         if (lastStyle.hasOwnProperty(styleName)) {
           if (!styleUpdates) {
-            styleUpdates = {};
+            styleUpdates = ({}: {[string]: $FlowFixMe});
           }
           styleUpdates[styleName] = '';
         }
@@ -722,7 +722,7 @@ export function diffProperties(
             (!nextProp || !nextProp.hasOwnProperty(styleName))
           ) {
             if (!styleUpdates) {
-              styleUpdates = {};
+              styleUpdates = ({}: {[string]: string});
             }
             styleUpdates[styleName] = '';
           }
@@ -734,7 +734,7 @@ export function diffProperties(
             lastProp[styleName] !== nextProp[styleName]
           ) {
             if (!styleUpdates) {
-              styleUpdates = {};
+              styleUpdates = ({}: {[string]: $FlowFixMe});
             }
             styleUpdates[styleName] = nextProp[styleName];
           }

@@ -182,14 +182,14 @@ describe('ProfilingCache', () => {
 
     const rootID = store.roots[0];
 
-    const prevCommitData = store.profilerStore.getDataForRoot(rootID)
-      .commitData;
+    const prevCommitData =
+      store.profilerStore.getDataForRoot(rootID).commitData;
     expect(prevCommitData).toHaveLength(4);
 
     utils.exportImportHelper(bridge, store);
 
-    const nextCommitData = store.profilerStore.getDataForRoot(rootID)
-      .commitData;
+    const nextCommitData =
+      store.profilerStore.getDataForRoot(rootID).commitData;
     expect(nextCommitData).toHaveLength(4);
     nextCommitData.forEach((commitData, index) => {
       expect(commitData).toEqual(prevCommitData[index]);
@@ -1094,8 +1094,10 @@ describe('ProfilingCache', () => {
     utils.act(() => setChildUnmounted(true));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
-      .updaters;
+    const updaters = store.profilerStore.getCommitData(
+      store.roots[0],
+      0,
+    ).updaters;
     expect(updaters.length).toEqual(1);
     expect(updaters[0].displayName).toEqual('App');
   });
@@ -1129,8 +1131,10 @@ describe('ProfilingCache', () => {
     utils.act(() => setChildUnmounted(true));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
-      .updaters;
+    const updaters = store.profilerStore.getCommitData(
+      store.roots[0],
+      0,
+    ).updaters;
     expect(updaters.length).toEqual(1);
     expect(updaters[0].displayName).toEqual('App');
   });
@@ -1159,8 +1163,10 @@ describe('ProfilingCache', () => {
     utils.act(() => setChildUnmounted(true));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
-      .updaters;
+    const updaters = store.profilerStore.getCommitData(
+      store.roots[0],
+      0,
+    ).updaters;
     expect(updaters.length).toEqual(1);
     expect(updaters[0].displayName).toEqual('App');
   });

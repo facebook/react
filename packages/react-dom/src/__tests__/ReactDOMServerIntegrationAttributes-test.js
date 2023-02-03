@@ -33,20 +33,16 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itRenders,
-  clientCleanRender,
-  clientRenderOnServerString,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, clientCleanRender, clientRenderOnServerString} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
   });
 
-  describe('property to attribute mapping', function() {
-    describe('string properties', function() {
+  describe('property to attribute mapping', function () {
+    describe('string properties', function () {
       itRenders('simple numbers', async render => {
         const e = await render(<div width={30} />);
         expect(e.getAttribute('width')).toBe('30');
@@ -73,7 +69,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('no string prop with function value', async render => {
-        const e = await render(<div width={function() {}} />, 1);
+        const e = await render(<div width={function () {}} />, 1);
         expect(e.hasAttribute('width')).toBe(false);
       });
 
@@ -83,7 +79,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('boolean properties', function() {
+    describe('boolean properties', function () {
       itRenders('boolean prop with true value', async render => {
         const e = await render(<div hidden={true} />);
         expect(e.getAttribute('hidden')).toBe('');
@@ -143,7 +139,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('no boolean prop with function value', async render => {
-        const e = await render(<div hidden={function() {}} />, 1);
+        const e = await render(<div hidden={function () {}} />, 1);
         expect(e.hasAttribute('hidden')).toBe(false);
       });
 
@@ -153,7 +149,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('download property (combined boolean/string attribute)', function() {
+    describe('download property (combined boolean/string attribute)', function () {
       itRenders('download prop with true value', async render => {
         const e = await render(<a download={true} />);
         expect(e.getAttribute('download')).toBe('');
@@ -195,7 +191,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('no download prop with function value', async render => {
-        const e = await render(<div download={function() {}} />, 1);
+        const e = await render(<div download={function () {}} />, 1);
         expect(e.hasAttribute('download')).toBe(false);
       });
 
@@ -205,7 +201,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('className property', function() {
+    describe('className property', function () {
       itRenders('className prop with string value', async render => {
         const e = await render(<div className="myClassName" />);
         expect(e.getAttribute('class')).toBe('myClassName');
@@ -254,7 +250,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('htmlFor property', function() {
+    describe('htmlFor property', function () {
       itRenders('htmlFor with string value', async render => {
         const e = await render(<div htmlFor="myFor" />);
         expect(e.getAttribute('for')).toBe('myFor');
@@ -287,7 +283,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('numeric properties', function() {
+    describe('numeric properties', function () {
       itRenders(
         'positive numeric property with positive value',
         async render => {
@@ -310,7 +306,7 @@ describe('ReactDOMServerIntegration', () => {
       );
 
       itRenders('no numeric prop with function value', async render => {
-        const e = await render(<ol start={function() {}} />, 1);
+        const e = await render(<ol start={function () {}} />, 1);
         expect(e.hasAttribute('start')).toBe(false);
       });
 
@@ -322,7 +318,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'no positive numeric prop with function value',
         async render => {
-          const e = await render(<input size={function() {}} />, 1);
+          const e = await render(<input size={function () {}} />, 1);
           expect(e.hasAttribute('size')).toBe(false);
         },
       );
@@ -333,7 +329,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('props with special meaning in React', function() {
+    describe('props with special meaning in React', function () {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
@@ -372,7 +368,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('inline styles', function() {
+    describe('inline styles', function () {
       itRenders('simple styles', async render => {
         const e = await render(<div style={{color: 'red', width: '30px'}} />);
         expect(e.style.color).toBe('red');
@@ -469,7 +465,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('aria attributes', function() {
+    describe('aria attributes', function () {
       itRenders('simple strings', async render => {
         const e = await render(<div aria-label="hello" />);
         expect(e.getAttribute('aria-label')).toBe('hello');
@@ -493,7 +489,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('cased attributes', function() {
+    describe('cased attributes', function () {
       itRenders(
         'badly cased aliased HTML attribute with a warning',
         async render => {
@@ -551,7 +547,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('unknown attributes', function() {
+    describe('unknown attributes', function () {
       itRenders('unknown attributes', async render => {
         const e = await render(<div foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');

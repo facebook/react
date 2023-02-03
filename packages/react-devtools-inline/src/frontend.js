@@ -37,6 +37,7 @@ export function createBridge(contentWindow: any, wall?: Wall): FrontendBridge {
   if (wall == null) {
     wall = {
       listen(fn) {
+        // $FlowFixMe[missing-local-annot]
         const onMessage = ({data}) => {
           fn(data);
         };
@@ -62,7 +63,6 @@ export function initialize(
   }: {
     bridge?: FrontendBridge,
     store?: Store,
-    // $FlowFixMe[incompatible-exact]
   } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {

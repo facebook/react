@@ -86,11 +86,12 @@ let bridge: FrontendBridge | null = null;
 let store: Store | null = null;
 let root = null;
 
-const log = (...args) => console.log('[React DevTools]', ...args);
-log.warn = (...args) => console.warn('[React DevTools]', ...args);
-log.error = (...args) => console.error('[React DevTools]', ...args);
+const log = (...args: Array<mixed>) => console.log('[React DevTools]', ...args);
+log.warn = (...args: Array<mixed>) => console.warn('[React DevTools]', ...args);
+log.error = (...args: Array<mixed>) =>
+  console.error('[React DevTools]', ...args);
 
-function debug(methodName: string, ...args) {
+function debug(methodName: string, ...args: Array<mixed>) {
   if (__DEBUG__) {
     console.log(
       `%c[core/standalone] %c${methodName}`,
@@ -166,6 +167,7 @@ function onDisconnected() {
   disconnectedCallback();
 }
 
+// $FlowFixMe[missing-local-annot]
 function onError({code, message}) {
   safeUnmount();
 
@@ -281,7 +283,7 @@ function connectToSocket(socket: WebSocket): {close(): void} {
   initialize(socket);
 
   return {
-    close: function() {
+    close: function () {
       onDisconnected();
     },
   };
@@ -388,7 +390,7 @@ function startServer(
   });
 
   return {
-    close: function() {
+    close: function () {
       connected = null;
       onDisconnected();
       if (startServerTimeoutID !== null) {

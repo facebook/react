@@ -23,9 +23,10 @@ export function isLegacyActEnvironment(fiber: Fiber): boolean {
     // to false.
 
     const isReactActEnvironmentGlobal =
-      // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
-        ? IS_REACT_ACT_ENVIRONMENT
+        ? // $FlowFixMe[cannot-resolve-name]
+          IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
     // $FlowFixMe - Flow doesn't know about jest
@@ -40,8 +41,10 @@ export function isLegacyActEnvironment(fiber: Fiber): boolean {
 export function isConcurrentActEnvironment(): void | boolean {
   if (__DEV__) {
     const isReactActEnvironmentGlobal =
+      // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
-        ? IS_REACT_ACT_ENVIRONMENT
+        ? // $FlowFixMe[cannot-resolve-name]
+          IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
     if (!isReactActEnvironmentGlobal && ReactCurrentActQueue.current !== null) {

@@ -66,7 +66,7 @@ var LOW_PRIORITY_TIMEOUT = 10000;
 var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt;
 
 // Tasks are stored on a min heap
-var taskQueue = [];
+var taskQueue: Array<Task> = [];
 var timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.
@@ -322,7 +322,8 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
-  return function() {
+  // $FlowFixMe[missing-this-annot]
+  return function () {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;

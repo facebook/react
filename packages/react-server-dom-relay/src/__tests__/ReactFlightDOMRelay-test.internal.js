@@ -226,7 +226,7 @@ describe('ReactFlightDOMRelay', () => {
     Foo.prototype = Object.create(Bar.prototype);
     // This is enumerable which some polyfills do.
     Foo.prototype.constructor = Foo;
-    Foo.prototype.method = function() {};
+    Foo.prototype.method = function () {};
 
     expect(() => {
       const transport = [];

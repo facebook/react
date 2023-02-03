@@ -13,7 +13,7 @@ import type {JSResourceReference} from 'JSResourceReference';
 
 import type {ModuleMetaData} from 'ReactFlightNativeRelayClientIntegration';
 
-export type ModuleReference<T> = JSResourceReference<T>;
+export type ClientReference<T> = JSResourceReference<T>;
 
 import {
   parseModelString,
@@ -25,7 +25,7 @@ export {
   requireModule,
 } from 'ReactFlightNativeRelayClientIntegration';
 
-import {resolveModuleReference as resolveModuleReferenceImpl} from 'ReactFlightNativeRelayClientIntegration';
+import {resolveClientReference as resolveClientReferenceImpl} from 'ReactFlightNativeRelayClientIntegration';
 
 import isArray from 'shared/isArray';
 
@@ -37,13 +37,14 @@ export type UninitializedModel = JSONValue;
 
 export type Response = ResponseBase;
 
-export function resolveModuleReference<T>(
+export function resolveClientReference<T>(
   bundlerConfig: BundlerConfig,
   moduleData: ModuleMetaData,
-): ModuleReference<T> {
-  return resolveModuleReferenceImpl(moduleData);
+): ClientReference<T> {
+  return resolveClientReferenceImpl(moduleData);
 }
 
+// $FlowFixMe[missing-local-annot]
 function parseModelRecursively(response: Response, parentObj, key, value) {
   if (typeof value === 'string') {
     return parseModelString(response, parentObj, key, value);

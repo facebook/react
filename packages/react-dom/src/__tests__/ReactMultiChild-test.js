@@ -238,7 +238,7 @@ describe('ReactMultiChild', () => {
 
       function createIterable(array) {
         return {
-          '@@iterator': function() {
+          '@@iterator': function () {
             let i = 0;
             return {
               next() {
@@ -304,8 +304,8 @@ describe('ReactMultiChild', () => {
 
   it('should warn for using generators as children', () => {
     function* Foo() {
-      yield (<h1 key="1">Hello</h1>);
-      yield (<h1 key="2">World</h1>);
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
     }
 
     const div = document.createElement('div');
@@ -325,9 +325,9 @@ describe('ReactMultiChild', () => {
 
   it('should not warn for using generators in legacy iterables', () => {
     const fooIterable = {
-      '@@iterator': function*() {
-        yield (<h1 key="1">Hello</h1>);
-        yield (<h1 key="2">World</h1>);
+      '@@iterator': function* () {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
       },
     };
 
@@ -345,9 +345,9 @@ describe('ReactMultiChild', () => {
 
   it('should not warn for using generators in modern iterables', () => {
     const fooIterable = {
-      [Symbol.iterator]: function*() {
-        yield (<h1 key="1">Hello</h1>);
-        yield (<h1 key="2">World</h1>);
+      [Symbol.iterator]: function* () {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
       },
     };
 

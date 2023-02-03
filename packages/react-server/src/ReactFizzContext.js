@@ -14,10 +14,9 @@ import checkPropTypes from 'shared/checkPropTypes';
 let warnedAboutMissingGetChildContext;
 
 if (__DEV__) {
-  warnedAboutMissingGetChildContext = {};
+  warnedAboutMissingGetChildContext = ({}: {[string]: boolean});
 }
 
-// $FlowFixMe[incompatible-exact]
 export const emptyContextObject: {} = {};
 if (__DEV__) {
   Object.freeze(emptyContextObject);
@@ -32,7 +31,7 @@ export function getMaskedContext(type: any, unmaskedContext: Object): Object {
       return emptyContextObject;
     }
 
-    const context = {};
+    const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
@@ -79,8 +78,9 @@ export function processChildContext(
     for (const contextKey in childContext) {
       if (!(contextKey in childContextTypes)) {
         throw new Error(
-          `${getComponentNameFromType(type) ||
-            'Unknown'}.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
+          `${
+            getComponentNameFromType(type) || 'Unknown'
+          }.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
         );
       }
     }

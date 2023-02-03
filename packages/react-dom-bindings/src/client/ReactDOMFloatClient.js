@@ -201,7 +201,6 @@ function getRootNode(container: Container): FloatRoot {
 
 function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
-  // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
   return currentContainer ? getRootNode(currentContainer) : null;
 }
 
@@ -510,18 +509,11 @@ export function getResource(
     }
     case 'meta': {
       let matcher, propertyString, parentResource;
-      const {
-        charSet,
-        content,
-        httpEquiv,
-        name,
-        itemProp,
-        property,
-      } = pendingProps;
+      const {charSet, content, httpEquiv, name, itemProp, property} =
+        pendingProps;
       const headRoot: Document = getDocumentFromRoot(resourceRoot);
-      const {head: headResources, lastStructuredMeta} = getResourcesFromRoot(
-        headRoot,
-      );
+      const {head: headResources, lastStructuredMeta} =
+        getResourcesFromRoot(headRoot);
       if (typeof charSet === 'string') {
         matcher = 'meta[charset]';
       } else if (typeof content === 'string') {
@@ -539,10 +531,7 @@ export function getResource(
             content,
           )}"]`;
 
-          const parentPropertyPath = property
-            .split(':')
-            .slice(0, -1)
-            .join(':');
+          const parentPropertyPath = property.split(':').slice(0, -1).join(':');
           parentResource = lastStructuredMeta.get(parentPropertyPath);
           if (parentResource) {
             // When using parentResource the matcher is not functional for locating
@@ -792,6 +781,7 @@ export function getResource(
 function preloadPropsFromRawProps(
   rawBorrowedProps: PreloadQualifyingProps,
 ): PreloadProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   return Object.assign({}, rawBorrowedProps);
 }
 
@@ -805,6 +795,7 @@ function titlePropsFromRawProps(
 }
 
 function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   const props: StyleProps = Object.assign({}, rawProps);
   props['data-precedence'] = rawProps.precedence;
   props.precedence = null;
@@ -813,6 +804,7 @@ function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
 }
 
 function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
+  // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
   const props: ScriptProps = Object.assign({}, rawProps);
   return props;
 }
@@ -898,9 +890,8 @@ function createStyleResource(
     }
   }
 
-  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-    href,
-  );
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
   const existingEl = root.querySelector(
     `link[rel="stylesheet"][href="${limitedEscapedHref}"]`,
   );
@@ -1072,9 +1063,8 @@ function createPreloadResource(
   href: string,
   props: PreloadProps,
 ): PreloadResource {
-  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-    href,
-  );
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
   let element: null | Instance | HTMLElement = ownerDocument.querySelector(
     `link[rel="preload"][href="${limitedEscapedHref}"]`,
   );
@@ -1176,23 +1166,19 @@ function acquireHeadResource(resource: HeadResource): Instance {
       }
       case 'link': {
         const linkProps: LinkProps = (props: any);
-        const limitedEscapedRel = escapeSelectorAttributeValueInsideDoubleQuotes(
-          linkProps.rel,
-        );
-        const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-          linkProps.href,
-        );
+        const limitedEscapedRel =
+          escapeSelectorAttributeValueInsideDoubleQuotes(linkProps.rel);
+        const limitedEscapedHref =
+          escapeSelectorAttributeValueInsideDoubleQuotes(linkProps.href);
         let selector = `link[rel="${limitedEscapedRel}"][href="${limitedEscapedHref}"]`;
         if (typeof linkProps.sizes === 'string') {
-          const limitedEscapedSizes = escapeSelectorAttributeValueInsideDoubleQuotes(
-            linkProps.sizes,
-          );
+          const limitedEscapedSizes =
+            escapeSelectorAttributeValueInsideDoubleQuotes(linkProps.sizes);
           selector += `[sizes="${limitedEscapedSizes}"]`;
         }
         if (typeof linkProps.media === 'string') {
-          const limitedEscapedMedia = escapeSelectorAttributeValueInsideDoubleQuotes(
-            linkProps.media,
-          );
+          const limitedEscapedMedia =
+            escapeSelectorAttributeValueInsideDoubleQuotes(linkProps.media);
           selector += `[media="${limitedEscapedMedia}"]`;
         }
         const existingEl = root.querySelector(selector);
@@ -1318,7 +1304,9 @@ function acquireScriptResource(resource: ScriptResource): Instance {
 }
 
 function attachLoadListeners(instance: Instance, resource: StyleResource) {
-  const listeners = {};
+  const listeners: {
+    [string]: () => mixed,
+  } = {};
   listeners.load = onResourceLoad.bind(
     null,
     instance,

@@ -52,13 +52,13 @@ let supportsUserTiming =
 let supportsUserTimingV3 = false;
 if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
-  const markOptions = {};
+  const markOptions = ({}: {startTime?: number});
   Object.defineProperty(markOptions, 'startTime', {
-    get: function() {
+    get: function () {
       supportsUserTimingV3 = true;
       return 0;
     },
-    set: function() {},
+    set: function () {},
   });
 
   try {
@@ -204,7 +204,7 @@ export function createProfilingHooks({
     }
   }
 
-  function markAndClear(markName) {
+  function markAndClear(markName: string) {
     // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
     ((performanceTarget: any): Performance).mark(markName);
     ((performanceTarget: any): Performance).clearMarks(markName);
@@ -237,10 +237,8 @@ export function createProfilingHooks({
     currentReactMeasuresStack.push(reactMeasure);
 
     if (currentTimelineData) {
-      const {
-        batchUIDToMeasuresMap,
-        laneToReactMeasureMap,
-      } = currentTimelineData;
+      const {batchUIDToMeasuresMap, laneToReactMeasureMap} =
+        currentTimelineData;
 
       let reactMeasures = batchUIDToMeasuresMap.get(currentBatchUID);
       if (reactMeasures != null) {

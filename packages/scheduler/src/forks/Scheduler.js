@@ -329,7 +329,8 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
-  return function() {
+  // $FlowFixMe[missing-this-annot]
+  return function () {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
@@ -629,7 +630,9 @@ if (typeof localSetImmediate === 'function') {
   };
 }
 
-function requestHostCallback(callback) {
+function requestHostCallback(
+  callback: (hasTimeRemaining: boolean, initialTime: number) => boolean,
+) {
   scheduledHostCallback = callback;
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
@@ -637,7 +640,10 @@ function requestHostCallback(callback) {
   }
 }
 
-function requestHostTimeout(callback, ms: number) {
+function requestHostTimeout(
+  callback: (currentTime: number) => void,
+  ms: number,
+) {
   // $FlowFixMe[not-a-function] nullable value
   taskTimeoutID = localSetTimeout(() => {
     callback(getCurrentTime());

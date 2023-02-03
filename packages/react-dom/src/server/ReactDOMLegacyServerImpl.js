@@ -43,12 +43,14 @@ function renderToStringImpl(
   let fatalError = null;
   let result = '';
   const destination = {
+    // $FlowFixMe[missing-local-annot]
     push(chunk) {
       if (chunk !== null) {
         result += chunk;
       }
       return true;
     },
+    // $FlowFixMe[missing-local-annot]
     destroy(error) {
       didFatal = true;
       fatalError = error;

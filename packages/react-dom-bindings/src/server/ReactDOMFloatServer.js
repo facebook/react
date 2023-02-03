@@ -697,10 +697,7 @@ export function resourcesFromElement(type: string, props: Props): boolean {
           const {property} = props;
           key = 'property::' + property + contentKey;
           propertyPath = property;
-          const parentPath = property
-            .split(':')
-            .slice(0, -1)
-            .join(':');
+          const parentPath = property.split(':').slice(0, -1).join(':');
           const parentResource = resources.structuredMetaKeys.get(parentPath);
           if (parentResource) {
             key = parentResource.key + '::child::' + key;
@@ -782,11 +779,9 @@ export function resourcesFromLink(props: Props): boolean {
         if (__DEV__) {
           validateLinkPropsForStyleResource(props);
         }
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let preloadResource = resources.preloadsMap.get(href);
         if (!preloadResource) {
           preloadResource = createPreloadResource(
-            // $FlowFixMe[incompatible-call] found when upgrading Flow
             resources,
             href,
             'style',
@@ -937,7 +932,6 @@ export function resourcesFromScript(props: Props): boolean {
       let preloadResource = resources.preloadsMap.get(src);
       if (!preloadResource) {
         preloadResource = createPreloadResource(
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           resources,
           src,
           'script',

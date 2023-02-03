@@ -26,8 +26,6 @@ if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
-const {measure, findNodeAtPoint} = nativeFabricUIManager;
-
 let createHierarchy;
 let getHostNode;
 let getHostProps;
@@ -39,7 +37,8 @@ let getOwnerHierarchy;
 let traverseOwnerTreeUp;
 
 if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
-  createHierarchy = function(fiberHierarchy) {
+  // $FlowFixMe[missing-local-annot]
+  createHierarchy = function (fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentNameFromType(fiber.type),
       getInspectorData: findNodeHandle => {
@@ -55,7 +54,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
               hostFiber.stateNode.node;
 
             if (shadowNode) {
-              measure(shadowNode, callback);
+              nativeFabricUIManager.measure(shadowNode, callback);
             } else {
               return UIManager.measure(
                 getHostNode(fiber, findNodeHandle),
@@ -68,7 +67,8 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     }));
   };
 
-  getHostNode = function(fiber: Fiber | null, findNodeHandle) {
+  // $FlowFixMe[missing-local-annot]
+  getHostNode = function (fiber: Fiber | null, findNodeHandle) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
@@ -84,7 +84,8 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return null;
   };
 
-  getHostProps = function(fiber) {
+  // $FlowFixMe[missing-local-annot]
+  getHostProps = function (fiber) {
     const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
@@ -92,7 +93,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return emptyObject;
   };
 
-  getInspectorDataForInstance = function(
+  getInspectorDataForInstance = function (
     closestInstance: Fiber | null,
   ): InspectorData {
     // Handle case where user clicks outside of ReactNative
@@ -122,13 +123,14 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     };
   };
 
-  getOwnerHierarchy = function(instance: any) {
+  getOwnerHierarchy = function (instance: any) {
     const hierarchy = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
   };
 
-  lastNonHostInstance = function(hierarchy) {
+  // $FlowFixMe[missing-local-annot]
+  lastNonHostInstance = function (hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
 
@@ -139,7 +141,8 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     return hierarchy[0];
   };
 
-  traverseOwnerTreeUp = function(hierarchy, instance: any) {
+  // $FlowFixMe[missing-local-annot]
+  traverseOwnerTreeUp = function (hierarchy, instance: any) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);
@@ -157,7 +160,7 @@ let getInspectorDataForViewAtPoint: (
 ) => void;
 
 if (__DEV__) {
-  getInspectorDataForViewTag = function(viewTag: number): Object {
+  getInspectorDataForViewTag = function (viewTag: number): Object {
     const closestInstance = getClosestInstanceFromNode(viewTag);
 
     // Handle case where user clicks outside of ReactNative
@@ -186,7 +189,7 @@ if (__DEV__) {
     };
   };
 
-  getInspectorDataForViewAtPoint = function(
+  getInspectorDataForViewAtPoint = function (
     findNodeHandle: (componentOrHandle: any) => ?number,
     inspectedView: Object,
     locationX: number,
@@ -197,7 +200,7 @@ if (__DEV__) {
 
     if (inspectedView._internalInstanceHandle != null) {
       // For Fabric we can look up the instance handle directly and measure it.
-      findNodeAtPoint(
+      nativeFabricUIManager.findNodeAtPoint(
         inspectedView._internalInstanceHandle.stateNode.node,
         locationX,
         locationY,
@@ -217,12 +220,11 @@ if (__DEV__) {
           const nativeViewTag =
             internalInstanceHandle.stateNode.canonical._nativeTag;
 
-          measure(
+          nativeFabricUIManager.measure(
             internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
-              const inspectorData = getInspectorDataForInstance(
-                closestInstance,
-              );
+              const inspectorData =
+                getInspectorDataForInstance(closestInstance);
               callback({
                 ...inspectorData,
                 pointerY: locationY,

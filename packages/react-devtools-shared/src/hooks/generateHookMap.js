@@ -63,7 +63,7 @@ export function generateHookMap(sourceAST: File): HookMap {
   const hookNamesMapping = getHookNamesMappingFromAST(sourceAST);
   const namesMap: Map<string, number> = new Map();
   const names = [];
-  const mappings = [];
+  const mappings: Array<HookMapLine> = [];
 
   let currentLine = null;
   hookNamesMapping.forEach(({name, start}) => {

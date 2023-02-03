@@ -48,14 +48,14 @@ describe('ReactCompositeComponent-state', () => {
 
       UNSAFE_componentWillMount() {
         this.peekAtState('componentWillMount-start');
-        this.setState(function(state) {
+        this.setState(function (state) {
           this.peekAtState('before-setState-sunrise', state);
         });
         this.setState(
           {color: 'sunrise'},
           this.peekAtCallback('setState-sunrise'),
         );
-        this.setState(function(state) {
+        this.setState(function (state) {
           this.peekAtState('after-setState-sunrise', state);
         });
         this.peekAtState('componentWillMount-after-sunrise');
@@ -63,7 +63,7 @@ describe('ReactCompositeComponent-state', () => {
           {color: 'orange'},
           this.peekAtCallback('setState-orange'),
         );
-        this.setState(function(state) {
+        this.setState(function (state) {
           this.peekAtState('after-setState-orange', state);
         });
         this.peekAtState('componentWillMount-end');
@@ -81,18 +81,18 @@ describe('ReactCompositeComponent-state', () => {
       UNSAFE_componentWillReceiveProps(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
-          this.setState(function(state) {
+          this.setState(function (state) {
             this.peekAtState('before-setState-receiveProps', state);
             return {color: newProps.nextColor};
           });
           // No longer a public API, but we can test that it works internally by
           // reaching into the updater.
           this.updater.enqueueReplaceState(this, {color: undefined});
-          this.setState(function(state) {
+          this.setState(function (state) {
             this.peekAtState('before-setState-again-receiveProps', state);
             return {color: newProps.nextColor};
           }, this.peekAtCallback('setState-receiveProps'));
-          this.setState(function(state) {
+          this.setState(function (state) {
             this.peekAtState('after-setState-receiveProps', state);
           });
         }
@@ -310,7 +310,7 @@ describe('ReactCompositeComponent-state', () => {
     }).not.toThrow();
   });
 
-  it('should update state when called from child cWRP', function() {
+  it('should update state when called from child cWRP', function () {
     const log = [];
     class Parent extends React.Component {
       state = {value: 'one'};
@@ -350,7 +350,7 @@ describe('ReactCompositeComponent-state', () => {
     ]);
   });
 
-  it('should merge state when sCU returns false', function() {
+  it('should merge state when sCU returns false', function () {
     const log = [];
     class Test extends React.Component {
       state = {a: 0};

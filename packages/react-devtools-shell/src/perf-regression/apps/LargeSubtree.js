@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 
-function generateArray(size) {
+function generateArray(size: number) {
   return Array.from({length: size}, () => Math.floor(Math.random() * size));
 }
 
@@ -24,9 +24,9 @@ export default function LargeSubtree(): React.Node {
     window.requestAnimationFrame(() => {
       const afterRenderTime = performance.now();
       console.log(
-        `Time spent on ${
-          showList ? 'unmounting' : 'mounting'
-        } the subtree: ${afterRenderTime - startTime}ms`,
+        `Time spent on ${showList ? 'unmounting' : 'mounting'} the subtree: ${
+          afterRenderTime - startTime
+        }ms`,
       );
     });
   };

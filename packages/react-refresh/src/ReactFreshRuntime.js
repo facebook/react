@@ -47,16 +47,14 @@ const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
-const allFamiliesByType:
-  | WeakMap<any, Family>
-  | Map<any, Family> = new PossiblyWeakMap();
-const allSignaturesByType: // $FlowFixMe
-WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
+const allFamiliesByType: WeakMap<any, Family> | Map<any, Family> =
+  new PossiblyWeakMap();
+const allSignaturesByType: WeakMap<any, Signature> | Map<any, Signature> =
+  new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
-const updatedFamiliesByType:
-  | WeakMap<any, Family>
-  | Map<any, Family> = new PossiblyWeakMap();
+const updatedFamiliesByType: WeakMap<any, Family> | Map<any, Family> =
+  new PossiblyWeakMap();
 
 // This is cleared on every performReactRefresh() call.
 // It is an array of [Family, NextType] tuples.
@@ -123,7 +121,7 @@ function computeFullKey(signature: Signature): string {
   return fullKey;
 }
 
-function haveEqualSignatures(prevType, nextType) {
+function haveEqualSignatures(prevType: any, nextType: any) {
   const prevSignature = allSignaturesByType.get(prevType);
   const nextSignature = allSignaturesByType.get(nextType);
 
@@ -143,11 +141,11 @@ function haveEqualSignatures(prevType, nextType) {
   return true;
 }
 
-function isReactClass(type) {
+function isReactClass(type: any) {
   return type.prototype && type.prototype.isReactComponent;
 }
 
-function canPreserveStateBetween(prevType, nextType) {
+function canPreserveStateBetween(prevType: any, nextType: any) {
   if (isReactClass(prevType) || isReactClass(nextType)) {
     return false;
   }
@@ -157,7 +155,7 @@ function canPreserveStateBetween(prevType, nextType) {
   return false;
 }
 
-function resolveFamily(type) {
+function resolveFamily(type: any) {
   // Only check updated types to keep lookups fast.
   return updatedFamiliesByType.get(type);
 }
@@ -179,7 +177,7 @@ function cloneSet<T>(set: Set<T>): Set<T> {
 }
 
 // This is a safety mechanism to protect against rogue getters and Proxies.
-function getProperty(object, property) {
+function getProperty(object: any, property: string) {
   try {
     return object[property];
   } catch (err) {
@@ -489,7 +487,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
 
     // Here, we just want to get a reference to scheduleRefresh.
     const oldInject = hook.inject;
-    hook.inject = function(injected) {
+    hook.inject = function (this: mixed, injected) {
       const id = oldInject.apply(this, arguments);
       if (
         typeof injected.scheduleRefresh === 'function' &&
@@ -517,7 +515,8 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // We also want to track currently mounted roots.
     const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
     const oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || (() => {});
-    hook.onScheduleFiberRoot = function(
+    hook.onScheduleFiberRoot = function (
+      this: mixed,
       id: number,
       root: FiberRoot,
       children: ReactNodeList,
@@ -532,7 +531,8 @@ export function injectIntoGlobalHook(globalObject: any): void {
       }
       return oldOnScheduleFiberRoot.apply(this, arguments);
     };
-    hook.onCommitFiberRoot = function(
+    hook.onCommitFiberRoot = function (
+      this: mixed,
       id: number,
       root: FiberRoot,
       maybePriorityLevel: mixed,
@@ -645,7 +645,7 @@ export function createSignatureFunctionForTransform(): <T>(
     let savedType;
     let hasCustomHooks;
     let didCollectHooks = false;
-    return function<T>(
+    return function <T>(
       type: T,
       key: string,
       forceReset?: boolean,

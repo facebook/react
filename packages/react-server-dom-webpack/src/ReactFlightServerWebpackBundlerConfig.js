@@ -13,10 +13,12 @@ type WebpackMap = {
   },
 };
 
-export type BundlerConfig = WebpackMap;
+export type BundlerConfig = {
+  clientManifest: WebpackMap,
+};
 
 // eslint-disable-next-line no-unused-vars
-export type ModuleReference<T> = {
+export type ClientReference<T> = {
   $$typeof: symbol,
   filepath: string,
   name: string,
@@ -30,11 +32,13 @@ export type ModuleMetaData = {
   async: boolean,
 };
 
-export type ModuleKey = string;
+export type ClientReferenceKey = string;
 
-const MODULE_TAG = Symbol.for('react.module.reference');
+const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
 
-export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+export function getClientReferenceKey(
+  reference: ClientReference<any>,
+): ClientReferenceKey {
   return (
     reference.filepath +
     '#' +
@@ -43,17 +47,17 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
   );
 }
 
-export function isModuleReference(reference: Object): boolean {
-  return reference.$$typeof === MODULE_TAG;
+export function isClientReference(reference: Object): boolean {
+  return reference.$$typeof === CLIENT_REFERENCE_TAG;
 }
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  moduleReference: ModuleReference<T>,
+  clientReference: ClientReference<T>,
 ): ModuleMetaData {
   const resolvedModuleData =
-    config[moduleReference.filepath][moduleReference.name];
-  if (moduleReference.async) {
+    config.clientManifest[clientReference.filepath][clientReference.name];
+  if (clientReference.async) {
     return {
       id: resolvedModuleData.id,
       chunks: resolvedModuleData.chunks,

@@ -10,9 +10,9 @@
 declare var $$$hostConfig: any;
 
 export opaque type BundlerConfig = mixed;
-export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-unused-vars
+export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
 export opaque type ModuleMetaData: any = mixed;
-export opaque type ModuleKey: any = mixed;
-export const isModuleReference = $$$hostConfig.isModuleReference;
-export const getModuleKey = $$$hostConfig.getModuleKey;
+export opaque type ClientReferenceKey: any = mixed;
+export const isClientReference = $$$hostConfig.isClientReference;
+export const getClientReferenceKey = $$$hostConfig.getClientReferenceKey;
 export const resolveModuleMetaData = $$$hostConfig.resolveModuleMetaData;

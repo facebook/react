@@ -59,9 +59,10 @@ export default function SettingsModal(_: {}): React.Node {
 
 function SettingsModalImpl(_: {}) {
   const {setIsModalShowing} = useContext(SettingsModalContext);
-  const dismissModal = useCallback(() => setIsModalShowing(false), [
-    setIsModalShowing,
-  ]);
+  const dismissModal = useCallback(
+    () => setIsModalShowing(false),
+    [setIsModalShowing],
+  );
 
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::selectedSettingsTabID',

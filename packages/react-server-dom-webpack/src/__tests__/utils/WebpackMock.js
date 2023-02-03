@@ -13,8 +13,8 @@ const Module = require('module');
 let webpackModuleIdx = 0;
 const webpackModules = {};
 const webpackErroredModules = {};
-const webpackMap = {};
-global.__webpack_require__ = function(id) {
+const webpackMap = {clientManifest: {}};
+global.__webpack_require__ = function (id) {
   if (webpackErroredModules[id]) {
     throw webpackErroredModules[id];
   }
@@ -44,7 +44,7 @@ exports.clientModuleError = function clientModuleError(moduleError) {
   const idx = '' + webpackModuleIdx++;
   webpackErroredModules[idx] = moduleError;
   const path = url.pathToFileURL(idx).href;
-  webpackMap[path] = {
+  webpackMap.clientManifest[path] = {
     '': {
       id: idx,
       chunks: [],
@@ -65,7 +65,7 @@ exports.clientExports = function clientExports(moduleExports) {
   const idx = '' + webpackModuleIdx++;
   webpackModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
-  webpackMap[path] = {
+  webpackMap.clientManifest[path] = {
     '': {
       id: idx,
       chunks: [],
@@ -81,12 +81,10 @@ exports.clientExports = function clientExports(moduleExports) {
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
-          webpackMap[path] = {
-            [name]: {
-              id: idx,
-              chunks: [],
-              name: name,
-            },
+          webpackMap.clientManifest[path][name] = {
+            id: idx,
+            chunks: [],
+            name: name,
           };
         }
       },
@@ -94,12 +92,10 @@ exports.clientExports = function clientExports(moduleExports) {
     );
   }
   for (const name in moduleExports) {
-    webpackMap[path] = {
-      [name]: {
-        id: idx,
-        chunks: [],
-        name: name,
-      },
+    webpackMap.clientManifest[path][name] = {
+      id: idx,
+      chunks: [],
+      name: name,
     };
   }
   const mod = {exports: {}};

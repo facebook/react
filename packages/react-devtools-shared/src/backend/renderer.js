@@ -154,9 +154,7 @@ const getCurrentTime =
     ? () => performance.now()
     : () => Date.now();
 
-export function getInternalReactConstants(
-  version: string,
-): {
+export function getInternalReactConstants(version: string): {
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
@@ -843,12 +841,7 @@ export function attach(
         'color: purple;',
         'color: black;',
       );
-      console.log(
-        new Error().stack
-          .split('\n')
-          .slice(1)
-          .join('\n'),
-      );
+      console.log(new Error().stack.split('\n').slice(1).join('\n'));
       console.groupEnd();
     }
   };
@@ -1800,8 +1793,8 @@ export function attach(
     const operations = new Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
-      // How big is the string table?
-      1 + // [stringTableLength]
+        // How big is the string table?
+        1 + // [stringTableLength]
         // Then goes the actual string table.
         pendingStringTableLength +
         // All unmounts are batched in a single message.
@@ -2072,9 +2065,8 @@ export function attach(
 
       // If we have the tree selection from previous reload, try to match this Fiber.
       // Also remember whether to do the same for siblings.
-      const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
-        fiber,
-      );
+      const mightSiblingsBeOnTrackedPath =
+        updateTrackedPathStateBeforeMount(fiber);
 
       const shouldIncludeInTree = !shouldFilterFiber(fiber);
       if (shouldIncludeInTree) {
@@ -2232,7 +2224,8 @@ export function attach(
           // Note that we should do this for any fiber we performed work on, regardless of its actualDuration value.
           // In some cases actualDuration might be 0 for fibers we worked on (particularly if we're using Date.now)
           // In other cases (e.g. Memo) actualDuration might be greater than 0 even if we "bailed out".
-          const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
+          const metadata =
+            ((currentCommitProfilingMetadata: any): CommitProfilingData);
           metadata.durations.push(id, actualDuration, selfDuration);
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
@@ -2546,7 +2539,7 @@ export function attach(
     // We don't patch any methods so there is no cleanup.
   }
 
-  function rootSupportsProfiling(root) {
+  function rootSupportsProfiling(root: any) {
     if (root.memoizedInteractions != null) {
       // v16 builds include this field for the scheduler/tracing API.
       return true;
@@ -2610,7 +2603,7 @@ export function attach(
     }
   }
 
-  function getUpdatersList(root): Array<SerializedElement> | null {
+  function getUpdatersList(root: any): Array<SerializedElement> | null {
     return root.memoizedUpdaters != null
       ? Array.from(root.memoizedUpdaters)
           .filter(fiber => getFiberIDUnsafe(fiber) !== null)
@@ -2618,7 +2611,7 @@ export function attach(
       : null;
   }
 
-  function handleCommitFiberUnmount(fiber) {
+  function handleCommitFiberUnmount(fiber: any) {
     // If the untrackFiberSet already has the unmounted Fiber, this means we've already
     // recordedUnmount, so we don't need to do it again. If we don't do this, we might
     // end up double-deleting Fibers in some cases (like Legacy Suspense).
@@ -2630,21 +2623,21 @@ export function attach(
     }
   }
 
-  function handlePostCommitFiberRoot(root) {
+  function handlePostCommitFiberRoot(root: any) {
     if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
-        const {effectDuration, passiveEffectDuration} = getEffectDurations(
-          root,
-        );
+        const {effectDuration, passiveEffectDuration} =
+          getEffectDurations(root);
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentCommitProfilingMetadata.effectDuration = effectDuration;
         // $FlowFixMe[incompatible-use] found when upgrading Flow
-        currentCommitProfilingMetadata.passiveEffectDuration = passiveEffectDuration;
+        currentCommitProfilingMetadata.passiveEffectDuration =
+          passiveEffectDuration;
       }
     }
   }
 
-  function handleCommitFiberRoot(root, priorityLevel) {
+  function handleCommitFiberRoot(root: any, priorityLevel: void | number) {
     const current = root.current;
     const alternate = current.alternate;
 
@@ -2719,9 +2712,10 @@ export function attach(
 
     if (isProfiling && isProfilingSupported) {
       if (!shouldBailoutWithPendingOperations()) {
-        const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-          currentRootID,
-        );
+        const commitProfilingMetadata =
+          ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+            currentRootID,
+          );
 
         if (commitProfilingMetadata != null) {
           commitProfilingMetadata.push(
@@ -2805,18 +2799,18 @@ export function attach(
     }
   }
 
-  function getDisplayNameForFiberID(id) {
+  function getDisplayNameForFiberID(id: number) {
     const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
   }
 
-  function getFiberForNative(hostInstance) {
+  function getFiberForNative(hostInstance: NativeType) {
     return renderer.findFiberByHostInstance(hostInstance);
   }
 
   function getFiberIDForNative(
-    hostInstance,
-    findNearestUnfilteredAncestor = false,
+    hostInstance: NativeType,
+    findNearestUnfilteredAncestor: boolean = false,
   ) {
     let fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
@@ -2832,7 +2826,7 @@ export function attach(
 
   // This function is copied from React and should be kept in sync:
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  function assertIsMounted(fiber) {
+  function assertIsMounted(fiber: Fiber) {
     if (getNearestMountedFiber(fiber) !== fiber) {
       throw new Error('Unable to find node on an unmounted component.');
     }
@@ -3252,7 +3246,7 @@ export function attach(
 
     let owners = null;
     if (_debugOwner) {
-      owners = [];
+      owners = ([]: Array<SerializedElement>);
       let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.push(fiberToSerializedElement(owner));
@@ -3265,12 +3259,13 @@ export function attach(
 
     let hooks = null;
     if (usesHooks) {
-      const originalConsoleMethods = {};
+      const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {
         try {
           originalConsoleMethods[method] = console[method];
+          // $FlowFixMe[prop-missing]
           console[method] = () => {};
         } catch (error) {}
       }
@@ -3285,6 +3280,7 @@ export function attach(
         // Restore original console functionality.
         for (const method in originalConsoleMethods) {
           try {
+            // $FlowFixMe[prop-missing]
             console[method] = originalConsoleMethods[method];
           } catch (error) {}
         }
@@ -3712,7 +3708,7 @@ export function attach(
     };
   }
 
-  function logElementToConsole(id) {
+  function logElementToConsole(id: number) {
     const result = isMostRecentlyInspectedElementCurrent(id)
       ? mostRecentlyInspectedElement
       : inspectElementRaw(id);
@@ -3962,7 +3958,8 @@ export function attach(
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let recordChangeDescriptions: boolean = false;
-  let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
+  let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null =
+    null;
 
   function getProfilingData(): ProfilingDataBackend {
     const dataForRoots: Array<ProfilingDataForRootBackend> = [];
@@ -4149,7 +4146,7 @@ export function attach(
   // null (do nothing)
   const forceErrorForFiberIDs = new Map();
 
-  function shouldErrorFiberAccordingToMap(fiber) {
+  function shouldErrorFiberAccordingToMap(fiber: any) {
     if (typeof setErrorHandler !== 'function') {
       throw new Error(
         'Expected overrideError() to not get called for earlier React versions.',
@@ -4185,7 +4182,7 @@ export function attach(
     return status;
   }
 
-  function overrideError(id, forceError) {
+  function overrideError(id: number, forceError: boolean) {
     if (
       typeof setErrorHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -4214,12 +4211,12 @@ export function attach(
 
   const forceFallbackForSuspenseIDs = new Set();
 
-  function shouldSuspendFiberAccordingToSet(fiber) {
+  function shouldSuspendFiberAccordingToSet(fiber: any) {
     const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));
     return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);
   }
 
-  function overrideSuspense(id, forceFallback) {
+  function overrideSuspense(id: number, forceFallback: boolean) {
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -4317,7 +4314,9 @@ export function attach(
     return true;
   }
 
-  function updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath) {
+  function updateTrackedPathStateAfterMount(
+    mightSiblingsBeOnTrackedPath: boolean,
+  ) {
     // updateTrackedPathStateBeforeMount() told us whether to match siblings.
     // Now that we're entering siblings, let's use that information.
     mightBeOnTrackedPath = mightSiblingsBeOnTrackedPath;

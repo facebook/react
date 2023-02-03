@@ -144,6 +144,7 @@ import {
   createThenableState,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -967,7 +968,8 @@ function use<T>(usable: Usable<T>): T {
 function useMemoCache(size: number): Array<any> {
   let memoCache = null;
   // Fast-path, load memo cache from wip fiber if already prepared
-  let updateQueue: FunctionComponentUpdateQueue | null = (currentlyRenderingFiber.updateQueue: any);
+  let updateQueue: FunctionComponentUpdateQueue | null =
+    (currentlyRenderingFiber.updateQueue: any);
   if (updateQueue !== null) {
     memoCache = updateQueue.memoCache;
   }
@@ -975,7 +977,8 @@ function useMemoCache(size: number): Array<any> {
   if (memoCache == null) {
     const current: Fiber | null = currentlyRenderingFiber.alternate;
     if (current !== null) {
-      const currentUpdateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
+      const currentUpdateQueue: FunctionComponentUpdateQueue | null =
+        (current.updateQueue: any);
       if (currentUpdateQueue !== null) {
         const currentMemoCache: ?MemoCache = currentUpdateQueue.memoCache;
         if (currentMemoCache != null) {
@@ -1738,7 +1741,8 @@ function pushStoreConsistencyCheck<T>(
     getSnapshot,
     value: renderedSnapshot,
   };
-  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue =
+    (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
@@ -1801,7 +1805,7 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
   }
 }
 
-function forceStoreRerender(fiber) {
+function forceStoreRerender(fiber: Fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
@@ -1825,13 +1829,8 @@ function mountState<S>(
     lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
-  const dispatch: Dispatch<
-    BasicStateAction<S>,
-  > = (queue.dispatch = (dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber,
-    queue,
-  ): any));
+  const dispatch: Dispatch<BasicStateAction<S>> = (queue.dispatch =
+    (dispatchSetState.bind(null, currentlyRenderingFiber, queue): any));
   return [hook.memoizedState, dispatch];
 }
 
@@ -1861,7 +1860,8 @@ function pushEffect(
     // Circular
     next: (null: any),
   };
-  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue =
+    (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
@@ -1934,7 +1934,7 @@ function mountRef<T>(initialValue: T): {current: T} {
           }
           return current;
         },
-        set current(value) {
+        set current(value: any) {
           if (currentlyRenderingFiber !== null && !didWarnAboutWrite) {
             if (hasBeenInitialized || !didCheckForLazyInit) {
               didWarnAboutWrite = true;
@@ -2055,7 +2055,8 @@ function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
   payload: EventFunctionPayload<Args, Return, F>,
 ) {
   currentlyRenderingFiber.flags |= UpdateEffect;
-  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue =
+    (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
@@ -2383,7 +2384,7 @@ function startTransition(
   setPending(true);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (enableTransitionTracing) {
@@ -2408,6 +2409,7 @@ function startTransition(
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -2415,7 +2417,6 @@ function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        currentTransition._updatedFibers.clear();
       }
     }
   }
@@ -2642,7 +2643,8 @@ function dispatchSetState<S, A>(
         let prevDispatcher;
         if (__DEV__) {
           prevDispatcher = ReactCurrentDispatcher.current;
-          ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+          ReactCurrentDispatcher.current =
+            InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
         try {
           const currentState: S = (queue.lastRenderedState: any);
@@ -2698,7 +2700,8 @@ function enqueueRenderPhaseUpdate<S, A>(
   // This is a render phase update. Stash it in a lazily-created map of
   // queue -> linked list of updates. After this render pass, we'll restart
   // and apply the stashed updates on top of the work-in-progress hook.
-  didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+  didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate =
+    true;
   const pending = queue.pending;
   if (pending === null) {
     // This is the first update. Create a circular list.
@@ -2736,7 +2739,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools<A>(fiber, lane, action: A): void {
+function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
@@ -2805,7 +2808,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useId: mountId,
 };
 if (enableCache) {
-  // $FlowFixMe[escaped-generic] discovered when updating Flow
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
 if (enableUseHook) {
@@ -3047,11 +3049,12 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      mountHookTypesDev();
-      return mountRefresh();
-    };
+    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        mountHookTypesDev();
+        return mountRefresh();
+      };
   }
   if (enableUseHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).use = use;
@@ -3060,15 +3063,14 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      mountHookTypesDev();
-      return mountEvent(callback);
-    };
+    (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        mountHookTypesDev();
+        return mountEvent(callback);
+      };
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -3202,28 +3204,29 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return mountRefresh();
-    };
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        updateHookTypesDev();
+        return mountRefresh();
+      };
   }
   if (enableUseHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).use = use;
   }
   if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache =
+      useMemoCache;
   }
   if (enableUseEffectEventHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      updateHookTypesDev();
-      return mountEvent(callback);
-    };
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        updateHookTypesDev();
+        return mountEvent(callback);
+      };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -3277,7 +3280,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateMemo(create, deps);
       } finally {
@@ -3292,7 +3296,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useReducer';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateReducer(reducer, initialArg, init);
       } finally {
@@ -3310,7 +3315,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useState';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateState(initialState);
       } finally {
@@ -3357,11 +3363,12 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
   if (enableUseHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).use = use;
@@ -3370,15 +3377,14 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      updateHookTypesDev();
-      return updateEvent(callback);
-    };
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        updateHookTypesDev();
+        return updateEvent(callback);
+      };
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -3433,7 +3439,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
       try {
         return updateMemo(create, deps);
       } finally {
@@ -3448,7 +3455,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useReducer';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
       try {
         return rerenderReducer(reducer, initialArg, init);
       } finally {
@@ -3466,7 +3474,8 @@ if (__DEV__) {
       currentHookNameInDev = 'useState';
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnRerenderInDEV;
       try {
         return rerenderState(initialState);
       } finally {
@@ -3513,11 +3522,12 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
   if (enableUseHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).use = use;
@@ -3526,15 +3536,14 @@ if (__DEV__) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      updateHookTypesDev();
-      return updateEvent(callback);
-    };
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        updateHookTypesDev();
+        return updateEvent(callback);
+      };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3685,14 +3694,15 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      mountHookTypesDev();
-      return mountRefresh();
-    };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        mountHookTypesDev();
+        return mountRefresh();
+      };
   }
   if (enableUseHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).use = function<T>(
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).use = function <T>(
       usable: Usable<T>,
     ): T {
       warnInvalidHookAccess();
@@ -3700,24 +3710,22 @@ if (__DEV__) {
     };
   }
   if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = function(
-      size: number,
-    ): Array<any> {
-      warnInvalidHookAccess();
-      return useMemoCache(size);
-    };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useMemoCache =
+      function (size: number): Array<any> {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      };
   }
   if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountEvent(callback);
-    };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountEvent(callback);
+      };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -3779,7 +3787,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateMemo(create, deps);
       } finally {
@@ -3795,7 +3804,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateReducer(reducer, initialArg, init);
       } finally {
@@ -3815,7 +3825,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateState(initialState);
       } finally {
@@ -3868,14 +3879,15 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
   if (enableUseHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).use = function<T>(
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).use = function <T>(
       usable: Usable<T>,
     ): T {
       warnInvalidHookAccess();
@@ -3883,24 +3895,22 @@ if (__DEV__) {
     };
   }
   if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = function(
-      size: number,
-    ): Array<any> {
-      warnInvalidHookAccess();
-      return useMemoCache(size);
-    };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache =
+      function (size: number): Array<any> {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      };
   }
   if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEvent(callback);
-    };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateEvent(callback);
+      };
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -3963,7 +3973,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateMemo(create, deps);
       } finally {
@@ -3979,7 +3990,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return rerenderReducer(reducer, initialArg, init);
       } finally {
@@ -3999,7 +4011,8 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      ReactCurrentDispatcher.current =
+        InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return rerenderState(initialState);
       } finally {
@@ -4052,38 +4065,37 @@ if (__DEV__) {
     },
   };
   if (enableCache) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
-      currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return updateRefresh();
-    };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
+      function useCacheRefresh() {
+        currentHookNameInDev = 'useCacheRefresh';
+        updateHookTypesDev();
+        return updateRefresh();
+      };
   }
   if (enableUseHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).use = function<T>(
-      usable: Usable<T>,
-    ): T {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).use = function <
+      T,
+    >(usable: Usable<T>): T {
       warnInvalidHookAccess();
       return use(usable);
     };
   }
   if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = function(
-      size: number,
-    ): Array<any> {
-      warnInvalidHookAccess();
-      return useMemoCache(size);
-    };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache =
+      function (size: number): Array<any> {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      };
   }
   if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent = function useEffectEvent<
-      Args,
-      Return,
-      F: (...Array<Args>) => Return,
-    >(callback: F): F {
-      currentHookNameInDev = 'useEffectEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEvent(callback);
-    };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
+      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useEffectEvent';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateEvent(callback);
+      };
   }
 }

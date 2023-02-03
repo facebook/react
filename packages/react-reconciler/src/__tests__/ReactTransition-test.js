@@ -934,16 +934,28 @@ describe('ReactTransition', () => {
       updateNormalPri();
     });
 
-    expect(Scheduler).toHaveYielded([
-      // Finish transition update.
-      'Normal pri: 0',
-      'Commit',
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
+      expect(Scheduler).toHaveYielded([
+        'Normal pri: 0',
+        'Commit',
 
-      // Normal pri update.
-      'Transition pri: 1',
-      'Normal pri: 1',
-      'Commit',
-    ]);
+        // Normal pri update.
+        'Transition pri: 1',
+        'Normal pri: 1',
+        'Commit',
+      ]);
+    } else {
+      expect(Scheduler).toHaveYielded([
+        // Finish transition update.
+        'Normal pri: 0',
+        'Commit',
+
+        // Normal pri update.
+        'Transition pri: 1',
+        'Normal pri: 1',
+        'Commit',
+      ]);
+    }
 
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });

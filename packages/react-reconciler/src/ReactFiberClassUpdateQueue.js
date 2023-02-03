@@ -636,7 +636,8 @@ export function processUpdateQueue<State>(
           const lastPendingUpdate = pendingQueue;
           // Intentionally unsound. Pending updates form a circular list, but we
           // unravel them when transferring them to the base queue.
-          const firstPendingUpdate = ((lastPendingUpdate.next: any): Update<State>);
+          const firstPendingUpdate =
+            ((lastPendingUpdate.next: any): Update<State>);
           lastPendingUpdate.next = null;
           update = firstPendingUpdate;
           queue.lastBaseUpdate = lastPendingUpdate;
@@ -676,7 +677,7 @@ export function processUpdateQueue<State>(
   }
 }
 
-function callCallback(callback, context) {
+function callCallback(callback: () => mixed, context: any) {
   if (typeof callback !== 'function') {
     throw new Error(
       'Invalid argument passed as callback. Expected a function. Instead ' +
@@ -707,9 +708,8 @@ export function deferHiddenCallbacks<State>(
     if (existingHiddenCallbacks === null) {
       updateQueue.shared.hiddenCallbacks = newHiddenCallbacks;
     } else {
-      updateQueue.shared.hiddenCallbacks = existingHiddenCallbacks.concat(
-        newHiddenCallbacks,
-      );
+      updateQueue.shared.hiddenCallbacks =
+        existingHiddenCallbacks.concat(newHiddenCallbacks);
     }
   }
 }

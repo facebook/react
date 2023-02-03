@@ -144,6 +144,7 @@ export function lazy<T>(
         get() {
           return defaultProps;
         },
+        // $FlowFixMe[missing-local-annot]
         set(newDefaultProps) {
           console.error(
             'React.lazy(...): It is not supported to assign `defaultProps` to ' +
@@ -163,6 +164,7 @@ export function lazy<T>(
         get() {
           return propTypes;
         },
+        // $FlowFixMe[missing-local-annot]
         set(newPropTypes) {
           console.error(
             'React.lazy(...): It is not supported to assign `propTypes` to ' +

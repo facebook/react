@@ -91,7 +91,11 @@ function getEventTargetDocument(eventTarget: any) {
  * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
-function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
+function constructSelectEvent(
+  dispatchQueue: DispatchQueue,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+) {
   // Ensure we have the right element, and that the user is not dragging a
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we

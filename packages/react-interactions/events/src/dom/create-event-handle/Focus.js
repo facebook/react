@@ -97,7 +97,7 @@ function handleGlobalFocusVisibleEvent(
 
 function handleFocusVisibleTargetEvents(
   event: SyntheticEvent<EventTarget>,
-  callback,
+  callback: boolean => void,
 ): void {
   if (event.type === 'keydown') {
     const {nativeEvent} = (event: any);
@@ -125,9 +125,10 @@ function isRelatedTargetWithin(
 }
 
 function setFocusVisibleListeners(
+  // $FlowFixMe[missing-local-annot]
   focusVisibleHandles,
   focusTarget: EventTarget,
-  callback,
+  callback: boolean => void,
 ) {
   focusVisibleHandles.forEach(focusVisibleHandle => {
     focusVisibleHandle.setListener(focusTarget, event =>

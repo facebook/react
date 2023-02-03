@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 describe('ReactComponent', () => {
@@ -22,25 +21,24 @@ describe('ReactComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should throw on invalid render targets', () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
-    expect(function() {
+    expect(function () {
       ReactDOM.render(<div />, [container]);
     }).toThrowError(/Target container is not a DOM element./);
 
-    expect(function() {
+    expect(function () {
       ReactDOM.render(<div />, null);
     }).toThrowError(/Target container is not a DOM element./);
   });
 
   it('should throw when supplying a string ref outside of render method', () => {
     let instance = <div ref="badDiv" />;
-    expect(function() {
+    expect(function () {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
@@ -137,24 +135,20 @@ describe('ReactComponent', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Component />);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "div" contains the string ref "inner". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in div (at **)\n' +
-              '    in Wrapper (at **)\n' +
-              '    in Component (at **)',
-            'Warning: Component "Component" contains the string ref "outer". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Component (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "div" contains the string ref "inner". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
+        '    in Wrapper (at **)\n' +
+        '    in Component (at **)',
+      'Warning: Component "Component" contains the string ref "outer". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('should not have string refs on unmounted components', () => {

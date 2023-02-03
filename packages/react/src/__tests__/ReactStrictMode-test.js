@@ -710,17 +710,13 @@ Please update the following components: Parent`,
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     root.render(<StrictRoot foo={true} />);
-    expect(() =>
-      Scheduler.unstable_flushAll(),
-    ).toErrorDev(
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
     root.render(<StrictRoot foo={false} />);
-    expect(() =>
-      Scheduler.unstable_flushAll(),
-    ).toErrorDev(
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
@@ -770,9 +766,7 @@ Please update the following components: Parent`,
 
     const container = document.createElement('div');
 
-    expect(() =>
-      ReactDOM.render(<SyncRoot />, container),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<SyncRoot />, container)).toErrorDev(
       'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
@@ -926,18 +920,11 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? 'Warning: Component "StrictMode" contains the string ref "somestring". ' +
-            'Support for string refs will be removed in a future major release. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in OuterComponent (at **)'
-        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-            'String refs are a source of potential bugs and should be avoided. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in OuterComponent (at **)',
+      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in OuterComponent (at **)',
     );
 
     // Dedup
@@ -973,20 +960,12 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? 'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
-            'Support for string refs will be removed in a future major release. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in InnerComponent (at **)\n' +
-            '    in OuterComponent (at **)'
-        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-            'String refs are a source of potential bugs and should be avoided. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in InnerComponent (at **)\n' +
-            '    in OuterComponent (at **)',
+      'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in InnerComponent (at **)\n' +
+        '    in OuterComponent (at **)',
     );
 
     // Dedup

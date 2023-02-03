@@ -79,7 +79,7 @@ const injectedRenderers: Map<
 > = new Map();
 
 let targetConsole: Object = console;
-let targetConsoleMethods = {};
+let targetConsoleMethods: {[string]: $FlowFixMe} = {};
 for (const method in console) {
   targetConsoleMethods[method] = console[method];
 }
@@ -97,7 +97,7 @@ export function dangerous_setTargetConsoleForTesting(
 ): void {
   targetConsole = targetConsoleForTesting;
 
-  targetConsoleMethods = {};
+  targetConsoleMethods = ({}: {[string]: $FlowFixMe});
   for (const method in targetConsole) {
     targetConsoleMethods[method] = console[method];
   }
@@ -179,7 +179,7 @@ export function patch({
       return;
     }
 
-    const originalConsoleMethods = {};
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
     unpatchFn = () => {
       for (const method in originalConsoleMethods) {
@@ -197,6 +197,7 @@ export function patch({
           ? targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
           : targetConsole[method]);
 
+        // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
           let shouldAppendWarningStack = false;
           if (method !== 'log') {
@@ -317,7 +318,7 @@ export function patchForStrictMode() {
       return;
     }
 
-    const originalConsoleMethods = {};
+    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
     unpatchForStrictModeFn = () => {
       for (const method in originalConsoleMethods) {
@@ -335,6 +336,7 @@ export function patchForStrictMode() {
           ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
           : targetConsole[method]);
 
+        // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
           if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
             // Dim the text color of the double logs if we're not
@@ -352,8 +354,10 @@ export function patchForStrictMode() {
           }
         };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
+        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+          originalMethod;
+        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+          overrideMethod;
 
         targetConsole[method] = overrideMethod;
       } catch (error) {}

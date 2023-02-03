@@ -40,9 +40,11 @@ export default function SearchInput({
 
   const resetSearch = () => search('');
 
+  // $FlowFixMe[missing-local-annot]
   const handleChange = ({currentTarget}) => {
     search(currentTarget.value);
   };
+  // $FlowFixMe[missing-local-annot]
   const handleKeyPress = ({key, shiftKey}) => {
     if (key === 'Enter') {
       if (shiftKey) {

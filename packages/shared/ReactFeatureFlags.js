@@ -13,7 +13,6 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const warnAboutDeprecatedLifecycles = true;
 export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
@@ -32,7 +31,8 @@ export const skipUnmountedBoundaries = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
+  true;
 
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
@@ -102,19 +102,6 @@ export const enableHostSingletons = true;
 
 export const enableFloat = true;
 
-// When a node is unmounted, recurse into the Fiber subtree and clean out
-// references. Each level cleans up more fiber fields than the previous level.
-// As far as we know, React itself doesn't leak, but because the Fiber contains
-// cycles, even a single leak in product code can cause us to retain large
-// amounts of memory.
-//
-// The long term plan is to remove the cycles, but in the meantime, we clear
-// additional fields to mitigate.
-//
-// It's an enum so that we can experiment with different levels of
-// aggressiveness.
-export const deletedTreeCleanUpLevel = 3;
-
 export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
@@ -150,6 +137,8 @@ export const enableUseRefAccessWarning = false;
 
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const enableSyncDefaultUpdates = true;
+
+export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in
 // startTransition. Only relevant when enableSyncDefaultUpdates is disabled.
@@ -196,26 +185,6 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
-
-// -----------------------------------------------------------------------------
-// JSX Chopping Block
-//
-// Similar to main Chopping Block but only flags related to JSX. These are
-// grouped because we will likely batch all of them into a single major release.
-// -----------------------------------------------------------------------------
-
-// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-// Part of the simplification of React.createElement so we can eventually move
-// from React.createElement to React.jsx
-// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
-
-// Enables a warning when trying to spread a 'key' to an element;
-// a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = true;
-
-export const warnAboutStringRefs = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools

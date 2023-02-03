@@ -18,21 +18,19 @@ export const {
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
+  enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing,
 } = dynamicFeatureFlags;
 
@@ -47,6 +45,7 @@ export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
+export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
@@ -55,6 +54,7 @@ export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
+export const enableClientRenderFallbackOnTextMismatch = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -64,10 +64,7 @@ export const enableSchedulingProfiler: boolean =
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
 // At least this will let us stop shipping <Profiler> implementation to all users.
 export const enableSchedulerDebugging = true;
-export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const warnAboutStringRefs = true;
-export const warnAboutDefaultPropsOnFunctionComponents = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;
@@ -96,8 +93,6 @@ export const enableComponentStackLocations = true;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
-
-export const deletedTreeCleanUpLevel = 3;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;

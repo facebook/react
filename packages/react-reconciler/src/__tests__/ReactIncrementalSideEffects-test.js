@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
@@ -20,7 +19,6 @@ describe('ReactIncrementalSideEffects', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });
@@ -76,7 +74,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span(), span())]);
   });
 
-  it('can update child nodes of a fragment', function() {
+  it('can update child nodes of a fragment', function () {
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -112,7 +110,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('can update child nodes rendering into text nodes', function() {
+  it('can update child nodes rendering into text nodes', function () {
     function Bar(props) {
       return props.text;
     }
@@ -137,7 +135,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div('World', 'World', '!')]);
   });
 
-  it('can deletes children either components, host or text', function() {
+  it('can deletes children either components, host or text', function () {
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -163,7 +161,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
-  it('can delete a child that changes type - implicit keys', function() {
+  it('can delete a child that changes type - implicit keys', function () {
     let unmounted = false;
 
     class ClassComponent extends React.Component {
@@ -215,7 +213,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
   });
 
-  it('can delete a child that changes type - explicit keys', function() {
+  it('can delete a child that changes type - explicit keys', function () {
     let unmounted = false;
 
     class ClassComponent extends React.Component {
@@ -266,9 +264,8 @@ describe('ReactIncrementalSideEffects', () => {
       return <span prop={props.children} />;
     }
 
-    const portalContainer = ReactNoop.getOrCreateRootContainer(
-      'portalContainer',
-    );
+    const portalContainer =
+      ReactNoop.getOrCreateRootContainer('portalContainer');
     function Foo(props) {
       return ReactNoop.createPortal(
         props.show ? [<div key="a" />, <Bar key="b">Hello</Bar>, 'World'] : [],
@@ -342,9 +339,8 @@ describe('ReactIncrementalSideEffects', () => {
       return <span prop={props.children} />;
     }
 
-    const portalContainer = ReactNoop.getOrCreateRootContainer(
-      'portalContainer',
-    );
+    const portalContainer =
+      ReactNoop.getOrCreateRootContainer('portalContainer');
     function Foo(props) {
       return ReactNoop.createPortal(
         [<div key="a" />, <Bar key="b">Hello</Bar>, 'World'],
@@ -788,7 +784,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
-  xit('can defer side-effects and reuse them later - complex', function() {
+  xit('can defer side-effects and reuse them later - complex', function () {
     let ops = [];
 
     class Bar extends React.Component {
@@ -1310,17 +1306,13 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo />);
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Foo" contains the string ref "bar". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Foo (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "Foo" contains the string ref "bar". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Foo (at **)',
+    ]);
     expect(fooInstance.refs.bar.test).toEqual('test');
   });
 });

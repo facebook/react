@@ -37,7 +37,7 @@ let didWarnCheckedDefaultChecked = false;
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
 
-function isControlled(props) {
+function isControlled(props: any) {
   const usesChecked = props.type === 'checkbox' || props.type === 'radio';
   return usesChecked ? props.checked != null : props.value != null;
 }
@@ -351,7 +351,7 @@ export function restoreControlledState(element: Element, props: Object) {
   updateNamedCousins(node, props);
 }
 
-function updateNamedCousins(rootNode, props) {
+function updateNamedCousins(rootNode: InputWithWrapperState, props: any) {
   const name = props.name;
   if (props.type === 'radio' && name != null) {
     let queryRoot: Element = rootNode;

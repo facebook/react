@@ -171,6 +171,7 @@ function Row({
   const [isAttributeValid, setIsAttributeValid] = useState(true);
   const [isValueValid, setIsValueValid] = useState(true);
 
+  // $FlowFixMe[missing-local-annot]
   const validateAndSetLocalAttribute = newAttribute => {
     const isValid =
       newAttribute === '' ||
@@ -183,6 +184,7 @@ function Row({
     });
   };
 
+  // $FlowFixMe[missing-local-annot]
   const validateAndSetLocalValue = newValue => {
     let isValid = false;
     try {
@@ -262,6 +264,7 @@ function Field({
   placeholder,
   value,
 }: FieldProps) {
+  // $FlowFixMe[missing-local-annot]
   const onKeyDown = event => {
     switch (event.key) {
       case 'Enter':

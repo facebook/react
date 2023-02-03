@@ -108,7 +108,7 @@ export function validatePreloadResourceDifference(
       let extraProps = null;
       let differentProps = null;
       if (originalProps.media != null && latestProps.media == null) {
-        missingProps = missingProps || {};
+        missingProps = missingProps || ({}: {[string]: $FlowFixMe});
         missingProps.media = originalProps.media;
       }
 
@@ -118,10 +118,12 @@ export function validatePreloadResourceDifference(
 
         if (propValue != null && propValue !== originalValue) {
           if (originalValue == null) {
-            extraProps = extraProps || {};
+            extraProps = extraProps || ({}: {[string]: $FlowFixMe});
             extraProps[propName] = propValue;
           } else {
-            differentProps = differentProps || {};
+            differentProps =
+              differentProps ||
+              ({}: {[string]: {latest: $FlowFixMe, original: $FlowFixMe}});
             differentProps[propName] = {
               original: originalValue,
               latest: propValue,
@@ -166,7 +168,7 @@ export function validateStyleResourceDifference(
     let extraProps = null;
     let differentProps = null;
     if (originalProps.media != null && latestProps.media == null) {
-      missingProps = missingProps || {};
+      missingProps = missingProps || ({}: {[string]: $FlowFixMe});
       missingProps.media = originalProps.media;
     }
 
@@ -177,10 +179,12 @@ export function validateStyleResourceDifference(
       if (propValue != null && propValue !== originalValue) {
         propName = propName === 'data-precedence' ? 'precedence' : propName;
         if (originalValue == null) {
-          extraProps = extraProps || {};
+          extraProps = extraProps || ({}: {[string]: $FlowFixMe});
           extraProps[propName] = propValue;
         } else {
-          differentProps = differentProps || {};
+          differentProps =
+            differentProps ||
+            ({}: {[string]: {latest: $FlowFixMe, original: $FlowFixMe}});
           differentProps[propName] = {
             original: originalValue,
             latest: propValue,
@@ -229,10 +233,12 @@ export function validateScriptResourceDifference(
 
       if (propValue != null && propValue !== originalValue) {
         if (originalValue == null) {
-          extraProps = extraProps || {};
+          extraProps = extraProps || ({}: {[string]: $FlowFixMe});
           extraProps[propName] = propValue;
         } else {
-          differentProps = differentProps || {};
+          differentProps =
+            differentProps ||
+            ({}: {[string]: {latest: $FlowFixMe, original: $FlowFixMe}});
           differentProps[propName] = {
             original: originalValue,
             latest: propValue,
@@ -304,13 +310,15 @@ export function validateStyleAndHintProps(
             !(preloadValue == null && styleValue == null)
           ) {
             if (styleValue == null) {
-              missingProps = missingProps || {};
+              missingProps = missingProps || ({}: {[string]: $FlowFixMe});
               missingProps[propName] = preloadValue;
             } else if (preloadValue == null) {
-              extraProps = extraProps || {};
+              extraProps = extraProps || ({}: {[string]: $FlowFixMe});
               extraProps[propName] = styleValue;
             } else {
-              differentProps = differentProps || {};
+              differentProps =
+                differentProps ||
+                ({}: {[string]: {latest: $FlowFixMe, original: $FlowFixMe}});
               differentProps[propName] = {
                 original: preloadValue,
                 latest: styleValue,
@@ -383,13 +391,15 @@ export function validateScriptAndHintProps(
             !(preloadValue == null && scriptValue == null)
           ) {
             if (scriptValue == null) {
-              missingProps = missingProps || {};
+              missingProps = missingProps || ({}: {[string]: $FlowFixMe});
               missingProps[propName] = preloadValue;
             } else if (preloadValue == null) {
-              extraProps = extraProps || {};
+              extraProps = extraProps || ({}: {[string]: $FlowFixMe});
               extraProps[propName] = scriptValue;
             } else {
-              differentProps = differentProps || {};
+              differentProps =
+                differentProps ||
+                ({}: {[string]: {latest: $FlowFixMe, original: $FlowFixMe}});
               differentProps[propName] = {
                 original: preloadValue,
                 latest: scriptValue,
@@ -419,8 +429,8 @@ function warnDifferentProps(
   urlPropKey: string,
   originalName: string,
   latestName: string,
-  extraProps: ?{[string]: any},
-  missingProps: ?{[string]: any},
+  extraProps: ?{[string]: $FlowFixMe},
+  missingProps: ?{[string]: $FlowFixMe},
   differentProps: ?{[string]: {original: any, latest: any}},
 ): void {
   if (__DEV__) {
@@ -510,13 +520,15 @@ export function validateURLKeyedUpdatedProps(
           !(pendingValue == null && currentValue == null)
         ) {
           if (pendingValue == null) {
-            missingProps = missingProps || {};
+            missingProps = missingProps || ({}: {[string]: mixed});
             missingProps[propName] = currentValue;
           } else if (currentValue == null) {
-            extraProps = extraProps || {};
+            extraProps = extraProps || ({}: {[string]: mixed});
             extraProps[propName] = pendingValue;
           } else {
-            differentProps = differentProps || {};
+            differentProps =
+              differentProps ||
+              ({}: {[string]: {latest: mixed, original: mixed}});
             differentProps[propName] = {
               original: currentValue,
               latest: pendingValue,
@@ -534,16 +546,19 @@ export function validateURLKeyedUpdatedProps(
         let comparisonStatement = '';
         if (missingProps !== null && typeof missingProps === 'object') {
           for (const propName in missingProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: missing or null in latest props, "${missingProps[propName]}" in original props`;
           }
         }
         if (extraProps !== null && typeof extraProps === 'object') {
           for (const propName in extraProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: "${extraProps[propName]}" in latest props, missing or null in original props`;
           }
         }
         if (differentProps !== null && typeof differentProps === 'object') {
           for (const propName in differentProps) {
+            // $FlowFixMe[incompatible-type]
             comparisonStatement += `\n  ${propName}: "${differentProps[propName].latest}" in latest props, "${differentProps[propName].original}" in original props`;
           }
         }

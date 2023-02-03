@@ -46,7 +46,7 @@ import type {
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cStore %c${methodName}`,
@@ -117,10 +117,8 @@ export default class Store extends EventEmitter<{
   _componentFilters: Array<ComponentFilter>;
 
   // Map of ID to number of recorded error and warning message IDs.
-  _errorsAndWarnings: Map<
-    number,
-    {errorCount: number, warningCount: number},
-  > = new Map();
+  _errorsAndWarnings: Map<number, {errorCount: number, warningCount: number}> =
+    new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -584,9 +582,10 @@ export default class Store extends EventEmitter<{
     }
   }
 
-  getErrorAndWarningCountForElementID(
-    id: number,
-  ): {errorCount: number, warningCount: number} {
+  getErrorAndWarningCountForElementID(id: number): {
+    errorCount: number,
+    warningCount: number,
+  } {
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -1029,10 +1028,8 @@ export default class Store extends EventEmitter<{
             ): any): Element);
             parentElement.children.push(id);
 
-            const [
-              displayNameWithoutHOCs,
-              hocDisplayNames,
-            ] = separateDisplayNameAndHOCs(displayName, type);
+            const [displayNameWithoutHOCs, hocDisplayNames] =
+              separateDisplayNameAndHOCs(displayName, type);
 
             const element: Element = {
               children: [],
@@ -1146,7 +1143,7 @@ export default class Store extends EventEmitter<{
             debug(`Remove root ${id}`);
           }
 
-          const recursivelyDeleteElements = elementID => {
+          const recursivelyDeleteElements = (elementID: number) => {
             const element = this._idToElement.get(elementID);
             this._idToElement.delete(elementID);
             if (element) {
@@ -1280,8 +1277,8 @@ export default class Store extends EventEmitter<{
 
     if (haveRootsChanged) {
       const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
-      const prevRootSupportsTimelineProfiling = this
-        ._rootSupportsTimelineProfiling;
+      const prevRootSupportsTimelineProfiling =
+        this._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
       this._rootSupportsBasicProfiling = false;
@@ -1399,22 +1396,21 @@ export default class Store extends EventEmitter<{
     this.emit('backendVersion');
   };
 
-  onBridgeProtocol: (
-    bridgeProtocol: BridgeProtocol,
-  ) => void = bridgeProtocol => {
-    if (this._onBridgeProtocolTimeoutID !== null) {
-      clearTimeout(this._onBridgeProtocolTimeoutID);
-      this._onBridgeProtocolTimeoutID = null;
-    }
+  onBridgeProtocol: (bridgeProtocol: BridgeProtocol) => void =
+    bridgeProtocol => {
+      if (this._onBridgeProtocolTimeoutID !== null) {
+        clearTimeout(this._onBridgeProtocolTimeoutID);
+        this._onBridgeProtocolTimeoutID = null;
+      }
 
-    this._bridgeProtocol = bridgeProtocol;
+      this._bridgeProtocol = bridgeProtocol;
 
-    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
-      // Technically newer versions of the frontend can, at least for now,
-      // gracefully handle older versions of the backend protocol.
-      // So for now we don't need to display the unsupported dialog.
-    }
-  };
+      if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+        // Technically newer versions of the frontend can, at least for now,
+        // gracefully handle older versions of the backend protocol.
+        // So for now we don't need to display the unsupported dialog.
+      }
+    };
 
   onBridgeProtocolTimeout: () => void = () => {
     this._onBridgeProtocolTimeoutID = null;
@@ -1431,7 +1427,7 @@ export default class Store extends EventEmitter<{
   // but the downstream errors they cause will be reported as bugs.
   // For example, https://github.com/facebook/react/issues/21402
   // Emitting an error event allows the ErrorBoundary to show the original error.
-  _throwAndEmitError(error: Error) {
+  _throwAndEmitError(error: Error): empty {
     this.emit('error', error);
 
     // Throwing is still valuable for local development

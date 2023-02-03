@@ -76,7 +76,7 @@ export default {
     const functionWithoutCapturedValueCache = new WeakMap();
     const useEffectEventVariables = new WeakSet();
     function memoizeWithWeakMap(fn, map) {
-      return function(arg) {
+      return function (arg) {
         if (map.has(arg)) {
           // to verify cache hits:
           // console.log(arg.name)

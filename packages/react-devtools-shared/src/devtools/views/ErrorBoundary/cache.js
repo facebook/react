@@ -93,7 +93,8 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
         }
 
         if (maybeItem) {
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<GitHubIssue>);
+          const resolvedRecord =
+            ((newRecord: any): ResolvedRecord<GitHubIssue>);
           resolvedRecord.status = Resolved;
           resolvedRecord.value = maybeItem;
         } else {

@@ -64,13 +64,10 @@ export default function Tree(props: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
-  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
-    false,
-  );
-  const {
-    highlightNativeElement,
-    clearHighlightNativeElement,
-  } = useHighlightNativeElement();
+  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
+    useState(false);
+  const {highlightNativeElement, clearHighlightNativeElement} =
+    useHighlightNativeElement();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -101,7 +98,7 @@ export default function Tree(props: Props): React.Node {
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
   useEffect(() => {
-    function handleStopInspectingNative(didSelectNode) {
+    function handleStopInspectingNative(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
         logEvent({
@@ -540,6 +537,7 @@ function updateIndentationSizeVar(
   list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
+// $FlowFixMe[missing-local-annot]
 function InnerElementType({children, style, ...rest}) {
   const {ownerID} = useContext(TreeStateContext);
 

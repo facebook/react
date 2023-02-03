@@ -22,7 +22,7 @@ function formatLanes(laneOrLanes: Lane | Lanes): string {
   return '0b' + (laneOrLanes: any).toString(2).padStart(31, '0');
 }
 
-function group(...groupArgs): void {
+function group(...groupArgs: Array<string>): void {
   pendingGroupArgs.push(groupArgs);
 
   if (nativeConsoleLog === null) {
@@ -44,7 +44,7 @@ function groupEnd(): void {
   }
 }
 
-function log(...logArgs): void {
+function log(...logArgs: Array<mixed>): void {
   if (printedGroupIndex < pendingGroupArgs.length - 1) {
     for (let i = printedGroupIndex + 1; i < pendingGroupArgs.length; i++) {
       const groupArgs = pendingGroupArgs[i];

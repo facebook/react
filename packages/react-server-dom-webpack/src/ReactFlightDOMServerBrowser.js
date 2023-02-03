@@ -27,12 +27,12 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactModel,
-  webpackMap: BundlerConfig,
+  webpackMaps: BundlerConfig,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    webpackMap,
+    webpackMaps,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
