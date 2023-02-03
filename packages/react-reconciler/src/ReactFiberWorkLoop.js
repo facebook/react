@@ -1206,7 +1206,7 @@ function recoverFromConcurrentError(
       // During the synchronous render, we attached additional ping listeners.
       // This is highly suggestive of an uncached promise (though it's not the
       // only reason this would happen). If it was an uncached promise, then
-      // it may have masked a downstream error from ocurring without actually
+      // it may have masked a downstream error from occurring without actually
       // fixing it. Example:
       //
       //    use(Promise.resolve('uncached'))
@@ -2329,7 +2329,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
-  // This is a fork of performUnitOfWork specifcally for replaying a fiber that
+  // This is a fork of performUnitOfWork specifically for replaying a fiber that
   // just suspended.
   //
   const current = unitOfWork.alternate;
@@ -2421,7 +2421,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
-  // This is a fork of performUnitOfWork specifcally for unwinding a fiber
+  // This is a fork of performUnitOfWork specifically for unwinding a fiber
   // that threw an exception.
   //
   // Return to the normal work loop. This will unwind the stack, and potentially

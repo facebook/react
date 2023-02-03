@@ -229,7 +229,7 @@ export default class Agent extends EventEmitter<{
     }
 
     // Send the Bridge protocol and backend versions, after initialization, in case the frontend has already requested it.
-    // The Store may be instantiated beore the agent.
+    // The Store may be instantiated before the agent.
     const version = process.env.DEVTOOLS_VERSION;
     if (version) {
       this._bridge.send('backendVersion', version);
