@@ -174,6 +174,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "ComputedLoad":
     case "JSXText":
     case "UnaryExpression":
+    case "TemplateLiteral":
     case "Primitive": {
       return false;
     }

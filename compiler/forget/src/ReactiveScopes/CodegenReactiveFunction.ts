@@ -415,6 +415,7 @@ const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
 const createSequenceExpression = withLoc(t.sequenceExpression);
 const createConditionalExpression = withLoc(t.conditionalExpression);
+const createTemplateLiteral = withLoc(t.templateLiteral);
 
 type Temporaries = Map<IdentifierId, t.Expression>;
 
@@ -749,6 +750,14 @@ function codegenInstructionValue(
           codegenInstructionValue(cx, instrValue.value),
         ]);
       }
+      break;
+    }
+    case "TemplateLiteral": {
+      value = createTemplateLiteral(
+        instrValue.loc,
+        instrValue.quasis.map((q) => t.templateElement(q)),
+        instrValue.subexprs.map((p) => codegenPlace(cx, p))
+      );
       break;
     }
     default: {

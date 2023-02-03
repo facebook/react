@@ -1420,6 +1420,40 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "TemplateLiteral": {
+      const expr = exprPath as NodePath<t.TemplateLiteral>;
+      const subexprs = expr.get("expressions");
+      const quasis = expr.get("quasis");
+
+      if (subexprs.length !== quasis.length - 1) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerAssignment) Unexpected quasi and subexpression lengths in TemplateLiteral.`,
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+
+      if (subexprs.some((e) => !e.isExpression())) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
+          severity: ErrorSeverity.Todo,
+          nodePath: exprPath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+
+      const subexprPlaces = subexprs.map((e) =>
+        lowerExpressionToPlace(builder, e as NodePath<t.Expression>)
+      );
+
+      return {
+        kind: "TemplateLiteral",
+        subexprs: subexprPlaces,
+        quasis: expr.get("quasis").map((q) => q.node.value),
+        loc: exprLoc,
+      };
+    }
     case "UnaryExpression": {
       let expr = exprPath as NodePath<t.UnaryExpression>;
       return {

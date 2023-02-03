@@ -6,6 +6,7 @@
  */
 
 import generate from "@babel/generator";
+import invariant from "invariant";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 import {
@@ -368,6 +369,19 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )} ? ${printInstructionValue(
         instrValue.consequent
       )} : ${printInstructionValue(instrValue.alternate)}`;
+      break;
+    }
+    case "TemplateLiteral": {
+      value = "`";
+      invariant(
+        instrValue.subexprs.length === instrValue.quasis.length - 1,
+        "Bad assumption about quasi length."
+      );
+      for (let i = 0; i < instrValue.subexprs.length; i++) {
+        value += instrValue.quasis[i].raw;
+        value += `\${${printPlace(instrValue.subexprs[i])}}`;
+      }
+      value += instrValue.quasis.at(-1)!.raw + "`";
       break;
     }
     default: {

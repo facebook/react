@@ -127,6 +127,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "TemplateLiteral": {
+      yield* instrValue.subexprs;
+      break;
+    }
     case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
@@ -249,6 +253,10 @@ export function mapInstructionOperands(
     }
     case "TypeCastExpression": {
       instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "TemplateLiteral": {
+      instrValue.subexprs = instrValue.subexprs.map(fn);
       break;
     }
     case "UnsupportedNode":

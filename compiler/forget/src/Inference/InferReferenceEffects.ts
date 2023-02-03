@@ -599,6 +599,13 @@ function inferBlock(env: Environment, block: BasicBlock) {
         effectKind = Effect.Mutate;
         break;
       }
+      case "TemplateLiteral": {
+        // template literal (with no tag function) always produces
+        // an immutable string
+        valueKind = ValueKind.Immutable;
+        effectKind = Effect.Read;
+        break;
+      }
       case "JSXText":
       case "Primitive": {
         valueKind = ValueKind.Immutable;

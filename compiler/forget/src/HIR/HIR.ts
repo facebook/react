@@ -446,7 +446,11 @@ export type InstructionData =
       tag: Place;
       value: { raw: string; cooked?: string };
     }
-
+  | {
+      kind: "TemplateLiteral";
+      subexprs: Array<Place>;
+      quasis: Array<{ raw: string; cooked?: string }>;
+    }
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow
