@@ -42,8 +42,8 @@
   },
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/react-server-dom-webpack"
   },
   "engines": {
@@ -56,8 +56,8 @@
   },
   "dependencies": {
     "acorn": "^6.2.1",
-    "neo-async": "^2.6.1",
-    "loose-envify": "^1.1.0"
+    "loose-envify": "^1.1.0",
+    "neo-async": "^2.6.1"
   },
   "browserify": {
     "transform": [

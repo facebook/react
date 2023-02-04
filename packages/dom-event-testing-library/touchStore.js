@@ -18,47 +18,46 @@
 const activeTouches = new Map();
 
 export function addTouch(touch) {
-  const identifier = touch.identifier;
-  const target = touch.target;
-  if (!activeTouches.has(target)) {
-    activeTouches.set(target, new Map());
+  const { identifier, target } = touch;
+  let targetTouches = activeTouches.get(target);
+  if (!targetTouches) {
+    activeTouches.set(target, targetTouches = new Map());
   }
-  if (activeTouches.get(target).get(identifier)) {
+  if (targetTouches.has(identifier)) {
     // Do not allow existing touches to be overwritten
     console.error(
       'Touch with identifier %s already exists. Did not record touch start.',
-      identifier,
+      identifier
     );
   } else {
-    activeTouches.get(target).set(identifier, touch);
+    targetTouches.set(identifier, touch);
   }
 }
 
+
 export function updateTouch(touch) {
-  const identifier = touch.identifier;
-  const target = touch.target;
-  if (activeTouches.get(target) != null) {
-    activeTouches.get(target).set(identifier, touch);
+  const { identifier, target } = touch;
+  const targetTouches = activeTouches.get(target);
+  if (targetTouches) {
+    targetTouches.set(identifier, touch);
   } else {
     console.error(
       'Touch with identifier %s does not exist. Cannot record touch move without a touch start.',
-      identifier,
+      identifier
     );
   }
 }
 
 export function removeTouch(touch) {
-  const identifier = touch.identifier;
-  const target = touch.target;
-  if (activeTouches.get(target) != null) {
-    if (activeTouches.get(target).has(identifier)) {
-      activeTouches.get(target).delete(identifier);
-    } else {
-      console.error(
-        'Touch with identifier %s does not exist. Cannot record touch end without a touch start.',
-        identifier,
-      );
-    }
+  const { identifier, target } = touch;
+  const targetTouches = activeTouches.get(target);
+  if (targetTouches && targetTouches.has(identifier)) {
+    targetTouches.delete(identifier);
+  } else {
+    console.error(
+      'Touch with identifier %s does not exist. Cannot record touch end without a touch start.',
+      identifier
+    );
   }
 }
 

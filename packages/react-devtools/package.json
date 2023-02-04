@@ -8,9 +8,7 @@
     "url": "https://github.com/facebook/react.git",
     "directory": "packages/react-devtools"
   },
-  "bin": {
-    "react-devtools": "./bin.js"
-  },
+  "bin": "./bin.js",
   "files": [
     "bin.js",
     "app.html",
