@@ -8044,22 +8044,22 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-flow-bin@^0.196.3:
-  version "0.196.3"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.196.3.tgz#b6df48986a2629f2c6a26fb79d73fc07c8056af0"
-  integrity sha512-pmvjlksi1CvkSnDHpcfhDFj/KC3hwSgE2OpzvugW57dfgqfHzqX1UfZIcScGWM5AmP/IeOsQCW383k3zIbEnrA==
+flow-bin@^0.199.0:
+  version "0.199.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.199.0.tgz#e710c0834d4e1032529a633e0cf32d89a102fcfb"
+  integrity sha512-8N8jn59ghgtDSogFoy1Ld1P8NlfdlVUcXSRADDf8WyX3SMMA6b1SbqraTRXxJDNn0F3WdVBHKdufdUg73y4Nhw==
 
-flow-parser@^0.196.1:
-  version "0.196.1"
-  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.196.1.tgz#3c31f102454518f0c68eeb99f57501c2a0c9bff0"
-  integrity sha512-V3yaKHyBWhl+LF6sxgbfqxMlwoFKs8UKh2DYTrGj1AHi9ST7Zyp+9ToF4l9eoL6l/DxdFwCNF3MAJ1vCVrgJmw==
+flow-parser@^0.198.2:
+  version "0.198.2"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.198.2.tgz#4c225995896b6be75943e9358e606a4fd86c87d9"
+  integrity sha512-tCQzqXbRAz0ZadIhAXGwdp/xsusADo8IK9idgc/2qCK5RmazbKDGedyykfRtzWgy7Klt4f4NZxq0o/wFUg6plQ==
 
-flow-remove-types@^2.196.1:
-  version "2.196.1"
-  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.196.1.tgz#c77ab53679beb1b1ba420c16865cea714a67defc"
-  integrity sha512-pAEe2B/fKtV96MVGWQgmjP5Z1nLeFFe++r83ql1Zj86+p+3IujsbvwxiXCiF/SS6ObbB6TmciCxxd+FsOUyY3Q==
+flow-remove-types@^2.198.2:
+  version "2.198.2"
+  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.198.2.tgz#1b9e0e32eead4554f0d325391bbeb0c7a2a2993f"
+  integrity sha512-l7ua9FnZwI0HUUUu2Khj3pYnGSlkY5vOE60bgG1ajPJ9P+KzRgXIjpCaS4iTbUEpu6olzRrAVJtJ5N8kxmvpiQ==
   dependencies:
-    flow-parser "^0.196.1"
+    flow-parser "^0.198.2"
     pirates "^3.0.2"
     vlq "^0.2.1"
 

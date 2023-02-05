@@ -33,8 +33,6 @@ module.exports = function register() {
         // reference.
         case 'defaultProps':
           return undefined;
-        case 'getDefaultProps':
-          return undefined;
         // Avoid this attempting to be serialized.
         case 'toJSON':
           return undefined;
@@ -91,8 +89,6 @@ module.exports = function register() {
         // reference.
         case 'defaultProps':
           return undefined;
-        case 'getDefaultProps':
-          return undefined;
         // Avoid this attempting to be serialized.
         case 'toJSON':
           return undefined;
@@ -132,24 +128,13 @@ module.exports = function register() {
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
 
-            const innerModuleId = target.filepath;
-            const clientReference: Function = Object.defineProperties(
-              (function () {
-                throw new Error(
-                  `Attempted to call the module exports of ${innerModuleId} from the server` +
-                    `but it's on the client. It's not possible to invoke a client function from ` +
-                    `the server, it can only be rendered as a Component or passed to props of a` +
-                    `Client Component.`,
-                );
-              }: any),
-              {
-                // Represents the whole object instead of a particular import.
-                name: {value: '*'},
-                $$typeof: {value: CLIENT_REFERENCE},
-                filepath: {value: target.filepath},
-                async: {value: true},
-              },
-            );
+            const clientReference = Object.defineProperties(({}: any), {
+              // Represents the whole Module object instead of a particular import.
+              name: {value: '*'},
+              $$typeof: {value: CLIENT_REFERENCE},
+              filepath: {value: target.filepath},
+              async: {value: true},
+            });
             const proxy = new Proxy(clientReference, proxyHandlers);
 
             // Treat this as a resolved Promise for React's use()
@@ -221,23 +206,13 @@ module.exports = function register() {
   // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._extensions['.client.js'] = function (module, path) {
     const moduleId: string = (url.pathToFileURL(path).href: any);
-    const clientReference: Function = Object.defineProperties(
-      (function () {
-        throw new Error(
-          `Attempted to call the module exports of ${moduleId} from the server` +
-            `but it's on the client. It's not possible to invoke a client function from ` +
-            `the server, it can only be rendered as a Component or passed to props of a` +
-            `Client Component.`,
-        );
-      }: any),
-      {
-        // Represents the whole object instead of a particular import.
-        name: {value: '*'},
-        $$typeof: {value: CLIENT_REFERENCE},
-        filepath: {value: moduleId},
-        async: {value: false},
-      },
-    );
+    const clientReference = Object.defineProperties(({}: any), {
+      // Represents the whole Module object instead of a particular import.
+      name: {value: '*'},
+      $$typeof: {value: CLIENT_REFERENCE},
+      filepath: {value: moduleId},
+      async: {value: false},
+    });
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(clientReference, proxyHandlers);
   };
