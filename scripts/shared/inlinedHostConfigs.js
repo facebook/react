@@ -46,7 +46,7 @@ module.exports = [
     isServerSupported: true,
   },
   {
-    shortName: 'bun',
+    shortName: 'dom-bun',
     entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
     paths: [
       'react-dom',
