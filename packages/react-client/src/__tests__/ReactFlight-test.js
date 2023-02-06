@@ -447,7 +447,10 @@ describe('ReactFlight', () => {
             <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
               <Render promise={ReactNoopFlightClient.read(event)} />
             </ErrorBoundary>
-            <ErrorBoundary expectedMessage="Functions cannot be passed directly to Client Components because they're not serializable.">
+            <ErrorBoundary
+              expectedMessage={
+                'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+              }>
               <Render promise={ReactNoopFlightClient.read(fn)} />
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">
@@ -459,7 +462,10 @@ describe('ReactFlight', () => {
             <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
               <Render promise={ReactNoopFlightClient.read(eventClient)} />
             </ErrorBoundary>
-            <ErrorBoundary expectedMessage="Functions cannot be passed directly to Client Components because they're not serializable.">
+            <ErrorBoundary
+              expectedMessage={
+                'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+              }>
               <Render promise={ReactNoopFlightClient.read(fnClient)} />
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">

@@ -14,6 +14,8 @@ import type {
   ModuleMetaData,
   ClientReference,
   ClientReferenceKey,
+  ServerReference,
+  ServerReferenceMetaData,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -42,8 +44,10 @@ import {
   processErrorChunkDev,
   processReferenceChunk,
   resolveModuleMetaData,
+  resolveServerReferenceMetaData,
   getClientReferenceKey,
   isClientReference,
+  isServerReference,
   supportsRequestStorage,
   requestStorage,
 } from './ReactFlightServerConfig';
@@ -101,7 +105,8 @@ export type ReactModel =
   | symbol
   | null
   | Iterable<ReactModel>
-  | ReactModelObject;
+  | ReactModelObject
+  | Promise<ReactModel>;
 
 type ReactModelObject = {+[key: string]: ReactModel};
 
@@ -134,6 +139,7 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenModules: Map<ClientReferenceKey, number>,
+  writtenServerReferences: Map<ServerReference<any>, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
@@ -187,6 +193,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    writtenServerReferences: new Map(),
     writtenProviders: new Map(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
@@ -509,6 +516,10 @@ function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
 }
 
+function serializeServerReferenceID(id: number): string {
+  return '$F' + id.toString(16);
+}
+
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -567,6 +578,32 @@ function serializeClientReference(
     }
     return serializeByValueID(errorId);
   }
+}
+
+function serializeServerReference(
+  request: Request,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
+  serverReference: ServerReference<any>,
+): string {
+  const writtenServerReferences = request.writtenServerReferences;
+  const existingId = writtenServerReferences.get(serverReference);
+  if (existingId !== undefined) {
+    return serializeServerReferenceID(existingId);
+  }
+  const serverReferenceMetaData: ServerReferenceMetaData =
+    resolveServerReferenceMetaData(request.bundlerConfig, serverReference);
+  request.pendingChunks++;
+  const moduleId = request.nextChunkId++;
+  // We assume that this object doesn't suspend.
+  const processedChunk = processModelChunk(
+    request,
+    moduleId,
+    serverReferenceMetaData,
+  );
+  request.completedJSONChunks.push(processedChunk);
+  writtenServerReferences.set(serverReference, moduleId);
+  return serializeServerReferenceID(moduleId);
 }
 
 function escapeStringValue(value: string): string {
@@ -991,6 +1028,7 @@ export function resolveModelToJSON(
   if (typeof value === 'object') {
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
+      // $FlowFixMe[method-unbinding]
     } else if (typeof value.then === 'function') {
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
@@ -1067,6 +1105,9 @@ export function resolveModelToJSON(
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
     }
+    if (isServerReference(value)) {
+      return serializeServerReference(request, parent, key, (value: any));
+    }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
@@ -1076,7 +1117,7 @@ export function resolveModelToJSON(
     } else {
       throw new Error(
         'Functions cannot be passed directly to Client Components ' +
-          "because they're not serializable." +
+          'unless you explicitly expose it by marking it with "use server".' +
           describeObjectForErrorMessage(parent, key),
       );
     }

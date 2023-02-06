@@ -207,7 +207,10 @@ async function transformClientModule(
 
   // Do a quick check for the exact string. If it doesn't exist, don't
   // bother parsing.
-  if (source.indexOf('use client') === -1) {
+  if (
+    source.indexOf('use client') === -1 &&
+    source.indexOf('use server') === -1
+  ) {
     return source;
   }
 
@@ -217,6 +220,7 @@ async function transformClientModule(
   });
 
   let useClient = false;
+  let useServer = false;
   for (let i = 0; i < body.length; i++) {
     const node = body[i];
     if (node.type !== 'ExpressionStatement' || !node.directive) {
@@ -224,51 +228,64 @@ async function transformClientModule(
     }
     if (node.directive === 'use client') {
       useClient = true;
-      break;
+    }
+    if (node.directive === 'use server') {
+      useServer = true;
     }
   }
 
-  if (!useClient) {
+  if (!useClient && !useServer) {
     return source;
+  }
+
+  if (useClient && useServer) {
+    throw new Error(
+      'Cannot have both "use client" and "use server" directives in the same file.',
+    );
   }
 
   await parseExportNamesInto(body, names, url, loader);
 
-  let newSrc =
-    "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
-  for (let i = 0; i < names.length; i++) {
-    const name = names[i];
-    if (name === 'default') {
-      newSrc += 'export default ';
-      newSrc += 'Object.defineProperties(function() {';
-      newSrc +=
-        'throw new Error(' +
-        JSON.stringify(
-          `Attempted to call the default export of ${url} from the server` +
-            `but it's on the client. It's not possible to invoke a client function from ` +
-            `the server, it can only be rendered as a Component or passed to props of a` +
-            `Client Component.`,
-        ) +
-        ');';
-    } else {
-      newSrc += 'export const ' + name + ' = ';
-      newSrc += 'Object.defineProperties(function() {';
-      newSrc +=
-        'throw new Error(' +
-        JSON.stringify(
-          `Attempted to call ${name}() from the server but ${name} is on the client. ` +
-            `It's not possible to invoke a client function from the server, it can ` +
-            `only be rendered as a Component or passed to props of a Client Component.`,
-        ) +
-        ');';
+  if (useClient) {
+    let newSrc =
+      "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i];
+      if (name === 'default') {
+        newSrc += 'export default ';
+        newSrc += 'Object.defineProperties(function() {';
+        newSrc +=
+          'throw new Error(' +
+          JSON.stringify(
+            `Attempted to call the default export of ${url} from the server` +
+              `but it's on the client. It's not possible to invoke a client function from ` +
+              `the server, it can only be rendered as a Component or passed to props of a` +
+              `Client Component.`,
+          ) +
+          ');';
+      } else {
+        newSrc += 'export const ' + name + ' = ';
+        newSrc += 'Object.defineProperties(function() {';
+        newSrc +=
+          'throw new Error(' +
+          JSON.stringify(
+            `Attempted to call ${name}() from the server but ${name} is on the client. ` +
+              `It's not possible to invoke a client function from the server, it can ` +
+              `only be rendered as a Component or passed to props of a Client Component.`,
+          ) +
+          ');';
+      }
+      newSrc += '},{';
+      newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
+      newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
+      newSrc += 'filepath: {value: ' + JSON.stringify(url) + '}';
+      newSrc += '});\n';
     }
-    newSrc += '},{';
-    newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
-    newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
-    newSrc += 'filepath: {value: ' + JSON.stringify(url) + '}';
-    newSrc += '});\n';
+    return newSrc;
+  } else {
+    // TODO
+    return source;
   }
-  return newSrc;
 }
 
 async function loadClientImport(

@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactModel} from 'react-server/src/ReactFlightServer';
+
 type WebpackMap = {
   [filepath: string]: {
     [name: string]: ModuleMetaData,
@@ -14,6 +16,19 @@ type WebpackMap = {
 };
 
 export type BundlerConfig = WebpackMap;
+
+export type ServerReference<T: Function> = T & {
+  $$typeof: symbol,
+  $$filepath: string,
+  $$name: string,
+  $$bound: Array<ReactModel>,
+};
+
+export type ServerReferenceMetaData = {
+  id: string,
+  name: string,
+  bound: Promise<Array<ReactModel>>,
+};
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
@@ -33,6 +48,7 @@ export type ModuleMetaData = {
 export type ClientReferenceKey = string;
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
+const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
@@ -47,6 +63,10 @@ export function getClientReferenceKey(
 
 export function isClientReference(reference: Object): boolean {
   return reference.$$typeof === CLIENT_REFERENCE_TAG;
+}
+
+export function isServerReference(reference: Object): boolean {
+  return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
 
 export function resolveModuleMetaData<T>(
@@ -65,4 +85,15 @@ export function resolveModuleMetaData<T>(
   } else {
     return resolvedModuleData;
   }
+}
+
+export function resolveServerReferenceMetaData<T>(
+  config: BundlerConfig,
+  serverReference: ServerReference<T>,
+): ServerReferenceMetaData {
+  return {
+    id: serverReference.$$filepath,
+    name: serverReference.$$name,
+    bound: Promise.resolve(serverReference.$$bound),
+  };
 }

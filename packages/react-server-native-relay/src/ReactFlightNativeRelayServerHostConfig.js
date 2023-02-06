@@ -15,6 +15,8 @@ import type {JSResourceReference} from 'JSResourceReference';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 export type ClientReference<T> = JSResourceReference<T>;
+export type ServerReference<T> = T;
+export type ServerReferenceMetaData = {};
 
 import type {
   Destination,
@@ -40,6 +42,10 @@ export function isClientReference(reference: Object): boolean {
   return reference instanceof JSResourceReferenceImpl;
 }
 
+export function isServerReference(reference: Object): boolean {
+  return false;
+}
+
 export type ClientReferenceKey = ClientReference<any>;
 
 export function getClientReferenceKey(
@@ -55,6 +61,13 @@ export function resolveModuleMetaData<T>(
   resource: ClientReference<T>,
 ): ModuleMetaData {
   return resolveModuleMetaDataImpl(config, resource);
+}
+
+export function resolveServerReferenceMetaData<T>(
+  config: BundlerConfig,
+  resource: ServerReference<T>,
+): ServerReferenceMetaData {
+  throw new Error('Not implemented.');
 }
 
 export type Chunk = RowEncoding;
