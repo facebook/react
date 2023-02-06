@@ -37,12 +37,12 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactModel,
-  webpackMaps: BundlerConfig,
+  webpackMap: BundlerConfig,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    webpackMaps,
+    webpackMap,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
