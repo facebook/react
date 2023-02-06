@@ -2507,6 +2507,50 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
+  it('can hydrate uSES in StrictMode with different client and server snapshot', async () => {
+    function subscribe() {
+      return () => {};
+    }
+    function getClientSnapshot() {
+      return 'Yay!';
+    }
+    function getServerSnapshot() {
+      return 'Nay!';
+    }
+
+    function App() {
+      const value = useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
+      Scheduler.unstable_yieldValue(value);
+
+      return value;
+    }
+
+    const element = (
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(element);
+      pipe(writable);
+    });
+    expect(Scheduler).toHaveYielded(['Nay!']);
+
+    ReactDOMClient.hydrateRoot(container, element);
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        'Nay!',
+        // Missing flushAndYield
+        // 'Yay!'
+      ]);
+    }).toErrorDev([]);
+  });
+
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
       'boundary, and during the client render it recovers',
