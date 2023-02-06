@@ -8,7 +8,7 @@
 
 module.exports = [
   {
-    shortName: 'dom',
+    shortName: 'dom-node',
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
