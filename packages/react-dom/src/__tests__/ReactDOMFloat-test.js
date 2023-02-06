@@ -399,7 +399,7 @@ describe('ReactDOMFloat', () => {
         <style>foo</style>
       </html>,
     ).toErrorDev([
-      'Cannot render <style> outside the main document. Try moving it into the root <head> tag.',
+      'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style> to the <style> tag.',
       'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
     ]);
 
@@ -612,6 +612,126 @@ describe('ReactDOMFloat', () => {
     expect(
       Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+  });
+
+  it('can avoid inserting a late stylesheet if it already rendered on the client', async () => {
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading foo...">
+              <BlockedOn value="foo">
+                <link rel="stylesheet" href="foo" precedence="foo" />
+                foo
+              </BlockedOn>
+            </Suspense>
+            <Suspense fallback="loading bar...">
+              <BlockedOn value="bar">
+                <link rel="stylesheet" href="bar" precedence="bar" />
+                bar
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>
+          <link rel="stylesheet" href="foo" precedence="foo" />
+          <Suspense fallback="loading foo...">
+            <link rel="stylesheet" href="foo" precedence="foo" />
+            foo
+          </Suspense>
+          <Suspense fallback="loading bar...">
+            <link rel="stylesheet" href="bar" precedence="bar" />
+            bar
+          </Suspense>
+        </body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+          <link as="style" href="foo" rel="preload" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('bar');
+    });
+    await act(() => {
+      let sheets = document.querySelectorAll(
+        'link[rel="stylesheet"][data-precedence]',
+      );
+      let event = document.createEvent('Event');
+      event.initEvent('load', true, true);
+      for (let i = 0; i < sheets.length; i++) {
+        sheets[i].dispatchEvent(event);
+      }
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+          <link rel="stylesheet" href="bar" data-precedence="bar" />
+          <link as="style" href="foo" rel="preload" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'bar'}
+          <link as="style" href="bar" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+    await act(() => {
+      let sheets = document.querySelectorAll(
+        'link[rel="stylesheet"][data-precedence]',
+      );
+      let event = document.createEvent('Event');
+      event.initEvent('load', true, true);
+      for (let i = 0; i < sheets.length; i++) {
+        sheets[i].dispatchEvent(event);
+      }
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+          <link rel="stylesheet" href="bar" data-precedence="bar" />
+          <link as="style" href="foo" rel="preload" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          <link as="style" href="bar" rel="preload" />
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
   });
 
   describe('ReactDOM.preload(href, { as: ... })', () => {
@@ -1867,6 +1987,152 @@ describe('ReactDOMFloat', () => {
       }).toErrorDev([
         'Warning: React encountered a <link rel="stylesheet" href="foo" .../> with a `precedence` prop that has props that conflict with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../> the props from the first encountered instance will be used and props from later instances will be ignored. Update the props on either <link rel="stylesheet" .../> instance so they agree.\n  "media" missing for props, original value: "all"\n  "data-extra" prop value: "foo", missing from original props\n  "precedence" prop value: "bar", original value: "foo"',
       ]);
+    });
+  });
+
+  describe('Style Resource', () => {
+    it('treats <style href="..." precedence="..."> elements as a style resource when server rendering', async () => {
+      const css = `
+body {
+  background-color: red;
+}`;
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <style href="foo" precedence="foo">
+                {css}
+              </style>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo" data-precedence="foo">
+              {css}
+            </style>
+          </head>
+          <body />
+        </html>,
+      );
+    });
+
+    it('can insert style resources as part of a boundary reveal', async () => {
+      const cssRed = `
+body {
+  background-color: red;
+}`;
+      const cssBlue = `
+body {
+background-color: blue;
+}`;
+      const cssGreen = `
+body {
+background-color: green;
+}`;
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Suspense fallback="loading...">
+                <BlockedOn value="blocked">
+                  <style href="foo" precedence="foo">
+                    {cssRed}
+                  </style>
+                  loaded
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>loading...</body>
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('blocked');
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo" data-precedence="foo">
+              {cssRed}
+            </style>
+          </head>
+          <body>loaded</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <style href="foo" precedence="foo">
+                {cssRed}
+              </style>
+              loaded
+            </Suspense>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo" data-precedence="foo">
+              {cssRed}
+            </style>
+          </head>
+          <body>loaded</body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <style href="foo" precedence="foo">
+                {cssRed}
+              </style>
+              loaded
+            </Suspense>
+            <style href="bar" precedence="bar">
+              {cssBlue}
+            </style>
+            <style href="baz" precedence="foo">
+              {cssGreen}
+            </style>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo" data-precedence="foo">
+              {cssRed}
+            </style>
+            <style data-href="baz" data-precedence="foo">
+              {cssGreen}
+            </style>
+            <style data-href="bar" data-precedence="bar">
+              {cssBlue}
+            </style>
+          </head>
+          <body>loaded</body>
+        </html>,
+      );
     });
   });
 

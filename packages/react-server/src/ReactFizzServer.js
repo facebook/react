@@ -65,6 +65,7 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  writeResourcesForBoundary,
   writePreamble,
   writeHoistables,
   writePostamble,
@@ -2175,6 +2176,10 @@ function flushCompletedBoundary(
   }
   completedSegments.length = 0;
 
+  if (enableFloat) {
+    writeResourcesForBoundary(destination, boundary.resources);
+  }
+
   return writeCompletedBoundaryInstruction(
     destination,
     request.responseState,
@@ -2210,7 +2215,16 @@ function flushPartialBoundary(
     }
   }
   completedSegments.splice(0, i);
-  return true;
+
+  if (enableFloat) {
+    // The way this is structured we only write resources for partial boundaries
+    // if there is no backpressure. Later before we complete the boundary we
+    // will write resources regardless of backpressure before we emit the
+    // completion instruction
+    return writeResourcesForBoundary(destination, boundary.resources);
+  } else {
+    return true;
+  }
 }
 
 function flushPartiallyCompletedSegment(

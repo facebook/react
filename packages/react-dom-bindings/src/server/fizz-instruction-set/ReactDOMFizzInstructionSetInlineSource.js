@@ -29,11 +29,25 @@ export function completeBoundaryWithStyles(
   const thisDocument = document;
   let lastResource, node;
 
+  let nodes = thisDocument.querySelectorAll('template[data-precedence]');
+  for (let i = 0; (node = nodes[i++]); ) {
+    let content = node.content;
+    let child = content.firstChild;
+    for (let j = 0; child; child = child.nextSibling) {
+      resourceMap.set(child.getAttribute('data-href'), child);
+    }
+    node.parentNode.removeChild(node);
+  }
+
   // Seed the precedence list with existing resources
-  const nodes = thisDocument.querySelectorAll(
+  nodes = thisDocument.querySelectorAll(
     'link[data-precedence],style[data-precedence]',
   );
   for (let i = 0; (node = nodes[i++]); ) {
+    resourceMap.set(
+      node.getAttribute(node.nodeName === 'STYLE' ? 'data-href' : 'href'),
+      node,
+    );
     precedences.set(node.dataset['precedence'], (lastResource = node));
   }
 
@@ -51,37 +65,39 @@ export function completeBoundaryWithStyles(
     // We check if this resource is already in our resourceMap and reuse it if so.
     // If it is already loaded we don't return it as a depenendency since there is nothing
     // to wait for
-    loadingState = resourceMap.get(href);
-    if (loadingState) {
-      if (loadingState['s'] !== 'l') {
-        dependencies.push(loadingState);
+    resourceEl = resourceMap.get(href);
+    if (resourceEl) {
+      if (resourceEl['_p']) {
+        if (resourceEl['_p']['s'] !== 'l') {
+          dependencies.push(resourceEl['_p']);
+        }
+        continue;
+      } else {
+        // We assume <style> since all links should have a loading state if they are in
+        // the resourceMap.  We mark the style as loaded so we can bail out on a future pass without rehoisting
+        resourceEl['_p'] = {s: 'l'};
       }
-      continue;
+    } else {
+      // We construct our new resource element, looping over remaining attributes if any
+      // setting them to the Element.
+      resourceEl = thisDocument.createElement('link');
+      resourceEl.href = href;
+      resourceEl.rel = 'stylesheet';
+      resourceEl.dataset['precedence'] = precedence = style[j++];
+      while ((attr = style[j++])) {
+        resourceEl.setAttribute(attr, style[j++]);
+      }
+      resourceMap.set(href, resourceEl);
+      loadingState = resourceEl['_p'] = new Promise((re, rj) => {
+        resourceEl.onload = re;
+        resourceEl.onerror = rj;
+      });
+      loadingState.then(
+        setStatus.bind(loadingState, LOADED),
+        setStatus.bind(loadingState, ERRORED),
+      );
+      dependencies.push(loadingState);
     }
-
-    // We construct our new resource element, looping over remaining attributes if any
-    // setting them to the Element.
-    resourceEl = thisDocument.createElement('link');
-    resourceEl.href = href;
-    resourceEl.rel = 'stylesheet';
-    resourceEl.dataset['precedence'] = precedence = style[j++];
-    while ((attr = style[j++])) {
-      resourceEl.setAttribute(attr, style[j++]);
-    }
-
-    // We stash a pending promise in our map by href which will resolve or reject
-    // when the underlying resource loads or errors. We add it to the dependencies
-    // array to be returned.
-    loadingState = resourceEl['_p'] = new Promise((re, rj) => {
-      resourceEl.onload = re;
-      resourceEl.onerror = rj;
-    });
-    loadingState.then(
-      setStatus.bind(loadingState, LOADED),
-      setStatus.bind(loadingState, ERRORED),
-    );
-    resourceMap.set(href, loadingState);
-    dependencies.push(loadingState);
 
     // The prior style resource is the last one placed at a given
     // precedence or the last resource itself which may be null.

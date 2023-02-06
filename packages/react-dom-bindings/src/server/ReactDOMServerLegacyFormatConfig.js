@@ -11,6 +11,7 @@ import type {
   BootstrapScriptDescriptor,
   FormatContext,
   StreamingFormat,
+  InstructionState,
 } from './ReactDOMServerFormatConfig';
 
 import {
@@ -42,10 +43,7 @@ export type ResponseState = {
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
-  sentCompleteSegmentFunction: boolean,
-  sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean,
-  sentStyleInsertionFunction: boolean,
+  instructions: InstructionState,
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
@@ -81,10 +79,7 @@ export function createResponseState(
     nextSuspenseID: responseState.nextSuspenseID,
     streamingFormat: responseState.streamingFormat,
     startInlineScript: responseState.startInlineScript,
-    sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
-    sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
-    sentClientRenderFunction: responseState.sentClientRenderFunction,
-    sentStyleInsertionFunction: responseState.sentStyleInsertionFunction,
+    instructions: responseState.instructions,
     externalRuntimeConfig: responseState.externalRuntimeConfig,
     htmlChunks: responseState.htmlChunks,
     headChunks: responseState.headChunks,

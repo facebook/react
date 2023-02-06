@@ -50,15 +50,17 @@ type TResource<T: 'stylesheet' | 'style' | 'script' | 'void'> = {
   count: number,
 };
 type StylesheetResource = TResource<'stylesheet'>;
-type StyleResource = TResource<'style'>;
+type StyleTagResource = TResource<'style'>;
+type StyleResource = StyleTagResource | StylesheetResource;
 type ScriptResource = TResource<'script'>;
 type VoidResource = TResource<'void'>;
-type Resource =
-  | StylesheetResource
-  | StyleResource
-  | ScriptResource
-  | VoidResource;
+type Resource = StyleResource | ScriptResource | VoidResource;
 
+type StyleTagProps = {
+  'data-href': string,
+  'data-precedence': string,
+  [string]: mixed,
+};
 type StylesheetProps = {
   rel: 'stylesheet',
   href: string,
@@ -79,7 +81,7 @@ type PreloadProps = {
 };
 
 export type RootResources = {
-  hoistableStylesheets: Map<string, StylesheetResource>,
+  hoistableStyles: Map<string, StyleResource>,
   hoistableScripts: Map<string, ScriptResource>,
 };
 
@@ -183,7 +185,7 @@ function preload(href: string, options: PreloadOptions) {
     let key = preloadKey;
     switch (as) {
       case 'style':
-        key = getStylesheetKey(href);
+        key = getStyleKey(href);
         break;
       case 'script':
         key = getScriptKey(href);
@@ -261,7 +263,7 @@ function preinit(href: string, options: PreinitOptions) {
           let key = preloadKey;
           switch (as) {
             case 'style':
-              key = getStylesheetKey(href);
+              key = getStyleKey(href);
               break;
             case 'script':
               key = getScriptKey(href);
@@ -294,14 +296,13 @@ function preinit(href: string, options: PreinitOptions) {
 
     switch (as) {
       case 'style': {
-        const stylesheets = getResourcesFromRoot(resourceRoot)
-          .hoistableStylesheets;
+        const styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
 
-        const key = getStylesheetKey(href);
+        const key = getStyleKey(href);
         const precedence = options.precedence || 'default';
 
         // Check if this resource already exists
-        let resource = stylesheets.get(key);
+        let resource = styles.get(key);
         if (resource) {
           // We can early return. The resource exists and there is nothing
           // more to do
@@ -309,7 +310,9 @@ function preinit(href: string, options: PreinitOptions) {
         }
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = resourceRoot.querySelector(key);
+        let instance: null | Instance = resourceRoot.querySelector(
+          getStylesheetSelectorFromKey(key),
+        );
         if (!instance) {
           // Construct a new instance and insert it
           const stylesheetProps = stylesheetPropsFromPreinitOptions(
@@ -338,7 +341,7 @@ function preinit(href: string, options: PreinitOptions) {
           instance,
           count: 1,
         };
-        stylesheets.set(key, resource);
+        styles.set(key, resource);
         return;
       }
       case 'script': {
@@ -356,7 +359,9 @@ function preinit(href: string, options: PreinitOptions) {
         }
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = resourceRoot.querySelector(key);
+        let instance: null | Instance = resourceRoot.querySelector(
+          getScriptSelectorFromKey(key),
+        );
         if (!instance) {
           // Construct a new instance and insert it
           const scriptProps = scriptPropsFromPreinitOptions(src, options);
@@ -432,6 +437,12 @@ function scriptPropsFromPreinitOptions(
 //      Resources from render
 // --------------------------------------
 
+type StyleTagQualifyingProps = {
+  href: string,
+  precedence: string,
+  [string]: mixed,
+};
+
 type StylesheetQualifyingProps = {
   rel: 'stylesheet',
   href: string,
@@ -456,6 +467,32 @@ export function getResource(
     case 'title': {
       return null;
     }
+    case 'style': {
+      if (
+        typeof pendingProps.precedence === 'string' &&
+        typeof pendingProps.href === 'string'
+      ) {
+        const key = getStyleKey(pendingProps.href);
+        const styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+        let resource = styles.get(key);
+        if (!resource) {
+          // We asserted this above but Flow can't figure out that the type satisfies
+          const ownerDocument = getDocumentFromRoot(resourceRoot);
+          resource = {
+            type: 'style',
+            instance: null,
+            count: 0,
+          };
+          styles.set(key, resource);
+        }
+        return resource;
+      }
+      return {
+        type: 'void',
+        instance: null,
+        count: 0,
+      };
+    }
     case 'link': {
       if (
         pendingProps.rel === 'stylesheet' &&
@@ -463,12 +500,11 @@ export function getResource(
         typeof pendingProps.precedence === 'string'
       ) {
         const qualifiedProps: StylesheetQualifyingProps = pendingProps;
-        const key = getStylesheetKey(qualifiedProps.href);
+        const key = getStyleKey(qualifiedProps.href);
 
-        const stylesheets = getResourcesFromRoot(resourceRoot)
-          .hoistableStylesheets;
+        const styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
 
-        let resource = stylesheets.get(key);
+        let resource = styles.get(key);
         if (!resource) {
           // We asserted this above but Flow can't figure out that the type satisfies
           const ownerDocument = getDocumentFromRoot(resourceRoot);
@@ -477,7 +513,7 @@ export function getResource(
             instance: null,
             count: 0,
           };
-          stylesheets.set(key, resource);
+          styles.set(key, resource);
           if (!preloadPropsMap.has(key)) {
             preloadStylesheet(
               ownerDocument,
@@ -521,6 +557,37 @@ export function getResource(
   }
 }
 
+function styleTagPropsFromRawProps(
+  rawProps: StyleTagQualifyingProps,
+): StyleTagProps {
+  return {
+    ...rawProps,
+    'data-href': rawProps.href,
+    'data-precedence': rawProps.precedence,
+    href: null,
+    precedence: null,
+  };
+}
+
+function getStyleKey(href: string) {
+  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+    href,
+  );
+  return `href="${limitedEscapedHref}"`;
+}
+
+function getStyleTagSelectorFromKey(key: string) {
+  return `style[data-${key}]`;
+}
+
+function getStylesheetSelectorFromKey(key: string) {
+  return `link[rel="stylesheet"][${key}]`;
+}
+
+function getPreloadStylesheetSelectorFromKey(key: string) {
+  return `link[rel="preload"][as="style"][${key}]`;
+}
+
 function stylesheetPropsFromRawProps(
   rawProps: StylesheetQualifyingProps,
 ): StylesheetProps {
@@ -531,13 +598,6 @@ function stylesheetPropsFromRawProps(
   };
 }
 
-function getStylesheetKey(href: string) {
-  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-    href,
-  );
-  return `link[rel="stylesheet"][href="${limitedEscapedHref}"]`;
-}
-
 function preloadStylesheet(
   ownerDocument: Document,
   key: string,
@@ -545,7 +605,7 @@ function preloadStylesheet(
 ) {
   preloadPropsMap.set(key, preloadProps);
 
-  if (!ownerDocument.querySelector(key)) {
+  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
     // There is no matching stylesheet instance in the Document.
     // We will insert a preload now to kick off loading because
     // we expect this stylesheet to commit
@@ -554,9 +614,7 @@ function preloadStylesheet(
     );
     if (
       null ===
-      ownerDocument.querySelector(
-        `link[rel="preload"][as="style"][href="${limitedEscapedHref}"]`,
-      )
+      ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
     ) {
       const preloadInstance = createElement(
         'link',
@@ -588,7 +646,11 @@ function preloadPropsFromStylesheet(
 
 function getScriptKey(src: string): string {
   const limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
-  return `script[async][src="${limitedEscapedSrc}"]`;
+  return `[src="${limitedEscapedSrc}"]`;
+}
+
+function getScriptSelectorFromKey(key: string): string {
+  return 'script[async]' + key;
 }
 
 // --------------------------------------
@@ -603,15 +665,45 @@ export function acquireResource(
   resource.count++;
   if (resource.instance === null) {
     switch (resource.type) {
+      case 'style': {
+        const qualifiedProps: StyleTagQualifyingProps = props;
+        const key = getStyleKey(qualifiedProps.href);
+
+        // Attempt to hydrate instance from DOM
+        let instance: null | Instance = hoistableRoot.querySelector(
+          getStyleTagSelectorFromKey(key),
+        );
+        if (instance) {
+          resource.instance = instance;
+          return instance;
+        }
+
+        const styleProps = styleTagPropsFromRawProps(props);
+        instance = createElement(
+          'style',
+          styleProps,
+          hoistableRoot,
+          HTML_NAMESPACE,
+        );
+
+        markNodeAsResource(instance);
+        setInitialProperties(instance, 'style', styleProps);
+        insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
+        resource.instance = instance;
+
+        return instance;
+      }
       case 'stylesheet': {
         // This typing is enforce by `getResource`. If we change the logic
         // there for what qualifies as a stylesheet resource we need to ensure
         // this cast still makes sense;
         const qualifiedProps: StylesheetQualifyingProps = props;
-        const key = getStylesheetKey(qualifiedProps.href);
+        const key = getStyleKey(qualifiedProps.href);
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = hoistableRoot.querySelector(key);
+        let instance: null | Instance = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(key),
+        );
         if (instance) {
           resource.instance = instance;
           return instance;
@@ -631,6 +723,14 @@ export function acquireResource(
           HTML_NAMESPACE,
         );
         markNodeAsResource(instance);
+        const linkInstance: HTMLLinkElement = (instance: any);
+        (linkInstance: any)._p = new Promise((resolve, reject) => {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        }).then(
+          () => ((linkInstance: any)._p.s = 'l'),
+          () => ((linkInstance: any)._p.s = 'e'),
+        );
         setInitialProperties(instance, 'link', stylesheetProps);
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
@@ -645,7 +745,9 @@ export function acquireResource(
         const key = getScriptKey(borrowedScriptProps.src);
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = hoistableRoot.querySelector(key);
+        let instance: null | Instance = hoistableRoot.querySelector(
+          getScriptSelectorFromKey(key),
+        );
         if (instance) {
           resource.instance = instance;
           return instance;
@@ -695,7 +797,7 @@ function insertStylesheet(
   root: HoistableRoot,
 ): void {
   const nodes = root.querySelectorAll(
-    'link[rel="stylesheet"][data-precedence]',
+    'link[rel="stylesheet"][data-precedence],style[data-precedence]',
   );
   const last = nodes.length ? nodes[nodes.length - 1] : null;
   let prior = last;

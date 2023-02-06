@@ -281,7 +281,7 @@ export function getResourcesFromRoot(root: HoistableRoot): RootResources {
   let resources = (root: any)[internalRootNodeResourcesKey];
   if (!resources) {
     resources = (root: any)[internalRootNodeResourcesKey] = {
-      hoistableStylesheets: new Map(),
+      hoistableStyles: new Map(),
       hoistableScripts: new Map(),
     };
   }

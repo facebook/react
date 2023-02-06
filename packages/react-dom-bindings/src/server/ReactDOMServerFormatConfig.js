@@ -112,7 +112,7 @@ export type StreamingFormat = 0 | 1;
 const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
-type InstructionState = number;
+export type InstructionState = number;
 const NothingSent /*                      */ = 0b0000;
 const SentCompleteSegmentFunction /*      */ = 0b0001;
 const SentCompleteBoundaryFunction /*     */ = 0b0010;
@@ -515,7 +515,7 @@ const styleAttributeStart = stringToPrecomputedChunk(' style="');
 const styleAssign = stringToPrecomputedChunk(':');
 const styleSeparator = stringToPrecomputedChunk(';');
 
-function pushStyle(
+function pushStyleAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   style: Object,
 ): void {
@@ -609,7 +609,7 @@ function pushAttribute(
 ): void {
   switch (name) {
     case 'style': {
-      pushStyle(target, value);
+      pushStyleAttribute(target, value);
       return;
     }
     case 'defaultValue':
@@ -892,7 +892,7 @@ function flattenOptionChildren(children: mixed): string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  Children.forEach((children: any), function (child) {
+  Children.forEach((children: any), function(child) {
     if (child == null) {
       return;
     }
@@ -1243,7 +1243,7 @@ function pushMeta(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-): ReactNodeList {
+): null {
   if (enableFloat) {
     if (insertionMode === SVG_MODE || noscriptTagInScope) {
       return pushSelfClosing(target, props, 'meta');
@@ -1344,10 +1344,7 @@ function pushLink(
               props: preloadAsStylePropsFromProps(href, props),
             };
             if (__DEV__) {
-              const devResource: ImplicitResourceDEV = (resource: any);
-              devResource.__provenance = 'implicit';
-              devResource.__underlyingProps = props;
-              devResource.__impliedProps = resource.props;
+              markAsImplicitResourceDEV(resource, props, resource.props);
             }
             resources.preloadsMap.set(key, resource);
           }
@@ -1356,7 +1353,7 @@ function pushLink(
           return pushLinkImpl(target, props);
         } else {
           // This stylesheet refers to a Resource and we create a new one if necessary
-          let resource = resources.stylesheetsMap.get(key);
+          let resource = resources.stylesMap.get(key);
           if (__DEV__) {
             if (resource) {
               const devResource: ResourceDEV = (resource: any);
@@ -1434,11 +1431,9 @@ function pushLink(
               props: resourceProps,
             };
             if (__DEV__) {
-              const devResource: RenderedResourceDEV = (resource: any);
-              devResource.__provenance = 'rendered';
-              devResource.__originalProps = props;
+              markAsRenderedResourceDEV(resource, props);
             }
-            resources.stylesheetsMap.set(key, resource);
+            resources.stylesMap.set(key, resource);
             let precedenceSet = resources.precedences.get(precedence);
             if (!precedenceSet) {
               precedenceSet = new Set();
@@ -1516,11 +1511,146 @@ function pushLinkImpl(
   return null;
 }
 
+function pushStyle(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  resources: Resources,
+  textEmbedded: boolean,
+  insertionMode: InsertionMode,
+  noscriptTagInScope: boolean,
+): ReactNodeList {
+  if (__DEV__) {
+    if (hasOwnProperty.call(props, 'children')) {
+      const children = props.children;
+
+      const child = Array.isArray(children)
+        ? children.length < 2
+          ? children[0]
+          : null
+        : children;
+
+      if (
+        typeof child === 'function' ||
+        typeof child === 'symbol' ||
+        Array.isArray(child)
+      ) {
+        const childType =
+          typeof child === 'function'
+            ? 'a Function'
+            : typeof child === 'symbol'
+            ? 'a Sybmol'
+            : 'an Array';
+        console.error(
+          'React expect children of <style> tags to be a string, number, or object with a `toString` method but found %s instead. ' +
+            'In browsers style Elements can only have `Text` Nodes as children.',
+          childType,
+        );
+      }
+    }
+  }
+  if (enableFloat) {
+    const precedence = props.precedence;
+    const href = props.href;
+
+    if (
+      insertionMode === SVG_MODE ||
+      noscriptTagInScope ||
+      typeof precedence !== 'string' ||
+      typeof href !== 'string' ||
+      href === ''
+    ) {
+      // This style tag is not able to be turned into a Style Resource
+      return pushStyleImpl(target, props);
+    }
+
+    const key = getResourceKey('style', href);
+    let resource = resources.stylesMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'style',
+        chunks: ([]: Array<Chunk | PrecomputedChunk>),
+        state: resources.boundaryResources ? Blocked : NoState,
+        props: styleTagPropsFromRawProps(props),
+      };
+      if (__DEV__) {
+        markAsRenderedResourceDEV(resource, props);
+      }
+      pushStyleImpl(resource.chunks, resource.props);
+
+      resources.stylesMap.set(key, resource);
+      let precedenceSet = resources.precedences.get(precedence);
+      if (!precedenceSet) {
+        precedenceSet = new Set();
+        resources.precedences.set(precedence, precedenceSet);
+      }
+      precedenceSet.add(resource);
+      if (resources.boundaryResources) {
+        resources.boundaryResources.add(resource);
+      }
+    }
+
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+  } else {
+    return pushStartGenericElement(target, props, 'style');
+  }
+}
+
+function pushStyleImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+): ReactNodeList {
+  target.push(startChunkForTag('style'));
+
+  let children = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            '`dangerouslySetInnerHTML` does not make sense on <title>.',
+          );
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+  target.push(endOfStartTag);
+
+  const child = Array.isArray(children)
+    ? children.length < 2
+      ? children[0]
+      : null
+    : children;
+  if (
+    typeof child !== 'function' &&
+    typeof child !== 'symbol' &&
+    child !== null &&
+    child !== undefined
+  ) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    target.push(stringToChunk(escapeTextForBrowser('' + child)));
+  }
+  target.push(endTag1, stringToChunk('style'), endTag2);
+  return null;
+}
+
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-): ReactNodeList {
+): null {
   target.push(startChunkForTag(tag));
 
   for (const propKey in props) {
@@ -1586,42 +1716,32 @@ function pushTitle(
   noscriptTagInScope: boolean,
 ): ReactNodeList {
   if (__DEV__) {
-    const children = props.children;
-    const childForValidation =
-      Array.isArray(children) && children.length < 2
-        ? children[0] || null
+    if (hasOwnProperty.call(props, 'children')) {
+      const children = props.children;
+
+      const child = Array.isArray(children)
+        ? children.length < 2
+          ? children[0]
+          : null
         : children;
-    if (Array.isArray(children) && children.length > 1) {
-      console.error(
-        'A title element received an array with more than 1 element as children. ' +
-          'In browsers title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
-    } else if (
-      childForValidation != null &&
-      childForValidation.$$typeof != null
-    ) {
-      console.error(
-        'A title element received a React element for children. ' +
-          'In the browser title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
-    } else if (
-      childForValidation != null &&
-      typeof childForValidation !== 'string' &&
-      typeof childForValidation !== 'number'
-    ) {
-      console.error(
-        'A title element received a value that was not a string or number for children. ' +
-          'In the browser title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
+
+      if (
+        typeof child === 'function' ||
+        typeof child === 'symbol' ||
+        Array.isArray(child)
+      ) {
+        const childType =
+          typeof child === 'function'
+            ? 'a Function'
+            : typeof child === 'symbol'
+            ? 'a Sybmol'
+            : 'an Array';
+        console.error(
+          'React expect children of <title> tags to be a string, number, or object with a `toString` method but found %s instead. ' +
+            'In browsers title Elements can only have `Text` Nodes as children.',
+          childType,
+        );
+      }
     }
   }
 
@@ -1658,7 +1778,6 @@ function pushTitleImpl(
           throw new Error(
             '`dangerouslySetInnerHTML` does not make sense on <title>.',
           );
-        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1837,9 +1956,7 @@ function pushScript(
             props: preloadAsScriptPropsFromProps(props.src, props),
           };
           if (__DEV__) {
-            const devResource: RenderedResourceDEV = (resource: any);
-            devResource.__provenance = 'rendered';
-            devResource.__originalProps = props;
+            markAsImplicitResourceDEV(resource, props, resource.props);
           }
           resources.preloadsMap.set(key, resource);
           resources.usedScripts.add(resource);
@@ -1854,12 +1971,10 @@ function pushScript(
             type: 'script',
             chunks: [],
             state: NoState,
-            props,
+            props: null,
           };
           if (__DEV__) {
-            const devResource: RenderedResourceDEV = (resource: any);
-            devResource.__provenance = 'rendered';
-            devResource.__originalProps = props;
+            markAsRenderedResourceDEV(resource, props);
           }
           // Add to the global script cache
           resources.scriptsMap.set(key, resource);
@@ -2022,7 +2137,7 @@ function pushStartCustomElement(
           innerHTML = propValue;
           break;
         case 'style':
-          pushStyle(target, propValue);
+          pushStyleAttribute(target, propValue);
           break;
         case 'suppressContentEditableWarning':
         case 'suppressHydrationWarning':
@@ -2239,6 +2354,15 @@ export function pushStartInstance(
             formatContext.noscriptTagInScope,
           )
         : pushStartGenericElement(target, props, type);
+    case 'style':
+      return pushStyle(
+        target,
+        props,
+        resources,
+        textEmbedded,
+        formatContext.insertionMode,
+        formatContext.noscriptTagInScope,
+      );
     case 'meta':
       return pushMeta(
         target,
@@ -2323,6 +2447,7 @@ export function pushEndInstance(
     // a unit and never return children. when we end up pushing the end tag we
     // want to ensure there is no extra closing tag pushed
     case 'title':
+    case 'style':
     case 'script': {
       if (!enableFloat) {
         break;
@@ -2411,22 +2536,29 @@ const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
   '<!--$?--><template id="',
 );
 const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
-const startClientRenderedSuspenseBoundary =
-  stringToPrecomputedChunk('<!--$!-->');
+const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
+  '<!--$!-->',
+);
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
-const clientRenderedSuspenseBoundaryError1 =
-  stringToPrecomputedChunk('<template');
-const clientRenderedSuspenseBoundaryErrorAttrInterstitial =
-  stringToPrecomputedChunk('"');
-const clientRenderedSuspenseBoundaryError1A =
-  stringToPrecomputedChunk(' data-dgst="');
-const clientRenderedSuspenseBoundaryError1B =
-  stringToPrecomputedChunk(' data-msg="');
-const clientRenderedSuspenseBoundaryError1C =
-  stringToPrecomputedChunk(' data-stck="');
-const clientRenderedSuspenseBoundaryError2 =
-  stringToPrecomputedChunk('></template>');
+const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
+  '<template',
+);
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
+  '"',
+);
+const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
+  ' data-dgst="',
+);
+const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
+  ' data-msg="',
+);
+const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
+  ' data-stck="',
+);
+const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
+  '></template>',
+);
 
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
@@ -2730,8 +2862,9 @@ const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   styleInsertionFunction + ';$RR("',
 );
-const completeBoundaryWithStylesScript1Partial =
-  stringToPrecomputedChunk('$RR("');
+const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
+  '$RR("',
+);
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3a = stringToPrecomputedChunk('",');
 const completeBoundaryScript3b = stringToPrecomputedChunk('"');
@@ -2769,7 +2902,7 @@ export function writeCompletedBoundaryInstruction(
         NothingSent
       ) {
         responseState.instructions |=
-          SentStyleInsertionFunction & SentCompleteBoundaryFunction;
+          SentStyleInsertionFunction | SentCompleteBoundaryFunction;
         writeChunk(
           destination,
           clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
@@ -3013,6 +3146,34 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
   });
 }
 
+const styleTagTemplateOpen = stringToPrecomputedChunk(
+  '<template data-precedence="">',
+);
+const styleTagTemplateClose = stringToPrecomputedChunk('</template>');
+
+function flushStyleTagsLateForBoundary(
+  this: Destination,
+  resource: StyleResource,
+) {
+  if (resource.type === 'style' && (resource.state & Flushed) === NoState) {
+    // This <style> tag can be flushed now
+    const chunks = resource.chunks;
+    for (let i = 0; i < chunks.length; i++) {
+      writeChunk(this, chunks[i]);
+    }
+    resource.state |= FlushedLate;
+  }
+}
+
+export function writeResourcesForBoundary(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+): boolean {
+  writeChunk(destination, styleTagTemplateOpen);
+  boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
+  return writeChunkAndReturn(destination, styleTagTemplateClose);
+}
+
 const precedencePlaceholderStart = stringToPrecomputedChunk(
   '<style data-precedence="',
 );
@@ -3038,11 +3199,13 @@ function flushResourceLate<T: Resource>(this: Destination, resource: T) {
   }
 }
 
-function flushUnblockedStylesheet(
+let didFlush = false;
+
+function flushUnblockedStyle(
   this: Destination,
-  resource: StylesheetResource,
+  resource: StyleResource,
   key: mixed,
-  set: Set<StylesheetResource>,
+  set: Set<StyleResource>,
 ) {
   const chunks = resource.chunks;
   if (resource.state & Flushed) {
@@ -3053,11 +3216,16 @@ function flushUnblockedStylesheet(
   } else if (resource.state & Blocked) {
     // We can't flush but we can preload. We will do this in a second pass
   } else {
-    // We can emit this stylesheet as is. We still need to encode it's chunks
-    // because unlike most Hoistables and Resources we do not eagerly encode
-    // them during render. This is because if we flush late we have to send a
-    // different encoding and we don't want to encode multiple times
-    pushLinkImpl(chunks, resource.props);
+    didFlush = true;
+    // We can emit this style or stylesheet as is.
+
+    if (resource.type === 'stylesheet') {
+      // We still need to encode stylesheet chunks
+      // because unlike most Hoistables and Resources we do not eagerly encode
+      // them during render. This is because if we flush late we have to send a
+      // different encoding and we don't want to encode multiple times
+      pushLinkImpl(chunks, resource.props);
+    }
     for (let i = 0; i < chunks.length; i++) {
       writeChunk(this, chunks[i]);
     }
@@ -3066,24 +3234,24 @@ function flushUnblockedStylesheet(
   }
 }
 
-function flushUblockedStylesheets(
+function flushUnblockedStyles(
   this: Destination,
-  set: Set<StylesheetResource>,
+  set: Set<StyleResource>,
   precedence: string,
 ) {
-  if (set.size) {
-    set.forEach(flushUnblockedStylesheet, this);
-  } else {
+  didFlush = false;
+  set.forEach(flushUnblockedStyle, this);
+  if (!didFlush) {
+    // if we did not flush anything for this precedence slot we emit
+    // an empty <style data-precedence="..." /> tag to ensure the
+    // precedence remains in the correct order
     writeChunk(this, precedencePlaceholderStart);
     writeChunk(this, stringToChunk(escapeTextForBrowser(precedence)));
     writeChunk(this, precedencePlaceholderEnd);
   }
 }
 
-function preloadBlockedStylesheet(
-  this: Destination,
-  resource: StylesheetResource,
-) {
+function preloadBlockedStyle(this: Destination, resource: StyleResource) {
   // The only Resources that should remain are Blocked resources
   if (__DEV__) {
     if ((resource.state & Blocked) === NoState) {
@@ -3096,6 +3264,10 @@ function preloadBlockedStylesheet(
       );
     }
   }
+  if (resource.type === 'style') {
+    // <style> tags do not need to be preloaded
+    return;
+  }
   const chunks = resource.chunks;
   const preloadProps = preloadAsStylePropsFromProps(
     resource.props.href,
@@ -3109,19 +3281,16 @@ function preloadBlockedStylesheet(
   chunks.length = 0;
 }
 
-function preloadBlockedStylesheets(
+function preloadBlockedStyles(
   this: Destination,
-  set: Set<StylesheetResource>,
+  set: Set<StyleResource>,
   precedence: string,
 ) {
-  set.forEach(preloadBlockedStylesheet, this);
+  set.forEach(preloadBlockedStyle, this);
   set.clear();
 }
 
-function preloadLateStylesheet(
-  this: Destination,
-  resource: StylesheetResource,
-) {
+function preloadLateStyle(this: Destination, resource: StyleResource) {
   if (__DEV__) {
     if (resource.state & PreloadFlushed) {
       console.error(
@@ -3130,6 +3299,11 @@ function preloadLateStylesheet(
     }
   }
 
+  if (resource.type === 'style') {
+    // <style> tags do not need to be preloaded
+    return;
+  }
+
   const chunks = resource.chunks;
   const preloadProps = preloadAsStylePropsFromProps(
     resource.props.href,
@@ -3143,12 +3317,12 @@ function preloadLateStylesheet(
   chunks.length = 0;
 }
 
-function preloadLateStylesheets(
+function preloadLateStyles(
   this: Destination,
-  set: Set<StylesheetResource>,
+  set: Set<StyleResource>,
   precedence: string,
 ) {
-  set.forEach(preloadLateStylesheet, this);
+  set.forEach(preloadLateStyle, this);
   set.clear();
 }
 
@@ -3221,14 +3395,14 @@ export function writePreamble(
   resources.fontPreloads.clear();
 
   // Flush unblocked stylesheets by precedence
-  resources.precedences.forEach(flushUblockedStylesheets, destination);
+  resources.precedences.forEach(flushUnblockedStyles, destination);
 
   // Flush preloads for Blocked stylesheets
-  resources.precedences.forEach(preloadBlockedStylesheets, destination);
+  resources.precedences.forEach(preloadBlockedStyles, destination);
 
   resources.usedStylesheets.forEach(resource => {
     const key = getResourceKey(resource.props.as, resource.props.href);
-    if (resources.stylesheetsMap.has(key)) {
+    if (resources.stylesMap.has(key)) {
       // The underlying stylesheet is represented both as a used stylesheet
       // (a regular component we will attempt to preload) and as a StylesheetResource.
       // We don't want to emit two preloads for the same href so we defer
@@ -3317,11 +3491,11 @@ export function writeHoistables(
 
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
-  resources.precedences.forEach(preloadLateStylesheets, destination);
+  resources.precedences.forEach(preloadLateStyles, destination);
 
   resources.usedStylesheets.forEach(resource => {
     const key = getResourceKey(resource.props.as, resource.props.href);
-    if (resources.stylesheetsMap.has(key)) {
+    if (resources.stylesMap.has(key)) {
       // The underlying stylesheet is represented both as a used stylesheet
       // (a regular component we will attempt to preload) and as a StylesheetResource.
       // We don't want to emit two preloads for the same href so we defer
@@ -3426,11 +3600,13 @@ function writeStyleResourceDependenciesInJS(
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyHrefOnlyInJS(
         destination,
-        resource.props.href,
+        resource.type === 'style'
+          ? resource.props['data-href']
+          : resource.props.href,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
-    } else {
+    } else if (resource.type === 'stylesheet') {
       // We need to emit the whole resource for insertion on the client
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyInJS(
@@ -3621,11 +3797,13 @@ function writeStyleResourceDependenciesInAttr(
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyHrefOnlyInAttr(
         destination,
-        resource.props.href,
+        resource.type === 'style'
+          ? resource.props['data-href']
+          : resource.props.href,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
-    } else {
+    } else if (resource.type === 'stylesheet') {
       // We need to emit the whole resource for insertion on the client
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyInAttr(
@@ -3811,12 +3989,11 @@ const Blocked /*            */ = 0b0100;
 // This generally only makes sense for Resources other than PreloadResource
 const PreloadFlushed /*     */ = 0b1000;
 
-// It is important that the state type be a pointer type
-type TResource<T: 'stylesheet' | 'script' | 'preload'> = {
+type TResource<T: 'stylesheet' | 'style' | 'script' | 'preload', P> = {
   type: T,
   chunks: Array<Chunk | PrecomputedChunk>,
   state: ResourceStateTag,
-  props: any,
+  props: P,
 };
 // Dev extensions.
 // Stylesheets and Scripts rendered with jsx
@@ -3849,7 +4026,7 @@ type PreloadProps = {
   href: string,
   [string]: mixed,
 };
-type PreloadResource = TResource<'preload'>;
+type PreloadResource = TResource<'preload', PreloadProps>;
 
 type StylesheetProps = {
   rel: 'stylesheet',
@@ -3857,27 +4034,36 @@ type StylesheetProps = {
   'data-precedence': string,
   [string]: mixed,
 };
-type StylesheetResource = TResource<'stylesheet'>;
+type StylesheetResource = TResource<'stylesheet', StylesheetProps>;
+
+type StyleTagProps = {
+  'data-href': string,
+  'data-precedence': string,
+  [string]: mixed,
+};
+type StyleTagResource = TResource<'style', StyleTagProps>;
+
+type StyleResource = StylesheetResource | StyleTagResource;
 
 type ScriptProps = {
   async: true,
   src: string,
   [string]: mixed,
 };
-type ScriptResource = TResource<'script'>;
+type ScriptResource = TResource<'script', null>;
 
-type Resource = StylesheetResource | ScriptResource | PreloadResource;
+type Resource = StyleResource | ScriptResource | PreloadResource;
 
 export type Resources = {
   // Request local cache
   preloadsMap: Map<string, PreloadResource>,
-  stylesheetsMap: Map<string, StylesheetResource>,
+  stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
 
   // Flushing queues for Resource dependencies
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
-  precedences: Map<string, Set<StylesheetResource>>,
+  precedences: Map<string, Set<StyleResource>>,
   usedStylesheets: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
   usedScripts: Set<PreloadResource>,
@@ -3896,7 +4082,7 @@ export function createResources(): Resources {
   return {
     // persistent
     preloadsMap: new Map(),
-    stylesheetsMap: new Map(),
+    stylesMap: new Map(),
     scriptsMap: new Map(),
 
     // cleared on flush
@@ -3916,7 +4102,7 @@ export function createResources(): Resources {
   };
 }
 
-export type BoundaryResources = Set<StylesheetResource>;
+export type BoundaryResources = Set<StyleResource>;
 
 export function createBoundaryResources(): BoundaryResources {
   return new Set();
@@ -3982,11 +4168,13 @@ export function preload(href: string, options: PreloadOptions) {
         props: preloadPropsFromPreloadOptions(href, as, options),
       };
       if (__DEV__) {
-        const devResource: ImperativeResourceDEV = (resource: any);
-        devResource.__provenance = 'preload';
-        devResource.__originalHref = href;
-        devResource.__originalOptions = options;
-        devResource.__propsEquivalent = resource.props;
+        markAsImperativeResourceDEV(
+          resource,
+          'preload',
+          href,
+          options,
+          resource.props,
+        );
       }
       // Unlike on the client this key will never be used to query the DOM. We
       // vary on `as` to mirror client behavior. It's not generally sensible that
@@ -4072,12 +4260,12 @@ function preinitImpl(
     switch (as) {
       case 'style': {
         const key = getResourceKey(as, href);
-        let resource = resources.stylesheetsMap.get(key);
+        let resource = resources.stylesMap.get(key);
         const precedence = options.precedence || 'default';
         if (__DEV__) {
           if (resource) {
             const devResource: ResourceDEV = (resource: any);
-            const resourceProps = stylePropsFromPreinitOptions(
+            const resourceProps = stylesheetPropsFromPreinitOptions(
               href,
               precedence,
               options,
@@ -4146,19 +4334,15 @@ function preinitImpl(
             type: 'stylesheet',
             chunks: ([]: Array<Chunk | PrecomputedChunk>),
             state: NoState,
-            props: stylePropsFromPreinitOptions(href, precedence, options),
+            props: stylesheetPropsFromPreinitOptions(href, precedence, options),
           };
-          resources.stylesheetsMap.set(key, resource);
+          resources.stylesMap.set(key, resource);
           if (__DEV__) {
-            const devResource: ImperativeResourceDEV = (resource: any);
-            devResource.__provenance = 'preinit';
-            devResource.__originalHref = href;
-            devResource.__originalOptions = options;
-            devResource.__propsEquivalent = {
+            markAsImperativeResourceDEV(resource, 'preinit', href, options, {
               ...resource.props,
               precedence,
               ['data-precedence']: undefined,
-            };
+            });
           }
           let precedenceSet = resources.precedences.get(precedence);
           if (!precedenceSet) {
@@ -4178,17 +4362,20 @@ function preinitImpl(
             type: 'script',
             chunks: [],
             state: NoState,
-            props: scriptPropsFromPreinitOptions(src, options),
+            props: null,
           };
+          let resourceProps = scriptPropsFromPreinitOptions(src, options);
           if (__DEV__) {
-            const devResource: ImperativeResourceDEV = (resource: any);
-            devResource.__provenance = 'preinit';
-            devResource.__originalHref = href;
-            devResource.__originalOptions = options;
-            devResource.__propsEquivalent = resource.props;
+            markAsImperativeResourceDEV(
+              resource,
+              'preinit',
+              href,
+              options,
+              resourceProps,
+            );
           }
           resources.scripts.add(resource);
-          pushScriptImpl(resource.chunks, resource.props);
+          pushScriptImpl(resource.chunks, resourceProps);
         }
         return;
       }
@@ -4234,7 +4421,7 @@ function preloadAsScriptPropsFromProps(href: string, props: any): PreloadProps {
   };
 }
 
-function stylePropsFromPreinitOptions(
+function stylesheetPropsFromPreinitOptions(
   href: string,
   precedence: string,
   options: PreinitOptions,
@@ -4266,6 +4453,16 @@ function adoptPreloadPropsForStylesheetProps(
     resourceProps.integrity = preloadProps.integrity;
 }
 
+function styleTagPropsFromRawProps(rawProps: any): StyleTagProps {
+  return {
+    ...rawProps,
+    'data-precedence': rawProps.precedence,
+    precedence: null,
+    'data-href': rawProps.href,
+    href: null,
+  };
+}
+
 function scriptPropsFromPreinitOptions(
   src: string,
   options: PreinitOptions,
@@ -4290,7 +4487,7 @@ function adoptPreloadPropsForScriptProps(
 
 function hoistStylesheetResource(
   this: BoundaryResources,
-  resource: StylesheetResource,
+  resource: StyleResource,
 ) {
   this.add(resource);
 }
@@ -4306,7 +4503,7 @@ export function hoistResources(
   }
 }
 
-function unblockStylesheet(resource: StylesheetResource) {
+function unblockStylesheet(resource: StyleResource) {
   resource.state &= ~Blocked;
 }
 
@@ -4316,4 +4513,86 @@ export function hoistResourcesToRoot(
 ): void {
   boundaryResources.forEach(unblockStylesheet);
   boundaryResources.clear();
+}
+
+function markAsRenderedResourceDEV(
+  resource: Resource,
+  originalProps: any,
+): void {
+  if (__DEV__) {
+    const devResource: RenderedResourceDEV = (resource: any);
+    if (typeof devResource.__provenance === 'string') {
+      throw new Error(
+        'Resource already marked for DEV type. This is a bug in React.',
+      );
+    }
+    devResource.__provenance = 'rendered';
+    devResource.__originalProps = originalProps;
+  } else {
+    throw new Error(
+      'markAsRenderedResourceDEV was included in a production build. This is a bug in React.',
+    );
+  }
+}
+
+function markAsImperativeResourceDEV(
+  resource: Resource,
+  provenance: 'preload' | 'preinit',
+  originalHref: string,
+  originalOptions: any,
+  propsEquivalent: any,
+): void {
+  if (__DEV__) {
+    const devResource: ImperativeResourceDEV = (resource: any);
+    if (typeof devResource.__provenance === 'string') {
+      throw new Error(
+        'Resource already marked for DEV type. This is a bug in React.',
+      );
+    }
+    devResource.__provenance = provenance;
+    devResource.__originalHref = originalHref;
+    devResource.__originalOptions = originalOptions;
+    devResource.__propsEquivalent = propsEquivalent;
+  } else {
+    throw new Error(
+      'markAsImperativeResourceDEV was included in a production build. This is a bug in React.',
+    );
+  }
+}
+
+function markAsImplicitResourceDEV(
+  resource: Resource,
+  underlyingProps: any,
+  impliedProps: any,
+): void {
+  if (__DEV__) {
+    const devResource: ImplicitResourceDEV = (resource: any);
+    if (typeof devResource.__provenance === 'string') {
+      throw new Error(
+        'Resource already marked for DEV type. This is a bug in React.',
+      );
+    }
+    devResource.__provenance = 'implicit';
+    devResource.__underlyingProps = underlyingProps;
+    devResource.__impliedProps = impliedProps;
+  } else {
+    throw new Error(
+      'markAsImplicitResourceDEV was included in a production build. This is a bug in React.',
+    );
+  }
+}
+
+function getAsResourceDEV(resource: Resource): ResourceDEV {
+  if (__DEV__) {
+    if (typeof (resource: any).__provenance === 'string') {
+      return (resource: any);
+    }
+    throw new Error(
+      'Resource was not marked for DEV type. This is a bug in React.',
+    );
+  } else {
+    throw new Error(
+      'getAsResourceDEV was included in a production build. This is a bug in React.',
+    );
+  }
 }

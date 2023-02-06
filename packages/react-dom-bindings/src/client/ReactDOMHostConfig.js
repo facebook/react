@@ -463,7 +463,10 @@ export const scheduleMicrotask: any =
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
     ? callback =>
-        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
+        localPromise
+          .resolve(null)
+          .then(callback)
+          .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
@@ -1588,8 +1591,8 @@ export function isHostHoistableType(
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
-    outsideHostContainerContext =
-      !hostContextDev.ancestorInfo.containerTagInScope;
+    outsideHostContainerContext = !hostContextDev.ancestorInfo
+      .containerTagInScope;
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
@@ -1601,6 +1604,23 @@ export function isHostHoistableType(
     }
     case 'title': {
       return namespace !== SVG_NAMESPACE;
+    }
+    case 'style': {
+      if (__DEV__) {
+        if (outsideHostContainerContext) {
+          console.error(
+            'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
+              ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
+              ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+              ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
+              ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
+              ' to the <style> tag.',
+          );
+        }
+      }
+      return (
+        namespace !== SVG_NAMESPACE && typeof props.precedence === 'string'
+      );
     }
     case 'link': {
       const {onLoad, onError} = props;
@@ -1673,8 +1693,7 @@ export function isHostHoistableType(
       );
     }
     case 'noscript':
-    case 'template':
-    case 'style': {
+    case 'template': {
       if (__DEV__) {
         if (outsideHostContainerContext) {
           console.error(
