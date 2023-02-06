@@ -237,6 +237,8 @@ function getRenderedAttributeValue(
       return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     } else if (containerTagName === 'document') {
       return document.implementation.createHTMLDocument('');
+    } else if (containerTagName === 'head') {
+      return document.implementation.createHTMLDocument('').head;
     } else {
       return document.createElement(containerTagName);
     }
@@ -303,6 +305,12 @@ function getRenderedAttributeValue(
   try {
     let container;
     if (containerTagName === 'document') {
+      const html = serverRenderer.renderToString(
+        react.createElement(tagName, props)
+      );
+      container = createContainer();
+      container.innerHTML = html;
+    } else if (containerTagName === 'head') {
       const html = serverRenderer.renderToString(
         react.createElement(tagName, props)
       );

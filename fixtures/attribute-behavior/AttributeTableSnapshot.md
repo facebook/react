@@ -1,4 +1,4 @@
-## `about` (on `<div>` inside `<div>`)
+﻿## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -1998,7 +1998,7 @@
 | `colSpan=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `colSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `content` (on `<meta>` inside `<div>`)
+## `content` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `content=(string)`| (changed)| `"a string"` |
@@ -5123,7 +5123,7 @@
 | `htmlFor=(null)`| (initial)| `<empty string>` |
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
-## `http-equiv` (on `<meta>` inside `<div>`)
+## `http-equiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `http-equiv=(string)`| (changed, warning)| `"a string"` |
@@ -5148,7 +5148,7 @@
 | `http-equiv=(null)`| (initial, warning)| `<empty string>` |
 | `http-equiv=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `httpEquiv` (on `<meta>` inside `<div>`)
+## `httpEquiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `httpEquiv=(string)`| (changed)| `"a string"` |
