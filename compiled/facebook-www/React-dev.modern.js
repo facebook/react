@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-855b77c9b-20230202";
+var ReactVersion = "18.3.0-www-modern-4bf2113a1-20230206";
 
 // ATTENTION
 // When adding new symbols to this file,
