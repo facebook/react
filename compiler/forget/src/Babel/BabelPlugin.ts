@@ -9,6 +9,7 @@
 
 import type * as BabelCore from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
+import { parseCompilerFlags } from "../CompilerFlags";
 import { compile } from "../CompilerPipeline";
 
 /**
@@ -24,7 +25,20 @@ export default function ReactForgetBabelPlugin(
     inherits: jsx,
     visitor: {
       FunctionDeclaration: {
-        enter(fn, _pass) {
+        enter(fn, pass) {
+          const flags = parseCompilerFlags(pass.opts);
+          if (flags.enableOnlyOnUseForgetDirective) {
+            let hasUseForgetDirective = false;
+            for (const directive of fn.node.body.directives) {
+              if (directive.value.value === "use forget") {
+                hasUseForgetDirective = true;
+                break;
+              }
+            }
+            if (!hasUseForgetDirective) {
+              return;
+            }
+          }
           if (fn.scope.getProgramParent() !== fn.scope.parent) {
             return;
           }
