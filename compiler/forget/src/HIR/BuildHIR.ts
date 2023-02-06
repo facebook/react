@@ -1359,33 +1359,15 @@ function lowerExpression(
         };
       }
       loweredFunc = lowering.unwrap();
-
-      let hasError = false;
-      const params: Array<string> = [];
-      for (const p of expr.get("params")) {
-        if (!p.isIdentifier()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${p.type} params in FunctionExpression`,
-            severity: ErrorSeverity.Todo,
-            nodePath: p,
-          });
-          hasError = true;
-          continue;
-        }
-        params.push(p.node.name);
-      }
-      return hasError
-        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-        : {
-            kind: "FunctionExpression",
-            name,
-            params,
-            loweredFunc,
-            dependencies: captured.refs,
-            mutatedDeps: [],
-            expr: expr.node,
-            loc: exprLoc,
-          };
+      return {
+        kind: "FunctionExpression",
+        name,
+        loweredFunc,
+        dependencies: captured.refs,
+        mutatedDeps: [],
+        expr: expr.node,
+        loc: exprLoc,
+      };
     }
     case "TaggedTemplateExpression": {
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;

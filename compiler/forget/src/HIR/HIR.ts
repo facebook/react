@@ -469,7 +469,6 @@ export type JsxAttribute =
 export type FunctionExpression = {
   kind: "FunctionExpression";
   name: string | null;
-  params: Array<string>;
   dependencies: Array<Place>;
   // TODO(gsn): Remove this mutatedDeps array and use dependencies as single
   // source of truth.
