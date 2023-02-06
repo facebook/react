@@ -2384,11 +2384,7 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, element);
     expect(() => {
-      expect(Scheduler).toFlushAndYield([
-        'Nay!',
-        // Missing flushAndYield
-        // 'Yay!'
-      ]);
+      expect(Scheduler).toFlushAndYield(['Nay!', 'Yay!']);
     }).toErrorDev([]);
   });
 
