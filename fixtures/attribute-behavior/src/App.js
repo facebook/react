@@ -764,7 +764,7 @@ class App extends React.Component {
       ReactDOMStable:
         'https://unpkg.com/react-dom@latest/umd/react-dom.development.js',
       ReactDOMServerStable:
-        'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
+        'https://unpkg.com/react-dom@latest/umd/react-dom-server-legacy.browser.development.js',
       ReactNext: '/react.development.js',
       ReactDOMNext: '/react-dom.development.js',
       ReactDOMServerNext: '/react-dom-server-legacy.browser.development.js',
