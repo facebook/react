@@ -11,6 +11,7 @@ function component() {
 
   let y = x.u;
   let z = x.v;
+  return z;
 }
 
 ```
@@ -45,6 +46,9 @@ function component() {
   const v = x.v;
   if (u > v) {
   }
+
+  const z = x.v;
+  return z;
 }
 
 ```

@@ -6,4 +6,5 @@ function component() {
   }
 
   let z = foo();
+  return z;
 }

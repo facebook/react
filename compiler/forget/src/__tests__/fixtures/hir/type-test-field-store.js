@@ -3,4 +3,5 @@ function component() {
   let q = {};
   x.t = q;
   let z = x.t;
+  return z;
 }

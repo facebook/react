@@ -5,6 +5,8 @@
 function component() {
   let x = 1;
   let y = 2;
+
+  return y;
 }
 
 ```
@@ -12,7 +14,10 @@ function component() {
 ## Code
 
 ```javascript
-function component() {}
+function component() {
+  const y = 2;
+  return y;
+}
 
 ```
       

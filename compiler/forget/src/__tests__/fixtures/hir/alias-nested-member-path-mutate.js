@@ -5,4 +5,5 @@ function component() {
   let x = {};
   x.y = y;
   mutate(x.y.z);
+  return x;
 }

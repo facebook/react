@@ -10,4 +10,5 @@ function component() {
 
   x.t = o; // generalize x.t
   let y = x.t;
+  return y;
 }

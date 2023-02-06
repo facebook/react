@@ -7,8 +7,8 @@ function foo(a, b, c) {
       }
     }
   }
-  if (a.length) {
-    return a;
+  if (x.length) {
+    return x;
   }
   return null;
 }

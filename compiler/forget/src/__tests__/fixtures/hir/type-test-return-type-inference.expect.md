@@ -10,6 +10,7 @@ function component() {
   }
 
   let z = foo();
+  return z;
 }
 
 ```
@@ -35,8 +36,14 @@ function component() {
   }
   if (x > y) {
   }
-
-  const z_0 = foo();
+  let z_0;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    z_0 = foo();
+    $[2] = z_0;
+  } else {
+    z_0 = $[2];
+  }
+  return z_0;
 }
 
 ```

@@ -10,4 +10,5 @@ function foo(a, b) {
   if (b) {
     y.push(b);
   }
+  return y;
 }

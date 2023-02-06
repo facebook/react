@@ -9,6 +9,7 @@ function component() {
   let x = {};
   x.y = y;
   mutate(x.y.z);
+  return x;
 }
 
 ```
@@ -17,14 +18,22 @@ function component() {
 
 ```javascript
 function component() {
-  const z = [];
-  const y = {};
-  y.z = z;
+  const $ = React.useMemoCache();
+  let x;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const z = [];
+    const y = {};
+    y.z = z;
 
-  const x = {};
-  x.y = y;
+    x = {};
+    x.y = y;
 
-  mutate(x.y.z);
+    mutate(x.y.z);
+    $[0] = x;
+  } else {
+    x = $[0];
+  }
+  return x;
 }
 
 ```

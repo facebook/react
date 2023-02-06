@@ -7,4 +7,5 @@ function component() {
 
   let y = x.u;
   let z = x.v;
+  return z;
 }

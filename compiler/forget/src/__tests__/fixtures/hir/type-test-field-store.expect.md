@@ -7,6 +7,7 @@ function component() {
   let q = {};
   x.t = q;
   let z = x.t;
+  return z;
 }
 
 ```
@@ -16,15 +17,24 @@ function component() {
 ```javascript
 function component() {
   const $ = React.useMemoCache();
-  const x = {};
-  let q;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    q = {};
-    $[0] = q;
+    x = {};
+    let q;
+    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+      q = {};
+      $[1] = q;
+    } else {
+      q = $[1];
+    }
+    x.t = q;
+    $[0] = x;
   } else {
-    q = $[0];
+    x = $[0];
   }
-  x.t = q;
+
+  const z = x.t;
+  return z;
 }
 
 ```

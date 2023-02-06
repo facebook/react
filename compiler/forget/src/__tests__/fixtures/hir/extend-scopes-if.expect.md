@@ -11,8 +11,8 @@ function foo(a, b, c) {
       }
     }
   }
-  if (a.length) {
-    return a;
+  if (x.length) {
+    return x;
   }
   return null;
 }
@@ -23,16 +23,29 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const x = [];
-  if (a) {
-    if (b) {
-      if (c) {
-        x.push(0);
+  const $ = React.useMemoCache();
+  const c_0 = $[0] !== a;
+  const c_1 = $[1] !== b;
+  const c_2 = $[2] !== c;
+  let x;
+  if (c_0 || c_1 || c_2) {
+    x = [];
+    if (a) {
+      if (b) {
+        if (c) {
+          x.push(0);
+        }
       }
     }
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = x;
+  } else {
+    x = $[3];
   }
-  if (a.length) {
-    return a;
+  if (x.length) {
+    return x;
   }
   return null;
 }

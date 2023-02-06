@@ -4,6 +4,7 @@ function foo(a, b, c) {
     if (c) {
       x = c;
     }
-    x;
+    // TODO: move the return to the end of the function
+    return x;
   }
 }

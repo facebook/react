@@ -5,4 +5,5 @@ function foo(props) {
     x++;
     y++;
   }
+  return y;
 }

@@ -14,6 +14,7 @@ function component() {
 
   x.t = o; // generalize x.t
   let y = x.t;
+  return y;
 }
 
 ```
@@ -37,10 +38,18 @@ function component() {
   } else {
     o = $[1];
   }
+  let x;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    x = {};
+    x.t = p;
+    x.t = o;
+    $[2] = x;
+  } else {
+    x = $[2];
+  }
 
-  const x = {};
-  x.t = p;
-  x.t = o;
+  const y = x.t;
+  return y;
 }
 
 ```

@@ -14,6 +14,7 @@ function foo(a, b) {
   if (b) {
     y.push(b);
   }
+  return y;
 }
 
 ```
@@ -33,14 +34,24 @@ function foo(a, b) {
   } else {
     x = $[1];
   }
-
-  const y = [];
-  if (x.length) {
-    y.push(x);
+  const c_2 = $[2] !== x;
+  const c_3 = $[3] !== b;
+  let y;
+  if (c_2 || c_3) {
+    y = [];
+    if (x.length) {
+      y.push(x);
+    }
+    if (b) {
+      y.push(b);
+    }
+    $[2] = x;
+    $[3] = b;
+    $[4] = y;
+  } else {
+    y = $[4];
   }
-  if (b) {
-    y.push(b);
-  }
+  return y;
 }
 
 ```
