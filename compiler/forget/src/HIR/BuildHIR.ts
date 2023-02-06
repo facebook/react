@@ -1084,7 +1084,7 @@ function lowerExpression(
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
           severity: ErrorSeverity.Todo,
-          nodePath: expr,
+          nodePath: expr.parentPath,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
