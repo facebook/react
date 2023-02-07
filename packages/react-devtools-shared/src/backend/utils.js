@@ -9,6 +9,7 @@
  */
 
 import {copy} from 'clipboard-js';
+import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
@@ -274,4 +275,12 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy &&
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
+}
+
+export function gt(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) === 1;
+}
+
+export function gte(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) > -1;
 }
