@@ -752,7 +752,14 @@ module.exports = function (webpackEnv) {
       //     },
       //   }),
       // Fork Start
-      new ReactFlightWebpackPlugin({isServer: false}),
+      new ReactFlightWebpackPlugin({
+        isServer: false,
+        clientReferences: {
+          directory: './src',
+          recursive: true,
+          include: /\.(js|ts|jsx|tsx)$/,
+        },
+      }),
       // Fork End
     ].filter(Boolean),
     // Turn off performance processing because we utilize
