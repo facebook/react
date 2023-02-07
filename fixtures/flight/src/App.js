@@ -2,10 +2,10 @@ import * as React from 'react';
 
 import Container from './Container.js';
 
-import {Counter} from './Counter.client.js';
-import {Counter as Counter2} from './Counter2.client.js';
+import {Counter} from './Counter.js';
+import {Counter as Counter2} from './Counter2.js';
 
-import ShowMore from './ShowMore.client.js';
+import ShowMore from './ShowMore.js';
 
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
