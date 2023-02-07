@@ -25,7 +25,6 @@ export function inferAliasForStores(
         continue;
       }
       switch (value.kind) {
-        case "Identifier":
         case "ArrayExpression":
         case "ObjectExpression":
         case "ComputedStore":
