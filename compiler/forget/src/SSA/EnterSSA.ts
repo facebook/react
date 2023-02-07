@@ -1,4 +1,5 @@
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -18,6 +19,7 @@ import {
   mapInstructionOperands,
   mapTerminalOperands,
 } from "../HIR/visitors";
+import { todoInvariant } from "../Utils/todo";
 
 type IncompletePhi = {
   oldId: Identifier;
@@ -35,6 +37,7 @@ class SSABuilder {
   unsealedPreds: Map<BasicBlock, number> = new Map();
   #blocks: Map<BlockId, BasicBlock>;
   #env: Environment;
+  #unknown: Set<Identifier> = new Set();
 
   constructor(env: Environment, blocks: Map<BlockId, BasicBlock>) {
     this.#blocks = blocks;
@@ -68,6 +71,15 @@ class SSABuilder {
 
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
+    if (this.#unknown.has(oldId)) {
+      CompilerError.invariant(
+        `identifier ${printIdentifier(
+          oldId
+        )} should have been defined before use`,
+        oldPlace.loc
+      );
+    }
+
     const newId = this.makeId(oldId);
     this.state().defs.set(oldId, newId);
     return {
@@ -98,6 +110,7 @@ class SSABuilder {
       // console.log(
       //   `Unable to find "${printIdentifier(oldId)}", assuming it's a global`
       // );
+      this.#unknown.add(oldId);
       return oldId;
     }
 
@@ -221,14 +234,6 @@ export default function enterSSA(func: HIRFunction) {
 
       if (count === 0 && visitedBlocks.has(output)) {
         builder.fixIncompletePhis(output);
-      }
-    }
-  }
-
-  for (const [_, block] of func.body.blocks) {
-    for (const instr of block.instructions) {
-      if (instr.value.kind === "FunctionExpression") {
-        mapInstructionOperands(instr, (place) => builder.getPlace(place));
       }
     }
   }

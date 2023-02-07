@@ -1,3 +1,4 @@
+// Let's not support identifiers defined after use for now.
 function component(a) {
   let y = function () {
     m(x);
