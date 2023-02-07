@@ -7,6 +7,8 @@
  * @flow
  */
 
+const acorn = require('acorn');
+
 const url = require('url');
 
 const Module = require('module');
@@ -212,13 +214,33 @@ module.exports = function register() {
     content: string,
     filename: string,
   ): void {
-    // TODO: Properly parse the directive from the file content.
-    if (
-      content.indexOf('"use client"') === -1 &&
-      content.indexOf("'use client'") === -1
-    ) {
+    // Do a quick check for the exact string. If it doesn't exist, don't
+    // bother parsing.
+    if (content.indexOf('use client') === -1) {
       return originalCompile.apply(this, arguments);
     }
+
+    const {body} = acorn.parse(content, {
+      ecmaVersion: '2019',
+      sourceType: 'source',
+    });
+
+    let useClient = false;
+    for (let i = 0; i < body.length; i++) {
+      const node = body[i];
+      if (node.type !== 'ExpressionStatement' || !node.directive) {
+        break;
+      }
+      if (node.directive === 'use client') {
+        useClient = true;
+        break;
+      }
+    }
+
+    if (!useClient) {
+      return originalCompile.apply(this, arguments);
+    }
+
     const moduleId: string = (url.pathToFileURL(filename).href: any);
     const clientReference = Object.defineProperties(({}: any), {
       // Represents the whole Module object instead of a particular import.
