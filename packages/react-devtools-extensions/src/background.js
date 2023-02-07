@@ -29,7 +29,7 @@ if (!IS_FIREFOX) {
         world: chrome.scripting.ExecutionWorld.MAIN,
       },
     ],
-    function() {
+    function () {
       // When the content scripts are already registered, an error will be thrown.
       // It happens when the service worker process is incorrectly duplicated.
       if (chrome.runtime.lastError) {
