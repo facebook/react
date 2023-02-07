@@ -263,7 +263,6 @@ export async function transformSource(
           ');';
       } else {
         newSrc += 'export const ' + name + ' = ';
-        newSrc += 'export default ';
         newSrc += 'Object.defineProperties(function() {';
         newSrc +=
           'throw new Error(' +
