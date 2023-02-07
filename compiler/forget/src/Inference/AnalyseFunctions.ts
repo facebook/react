@@ -5,6 +5,7 @@ import {
   Identifier,
   mergeConsecutiveBlocks,
   Place,
+  Effect,
 } from "../HIR";
 import { constantPropagation } from "../Optimization";
 import { eliminateRedundantPhi, enterSSA } from "../SSA";
@@ -85,7 +86,6 @@ function infer(
       .filter((m) => m !== null) as string[]
   );
 
-  const mutatedDeps: Place[] = [];
   for (const dep of value.dependencies) {
     let name: string | null = null;
 
@@ -97,7 +97,7 @@ function infer(
     }
 
     if (name !== null && mutations.has(name)) {
-      mutatedDeps.push(dep);
+      dep.effect = Effect.Capture;
     }
   }
 
@@ -114,11 +114,10 @@ function infer(
     );
 
     if (mutations.has(place.identifier.name)) {
-      mutatedDeps.push(place);
+      place.effect = Effect.Capture;
+      value.dependencies.push(place);
     }
   }
-
-  value.mutatedDeps = mutatedDeps;
 }
 
 function isMutated(id: Identifier) {

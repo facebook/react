@@ -470,9 +470,6 @@ export type FunctionExpression = {
   kind: "FunctionExpression";
   name: string | null;
   dependencies: Array<Place>;
-  // TODO(gsn): Remove this mutatedDeps array and use dependencies as single
-  // source of truth.
-  mutatedDeps: Array<Place>;
   loweredFunc: HIRFunction;
   expr: t.ArrowFunctionExpression | t.FunctionExpression;
 };

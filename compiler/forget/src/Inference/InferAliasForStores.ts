@@ -28,7 +28,8 @@ export function inferAliasForStores(
         case "ArrayExpression":
         case "ObjectExpression":
         case "ComputedStore":
-        case "PropertyStore": {
+        case "PropertyStore":
+        case "FunctionExpression": {
           for (const operand of eachInstructionValueOperand(value)) {
             if (
               operand.effect === Effect.Capture ||
@@ -38,11 +39,6 @@ export function inferAliasForStores(
             }
           }
           break;
-        }
-        case "FunctionExpression": {
-          for (const dep of value.mutatedDeps) {
-            maybeAlias(aliases, lvalue.place, dep, instr.id);
-          }
         }
       }
     }

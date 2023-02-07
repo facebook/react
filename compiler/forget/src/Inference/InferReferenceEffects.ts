@@ -572,12 +572,6 @@ function inferBlock(env: Environment, block: BasicBlock) {
         lvalueEffect = Effect.Store;
         break;
       }
-      case "FunctionExpression": {
-        valueKind = ValueKind.Mutable;
-        effectKind = Effect.Read;
-        lvalueEffect = Effect.Store;
-        break;
-      }
       case "UnaryExpression": {
         valueKind = ValueKind.Immutable;
         effectKind = Effect.Read;
@@ -614,6 +608,18 @@ function inferBlock(env: Environment, block: BasicBlock) {
       case "Primitive": {
         valueKind = ValueKind.Immutable;
         break;
+      }
+      case "FunctionExpression": {
+        for (const operand of eachInstructionOperand(instr)) {
+          env.reference(
+            operand,
+            operand.effect === Effect.Unknown ? Effect.Read : operand.effect
+          );
+        }
+        env.initialize(instrValue, ValueKind.Mutable);
+        env.define(instr.lvalue.place, instrValue);
+        instr.lvalue.place.effect = Effect.Store;
+        continue;
       }
       case "PropertyCall": {
         if (!env.isDefined(instrValue.receiver)) {

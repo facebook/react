@@ -1364,7 +1364,6 @@ function lowerExpression(
         name,
         loweredFunc,
         dependencies: captured.refs,
-        mutatedDeps: [],
         expr: expr.node,
         loc: exprLoc,
       };
