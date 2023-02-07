@@ -260,7 +260,7 @@ const bundles = [
 
   /******* React DOM Fizz Server Edge *******/
   {
-    bundleTypes: [BUN_DEV, BUN_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/src/server/ReactDOMFizzServerEdge.js',
     name: 'react-dom-server.edge', // 'node_modules/react/*.js',
