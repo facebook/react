@@ -11,6 +11,7 @@ import {
   InstructionId,
   Place,
 } from "../HIR/HIR";
+import { printInstructionValue } from "../HIR/PrintHIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 
@@ -39,6 +40,15 @@ export function inferAliasForStores(
             }
           }
           break;
+        }
+        default: {
+          // Effect.Capture & Effect.Store are only used for aliasing
+          // instructions.
+          throw new Error(
+            `Unexpected capture/store instruction: ${printInstructionValue(
+              value
+            )}`
+          );
         }
       }
     }
