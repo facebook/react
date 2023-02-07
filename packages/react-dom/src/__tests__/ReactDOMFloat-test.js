@@ -46,7 +46,7 @@ function resetJSDOM(markup) {
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({JSDOM} = require('jsdom'));
+    JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOM = require('react-dom');

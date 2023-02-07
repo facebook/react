@@ -51,7 +51,7 @@ function resetJSDOM(markup) {
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({JSDOM} = require('jsdom'));
+    JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOMClient = require('react-dom/client');

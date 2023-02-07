@@ -27,7 +27,7 @@ let textCache;
 describe('ReactDOMFizzShellHydration', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({JSDOM} = require('jsdom'));
+    JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
