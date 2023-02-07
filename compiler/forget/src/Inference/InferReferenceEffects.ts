@@ -303,6 +303,10 @@ class Environment {
         effect = Effect.Store;
         break;
       }
+      case Effect.Capture: {
+        effect = Effect.Capture;
+        break;
+      }
       case Effect.Read: {
         effect = Effect.Read;
         break;
@@ -542,7 +546,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       }
       case "ArrayExpression": {
         valueKind = ValueKind.Mutable;
-        effectKind = Effect.Read;
+        effectKind = Effect.Capture;
         lvalueEffect = Effect.Store;
         break;
       }
@@ -564,7 +568,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       case "ObjectExpression": {
         valueKind = ValueKind.Mutable;
         // Object construction captures but does not modify the key/property values
-        effectKind = Effect.Read;
+        effectKind = Effect.Capture;
         lvalueEffect = Effect.Store;
         break;
       }
@@ -658,7 +662,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         const effect = isObjectType(instrValue.object.identifier)
           ? Effect.Store
           : Effect.Mutate;
-        env.reference(instrValue.value, Effect.Read);
+        env.reference(instrValue.value, Effect.Capture);
         env.reference(instrValue.object, effect);
 
         const lvalue = instr.lvalue;
@@ -688,8 +692,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
         const effect = isObjectType(instrValue.object.identifier)
           ? Effect.Store
           : Effect.Mutate;
-        env.reference(instrValue.value, Effect.Read);
-        env.reference(instrValue.property, Effect.Read);
+        env.reference(instrValue.value, Effect.Capture);
+        env.reference(instrValue.property, Effect.Capture);
         env.reference(instrValue.object, effect);
 
         const lvalue = instr.lvalue;

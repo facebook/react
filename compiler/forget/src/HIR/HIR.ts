@@ -546,6 +546,8 @@ export enum Effect {
   Freeze = "freeze",
   // This reference reads the value
   Read = "read",
+  // This reference reads and stores the value
+  Capture = "capture",
   // This reference may write to (mutate) the value
   Mutate = "mutate",
   // This reference may alias to (mutate) the value

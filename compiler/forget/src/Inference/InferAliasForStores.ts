@@ -30,7 +30,12 @@ export function inferAliasForStores(
         case "ComputedStore":
         case "PropertyStore": {
           for (const operand of eachInstructionValueOperand(value)) {
-            maybeAlias(aliases, lvalue.place, operand, instr.id);
+            if (
+              operand.effect === Effect.Capture ||
+              operand.effect === Effect.Store
+            ) {
+              maybeAlias(aliases, lvalue.place, operand, instr.id);
+            }
           }
           break;
         }

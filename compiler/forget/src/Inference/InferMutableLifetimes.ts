@@ -77,6 +77,7 @@ function inferPlace(
         )}!`
       );
     }
+    case Effect.Capture:
     case Effect.Read:
     case Effect.Freeze:
       return;
