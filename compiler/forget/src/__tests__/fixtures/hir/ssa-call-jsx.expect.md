@@ -21,7 +21,7 @@ function Component(props) {
 function foo() {}
 
 function Component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   let a;
   let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

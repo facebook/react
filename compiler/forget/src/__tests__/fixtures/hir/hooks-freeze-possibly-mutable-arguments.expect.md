@@ -26,7 +26,7 @@ function call(x) {}
 
 ```javascript
 function Component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const cond = props.cond;
   const x = props.x;
   const c_0 = $[0] !== cond;

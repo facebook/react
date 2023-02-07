@@ -18,7 +18,7 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {

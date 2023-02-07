@@ -20,7 +20,7 @@ function foo(a, b) {
 
 ```javascript
 function foo(a, b) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== a;
   let x;
   if (c_0) {

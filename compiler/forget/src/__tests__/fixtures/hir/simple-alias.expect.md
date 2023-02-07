@@ -21,7 +21,7 @@ function foo() {
 ```javascript
 function mutate() {}
 function foo() {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   let c$1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const b = {};

@@ -14,7 +14,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = { t: 1 };

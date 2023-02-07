@@ -27,7 +27,7 @@ function mutate(x, y) {}
 
 ```javascript
 function foo(cond) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== cond;
   let a;
   if (c_0) {

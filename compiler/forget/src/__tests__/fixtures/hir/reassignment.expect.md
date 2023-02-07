@@ -21,7 +21,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== props.p0;
   const c_1 = $[1] !== props.p1;
   let y;

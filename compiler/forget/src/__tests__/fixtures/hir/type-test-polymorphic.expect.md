@@ -23,7 +23,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   let p;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     p = makePrimitive();

@@ -41,7 +41,7 @@ function mutate() {}
 function cond() {}
 
 function Component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const a = {};
   const b = {};
   let c;

@@ -13,7 +13,7 @@ function foo(a) {
 
 ```javascript
 function foo(a) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== a.b;
   let x;
   if (c_0) {

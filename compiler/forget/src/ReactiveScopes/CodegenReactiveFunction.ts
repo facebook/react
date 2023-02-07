@@ -49,7 +49,7 @@ export function codegenReactiveFunction(
           t.callExpression(
             t.memberExpression(
               t.identifier("React"),
-              t.identifier("useMemoCache")
+              t.identifier("unstable_useMemoCache")
             ),
             []
           )

@@ -19,7 +19,7 @@ function Component(props) {
 // @flow
 type Foo = { bar: string };
 function Component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== props.bar;
   let y;
   if (c_0) {

@@ -25,7 +25,7 @@ function componentA(props) {
 }
 
 function componentB(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const t0 = `hello ${props.a}`;
   const c_0 = $[0] !== t0;
   let x;

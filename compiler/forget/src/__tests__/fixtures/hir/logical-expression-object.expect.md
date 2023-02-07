@@ -19,7 +19,7 @@ function component(props) {
 
 ```javascript
 function component(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const c_0 = $[0] !== props;
   let t0;
   if (c_0) {

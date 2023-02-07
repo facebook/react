@@ -15,7 +15,7 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const x = props.x;
   const x$0 = x + 1;
   const y = x$0;

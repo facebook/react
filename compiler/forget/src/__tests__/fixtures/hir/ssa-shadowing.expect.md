@@ -23,7 +23,7 @@ function Foo(cond) {
 function log() {}
 
 function Foo(cond) {
-  const $ = React.useMemoCache();
+  const $ = React.unstable_useMemoCache();
   const str = "";
   const c_0 = $[0] !== cond;
   let str$0;
