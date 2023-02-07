@@ -193,7 +193,12 @@ async function parseExportNamesInto(
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          parseExportNamesInto(source, names, url, defaultTransformSource);
+          await parseExportNamesInto(
+            source,
+            names,
+            url,
+            defaultTransformSource,
+          );
           continue;
         }
       case 'ExportDefaultDeclaration':
@@ -216,7 +221,6 @@ async function parseExportNamesInto(
             addExportNames(names, specifiers[j].exported);
           }
         }
-        continue;
     }
   }
 }
