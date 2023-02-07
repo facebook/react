@@ -42,14 +42,14 @@ describe('ChangeEventPlugin', () => {
     // - calling 'window.postMessage' should actually fire postmessage handlers
     const originalAddEventListener = global.addEventListener;
     let postMessageCallback;
-    global.addEventListener = function(eventName, callback, useCapture) {
+    global.addEventListener = function (eventName, callback, useCapture) {
       if (eventName === 'message') {
         postMessageCallback = callback;
       } else {
         originalAddEventListener(eventName, callback, useCapture);
       }
     };
-    global.postMessage = function(messageKey, targetOrigin) {
+    global.postMessage = function (messageKey, targetOrigin) {
       const postMessageEvent = {source: window, data: messageKey};
       if (postMessageCallback) {
         postMessageCallback(postMessageEvent);
@@ -472,7 +472,7 @@ describe('ChangeEventPlugin', () => {
     // https://github.com/facebook/react/issues/10196
     try {
       originalCreateElement = document.createElement;
-      document.createElement = function() {
+      document.createElement = function () {
         const node = originalCreateElement.apply(this, arguments);
         Object.defineProperty(node, 'value', {
           get() {},

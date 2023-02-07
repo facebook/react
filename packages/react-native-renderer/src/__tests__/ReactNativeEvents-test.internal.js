@@ -63,19 +63,18 @@ const fakeRequireNativeComponent = (uiViewClassName, validAttributes) => {
 beforeEach(() => {
   jest.resetModules();
 
-  require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
-
   PropTypes = require('prop-types');
-  RCTEventEmitter = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-    .RCTEventEmitter;
+  RCTEventEmitter =
+    require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
-    .default;
-  UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-    .UIManager;
-  createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-    .ReactNativeViewConfigRegistry.register;
+  ResponderEventPlugin =
+    require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
+  UIManager =
+    require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
+  createReactNativeComponentClass =
+    require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
 });
 
 it('fails to register the same event name with different types', () => {

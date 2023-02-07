@@ -71,9 +71,7 @@ describe('ReactElement', () => {
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = <div key="3" />;
-    expect(
-      () => void element.props.key,
-    ).toErrorDev(
+    expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -336,7 +334,7 @@ describe('ReactElement', () => {
         const el = <div className="moo" />;
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe('moo');
@@ -363,7 +361,7 @@ describe('ReactElement', () => {
         const el = <div>{this.props.sound}</div>;
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe(undefined);

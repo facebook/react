@@ -39,10 +39,10 @@ if (isChrome || isEdge) {
     // The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
     const FRAME_TIME = 16;
     let lastTime = 0;
-    window.requestAnimationFrame = function(callback, element) {
+    window.requestAnimationFrame = function (callback, element) {
       const now = window.performance.now();
       const nextTime = Math.max(lastTime + FRAME_TIME, now);
-      return setTimeout(function() {
+      return setTimeout(function () {
         callback((lastTime = nextTime));
       }, nextTime - now);
     };
@@ -91,7 +91,7 @@ function createPanelIfReactLoaded() {
 
   chrome.devtools.inspectedWindow.eval(
     'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-    function(pageHasReact, error) {
+    function (pageHasReact, error) {
       if (!pageHasReact || panelCreated) {
         return;
       }
@@ -199,7 +199,7 @@ function createPanelIfReactLoaded() {
         // Otherwise the Store may miss important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
           `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
-          function(response, evalError) {
+          function (response, evalError) {
             if (evalError) {
               console.error(evalError);
             }
@@ -553,7 +553,7 @@ chrome.devtools.network.onNavigated.addListener(checkPageForReact);
 
 // Check to see if React has loaded once per second in case React is added
 // after page load
-const loadCheckInterval = setInterval(function() {
+const loadCheckInterval = setInterval(function () {
   createPanelIfReactLoaded();
 }, 1000);
 

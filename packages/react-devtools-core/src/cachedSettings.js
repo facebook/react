@@ -33,7 +33,8 @@ function initializeConsolePatchSettings(
   if (devToolsSettingsManager.getConsolePatchSettings == null) {
     return;
   }
-  const consolePatchSettingsString = devToolsSettingsManager.getConsolePatchSettings();
+  const consolePatchSettingsString =
+    devToolsSettingsManager.getConsolePatchSettings();
   if (consolePatchSettingsString == null) {
     return;
   }

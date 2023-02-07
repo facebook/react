@@ -16,9 +16,8 @@ import {createCursor, push, pop} from './ReactFiberStack';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);
 const contextFiberStackCursor: StackCursor<Fiber | null> = createCursor(null);
-const rootInstanceStackCursor: StackCursor<Container | null> = createCursor(
-  null,
-);
+const rootInstanceStackCursor: StackCursor<Container | null> =
+  createCursor(null);
 
 function requiredContext<Value>(c: Value | null): Value {
   if (__DEV__) {

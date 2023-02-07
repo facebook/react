@@ -24,9 +24,8 @@ export function flushBuffered(destination: Destination) {
 // For now we support AsyncLocalStorage as a global for the "browser" builds
 // TODO: Move this to some special WinterCG build.
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
 
 const VIEW_SIZE = 512;
 let currentView = null;

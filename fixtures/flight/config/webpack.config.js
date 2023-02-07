@@ -91,7 +91,7 @@ const hasJsxRuntime = (() => {
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
-module.exports = function(webpackEnv) {
+module.exports = function (webpackEnv) {
   const isEnvDevelopment = webpackEnv === 'development';
   const isEnvProduction = webpackEnv === 'production';
 
@@ -752,7 +752,14 @@ module.exports = function(webpackEnv) {
       //     },
       //   }),
       // Fork Start
-      new ReactFlightWebpackPlugin({isServer: false}),
+      new ReactFlightWebpackPlugin({
+        isServer: false,
+        clientReferences: {
+          directory: './src',
+          recursive: true,
+          include: /\.(js|ts|jsx|tsx)$/,
+        },
+      }),
       // Fork End
     ].filter(Boolean),
     // Turn off performance processing because we utilize

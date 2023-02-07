@@ -12,8 +12,8 @@ import type {
   Chunk,
   BundlerConfig,
   ModuleMetaData,
-  ModuleReference,
-  ModuleKey,
+  ClientReference,
+  ClientReferenceKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -38,14 +38,12 @@ import {
   closeWithError,
   processModelChunk,
   processModuleChunk,
-  processProviderChunk,
-  processSymbolChunk,
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
   resolveModuleMetaData,
-  getModuleKey,
-  isModuleReference,
+  getClientReferenceKey,
+  isClientReference,
   supportsRequestStorage,
   requestStorage,
 } from './ReactFlightServerConfig';
@@ -135,7 +133,7 @@ export type Request = {
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
-  writtenModules: Map<ModuleKey, number>,
+  writtenModules: Map<ClientReferenceKey, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
@@ -194,7 +192,7 @@ export function createRequest(
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     // $FlowFixMe[missing-this-annot]
-    toJSON: function(key: string, value: ReactModel): ReactJSONValue {
+    toJSON: function (key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };
@@ -217,6 +215,82 @@ const POP = {};
 // in case they error.
 const jsxPropsParents: WeakMap<any, any> = new WeakMap();
 const jsxChildrenParents: WeakMap<any, any> = new WeakMap();
+
+function serializeThenable(request: Request, thenable: Thenable<any>): number {
+  request.pendingChunks++;
+  const newTask = createTask(
+    request,
+    null,
+    getActiveContext(),
+    request.abortableTasks,
+  );
+
+  switch (thenable.status) {
+    case 'fulfilled': {
+      // We have the resolved value, we can go ahead and schedule it for serialization.
+      newTask.model = thenable.value;
+      pingTask(request, newTask);
+      return newTask.id;
+    }
+    case 'rejected': {
+      const x = thenable.reason;
+      const digest = logRecoverableError(request, x);
+      if (__DEV__) {
+        const {message, stack} = getErrorMessageAndStackDev(x);
+        emitErrorChunkDev(request, newTask.id, digest, message, stack);
+      } else {
+        emitErrorChunkProd(request, newTask.id, digest);
+      }
+      return newTask.id;
+    }
+    default: {
+      if (typeof thenable.status === 'string') {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        break;
+      }
+      const pendingThenable: PendingThenable<mixed> = (thenable: any);
+      pendingThenable.status = 'pending';
+      pendingThenable.then(
+        fulfilledValue => {
+          if (thenable.status === 'pending') {
+            const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = fulfilledValue;
+          }
+        },
+        (error: mixed) => {
+          if (thenable.status === 'pending') {
+            const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          }
+        },
+      );
+      break;
+    }
+  }
+
+  thenable.then(
+    value => {
+      newTask.model = value;
+      pingTask(request, newTask);
+    },
+    reason => {
+      // TODO: Is it safe to directly emit these without being inside a retry?
+      const digest = logRecoverableError(request, reason);
+      if (__DEV__) {
+        const {message, stack} = getErrorMessageAndStackDev(reason);
+        emitErrorChunkDev(request, newTask.id, digest, message, stack);
+      } else {
+        emitErrorChunkProd(request, newTask.id, digest);
+      }
+    },
+  );
+
+  return newTask.id;
+}
 
 function readThenable<T>(thenable: Thenable<T>): T {
   if (thenable.status === 'fulfilled') {
@@ -272,6 +346,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
 }
 
 function attemptResolveElement(
+  request: Request,
   type: any,
   key: null | React$Key,
   ref: mixed,
@@ -293,7 +368,7 @@ function attemptResolveElement(
     }
   }
   if (typeof type === 'function') {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
@@ -305,6 +380,14 @@ function attemptResolveElement(
       result !== null &&
       typeof result.then === 'function'
     ) {
+      // When the return value is in children position we can resolve it immediately,
+      // to its value without a wrapper if it's synchronously available.
+      const thenable: Thenable<any> = result;
+      if (thenable.status === 'fulfilled') {
+        return thenable.value;
+      }
+      // TODO: Once we accept Promises as children on the client, we can just return
+      // the thenable here.
       return createLazyWrapperAroundWakeable(result);
     }
     return result;
@@ -323,7 +406,7 @@ function attemptResolveElement(
     // Any built-in works as long as its props are serializable.
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
-    if (isModuleReference(type)) {
+    if (isClientReference(type)) {
       // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
@@ -333,6 +416,7 @@ function attemptResolveElement(
         const init = type._init;
         const wrappedType = init(payload);
         return attemptResolveElement(
+          request,
           wrappedType,
           key,
           ref,
@@ -347,6 +431,7 @@ function attemptResolveElement(
       }
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(
+          request,
           type.type,
           key,
           ref,
@@ -416,17 +501,29 @@ function serializeByValueID(id: number): string {
   return '$' + id.toString(16);
 }
 
-function serializeByRefID(id: number): string {
-  return '@' + id.toString(16);
+function serializeLazyID(id: number): string {
+  return '$L' + id.toString(16);
 }
 
-function serializeModuleReference(
+function serializePromiseID(id: number): string {
+  return '$@' + id.toString(16);
+}
+
+function serializeSymbolReference(name: string): string {
+  return '$S' + name;
+}
+
+function serializeProviderReference(name: string): string {
+  return '$P' + name;
+}
+
+function serializeClientReference(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
-  moduleReference: ModuleReference<any>,
+  moduleReference: ClientReference<any>,
 ): string {
-  const moduleKey: ModuleKey = getModuleKey(moduleReference);
+  const moduleKey: ClientReferenceKey = getClientReferenceKey(moduleReference);
   const writtenModules = request.writtenModules;
   const existingId = writtenModules.get(moduleKey);
   if (existingId !== undefined) {
@@ -436,7 +533,7 @@ function serializeModuleReference(
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeByRefID(existingId);
+      return serializeLazyID(existingId);
     }
     return serializeByValueID(existingId);
   }
@@ -455,7 +552,7 @@ function serializeModuleReference(
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeByRefID(moduleId);
+      return serializeLazyID(moduleId);
     }
     return serializeByValueID(moduleId);
   } catch (x) {
@@ -473,7 +570,7 @@ function serializeModuleReference(
 }
 
 function escapeStringValue(value: string): string {
-  if (value[0] === '$' || value[0] === '@') {
+  if (value[0] === '$') {
     // We need to escape $ or @ prefixed strings since we use those to encode
     // references to IDs and as special symbol values.
     return '$' + value;
@@ -533,7 +630,7 @@ function isSimpleObject(object: any): boolean {
 function objectName(object: mixed): string {
   // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
-  return name.replace(/^\[object (.*)\]$/, function(m, p0) {
+  return name.replace(/^\[object (.*)\]$/, function (m, p0) {
     return p0;
   });
 }
@@ -829,6 +926,7 @@ export function resolveModelToJSON(
           const element: React$Element<any> = (value: any);
           // Attempt to render the Server Component.
           value = attemptResolveElement(
+            request,
             element.type,
             element.key,
             element.ref,
@@ -867,7 +965,7 @@ export function resolveModelToJSON(
         const ping = newTask.ping;
         x.then(ping, ping);
         newTask.thenableState = getThenableStateAfterSuspending();
-        return serializeByRefID(newTask.id);
+        return serializeLazyID(newTask.id);
       } else {
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
@@ -881,7 +979,7 @@ export function resolveModelToJSON(
         } else {
           emitErrorChunkProd(request, errorId, digest);
         }
-        return serializeByRefID(errorId);
+        return serializeLazyID(errorId);
       }
     }
   }
@@ -891,8 +989,13 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'object') {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, (value: any));
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, (value: any));
+    } else if (typeof value.then === 'function') {
+      // We assume that any object with a .then property is a "Thenable" type,
+      // or a Promise type. Either of which can be represented by a Promise.
+      const promiseId = serializeThenable(request, (value: any));
+      return serializePromiseID(promiseId);
     } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
       const providerKey = ((value: any): ReactProviderType<any>)._context
         ._globalName;
@@ -961,8 +1064,8 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
-    if (isModuleReference(value)) {
-      return serializeModuleReference(request, parent, key, (value: any));
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, (value: any));
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
@@ -1031,9 +1134,10 @@ function logRecoverableError(request: Request, error: mixed): string {
   return errorDigest || '';
 }
 
-function getErrorMessageAndStackDev(
-  error: mixed,
-): {message: string, stack: string} {
+function getErrorMessageAndStackDev(error: mixed): {
+  message: string,
+  stack: string,
+} {
   if (__DEV__) {
     let message;
     let stack = '';
@@ -1109,7 +1213,8 @@ function emitModuleChunk(
 }
 
 function emitSymbolChunk(request: Request, id: number, name: string): void {
-  const processedChunk = processSymbolChunk(request, id, name);
+  const symbolReference = serializeSymbolReference(name);
+  const processedChunk = processReferenceChunk(request, id, symbolReference);
   request.completedModuleChunks.push(processedChunk);
 }
 
@@ -1118,7 +1223,8 @@ function emitProviderChunk(
   id: number,
   contextName: string,
 ): void {
-  const processedChunk = processProviderChunk(request, id, contextName);
+  const contextReference = serializeProviderReference(contextName);
+  const processedChunk = processReferenceChunk(request, id, contextReference);
   request.completedJSONChunks.push(processedChunk);
 }
 
@@ -1148,6 +1254,7 @@ function retryTask(request: Request, task: Task): void {
       // also suspends.
       task.model = value;
       value = attemptResolveElement(
+        request,
         element.type,
         element.key,
         element.ref,
@@ -1171,6 +1278,7 @@ function retryTask(request: Request, task: Task): void {
         const nextElement: React$Element<any> = (value: any);
         task.model = value;
         value = attemptResolveElement(
+          request,
           nextElement.type,
           nextElement.key,
           nextElement.ref,

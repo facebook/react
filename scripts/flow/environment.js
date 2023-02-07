@@ -120,9 +120,7 @@ declare module 'fs/promises' {
   ) => Promise<mixed>;
 }
 declare module 'pg' {
-  declare var Pool: (
-    options: mixed,
-  ) => {
+  declare var Pool: (options: mixed) => {
     query: (query: string, values?: Array<mixed>) => void,
   };
 }

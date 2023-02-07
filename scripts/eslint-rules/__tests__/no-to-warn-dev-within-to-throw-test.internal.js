@@ -20,8 +20,7 @@ ruleTester.run('eslint-rules/no-to-warn-dev-within-to-throw', rule, {
   ],
   invalid: [
     {
-      code:
-        'expect(function() { expect(callback).toWarnDev("warning") }).toThrow("error");',
+      code: 'expect(function() { expect(callback).toWarnDev("warning") }).toThrow("error");',
       errors: [
         {
           message: 'toWarnDev() matcher should not be nested',

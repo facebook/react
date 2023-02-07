@@ -933,7 +933,7 @@ const bundles = [
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
   Object.freeze(o);
-  Object.getOwnPropertyNames(o).forEach(function(prop) {
+  Object.getOwnPropertyNames(o).forEach(function (prop) {
     if (
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
@@ -950,7 +950,7 @@ deepFreeze(bundles);
 deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
-function getOriginalFilename(bundle, bundleType) {
+function getFilename(bundle, bundleType) {
   let name = bundle.name || bundle.entry;
   const globalName = bundle.global;
   // we do this to replace / to -, for react-dom/server
@@ -991,23 +991,6 @@ function getOriginalFilename(bundle, bundleType) {
     case BROWSER_SCRIPT:
       return `${name}.js`;
   }
-}
-
-function getFilename(bundle, bundleType) {
-  const originalFilename = getOriginalFilename(bundle, bundleType);
-  // Ensure .server.js or .client.js is the final suffix.
-  // This is important for the Server tooling convention.
-  if (originalFilename.indexOf('.server.') !== -1) {
-    return originalFilename
-      .replace('.server.', '.')
-      .replace('.js', '.server.js');
-  }
-  if (originalFilename.indexOf('.client.') !== -1) {
-    return originalFilename
-      .replace('.client.', '.')
-      .replace('.js', '.client.js');
-  }
-  return originalFilename;
 }
 
 module.exports = {

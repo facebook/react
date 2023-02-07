@@ -3607,7 +3607,7 @@ describe('ReactFresh', () => {
       // a proper reload because we will bottle up the update.
       // So we're being somewhat conservative.
       expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
-      expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(
+      expect(ReactFreshRuntime.isLikelyComponentType(function () {})).toBe(
         false,
       );
       expect(

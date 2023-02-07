@@ -102,10 +102,8 @@ function OwnersListContextController({children}: Props): React.Node {
             ownersList.owners === null
               ? null
               : ownersList.owners.map(owner => {
-                  const [
-                    displayNameWithoutHOCs,
-                    hocDisplayNames,
-                  ] = separateDisplayNameAndHOCs(owner.displayName, owner.type);
+                  const [displayNameWithoutHOCs, hocDisplayNames] =
+                    separateDisplayNameAndHOCs(owner.displayName, owner.type);
 
                   return {
                     ...owner,

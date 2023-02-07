@@ -192,7 +192,7 @@ describe('ReactDOMImageLoad', () => {
     );
   });
 
-  it('captures the load event if it happens before commit phase and replays it between layout and passive effects', async function() {
+  it('captures the load event if it happens before commit phase and replays it between layout and passive effects', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -232,7 +232,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalled();
   });
 
-  it('captures the load event if it happens after commit phase and replays it', async function() {
+  it('captures the load event if it happens after commit phase and replays it', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -262,7 +262,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('it replays the last load event when more than one fire before the end of the layout phase completes', async function() {
+  it('it replays the last load event when more than one fire before the end of the layout phase completes', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -313,7 +313,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('replays load events that happen in passive phase after the passive phase.', async function() {
+  it('replays load events that happen in passive phase after the passive phase.', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -339,7 +339,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed', async function() {
+  it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -388,7 +388,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).not.toHaveBeenCalled();
   });
 
-  it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed, alternate', async function() {
+  it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed, alternate', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -517,7 +517,7 @@ describe('ReactDOMImageLoad', () => {
   //   expect(onLoadSpy).toHaveBeenCalledTimes(1);
   // });
 
-  it('correctly replays the last img load even when a yield + update causes the host element to change', async function() {
+  it('correctly replays the last img load even when a yield + update causes the host element to change', async function () {
     let externalSetSrc = null;
     let externalSetSrcAlt = null;
 

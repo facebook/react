@@ -82,8 +82,10 @@ function TimelineContextController({children}: Props): React.Node {
 
   // Recreate view state any time new profiling data is imported.
   const viewState = useMemo<ViewState>(() => {
-    const horizontalScrollStateChangeCallbacks: Set<HorizontalScrollStateChangeCallback> = new Set();
-    const searchRegExpStateChangeCallbacks: Set<SearchRegExpStateChangeCallback> = new Set();
+    const horizontalScrollStateChangeCallbacks: Set<HorizontalScrollStateChangeCallback> =
+      new Set();
+    const searchRegExpStateChangeCallbacks: Set<SearchRegExpStateChangeCallback> =
+      new Set();
 
     const horizontalScrollState = {
       offset: 0,

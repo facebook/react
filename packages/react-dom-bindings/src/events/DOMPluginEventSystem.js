@@ -378,11 +378,7 @@ export function listenToNativeEventForNonManagedEventTarget(
   }
 }
 
-const listeningMarker =
-  '_reactListening' +
-  Math.random()
-    .toString(36)
-    .slice(2);
+const listeningMarker = '_reactListening' + Math.random().toString(36).slice(2);
 
 export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
   if (!(rootContainerElement: any)[listeningMarker]) {
@@ -463,7 +459,7 @@ function addTrappedEventListener(
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
     // $FlowFixMe[missing-this-annot]
-    listener = function(...p) {
+    listener = function (...p) {
       removeEventListener(
         targetContainer,
         domEventName,
@@ -692,9 +688,8 @@ export function accumulateSinglePhaseListeners(
 
       // createEventHandle listeners
       if (enableCreateEventHandleAPI) {
-        const eventHandlerListeners = getEventHandlerListeners(
-          lastHostComponent,
-        );
+        const eventHandlerListeners =
+          getEventHandlerListeners(lastHostComponent);
         if (eventHandlerListeners !== null) {
           eventHandlerListeners.forEach(entry => {
             if (
@@ -731,9 +726,8 @@ export function accumulateSinglePhaseListeners(
     ) {
       // Scopes
       const reactScopeInstance = stateNode;
-      const eventHandlerListeners = getEventHandlerListeners(
-        reactScopeInstance,
-      );
+      const eventHandlerListeners =
+        getEventHandlerListeners(reactScopeInstance);
       if (eventHandlerListeners !== null) {
         eventHandlerListeners.forEach(entry => {
           if (

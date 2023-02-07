@@ -78,8 +78,9 @@ export function processChildContext(
     for (const contextKey in childContext) {
       if (!(contextKey in childContextTypes)) {
         throw new Error(
-          `${getComponentNameFromType(type) ||
-            'Unknown'}.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
+          `${
+            getComponentNameFromType(type) || 'Unknown'
+          }.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
         );
       }
     }

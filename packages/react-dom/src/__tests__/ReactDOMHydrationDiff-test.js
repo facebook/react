@@ -38,7 +38,7 @@ describe('ReactDOMServerHydration', () => {
   function normalizeCodeLocInfo(str) {
     return (
       typeof str === 'string' &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
         return '\n    in ' + name + ' (at **)';
       })
     );

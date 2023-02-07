@@ -1,10 +1,11 @@
 import {
   resolve,
-  getSource,
+  load as reactLoad,
+  getSource as getSourceImpl,
   transformSource as reactTransformSource,
 } from 'react-server-dom-webpack/node-loader';
 
-export {resolve, getSource};
+export {resolve};
 
 import babel from '@babel/core';
 
@@ -17,6 +18,23 @@ const babelOptions = {
   ],
 };
 
+async function babelLoad(url, context, defaultLoad) {
+  const {format} = context;
+  const result = await defaultLoad(url, context, defaultLoad);
+  if (result.format === 'module') {
+    const opt = Object.assign({filename: url}, babelOptions);
+    const {code} = await babel.transformAsync(result.source, opt);
+    return {source: code, format: 'module'};
+  }
+  return defaultLoad(url, context, defaultLoad);
+}
+
+export async function load(url, context, defaultLoad) {
+  return await reactLoad(url, context, (u, c) => {
+    return babelLoad(u, c, defaultLoad);
+  });
+}
+
 async function babelTransformSource(source, context, defaultTransformSource) {
   const {format} = context;
   if (format === 'module') {
@@ -27,8 +45,12 @@ async function babelTransformSource(source, context, defaultTransformSource) {
   return defaultTransformSource(source, context, defaultTransformSource);
 }
 
-export async function transformSource(source, context, defaultTransformSource) {
-  return reactTransformSource(source, context, (s, c) => {
+async function transformSourceImpl(source, context, defaultTransformSource) {
+  return await reactTransformSource(source, context, (s, c) => {
     return babelTransformSource(s, c, defaultTransformSource);
   });
 }
+
+export const transformSource =
+  process.version < 'v16' ? transformSourceImpl : undefined;
+export const getSource = process.version < 'v16' ? getSourceImpl : undefined;

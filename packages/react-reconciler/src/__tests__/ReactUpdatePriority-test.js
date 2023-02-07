@@ -15,8 +15,8 @@ describe('ReactUpdatePriority', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
-    ContinuousEventPriority = require('react-reconciler/constants')
-      .ContinuousEventPriority;
+    ContinuousEventPriority =
+      require('react-reconciler/constants').ContinuousEventPriority;
     startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;

@@ -95,7 +95,7 @@ describe('ReactFreshIntegration', () => {
   });
 
   describe('with typescript syntax', () => {
-    runTests(function(source) {
+    runTests(function (source) {
       const typescriptSource = babel.transform(source, {
         babelrc: false,
         configFile: false,

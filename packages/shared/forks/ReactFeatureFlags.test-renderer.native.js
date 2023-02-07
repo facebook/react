@@ -35,7 +35,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
-export const warnAboutSpreadingKeyToJSX = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -49,7 +48,8 @@ export const enableCPUSuspense = false;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
 export const enableUseEffectEventHook = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
+  true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;

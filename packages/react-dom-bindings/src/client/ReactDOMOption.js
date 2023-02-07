@@ -23,7 +23,7 @@ export function validateProps(element: Element, props: Object) {
     // If a value is not provided, then the children must be simple.
     if (props.value == null) {
       if (typeof props.children === 'object' && props.children !== null) {
-        Children.forEach(props.children, function(child) {
+        Children.forEach(props.children, function (child) {
           if (child == null) {
             return;
           }

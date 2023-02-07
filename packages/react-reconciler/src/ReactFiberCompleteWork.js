@@ -211,7 +211,7 @@ let updateHostText;
 if (supportsMutation) {
   // Mutation mode
 
-  appendAllChildren = function(
+  appendAllChildren = function (
     parent: Instance,
     workInProgress: Fiber,
     needsVisibilityToggle: boolean,
@@ -255,10 +255,13 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function (
+    current: null | Fiber,
+    workInProgress: Fiber,
+  ) {
     // Noop
   };
-  updateHostComponent = function(
+  updateHostComponent = function (
     current: Fiber,
     workInProgress: Fiber,
     type: Type,
@@ -297,7 +300,7 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     }
   };
-  updateHostText = function(
+  updateHostText = function (
     current: Fiber,
     workInProgress: Fiber,
     oldText: string,
@@ -311,7 +314,7 @@ if (supportsMutation) {
 } else if (supportsPersistence) {
   // Persistent host tree mode
 
-  appendAllChildren = function(
+  appendAllChildren = function (
     parent: Instance,
     workInProgress: Fiber,
     needsVisibilityToggle: boolean,
@@ -378,7 +381,7 @@ if (supportsMutation) {
   };
 
   // An unfortunate fork of appendAllChildren because we have two different parent types.
-  const appendAllChildrenToContainer = function(
+  const appendAllChildrenToContainer = function (
     containerChildSet: ChildSet,
     workInProgress: Fiber,
     needsVisibilityToggle: boolean,
@@ -450,7 +453,10 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function (
+    current: null | Fiber,
+    workInProgress: Fiber,
+  ) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
@@ -470,7 +476,7 @@ if (supportsMutation) {
       finalizeContainerChildren(container, newChildSet);
     }
   };
-  updateHostComponent = function(
+  updateHostComponent = function (
     current: Fiber,
     workInProgress: Fiber,
     type: Type,
@@ -531,7 +537,7 @@ if (supportsMutation) {
       appendAllChildren(newInstance, workInProgress, false, false);
     }
   };
-  updateHostText = function(
+  updateHostText = function (
     current: Fiber,
     workInProgress: Fiber,
     oldText: string,
@@ -556,10 +562,13 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function (
+    current: null | Fiber,
+    workInProgress: Fiber,
+  ) {
     // Noop
   };
-  updateHostComponent = function(
+  updateHostComponent = function (
     current: Fiber,
     workInProgress: Fiber,
     type: Type,
@@ -567,7 +576,7 @@ if (supportsMutation) {
   ) {
     // Noop
   };
-  updateHostText = function(
+  updateHostText = function (
     current: Fiber,
     workInProgress: Fiber,
     oldText: string,
@@ -810,7 +819,8 @@ function completeDehydratedSuspenseBoundary(
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
               // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
             }
           }
         }
@@ -839,7 +849,8 @@ function completeDehydratedSuspenseBoundary(
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
               // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
             }
           }
         }
@@ -1170,11 +1181,12 @@ function completeWork(
         (current.memoizedState !== null &&
           current.memoizedState.dehydrated !== null)
       ) {
-        const fallthroughToNormalSuspensePath = completeDehydratedSuspenseBoundary(
-          current,
-          workInProgress,
-          nextState,
-        );
+        const fallthroughToNormalSuspensePath =
+          completeDehydratedSuspenseBoundary(
+            current,
+            workInProgress,
+            nextState,
+          );
         if (!fallthroughToNormalSuspensePath) {
           if (workInProgress.flags & ShouldCapture) {
             // Special case. There were remaining unhydrated nodes. We treat
@@ -1281,7 +1293,8 @@ function completeWork(
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
               // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+              workInProgress.treeBaseDuration -=
+                ((primaryChildFragment.treeBaseDuration: any): number);
             }
           }
         }
@@ -1511,9 +1524,8 @@ function completeWork(
             ForceSuspenseFallback,
           );
         } else {
-          suspenseContext = setDefaultShallowSuspenseListContext(
-            suspenseContext,
-          );
+          suspenseContext =
+            setDefaultShallowSuspenseListContext(suspenseContext);
         }
         pushSuspenseListContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
