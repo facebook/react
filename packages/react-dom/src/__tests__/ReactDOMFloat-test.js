@@ -39,6 +39,14 @@ function resetJSDOM(markup) {
   const jsdom = new JSDOM(markup, {
     runScripts: 'dangerously',
   });
+  // We mock matchMedia. for simplicity it only matches 'all' or '' and misses everything else
+  Object.defineProperty(jsdom.window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: query === 'all' || query === '',
+      media: query,
+    })),
+  });
   window = jsdom.window;
   document = jsdom.window.document;
 }
@@ -729,6 +737,290 @@ describe('ReactDOMFloat', () => {
           {'bar'}
           <link as="style" href="bar" rel="preload" />
           <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('can hoist <link rel="stylesheet" .../> and <style /> tags together, respecting order of discovery', async () => {
+    const css = `
+body {
+  background-color: red;
+}`;
+
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <link rel="stylesheet" href="one1" precedence="one" />
+            <style href="two1" precedence="two">
+              {css}
+            </style>
+            <link rel="stylesheet" href="three1" precedence="three" />
+            <style href="four1" precedence="four">
+              {css}
+            </style>
+            <Suspense>
+              <BlockedOn value="block">
+                <link rel="stylesheet" href="one2" precedence="one" />
+                <link rel="stylesheet" href="two2" precedence="two" />
+                <style href="three2" precedence="three">
+                  {css}
+                </style>
+                <style href="four2" precedence="four">
+                  {css}
+                </style>
+                <link rel="stylesheet" href="five1" precedence="five" />
+              </BlockedOn>
+            </Suspense>
+            <Suspense>
+              <BlockedOn value="block2">
+                <style href="one3" precedence="one">
+                  {css}
+                </style>
+                <style href="two3" precedence="two">
+                  {css}
+                </style>
+                <link rel="stylesheet" href="three3" precedence="three" />
+                <link rel="stylesheet" href="four3" precedence="four" />
+                <style href="six1" precedence="six">
+                  {css}
+                </style>
+              </BlockedOn>
+            </Suspense>
+            <Suspense>
+              <BlockedOn value="block again">
+                <link rel="stylesheet" href="one2" precedence="one" />
+                <link rel="stylesheet" href="two2" precedence="two" />
+                <style href="three2" precedence="three">
+                  {css}
+                </style>
+                <style href="four2" precedence="four">
+                  {css}
+                </style>
+                <link rel="stylesheet" href="five1" precedence="five" />
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="one1" data-precedence="one" />
+          <style data-href="two1" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three1" data-precedence="three" />
+          <style data-href="four1" data-precedence="four">
+            {css}
+          </style>
+        </head>
+        <body />
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('block');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="one1" data-precedence="one" />
+          <link rel="stylesheet" href="one2" data-precedence="one" />
+          <style data-href="two1" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="two2" data-precedence="two" />
+          <link rel="stylesheet" href="three1" data-precedence="three" />
+          <style data-href="three2" data-precedence="three">
+            {css}
+          </style>
+          <style data-href="four1" data-precedence="four">
+            {css}
+          </style>
+          <style data-href="four2" data-precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="five1" data-precedence="five" />
+        </head>
+        <body>
+          <link rel="preload" href="one2" as="style" />
+          <link rel="preload" href="two2" as="style" />
+          <link rel="preload" href="five1" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('block2');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="one1" data-precedence="one" />
+          <link rel="stylesheet" href="one2" data-precedence="one" />
+          <style data-href="one3" data-precedence="one">
+            {css}
+          </style>
+          <style data-href="two1" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="two2" data-precedence="two" />
+          <style data-href="two3" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three1" data-precedence="three" />
+          <style data-href="three2" data-precedence="three">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three3" data-precedence="three" />
+          <style data-href="four1" data-precedence="four">
+            {css}
+          </style>
+          <style data-href="four2" data-precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="four3" data-precedence="four" />
+          <link rel="stylesheet" href="five1" data-precedence="five" />
+          <style data-href="six1" data-precedence="six">
+            {css}
+          </style>
+        </head>
+        <body>
+          <link rel="preload" href="one2" as="style" />
+          <link rel="preload" href="two2" as="style" />
+          <link rel="preload" href="five1" as="style" />
+          <link rel="preload" href="three3" as="style" />
+          <link rel="preload" href="four3" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('block again');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="one1" data-precedence="one" />
+          <link rel="stylesheet" href="one2" data-precedence="one" />
+          <style data-href="one3" data-precedence="one">
+            {css}
+          </style>
+          <style data-href="two1" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="two2" data-precedence="two" />
+          <style data-href="two3" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three1" data-precedence="three" />
+          <style data-href="three2" data-precedence="three">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three3" data-precedence="three" />
+          <style data-href="four1" data-precedence="four">
+            {css}
+          </style>
+          <style data-href="four2" data-precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="four3" data-precedence="four" />
+          <link rel="stylesheet" href="five1" data-precedence="five" />
+          <style data-href="six1" data-precedence="six">
+            {css}
+          </style>
+        </head>
+        <body>
+          <link rel="preload" href="one2" as="style" />
+          <link rel="preload" href="two2" as="style" />
+          <link rel="preload" href="five1" as="style" />
+          <link rel="preload" href="three3" as="style" />
+          <link rel="preload" href="four3" as="style" />
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>
+          <link rel="stylesheet" href="one4" precedence="one" />
+          <style href="two4" precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three4" precedence="three" />
+          <style href="four4" precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="seven1" precedence="seven" />
+          <style href="eight1" precedence="eight">
+            {css}
+          </style>
+        </body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="one1" data-precedence="one" />
+          <link rel="stylesheet" href="one2" data-precedence="one" />
+          <style data-href="one3" data-precedence="one">
+            {css}
+          </style>
+          <link rel="stylesheet" href="one4" data-precedence="one" />
+          <style data-href="two1" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="two2" data-precedence="two" />
+          <style data-href="two3" data-precedence="two">
+            {css}
+          </style>
+          <style data-href="two4" data-precedence="two">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three1" data-precedence="three" />
+          <style data-href="three2" data-precedence="three">
+            {css}
+          </style>
+          <link rel="stylesheet" href="three3" data-precedence="three" />
+          <link rel="stylesheet" href="three4" data-precedence="three" />
+          <style data-href="four1" data-precedence="four">
+            {css}
+          </style>
+          <style data-href="four2" data-precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="four3" data-precedence="four" />
+          <style data-href="four4" data-precedence="four">
+            {css}
+          </style>
+          <link rel="stylesheet" href="five1" data-precedence="five" />
+          <style data-href="six1" data-precedence="six">
+            {css}
+          </style>
+          <link rel="stylesheet" href="seven1" data-precedence="seven" />
+          <style data-href="eight1" data-precedence="eight">
+            {css}
+          </style>
+          <link rel="preload" href="one4" as="style" />
+          <link rel="preload" href="three4" as="style" />
+          <link rel="preload" href="seven1" as="style" />
+        </head>
+        <body>
+          <link rel="preload" href="one2" as="style" />
+          <link rel="preload" href="two2" as="style" />
+          <link rel="preload" href="five1" as="style" />
+          <link rel="preload" href="three3" as="style" />
+          <link rel="preload" href="four3" as="style" />
         </body>
       </html>,
     );
@@ -1987,6 +2279,120 @@ describe('ReactDOMFloat', () => {
       }).toErrorDev([
         'Warning: React encountered a <link rel="stylesheet" href="foo" .../> with a `precedence` prop that has props that conflict with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../> the props from the first encountered instance will be used and props from later instances will be ignored. Update the props on either <link rel="stylesheet" .../> instance so they agree.\n  "media" missing for props, original value: "all"\n  "data-extra" prop value: "foo", missing from original props\n  "precedence" prop value: "bar", original value: "foo"',
       ]);
+    });
+
+    it('will not block displaying a Suspense boundary on a stylesheet with media that does not match', async () => {
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Suspense fallback="loading...">
+                <BlockedOn value="block">
+                  foo
+                  <link
+                    rel="stylesheet"
+                    href="print"
+                    media="print"
+                    precedence="print"
+                  />
+                  <link
+                    rel="stylesheet"
+                    href="all"
+                    media="all"
+                    precedence="all"
+                  />
+                </BlockedOn>
+              </Suspense>
+              <Suspense fallback="loading...">
+                <BlockedOn value="block">
+                  bar
+                  <link
+                    rel="stylesheet"
+                    href="print"
+                    media="print"
+                    precedence="print"
+                  />
+                  <link
+                    rel="stylesheet"
+                    href="all"
+                    media="all"
+                    precedence="all"
+                  />
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            {'loading...'}
+            {'loading...'}
+          </body>
+        </html>,
+      );
+
+      await act(() => {
+        resolveText('block');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="print"
+              media="print"
+              data-precedence="print"
+            />
+            <link
+              rel="stylesheet"
+              href="all"
+              media="all"
+              data-precedence="all"
+            />
+          </head>
+          <body>
+            {'loading...'}
+            {'loading...'}
+            <link rel="preload" href="print" media="print" as="style" />
+            <link rel="preload" href="all" media="all" as="style" />
+          </body>
+        </html>,
+      );
+
+      await act(() => {
+        const allStyle = document.querySelector('link[href="all"]');
+        const event = document.createEvent('Events');
+        event.initEvent('load', true, true);
+        allStyle.dispatchEvent(event);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="print"
+              media="print"
+              data-precedence="print"
+            />
+            <link
+              rel="stylesheet"
+              href="all"
+              media="all"
+              data-precedence="all"
+            />
+          </head>
+          <body>
+            {'foo'}
+            {'bar'}
+            <link rel="preload" href="print" media="print" as="style" />
+            <link rel="preload" href="all" media="all" as="style" />
+          </body>
+        </html>,
+      );
     });
   });
 

@@ -1343,10 +1343,10 @@ function pushLink(
               state: NoState,
               props: preloadAsStylePropsFromProps(href, props),
             };
+            resources.preloadsMap.set(key, resource);
             if (__DEV__) {
               markAsImplicitResourceDEV(resource, props, resource.props);
             }
-            resources.preloadsMap.set(key, resource);
           }
           pushLinkImpl(resource.chunks, resource.props);
           resources.usedStylesheets.add(resource);
@@ -1430,19 +1430,19 @@ function pushLink(
               state: resources.boundaryResources ? Blocked : NoState,
               props: resourceProps,
             };
+            resources.stylesMap.set(key, resource);
             if (__DEV__) {
               markAsRenderedResourceDEV(resource, props);
             }
-            resources.stylesMap.set(key, resource);
             let precedenceSet = resources.precedences.get(precedence);
             if (!precedenceSet) {
               precedenceSet = new Set();
               resources.precedences.set(precedence, precedenceSet);
             }
             precedenceSet.add(resource);
-            if (resources.boundaryResources) {
-              resources.boundaryResources.add(resource);
-            }
+          }
+          if (resources.boundaryResources) {
+            resources.boundaryResources.add(resource);
           }
           if (textEmbedded) {
             // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -1572,12 +1572,12 @@ function pushStyle(
         state: resources.boundaryResources ? Blocked : NoState,
         props: styleTagPropsFromRawProps(props),
       };
+      resources.stylesMap.set(key, resource);
       if (__DEV__) {
         markAsRenderedResourceDEV(resource, props);
       }
       pushStyleImpl(resource.chunks, resource.props);
 
-      resources.stylesMap.set(key, resource);
       let precedenceSet = resources.precedences.get(precedence);
       if (!precedenceSet) {
         precedenceSet = new Set();
@@ -1955,10 +1955,10 @@ function pushScript(
             state: NoState,
             props: preloadAsScriptPropsFromProps(props.src, props),
           };
+          resources.preloadsMap.set(key, resource);
           if (__DEV__) {
             markAsImplicitResourceDEV(resource, props, resource.props);
           }
-          resources.preloadsMap.set(key, resource);
           resources.usedScripts.add(resource);
           pushLinkImpl(resource.chunks, resource.props);
           return null;
@@ -1973,11 +1973,10 @@ function pushScript(
             state: NoState,
             props: null,
           };
+          resources.scriptsMap.set(key, resource);
           if (__DEV__) {
             markAsRenderedResourceDEV(resource, props);
           }
-          // Add to the global script cache
-          resources.scriptsMap.set(key, resource);
           // Add to the script flushing queue
           resources.scripts.add(resource);
 
@@ -2852,15 +2851,15 @@ export function writeCompletedSegmentInstruction(
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  completeBoundaryFunction + ';$RC("',
+  completeBoundaryFunction + '$RC("',
 );
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
-  completeBoundaryFunction + ';' + styleInsertionFunction + ';$RR("',
+  completeBoundaryFunction + styleInsertionFunction + '$RR("',
 );
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
-  styleInsertionFunction + ';$RR("',
+  styleInsertionFunction + '$RR("',
 );
 const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
   '$RR("',
@@ -4167,6 +4166,7 @@ export function preload(href: string, options: PreloadOptions) {
         state: NoState,
         props: preloadPropsFromPreloadOptions(href, as, options),
       };
+      resources.preloadsMap.set(key, resource);
       if (__DEV__) {
         markAsImperativeResourceDEV(
           resource,
@@ -4176,11 +4176,6 @@ export function preload(href: string, options: PreloadOptions) {
           resource.props,
         );
       }
-      // Unlike on the client this key will never be used to query the DOM. We
-      // vary on `as` to mirror client behavior. It's not generally sensible that
-      // you would use the same href for two different types of assets but we allow
-      // it nonetheless.
-      resources.preloadsMap.set(key, resource);
 
       pushLinkImpl(resource.chunks, resource.props);
     }
@@ -4364,6 +4359,7 @@ function preinitImpl(
             state: NoState,
             props: null,
           };
+          resources.scriptsMap.set(key, resource);
           let resourceProps = scriptPropsFromPreinitOptions(src, options);
           if (__DEV__) {
             markAsImperativeResourceDEV(
