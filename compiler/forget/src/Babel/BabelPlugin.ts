@@ -8,8 +8,10 @@
 /// <reference path="./plugin-syntax-jsx.d.ts" />
 
 import type * as BabelCore from "@babel/core";
+import generate from "@babel/generator";
 import jsx from "@babel/plugin-syntax-jsx";
 import { parseCompilerFlags } from "../CompilerFlags";
+import prettier from "prettier";
 import { compile } from "../CompilerPipeline";
 
 /**
@@ -46,8 +48,17 @@ export default function ReactForgetBabelPlugin(
 
           // We are generating a new FunctionDeclaration node, so we must skip over it or this
           // traversal will loop infinitely.
-          fn.replaceWith(ast);
-          fn.skip();
+          try {
+            fn.replaceWith(ast);
+            fn.skip();
+          } catch (err) {
+            const result = generate(ast);
+            err.message = `${err.message}\n\n${prettier.format(result.code, {
+              semi: true,
+              parser: "babel-ts",
+            })}`;
+            throw err;
+          }
         },
       },
     },
