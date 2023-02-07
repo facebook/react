@@ -20,8 +20,6 @@ describe('ReactDOMFizzStaticNode', () => {
     React = require('react');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');
-      global.AbortController =
-        require('abortcontroller-polyfill/dist/cjs-ponyfill').AbortController;
     }
     Suspense = React.Suspense;
   });
