@@ -202,13 +202,10 @@ export default function enterSSA(func: HIRFunction) {
     for (const instr of block.instructions) {
       mapInstructionOperands(instr, (place) => builder.getPlace(place));
 
-      if (instr.lvalue != null) {
-        const oldPlace = instr.lvalue.place;
-        let newPlace: Place;
-        newPlace = builder.definePlace(oldPlace);
-        instr.lvalue.kind = InstructionKind.Const;
-        instr.lvalue.place = newPlace;
-      }
+      const oldPlace = instr.lvalue.place;
+      const newPlace = builder.definePlace(oldPlace);
+      instr.lvalue.kind = InstructionKind.Const;
+      instr.lvalue.place = newPlace;
     }
 
     mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));
