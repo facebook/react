@@ -216,33 +216,4 @@ module.exports = function register() {
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(clientReference, proxyHandlers);
   };
-
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  const originalResolveFilename = Module._resolveFilename;
-
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  // $FlowFixMe[missing-this-annot]
-  Module._resolveFilename = function (request, parent, isMain, options) {
-    const resolved = originalResolveFilename.apply(this, arguments);
-    if (resolved.endsWith('.server.js')) {
-      if (
-        parent &&
-        parent.filename &&
-        !parent.filename.endsWith('.server.js')
-      ) {
-        let reason;
-        if (request.endsWith('.server.js')) {
-          reason = `"${request}"`;
-        } else {
-          reason = `"${request}" (which expands to "${resolved}")`;
-        }
-        throw new Error(
-          `Cannot import ${reason} from "${parent.filename}". ` +
-            'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
-            'That way nobody accidentally sends these to the client by indirectly importing it.',
-        );
-      }
-    }
-    return resolved;
-  };
 };

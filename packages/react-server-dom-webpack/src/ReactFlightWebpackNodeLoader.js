@@ -82,24 +82,7 @@ export async function resolve(
       );
     }
   }
-  const resolved = await defaultResolve(specifier, context, defaultResolve);
-  if (resolved.url.endsWith('.server.js')) {
-    const parentURL = context.parentURL;
-    if (parentURL && !parentURL.endsWith('.server.js')) {
-      let reason;
-      if (specifier.endsWith('.server.js')) {
-        reason = `"${specifier}"`;
-      } else {
-        reason = `"${specifier}" (which expands to "${resolved.url}")`;
-      }
-      throw new Error(
-        `Cannot import ${reason} from "${parentURL}". ` +
-          'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
-          'That way nobody accidentally sends these to the client by indirectly importing it.',
-      );
-    }
-  }
-  return resolved;
+  return await defaultResolve(specifier, context, defaultResolve);
 }
 
 export async function getSource(
