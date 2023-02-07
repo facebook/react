@@ -144,15 +144,11 @@ function resolveClientImport(
 }
 
 async function parseExportNamesInto(
-  transformedSource: string,
+  body: any,
   names: Array<string>,
   parentURL: string,
   loader: LoadFunction,
 ): Promise<void> {
-  const {body} = acorn.parse(transformedSource, {
-    ecmaVersion: '2019',
-    sourceType: 'module',
-  });
   for (let i = 0; i < body.length; i++) {
     const node = body[i];
     switch (node.type) {
@@ -170,7 +166,11 @@ async function parseExportNamesInto(
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          await parseExportNamesInto(source, names, url, loader);
+          const {body: childBody} = acorn.parse(source, {
+            ecmaVersion: '2019',
+            sourceType: 'module',
+          });
+          await parseExportNamesInto(childBody, names, url, loader);
           continue;
         }
       case 'ExportDefaultDeclaration':
@@ -205,7 +205,34 @@ async function transformClientModule(
 ): Promise<string> {
   const names: Array<string> = [];
 
-  await parseExportNamesInto(source, names, url, loader);
+  // Do a quick check for the exact string. If it doesn't exist, don't
+  // bother parsing.
+  if (source.indexOf('use client') === -1) {
+    return source;
+  }
+
+  const {body} = acorn.parse(source, {
+    ecmaVersion: '2019',
+    sourceType: 'module',
+  });
+
+  let useClient = false;
+  for (let i = 0; i < body.length; i++) {
+    const node = body[i];
+    if (node.type !== 'ExpressionStatement' || !node.directive) {
+      break;
+    }
+    if (node.directive === 'use client') {
+      useClient = true;
+      break;
+    }
+  }
+
+  if (!useClient) {
+    return source;
+  }
+
+  await parseExportNamesInto(body, names, url, loader);
 
   let newSrc =
     "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
@@ -277,7 +304,7 @@ export async function transformSource(
     context,
     defaultTransformSource,
   );
-  if (context.format === 'module' && context.url.endsWith('.client.js')) {
+  if (context.format === 'module') {
     const transformedSource = transformed.source;
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
@@ -299,7 +326,7 @@ export async function load(
   context: LoadContext,
   defaultLoad: LoadFunction,
 ): Promise<{format: string, shortCircuit?: boolean, source: Source}> {
-  if (context.format === 'module' && url.endsWith('.client.js')) {
+  if (context.format === 'module') {
     const result = await defaultLoad(url, context, defaultLoad);
     if (typeof result.source !== 'string') {
       throw new Error('Expected source to have been loaded into a string.');
