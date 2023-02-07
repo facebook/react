@@ -204,8 +204,22 @@ module.exports = function register() {
   };
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  Module._extensions['.client.js'] = function (module, path) {
-    const moduleId: string = (url.pathToFileURL(path).href: any);
+  const originalCompile = Module.prototype._compile;
+
+  // $FlowFixMe[prop-missing] found when upgrading Flow
+  Module.prototype._compile = function (
+    this: any,
+    content: string,
+    filename: string,
+  ): void {
+    // TODO: Properly parse the directive from the file content.
+    if (
+      content.indexOf('"use client"') === -1 &&
+      content.indexOf("'use client'") === -1
+    ) {
+      return originalCompile.apply(this, arguments);
+    }
+    const moduleId: string = (url.pathToFileURL(filename).href: any);
     const clientReference = Object.defineProperties(({}: any), {
       // Represents the whole Module object instead of a particular import.
       name: {value: '*'},
@@ -214,6 +228,6 @@ module.exports = function register() {
       async: {value: false},
     });
     // $FlowFixMe[incompatible-call] found when upgrading Flow
-    module.exports = new Proxy(clientReference, proxyHandlers);
+    this.exports = new Proxy(clientReference, proxyHandlers);
   };
 };

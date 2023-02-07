@@ -21,21 +21,21 @@ global.__webpack_require__ = function (id) {
   return webpackModules[id];
 };
 
-const previousLoader = Module._extensions['.client.js'];
+const previousCompile = Module.prototype._compile;
 
 const register = require('react-server-dom-webpack/node-register');
-// Register node loader
+// Register node compile
 register();
 
-const nodeLoader = Module._extensions['.client.js'];
+const nodeCompile = Module.prototype._compile;
 
-if (previousLoader === nodeLoader) {
+if (previousCompile === nodeCompile) {
   throw new Error(
-    'Expected the Node loader to register the .client.js extension',
+    'Expected the Node loader to register the _compile extension',
   );
 }
 
-Module._extensions['.client.js'] = previousLoader;
+Module.prototype._compile = previousCompile;
 
 exports.webpackMap = webpackMap;
 exports.webpackModules = webpackModules;
@@ -57,7 +57,7 @@ exports.clientModuleError = function clientModuleError(moduleError) {
     },
   };
   const mod = {exports: {}};
-  nodeLoader(mod, idx);
+  nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
 
@@ -99,6 +99,6 @@ exports.clientExports = function clientExports(moduleExports) {
     };
   }
   const mod = {exports: {}};
-  nodeLoader(mod, idx);
+  nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
