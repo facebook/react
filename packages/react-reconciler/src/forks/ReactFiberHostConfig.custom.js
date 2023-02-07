@@ -197,9 +197,15 @@ export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
 // -------------------
 export const supportsResources = $$$hostConfig.supportsResources;
 export const isHostHoistableType = $$$hostConfig.isHostHoistableType;
+export const getHoistableRoot = $$$hostConfig.getHoistableRoot;
 export const getResource = $$$hostConfig.getResource;
 export const acquireResource = $$$hostConfig.acquireResource;
 export const releaseResource = $$$hostConfig.releaseResource;
+export const hydrateHoistable = $$$hostConfig.hydrateHoistable;
+export const mountHoistable = $$$hostConfig.mountHoistable;
+export const unmountHoistable = $$$hostConfig.unmountHoistable;
+export const createHoistableInstance = $$$hostConfig.createHoistableInstance;
+export type HoistableRoot = mixed;
 
 // -------------------
 //     Singletons

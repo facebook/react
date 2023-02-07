@@ -16,13 +16,6 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {
-  warnOnMissingHrefAndRel,
-  validatePreloadResourceDifference,
-  validateURLKeyedUpdatedProps,
-  validateStyleResourceDifference,
-  validateScriptResourceDifference,
-  validateLinkPropsForStyleResource,
-  validateLinkPropsForPreloadResource,
   validatePreloadArguments,
   validatePreinitArguments,
 } from '../shared/ReactDOMResourceValidation';
@@ -178,9 +171,8 @@ function preload(href: string, options: PreloadOptions) {
     ownerDocument
   ) {
     const as = options.as;
-    const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-      href,
-    );
+    const limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
     const preloadKey = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
     let key = preloadKey;
     switch (as) {
@@ -256,9 +248,8 @@ function preinit(href: string, options: PreinitOptions) {
         // matching preload with this href
         const preloadDocument = getDocumentForPreloads();
         if (preloadDocument) {
-          const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-            href,
-          );
+          const limitedEscapedHref =
+            escapeSelectorAttributeValueInsideDoubleQuotes(href);
           const preloadKey = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
           let key = preloadKey;
           switch (as) {
@@ -476,8 +467,6 @@ export function getResource(
         const styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
         let resource = styles.get(key);
         if (!resource) {
-          // We asserted this above but Flow can't figure out that the type satisfies
-          const ownerDocument = getDocumentFromRoot(resourceRoot);
           resource = {
             type: 'style',
             instance: null,
@@ -570,9 +559,8 @@ function styleTagPropsFromRawProps(
 }
 
 function getStyleKey(href: string) {
-  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-    href,
-  );
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
   return `href="${limitedEscapedHref}"`;
 }
 
@@ -609,9 +597,6 @@ function preloadStylesheet(
     // There is no matching stylesheet instance in the Document.
     // We will insert a preload now to kick off loading because
     // we expect this stylesheet to commit
-    const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
-      preloadProps.href,
-    );
     if (
       null ===
       ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))

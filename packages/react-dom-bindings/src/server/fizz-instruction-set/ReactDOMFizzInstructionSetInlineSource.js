@@ -33,7 +33,7 @@ export function completeBoundaryWithStyles(
   let nodes = thisDocument.querySelectorAll('template[data-precedence]');
   for (let i = 0; (node = nodes[i++]); ) {
     let child = node.content.firstChild;
-    for (let j = 0; child; child = child.nextSibling) {
+    for (; child; child = child.nextSibling) {
       stylesToHoist.set(child.getAttribute('data-href'), child);
     }
     node.parentNode.removeChild(node);

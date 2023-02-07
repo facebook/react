@@ -892,7 +892,7 @@ function flattenOptionChildren(children: mixed): string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  Children.forEach((children: any), function(child) {
+  Children.forEach((children: any), function (child) {
     if (child == null) {
       return;
     }
@@ -1355,8 +1355,8 @@ function pushLink(
           // This stylesheet refers to a Resource and we create a new one if necessary
           let resource = resources.stylesMap.get(key);
           if (__DEV__) {
-            if (resource) {
-              const devResource: ResourceDEV = (resource: any);
+            const devResource = getAsResourceDEV(resource);
+            if (devResource) {
               switch (devResource.__provenance) {
                 case 'rendered': {
                   const differentProps = compareResourcePropsForWarning(
@@ -1365,9 +1365,8 @@ function pushLink(
                     devResource.__originalProps,
                   );
                   if (differentProps) {
-                    const differenceDescription = describeDifferencesForStylesheets(
-                      differentProps,
-                    );
+                    const differenceDescription =
+                      describeDifferencesForStylesheets(differentProps);
                     if (differenceDescription) {
                       console.error(
                         'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
@@ -1388,9 +1387,10 @@ function pushLink(
                     devResource.__propsEquivalent,
                   );
                   if (differentProps) {
-                    const differenceDescription = describeDifferencesForStylesheetOverPreinit(
-                      differentProps,
-                    );
+                    const differenceDescription =
+                      describeDifferencesForStylesheetOverPreinit(
+                        differentProps,
+                      );
                     if (differenceDescription) {
                       console.error(
                         'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
@@ -1725,22 +1725,40 @@ function pushTitle(
           : null
         : children;
 
-      if (
-        typeof child === 'function' ||
-        typeof child === 'symbol' ||
-        Array.isArray(child)
-      ) {
-        const childType =
-          typeof child === 'function'
-            ? 'a Function'
-            : typeof child === 'symbol'
-            ? 'a Sybmol'
-            : 'an Array';
+      if (Array.isArray(children) && children.length > 1) {
         console.error(
-          'React expect children of <title> tags to be a string, number, or object with a `toString` method but found %s instead. ' +
-            'In browsers title Elements can only have `Text` Nodes as children.',
+          'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an Array with length %s instead.' +
+            ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
+            ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
+            ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
+            ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
+          children.length,
+        );
+      } else if (typeof child === 'function' || typeof child === 'symbol') {
+        const childType =
+          typeof child === 'function' ? 'a Function' : 'a Sybmol';
+        console.error(
+          'React expect children of <title> tags to be a string, number, or object with a novel `toString` method but found %s instead.' +
+            ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>' +
+            ' tags to a single string value.',
           childType,
         );
+      } else if (child && child.toString === {}.toString) {
+        if (child.$$typeof != null) {
+          console.error(
+            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that appears to be' +
+              ' a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to' +
+              ' be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is' +
+              ' a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+          );
+        } else {
+          console.error(
+            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that does not implement' +
+              ' a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags' +
+              ' to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>' +
+              ' is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+          );
+        }
       }
     }
   }
@@ -2535,29 +2553,22 @@ const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
   '<!--$?--><template id="',
 );
 const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
-const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
-  '<!--$!-->',
-);
+const startClientRenderedSuspenseBoundary =
+  stringToPrecomputedChunk('<!--$!-->');
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
-const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  '<template',
-);
-const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
-  '"',
-);
-const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  ' data-dgst="',
-);
-const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  ' data-msg="',
-);
-const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
-  ' data-stck="',
-);
-const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  '></template>',
-);
+const clientRenderedSuspenseBoundaryError1 =
+  stringToPrecomputedChunk('<template');
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial =
+  stringToPrecomputedChunk('"');
+const clientRenderedSuspenseBoundaryError1A =
+  stringToPrecomputedChunk(' data-dgst="');
+const clientRenderedSuspenseBoundaryError1B =
+  stringToPrecomputedChunk(' data-msg="');
+const clientRenderedSuspenseBoundaryError1C =
+  stringToPrecomputedChunk(' data-stck="');
+const clientRenderedSuspenseBoundaryError2 =
+  stringToPrecomputedChunk('></template>');
 
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
@@ -2861,9 +2872,8 @@ const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   styleInsertionFunction + '$RR("',
 );
-const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
-  '$RR("',
-);
+const completeBoundaryWithStylesScript1Partial =
+  stringToPrecomputedChunk('$RR("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3a = stringToPrecomputedChunk('",');
 const completeBoundaryScript3b = stringToPrecomputedChunk('"');
@@ -3150,11 +3160,20 @@ const styleTagTemplateOpen = stringToPrecomputedChunk(
 );
 const styleTagTemplateClose = stringToPrecomputedChunk('</template>');
 
+// Tracks whether we wrote any late style tags. We use this to determine
+// whether we need to emit a closing template tag after flushing late style tags
+let didWrite = false;
+
 function flushStyleTagsLateForBoundary(
   this: Destination,
   resource: StyleResource,
 ) {
   if (resource.type === 'style' && (resource.state & Flushed) === NoState) {
+    if (didWrite === false) {
+      // we are going to write so we need to emit the open tag
+      didWrite = true;
+      writeChunk(this, styleTagTemplateOpen);
+    }
     // This <style> tag can be flushed now
     const chunks = resource.chunks;
     for (let i = 0; i < chunks.length; i++) {
@@ -3168,9 +3187,13 @@ export function writeResourcesForBoundary(
   destination: Destination,
   boundaryResources: BoundaryResources,
 ): boolean {
-  writeChunk(destination, styleTagTemplateOpen);
+  didWrite = false;
   boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
-  return writeChunkAndReturn(destination, styleTagTemplateClose);
+  if (didWrite) {
+    return writeChunkAndReturn(destination, styleTagTemplateClose);
+  } else {
+    return true;
+  }
 }
 
 const precedencePlaceholderStart = stringToPrecomputedChunk(
@@ -4278,9 +4301,8 @@ function preinitImpl(
                   devResource.__originalProps,
                 );
                 if (differentProps) {
-                  const differenceDescription = describeDifferencesForPreinitOverStylesheet(
-                    differentProps,
-                  );
+                  const differenceDescription =
+                    describeDifferencesForPreinitOverStylesheet(differentProps);
                   if (differenceDescription) {
                     console.error(
                       'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
@@ -4305,9 +4327,8 @@ function preinitImpl(
                   devResource.__propsEquivalent,
                 );
                 if (differentProps) {
-                  const differenceDescription = describeDifferencesForPreinits(
-                    differentProps,
-                  );
+                  const differenceDescription =
+                    describeDifferencesForPreinits(differentProps);
                   if (differenceDescription) {
                     console.error(
                       'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
@@ -4360,7 +4381,7 @@ function preinitImpl(
             props: null,
           };
           resources.scriptsMap.set(key, resource);
-          let resourceProps = scriptPropsFromPreinitOptions(src, options);
+          const resourceProps = scriptPropsFromPreinitOptions(src, options);
           if (__DEV__) {
             markAsImperativeResourceDEV(
               resource,
@@ -4518,13 +4539,14 @@ function markAsRenderedResourceDEV(
   if (__DEV__) {
     const devResource: RenderedResourceDEV = (resource: any);
     if (typeof devResource.__provenance === 'string') {
-      throw new Error(
+      console.error(
         'Resource already marked for DEV type. This is a bug in React.',
       );
     }
     devResource.__provenance = 'rendered';
     devResource.__originalProps = originalProps;
   } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'markAsRenderedResourceDEV was included in a production build. This is a bug in React.',
     );
@@ -4541,7 +4563,7 @@ function markAsImperativeResourceDEV(
   if (__DEV__) {
     const devResource: ImperativeResourceDEV = (resource: any);
     if (typeof devResource.__provenance === 'string') {
-      throw new Error(
+      console.error(
         'Resource already marked for DEV type. This is a bug in React.',
       );
     }
@@ -4550,6 +4572,7 @@ function markAsImperativeResourceDEV(
     devResource.__originalOptions = originalOptions;
     devResource.__propsEquivalent = propsEquivalent;
   } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'markAsImperativeResourceDEV was included in a production build. This is a bug in React.',
     );
@@ -4564,7 +4587,7 @@ function markAsImplicitResourceDEV(
   if (__DEV__) {
     const devResource: ImplicitResourceDEV = (resource: any);
     if (typeof devResource.__provenance === 'string') {
-      throw new Error(
+      console.error(
         'Resource already marked for DEV type. This is a bug in React.',
       );
     }
@@ -4572,21 +4595,28 @@ function markAsImplicitResourceDEV(
     devResource.__underlyingProps = underlyingProps;
     devResource.__impliedProps = impliedProps;
   } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'markAsImplicitResourceDEV was included in a production build. This is a bug in React.',
     );
   }
 }
 
-function getAsResourceDEV(resource: Resource): ResourceDEV {
+function getAsResourceDEV(
+  resource: null | void | Resource,
+): null | ResourceDEV {
   if (__DEV__) {
-    if (typeof (resource: any).__provenance === 'string') {
-      return (resource: any);
+    if (resource) {
+      if (typeof (resource: any).__provenance === 'string') {
+        return (resource: any);
+      }
+      console.error(
+        'Resource was not marked for DEV type. This is a bug in React.',
+      );
     }
-    throw new Error(
-      'Resource was not marked for DEV type. This is a bug in React.',
-    );
+    return null;
   } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'getAsResourceDEV was included in a production build. This is a bug in React.',
     );

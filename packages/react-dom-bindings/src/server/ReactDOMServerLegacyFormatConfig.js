@@ -125,6 +125,7 @@ export {
   writeClientRenderBoundaryInstruction,
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
+  writeResourcesForBoundary,
   writePlaceholder,
   writeCompletedRoot,
   createResources,

@@ -2680,7 +2680,8 @@ function commitMutationEffectsOnFiber(
             }
           } else if (newResource === null && finishedWork.stateNode !== null) {
             // We may have an update on a Hoistable element
-            const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
+            const updatePayload: null | UpdatePayload =
+              (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
             if (updatePayload !== null) {
               try {
@@ -2820,11 +2821,18 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
-      const previousHoistableRoot = currentHoistableRoot;
-      currentHoistableRoot = getHoistableRoot(root.containerInfo);
-      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
-      currentHoistableRoot = previousHoistableRoot;
+      if (enableFloat && supportsResources) {
+        const previousHoistableRoot = currentHoistableRoot;
+        currentHoistableRoot = getHoistableRoot(root.containerInfo);
+
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        currentHoistableRoot = previousHoistableRoot;
+
+        commitReconciliationEffects(finishedWork);
+      } else {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork);
+      }
 
       if (flags & Update) {
         if (supportsMutation && supportsHydration) {
@@ -2856,13 +2864,18 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostPortal: {
-      const previousHoistableRoot = currentHoistableRoot;
-      currentHoistableRoot = getHoistableRoot(
-        finishedWork.stateNode.containerInfo,
-      );
-      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
-      currentHoistableRoot = previousHoistableRoot;
+      if (enableFloat && supportsResources) {
+        const previousHoistableRoot = currentHoistableRoot;
+        currentHoistableRoot = getHoistableRoot(
+          finishedWork.stateNode.containerInfo,
+        );
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork);
+        currentHoistableRoot = previousHoistableRoot;
+      } else {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork);
+      }
 
       if (flags & Update) {
         if (supportsPersistence) {

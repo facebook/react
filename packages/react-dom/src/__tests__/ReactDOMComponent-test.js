@@ -494,6 +494,7 @@ describe('ReactDOMComponent', () => {
             'To fix this, either do not render the element at all ' +
             'or pass null to href instead of an empty string.',
         );
+        console.log('container', container.outerHTML);
         const node = container.firstChild;
         expect(node.hasAttribute('href')).toBe(false);
 

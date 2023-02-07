@@ -463,10 +463,7 @@ export const scheduleMicrotask: any =
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
     ? callback =>
-        localPromise
-          .resolve(null)
-          .then(callback)
-          .catch(handleErrorInNextTick)
+        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
@@ -1591,8 +1588,8 @@ export function isHostHoistableType(
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
-    outsideHostContainerContext = !hostContextDev.ancestorInfo
-      .containerTagInScope;
+    outsideHostContainerContext =
+      !hostContextDev.ancestorInfo.containerTagInScope;
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
@@ -1623,22 +1620,40 @@ export function isHostHoistableType(
       );
     }
     case 'link': {
-      const {onLoad, onError} = props;
-      if (onLoad || onError) {
+      const {onLoad, onError, rel, href} = props;
+      if (
+        namespace === SVG_NAMESPACE ||
+        typeof rel !== 'string' ||
+        typeof href !== 'string' ||
+        href === '' ||
+        onLoad ||
+        onError
+      ) {
         if (__DEV__) {
           if (outsideHostContainerContext) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
+            if (
+              typeof rel !== 'string' ||
+              typeof href !== 'string' ||
+              href === ''
+            ) {
+              console.error(
+                'Cannot render a <link> outside the main document without a `rel` and `href` prop.' +
+                  ' Try adding a `rel` and/or `href` prop to this <link> or moving the link into the <head> tag',
+              );
+            } else if (onError || onLoad) {
+              console.error(
+                'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
+                  ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            }
           }
         }
         return false;
       }
       switch (props.rel) {
         case 'stylesheet': {
-          const {href, precedence, disabled} = props;
+          const {precedence, disabled} = props;
           if (__DEV__) {
             validateLinkPropsForStyleResource(props);
             if (typeof precedence !== 'string') {
@@ -1650,12 +1665,7 @@ export function isHostHoistableType(
               }
             }
           }
-          return (
-            namespace !== SVG_NAMESPACE &&
-            typeof href === 'string' &&
-            typeof precedence === 'string' &&
-            disabled == null
-          );
+          return typeof precedence === 'string' && disabled == null;
         }
         default: {
           return true;

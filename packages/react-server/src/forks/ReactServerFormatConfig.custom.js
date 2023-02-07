@@ -83,3 +83,5 @@ export const createResources = $$$hostConfig.createResources;
 export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
   $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
+export const writeResourcesForBoundary =
+  $$$hostConfig.writeResourcesForBoundary;
