@@ -32,6 +32,8 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
+const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
     if (element) {
@@ -179,10 +181,12 @@ function validateExplicitKey(element, parentType) {
  */
 function validateChildKeys(node, parentType) {
   if (__DEV__) {
-    if (typeof node !== 'object') {
+    if (typeof node !== 'object' || !node) {
       return;
     }
-    if (isArray(node)) {
+    if (node.$$typeof === REACT_CLIENT_REFERENCE) {
+      // This is a reference to a client component so it's unknown.
+    } else if (isArray(node)) {
       for (let i = 0; i < node.length; i++) {
         const child = node[i];
         if (isValidElement(child)) {
@@ -194,7 +198,7 @@ function validateChildKeys(node, parentType) {
       if (node._store) {
         node._store.validated = true;
       }
-    } else if (node) {
+    } else {
       const iteratorFn = getIteratorFn(node);
       if (typeof iteratorFn === 'function') {
         // Entry iterators used to provide implicit keys,
@@ -223,6 +227,9 @@ function validatePropTypes(element) {
   if (__DEV__) {
     const type = element.type;
     if (type === null || type === undefined || typeof type === 'string') {
+      return;
+    }
+    if (type.$$typeof === REACT_CLIENT_REFERENCE) {
       return;
     }
     let propTypes;

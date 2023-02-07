@@ -247,6 +247,94 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableUseHook
+  it('should be able to esm compat test module references', async () => {
+    const ESMCompatModule = {
+      __esModule: true,
+      default: function ({greeting}) {
+        return greeting + ' World';
+      },
+      hi: 'Hello',
+    };
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    function interopWebpack(obj) {
+      // Basically what Webpack's ESM interop feature testing does.
+      if (typeof obj === 'object' && obj.__esModule) {
+        return obj;
+      }
+      return Object.assign({default: obj}, obj);
+    }
+
+    const {default: Component, hi} = interopWebpack(
+      clientExports(ESMCompatModule),
+    );
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <Component greeting={hi} />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Hello World</p>');
+  });
+
+  // @gate enableUseHook
+  it('should be able to render a named component export', async () => {
+    const Module = {
+      Component: function ({greeting}) {
+        return greeting + ' World';
+      },
+    };
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const {Component} = clientExports(Module);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <Component greeting={'Hello'} />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Hello World</p>');
+  });
+
+  // @gate enableUseHook
   it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
@@ -848,8 +936,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in webpackMap.clientManifest) {
-      Object.defineProperty(webpackMap.clientManifest, id, {
+    for (const id in webpackMap) {
+      Object.defineProperty(webpackMap, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },
@@ -904,5 +992,51 @@ describe('ReactFlightDOM', () => {
     }
 
     expect(reportedErrors).toEqual(['bug in the bundler']);
+  });
+
+  // @gate enableUseHook
+  it('should pass a Promise through props and be able use() it on the client', async () => {
+    async function getData() {
+      return 'async hello';
+    }
+
+    function Component({data}) {
+      const text = use(data);
+      return <p>{text}</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    function ServerComponent() {
+      const data = getData(); // no await here
+      return <ClientComponent data={data} />;
+    }
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>async hello</p>');
   });
 });
