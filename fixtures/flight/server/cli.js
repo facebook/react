@@ -29,7 +29,7 @@ const app = express();
 
 // Application
 app.get('/', function (req, res) {
-  require('./handler.server.js')(req, res);
+  require('./handler.js')(req, res);
 });
 
 app.get('/todos', function (req, res) {
