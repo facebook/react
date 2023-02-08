@@ -1,4 +1,4 @@
-﻿## `about` (on `<div>` inside `<div>`)
+## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -11401,23 +11401,23 @@
 ## `transformOrigin` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `transformOrigin=(string)`| (initial)| `<null>` |
-| `transformOrigin=(empty string)`| (initial)| `<null>` |
-| `transformOrigin=(array with string)`| (initial)| `<null>` |
-| `transformOrigin=(empty array)`| (initial)| `<null>` |
-| `transformOrigin=(object)`| (initial)| `<null>` |
-| `transformOrigin=(numeric string)`| (initial)| `<null>` |
-| `transformOrigin=(-1)`| (initial)| `<null>` |
-| `transformOrigin=(0)`| (initial)| `<null>` |
-| `transformOrigin=(integer)`| (initial)| `<null>` |
-| `transformOrigin=(NaN)`| (initial, warning)| `<null>` |
-| `transformOrigin=(float)`| (initial)| `<null>` |
+| `transformOrigin=(string)`| (changed)| `"a string"` |
+| `transformOrigin=(empty string)`| (changed)| `<empty string>` |
+| `transformOrigin=(array with string)`| (changed)| `"string"` |
+| `transformOrigin=(empty array)`| (changed)| `<empty string>` |
+| `transformOrigin=(object)`| (changed)| `"result of toString()"` |
+| `transformOrigin=(numeric string)`| (changed)| `"42"` |
+| `transformOrigin=(-1)`| (changed)| `"-1"` |
+| `transformOrigin=(0)`| (changed)| `"0"` |
+| `transformOrigin=(integer)`| (changed)| `"1"` |
+| `transformOrigin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transformOrigin=(float)`| (changed)| `"99.99"` |
 | `transformOrigin=(true)`| (initial, warning)| `<null>` |
 | `transformOrigin=(false)`| (initial, warning)| `<null>` |
-| `transformOrigin=(string 'true')`| (initial)| `<null>` |
-| `transformOrigin=(string 'false')`| (initial)| `<null>` |
-| `transformOrigin=(string 'on')`| (initial)| `<null>` |
-| `transformOrigin=(string 'off')`| (initial)| `<null>` |
+| `transformOrigin=(string 'true')`| (changed)| `"true"` |
+| `transformOrigin=(string 'false')`| (changed)| `"false"` |
+| `transformOrigin=(string 'on')`| (changed)| `"on"` |
+| `transformOrigin=(string 'off')`| (changed)| `"off"` |
 | `transformOrigin=(symbol)`| (initial, warning)| `<null>` |
 | `transformOrigin=(function)`| (initial, warning)| `<null>` |
 | `transformOrigin=(null)`| (initial)| `<null>` |
