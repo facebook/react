@@ -227,10 +227,11 @@ class Environment {
    */
   alias(place: Place, value: Place) {
     const values = this.#variables.get(value.identifier.id);
-    // A value can be undefined if it has been captured from outside scope.
-    if (value === undefined) {
-      return;
-    }
+    invariant(
+      values != null,
+      "Expected value for identifier `%s` to be initialized.",
+      value.identifier.id
+    );
     this.#variables.set(place.identifier.id, new Set(values));
   }
 
