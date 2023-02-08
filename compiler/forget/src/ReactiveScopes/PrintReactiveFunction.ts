@@ -43,9 +43,9 @@ export function printReactiveBlock(
   writer.writeLine(
     `scope @${block.scope.id} [${block.scope.range.start}:${
       block.scope.range.end
-    }] deps=[${Array.from(block.scope.dependencies)
+    }] dependencies=[${Array.from(block.scope.dependencies)
       .map((dep) => printDependency(dep))
-      .join(", ")}] out=[${Array.from(block.scope.outputs)
+      .join(", ")}] declarations=[${Array.from(block.scope.declarations)
       .map((out) => printIdentifier(out))
       .join(", ")}] {`
   );

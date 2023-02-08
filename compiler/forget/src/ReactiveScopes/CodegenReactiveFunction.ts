@@ -179,7 +179,7 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const output of scope.outputs) {
+  for (const output of scope.declarations) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;

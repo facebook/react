@@ -25,7 +25,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     // value.
     // Many of our current test fixtures do not return a value, so
     // it is better for now to promote (and memoize) every output.
-    for (const identifier of block.scope.outputs) {
+    for (const identifier of block.scope.declarations) {
       if (identifier.name == null) {
         identifier.name = `t${state.nextId++}`;
       }

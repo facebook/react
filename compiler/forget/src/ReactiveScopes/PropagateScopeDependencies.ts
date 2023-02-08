@@ -153,7 +153,7 @@ class Context {
     if (decl !== undefined) {
       const operandScope = maybeDependency.place.identifier.scope;
       if (operandScope !== null && !this.#isScopeActive(operandScope)) {
-        operandScope.outputs.add(maybeDependency.place.identifier);
+        operandScope.declarations.add(maybeDependency.place.identifier);
       }
     }
 

@@ -30,7 +30,7 @@ function visitBlock(block: ReactiveBlock): ReactiveBlock {
       }
       case "scope": {
         stmt.instructions = visitBlock(stmt.instructions);
-        if (stmt.scope.outputs.size === 0) {
+        if (stmt.scope.declarations.size === 0) {
           nextBlock ??= block.slice(0, i);
           nextBlock.push(...stmt.instructions);
           continue;
