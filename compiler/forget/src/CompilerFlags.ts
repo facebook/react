@@ -30,7 +30,7 @@ export function parseCompilerFlags(obj: unknown): CompilerFlags {
     }
   }
   if (invalidFlags.length > 0) {
-    throw new Error(`Unexpected React Forget compiler flags: ${invalidFlags}`);
+    console.error(`Unexpected React Forget compiler flags: ${invalidFlags}`);
   }
   return { ...defaultFlags, ...parsedFlags };
 }
