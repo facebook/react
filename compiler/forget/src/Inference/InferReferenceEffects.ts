@@ -792,8 +792,16 @@ const HOOKS: Map<string, Hook> = new Map([
     "useRef",
     {
       kind: "Ref",
-      effectKind: Effect.Read,
+      effectKind: Effect.Capture,
       valueKind: ValueKind.Mutable,
+    },
+  ],
+  [
+    "useFreeze",
+    {
+      kind: "Ref",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
     },
   ],
 ]);
@@ -812,7 +820,7 @@ export function parseHookCall(place: Place): Hook | null {
   }
   return {
     kind: "Custom",
-    effectKind: Effect.Freeze,
-    valueKind: ValueKind.Frozen,
+    effectKind: Effect.Mutate,
+    valueKind: ValueKind.Mutable,
   };
 }
