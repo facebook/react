@@ -1606,6 +1606,7 @@ function pushStyleImpl(
   target.push(startChunkForTag('style'));
 
   let children = null;
+  let innerHTML = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -1617,9 +1618,8 @@ function pushStyleImpl(
           children = propValue;
           break;
         case 'dangerouslySetInnerHTML':
-          throw new Error(
-            '`dangerouslySetInnerHTML` does not make sense on <title>.',
-          );
+          innerHTML = propValue;
+          break;
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1642,6 +1642,7 @@ function pushStyleImpl(
     // eslint-disable-next-line react-internal/safe-string-coercion
     target.push(stringToChunk(escapeTextForBrowser('' + child)));
   }
+  pushInnerHTML(target, innerHTML, children);
   target.push(endTag1, stringToChunk('style'), endTag2);
   return null;
 }
@@ -1782,6 +1783,7 @@ function pushTitleImpl(
   target.push(startChunkForTag('title'));
 
   let children = null;
+  let innerHTML = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -1793,9 +1795,8 @@ function pushTitleImpl(
           children = propValue;
           break;
         case 'dangerouslySetInnerHTML':
-          throw new Error(
-            '`dangerouslySetInnerHTML` does not make sense on <title>.',
-          );
+          innerHTML = propValue;
+          break;
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1818,6 +1819,7 @@ function pushTitleImpl(
     // eslint-disable-next-line react-internal/safe-string-coercion
     target.push(stringToChunk(escapeTextForBrowser('' + child)));
   }
+  pushInnerHTML(target, innerHTML, children);
   target.push(endTag1, stringToChunk('title'), endTag2);
   return null;
 }
