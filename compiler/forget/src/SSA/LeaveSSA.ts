@@ -200,7 +200,8 @@ export function leaveSSA(fn: HIRFunction) {
       // TODO(joe): This above statement is true, right? Could there be a value
       // block with instructions in terminals?
       const isPhiMutatedAfterCreation: boolean =
-        end > (phiBlock.instructions.at(0)?.id ?? end);
+        phi.id.mutableRange.end >
+        (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
 
       // If this phi id is the canonical id we need to generate a let binding for it
       // (otherwise, it means this phi merges into some other phi which already generated
@@ -241,11 +242,11 @@ export function leaveSSA(fn: HIRFunction) {
 
       // Generate an assignment in each predecessor
       for (const [predecessorId, operand] of phi.operands) {
+        if (isPhiMutatedAfterCreation) {
+          operand.mutableRange.end = phi.id.mutableRange.end;
+        }
         if (operand === initOperand) {
           continue;
-        }
-        if (isPhiMutatedAfterCreation) {
-          operand.mutableRange.end = canonicalId.mutableRange.end;
         }
         const predecessor = fn.body.blocks.get(predecessorId)!;
         const instr: Instruction = {
