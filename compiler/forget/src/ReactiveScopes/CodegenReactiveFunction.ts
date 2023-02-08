@@ -76,7 +76,7 @@ export function codegenReactiveFunction(
 
 class Context {
   #nextCacheIndex: number = 0;
-  #identifiers: Set<Identifier> = new Set();
+  #declarations: Set<Identifier> = new Set();
   temp: Temporaries = new Map();
   errors: CompilerError = new CompilerError();
 
@@ -85,11 +85,11 @@ class Context {
   }
 
   declare(identifier: Identifier): void {
-    this.#identifiers.add(identifier);
+    this.#declarations.add(identifier);
   }
 
-  declared(identifier: Identifier): boolean {
-    return this.#identifiers.has(identifier);
+  hasDeclared(identifier: Identifier): boolean {
+    return this.#declarations.has(identifier);
   }
 }
 
@@ -179,21 +179,48 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const output of scope.declarations) {
+  for (const declaration of scope.declarations) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;
     }
 
     invariant(
-      output.name != null,
+      declaration.name != null,
       "Expected identifier '@%s' to be named",
-      output.id
+      declaration.id
     );
 
-    const name = convertIdentifier(output);
-    cx.declare(output);
-    statements.push(t.variableDeclaration("let", [t.variableDeclarator(name)]));
+    const name = convertIdentifier(declaration);
+    if (!cx.hasDeclared(declaration)) {
+      statements.push(
+        t.variableDeclaration("let", [t.variableDeclarator(name)])
+      );
+    }
+    cacheStoreStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          "=",
+          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          name
+        )
+      )
+    );
+    cacheLoadStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          "=",
+          name,
+          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true)
+        )
+      )
+    );
+    cx.declare(declaration);
+  }
+  for (const reassignment of scope.reassignments) {
+    const index = cx.nextCacheIndex;
+    const name = convertIdentifier(reassignment);
+
     cacheStoreStatements.push(
       t.expressionStatement(
         t.assignmentExpression(
@@ -213,11 +240,6 @@ function codegenReactiveScope(
       )
     );
   }
-  invariant(
-    firstOutputIndex !== null,
-    "Expected scope '@%s' to have at least one output",
-    scope.id
-  );
   let testCondition = (changeIdentifiers as Array<t.Expression>).reduce(
     (acc: t.Expression | null, ident: t.Expression) => {
       if (acc == null) {
@@ -228,6 +250,11 @@ function codegenReactiveScope(
     null as t.Expression | null
   );
   if (testCondition === null) {
+    invariant(
+      firstOutputIndex !== null,
+      "Expected scope '@%s' to have at least one output",
+      scope.id
+    );
     testCondition = t.binaryExpression(
       "===",
       t.memberExpression(
@@ -328,7 +355,7 @@ function codegenInstructionNullable(
   value: t.Expression
 ): t.Statement | null {
   let statement;
-  if (instr.lvalue !== null && cx.declared(instr.lvalue.place.identifier)) {
+  if (instr.lvalue !== null && cx.hasDeclared(instr.lvalue.place.identifier)) {
     statement = codegenInstruction(
       cx,
       {

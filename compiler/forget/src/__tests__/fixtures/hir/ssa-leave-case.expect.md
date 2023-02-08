@@ -27,10 +27,11 @@ function Component(props) {
   const c_0 = $[0] !== props.p0;
   const c_1 = $[1] !== props.p1;
   let x;
+  let y$0;
   if (c_0 || c_1) {
     x = [];
     const y = undefined;
-    let y$0 = y;
+    y$0 = y;
     if (props.p0) {
       x.push(props.p1);
       const y$1 = x;
@@ -39,22 +40,24 @@ function Component(props) {
     $[0] = props.p0;
     $[1] = props.p1;
     $[2] = x;
+    $[3] = y$0;
   } else {
     x = $[2];
+    y$0 = $[3];
   }
-  const c_3 = $[3] !== x;
+  const c_4 = $[4] !== x;
   let t0;
-  if (c_3) {
+  if (c_4) {
     t0 = (
       <Component>
         {x}
         {y$0}
       </Component>
     );
-    $[3] = x;
-    $[4] = t0;
+    $[4] = x;
+    $[5] = t0;
   } else {
-    t0 = $[4];
+    t0 = $[5];
   }
   return t0;
 }

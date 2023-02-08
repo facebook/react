@@ -30,7 +30,13 @@ function visitBlock(block: ReactiveBlock): ReactiveBlock {
       }
       case "scope": {
         stmt.instructions = visitBlock(stmt.instructions);
-        if (stmt.scope.declarations.size === 0) {
+        // If a scope doesn't have declarations but reassigns a value, the scope shouldn't be pruned
+        // as we still want to generate a memo block for that scope
+        if (
+          stmt.scope.declarations.size === 0 &&
+          (stmt.scope.dependencies.size === 0 ||
+            stmt.scope.reassignments.size === 0)
+        ) {
           nextBlock ??= block.slice(0, i);
           nextBlock.push(...stmt.instructions);
           continue;

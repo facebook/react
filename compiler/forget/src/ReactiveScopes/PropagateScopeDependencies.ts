@@ -33,12 +33,17 @@ import { eachReactiveValueOperand } from "./visitors";
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
   const context = new Context(inferReactiveIdentifiers(fn));
   if (fn.id !== null) {
-    context.declare(fn.id, { kind: DeclKind.Const, id: makeInstructionId(0) });
+    context.declare(fn.id, {
+      kind: DeclKind.Const,
+      id: makeInstructionId(0),
+      scope: null,
+    });
   }
   for (const param of fn.params) {
     context.declare(param.identifier, {
       kind: DeclKind.Dynamic,
       id: makeInstructionId(0),
+      scope: null,
     });
   }
   visit(context, fn.body);
@@ -50,7 +55,11 @@ enum DeclKind {
 }
 
 type DeclMap = Map<Identifier, Decl>;
-type Decl = { kind: DeclKind; id: InstructionId };
+type Decl = {
+  kind: DeclKind;
+  id: InstructionId;
+  scope: ReactiveScope | null;
+};
 
 type Scopes = Array<ReactiveScope>;
 
@@ -78,6 +87,12 @@ class Context {
     return scopedDependencies;
   }
 
+  /**
+   * Records where a value was declared, and optionally, the scope where the value originated from.
+   * This is later used to determine if a dependency should be added to a scope; if the current
+   * scope we are visiting is the same scope where the value originates, it can't be a dependency
+   * on itself.
+   */
   declare(identifier: Identifier, decl: Decl): void {
     this.#declarations.set(identifier, decl);
   }
@@ -100,8 +115,8 @@ class Context {
     return this.#scopes.indexOf(scope) !== -1;
   }
 
-  get #currentScope(): ReactiveScope {
-    return this.#scopes.at(-1)!;
+  get currentScope(): ReactiveScope | null {
+    return this.#scopes.at(-1) ?? null;
   }
 
   isReactive(id: Identifier): boolean {
@@ -149,22 +164,26 @@ class Context {
 
     // Any value used after its defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
-    // some later code needs access to the value.
-    if (decl !== undefined) {
-      const operandScope = maybeDependency.place.identifier.scope;
-      if (operandScope !== null && !this.#isScopeActive(operandScope)) {
-        operandScope.declarations.add(maybeDependency.place.identifier);
-      }
+    // some later code needs access to the value. If the current
+    // scope we are visiting is the same scope where the value originates,
+    // it can't be a dependency on itself.
+    if (
+      decl !== undefined &&
+      decl.scope !== null &&
+      !this.#isScopeActive(decl.scope)
+    ) {
+      decl.scope.declarations.add(maybeDependency.place.identifier);
     }
 
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.
-    const currentScope = this.#currentScope;
+    const currentScope = this.currentScope;
     if (
+      currentScope != null &&
       decl !== undefined &&
       decl.kind !== DeclKind.Const &&
-      currentScope !== undefined &&
-      decl.id < currentScope.range.start
+      decl.id < currentScope.range.start &&
+      (decl.scope == null || !this.#isScopeActive(decl.scope))
     ) {
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
@@ -199,6 +218,25 @@ class Context {
         }
       }
       this.#dependencies.add(maybeDependency);
+    }
+  }
+
+  /**
+   * Record a variable that is declared in some other scope and that is being reassigned in the
+   * current one as a {@link ReactiveScope.reassignments}
+   */
+  visitReassignment(lvalue: LValue): void {
+    if (lvalue.kind !== InstructionKind.Reassign) {
+      return;
+    }
+    const declaration = this.#declarations.get(lvalue.place.identifier);
+    if (
+      this.currentScope != null &&
+      lvalue.place.identifier.scope != null &&
+      declaration !== undefined &&
+      declaration.scope !== lvalue.place.identifier.scope
+    ) {
+      this.currentScope.reassignments.add(lvalue.place.identifier);
     }
   }
 }
@@ -335,14 +373,17 @@ function visitInstructionValue(
 function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
   visitInstructionValue(context, instr.value, lvalue);
-  if (lvalue !== null && lvalue.kind !== InstructionKind.Reassign) {
-    // TODO: only assign Const if the value is never reassigned
-    const kind = context.isReactive(lvalue.place.identifier)
-      ? DeclKind.Dynamic
-      : DeclKind.Const;
-    context.declare(lvalue.place.identifier, {
-      kind,
-      id: lvalue.place.identifier.mutableRange.start,
-    });
+  if (lvalue == null) {
+    return;
   }
+  context.visitReassignment(lvalue);
+  // TODO: only assign Const if the value is never reassigned
+  const kind = context.isReactive(lvalue.place.identifier)
+    ? DeclKind.Dynamic
+    : DeclKind.Const;
+  context.declare(lvalue.place.identifier, {
+    kind,
+    id: lvalue.place.identifier.mutableRange.start,
+    scope: context.currentScope,
+  });
 }

@@ -556,6 +556,7 @@ export type ReactiveScope = {
   range: MutableRange;
   dependencies: Set<ReactiveScopeDependency>;
   declarations: Set<Identifier>;
+  reassignments: Set<Identifier>;
 };
 
 export type ReactiveScopeDependency = {
