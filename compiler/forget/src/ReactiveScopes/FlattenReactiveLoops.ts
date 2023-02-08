@@ -6,142 +6,66 @@
  */
 
 import {
-  ReactiveBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
+  ReactiveStatement,
+  ReactiveTerminal,
+  ReactiveTerminalStatement,
 } from "../HIR/HIR";
 import { assertExhaustive } from "../Utils/utils";
+import {
+  ReactiveFunctionTransform,
+  Transformed,
+  visitReactiveFunction,
+} from "./visitors";
 
 /**
  * Given a reactive function, flattens any scopes contained within a loop construct.
  * We won't initially support memoization within loops though this is possible in the future.
  */
 export function flattenReactiveLoops(fn: ReactiveFunction): void {
-  visit(fn.body, false);
+  visitReactiveFunction(fn, new Transform(), false);
 }
 
-function visit(block: ReactiveBlock, shouldFlatten: boolean): void {
-  let i = 0;
-  while (i < block.length) {
-    const item = block[i]!;
-    switch (item.kind) {
-      case "scope": {
-        if (shouldFlatten) {
-          const successors = block.splice(i + 1);
-          block.pop(); // remove the current element
-          flatten(item, block);
-          i = block.length;
-          block.push(...successors);
-        } else {
-          visit(item.instructions, false);
-          i++;
-        }
-        break;
-      }
-      case "instruction": {
-        i++;
-        break;
-      }
-      case "terminal": {
-        const terminal = item.terminal;
-        switch (terminal.kind) {
-          case "break":
-          case "continue":
-          case "return":
-          case "throw": {
-            break;
-          }
-          case "for": {
-            visit(terminal.loop, true);
-            break;
-          }
-          case "while": {
-            visit(terminal.loop, true);
-            break;
-          }
-          case "if": {
-            visit(terminal.consequent, shouldFlatten);
-            if (terminal.alternate !== null) {
-              visit(terminal.alternate, shouldFlatten);
-            }
-            break;
-          }
-          case "switch": {
-            for (const case_ of terminal.cases) {
-              if (case_.block !== undefined) {
-                visit(case_.block, shouldFlatten);
-              }
-            }
-            break;
-          }
-          default: {
-            assertExhaustive(
-              terminal,
-              `Unexpected terminal kind '${(terminal as any).kind}'`
-            );
-          }
-        }
-        i++;
-        break;
-      }
-      default: {
-        assertExhaustive(item, `Unexpected item`);
-      }
+class Transform extends ReactiveFunctionTransform<boolean> {
+  override transformScope(
+    scope: ReactiveScopeBlock,
+    isWithinLoop: boolean
+  ): Transformed<ReactiveStatement> {
+    this.visitScope(scope, isWithinLoop);
+    if (isWithinLoop) {
+      return { kind: "replace-many", value: scope.instructions };
+    } else {
+      return { kind: "keep" };
     }
   }
-}
 
-function flatten(scope: ReactiveScopeBlock, block: ReactiveBlock): void {
-  for (const item of scope.instructions) {
-    switch (item.kind) {
-      case "scope": {
-        flatten(item, block);
+  override visitTerminal(
+    stmt: ReactiveTerminalStatement<ReactiveTerminal>,
+    isWithinLoop: boolean
+  ): void {
+    switch (stmt.terminal.kind) {
+      // Loop terminals flatten nested scopes
+      case "while":
+      case "for": {
+        this.traverseTerminal(stmt, true);
         break;
       }
-      case "terminal": {
-        const terminal = item.terminal;
-        switch (terminal.kind) {
-          case "break":
-          case "continue":
-          case "return":
-          case "throw": {
-            break;
-          }
-          case "for": {
-            visit(terminal.loop, true);
-            break;
-          }
-          case "while": {
-            visit(terminal.loop, true);
-            break;
-          }
-          case "if": {
-            visit(terminal.consequent, true);
-            if (terminal.alternate !== null) {
-              visit(terminal.alternate, true);
-            }
-            break;
-          }
-          case "switch": {
-            for (const case_ of terminal.cases) {
-              if (case_.block !== undefined) {
-                visit(case_.block, true);
-              }
-            }
-            break;
-          }
-          default: {
-            assertExhaustive(
-              terminal,
-              `Unexpected terminal kind '${(terminal as any).kind}'`
-            );
-          }
-        }
-        block.push(item);
+      // Non-loop terminals passthrough is contextual, inherits the parent isWithinScope
+      case "break":
+      case "continue":
+      case "if":
+      case "return":
+      case "switch":
+      case "throw": {
+        this.traverseTerminal(stmt, isWithinLoop);
         break;
       }
       default: {
-        block.push(item);
+        assertExhaustive(
+          stmt.terminal,
+          `Unexpected terminal kind '${(stmt.terminal as any).kind}'`
+        );
       }
     }
   }

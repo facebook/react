@@ -13,6 +13,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
+  ReactiveStatement,
   ReactiveTerminal,
   ReactiveTerminalStatement,
   ReactiveValue,
@@ -172,6 +173,96 @@ export class ReactiveFunctionVisitor<TState = void> {
         }
       }
     }
+  }
+}
+
+export type Transformed<T> =
+  | { kind: "remove" }
+  | { kind: "keep" }
+  | { kind: "replace"; value: T }
+  | { kind: "replace-many"; value: Array<T> };
+
+export class ReactiveFunctionTransform<
+  TState = void
+> extends ReactiveFunctionVisitor<TState> {
+  override traverseBlock(block: ReactiveBlock, state: TState): void {
+    let nextBlock: ReactiveBlock | null = null;
+    for (let i = 0; i < block.length; i++) {
+      const instr = block[i]!;
+      let transformed: Transformed<ReactiveStatement>;
+      switch (instr.kind) {
+        case "instruction": {
+          transformed = this.transformInstruction(instr.instruction, state);
+          break;
+        }
+        case "scope": {
+          transformed = this.transformScope(instr, state);
+          break;
+        }
+        case "terminal": {
+          transformed = this.transformTerminal(instr, state);
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instr,
+            `Unexpected instruction kind '${(instr as any).kind}'`
+          );
+        }
+      }
+      switch (transformed.kind) {
+        case "keep": {
+          if (nextBlock !== null) {
+            nextBlock.push(instr);
+          }
+          break;
+        }
+        case "remove": {
+          if (nextBlock === null) {
+            nextBlock = block.slice(0, i);
+          }
+          break;
+        }
+        case "replace": {
+          nextBlock ??= block.slice(0, i);
+          nextBlock.push(transformed.value);
+          break;
+        }
+        case "replace-many": {
+          nextBlock ??= block.slice(0, i);
+          nextBlock.push(...transformed.value);
+          break;
+        }
+      }
+    }
+    if (nextBlock !== null) {
+      block.length = 0;
+      block.push(...nextBlock);
+    }
+  }
+
+  transformInstruction(
+    instruction: ReactiveInstruction,
+    state: TState
+  ): Transformed<ReactiveStatement> {
+    this.visitInstruction(instruction, state);
+    return { kind: "keep" };
+  }
+
+  transformTerminal(
+    stmt: ReactiveTerminalStatement,
+    state: TState
+  ): Transformed<ReactiveStatement> {
+    this.visitTerminal(stmt, state);
+    return { kind: "keep" };
+  }
+
+  transformScope(
+    scope: ReactiveScopeBlock,
+    state: TState
+  ): Transformed<ReactiveStatement> {
+    this.visitScope(scope, state);
+    return { kind: "keep" };
   }
 }
 
