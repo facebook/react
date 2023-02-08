@@ -18,6 +18,24 @@ module.exports = function register() {
   const SERVER_REFERENCE = Symbol.for('react.server.reference');
   const PROMISE_PROTOTYPE = Promise.prototype;
 
+  // Patch bind on the server to ensure that this creates another
+  // bound server reference with the additional arguments.
+  const originalBind = Function.prototype.bind;
+  /*eslint-disable no-extend-native */
+  Function.prototype.bind = (function bind(this: any, self: any) {
+    // $FlowFixMe[unsupported-syntax]
+    const newFn = originalBind.apply(this, arguments);
+    if (this.$$typeof === SERVER_REFERENCE) {
+      // $FlowFixMe[method-unbinding]
+      const args = Array.prototype.slice.call(arguments, 1);
+      newFn.$$typeof = SERVER_REFERENCE;
+      newFn.$$filepath = this.$$filepath;
+      newFn.$$name = this.$$name;
+      newFn.$$bound = this.$$bound.concat(args);
+    }
+    return newFn;
+  }: any);
+
   const deepProxyHandlers = {
     get: function (target: Function, name: string, receiver: Proxy<Function>) {
       switch (name) {
