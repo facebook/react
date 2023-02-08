@@ -11373,6 +11373,56 @@
 | `transform=(null)`| (initial)| `[]` |
 | `transform=(undefined)`| (initial)| `[]` |
 
+## `transform-origin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transform-origin=(string)`| (changed, warning)| `"a string"` |
+| `transform-origin=(empty string)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(array with string)`| (changed, warning)| `"string"` |
+| `transform-origin=(empty array)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(object)`| (changed, warning)| `"result of toString()"` |
+| `transform-origin=(numeric string)`| (changed, warning)| `"42"` |
+| `transform-origin=(-1)`| (changed, warning)| `"-1"` |
+| `transform-origin=(0)`| (changed, warning)| `"0"` |
+| `transform-origin=(integer)`| (changed, warning)| `"1"` |
+| `transform-origin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transform-origin=(float)`| (changed, warning)| `"99.99"` |
+| `transform-origin=(true)`| (initial, warning)| `<null>` |
+| `transform-origin=(false)`| (initial, warning)| `<null>` |
+| `transform-origin=(string 'true')`| (changed, warning)| `"true"` |
+| `transform-origin=(string 'false')`| (changed, warning)| `"false"` |
+| `transform-origin=(string 'on')`| (changed, warning)| `"on"` |
+| `transform-origin=(string 'off')`| (changed, warning)| `"off"` |
+| `transform-origin=(symbol)`| (initial, warning)| `<null>` |
+| `transform-origin=(function)`| (initial, warning)| `<null>` |
+| `transform-origin=(null)`| (initial, warning)| `<null>` |
+| `transform-origin=(undefined)`| (initial, warning)| `<null>` |
+
+## `transformOrigin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transformOrigin=(string)`| (initial)| `<null>` |
+| `transformOrigin=(empty string)`| (initial)| `<null>` |
+| `transformOrigin=(array with string)`| (initial)| `<null>` |
+| `transformOrigin=(empty array)`| (initial)| `<null>` |
+| `transformOrigin=(object)`| (initial)| `<null>` |
+| `transformOrigin=(numeric string)`| (initial)| `<null>` |
+| `transformOrigin=(-1)`| (initial)| `<null>` |
+| `transformOrigin=(0)`| (initial)| `<null>` |
+| `transformOrigin=(integer)`| (initial)| `<null>` |
+| `transformOrigin=(NaN)`| (initial, warning)| `<null>` |
+| `transformOrigin=(float)`| (initial)| `<null>` |
+| `transformOrigin=(true)`| (initial, warning)| `<null>` |
+| `transformOrigin=(false)`| (initial, warning)| `<null>` |
+| `transformOrigin=(string 'true')`| (initial)| `<null>` |
+| `transformOrigin=(string 'false')`| (initial)| `<null>` |
+| `transformOrigin=(string 'on')`| (initial)| `<null>` |
+| `transformOrigin=(string 'off')`| (initial)| `<null>` |
+| `transformOrigin=(symbol)`| (initial, warning)| `<null>` |
+| `transformOrigin=(function)`| (initial, warning)| `<null>` |
+| `transformOrigin=(null)`| (initial)| `<null>` |
+| `transformOrigin=(undefined)`| (initial)| `<null>` |
+
 ## `type` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
