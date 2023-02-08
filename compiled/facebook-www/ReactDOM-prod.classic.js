@@ -2716,6 +2716,22 @@ function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   } while (node);
   retryIfBlockedOn(suspenseInstance);
 }
+function clearContainer(container) {
+  var nodeType = container.nodeType;
+  if (9 === nodeType)
+    clearRootResources(container), clearContainerSparingly(container);
+  else if (1 === nodeType)
+    switch (container.nodeName) {
+      case "HEAD":
+        clearRootResources(container);
+      case "HTML":
+      case "BODY":
+        clearContainerSparingly(container);
+        break;
+      default:
+        container.textContent = "";
+    }
+}
 function clearContainerSparingly(container) {
   var nextNode = container.firstChild;
   nextNode && 10 === nextNode.nodeType && (nextNode = nextNode.nextSibling);
@@ -10909,24 +10925,8 @@ function commitBeforeMutationEffects(root, firstChild) {
               }
               break;
             case 3:
-              if (0 !== (flags & 1024)) {
-                var container = firstChild.stateNode.containerInfo,
-                  nodeType = container.nodeType;
-                if (9 === nodeType)
-                  clearRootResources(container),
-                    clearContainerSparingly(container);
-                else if (1 === nodeType)
-                  switch (container.nodeName) {
-                    case "HEAD":
-                      clearRootResources(container);
-                    case "HTML":
-                    case "BODY":
-                      clearContainerSparingly(container);
-                      break;
-                    default:
-                      container.textContent = "";
-                  }
-              }
+              0 !== (flags & 1024) &&
+                clearContainer(firstChild.stateNode.containerInfo);
               break;
             case 5:
             case 26:
@@ -15395,8 +15395,7 @@ function legacyCreateRootFromDOMContainer(
     flushSync();
     return root$228;
   }
-  for (; (isHydrationContainer = container.lastChild); )
-    container.removeChild(isHydrationContainer);
+  clearContainer(container);
   if ("function" === typeof callback) {
     var originalCallback$229 = callback;
     callback = function () {
@@ -15576,7 +15575,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1750 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-758fc7fde-20230207",
+  version: "18.3.0-www-classic-a3152eda5-20230208",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2134 = {
@@ -15606,7 +15605,7 @@ var internals$jscomp$inline_2134 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-758fc7fde-20230207"
+  reconcilerVersion: "18.3.0-next-a3152eda5-20230208"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2135 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15854,4 +15853,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-758fc7fde-20230207";
+exports.version = "18.3.0-next-a3152eda5-20230208";

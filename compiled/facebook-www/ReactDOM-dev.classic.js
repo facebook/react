@@ -42695,7 +42695,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-758fc7fde-20230207";
+var ReactVersion = "18.3.0-www-classic-a3152eda5-20230208";
 
 function createPortal(
   children,
@@ -43727,20 +43727,6 @@ var topLevelUpdateWarnings;
           "and render the new components instead of calling ReactDOM.render."
       );
     }
-
-    if (
-      container.nodeType === ELEMENT_NODE &&
-      container.tagName &&
-      container.tagName.toUpperCase() === "BODY"
-    ) {
-      error(
-        "render(): Rendering components directly into document.body is " +
-          "discouraged, since its children are often manipulated by third-party " +
-          "scripts and browser extensions. This may lead to subtle " +
-          "reconciliation issues. Try rendering into a container element created " +
-          "for your app."
-      );
-    }
   };
 }
 
@@ -43800,11 +43786,7 @@ function legacyCreateRootFromDOMContainer(
     return root;
   } else {
     // First clear any existing content.
-    var rootSibling;
-
-    while ((rootSibling = container.lastChild)) {
-      container.removeChild(rootSibling);
-    }
+    clearContainer(container);
 
     if (typeof callback === "function") {
       var _originalCallback = callback;
