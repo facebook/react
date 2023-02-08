@@ -27,15 +27,8 @@ function Foo(props) {
     x = $[1];
   }
   const y = x?.b;
-  const c_2 = $[2] !== y;
-  let z;
-  if (c_2) {
-    z = useBar(y);
-    $[2] = y;
-    $[3] = z;
-  } else {
-    z = $[3];
-  }
+
+  const z = useBar(y);
   return z;
 }
 

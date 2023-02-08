@@ -34,22 +34,18 @@ function Component(props) {
   } else {
     x = $[0];
   }
-  let y;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    y = useFreeze(x);
-    $[1] = y;
-  } else {
-    y = $[1];
-  }
+  const y = useFreeze(x);
   foo(y, x);
+  const c_1 = $[1] !== y;
   let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_1) {
     t0 = (
       <Component>
         {x}
         {y}
       </Component>
     );
+    $[1] = y;
     $[2] = t0;
   } else {
     t0 = $[2];

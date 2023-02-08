@@ -12,6 +12,7 @@ import {
   ReactiveInstruction,
   ReactiveScope,
 } from "../HIR/HIR";
+import { parseHookCall } from "../Inference/InferReferenceEffects";
 import {
   eachReactiveValueOperand,
   ReactiveFunctionVisitor,
@@ -38,6 +39,17 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
       if (reactivityMap.get(operand.identifier)) {
         hasReactiveInput = true;
         break;
+      }
+    }
+    if (!hasReactiveInput && instr.value.kind === "CallExpression") {
+      // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
+      // they are not guaranteed to memoize their return value, and their result
+      // must be assumed to be reactive.
+      // TODO: use types or an opt-in registry of custom hook information to
+      // allow treating safe hooks as non-reactive.
+      const hook = parseHookCall(instr.value.callee);
+      if (hook !== null) {
+        hasReactiveInput = true;
       }
     }
     reactivityMap.set(lval.place.identifier, hasReactiveInput);

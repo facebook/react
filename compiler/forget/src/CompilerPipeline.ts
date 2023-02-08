@@ -33,6 +33,7 @@ import {
   pruneUnusedScopes,
   renameVariables,
 } from "./ReactiveScopes";
+import { flattenScopesWithHooks } from "./ReactiveScopes/FlattenScopesWithHooks";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { inferTypes } from "./TypeInference";
 import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
@@ -115,6 +116,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "FlattenReactiveLoops",
+    value: reactiveFunction,
+  });
+
+  flattenScopesWithHooks(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "FlattenScopesWithHooks",
     value: reactiveFunction,
   });
 

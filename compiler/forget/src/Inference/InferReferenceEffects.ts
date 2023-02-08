@@ -801,7 +801,7 @@ const HOOKS: Map<string, Hook> = new Map([
 type HookKind = { kind: "State" } | { kind: "Ref" } | { kind: "Custom" };
 type Hook = HookKind & { effectKind: Effect; valueKind: ValueKind };
 
-function parseHookCall(place: Place): Hook | null {
+export function parseHookCall(place: Place): Hook | null {
   const name = place.identifier.name;
   if (name === null || !name.match(/^_?use/)) {
     return null;

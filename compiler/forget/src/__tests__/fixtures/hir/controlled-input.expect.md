@@ -4,8 +4,8 @@
 ```javascript
 function component() {
   let [x, setX] = useState(0);
-  const handler = (v) => setX(v);
-  return <Foo handler={handler}></Foo>;
+  const handler = (event) => setX(event.target.value);
+  return <input onChange={handler} value={x} />;
 }
 
 ```
@@ -15,24 +15,27 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache();
+  const x = useState(0)[0];
   const setX = useState(0)[1];
   const c_0 = $[0] !== setX;
   let handler;
   if (c_0) {
-    handler = (v) => setX(v);
+    handler = (event) => setX(event.target.value);
     $[0] = setX;
     $[1] = handler;
   } else {
     handler = $[1];
   }
   const c_2 = $[2] !== handler;
+  const c_3 = $[3] !== x;
   let t0;
-  if (c_2) {
-    t0 = <Foo handler={handler}></Foo>;
+  if (c_2 || c_3) {
+    t0 = <input onChange={handler} value={x}></input>;
     $[2] = handler;
-    $[3] = t0;
+    $[3] = x;
+    $[4] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[4];
   }
   return t0;
 }

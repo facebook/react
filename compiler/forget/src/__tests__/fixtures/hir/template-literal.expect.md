@@ -25,17 +25,7 @@ function componentA(props) {
 }
 
 function componentB(props) {
-  const $ = React.unstable_useMemoCache();
-  const t0 = `hello ${props.a}`;
-  const c_0 = $[0] !== t0;
-  let x;
-  if (c_0) {
-    x = useFoo(t0);
-    $[0] = t0;
-    $[1] = x;
-  } else {
-    x = $[1];
-  }
+  const x = useFoo(`hello ${props.a}`);
   return x;
 }
 
