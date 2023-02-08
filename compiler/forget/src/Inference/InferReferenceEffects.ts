@@ -690,6 +690,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
         env.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
+        lvalue.place.effect = Effect.Mutate;
         env.initialize(instrValue, env.kind(instrValue.object));
         env.define(lvalue.place, instrValue);
         continue;
@@ -722,6 +723,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         env.reference(instrValue.object, Effect.Read);
         env.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
+        lvalue.place.effect = Effect.Mutate;
         env.initialize(instrValue, env.kind(instrValue.object));
         env.define(lvalue.place, instrValue);
         continue;
