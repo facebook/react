@@ -70,11 +70,15 @@ import {
 import {
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
-  compareResourcePropsForWarning,
   describeDifferencesForStylesheets,
   describeDifferencesForStylesheetOverPreinit,
-  describeDifferencesForPreinitOverStylesheet,
+  describeDifferencesForScripts,
+  describeDifferencesForScriptOverPreinit,
   describeDifferencesForPreinits,
+  describeDifferencesForPreinitOverStylesheet,
+  describeDifferencesForPreinitOverScript,
+  describeDifferencesForPreloads,
+  describeDifferencesForPreloadOverImplicitPreload,
 } from '../shared/ReactDOMResourceValidation';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
@@ -1359,53 +1363,45 @@ function pushLink(
             if (devResource) {
               switch (devResource.__provenance) {
                 case 'rendered': {
-                  const differentProps = compareResourcePropsForWarning(
-                    // Diff the props from the JSX element, not the derived resource props
-                    props,
-                    devResource.__originalProps,
-                  );
-                  if (differentProps) {
-                    const differenceDescription =
-                      describeDifferencesForStylesheets(differentProps);
-                    if (differenceDescription) {
-                      console.error(
-                        'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
-                          ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
-                          ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
-                          ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
-                        href,
-                        differenceDescription,
-                      );
-                    }
+                  const differenceDescription =
+                    describeDifferencesForStylesheets(
+                      // Diff the props from the JSX element, not the derived resource props
+                      props,
+                      devResource.__originalProps,
+                    );
+                  if (differenceDescription) {
+                    console.error(
+                      'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
+                        ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
+                        ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
+                        ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
+                      href,
+                      differenceDescription,
+                    );
                   }
                   break;
                 }
                 case 'preinit': {
-                  const differentProps = compareResourcePropsForWarning(
-                    // Diff the props from the JSX element, not the derived resource props
-                    props,
-                    devResource.__propsEquivalent,
-                  );
-                  if (differentProps) {
-                    const differenceDescription =
-                      describeDifferencesForStylesheetOverPreinit(
-                        differentProps,
-                      );
-                    if (differenceDescription) {
-                      console.error(
-                        'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
-                          ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
-                          ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
-                          ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
-                          ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
-                          ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
-                          ' <link> tags only.%s',
-                        precedence,
-                        href,
-                        href,
-                        differenceDescription,
-                      );
-                    }
+                  const differenceDescription =
+                    describeDifferencesForStylesheetOverPreinit(
+                      // Diff the props from the JSX element, not the derived resource props
+                      props,
+                      devResource.__propsEquivalent,
+                    );
+                  if (differenceDescription) {
+                    console.error(
+                      'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
+                        ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
+                        ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
+                        ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
+                        ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
+                        ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
+                        ' <link> tags only.%s',
+                      precedence,
+                      href,
+                      href,
+                      differenceDescription,
+                    );
                   }
                   break;
                 }
@@ -1954,67 +1950,131 @@ function pushScript(
 ): null {
   if (enableFloat) {
     if (
-      insertionMode !== SVG_MODE &&
-      !noscriptTagInScope &&
-      typeof props.src === 'string' &&
-      props.src &&
-      props.async === true
+      insertionMode === SVG_MODE ||
+      noscriptTagInScope ||
+      typeof props.src !== 'string' ||
+      !props.src
     ) {
-      const key = getResourceKey('script', props.src);
-      if (props.onLoad || props.onError) {
-        // We can't resourcify scripts with load listeners. To avoid ambiguity with
-        // other Resourcified async scripts on the server we omit them from the server
-        // stream and expect them to be inserted during hydration on the client.
-        // We can still preload them however so the client can start fetching the script
-        // as soon as possible
-        let resource = resources.preloadsMap.get(key);
-        if (!resource) {
-          resource = {
-            type: 'preload',
-            chunks: [],
-            state: NoState,
-            props: preloadAsScriptPropsFromProps(props.src, props),
-          };
-          resources.preloadsMap.set(key, resource);
-          if (__DEV__) {
-            markAsImplicitResourceDEV(resource, props, resource.props);
-          }
-          resources.usedScripts.add(resource);
-          pushLinkImpl(resource.chunks, resource.props);
-          return null;
-        }
-      } else {
-        // We can make this <script> into a ScriptResource
-        let resource = resources.scriptsMap.get(key);
-        if (!resource) {
-          resource = {
-            type: 'script',
-            chunks: [],
-            state: NoState,
-            props: null,
-          };
-          resources.scriptsMap.set(key, resource);
-          if (__DEV__) {
-            markAsRenderedResourceDEV(resource, props);
-          }
-          // Add to the script flushing queue
-          resources.scripts.add(resource);
+      // This script will not be a resource nor can it be preloaded, we bailout early
+      // and emit it in place.
+      return pushScriptImpl(target, props);
+    }
 
-          let scriptProps = props;
-          const preloadResource = resources.preloadsMap.get(key);
-          if (preloadResource) {
-            // If we already had a preload we don't want that resource to flush directly.
-            // We let the newly created resource govern flushing.
-            preloadResource.state |= Blocked;
-            scriptProps = {...props};
-            adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
+    const src = props.src;
+    const key = getResourceKey('script', src);
+    if (props.async !== true || props.onLoad || props.onError) {
+      // We can't resourcify scripts with load listeners. To avoid ambiguity with
+      // other Resourcified async scripts on the server we omit them from the server
+      // stream and expect them to be inserted during hydration on the client.
+      // We can still preload them however so the client can start fetching the script
+      // as soon as possible
+      let resource = resources.preloadsMap.get(key);
+      if (!resource) {
+        resource = {
+          type: 'preload',
+          chunks: [],
+          state: NoState,
+          props: preloadAsScriptPropsFromProps(props.src, props),
+        };
+        resources.preloadsMap.set(key, resource);
+        if (__DEV__) {
+          markAsImplicitResourceDEV(resource, props, resource.props);
+        }
+        resources.usedScripts.add(resource);
+        pushLinkImpl(resource.chunks, resource.props);
+      }
+
+      if (props.async !== true) {
+        // This is not an async script, we can preloaded it but it still needs to
+        // be emitted in place since it needs to hydrate on the client
+        pushScriptImpl(target, props);
+        return null;
+      }
+    } else {
+      // We can make this <script> into a ScriptResource
+      let resource = resources.scriptsMap.get(key);
+      if (__DEV__) {
+        const devResource = getAsResourceDEV(resource);
+        if (devResource) {
+          switch (devResource.__provenance) {
+            case 'rendered': {
+              const differenceDescription = describeDifferencesForScripts(
+                // Diff the props from the JSX element, not the derived resource props
+                props,
+                devResource.__originalProps,
+              );
+              if (differenceDescription) {
+                console.error(
+                  'React encountered a <script async={true} src="%s" .../> that has props that conflict' +
+                    ' with another hoistable script with the same `src`. When rendering hoistable scripts (async scripts without any loading handlers)' +
+                    ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
+                    ' Update the props on both <script async={true} .../> instance so they agree.%s',
+                  src,
+                  differenceDescription,
+                );
+              }
+              break;
+            }
+            case 'preinit': {
+              const differenceDescription =
+                describeDifferencesForScriptOverPreinit(
+                  // Diff the props from the JSX element, not the derived resource props
+                  props,
+                  devResource.__propsEquivalent,
+                );
+              if (differenceDescription) {
+                console.error(
+                  'React encountered a <script async={true} src="%s" .../> with props that conflict' +
+                    ' with the options provided to `ReactDOM.preinit("%s", { as: "script", ... })`. React will use the first props or preinitialization' +
+                    ' options encountered when rendering a hoistable script with a particular `src` and will ignore any newer props or' +
+                    ' options. The first instance of this script resource was created using the `ReactDOM.preinit()` function.' +
+                    ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
+                    ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
+                    ' <script> tags only.%s',
+                  src,
+                  src,
+                  differenceDescription,
+                );
+              }
+              break;
+            }
           }
-          // encode the tag as Chunks
-          return pushScriptImpl(resource.chunks, scriptProps);
         }
       }
+      if (!resource) {
+        resource = {
+          type: 'script',
+          chunks: [],
+          state: NoState,
+          props: null,
+        };
+        resources.scriptsMap.set(key, resource);
+        if (__DEV__) {
+          markAsRenderedResourceDEV(resource, props);
+        }
+        // Add to the script flushing queue
+        resources.scripts.add(resource);
+
+        let scriptProps = props;
+        const preloadResource = resources.preloadsMap.get(key);
+        if (preloadResource) {
+          // If we already had a preload we don't want that resource to flush directly.
+          // We let the newly created resource govern flushing.
+          preloadResource.state |= Blocked;
+          scriptProps = {...props};
+          adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
+        }
+        // encode the tag as Chunks
+        pushScriptImpl(resource.chunks, scriptProps);
+      }
     }
-    return pushScriptImpl(target, props);
+
+    if (textEmbedded) {
+      // This script follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    return null;
   } else {
     return pushScriptImpl(target, props);
   }
@@ -4144,7 +4204,12 @@ function getResourceKey(as: string, href: string): string {
 }
 
 type PreloadAs = 'style' | 'font' | 'script';
-type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
+type PreloadOptions = {
+  as: PreloadAs,
+  crossOrigin?: string,
+  integrity?: string,
+  media?: string,
+};
 export function preload(href: string, options: PreloadOptions) {
   if (!currentResources) {
     // While we expect that preload calls are primarily going to be observed
@@ -4184,6 +4249,61 @@ export function preload(href: string, options: PreloadOptions) {
     const as = options.as;
     const key = getResourceKey(as, href);
     let resource = resources.preloadsMap.get(key);
+    if (__DEV__) {
+      const devResource = getAsResourceDEV(resource);
+      if (devResource) {
+        switch (devResource.__provenance) {
+          case 'preload': {
+            const differenceDescription = describeDifferencesForPreloads(
+              options,
+              devResource.__originalOptions,
+            );
+            if (differenceDescription) {
+              console.error(
+                'ReactDOM.preload(): The options provided conflict with another call to `ReactDOM.preload("%s", { as: "%s", ...})`.' +
+                  ' React will always use the options it first encounters when preloading a resource for a given `href` and `as` type, and any later options will be ignored if different.' +
+                  ' Try updating all calls to `ReactDOM.preload()` with the same `href` and `as` type to use the same options, or eliminate one of the calls.%s',
+                href,
+                as,
+                differenceDescription,
+              );
+            }
+            break;
+          }
+          case 'implicit': {
+            const differenceDescription =
+              describeDifferencesForPreloadOverImplicitPreload(
+                options,
+                devResource.__impliedProps,
+              );
+            if (differenceDescription) {
+              const elementDescription =
+                as === 'style'
+                  ? '<link rel="stylesheet" ... />'
+                  : as === 'script'
+                  ? '<script ... />'
+                  : null;
+              if (elementDescription) {
+                console.error(
+                  'ReactDOM.preload(): For `href` "%s", The options provided conflict with props on a matching %s element. When the preload' +
+                    ' options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource' +
+                    ' is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead' +
+                    ' and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to' +
+                    ' render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call' +
+                    ' may be extraneous. Try removing the call, otherwise try adjusting both the props on the %s and the options' +
+                    ' passed to `ReactDOM.preload()` to agree.%s',
+                  href,
+                  elementDescription,
+                  elementDescription,
+                  differenceDescription,
+                );
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
     if (!resource) {
       resource = {
         type: 'preload',
@@ -4283,8 +4403,8 @@ function preinitImpl(
         let resource = resources.stylesMap.get(key);
         const precedence = options.precedence || 'default';
         if (__DEV__) {
-          if (resource) {
-            const devResource: ResourceDEV = (resource: any);
+          const devResource = getAsResourceDEV(resource);
+          if (devResource) {
             const resourceProps = stylesheetPropsFromPreinitOptions(
               href,
               precedence,
@@ -4297,50 +4417,43 @@ function preinitImpl(
             };
             switch (devResource.__provenance) {
               case 'rendered': {
-                const differentProps = compareResourcePropsForWarning(
-                  // Diff the props from the JSX element, not the derived resource props
-                  propsEquivalent,
-                  devResource.__originalProps,
-                );
-                if (differentProps) {
-                  const differenceDescription =
-                    describeDifferencesForPreinitOverStylesheet(differentProps);
-                  if (differenceDescription) {
-                    console.error(
-                      'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
-                        ' React will always use the props or options it first encounters for a hoistable stylesheet for a given `href` and any later props or options will be ignored if different.' +
-                        ' Generally ReactDOM.preinit() is useful when you are not yet rendering a stylesheet but you anticipate it will be used soon.' +
-                        ' In this case the stylesheet was already rendered so preinitializing it does not provide any additional benefit.' +
-                        ' To resolve, try making the props and options agree between the <link rel="stylesheet" .../> and the `ReactDOM.preinit()` call or' +
-                        ' remove the `ReactDOM.preinit()` call.%s',
-                      href,
-                      devResource.__originalProps.precedence,
-                      href,
-                      differenceDescription,
-                    );
-                  }
+                const differenceDescription =
+                  describeDifferencesForPreinitOverStylesheet(
+                    // Diff the props from the JSX element, not the derived resource props
+                    propsEquivalent,
+                    devResource.__originalProps,
+                  );
+                if (differenceDescription) {
+                  console.error(
+                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
+                      ' React will always use the props or options it first encounters for a hoistable stylesheet for a given `href` and any later props or options will be ignored if different.' +
+                      ' Generally, ReactDOM.preinit() is useful when you are not yet rendering a stylesheet but you anticipate it will be used soon.' +
+                      ' In this case the stylesheet was already rendered so preinitializing it does not provide any additional benefit.' +
+                      ' To resolve, try making the props and options agree between the <link rel="stylesheet" .../> and the `ReactDOM.preinit()` call or' +
+                      ' remove the `ReactDOM.preinit()` call.%s',
+                    href,
+                    devResource.__originalProps.precedence,
+                    href,
+                    differenceDescription,
+                  );
                 }
                 break;
               }
               case 'preinit': {
-                const differentProps = compareResourcePropsForWarning(
+                const differenceDescription = describeDifferencesForPreinits(
                   // Diff the props from the JSX element, not the derived resource props
                   propsEquivalent,
                   devResource.__propsEquivalent,
                 );
-                if (differentProps) {
-                  const differenceDescription =
-                    describeDifferencesForPreinits(differentProps);
-                  if (differenceDescription) {
-                    console.error(
-                      'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
-                        ' React will always use the options it first encounters when preinitializing a hoistable stylesheet for a given `href` and any later options will be ignored if different.' +
-                        ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
-                      href,
-                      href,
-                      differenceDescription,
-                    );
-                  }
+                if (differenceDescription) {
+                  console.error(
+                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
+                      ' React will always use the options it first encounters when preinitializing a hoistable stylesheet for a given `href` and any later options will be ignored if different.' +
+                      ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
+                    href,
+                    href,
+                    differenceDescription,
+                  );
                 }
                 break;
               }
@@ -4375,6 +4488,53 @@ function preinitImpl(
         const src = href;
         const key = getResourceKey(as, src);
         let resource = resources.scriptsMap.get(key);
+        if (__DEV__) {
+          const devResource = getAsResourceDEV(resource);
+          if (devResource) {
+            const propsEquivalent = scriptPropsFromPreinitOptions(src, options);
+            switch (devResource.__provenance) {
+              case 'rendered': {
+                const differenceDescription =
+                  describeDifferencesForPreinitOverScript(
+                    // Diff the props from the JSX element, not the derived resource props
+                    propsEquivalent,
+                    devResource.__originalProps,
+                  );
+                if (differenceDescription) {
+                  console.error(
+                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <script async={true} src="%s" .../> that was already rendered.' +
+                      ' React will always use the props or options it first encounters for a hoistable script for a given `href` and any later props or options will be ignored if different.' +
+                      ' Generally, ReactDOM.preinit() is useful when you are not yet rendering a script but you anticipate it will be used soon and want to go beyond preloading it and have it' +
+                      ' execute early. In this case the script was already rendered so preinitializing it does not provide any additional benefit.' +
+                      ' To resolve, try making the props and options agree between the <script .../> and the `ReactDOM.preinit()` call or remove the `ReactDOM.preinit()` call.%s',
+                    href,
+                    href,
+                    differenceDescription,
+                  );
+                }
+                break;
+              }
+              case 'preinit': {
+                const differenceDescription = describeDifferencesForPreinits(
+                  // Diff the props from the JSX element, not the derived resource props
+                  propsEquivalent,
+                  devResource.__propsEquivalent,
+                );
+                if (differenceDescription) {
+                  console.error(
+                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "script", ... })`.' +
+                      ' React will always use the options it first encounters when preinitializing a hoistable script for a given `href` and any later options will be ignored if different.' +
+                      ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
+                    href,
+                    href,
+                    differenceDescription,
+                  );
+                }
+                break;
+              }
+            }
+          }
+        }
         if (!resource) {
           resource = {
             type: 'script',
