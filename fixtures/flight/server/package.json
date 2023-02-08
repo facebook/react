@@ -1,4 +1,4 @@
 {
   "type": "commonjs",
-  "main": "./cli.server.js"
+  "main": "./cli.js"
 }

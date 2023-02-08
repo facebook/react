@@ -41,6 +41,18 @@ type TransformSourceFunction = (
   TransformSourceFunction,
 ) => Promise<{source: Source}>;
 
+type LoadContext = {
+  conditions: Array<string>,
+  format: string | null | void,
+  importAssertions: Object,
+};
+
+type LoadFunction = (
+  string,
+  LoadContext,
+  LoadFunction,
+) => Promise<{format: string, shortCircuit?: boolean, source: Source}>;
+
 type Source = string | ArrayBuffer | Uint8Array;
 
 let warnedAboutConditionsFlag = false;
@@ -70,24 +82,7 @@ export async function resolve(
       );
     }
   }
-  const resolved = await defaultResolve(specifier, context, defaultResolve);
-  if (resolved.url.endsWith('.server.js')) {
-    const parentURL = context.parentURL;
-    if (parentURL && !parentURL.endsWith('.server.js')) {
-      let reason;
-      if (specifier.endsWith('.server.js')) {
-        reason = `"${specifier}"`;
-      } else {
-        reason = `"${specifier}" (which expands to "${resolved.url}")`;
-      }
-      throw new Error(
-        `Cannot import ${reason} from "${parentURL}". ` +
-          'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
-          'That way nobody accidentally sends these to the client by indirectly importing it.',
-      );
-    }
-  }
-  return resolved;
+  return await defaultResolve(specifier, context, defaultResolve);
 }
 
 export async function getSource(
@@ -148,38 +143,12 @@ function resolveClientImport(
   return stashedResolve(specifier, {conditions, parentURL}, stashedResolve);
 }
 
-async function loadClientImport(
-  url: string,
-  defaultTransformSource: TransformSourceFunction,
-): Promise<{source: Source}> {
-  if (stashedGetSource === null) {
-    throw new Error(
-      'Expected getSource to have been called before transformSource',
-    );
-  }
-  // TODO: Validate that this is another module by calling getFormat.
-  const {source} = await stashedGetSource(
-    url,
-    {format: 'module'},
-    stashedGetSource,
-  );
-  return defaultTransformSource(
-    source,
-    {format: 'module', url},
-    defaultTransformSource,
-  );
-}
-
 async function parseExportNamesInto(
-  transformedSource: string,
+  body: any,
   names: Array<string>,
   parentURL: string,
-  defaultTransformSource: TransformSourceFunction,
+  loader: LoadFunction,
 ): Promise<void> {
-  const {body} = acorn.parse(transformedSource, {
-    ecmaVersion: '2019',
-    sourceType: 'module',
-  });
   for (let i = 0; i < body.length; i++) {
     const node = body[i];
     switch (node.type) {
@@ -189,11 +158,19 @@ async function parseExportNamesInto(
           continue;
         } else {
           const {url} = await resolveClientImport(node.source.value, parentURL);
-          const {source} = await loadClientImport(url, defaultTransformSource);
+          const {source} = await loader(
+            url,
+            {format: 'module', conditions: [], importAssertions: {}},
+            loader,
+          );
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          parseExportNamesInto(source, names, url, defaultTransformSource);
+          const {body: childBody} = acorn.parse(source, {
+            ecmaVersion: '2019',
+            sourceType: 'module',
+          });
+          await parseExportNamesInto(childBody, names, url, loader);
           continue;
         }
       case 'ExportDefaultDeclaration':
@@ -221,6 +198,102 @@ async function parseExportNamesInto(
   }
 }
 
+async function transformClientModule(
+  source: string,
+  url: string,
+  loader: LoadFunction,
+): Promise<string> {
+  const names: Array<string> = [];
+
+  // Do a quick check for the exact string. If it doesn't exist, don't
+  // bother parsing.
+  if (source.indexOf('use client') === -1) {
+    return source;
+  }
+
+  const {body} = acorn.parse(source, {
+    ecmaVersion: '2019',
+    sourceType: 'module',
+  });
+
+  let useClient = false;
+  for (let i = 0; i < body.length; i++) {
+    const node = body[i];
+    if (node.type !== 'ExpressionStatement' || !node.directive) {
+      break;
+    }
+    if (node.directive === 'use client') {
+      useClient = true;
+      break;
+    }
+  }
+
+  if (!useClient) {
+    return source;
+  }
+
+  await parseExportNamesInto(body, names, url, loader);
+
+  let newSrc =
+    "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i];
+    if (name === 'default') {
+      newSrc += 'export default ';
+      newSrc += 'Object.defineProperties(function() {';
+      newSrc +=
+        'throw new Error(' +
+        JSON.stringify(
+          `Attempted to call the default export of ${url} from the server` +
+            `but it's on the client. It's not possible to invoke a client function from ` +
+            `the server, it can only be rendered as a Component or passed to props of a` +
+            `Client Component.`,
+        ) +
+        ');';
+    } else {
+      newSrc += 'export const ' + name + ' = ';
+      newSrc += 'Object.defineProperties(function() {';
+      newSrc +=
+        'throw new Error(' +
+        JSON.stringify(
+          `Attempted to call ${name}() from the server but ${name} is on the client. ` +
+            `It's not possible to invoke a client function from the server, it can ` +
+            `only be rendered as a Component or passed to props of a Client Component.`,
+        ) +
+        ');';
+    }
+    newSrc += '},{';
+    newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
+    newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
+    newSrc += 'filepath: {value: ' + JSON.stringify(url) + '}';
+    newSrc += '});\n';
+  }
+  return newSrc;
+}
+
+async function loadClientImport(
+  url: string,
+  defaultTransformSource: TransformSourceFunction,
+): Promise<{format: string, shortCircuit?: boolean, source: Source}> {
+  if (stashedGetSource === null) {
+    throw new Error(
+      'Expected getSource to have been called before transformSource',
+    );
+  }
+  // TODO: Validate that this is another module by calling getFormat.
+  const {source} = await stashedGetSource(
+    url,
+    {format: 'module'},
+    stashedGetSource,
+  );
+  const result = await defaultTransformSource(
+    source,
+    {format: 'module', url},
+    defaultTransformSource,
+  );
+  return {format: 'module', source: result.source};
+}
+
 export async function transformSource(
   source: Source,
   context: TransformSourceContext,
@@ -231,57 +304,35 @@ export async function transformSource(
     context,
     defaultTransformSource,
   );
-  if (context.format === 'module' && context.url.endsWith('.client.js')) {
+  if (context.format === 'module') {
     const transformedSource = transformed.source;
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
     }
-
-    const names: Array<string> = [];
-    await parseExportNamesInto(
+    const newSrc = await transformClientModule(
       transformedSource,
-      names,
       context.url,
-      defaultTransformSource,
+      (url: string, ctx: LoadContext, defaultLoad: LoadFunction) => {
+        return loadClientImport(url, defaultTransformSource);
+      },
     );
-
-    let newSrc =
-      "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
-    for (let i = 0; i < names.length; i++) {
-      const name = names[i];
-      if (name === 'default') {
-        newSrc += 'export default ';
-        newSrc += 'Object.defineProperties(function() {';
-        newSrc +=
-          'throw new Error(' +
-          JSON.stringify(
-            `Attempted to call the default export of ${context.url} from the server` +
-              `but it's on the client. It's not possible to invoke a client function from ` +
-              `the server, it can only be rendered as a Component or passed to props of a` +
-              `Client Component.`,
-          ) +
-          ');';
-      } else {
-        newSrc += 'export const ' + name + ' = ';
-        newSrc += 'export default ';
-        newSrc += 'Object.defineProperties(function() {';
-        newSrc +=
-          'throw new Error(' +
-          JSON.stringify(
-            `Attempted to call ${name}() from the server but ${name} is on the client. ` +
-              `It's not possible to invoke a client function from the server, it can ` +
-              `only be rendered as a Component or passed to props of a Client Component.`,
-          ) +
-          ');';
-      }
-      newSrc += '},{';
-      newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
-      newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
-      newSrc += 'filepath: {value: ' + JSON.stringify(context.url) + '}';
-      newSrc += '});\n';
-    }
-
     return {source: newSrc};
   }
   return transformed;
+}
+
+export async function load(
+  url: string,
+  context: LoadContext,
+  defaultLoad: LoadFunction,
+): Promise<{format: string, shortCircuit?: boolean, source: Source}> {
+  if (context.format === 'module') {
+    const result = await defaultLoad(url, context, defaultLoad);
+    if (typeof result.source !== 'string') {
+      throw new Error('Expected source to have been loaded into a string.');
+    }
+    const newSrc = await transformClientModule(result.source, url, defaultLoad);
+    return {format: 'module', source: newSrc};
+  }
+  return defaultLoad(url, context, defaultLoad);
 }

@@ -17,8 +17,6 @@ global.TextDecoder = require('util').TextDecoder;
 global.Headers = require('node-fetch').Headers;
 global.Request = require('node-fetch').Request;
 global.Response = require('node-fetch').Response;
-// Patch for Browser environments to be able to polyfill AsyncLocalStorage
-global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 let fetchCount = 0;
 async function fetchMock(resource, options) {

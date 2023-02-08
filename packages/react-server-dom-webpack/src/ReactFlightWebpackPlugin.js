@@ -79,7 +79,7 @@ export default class ReactFlightWebpackPlugin {
         {
           directory: '.',
           recursive: true,
-          include: /\.client\.(js|ts|jsx|tsx)$/,
+          include: /\.(js|ts|jsx|tsx)$/,
         },
       ];
     } else if (
@@ -231,7 +231,7 @@ export default class ReactFlightWebpackPlugin {
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.
 
-              if (!/\.client\.(js|ts)x?$/.test(module.resource)) {
+              if (!/\.(js|ts)x?$/.test(module.resource)) {
                 return;
               }
 

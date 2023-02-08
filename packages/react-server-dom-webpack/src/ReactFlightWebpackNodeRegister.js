@@ -7,6 +7,8 @@
  * @flow
  */
 
+const acorn = require('acorn');
+
 const url = require('url');
 
 const Module = require('module');
@@ -204,8 +206,42 @@ module.exports = function register() {
   };
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  Module._extensions['.client.js'] = function (module, path) {
-    const moduleId: string = (url.pathToFileURL(path).href: any);
+  const originalCompile = Module.prototype._compile;
+
+  // $FlowFixMe[prop-missing] found when upgrading Flow
+  Module.prototype._compile = function (
+    this: any,
+    content: string,
+    filename: string,
+  ): void {
+    // Do a quick check for the exact string. If it doesn't exist, don't
+    // bother parsing.
+    if (content.indexOf('use client') === -1) {
+      return originalCompile.apply(this, arguments);
+    }
+
+    const {body} = acorn.parse(content, {
+      ecmaVersion: '2019',
+      sourceType: 'source',
+    });
+
+    let useClient = false;
+    for (let i = 0; i < body.length; i++) {
+      const node = body[i];
+      if (node.type !== 'ExpressionStatement' || !node.directive) {
+        break;
+      }
+      if (node.directive === 'use client') {
+        useClient = true;
+        break;
+      }
+    }
+
+    if (!useClient) {
+      return originalCompile.apply(this, arguments);
+    }
+
+    const moduleId: string = (url.pathToFileURL(filename).href: any);
     const clientReference = Object.defineProperties(({}: any), {
       // Represents the whole Module object instead of a particular import.
       name: {value: '*'},
@@ -214,35 +250,6 @@ module.exports = function register() {
       async: {value: false},
     });
     // $FlowFixMe[incompatible-call] found when upgrading Flow
-    module.exports = new Proxy(clientReference, proxyHandlers);
-  };
-
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  const originalResolveFilename = Module._resolveFilename;
-
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  // $FlowFixMe[missing-this-annot]
-  Module._resolveFilename = function (request, parent, isMain, options) {
-    const resolved = originalResolveFilename.apply(this, arguments);
-    if (resolved.endsWith('.server.js')) {
-      if (
-        parent &&
-        parent.filename &&
-        !parent.filename.endsWith('.server.js')
-      ) {
-        let reason;
-        if (request.endsWith('.server.js')) {
-          reason = `"${request}"`;
-        } else {
-          reason = `"${request}" (which expands to "${resolved}")`;
-        }
-        throw new Error(
-          `Cannot import ${reason} from "${parent.filename}". ` +
-            'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
-            'That way nobody accidentally sends these to the client by indirectly importing it.',
-        );
-      }
-    }
-    return resolved;
+    this.exports = new Proxy(clientReference, proxyHandlers);
   };
 };
