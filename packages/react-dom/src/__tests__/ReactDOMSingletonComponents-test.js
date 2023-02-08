@@ -1021,7 +1021,7 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at documentElement', async () => {
+  it('(#26128) does not throw when rendering at document', async () => {
     ReactDOM.render(<html />, document);
   });
 });
