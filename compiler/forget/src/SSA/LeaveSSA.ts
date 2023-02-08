@@ -174,15 +174,8 @@ export function leaveSSA(fn: HIRFunction) {
       }
 
       // all versions of the variable need to be remapped to the canonical id
-      // also extend the mutable range of the canonical id based on the min/max
-      // of the ranges of its operands
-      let start = canonicalId.mutableRange.start as number;
-      let end = canonicalId.mutableRange.end as number;
       for (const [, operand] of phi.operands) {
-        start = Math.min(start, operand.mutableRange.start);
-        end = Math.max(end, operand.mutableRange.end);
         reassignments.set(operand, canonicalId);
-
         if (operand.mutableRange.start < terminal.id) {
           invariant(
             initOperand === null,
@@ -191,8 +184,6 @@ export function leaveSSA(fn: HIRFunction) {
           initOperand = operand;
         }
       }
-      canonicalId.mutableRange.start = makeInstructionId(start);
-      canonicalId.mutableRange.end = makeInstructionId(end);
 
       // If there are no instructions in the block then there's just a terminal
       // node, which has no mutation, so that should be false.
@@ -202,6 +193,14 @@ export function leaveSSA(fn: HIRFunction) {
       const isPhiMutatedAfterCreation: boolean =
         phi.id.mutableRange.end >
         (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
+
+      // If a phi is never mutated after creation, reset its mutable range to be itself
+      if (!isPhiMutatedAfterCreation) {
+        canonicalId.mutableRange.start = phiBlock.terminal.id;
+        canonicalId.mutableRange.end = makeInstructionId(
+          phiBlock.terminal.id + 1
+        );
+      }
 
       // If this phi id is the canonical id we need to generate a let binding for it
       // (otherwise, it means this phi merges into some other phi which already generated

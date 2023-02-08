@@ -56,61 +56,49 @@ function foo(a, b, c) {
   } else {
     y = $[3];
   }
-  const c_4 = $[4] !== b;
-  const c_5 = $[5] !== c;
-  let x$0;
-  if (c_4 || c_5) {
-    x$0 = undefined;
-    bb3: switch (b) {
-      case 0: {
-        const c_7 = $[7] !== b;
-        let x$1;
-        if (c_7) {
-          x$1 = [];
-          x$1.push(b);
-          $[7] = b;
-          $[8] = x$1;
-        } else {
-          x$1 = $[8];
-        }
-        x$0 = x$1;
-        break bb3;
+  let x$0 = undefined;
+  bb3: switch (b) {
+    case 0: {
+      const c_4 = $[4] !== b;
+      let x$1;
+      if (c_4) {
+        x$1 = [];
+        x$1.push(b);
+        $[4] = b;
+        $[5] = x$1;
+      } else {
+        x$1 = $[5];
       }
-      default: {
-        const c_9 = $[9] !== c;
-        let x$2;
-        if (c_9) {
-          x$2 = [];
-          x$2.push(c);
-          $[9] = c;
-          $[10] = x$2;
-        } else {
-          x$2 = $[10];
-        }
-        x$0 = x$2;
-      }
+      x$0 = x$1;
+      break bb3;
     }
-    $[4] = b;
-    $[5] = c;
-    $[6] = x$0;
-  } else {
-    x$0 = $[6];
+    default: {
+      const c_6 = $[6] !== c;
+      let x$2;
+      if (c_6) {
+        x$2 = [];
+        x$2.push(c);
+        $[6] = c;
+        $[7] = x$2;
+      } else {
+        x$2 = $[7];
+      }
+      x$0 = x$2;
+    }
   }
-  const c_11 = $[11] !== y;
-  const c_12 = $[12] !== x$0;
+  const c_8 = $[8] !== y;
   let t0;
-  if (c_11 || c_12) {
+  if (c_8) {
     t0 = (
       <div>
         {y}
         {x$0}
       </div>
     );
-    $[11] = y;
-    $[12] = x$0;
-    $[13] = t0;
+    $[8] = y;
+    $[9] = t0;
   } else {
-    t0 = $[13];
+    t0 = $[9];
   }
   return t0;
 }

@@ -19,21 +19,12 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const $ = React.unstable_useMemoCache();
   const x = a;
   if (b) {
-    const c_0 = $[0] !== c;
-    let x$0;
-    if (c_0) {
-      x$0 = x;
-      if (c) {
-        const x$1 = c;
-        x$0 = x$1;
-      }
-      $[0] = c;
-      $[1] = x$0;
-    } else {
-      x$0 = $[1];
+    let x$0 = x;
+    if (c) {
+      const x$1 = c;
+      x$0 = x$1;
     }
     return x$0;
   }

@@ -30,29 +30,19 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  const c_2 = $[2] !== props.cond;
-  const c_3 = $[3] !== props.foo;
-  let x$0;
-  if (c_2 || c_3) {
-    x$0 = x;
-    if (props.cond) {
-      const c_5 = $[5] !== props.foo;
-      let x$1;
-      if (c_5) {
-        x$1 = [];
-        x$1.push(props.foo);
-        $[5] = props.foo;
-        $[6] = x$1;
-      } else {
-        x$1 = $[6];
-      }
-      x$0 = x$1;
+  let x$0 = x;
+  if (props.cond) {
+    const c_2 = $[2] !== props.foo;
+    let x$1;
+    if (c_2) {
+      x$1 = [];
+      x$1.push(props.foo);
+      $[2] = props.foo;
+      $[3] = x$1;
+    } else {
+      x$1 = $[3];
     }
-    $[2] = props.cond;
-    $[3] = props.foo;
-    $[4] = x$0;
-  } else {
-    x$0 = $[4];
+    x$0 = x$1;
   }
   return x$0;
 }
