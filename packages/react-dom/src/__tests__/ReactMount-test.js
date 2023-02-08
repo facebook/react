@@ -149,12 +149,17 @@ describe('ReactMount', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
 
-    expect(() =>
-      ReactDOM.render(<div />, iFrame.contentDocument.body),
-    ).toErrorDev(
-      'Rendering components directly into document.body is discouraged',
-      {withoutStack: true},
-    );
+    if (gate(flags => flags.enableHostSingletons)) {
+      // HostSingletons make the warning for document.body unecessary
+      ReactDOM.render(<div />, iFrame.contentDocument.body);
+    } else {
+      expect(() =>
+        ReactDOM.render(<div />, iFrame.contentDocument.body),
+      ).toErrorDev(
+        'Rendering components directly into document.body is discouraged',
+        {withoutStack: true},
+      );
+    }
   });
 
   it('should account for escaping on a checksum mismatch', () => {
