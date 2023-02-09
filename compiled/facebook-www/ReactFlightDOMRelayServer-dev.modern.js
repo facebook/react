@@ -531,6 +531,7 @@ var capitalize = function (token) {
   "text-anchor",
   "text-decoration",
   "text-rendering",
+  "transform-origin",
   "underline-position",
   "underline-thickness",
   "unicode-bidi",

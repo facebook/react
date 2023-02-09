@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-3ff1540e9-20230209";
+var ReactVersion = "18.3.0-www-modern-28fcae062-20230209";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -642,6 +642,7 @@ var capitalize = function (token) {
   "text-anchor",
   "text-decoration",
   "text-rendering",
+  "transform-origin",
   "underline-position",
   "underline-thickness",
   "unicode-bidi",
@@ -1518,6 +1519,8 @@ var possibleStandardNames = {
   "text-rendering": "textRendering",
   to: "to",
   transform: "transform",
+  transformorigin: "transformOrigin",
+  "transform-origin": "transformOrigin",
   typeof: "typeof",
   u1: "u1",
   u2: "u2",

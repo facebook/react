@@ -1699,6 +1699,7 @@ var capitalize = function (token) {
   "text-anchor",
   "text-decoration",
   "text-rendering",
+  "transform-origin",
   "underline-position",
   "underline-thickness",
   "unicode-bidi",
@@ -4752,6 +4753,8 @@ var possibleStandardNames = {
   "text-rendering": "textRendering",
   to: "to",
   transform: "transform",
+  transformorigin: "transformOrigin",
+  "transform-origin": "transformOrigin",
   typeof: "typeof",
   u1: "u1",
   u2: "u2",
@@ -42695,7 +42698,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-3ff1540e9-20230209";
+var ReactVersion = "18.3.0-www-classic-28fcae062-20230209";
 
 function createPortal(
   children,
