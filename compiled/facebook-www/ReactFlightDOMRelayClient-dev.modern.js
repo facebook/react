@@ -29,7 +29,7 @@ function resolveClientReference(bundlerConfig, moduleData) {
   return ReactFlightDOMRelayClientIntegration.resolveClientReference(
     moduleData
   );
-} // $FlowFixMe[missing-local-annot]
+}
 
 function parseModelRecursively(response, parentObj, key, value) {
   if (typeof value === "string") {
@@ -437,7 +437,7 @@ function createModelResolver(chunk, parentObject, key) {
       deps: 1,
       value: null
     };
-  } // $FlowFixMe[missing-local-annot]
+  }
 
   return function (value) {
     parentObject[key] = value;

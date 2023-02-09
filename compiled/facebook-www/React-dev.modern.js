@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-53b1f69ba-20230209";
+var ReactVersion = "18.3.0-www-modern-6ddcbd4f9-20230209";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1928,8 +1928,7 @@ function getCacheSignal() {
     var reason = new Error(
       "This CacheSignal was requested outside React which means that it is " +
         "immediately aborted."
-    ); // $FlowFixMe Flow doesn't yet know about this argument.
-
+    );
     controller.abort(reason);
     return controller.signal;
   }

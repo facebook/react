@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-53b1f69ba-20230209";
+var ReactVersion = "18.3.0-www-classic-6ddcbd4f9-20230209";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -10752,8 +10752,7 @@ function stopProfilerTimerIfRunning(fiber) {
 
 function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
   if (profilerStartTime >= 0) {
-    var elapsedTime = now$1() - profilerStartTime; // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-
+    var elapsedTime = now$1() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
 
     if (overrideBaseTime) {

@@ -3563,7 +3563,8 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function (node, html) {
 
       while (node.firstChild) {
         node.removeChild(node.firstChild);
-      }
+      } // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
 
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
@@ -31215,7 +31216,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-53b1f69ba-20230209";
+var ReactVersion = "18.3.0-www-classic-6ddcbd4f9-20230209";
 
 function createPortal(
   children,
@@ -37905,7 +37906,7 @@ function registerEvents$1() {
   ]);
 }
 
-function createAndAccumulateChangeEvent( // $FlowFixMe[missing-local-annot]
+function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
   nativeEvent,
@@ -39168,6 +39169,7 @@ function addTrappedEventListener(
 
   if (isDeferredListenerForLegacyFBSupport) {
     var originalListener = listener; // $FlowFixMe[missing-this-annot]
+    // $FlowFixMe[definition-cycle]
 
     listener = function () {
       removeEventListener(targetContainer, domEventName, unsubscribeListener);

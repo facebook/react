@@ -3295,7 +3295,8 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function (node, html) {
 
       while (node.firstChild) {
         node.removeChild(node.firstChild);
-      }
+      } // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
 
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
@@ -9643,7 +9644,7 @@ function registerEvents$1() {
   ]);
 }
 
-function createAndAccumulateChangeEvent( // $FlowFixMe[missing-local-annot]
+function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
   nativeEvent,
@@ -11417,6 +11418,7 @@ function addTrappedEventListener(
 
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     var originalListener = listener; // $FlowFixMe[missing-this-annot]
+    // $FlowFixMe[definition-cycle]
 
     listener = function () {
       removeEventListener(
@@ -24865,8 +24867,7 @@ function stopProfilerTimerIfRunning(fiber) {
 
 function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
   if (profilerStartTime >= 0) {
-    var elapsedTime = now$1() - profilerStartTime; // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-
+    var elapsedTime = now$1() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
 
     if (overrideBaseTime) {
@@ -42422,7 +42423,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-53b1f69ba-20230209";
+var ReactVersion = "18.3.0-www-modern-6ddcbd4f9-20230209";
 
 function createPortal(
   children,

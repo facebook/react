@@ -3220,7 +3220,8 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function (node, html) {
 
       while (node.firstChild) {
         node.removeChild(node.firstChild);
-      }
+      } // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
 
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
@@ -8884,7 +8885,7 @@ function registerEvents$1() {
   ]);
 }
 
-function createAndAccumulateChangeEvent( // $FlowFixMe[missing-local-annot]
+function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
   nativeEvent,
@@ -38517,7 +38518,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-53b1f69ba-20230209";
+var ReactVersion = "18.3.0-www-modern-6ddcbd4f9-20230209";
 
 function createPortal(
   children,
