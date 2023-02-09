@@ -1,4 +1,4 @@
-﻿## `about` (on `<div>` inside `<div>`)
+## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -11372,6 +11372,56 @@
 | `transform=(function)`| (initial, warning)| `[]` |
 | `transform=(null)`| (initial)| `[]` |
 | `transform=(undefined)`| (initial)| `[]` |
+
+## `transform-origin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transform-origin=(string)`| (changed, warning)| `"a string"` |
+| `transform-origin=(empty string)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(array with string)`| (changed, warning)| `"string"` |
+| `transform-origin=(empty array)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(object)`| (changed, warning)| `"result of toString()"` |
+| `transform-origin=(numeric string)`| (changed, warning)| `"42"` |
+| `transform-origin=(-1)`| (changed, warning)| `"-1"` |
+| `transform-origin=(0)`| (changed, warning)| `"0"` |
+| `transform-origin=(integer)`| (changed, warning)| `"1"` |
+| `transform-origin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transform-origin=(float)`| (changed, warning)| `"99.99"` |
+| `transform-origin=(true)`| (initial, warning)| `<null>` |
+| `transform-origin=(false)`| (initial, warning)| `<null>` |
+| `transform-origin=(string 'true')`| (changed, warning)| `"true"` |
+| `transform-origin=(string 'false')`| (changed, warning)| `"false"` |
+| `transform-origin=(string 'on')`| (changed, warning)| `"on"` |
+| `transform-origin=(string 'off')`| (changed, warning)| `"off"` |
+| `transform-origin=(symbol)`| (initial, warning)| `<null>` |
+| `transform-origin=(function)`| (initial, warning)| `<null>` |
+| `transform-origin=(null)`| (initial, warning)| `<null>` |
+| `transform-origin=(undefined)`| (initial, warning)| `<null>` |
+
+## `transformOrigin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transformOrigin=(string)`| (changed)| `"a string"` |
+| `transformOrigin=(empty string)`| (changed)| `<empty string>` |
+| `transformOrigin=(array with string)`| (changed)| `"string"` |
+| `transformOrigin=(empty array)`| (changed)| `<empty string>` |
+| `transformOrigin=(object)`| (changed)| `"result of toString()"` |
+| `transformOrigin=(numeric string)`| (changed)| `"42"` |
+| `transformOrigin=(-1)`| (changed)| `"-1"` |
+| `transformOrigin=(0)`| (changed)| `"0"` |
+| `transformOrigin=(integer)`| (changed)| `"1"` |
+| `transformOrigin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transformOrigin=(float)`| (changed)| `"99.99"` |
+| `transformOrigin=(true)`| (initial, warning)| `<null>` |
+| `transformOrigin=(false)`| (initial, warning)| `<null>` |
+| `transformOrigin=(string 'true')`| (changed)| `"true"` |
+| `transformOrigin=(string 'false')`| (changed)| `"false"` |
+| `transformOrigin=(string 'on')`| (changed)| `"on"` |
+| `transformOrigin=(string 'off')`| (changed)| `"off"` |
+| `transformOrigin=(symbol)`| (initial, warning)| `<null>` |
+| `transformOrigin=(function)`| (initial, warning)| `<null>` |
+| `transformOrigin=(null)`| (initial)| `<null>` |
+| `transformOrigin=(undefined)`| (initial)| `<null>` |
 
 ## `type` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |

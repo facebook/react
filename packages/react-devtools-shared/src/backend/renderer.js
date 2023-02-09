@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {gt, gte} from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -39,6 +38,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {gt, gte} from 'react-devtools-shared/src/backend/utils';
 import {
   cleanForBridge,
   copyToClipboard,

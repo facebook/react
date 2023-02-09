@@ -28,10 +28,6 @@ describe('ReactIncrementalUpdates', () => {
       require('react-reconciler/constants').ContinuousEventPriority;
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop, hidden: false};
-  }
-
   function flushNextRenderIfExpired() {
     // This will start rendering the next level of work. If the work hasn't
     // expired yet, React will exit without doing anything. If it has expired,
@@ -174,7 +170,7 @@ describe('ReactIncrementalUpdates', () => {
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
-    expect(ReactNoop.getChildren()).toEqual([span('')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="" />);
 
     // Schedule some more updates at different priorities
     instance.setState(createUpdate('d'));
@@ -193,11 +189,11 @@ describe('ReactIncrementalUpdates', () => {
       )
     ) {
       expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
-      expect(ReactNoop.getChildren()).toEqual([span('def')]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
     } else {
       // Update d was dropped and replaced by e.
       expect(Scheduler).toHaveYielded(['e', 'f']);
-      expect(ReactNoop.getChildren()).toEqual([span('ef')]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="ef" />);
     }
 
     // Now flush the remaining work. Even though e and f were already processed,
@@ -235,7 +231,7 @@ describe('ReactIncrementalUpdates', () => {
         'g',
       ]);
     }
-    expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="abcdefg" />);
   });
 
   it('can abort an update, schedule a replaceState, and resume', () => {
@@ -279,7 +275,7 @@ describe('ReactIncrementalUpdates', () => {
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
-    expect(ReactNoop.getChildren()).toEqual([span('')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="" />);
 
     // Schedule some more updates at different priorities
     instance.setState(createUpdate('d'));
@@ -305,7 +301,7 @@ describe('ReactIncrementalUpdates', () => {
       // Update d was dropped and replaced by e.
       expect(Scheduler).toHaveYielded(['e', 'f']);
     }
-    expect(ReactNoop.getChildren()).toEqual([span('f')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="f" />);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
@@ -342,7 +338,7 @@ describe('ReactIncrementalUpdates', () => {
         'g',
       ]);
     }
-    expect(ReactNoop.getChildren()).toEqual([span('fg')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="fg" />);
   });
 
   it('passes accumulation of previous updates to replaceState updater function', () => {
@@ -537,7 +533,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });
-    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="derived state" />);
 
     ReactNoop.flushSync(() => {
       // Triggers getDerivedStateFromProps again
@@ -546,12 +542,12 @@ describe('ReactIncrementalUpdates', () => {
       // led to this bug. Removing it causes it to "accidentally" work.
       foo.setState({value: 'update state'}, function noop() {});
     });
-    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="derived state" />);
 
     ReactNoop.flushSync(() => {
       bar.setState({});
     });
-    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="derived state" />);
   });
 
   it('regression: does not expire soon due to layout effects in the last batch', () => {
