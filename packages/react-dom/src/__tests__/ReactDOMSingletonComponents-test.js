@@ -13,6 +13,7 @@ let JSDOM;
 let Stream;
 let Scheduler;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let document;
@@ -28,6 +29,7 @@ describe('ReactDOM HostSingleton', () => {
     JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
@@ -1006,5 +1008,20 @@ describe('ReactDOM HostSingleton', () => {
         <body>foo</body>
       </html>,
     );
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at body', async () => {
+    ReactDOM.render(<div />, document.body);
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at <html>', async () => {
+    ReactDOM.render(<body />, document.documentElement);
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at document', async () => {
+    ReactDOM.render(<html />, document);
   });
 });
