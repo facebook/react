@@ -34,7 +34,7 @@ export function assertExhaustive(_: never, errorMsg: string): never {
 export function retainWhere<T>(
   array: Array<T>,
   predicate: (item: T) => boolean
-) {
+): void {
   let writeIndex = 0;
   for (let readIndex = 0; readIndex < array.length; readIndex++) {
     const item = array[readIndex];

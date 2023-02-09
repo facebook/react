@@ -37,7 +37,7 @@ function printJumpArrow(
  * Prints a mermaid arrow connecting a BasicBlock's instructions to its Terminal for use in the
  * "Basic Blocks" section.
  */
-function printTerminalArrow(blockId: BlockId, block: BasicBlock) {
+function printTerminalArrow(blockId: BlockId, block: BasicBlock): string {
   const bbId = printBlockId(blockId);
   if (block.instructions.length > 0) {
     return `${bbId}_${INSTRUCTIONS_NODE_NAME} --> ${bbId}_${TERMINAL_NODE_NAME}(["${printTerminalLabel(
@@ -53,7 +53,7 @@ function printTerminalArrow(blockId: BlockId, block: BasicBlock) {
  * Prints a BasicBlock as a mermaid `subgraph`, with instructions as a single multiline mermaid node
  * and the terminal as an arrow connecting the instruction node with the terminal.
  */
-function printBlockSubgraphs(blockId: BlockId, block: BasicBlock) {
+function printBlockSubgraphs(blockId: BlockId, block: BasicBlock): string {
   const buffer = [];
   const bbId = printBlockId(blockId);
   const instructions = block.instructions

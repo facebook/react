@@ -14,7 +14,7 @@ let ENABLED: boolean = false;
 
 let lastLogged: string;
 
-export function toggleLogging(enabled: boolean) {
+export function toggleLogging(enabled: boolean): void {
   ENABLED = enabled;
 }
 
@@ -54,7 +54,7 @@ export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
   }
 }
 
-export function log(fn: () => string) {
+export function log(fn: () => string): void {
   if (ENABLED) {
     const message = fn();
     process.stdout.write(message.trim() + "\n\n");

@@ -15,7 +15,7 @@ export { printHIR } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
 declare global {
-  var __DEV__: boolean | null | undefined;
+  let __DEV__: boolean | null | undefined;
 }
 
 import ReactForgetBabelPlugin from "./Babel/BabelPlugin";

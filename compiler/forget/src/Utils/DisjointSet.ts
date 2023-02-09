@@ -18,7 +18,7 @@ export default class DisjointSet<T> {
    * linking any previous sets that the items were part of into a single
    * set.
    */
-  union(items: Array<T>) {
+  union(items: Array<T>): void {
     const first = items.shift();
     invariant(first != null, "Expected set to be non-empty");
     // determine an arbitrary "root" for this set: if the first
@@ -94,7 +94,7 @@ export default class DisjointSet<T> {
    * Calls the provided callback once for each item in the disjoint set,
    * passing the @param item and the @param group to which it belongs.
    */
-  forEach(fn: (item: T, group: T) => void) {
+  forEach(fn: (item: T, group: T) => void): void {
     for (const item of this.#entries.keys()) {
       const group = this.find(item)!;
       fn(item, group);
