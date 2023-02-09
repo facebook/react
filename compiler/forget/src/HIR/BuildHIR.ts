@@ -1373,7 +1373,7 @@ function lowerExpression(
       if (expr.get("quasi").get("expressions").length !== 0) {
         builder.errors.push({
           reason:
-            "(BuildHIR::lowerAssignment) Handle tagged template with interpolations",
+            "(BuildHIR::lowerExpression) Handle tagged template with interpolations",
           severity: ErrorSeverity.Todo,
           nodePath: exprPath,
         });
@@ -1387,7 +1387,7 @@ function lowerExpression(
       if (value.raw !== value.cooked) {
         builder.errors.push({
           reason:
-            "(BuildHIR::lowerAssignment) Handle tagged template where cooked value is different from raw value",
+            "(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value",
           severity: ErrorSeverity.Todo,
           nodePath: exprPath,
         });
@@ -1408,7 +1408,7 @@ function lowerExpression(
 
       if (subexprs.length !== quasis.length - 1) {
         builder.errors.push({
-          reason: `(BuildHIR::lowerAssignment) Unexpected quasi and subexpression lengths in TemplateLiteral.`,
+          reason: `(BuildHIR::lowerExpression) Unexpected quasi and subexpression lengths in TemplateLiteral.`,
           severity: ErrorSeverity.InvalidInput,
           nodePath: exprPath,
         });
@@ -1524,7 +1524,7 @@ function lowerMemberExpression(
   if (!expr.node.computed) {
     if (!property.isIdentifier()) {
       builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Handle ${property.type} property`,
+        reason: `(BuildHIR::lowerMemberExpression) Handle ${property.type} property`,
         severity: ErrorSeverity.Todo,
         nodePath: property,
       });
@@ -1568,60 +1568,6 @@ function lowerMemberExpression(
     };
     return { object, property: propertyPlace, value };
   }
-}
-
-function lowerConditional(
-  builder: HIRBuilder,
-  test: Place,
-  loc: SourceLocation,
-  consequent: () => InstructionValue,
-  alternate: () => InstructionValue
-): Place {
-  const place: Place = buildTemporaryPlace(builder, loc);
-  //  Block for code following the if
-  const continuationBlock = builder.reserve("block");
-  //  Block for the consequent (if the test is truthy)
-  const consequentBlock = builder.enter("value", (blockId) => {
-    let value = consequent();
-    builder.push({
-      id: makeInstructionId(0),
-      value,
-      lvalue: { place: { ...place }, kind: InstructionKind.Const },
-      loc: value.loc,
-    });
-    return {
-      kind: "goto",
-      block: continuationBlock.id,
-      variant: GotoVariant.Break,
-      id: makeInstructionId(0),
-    };
-  });
-  //  Block for the alternate (if the test is not truthy)
-  const alternateBlock = builder.enter("value", (blockId) => {
-    let value = alternate();
-    builder.push({
-      id: makeInstructionId(0),
-      value,
-      lvalue: { place: { ...place }, kind: InstructionKind.Const },
-      loc: value.loc,
-    });
-    return {
-      kind: "goto",
-      block: continuationBlock.id,
-      variant: GotoVariant.Break,
-      id: makeInstructionId(0),
-    };
-  });
-  const terminal: IfTerminal = {
-    kind: "if",
-    test,
-    consequent: consequentBlock,
-    alternate: alternateBlock,
-    fallthrough: continuationBlock.id,
-    id: makeInstructionId(0),
-  };
-  builder.terminateWithContinuation(terminal, continuationBlock);
-  return place;
 }
 
 function lowerJsxElementName(

@@ -303,7 +303,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   36 |   }
   37 |
 
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle tagged template with interpolations
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template with interpolations
   36 |   }
   37 |
 > 38 |   graphql`
@@ -312,7 +312,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   40 |   `;
   41 |
 
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle tagged template where cooked value is different from raw value
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value
   40 |   `;
   41 |
 > 42 |   graphql`\\t\n`;
