@@ -105,10 +105,6 @@ describe('ReactExpiration', () => {
     }
   }
 
-  function span(prop) {
-    return {type: 'span', children: [], prop, hidden: false};
-  }
-
   function flushNextRenderIfExpired() {
     // This will start rendering the next level of work. If the work hasn't
     // expired yet, React will exit without doing anything. If it has expired,
@@ -127,21 +123,21 @@ describe('ReactExpiration', () => {
       ReactNoop.render(<span prop="done" />);
     }
 
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Nothing has expired yet because time hasn't advanced.
     flushNextRenderIfExpired();
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance time a bit, but not enough to expire the low pri update.
     ReactNoop.expire(4500);
     flushNextRenderIfExpired();
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance by another second. Now the update should expire and flush.
     ReactNoop.expire(500);
     flushNextRenderIfExpired();
-    expect(ReactNoop.getChildren()).toEqual([span('done')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="done" />);
   });
 
   it('two updates of like priority in the same event always flush within the same batch', () => {
@@ -181,20 +177,20 @@ describe('ReactExpiration', () => {
 
     // Don't advance time by enough to expire the first update.
     expect(Scheduler).toHaveYielded([]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Schedule another update.
     ReactNoop.render(<TextClass text="B" />);
     // Both updates are batched
     expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
-    expect(ReactNoop.getChildren()).toEqual([span('B')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
 
     // Now do the same thing again, except this time don't flush any work in
     // between the two updates.
     ReactNoop.render(<TextClass text="A" />);
     Scheduler.unstable_advanceTime(2000);
     expect(Scheduler).toHaveYielded([]);
-    expect(ReactNoop.getChildren()).toEqual([span('B')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
     // Schedule another update.
     ReactNoop.render(<TextClass text="B" />);
     // The updates should flush in the same batch, since as far as the scheduler
@@ -242,20 +238,20 @@ describe('ReactExpiration', () => {
 
       // Don't advance time by enough to expire the first update.
       expect(Scheduler).toHaveYielded([]);
-      expect(ReactNoop.getChildren()).toEqual([]);
+      expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Schedule another update.
       ReactNoop.render(<TextClass text="B" />);
       // Both updates are batched
       expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
-      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
 
       // Now do the same thing again, except this time don't flush any work in
       // between the two updates.
       ReactNoop.render(<TextClass text="A" />);
       Scheduler.unstable_advanceTime(2000);
       expect(Scheduler).toHaveYielded([]);
-      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
 
       // Perform some synchronous work. The scheduler must assume we're inside
       // the same event.

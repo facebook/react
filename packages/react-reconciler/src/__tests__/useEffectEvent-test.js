@@ -42,10 +42,6 @@ describe('useEffectEvent', () => {
     useMemo = React.useMemo;
   });
 
-  function span(prop) {
-    return {type: 'span', hidden: false, children: [], prop};
-  }
-
   function Text(props) {
     Scheduler.unstable_yieldValue(props.text);
     return <span prop={props.text} />;
@@ -77,17 +73,21 @@ describe('useEffectEvent', () => {
     const button = React.createRef(null);
     ReactNoop.render(<Counter incrementBy={1} />);
     expect(Scheduler).toFlushAndYield(['Increment', 'Count: 0']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 0'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 0" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 1']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 1'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 1" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -95,26 +95,32 @@ describe('useEffectEvent', () => {
       // Event should use the updated callback function closed over the new value.
       'Count: 2',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 2'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 2" />
+      </>,
+    );
 
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
     expect(Scheduler).toFlushAndYield(['Increment', 'Count: 2']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 2'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 2" />
+      </>,
+    );
 
     // Event uses the new prop
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 12']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 12'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 12" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -153,24 +159,30 @@ describe('useEffectEvent', () => {
     const button = React.createRef(null);
     ReactNoop.render(<Counter incrementBy={5} />);
     expect(Scheduler).toFlushAndYield(['Increment', 'Count: 0']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 0'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 0" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 5']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 5'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 5" />
+      </>,
+    );
 
     act(button.current.multiply);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 25']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 25'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 25" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -206,20 +218,24 @@ describe('useEffectEvent', () => {
     const button = React.createRef(null);
     ReactNoop.render(<Greeter hello={'hej'} />);
     expect(Scheduler).toFlushAndYield(['Say hej', 'Greeting: Seb says hej']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Say hej'),
-      span('Greeting: Seb says hej'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Say hej" />
+        <span prop="Greeting: Seb says hej" />
+      </>,
+    );
 
     act(button.current.greet);
     expect(Scheduler).toHaveYielded([
       'Say hej',
       'Greeting: undefined says hej',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Say hej'),
-      span('Greeting: undefined says hej'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Say hej" />
+        <span prop="Greeting: undefined says hej" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -299,10 +315,12 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 2',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 2'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 2" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -310,10 +328,12 @@ describe('useEffectEvent', () => {
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 3'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 3" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -321,10 +341,12 @@ describe('useEffectEvent', () => {
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 4'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 4" />
+      </>,
+    );
 
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
@@ -335,18 +357,22 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 24',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 24'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 24" />
+      </>,
+    );
 
     // Event uses the new prop
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 34'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 34" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -388,10 +414,12 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 2',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 2'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 2" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -399,10 +427,12 @@ describe('useEffectEvent', () => {
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 3'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 3" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -410,10 +440,12 @@ describe('useEffectEvent', () => {
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 4'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 4" />
+      </>,
+    );
 
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
@@ -424,18 +456,22 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 24',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 24'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 24" />
+      </>,
+    );
 
     // Event uses the new prop
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 34'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 34" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -483,10 +519,12 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 2',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 2'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 2" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -494,10 +532,12 @@ describe('useEffectEvent', () => {
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 3'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 3" />
+      </>,
+    );
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
@@ -505,10 +545,12 @@ describe('useEffectEvent', () => {
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 4'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 4" />
+      </>,
+    );
 
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
@@ -519,18 +561,22 @@ describe('useEffectEvent', () => {
       'Increment',
       'Count: 24',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 24'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 24" />
+      </>,
+    );
 
     // Event uses the new prop
     act(button.current.increment);
     expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Increment'),
-      span('Count: 34'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Increment" />
+        <span prop="Count: 34" />
+      </>,
+    );
   });
 
   // @gate enableUseEffectEventHook
@@ -693,9 +739,9 @@ describe('useEffectEvent', () => {
 
     act(() => ReactNoop.render(<ChatRoom roomId="general" theme="light" />));
     expect(Scheduler).toHaveYielded(['Welcome to the general room!']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Welcome to the general room!'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <span prop="Welcome to the general room!" />,
+    );
 
     jest.advanceTimersByTime(100);
     Scheduler.unstable_advanceTime(100);
@@ -704,9 +750,9 @@ describe('useEffectEvent', () => {
     // change roomId only
     act(() => ReactNoop.render(<ChatRoom roomId="music" theme="light" />));
     expect(Scheduler).toHaveYielded(['Welcome to the music room!']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Welcome to the music room!'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <span prop="Welcome to the music room!" />,
+    );
     jest.advanceTimersByTime(100);
     Scheduler.unstable_advanceTime(100);
     // should trigger a reconnect
@@ -715,9 +761,9 @@ describe('useEffectEvent', () => {
     // change theme only
     act(() => ReactNoop.render(<ChatRoom roomId="music" theme="dark" />));
     expect(Scheduler).toHaveYielded(['Welcome to the music room!']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Welcome to the music room!'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <span prop="Welcome to the music room!" />,
+    );
     jest.advanceTimersByTime(100);
     Scheduler.unstable_advanceTime(100);
     // should not trigger a reconnect
@@ -726,9 +772,9 @@ describe('useEffectEvent', () => {
     // change roomId only
     act(() => ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />));
     expect(Scheduler).toHaveYielded(['Welcome to the travel room!']);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Welcome to the travel room!'),
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <span prop="Welcome to the travel room!" />,
+    );
     jest.advanceTimersByTime(100);
     Scheduler.unstable_advanceTime(100);
     // should trigger a reconnect
