@@ -130,7 +130,7 @@ describe('Timeline profiler', () => {
       renderHelper(<div />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--render-stop",
@@ -151,7 +151,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<div />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -161,7 +161,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--render-stop",
           "--commit-start-32",
@@ -196,7 +196,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-128",
           "--render-start-128",
           "--component-render-start-Foo",
@@ -219,7 +219,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-Example",
@@ -242,7 +242,7 @@ describe('Timeline profiler', () => {
 
       await fakeSuspensePromise;
       expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+                [
                   "--suspense-resolved-0-Example",
                 ]
           `);
@@ -261,7 +261,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-Example",
@@ -299,7 +299,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -309,7 +309,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -331,7 +331,7 @@ describe('Timeline profiler', () => {
 
       await fakeSuspensePromise;
       expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
+            [
               "--suspense-resolved-0-Example",
             ]
         `);
@@ -350,7 +350,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -360,7 +360,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -382,7 +382,7 @@ describe('Timeline profiler', () => {
 
       await expect(fakeSuspensePromise).rejects.toThrow();
       expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+                [
                   "--suspense-rejected-0-Example",
                 ]
           `);
@@ -402,7 +402,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -412,7 +412,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -455,7 +455,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -465,7 +465,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -509,7 +509,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -529,7 +529,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--schedule-state-update-32-Example",
@@ -563,7 +563,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -583,7 +583,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--schedule-forced-update-32-Example",
@@ -614,7 +614,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -624,7 +624,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -670,7 +670,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushAndYield([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-Example",
@@ -719,7 +719,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushAndYield([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-Example",
@@ -766,7 +766,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-ErrorBoundary",
@@ -829,7 +829,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -839,7 +839,7 @@ describe('Timeline profiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-ErrorBoundary",
           "--component-render-stop",
@@ -929,7 +929,7 @@ describe('Timeline profiler', () => {
       ]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-ComponentWithEffects",
@@ -960,7 +960,7 @@ describe('Timeline profiler', () => {
       ]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--passive-effects-start-32",
           "--component-passive-effect-mount-start-ComponentWithEffects",
           "--component-passive-effect-mount-stop",
@@ -987,7 +987,7 @@ describe('Timeline profiler', () => {
       ]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--render-stop",
@@ -1021,7 +1021,7 @@ describe('Timeline profiler', () => {
         renderHelper(<div />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-render-2",
             "--render-start-2",
             "--render-stop",
@@ -1041,7 +1041,7 @@ describe('Timeline profiler', () => {
       it('regression test DefaultLane', () => {
         renderRootHelper(<div />);
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-render-32",
           ]
         `);
@@ -1069,7 +1069,7 @@ describe('Timeline profiler', () => {
         await Promise.resolve();
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-state-update-2-App",
             "--render-start-2",
             "--component-render-start-App",
@@ -1109,7 +1109,7 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushAndYield([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-state-update-8-App",
             "--render-start-8",
             "--component-render-start-App",
@@ -1189,8 +1189,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 10,
               "type": "schedule-render",
@@ -1205,8 +1205,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
@@ -1243,8 +1243,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1253,7 +1253,7 @@ describe('Timeline profiler', () => {
               "type": "schedule-state-update",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1262,7 +1262,7 @@ describe('Timeline profiler', () => {
               "type": "schedule-state-update",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1271,7 +1271,7 @@ describe('Timeline profiler', () => {
               "type": "schedule-state-update",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1283,15 +1283,15 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
@@ -1369,7 +1369,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1427,7 +1427,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1485,7 +1485,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1543,7 +1543,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1584,15 +1584,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1602,14 +1602,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1643,15 +1643,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1661,14 +1661,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 20,
@@ -1711,15 +1711,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1729,14 +1729,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1780,15 +1780,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1798,14 +1798,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 20,
@@ -1835,22 +1835,22 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1860,14 +1860,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1898,22 +1898,22 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1923,14 +1923,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1961,8 +1961,8 @@ describe('Timeline profiler', () => {
         // Render phase updates should be retried as part of the same batch.
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(1);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 20,
               "timestamp": 10,
@@ -1972,14 +1972,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -2031,22 +2031,22 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 20,
@@ -2056,14 +2056,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "componentStack": "
               in ErrorBoundary (at **)",
@@ -2075,8 +2075,8 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
@@ -2130,36 +2130,36 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 30,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 30,
@@ -2169,14 +2169,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "componentStack": "
               in ErrorBoundary (at **)",
@@ -2188,15 +2188,15 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
               "timestamp": 20,
               "type": "thrown-error",
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
@@ -2274,78 +2274,78 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
@@ -2356,8 +2356,8 @@ describe('Timeline profiler', () => {
         `);
         expect(timelineData.batchUIDToMeasuresMap).toMatchInlineSnapshot(`
           Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2365,7 +2365,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2373,7 +2373,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2381,7 +2381,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2389,7 +2389,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2398,8 +2398,8 @@ describe('Timeline profiler', () => {
                 "type": "passive-effects",
               },
             ],
-            2 => Array [
-              Object {
+            2 => [
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2407,7 +2407,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2415,7 +2415,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2423,7 +2423,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2431,7 +2431,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2469,14 +2469,14 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Child",
               "componentStack": "
               in Child (at **)

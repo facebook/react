@@ -210,7 +210,7 @@ describe(zoomState, () => {
     });
 
     expect(zoomedState).toMatchInlineSnapshot(`
-      Object {
+      {
         "length": 200,
         "offset": -50,
       }
@@ -232,7 +232,7 @@ describe(moveStateToRange, () => {
     });
 
     expect(movedState).toMatchInlineSnapshot(`
-      Object {
+      {
         "length": 400,
         "offset": -50,
       }

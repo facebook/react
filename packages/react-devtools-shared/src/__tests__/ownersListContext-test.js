@@ -114,14 +114,14 @@ describe('OwnersListContext', () => {
     const firstChild = ((store.getElementAtIndex(2): any): Element);
 
     expect(await getOwnersListForOwner(parent)).toMatchInlineSnapshot(`
-      Array [
+      [
         "Grandparent",
         "Parent",
       ]
     `);
 
     expect(await getOwnersListForOwner(firstChild)).toMatchInlineSnapshot(`
-      Array [
+      [
         "Grandparent",
         "Parent",
         "Child",
@@ -157,7 +157,7 @@ describe('OwnersListContext', () => {
     const firstChild = ((store.getElementAtIndex(1): any): Element);
 
     expect(await getOwnersListForOwner(firstChild)).toMatchInlineSnapshot(`
-      Array [
+      [
         "Grandparent",
         "Parent",
         "Child",
@@ -183,7 +183,7 @@ describe('OwnersListContext', () => {
     const grandparent = ((store.getElementAtIndex(0): any): Element);
 
     expect(await getOwnersListForOwner(grandparent)).toMatchInlineSnapshot(`
-      Array [
+      [
         "Grandparent",
       ]
     `);
@@ -212,7 +212,7 @@ describe('OwnersListContext', () => {
     const wrapped = ((store.getElementAtIndex(2): any): Element);
 
     expect(await getOwnersListForOwner(wrapped)).toMatchInlineSnapshot(`
-      Array [
+      [
         "Grandparent",
         "InnerComponent",
         "InnerComponent",
