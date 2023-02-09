@@ -274,7 +274,7 @@ function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
   updatedFamilies: Set<Family>,
   staleFamilies: Set<Family>,
-) {
+): void {
   if (__DEV__) {
     const {alternate, child, sibling, tag, type} = fiber;
 
@@ -353,7 +353,7 @@ export const findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   families: Array<Family>,
 ): Set<Instance> => {
   if (__DEV__) {
-    const hostInstances = new Set();
+    const hostInstances = new Set<Instance>();
     const types = new Set(families.map(family => family.current));
     findHostInstancesForMatchingFibersRecursively(
       root.current,

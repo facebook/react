@@ -12,7 +12,7 @@ import type {Rect} from '../../view-base';
 import {rectEqualToRect} from '../../view-base';
 import {COLORS, FONT_SIZE, TEXT_PADDING} from '../constants';
 
-const cachedTextWidths = new Map();
+const cachedTextWidths = new Map<string, number>();
 
 export function getTextWidth(
   context: CanvasRenderingContext2D,

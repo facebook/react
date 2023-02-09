@@ -60,7 +60,7 @@ let reentry = false;
 let componentFrameCache;
 if (__DEV__) {
   const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-  componentFrameCache = new PossiblyWeakMap();
+  componentFrameCache = new PossiblyWeakMap<Function, string>();
 }
 
 export function describeNativeComponentFrame(

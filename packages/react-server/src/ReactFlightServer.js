@@ -171,8 +171,8 @@ export function createRequest(
   ReactCurrentCache.current = DefaultCacheDispatcher;
 
   const abortSet: Set<Task> = new Set();
-  const pingedTasks = [];
-  const request = {
+  const pingedTasks: Array<Task> = [];
+  const request: Request = {
     status: OPEN,
     fatalError: null,
     destination: null,
@@ -182,9 +182,9 @@ export function createRequest(
     pendingChunks: 0,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    completedModuleChunks: ([]: Array<Chunk>),
-    completedJSONChunks: ([]: Array<Chunk>),
-    completedErrorChunks: ([]: Array<Chunk>),
+    completedModuleChunks: [],
+    completedJSONChunks: [],
+    completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
     writtenProviders: new Map(),
@@ -485,7 +485,7 @@ function createTask(
   abortSet: Set<Task>,
 ): Task {
   const id = request.nextChunkId++;
-  const task = {
+  const task: Task = {
     id,
     status: PENDING,
     model,

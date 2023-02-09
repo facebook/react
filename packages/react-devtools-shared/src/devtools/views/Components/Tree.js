@@ -87,7 +87,7 @@ export default function Tree(props: Props): React.Node {
   // meaning the scroll action would be skipped (since ref updates don't re-run effects).
   // Using a callback ref accounts for this case...
   const listCallbackRef = useCallback(
-    list => {
+    (list: $FlowFixMe) => {
       if (list != null && selectedElementIndex !== null) {
         list.scrollToItem(selectedElementIndex, 'smart');
       }
@@ -226,7 +226,7 @@ export default function Tree(props: Props): React.Node {
   }, [dispatch, numElements, selectedElementIndex]);
 
   const handleKeyPress = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       switch (event.key) {
         case 'Enter':
         case ' ':
@@ -272,7 +272,7 @@ export default function Tree(props: Props): React.Node {
 
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
-    id => {
+    (id: $FlowFixMe) => {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
       if (!isNavigatingWithKeyboard) {

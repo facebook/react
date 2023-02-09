@@ -415,7 +415,7 @@ export function getInternalReactConstants(version: string): {
     TracingMarkerComponent,
   } = ReactTypeOfWork;
 
-  function resolveFiberType(type: any) {
+  function resolveFiberType(type: any): $FlowFixMe {
     const typeSymbol = getTypeSymbol(type);
     switch (typeSymbol) {
       case MEMO_NUMBER:
@@ -1627,7 +1627,7 @@ export function attach(
     }
   }
 
-  let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+  let flushPendingErrorsAndWarningsAfterDelayTimeoutID: null | TimeoutID = null;
 
   function clearPendingErrorsAndWarningsAfterDelay() {
     if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
@@ -1790,7 +1790,7 @@ export function attach(
       pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Array(
+    const operations = new Array<number>(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
         // How big is the string table?
@@ -4144,7 +4144,7 @@ export function attach(
 
   // Map of id and its force error status: true (error), false (toggled off),
   // null (do nothing)
-  const forceErrorForFiberIDs = new Map();
+  const forceErrorForFiberIDs = new Map<number | null, $FlowFixMe>();
 
   function shouldErrorFiberAccordingToMap(fiber: any) {
     if (typeof setErrorHandler !== 'function') {
@@ -4209,7 +4209,7 @@ export function attach(
     return false;
   }
 
-  const forceFallbackForSuspenseIDs = new Set();
+  const forceFallbackForSuspenseIDs = new Set<number>();
 
   function shouldSuspendFiberAccordingToSet(fiber: any) {
     const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));

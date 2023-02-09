@@ -45,7 +45,7 @@ export default function SnapshotSelector(_: Props): React.Node {
 
   const filteredCommitIndices = useMemo(
     () =>
-      commitData.reduce((reduced, commitDatum, index) => {
+      commitData.reduce((reduced: $FlowFixMe, commitDatum, index) => {
         if (
           !isCommitFilterEnabled ||
           commitDatum.duration >= minCommitDuration

@@ -129,13 +129,13 @@ Chunk.prototype.then = function <T>(
     case BLOCKED:
       if (resolve) {
         if (chunk.value === null) {
-          chunk.value = [];
+          chunk.value = ([]: Array<(T) => mixed>);
         }
         chunk.value.push(resolve);
       }
       if (reject) {
         if (chunk.reason === null) {
-          chunk.reason = [];
+          chunk.reason = ([]: Array<(mixed) => mixed>);
         }
         chunk.reason.push(reject);
       }
@@ -435,7 +435,7 @@ function createModelResolver<T>(
   chunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
-) {
+): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
     blocked = initializingChunkBlockedModel;
@@ -446,7 +446,6 @@ function createModelResolver<T>(
       value: null,
     };
   }
-  // $FlowFixMe[missing-local-annot]
   return value => {
     parentObject[key] = value;
     blocked.deps--;
@@ -465,7 +464,7 @@ function createModelResolver<T>(
   };
 }
 
-function createModelReject<T>(chunk: SomeChunk<T>) {
+function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
@@ -583,7 +582,7 @@ export function resolveModule(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveClientReference(
+  const moduleReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
     moduleMetaData,
   );

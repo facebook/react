@@ -9,8 +9,8 @@
 
 import * as React from 'react';
 
-const arrayOne = [];
-const arrayTwo = [];
+const arrayOne: $FlowFixMe = [];
+const arrayTwo: $FlowFixMe = [];
 arrayTwo.push(arrayOne);
 arrayOne.push(arrayTwo);
 

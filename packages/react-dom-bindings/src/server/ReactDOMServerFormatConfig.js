@@ -1878,7 +1878,7 @@ function pushStartPreformattedElement(
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
 const VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-const validatedTagCache = new Map();
+const validatedTagCache = new Map<string, PrecomputedChunk>();
 function startChunkForTag(tag: string): PrecomputedChunk {
   let tagStartChunk = validatedTagCache.get(tag);
   if (tagStartChunk === undefined) {

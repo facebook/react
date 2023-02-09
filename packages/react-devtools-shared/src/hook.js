@@ -8,13 +8,14 @@
  * @flow
  */
 
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {BrowserTheme} from './devtools/views/DevTools';
 import type {
-  RendererID,
-  ReactRenderer,
-  Handler,
   DevToolsHook,
-} from 'react-devtools-shared/src/backend/types';
+  Handler,
+  ReactRenderer,
+  RendererID,
+  RendererInterface,
+} from './backend/types';
 
 import {
   patchConsoleUsingWindowValues,
@@ -519,9 +520,9 @@ export function installHook(target: any): DevToolsHook | null {
 
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots: {[RendererID]: Set<mixed>} = {};
-  const rendererInterfaces = new Map();
+  const rendererInterfaces = new Map<RendererID, RendererInterface>();
   const listeners: {[string]: Array<Handler>} = {};
-  const renderers = new Map();
+  const renderers = new Map<RendererID, ReactRenderer>();
 
   const hook: DevToolsHook = {
     rendererInterfaces,

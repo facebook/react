@@ -12,7 +12,7 @@ import createMicrosoftUnsafeLocalFunction from './createMicrosoftUnsafeLocalFunc
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
 // SVG temp container for IE lacking innerHTML
-let reusableSVGContainer;
+let reusableSVGContainer: HTMLElement;
 
 /**
  * Set the innerHTML property of a node
@@ -57,6 +57,8 @@ const setInnerHTML: (
       while (node.firstChild) {
         node.removeChild(node.firstChild);
       }
+      // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
       }

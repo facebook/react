@@ -65,9 +65,9 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
   let record = map.get(errorMessage);
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 

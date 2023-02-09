@@ -44,14 +44,18 @@ export function resolveClientReference<T>(
   return resolveClientReferenceImpl(moduleData);
 }
 
-// $FlowFixMe[missing-local-annot]
-function parseModelRecursively(response: Response, parentObj, key, value) {
+function parseModelRecursively(
+  response: Response,
+  parentObj: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
+  key: string,
+  value: JSONValue,
+): $FlowFixMe {
   if (typeof value === 'string') {
     return parseModelString(response, parentObj, key, value);
   }
   if (typeof value === 'object' && value !== null) {
     if (isArray(value)) {
-      const parsedValue = [];
+      const parsedValue: Array<$FlowFixMe> = [];
       for (let i = 0; i < value.length; i++) {
         (parsedValue: any)[i] = parseModelRecursively(
           response,

@@ -31,7 +31,14 @@ function startReadingFromStream(
   stream: ReadableStream,
 ): void {
   const reader = stream.getReader();
-  function progress({done, value}: {done: boolean, value: ?any, ...}) {
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: ?any,
+    ...
+  }): void | Promise<void> {
     if (done) {
       close(response);
       return;

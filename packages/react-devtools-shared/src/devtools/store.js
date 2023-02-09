@@ -642,7 +642,7 @@ export default class Store extends EventEmitter<{
   }
 
   getOwnersListForElement(ownerID: number): Array<Element> {
-    const list = [];
+    const list: Array<Element> = [];
     const element = this._idToElement.get(ownerID);
     if (element != null) {
       list.push({
@@ -900,7 +900,7 @@ export default class Store extends EventEmitter<{
     let i = 2;
 
     // Reassemble the string table.
-    const stringTable = [
+    const stringTable: Array<string | null> = [
       null, // ID = 0 corresponds to the null string.
     ];
     const stringTableSize = operations[i++];

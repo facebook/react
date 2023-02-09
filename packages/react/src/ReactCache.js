@@ -60,7 +60,9 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       // $FlowFixMe: We don't want to use rest arguments since we transpile the code.
       return fn.apply(null, arguments);
     }
-    const fnMap = dispatcher.getCacheForType(createCacheRoot);
+    const fnMap: WeakMap<any, CacheNode<T>> = dispatcher.getCacheForType(
+      createCacheRoot,
+    );
     const fnNode = fnMap.get(fn);
     let cacheNode: CacheNode<T>;
     if (fnNode === undefined) {

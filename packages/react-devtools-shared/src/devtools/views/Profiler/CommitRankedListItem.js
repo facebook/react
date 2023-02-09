@@ -40,7 +40,7 @@ function CommitRankedListItem({data, index, style}: Props) {
   const {lineHeight} = useContext(SettingsContext);
 
   const handleClick = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       event.stopPropagation();
       const {id, name} = node;
       selectFiber(id, name);

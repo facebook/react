@@ -18,14 +18,16 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {
   BatchUID,
+  InternalModuleSourceToRanges,
   LaneToLabelMap,
   ReactComponentMeasure,
+  ReactLane,
   ReactMeasure,
   ReactMeasureType,
-  TimelineData,
-  SuspenseEvent,
-  SchedulingEvent,
   ReactScheduleStateUpdateEvent,
+  SchedulingEvent,
+  SuspenseEvent,
+  TimelineData,
 } from 'react-devtools-timeline/src/types';
 
 import isArray from 'shared/isArray';
@@ -837,7 +839,8 @@ export function createProfilingHooks({
       isProfiling = value;
 
       if (isProfiling) {
-        const internalModuleSourceToRanges = new Map();
+        const internalModuleSourceToRanges: InternalModuleSourceToRanges =
+          new Map();
 
         if (supportsUserTimingV3) {
           const ranges = getInternalModuleRanges();
@@ -856,7 +859,7 @@ export function createProfilingHooks({
           }
         }
 
-        const laneToReactMeasureMap = new Map();
+        const laneToReactMeasureMap = new Map<ReactLane, ReactMeasure[]>();
         let lane = 1;
         for (let index = 0; index < REACT_TOTAL_NUM_LANES; index++) {
           laneToReactMeasureMap.set(lane, []);

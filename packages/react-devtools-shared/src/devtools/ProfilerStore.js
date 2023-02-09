@@ -308,7 +308,7 @@ export default class ProfilerStore extends EventEmitter<{
       // Record snapshot of tree at the time profiling is started.
       // This info is required to handle cases of e.g. nodes being removed during profiling.
       this._store.roots.forEach(rootID => {
-        const profilingSnapshots = new Map();
+        const profilingSnapshots = new Map<number, SnapshotNode>();
         this._initialSnapshotsByRootID.set(rootID, profilingSnapshots);
         this._takeProfilingSnapshotRecursive(rootID, profilingSnapshots);
       });

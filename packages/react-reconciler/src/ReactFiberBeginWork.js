@@ -1492,7 +1492,7 @@ function updateHostRoot(
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
       // forced a client render.
-      const recoverableError = createCapturedValueAtFiber(
+      const recoverableError = createCapturedValueAtFiber<mixed>(
         new Error(
           'There was an error while hydrating. Because the error happened outside ' +
             'of a Suspense boundary, the entire root will switch to ' +
@@ -1508,7 +1508,7 @@ function updateHostRoot(
         recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
-      const recoverableError = createCapturedValueAtFiber(
+      const recoverableError = createCapturedValueAtFiber<mixed>(
         new Error(
           'This root received an early update, before anything was able ' +
             'hydrate. Switched the entire root to client rendering.',
@@ -2820,7 +2820,7 @@ function updateDehydratedSuspenseComponent(
         );
       }
       (error: any).digest = digest;
-      const capturedValue = createCapturedValue(error, digest, stack);
+      const capturedValue = createCapturedValue<mixed>(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -2955,7 +2955,7 @@ function updateDehydratedSuspenseComponent(
       pushPrimaryTreeSuspenseHandler(workInProgress);
 
       workInProgress.flags &= ~ForceClientRender;
-      const capturedValue = createCapturedValue(
+      const capturedValue = createCapturedValue<mixed>(
         new Error(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',

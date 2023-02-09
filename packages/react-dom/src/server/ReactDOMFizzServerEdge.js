@@ -49,7 +49,7 @@ function renderToReadableStream(
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
-    const allReady = new Promise((res, rej) => {
+    const allReady = new Promise<void>((res, rej) => {
       onAllReady = res;
       onFatalError = rej;
     });

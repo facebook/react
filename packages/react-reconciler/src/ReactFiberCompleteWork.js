@@ -204,7 +204,12 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
   return true;
 }
 
-let appendAllChildren;
+let appendAllChildren: (
+  parent: Instance,
+  workInProgress: Fiber,
+  needsVisibilityToggle: boolean,
+  isHidden: boolean,
+) => void;
 let updateHostContainer;
 let updateHostComponent;
 let updateHostText;

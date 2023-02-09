@@ -109,7 +109,7 @@ export function createEventHandle(
       }
     }
 
-    const eventHandle = (
+    const eventHandle: ReactDOMEventHandle = (
       target: EventTarget | ReactScopeInstance,
       callback: (SyntheticEvent<EventTarget>) => void,
     ) => {
