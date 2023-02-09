@@ -183,7 +183,7 @@ describe('ReactFetch', () => {
       return text + ' ' + text2;
     }
     expect(await render(Component)).toMatchInlineSnapshot(
-      `"GET world [[\\"a\\",\\"A\\"]] GET world [[\\"b\\",\\"B\\"]]"`,
+      `"GET world [["a","A"]] GET world [["b","B"]]"`,
     );
     expect(fetchCount).toBe(2);
   });

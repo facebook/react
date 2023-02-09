@@ -91,7 +91,7 @@ describe('ReactDOMFizzServerNode', () => {
     pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+      `"<div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

@@ -2497,10 +2497,10 @@ describe('InspectedElement', () => {
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        {
-          "errors": [
-            [
-              "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.
+        Object {
+          "errors": Array [
+            Array [
+              "Warning: Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.
             at Example",
               1,
             ],
