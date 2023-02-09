@@ -9,7 +9,7 @@
 'use strict';
 
 // Based on https://repl.it/site/blog/infinite-loops.
-
+const {declare} = require('@babel/helper-plugin-utils');
 // This should be reasonable for all loops in the source.
 // Note that if the numbers are too large, the tests will take too long to fail
 // for this to be useful (each individual test case might hit an infinite loop).
@@ -18,7 +18,7 @@ const MAX_SOURCE_ITERATIONS = 1500;
 // For example, in the fuzz tester.
 const MAX_TEST_ITERATIONS = 5000;
 
-module.exports = ({types: t, template}) => {
+module.exports = declare(({types: t, template}) => {
   // We set a global so that we can later fail the test
   // even if the error ends up being caught by the code.
   const buildGuard = template(`
@@ -71,4 +71,4 @@ module.exports = ({types: t, template}) => {
       },
     },
   };
-};
+});

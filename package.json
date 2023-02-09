@@ -9,6 +9,7 @@
     "@babel/code-frame": "^7.10.4",
     "@babel/core": "^7.11.1",
     "@babel/helper-module-imports": "^7.10.4",
+    "@babel/helper-plugin-utils": "^7.20.2",
     "@babel/parser": "^7.11.3",
     "@babel/plugin-external-helpers": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",

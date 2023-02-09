@@ -7,8 +7,8 @@
 'use strict';
 
 const helperModuleImports = require('@babel/helper-module-imports');
-
-module.exports = function replaceConsoleCalls(babel) {
+const {declare} = require('@babel/helper-plugin-utils');
+function replaceConsoleCalls(babel) {
   let consoleErrors = new WeakMap();
   function getConsoleError(path, file) {
     if (!consoleErrors.has(file)) {
@@ -79,4 +79,5 @@ module.exports = function replaceConsoleCalls(babel) {
       },
     },
   };
-};
+}
+module.exports = declare(replaceConsoleCalls);
