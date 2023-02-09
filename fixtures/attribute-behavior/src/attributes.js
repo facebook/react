@@ -1981,6 +1981,16 @@ const attributes = [
     overrideStringValue:
       'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
   },
+  {
+    name: 'transform-origin',
+    tagName: 'svg',
+    read: getSVGAttribute('transform-origin'),
+  },
+  {
+    name: 'transformOrigin',
+    tagName: 'svg',
+    read: getSVGAttribute('transform-origin'),
+  },
   {name: 'type', tagName: 'button', overrideStringValue: 'reset'},
   {
     name: 'type',
