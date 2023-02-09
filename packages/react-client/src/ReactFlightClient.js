@@ -12,7 +12,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
   ClientReference,
-  ModuleMetaData,
+  ClientReferenceMetadata,
   UninitializedModel,
   Response,
   BundlerConfig,
@@ -639,16 +639,19 @@ export function resolveModule(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveClientReference<$FlowFixMe>(
+  const clientReferenceMetadata: ClientReferenceMetadata = parseModel(
+    response,
+    model,
+  );
+  const clientReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
-    moduleMetaData,
+    clientReferenceMetadata,
   );
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
-  const promise = preloadModule(moduleReference);
+  const promise = preloadModule(clientReference);
   if (promise) {
     let blockedChunk: BlockedChunk<any>;
     if (!chunk) {
@@ -663,16 +666,16 @@ export function resolveModule(
       blockedChunk.status = BLOCKED;
     }
     promise.then(
-      () => resolveModuleChunk(blockedChunk, moduleReference),
+      () => resolveModuleChunk(blockedChunk, clientReference),
       error => triggerErrorOnChunk(blockedChunk, error),
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+      chunks.set(id, createResolvedModuleChunk(response, clientReference));
     } else {
       // This can't actually happen because we don't have any forward
       // references to modules.
-      resolveModuleChunk(chunk, moduleReference);
+      resolveModuleChunk(chunk, clientReference);
     }
   }
 }

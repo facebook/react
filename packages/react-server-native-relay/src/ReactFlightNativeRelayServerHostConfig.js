@@ -16,12 +16,12 @@ import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 export type ClientReference<T> = JSResourceReference<T>;
 export type ServerReference<T> = T;
-export type ServerReferenceMetaData = {};
+export type ServerReferenceMetadata = {};
 
 import type {
   Destination,
   BundlerConfig,
-  ModuleMetaData,
+  ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
 import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
@@ -29,13 +29,13 @@ import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 import {
   emitRow,
   close,
-  resolveModuleMetaData as resolveModuleMetaDataImpl,
+  resolveClientReferenceMetadata as resolveClientReferenceMetadataImpl,
 } from 'ReactFlightNativeRelayServerIntegration';
 
 export type {
   Destination,
   BundlerConfig,
-  ModuleMetaData,
+  ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
 export function isClientReference(reference: Object): boolean {
@@ -56,17 +56,17 @@ export function getClientReferenceKey(
   return reference;
 }
 
-export function resolveModuleMetaData<T>(
+export function resolveClientReferenceMetadata<T>(
   config: BundlerConfig,
   resource: ClientReference<T>,
-): ModuleMetaData {
-  return resolveModuleMetaDataImpl(config, resource);
+): ClientReferenceMetadata {
+  return resolveClientReferenceMetadataImpl(config, resource);
 }
 
-export function resolveServerReferenceMetaData<T>(
+export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   resource: ServerReference<T>,
-): ServerReferenceMetaData {
+): ServerReferenceMetadata {
   throw new Error('Not implemented.');
 }
 
@@ -170,13 +170,13 @@ export function processReferenceChunk(
   return ['O', id, reference];
 }
 
-export function processModuleChunk(
+export function processImportChunk(
   request: Request,
   id: number,
-  moduleMetaData: ModuleMetaData,
+  clientReferenceMetadata: ClientReferenceMetadata,
 ): Chunk {
-  // The moduleMetaData is already a JSON serializable value.
-  return ['I', id, moduleMetaData];
+  // The clientReferenceMetadata is already a JSON serializable value.
+  return ['I', id, clientReferenceMetadata];
 }
 
 export function scheduleWork(callback: () => void) {

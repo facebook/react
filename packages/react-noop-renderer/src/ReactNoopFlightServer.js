@@ -57,7 +57,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   getClientReferenceKey(reference: Object): Object {
     return reference;
   },
-  resolveModuleMetaData(
+  resolveClientReferenceMetadata(
     config: void,
     reference: {$$typeof: symbol, value: any},
   ) {

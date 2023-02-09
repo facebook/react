@@ -482,10 +482,10 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath]['*'];
+    const ssrMetadata = webpackMap[ClientComponentOnTheServer.filepath]['*'];
     const translationMap = {
       [clientId]: {
-        '*': ssrMetaData,
+        '*': ssrMetadata,
       },
     };
 

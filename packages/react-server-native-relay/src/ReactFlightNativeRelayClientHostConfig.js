@@ -11,7 +11,7 @@ import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
 import type {JSResourceReference} from 'JSResourceReference';
 
-import type {ModuleMetaData} from 'ReactFlightNativeRelayClientIntegration';
+import type {ClientReferenceMetadata} from 'ReactFlightNativeRelayClientIntegration';
 
 export type ClientReference<T> = JSResourceReference<T>;
 
@@ -29,7 +29,7 @@ import {resolveClientReference as resolveClientReferenceImpl} from 'ReactFlightN
 
 import isArray from 'shared/isArray';
 
-export type {ModuleMetaData} from 'ReactFlightNativeRelayClientIntegration';
+export type {ClientReferenceMetadata} from 'ReactFlightNativeRelayClientIntegration';
 
 export type BundlerConfig = null;
 
@@ -39,9 +39,9 @@ export type Response = ResponseBase;
 
 export function resolveClientReference<T>(
   bundlerConfig: BundlerConfig,
-  moduleData: ModuleMetaData,
+  metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  return resolveClientReferenceImpl(moduleData);
+  return resolveClientReferenceImpl(metadata);
 }
 
 function parseModelRecursively(

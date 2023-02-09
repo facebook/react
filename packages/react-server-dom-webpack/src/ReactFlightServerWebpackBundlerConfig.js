@@ -11,7 +11,7 @@ import type {ReactModel} from 'react-server/src/ReactFlightServer';
 
 type WebpackMap = {
   [filepath: string]: {
-    [name: string]: ModuleMetaData,
+    [name: string]: ClientReferenceMetadata,
   },
 };
 
@@ -24,7 +24,7 @@ export type ServerReference<T: Function> = T & {
   $$bound: Array<ReactModel>,
 };
 
-export type ServerReferenceMetaData = {
+export type ServerReferenceMetadata = {
   id: string,
   name: string,
   bound: Promise<Array<ReactModel>>,
@@ -38,7 +38,7 @@ export type ClientReference<T> = {
   async: boolean,
 };
 
-export type ModuleMetaData = {
+export type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
   name: string,
@@ -69,10 +69,10 @@ export function isServerReference(reference: Object): boolean {
   return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
 
-export function resolveModuleMetaData<T>(
+export function resolveClientReferenceMetadata<T>(
   config: BundlerConfig,
   clientReference: ClientReference<T>,
-): ModuleMetaData {
+): ClientReferenceMetadata {
   const resolvedModuleData =
     config[clientReference.filepath][clientReference.name];
   if (clientReference.async) {
@@ -87,10 +87,10 @@ export function resolveModuleMetaData<T>(
   }
 }
 
-export function resolveServerReferenceMetaData<T>(
+export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): ServerReferenceMetaData {
+): ServerReferenceMetadata {
   return {
     id: serverReference.$$filepath,
     name: serverReference.$$name,

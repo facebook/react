@@ -85,7 +85,7 @@ jest.mock('react-server/flight', () => {
       isClientReference: config.isClientReference,
       isServerReference: config.isServerReference,
       getClientReferenceKey: config.getClientReferenceKey,
-      resolveModuleMetaData: config.resolveModuleMetaData,
+      resolveClientReferenceMetadata: config.resolveClientReferenceMetadata,
     }));
     jest.mock(shimFlightServerConfigPath, () =>
       jest.requireActual(
