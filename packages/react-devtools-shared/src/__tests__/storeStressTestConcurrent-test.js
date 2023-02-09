@@ -262,58 +262,58 @@ describe('StoreStressConcurrent', () => {
       Array [
         "[root]
         ▾ <Root>
-            <A key=\\"a\\">",
+            <A key="a">",
         "[root]
         ▾ <Root>
-            <B key=\\"b\\">",
+            <B key="b">",
         "[root]
         ▾ <Root>
-            <C key=\\"c\\">",
+            <C key="c">",
         "[root]
         ▾ <Root>
-            <D key=\\"d\\">",
+            <D key="d">",
         "[root]
         ▾ <Root>
-            <E key=\\"e\\">",
+            <E key="e">",
         "[root]
         ▾ <Root>
-            <A key=\\"a\\">",
+            <A key="a">",
         "[root]
         ▾ <Root>
-            <B key=\\"b\\">",
+            <B key="b">",
         "[root]
         ▾ <Root>
-            <C key=\\"c\\">",
+            <C key="c">",
         "[root]
         ▾ <Root>
-            <D key=\\"d\\">",
+            <D key="d">",
         "[root]
         ▾ <Root>
-            <E key=\\"e\\">",
+            <E key="e">",
         "[root]
         ▾ <Root>
-            <A key=\\"a\\">
-            <B key=\\"b\\">",
+            <A key="a">
+            <B key="b">",
         "[root]
         ▾ <Root>
-            <B key=\\"b\\">
-            <A key=\\"a\\">",
+            <B key="b">
+            <A key="a">",
         "[root]
         ▾ <Root>
-            <B key=\\"b\\">
-            <C key=\\"c\\">",
+            <B key="b">
+            <C key="c">",
         "[root]
         ▾ <Root>
-            <C key=\\"c\\">
-            <B key=\\"b\\">",
+            <C key="c">
+            <B key="b">",
         "[root]
         ▾ <Root>
-            <A key=\\"a\\">
-            <C key=\\"c\\">",
+            <A key="a">
+            <C key="c">",
         "[root]
         ▾ <Root>
-            <C key=\\"c\\">
-            <A key=\\"a\\">",
+            <C key="c">
+            <A key="a">",
       ]
     `);
 
@@ -435,63 +435,63 @@ describe('StoreStressConcurrent', () => {
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
-              <B key=\\"b\\">
-              <C key=\\"c\\">
+              <A key="a">
+              <B key="b">
+              <C key="c">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <C key=\\"c\\">
-              <B key=\\"b\\">
-              <A key=\\"a\\">
+              <C key="c">
+              <B key="b">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <C key=\\"c\\">
-              <A key=\\"a\\">
+              <C key="c">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <C key=\\"c\\">
-              <A key=\\"a\\">
+              <C key="c">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <C key=\\"c\\">
-              <A key=\\"a\\">
+              <C key="c">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
-              <B key=\\"b\\">
+              <A key="a">
+              <B key="b">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
+              <A key="a">
             <Y>",
         "[root]
         ▾ <Root>
@@ -502,13 +502,13 @@ describe('StoreStressConcurrent', () => {
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <B key=\\"b\\">
+              <B key="b">
             <Y>",
         "[root]
         ▾ <Root>
             <X>
           ▾ <Suspense>
-              <A key=\\"a\\">
+              <A key="a">
             <Y>",
       ]
     `);
@@ -956,7 +956,7 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -964,7 +964,7 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -972,9 +972,9 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
-                <B key=\\"b\\">
-                <C key=\\"c\\">
+                <A key="a">
+                <B key="b">
+                <C key="c">
                 <Z>
             <Y>",
         "[root]
@@ -982,9 +982,9 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <C key=\\"c\\">
-                <B key=\\"b\\">
-                <A key=\\"a\\">
+                <C key="c">
+                <B key="b">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -992,8 +992,8 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <C key=\\"c\\">
-                <A key=\\"a\\">
+                <C key="c">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -1001,8 +1001,8 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <C key=\\"c\\">
-                <A key=\\"a\\">
+                <C key="c">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -1010,8 +1010,8 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <C key=\\"c\\">
-                <A key=\\"a\\">
+                <C key="c">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -1019,8 +1019,8 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
-                <B key=\\"b\\">
+                <A key="a">
+                <B key="b">
                 <Z>
             <Y>",
         "[root]
@@ -1028,7 +1028,7 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
+                <A key="a">
                 <Z>
             <Y>",
         "[root]
@@ -1043,7 +1043,7 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <B key=\\"b\\">
+                <B key="b">
                 <Z>
             <Y>",
         "[root]
@@ -1051,7 +1051,7 @@ describe('StoreStressConcurrent', () => {
             <X>
           ▾ <Suspense>
             ▾ <MaybeSuspend>
-                <A key=\\"a\\">
+                <A key="a">
                 <Z>
             <Y>",
       ]
