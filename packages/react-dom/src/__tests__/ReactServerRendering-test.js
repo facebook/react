@@ -1154,8 +1154,10 @@ describe('ReactDOMServer', () => {
       expect(output).toBe(`<my-custom-element></my-custom-element>`);
     });
     it('Style property with empty values should be omitted.', () => {
-      const output = ReactDOMServer.renderToString(<div style={{transform: ''}} />)
-      expect(output).toEqual('<div></div>')
+      const output = ReactDOMServer.renderToString(
+        <div style={{transform: ''}} />,
+      );
+      expect(output).toEqual('<div></div>');
     });
   });
 });

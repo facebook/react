@@ -702,10 +702,7 @@ describe('ReactDOMServerHydration', () => {
     domElement.innerHTML = markup;
 
     expect(() => {
-      ReactDOM.hydrate(
-        <App />,
-        domElement,
-      );
+      ReactDOM.hydrate(<App />, domElement);
       expect(domElement.innerHTML).toEqual(markup);
     }).toErrorDev([]);
   });
