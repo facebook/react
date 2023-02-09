@@ -11,10 +11,7 @@ aliases:
     restore_cache:
       name: Restore yarn cache for fixtures/dom
       keys:
-        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
-        - v1-yarn_cache-{{ arch }}-
-        - v1-yarn_cache-
+        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
 
   - &yarn_install_fixtures_dom
     run:
@@ -32,7 +29,7 @@ aliases:
   - &save_yarn_cache_fixtures_dom
     save_cache:
       name: Save yarn cache for fixtures/dom
-      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
       paths:
         - ~/.cache/yarn
 
@@ -48,9 +45,7 @@ commands:
       - restore_cache:
           name: Restore yarn cache
           keys:
-            - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
-            - v1-yarn_cache-{{ arch }}-
-            - v1-yarn_cache-
+            - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
           command: |
@@ -60,7 +55,7 @@ commands:
             fi
       - save_cache:
           name: Save yarn cache
-          key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+          key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
