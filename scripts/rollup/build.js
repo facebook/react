@@ -225,6 +225,7 @@ function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
     case NODE_ESM:
+      return true;
     case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
@@ -377,12 +378,18 @@ function getPlugins(
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
+    // closure doesn't yet support leaving ESM imports intact
     isProduction &&
+      bundleType !== NODE_ESM &&
       closure({
         compilation_level: 'SIMPLE',
-        language_in: 'ECMASCRIPT_2015',
+        language_in: 'ECMASCRIPT_2018',
         language_out:
-          bundleType === BROWSER_SCRIPT ? 'ECMASCRIPT5' : 'ECMASCRIPT5_STRICT',
+          bundleType === NODE_ES2015
+            ? 'ECMASCRIPT_2018'
+            : bundleType === BROWSER_SCRIPT
+            ? 'ECMASCRIPT5'
+            : 'ECMASCRIPT5_STRICT',
         env: 'CUSTOM',
         warning_level: 'QUIET',
         apply_input_source_maps: false,
