@@ -698,7 +698,7 @@ describe('ReactDOMServerHydration', () => {
     const domElement = document.createElement('div');
     const App = () => <div style={{transform: ''}} />;
 
-    const markup = ReactDOMServer.renderToStaticMarkup(<App />);
+    const markup = ReactDOMServer.renderToString(<App />);
     domElement.innerHTML = markup;
 
     expect(() => {
