@@ -582,10 +582,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     await act(async () => {
-      // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-      // The abort call itself should set this property but since we are testing in node we
-      // set it here manually
-      controller.signal.reason = 'for reasons';
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__

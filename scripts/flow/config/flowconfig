@@ -15,6 +15,7 @@
 .*/node_modules/create-react-class/.*
 .*/node_modules/react-native-web/.*
 .*/node_modules/fbjs/lib/keyMirrorRecursive.js.flow
+.*/node_modules/resolve/test/.*
 .*/__mocks__/.*
 .*/__tests__/.*
 

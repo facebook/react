@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -49,7 +51,11 @@ describe('ReactDOMServerHydration', () => {
     if (format instanceof Error) {
       return 'Caught [' + format.message + ']';
     }
-    if (format.indexOf('Error: Uncaught [') === 0) {
+    if (
+      format !== null &&
+      typeof format === 'object' &&
+      String(format).indexOf('Error: Uncaught [') === 0
+    ) {
       // Ignore errors captured by jsdom and their stacks.
       // We only want console errors in this suite.
       return null;

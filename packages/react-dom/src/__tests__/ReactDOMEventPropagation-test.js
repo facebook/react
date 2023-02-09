@@ -16,8 +16,8 @@ describe('ReactDOMEventListener', () => {
   beforeEach(() => {
     window.TextEvent = function () {};
     jest.resetModules();
-    React = require('react');
     jest.isolateModules(() => {
+      React = require('react');
       OuterReactDOM = require('react-dom');
     });
     jest.isolateModules(() => {

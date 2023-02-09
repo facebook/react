@@ -35,4 +35,7 @@ if (typeof window !== 'undefined') {
   global.cancelIdleCallback = function (callbackID) {
     clearTimeout(callbackID);
   };
+} else {
+  global.AbortController =
+    require('abortcontroller-polyfill/dist/cjs-ponyfill').AbortController;
 }

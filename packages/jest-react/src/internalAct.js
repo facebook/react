@@ -29,8 +29,8 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     );
   }
 
-  // $FlowFixMe: _isMockFunction doesn't exist on function
-  if (setTimeout._isMockFunction !== true) {
+  // $FlowFixMe: Flow doesn't know about global Jest object
+  if (!jest.isMockFunction(setTimeout)) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +
         '(i.e. jest.useFakeTimers).',

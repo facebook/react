@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -37,6 +38,15 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
+
+function resetJSDOM(markup) {
+  // Test Environment
+  const jsdom = new JSDOM(markup, {
+    runScripts: 'dangerously',
+  });
+  window = jsdom.window;
+  document = jsdom.window.document;
+}
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -71,15 +81,7 @@ describe('ReactDOMFizzServer', () => {
 
     textCache = new Map();
 
-    // Test Environment
-    const jsdom = new JSDOM(
-      '<!DOCTYPE html><html><head></head><body><div id="container">',
-      {
-        runScripts: 'dangerously',
-      },
-    );
-    window = jsdom.window;
-    document = jsdom.window.document;
+    resetJSDOM('<!DOCTYPE html><html><head></head><body><div id="container">');
     container = document.getElementById('container');
 
     buffer = '';
@@ -168,12 +170,7 @@ describe('ReactDOMFizzServer', () => {
     // We also want to execute any scripts that are embedded.
     // We assume that we have now received a proper fragment of HTML.
     const bufferedContent = buffer;
-    // Test Environment
-    const jsdom = new JSDOM(bufferedContent, {
-      runScripts: 'dangerously',
-    });
-    window = jsdom.window;
-    document = jsdom.window.document;
+    resetJSDOM(bufferedContent);
     container = document;
     buffer = '';
     await withLoadingReadyState(async () => {
@@ -1512,7 +1509,7 @@ describe('ReactDOMFizzServer', () => {
   function normalizeCodeLocInfo(str) {
     return (
       str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
         return '\n    in ' + name + ' (at **)';
       })
     );
@@ -4964,12 +4961,7 @@ describe('ReactDOMFizzServer', () => {
 
   describe('title children', () => {
     function prepareJSDOMForTitle() {
-      // Test Environment
-      const jsdom = new JSDOM('<!DOCTYPE html><html><head>\u0000', {
-        runScripts: 'dangerously',
-      });
-      window = jsdom.window;
-      document = jsdom.window.document;
+      resetJSDOM('<!DOCTYPE html><html><head>\u0000');
       container = document.getElementsByTagName('head')[0];
     }
 

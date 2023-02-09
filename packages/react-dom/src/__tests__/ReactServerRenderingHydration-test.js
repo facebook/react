@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
-
-global.TextEncoder = require('util').TextEncoder;
 
 let React;
 let ReactDOM;
