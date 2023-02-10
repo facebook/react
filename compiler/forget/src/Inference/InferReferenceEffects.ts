@@ -293,15 +293,13 @@ class Environment {
         break;
       }
       case Effect.Store: {
-        // TODO(gsn): Uncomment the invariant once
-        // https://github.com/facebook/react-forget/pull/908#discussion_r1054294337
-        // is fixed.
+        // TODO(gsn): This should be bailout once we add bailout infra.
         //
         // invariant(
         //   valueKind === ValueKind.Mutable,
         //   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
         // );
-        effect = Effect.Store;
+        effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
         break;
       }
       case Effect.Capture: {
@@ -666,11 +664,8 @@ function inferBlock(env: Environment, block: BasicBlock) {
         continue;
       }
       case "PropertyStore": {
-        const effect = isObjectType(instrValue.object.identifier)
-          ? Effect.Store
-          : Effect.Mutate;
         env.reference(instrValue.value, Effect.Capture);
-        env.reference(instrValue.object, effect);
+        env.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
         env.alias(lvalue.place, instrValue.value);
@@ -697,12 +692,9 @@ function inferBlock(env: Environment, block: BasicBlock) {
         continue;
       }
       case "ComputedStore": {
-        const effect = isObjectType(instrValue.object.identifier)
-          ? Effect.Store
-          : Effect.Mutate;
         env.reference(instrValue.value, Effect.Capture);
         env.reference(instrValue.property, Effect.Capture);
-        env.reference(instrValue.object, effect);
+        env.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
         env.alias(lvalue.place, instrValue.value);
