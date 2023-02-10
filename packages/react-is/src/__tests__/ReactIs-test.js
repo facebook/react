@@ -52,43 +52,43 @@ describe('ReactIs', () => {
 
     const FunctionComponent = () => React.createElement('div');
     const ForwardRefComponent = React.forwardRef((props, ref) =>
-      React.createElement(Component, {forwardedRef: ref, ...props}),
+      React.createElement(Component, { forwardedRef: ref, ...props }),
     );
     const LazyComponent = React.lazy(() => Component);
     const MemoComponent = React.memo(Component);
     const Context = React.createContext(false);
 
-    expect(ReactIs.isValidElementType('div')).toEqual(true);
-    expect(ReactIs.isValidElementType(Component)).toEqual(true);
-    expect(ReactIs.isValidElementType(PureComponent)).toEqual(true);
-    expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
-    expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
-    expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
-    expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
-    expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
-    expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
+    expect(ReactIs.isValidElementType('div')).toBe(true);
+    expect(ReactIs.isValidElementType(Component)).toBe(true);
+    expect(ReactIs.isValidElementType(PureComponent)).toBe(true);
+    expect(ReactIs.isValidElementType(FunctionComponent)).toBe(true);
+    expect(ReactIs.isValidElementType(ForwardRefComponent)).toBe(true);
+    expect(ReactIs.isValidElementType(LazyComponent)).toBe(true);
+    expect(ReactIs.isValidElementType(MemoComponent)).toBe(true);
+    expect(ReactIs.isValidElementType(Context.Provider)).toBe(true);
+    expect(ReactIs.isValidElementType(Context.Consumer)).toBe(true);
     if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
       }).toWarnDev(
         'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
+        'future major release. Consider using JSX or use React.createElement() ' +
+        'directly instead.',
+        { withoutStack: true },
       );
-      expect(ReactIs.isValidElementType(factory)).toEqual(true);
+      expect(ReactIs.isValidElementType(factory)).toBe(true);
     }
-    expect(ReactIs.isValidElementType(React.Fragment)).toEqual(true);
-    expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
-    expect(ReactIs.isValidElementType(React.Suspense)).toEqual(true);
+    expect(ReactIs.isValidElementType(React.Fragment)).toBe(true);
+    expect(ReactIs.isValidElementType(React.StrictMode)).toBe(true);
+    expect(ReactIs.isValidElementType(React.Suspense)).toBe(true);
 
-    expect(ReactIs.isValidElementType(true)).toEqual(false);
-    expect(ReactIs.isValidElementType(123)).toEqual(false);
-    expect(ReactIs.isValidElementType({})).toEqual(false);
-    expect(ReactIs.isValidElementType(null)).toEqual(false);
-    expect(ReactIs.isValidElementType(undefined)).toEqual(false);
-    expect(ReactIs.isValidElementType({type: 'div', props: {}})).toEqual(false);
+    expect(ReactIs.isValidElementType(true)).toBe(false);
+    expect(ReactIs.isValidElementType(123)).toBe(false);
+    expect(ReactIs.isValidElementType({})).toBe(false);
+    expect(ReactIs.isValidElementType(null)).toBe(false);
+    expect(ReactIs.isValidElementType(undefined)).toBe(false);
+    expect(ReactIs.isValidElementType({ type: 'div', props: {} })).toBe(false);
   });
 
   it('should identify context consumers', () => {
@@ -133,7 +133,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(RefForwardingComponent)).toBe(true);
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
     expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
-    expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
+    expect(ReactIs.isForwardRef({ type: ReactIs.StrictMode })).toBe(false);
     expect(ReactIs.isForwardRef(<div />)).toBe(false);
   });
 
@@ -141,7 +141,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(React.Fragment)).toBe(true);
     expect(ReactIs.typeOf(<React.Fragment />)).toBe(ReactIs.Fragment);
     expect(ReactIs.isFragment(<React.Fragment />)).toBe(true);
-    expect(ReactIs.isFragment({type: ReactIs.Fragment})).toBe(false);
+    expect(ReactIs.isFragment({ type: ReactIs.Fragment })).toBe(false);
     expect(ReactIs.isFragment('React.Fragment')).toBe(false);
     expect(ReactIs.isFragment(<div />)).toBe(false);
     expect(ReactIs.isFragment([])).toBe(false);
@@ -178,7 +178,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(React.StrictMode)).toBe(true);
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);
-    expect(ReactIs.isStrictMode({type: ReactIs.StrictMode})).toBe(false);
+    expect(ReactIs.isStrictMode({ type: ReactIs.StrictMode })).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
   });
 
@@ -186,7 +186,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(React.Suspense)).toBe(true);
     expect(ReactIs.typeOf(<React.Suspense />)).toBe(ReactIs.Suspense);
     expect(ReactIs.isSuspense(<React.Suspense />)).toBe(true);
-    expect(ReactIs.isSuspense({type: ReactIs.Suspense})).toBe(false);
+    expect(ReactIs.isSuspense({ type: ReactIs.Suspense })).toBe(false);
     expect(ReactIs.isSuspense('React.Suspense')).toBe(false);
     expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
@@ -196,7 +196,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(SuspenseList)).toBe(true);
     expect(ReactIs.typeOf(<SuspenseList />)).toBe(ReactIs.SuspenseList);
     expect(ReactIs.isSuspenseList(<SuspenseList />)).toBe(true);
-    expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
+    expect(ReactIs.isSuspenseList({ type: ReactIs.SuspenseList })).toBe(false);
     expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
     expect(ReactIs.isSuspenseList(<div />)).toBe(false);
   });
@@ -209,7 +209,7 @@ describe('ReactIs', () => {
     expect(
       ReactIs.isProfiler(<React.Profiler id="foo" onRender={jest.fn()} />),
     ).toBe(true);
-    expect(ReactIs.isProfiler({type: ReactIs.Profiler})).toBe(false);
+    expect(ReactIs.isProfiler({ type: ReactIs.Profiler })).toBe(false);
     expect(ReactIs.isProfiler(<div />)).toBe(false);
   });
 });

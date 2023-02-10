@@ -11,7 +11,7 @@
 // ReactJSXElementValidator-test, ReactComponent-test,
 // and ReactElementJSX-test.
 
-jest.mock('react/jsx-runtime', () => require('./jsx-runtime'), {virtual: true});
+jest.mock('react/jsx-runtime', () => require('./jsx-runtime'), { virtual: true });
 jest.mock('react/jsx-dev-runtime', () => require('./jsx-dev-runtime'), {
   virtual: true,
 });
@@ -36,7 +36,7 @@ let RequiredPropComponent = class extends React.Component {
   }
 };
 RequiredPropComponent.displayName = 'RequiredPropComponent';
-RequiredPropComponent.propTypes = {prop: PropTypes.string.isRequired};
+RequiredPropComponent.propTypes = { prop: PropTypes.string.isRequired };
 
 it('works', () => {
   const container = document.createElement('div');
@@ -85,7 +85,7 @@ it('returns an immutable element', () => {
 });
 
 it('does not reuse the object that is spread into props', () => {
-  const config = {foo: 1};
+  const config = { foo: 1 };
   const element = <Component {...config} />;
   expect(element.props.foo).toBe(1);
   config.foo = 2;
@@ -97,7 +97,7 @@ it('extracts key and ref from the rest of the props', () => {
   expect(element.type).toBe(Component);
   expect(element.key).toBe('12');
   expect(element.ref).toBe('34');
-  const expectation = {foo: '56'};
+  const expectation = { foo: '56' };
   Object.freeze(expectation);
   expect(element.props).toEqual(expectation);
 });
@@ -107,7 +107,7 @@ it('coerces the key to a string', () => {
   expect(element.type).toBe(Component);
   expect(element.key).toBe('12');
   expect(element.ref).toBe(null);
-  const expectation = {foo: '56'};
+  const expectation = { foo: '56' };
   Object.freeze(expectation);
   expect(element.props).toEqual(expectation);
 });
@@ -169,15 +169,15 @@ it('allows static methods to be called using the type property', () => {
 });
 
 it('identifies valid elements', () => {
-  expect(React.isValidElement(<div />)).toEqual(true);
-  expect(React.isValidElement(<Component />)).toEqual(true);
+  expect(React.isValidElement(<div />)).toBe(true);
+  expect(React.isValidElement(<Component />)).toBe(true);
 
-  expect(React.isValidElement(null)).toEqual(false);
-  expect(React.isValidElement(true)).toEqual(false);
-  expect(React.isValidElement({})).toEqual(false);
-  expect(React.isValidElement('string')).toEqual(false);
-  expect(React.isValidElement(Component)).toEqual(false);
-  expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
+  expect(React.isValidElement(null)).toBe(false);
+  expect(React.isValidElement(true)).toBe(false);
+  expect(React.isValidElement({})).toBe(false);
+  expect(React.isValidElement('string')).toBe(false);
+  expect(React.isValidElement(Component)).toBe(false);
+  expect(React.isValidElement({ type: 'div', props: {} })).toBe(false);
 });
 
 it('is indistinguishable from a plain object', () => {
@@ -187,7 +187,7 @@ it('is indistinguishable from a plain object', () => {
 });
 
 it('should use default prop value when removing a prop', () => {
-  Component.defaultProps = {fruit: 'persimmon'};
+  Component.defaultProps = { fruit: 'persimmon' };
 
   const container = document.createElement('div');
   const instance = ReactDOM.render(<Component fruit="mango" />, container);
@@ -203,7 +203,7 @@ it('should normalize props with default values', () => {
       return <span>{this.props.prop}</span>;
     }
   }
-  NormalizingComponent.defaultProps = {prop: 'testKey'};
+  NormalizingComponent.defaultProps = { prop: 'testKey' };
 
   const container = document.createElement('div');
   const instance = ReactDOM.render(<NormalizingComponent />, container);
@@ -243,9 +243,9 @@ it('warns for keys for arrays of elements with owner info', () => {
     ReactTestUtils.renderIntoDocument(<ComponentWrapper />)
   ).toErrorDev(
     'Each child in a list should have a unique "key" prop.' +
-      '\n\nCheck the render method of `InnerComponent`. ' +
-      'It was passed a child from ComponentWrapper. ',
-    {withoutStack: true}
+    '\n\nCheck the render method of `InnerComponent`. ' +
+    'It was passed a child from ComponentWrapper. ',
+    { withoutStack: true }
   );
 });
 
@@ -281,7 +281,7 @@ it('does not warn for numeric keys in entry iterable as a child', () => {
       return {
         next: function () {
           const done = ++i > 2;
-          return {value: done ? undefined : [i, <Component />], done: done};
+          return { value: done ? undefined : [i, <Component />], done: done };
         },
       };
     },
@@ -308,7 +308,7 @@ it('should give context for PropType errors in nested components.', () => {
   // In this test, we're making sure that if a proptype error is found in a
   // component, we give a small hint as to which parent instantiated that
   // component as per warnings about key usage in ReactElementValidator.
-  function MyComp({color}) {
+  function MyComp({ color }) {
     return <div>My color is {color}</div>;
   }
   MyComp.propTypes = {
@@ -321,9 +321,9 @@ it('should give context for PropType errors in nested components.', () => {
   }
   expect(() => ReactTestUtils.renderIntoDocument(<ParentComp />)).toErrorDev(
     'Warning: Failed prop type: ' +
-      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-      'expected `string`.',
-    {withoutStack: true}
+    'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+    'expected `string`.',
+    { withoutStack: true }
   );
 });
 
@@ -334,46 +334,46 @@ it('gives a helpful error when passing null, undefined, or boolean', () => {
   const Div = 'div';
   expect(() => void (<Undefined />)).toErrorDev(
     'Warning: React.jsx: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: undefined. You likely forgot to export your ' +
-      "component from the file it's defined in, or you might have mixed up " +
-      'default and named imports.' +
-      (process.env.BABEL_ENV === 'development'
-        ? '\n\nCheck your code at **.'
-        : ''),
-    {withoutStack: true}
+    '(for built-in components) or a class/function (for composite ' +
+    'components) but got: undefined. You likely forgot to export your ' +
+    "component from the file it's defined in, or you might have mixed up " +
+    'default and named imports.' +
+    (process.env.BABEL_ENV === 'development'
+      ? '\n\nCheck your code at **.'
+      : ''),
+    { withoutStack: true }
   );
   expect(() => void (<Null />)).toErrorDev(
     'Warning: React.jsx: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null.' +
-      (process.env.BABEL_ENV === 'development'
-        ? '\n\nCheck your code at **.'
-        : ''),
-    {withoutStack: true}
+    '(for built-in components) or a class/function (for composite ' +
+    'components) but got: null.' +
+    (process.env.BABEL_ENV === 'development'
+      ? '\n\nCheck your code at **.'
+      : ''),
+    { withoutStack: true }
   );
   expect(() => void (<True />)).toErrorDev(
     'Warning: React.jsx: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean.' +
-      (process.env.BABEL_ENV === 'development'
-        ? '\n\nCheck your code at **.'
-        : ''),
-    {withoutStack: true}
+    '(for built-in components) or a class/function (for composite ' +
+    'components) but got: boolean.' +
+    (process.env.BABEL_ENV === 'development'
+      ? '\n\nCheck your code at **.'
+      : ''),
+    { withoutStack: true }
   );
   // No error expected
   void (<Div />);
 });
 
 it('should check default prop values', () => {
-  RequiredPropComponent.defaultProps = {prop: null};
+  RequiredPropComponent.defaultProps = { prop: null };
 
   expect(() =>
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />)
   ).toErrorDev(
     'Warning: Failed prop type: Required prop `prop` was not specified in ' +
-      '`RequiredPropComponent`.',
-    {withoutStack: true}
+    '`RequiredPropComponent`.',
+    { withoutStack: true }
   );
 });
 
@@ -394,8 +394,8 @@ it('should warn on invalid prop types', () => {
     ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />)
   ).toErrorDev(
     'NullPropTypeComponent: prop type `prop` is invalid; it must be a ' +
-      'function, usually from the `prop-types` package,',
-    {withoutStack: true}
+    'function, usually from the `prop-types` package,',
+    { withoutStack: true }
   );
 });
 
@@ -412,7 +412,7 @@ xit('should warn on invalid context types', () => {
     ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />)
   ).toErrorDev(
     'NullContextTypeComponent: type `prop` is invalid; it must ' +
-      'be a function, usually from the `prop-types` package,'
+    'be a function, usually from the `prop-types` package,'
   );
 });
 
@@ -429,8 +429,8 @@ it('should warn if getDefaultProps is specified on the class', () => {
     ReactTestUtils.renderIntoDocument(<GetDefaultPropsComponent />)
   ).toErrorDev(
     'getDefaultProps is only used on classic React.createClass definitions.' +
-      ' Use a static property named `defaultProps` instead.',
-    {withoutStack: true}
+    ' Use a static property named `defaultProps` instead.',
+    { withoutStack: true }
   );
 });
 
@@ -449,8 +449,8 @@ it('should warn if component declares PropTypes instead of propTypes', () => {
     )
   ).toErrorDev(
     'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
-      'instead of `propTypes`. Did you misspell the property assignment?',
-    {withoutStack: true}
+    'instead of `propTypes`. Did you misspell the property assignment?',
+    { withoutStack: true }
   );
 });
 
@@ -464,7 +464,7 @@ xit('warns for fragments with illegal attributes', () => {
 
   expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
     'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
-      'can only have `key` and `children` props.'
+    'can only have `key` and `children` props.'
   );
 });
 
@@ -518,7 +518,7 @@ xit('does not call lazy initializers eagerly', () => {
   let didCall = false;
   const Lazy = React.lazy(() => {
     didCall = true;
-    return {then() {}};
+    return { then() { } };
   });
   <Lazy />;
   expect(didCall).toBe(false);
@@ -715,10 +715,10 @@ it('should warn when `key` is being accessed on composite element', () => {
   }
   expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
     'Child: `key` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://reactjs.org/link/special-props)',
-    {withoutStack: true}
+    'in `undefined` being returned. If you need to access the same ' +
+    'value within the child component, you should pass it as a different ' +
+    'prop. (https://reactjs.org/link/special-props)',
+    { withoutStack: true }
   );
 });
 
@@ -740,10 +740,10 @@ it('should warn when `ref` is being accessed', () => {
   }
   expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
     'Child: `ref` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://reactjs.org/link/special-props)',
-    {withoutStack: true}
+    'in `undefined` being returned. If you need to access the same ' +
+    'value within the child component, you should pass it as a different ' +
+    'prop. (https://reactjs.org/link/special-props)',
+    { withoutStack: true }
   );
 });
 

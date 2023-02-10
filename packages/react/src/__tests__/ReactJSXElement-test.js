@@ -70,7 +70,7 @@ describe('ReactJSXElement', () => {
   });
 
   it('does not reuse the object that is spread into props', () => {
-    const config = {foo: 1};
+    const config = { foo: 1 };
     const element = <Component {...config} />;
     expect(element.props.foo).toBe(1);
     config.foo = 2;
@@ -83,7 +83,7 @@ describe('ReactJSXElement', () => {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(ref);
-    const expectation = {foo: '56'};
+    const expectation = { foo: '56' };
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -93,7 +93,7 @@ describe('ReactJSXElement', () => {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    const expectation = {foo: '56'};
+    const expectation = { foo: '56' };
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -155,15 +155,15 @@ describe('ReactJSXElement', () => {
   });
 
   it('identifies valid elements', () => {
-    expect(React.isValidElement(<div />)).toEqual(true);
-    expect(React.isValidElement(<Component />)).toEqual(true);
+    expect(React.isValidElement(<div />)).toBe(true);
+    expect(React.isValidElement(<Component />)).toBe(true);
 
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
+    expect(React.isValidElement(null)).toBe(false);
+    expect(React.isValidElement(true)).toBe(false);
+    expect(React.isValidElement({})).toBe(false);
+    expect(React.isValidElement('string')).toBe(false);
+    expect(React.isValidElement(Component)).toBe(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toBe(false);
   });
 
   it('is indistinguishable from a plain object', () => {
@@ -173,7 +173,7 @@ describe('ReactJSXElement', () => {
   });
 
   it('should use default prop value when removing a prop', () => {
-    Component.defaultProps = {fruit: 'persimmon'};
+    Component.defaultProps = { fruit: 'persimmon' };
 
     const container = document.createElement('div');
     const instance = ReactDOM.render(<Component fruit="mango" />, container);
@@ -189,7 +189,7 @@ describe('ReactJSXElement', () => {
         return <span>{this.props.prop}</span>;
       }
     }
-    NormalizingComponent.defaultProps = {prop: 'testKey'};
+    NormalizingComponent.defaultProps = { prop: 'testKey' };
 
     const instance = ReactTestUtils.renderIntoDocument(
       <NormalizingComponent />,

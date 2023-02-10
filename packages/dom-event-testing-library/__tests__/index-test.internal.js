@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {defaultBrowserChromeSize} from '../constants';
+import { defaultBrowserChromeSize } from '../constants';
 
 import {
   createEventTarget,
@@ -98,15 +98,15 @@ describe('createEventTarget', () => {
     test('default', () => {
       const target = createEventTarget(node);
       node.addEventListener('click', e => {
-        expect(e.altKey).toEqual(false);
+        expect(e.altKey).toBe(false);
         expect(e.button).toEqual(0);
         expect(e.buttons).toEqual(0);
         expect(e.clientX).toEqual(0);
         expect(e.clientY).toEqual(0);
-        expect(e.ctrlKey).toEqual(false);
+        expect(e.ctrlKey).toBe(false);
         expect(e.detail).toEqual(1);
         expect(typeof e.getModifierState).toEqual('function');
-        expect(e.metaKey).toEqual(false);
+        expect(e.metaKey).toBe(false);
         expect(e.movementX).toEqual(0);
         expect(e.movementY).toEqual(0);
         expect(e.offsetX).toEqual(0);
@@ -116,7 +116,7 @@ describe('createEventTarget', () => {
         expect(typeof e.preventDefault).toEqual('function');
         expect(e.screenX).toEqual(0);
         expect(e.screenY).toEqual(defaultBrowserChromeSize);
-        expect(e.shiftKey).toEqual(false);
+        expect(e.shiftKey).toBe(false);
         expect(typeof e.timeStamp).toEqual('number');
       });
       target.click();
@@ -125,13 +125,13 @@ describe('createEventTarget', () => {
     test('custom payload', () => {
       const target = createEventTarget(node);
       node.addEventListener('click', e => {
-        expect(e.altKey).toEqual(true);
+        expect(e.altKey).toBe(true);
         expect(e.button).toEqual(1);
         expect(e.buttons).toEqual(4);
         expect(e.clientX).toEqual(10);
         expect(e.clientY).toEqual(20);
-        expect(e.ctrlKey).toEqual(true);
-        expect(e.metaKey).toEqual(true);
+        expect(e.ctrlKey).toBe(true);
+        expect(e.metaKey).toBe(true);
         expect(e.movementX).toEqual(1);
         expect(e.movementY).toEqual(2);
         expect(e.offsetX).toEqual(5);
@@ -140,7 +140,7 @@ describe('createEventTarget', () => {
         expect(e.pageY).toEqual(50);
         expect(e.screenX).toEqual(10);
         expect(e.screenY).toEqual(20 + defaultBrowserChromeSize);
-        expect(e.shiftKey).toEqual(true);
+        expect(e.shiftKey).toBe(true);
       });
       target.click({
         altKey: true,
@@ -183,13 +183,13 @@ describe('createEventTarget', () => {
     test('default', () => {
       const target = createEventTarget(node);
       node.addEventListener('keydown', e => {
-        expect(e.altKey).toEqual(false);
-        expect(e.ctrlKey).toEqual(false);
+        expect(e.altKey).toBe(false);
+        expect(e.ctrlKey).toBe(false);
         expect(typeof e.getModifierState).toEqual('function');
         expect(e.key).toEqual('');
-        expect(e.metaKey).toEqual(false);
+        expect(e.metaKey).toBe(false);
         expect(typeof e.preventDefault).toEqual('function');
-        expect(e.shiftKey).toEqual(false);
+        expect(e.shiftKey).toBe(false);
         expect(typeof e.timeStamp).toEqual('number');
       });
       target.keydown();
@@ -198,12 +198,12 @@ describe('createEventTarget', () => {
     test('custom payload', () => {
       const target = createEventTarget(node);
       node.addEventListener('keydown', e => {
-        expect(e.altKey).toEqual(true);
-        expect(e.ctrlKey).toEqual(true);
-        expect(e.isComposing).toEqual(true);
+        expect(e.altKey).toBe(true);
+        expect(e.ctrlKey).toBe(true);
+        expect(e.isComposing).toBe(true);
         expect(e.key).toEqual('Enter');
-        expect(e.metaKey).toEqual(true);
-        expect(e.shiftKey).toEqual(true);
+        expect(e.metaKey).toBe(true);
+        expect(e.shiftKey).toBe(true);
       });
       target.keydown({
         altKey: true,
@@ -220,13 +220,13 @@ describe('createEventTarget', () => {
     test('default', () => {
       const target = createEventTarget(node);
       node.addEventListener('keyup', e => {
-        expect(e.altKey).toEqual(false);
-        expect(e.ctrlKey).toEqual(false);
+        expect(e.altKey).toBe(false);
+        expect(e.ctrlKey).toBe(false);
         expect(typeof e.getModifierState).toEqual('function');
         expect(e.key).toEqual('');
-        expect(e.metaKey).toEqual(false);
+        expect(e.metaKey).toBe(false);
         expect(typeof e.preventDefault).toEqual('function');
-        expect(e.shiftKey).toEqual(false);
+        expect(e.shiftKey).toBe(false);
         expect(typeof e.timeStamp).toEqual('number');
       });
       target.keydown();
@@ -235,12 +235,12 @@ describe('createEventTarget', () => {
     test('custom payload', () => {
       const target = createEventTarget(node);
       node.addEventListener('keyup', e => {
-        expect(e.altKey).toEqual(true);
-        expect(e.ctrlKey).toEqual(true);
-        expect(e.isComposing).toEqual(true);
+        expect(e.altKey).toBe(true);
+        expect(e.ctrlKey).toBe(true);
+        expect(e.isComposing).toBe(true);
         expect(e.key).toEqual('Enter');
-        expect(e.metaKey).toEqual(true);
-        expect(e.shiftKey).toEqual(true);
+        expect(e.metaKey).toBe(true);
+        expect(e.shiftKey).toBe(true);
       });
       target.keyup({
         altKey: true,
@@ -267,15 +267,15 @@ describe('createEventTarget', () => {
     test('default', () => {
       const target = createEventTarget(node);
       node.addEventListener('click', e => {
-        expect(e.altKey).toEqual(false);
+        expect(e.altKey).toBe(false);
         expect(e.button).toEqual(0);
         expect(e.buttons).toEqual(0);
         expect(e.clientX).toEqual(0);
         expect(e.clientY).toEqual(0);
-        expect(e.ctrlKey).toEqual(false);
+        expect(e.ctrlKey).toBe(false);
         expect(e.detail).toEqual(0);
         expect(typeof e.getModifierState).toEqual('function');
-        expect(e.metaKey).toEqual(false);
+        expect(e.metaKey).toBe(false);
         expect(e.movementX).toEqual(0);
         expect(e.movementY).toEqual(0);
         expect(e.offsetX).toEqual(0);
@@ -285,7 +285,7 @@ describe('createEventTarget', () => {
         expect(typeof e.preventDefault).toEqual('function');
         expect(e.screenX).toEqual(0);
         expect(e.screenY).toEqual(0);
-        expect(e.shiftKey).toEqual(false);
+        expect(e.shiftKey).toBe(false);
         expect(typeof e.timeStamp).toEqual('number');
       });
       target.virtualclick();
@@ -295,19 +295,19 @@ describe('createEventTarget', () => {
       const target = createEventTarget(node);
       node.addEventListener('click', e => {
         // expect most of the custom payload to be ignored
-        expect(e.altKey).toEqual(true);
+        expect(e.altKey).toBe(true);
         expect(e.button).toEqual(1);
         expect(e.buttons).toEqual(0);
         expect(e.clientX).toEqual(0);
         expect(e.clientY).toEqual(0);
-        expect(e.ctrlKey).toEqual(true);
+        expect(e.ctrlKey).toBe(true);
         expect(e.detail).toEqual(0);
-        expect(e.metaKey).toEqual(true);
+        expect(e.metaKey).toBe(true);
         expect(e.pageX).toEqual(0);
         expect(e.pageY).toEqual(0);
         expect(e.screenX).toEqual(0);
         expect(e.screenY).toEqual(0);
-        expect(e.shiftKey).toEqual(true);
+        expect(e.shiftKey).toBe(true);
       });
       target.virtualclick({
         altKey: true,
@@ -348,7 +348,7 @@ describe('createEventTarget', () => {
         "y": 0,
       }
     `);
-    target.setBoundingClientRect({x: 10, y: 20, width: 100, height: 200});
+    target.setBoundingClientRect({ x: 10, y: 20, width: 100, height: 200 });
     expect(node.getBoundingClientRect()).toMatchInlineSnapshot(`
       Object {
         "bottom": 220,

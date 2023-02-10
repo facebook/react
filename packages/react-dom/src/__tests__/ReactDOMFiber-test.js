@@ -27,14 +27,14 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should render strings as children', () => {
-    const Box = ({value}) => <div>{value}</div>;
+    const Box = ({ value }) => <div>{value}</div>;
 
     ReactDOM.render(<Box value="foo" />, container);
     expect(container.textContent).toEqual('foo');
   });
 
   it('should render numbers as children', () => {
-    const Box = ({value}) => <div>{value}</div>;
+    const Box = ({ value }) => <div>{value}</div>;
 
     ReactDOM.render(<Box value={10} />, container);
 
@@ -45,12 +45,12 @@ describe('ReactDOMFiber', () => {
     // mounting phase
     let called = false;
     ReactDOM.render(<div>Foo</div>, container, () => (called = true));
-    expect(called).toEqual(true);
+    expect(called).toBe(true);
 
     // updating phase
     called = false;
     ReactDOM.render(<div>Foo</div>, container, () => (called = true));
-    expect(called).toEqual(true);
+    expect(called).toBe(true);
   });
 
   it('should call a callback argument when the same element is re-rendered', () => {
@@ -64,25 +64,25 @@ describe('ReactDOMFiber', () => {
     // mounting phase
     let called = false;
     ReactDOM.render(element, container, () => (called = true));
-    expect(called).toEqual(true);
+    expect(called).toBe(true);
 
     // updating phase
     called = false;
     ReactDOM.unstable_batchedUpdates(() => {
       ReactDOM.render(element, container, () => (called = true));
     });
-    expect(called).toEqual(true);
+    expect(called).toBe(true);
   });
 
   it('should render a component returning strings directly from render', () => {
-    const Text = ({value}) => value;
+    const Text = ({ value }) => value;
 
     ReactDOM.render(<Text value="foo" />, container);
     expect(container.textContent).toEqual('foo');
   });
 
   it('should render a component returning numbers directly from render', () => {
-    const Text = ({value}) => value;
+    const Text = ({ value }) => value;
 
     ReactDOM.render(<Text value={10} />, container);
 
@@ -202,9 +202,9 @@ describe('ReactDOMFiber', () => {
   });
 
   let svgEls, htmlEls, mathEls;
-  const expectSVG = {ref: el => svgEls.push(el)};
-  const expectHTML = {ref: el => htmlEls.push(el)};
-  const expectMath = {ref: el => mathEls.push(el)};
+  const expectSVG = { ref: el => svgEls.push(el) };
+  const expectHTML = { ref: el => htmlEls.push(el) };
+  const expectMath = { ref: el => mathEls.push(el) };
 
   const usePortal = function (tree) {
     return ReactDOM.createPortal(tree, document.createElement('div'));
@@ -277,7 +277,7 @@ describe('ReactDOMFiber', () => {
         ops.push(`Parent:${this.props.step} componentWillUnmount`);
       }
       render() {
-        const {step} = this.props;
+        const { step } = this.props;
         return [
           <Child key="a" name={`normal[0]:${step}`} />,
           ReactDOM.createPortal(
@@ -464,7 +464,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe(
       '<div><div>child</div><div>parent</div></div>',
     );
-    instance.setState({show: false});
+    instance.setState({ show: false });
     expect(instance.state.show).toBe(false);
     expect(container.innerHTML).toBe('<div><div>parent</div></div>');
   });
@@ -656,9 +656,9 @@ describe('ReactDOMFiber', () => {
     }
 
     class ErrorBoundary extends React.Component {
-      state = {error: null};
+      state = { error: null };
       componentDidCatch(error) {
-        this.setState({error});
+        this.setState({ error });
       }
       render() {
         if (this.state.error) {
@@ -689,9 +689,9 @@ describe('ReactDOMFiber', () => {
     }
 
     class ErrorBoundary extends React.Component {
-      state = {error: null};
+      state = { error: null };
       componentDidCatch(error) {
-        this.setState({error});
+        this.setState({ error });
       }
       render() {
         if (this.state.error) {
@@ -790,7 +790,7 @@ describe('ReactDOMFiber', () => {
     const instance = ReactDOM.render(<Parent />, container);
     expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
     expect(container.innerHTML).toBe('');
-    instance.setState({bar: 'changed'});
+    instance.setState({ bar: 'changed' });
     expect(portalContainer.innerHTML).toBe('<div>changed-changed</div>');
     expect(container.innerHTML).toBe('');
   });
@@ -1047,8 +1047,8 @@ describe('ReactDOMFiber', () => {
     }
     expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
-        '    in div (at **)\n' +
-        '    in Example (at **)',
+      '    in div (at **)\n' +
+      '    in Example (at **)',
     );
   });
 
@@ -1060,10 +1060,10 @@ describe('ReactDOMFiber', () => {
     }
     expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
-        'If you used to conditionally omit it with onClick={condition && value}, ' +
-        'pass onClick={condition ? value : undefined} instead.\n' +
-        '    in div (at **)\n' +
-        '    in Example (at **)',
+      'If you used to conditionally omit it with onClick={condition && value}, ' +
+      'pass onClick={condition ? value : undefined} instead.\n' +
+      '    in div (at **)\n' +
+      '    in Example (at **)',
     );
   });
 
@@ -1086,12 +1086,12 @@ describe('ReactDOMFiber', () => {
     }
 
     class Example extends React.Component {
-      state = {flip: false, count: 0};
+      state = { flip: false, count: 0 };
       flip() {
-        this.setState({flip: true, count: this.state.count + 1});
+        this.setState({ flip: true, count: this.state.count + 1 });
       }
       tick() {
-        this.setState({count: this.state.count + 1});
+        this.setState({ count: this.state.count + 1 });
       }
       render() {
         const useB = !this.props.forceA && this.state.flip;
@@ -1197,11 +1197,11 @@ describe('ReactDOMFiber', () => {
         ReactDOM.render(<div key="2">baz</div>, container),
       ).toErrorDev(
         'render(...): ' +
-          'It looks like the React-rendered content of this container was ' +
-          'removed without using React. This is not supported and will ' +
-          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-          'to empty a container.',
-        {withoutStack: true},
+        'It looks like the React-rendered content of this container was ' +
+        'removed without using React. This is not supported and will ' +
+        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+        'to empty a container.',
+        { withoutStack: true },
       );
     }).toThrowError();
   });
@@ -1215,11 +1215,11 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '<div>MEOW.</div>';
     expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
       'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-      {withoutStack: true},
+      'It looks like the React-rendered content of this container was ' +
+      'removed without using React. This is not supported and will ' +
+      'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+      'to empty a container.',
+      { withoutStack: true },
     );
   });
 
@@ -1232,11 +1232,11 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '';
     expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
       'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-      {withoutStack: true},
+      'It looks like the React-rendered content of this container was ' +
+      'removed without using React. This is not supported and will ' +
+      'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+      'to empty a container.',
+      { withoutStack: true },
     );
   });
 

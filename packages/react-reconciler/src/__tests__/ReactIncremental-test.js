@@ -26,7 +26,7 @@ describe('ReactIncremental', () => {
 
   // Note: This is based on a similar component we use in www. We can delete
   // once the extra div wrapper is no longer necessary.
-  function LegacyHiddenDiv({children, mode}) {
+  function LegacyHiddenDiv({ children, mode }) {
     return (
       <div hidden={mode === 'hidden'}>
         <React.unstable_LegacyHidden
@@ -220,7 +220,7 @@ describe('ReactIncremental', () => {
         inst.setState(
           () => {
             Scheduler.unstable_yieldValue('setState1');
-            return {text: 'bar'};
+            return { text: 'bar' };
           },
           () => Scheduler.unstable_yieldValue('callback1'),
         );
@@ -229,7 +229,7 @@ describe('ReactIncremental', () => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState1');
-          return {text: 'bar'};
+          return { text: 'bar' };
         },
         () => Scheduler.unstable_yieldValue('callback1'),
       );
@@ -245,7 +245,7 @@ describe('ReactIncremental', () => {
         inst.setState(
           () => {
             Scheduler.unstable_yieldValue('setState2');
-            return {text2: 'baz'};
+            return { text2: 'baz' };
           },
           () => Scheduler.unstable_yieldValue('callback2'),
         );
@@ -254,7 +254,7 @@ describe('ReactIncremental', () => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState2');
-          return {text2: 'baz'};
+          return { text2: 'baz' };
         },
         () => Scheduler.unstable_yieldValue('callback2'),
       );
@@ -267,7 +267,7 @@ describe('ReactIncremental', () => {
       'callback1',
       'callback2',
     ]);
-    expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
+    expect(inst.state).toEqual({ text: 'bar', text2: 'baz' });
   });
 
   // @gate www
@@ -537,7 +537,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flushDeferredPri(20);
     expect(Scheduler).toHaveYielded(['Foo constructor: foo', 'Foo']);
 
-    foo.setState({value: 'bar'});
+    foo.setState({ value: 'bar' });
 
     expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
   });
@@ -601,7 +601,7 @@ describe('ReactIncremental', () => {
       'Foo did complete',
     ]);
 
-    foo.setState({value: 'bar'});
+    foo.setState({ value: 'bar' });
 
     expect(Scheduler).toFlushWithoutYielding();
     expect(constructorCount).toEqual(1);
@@ -706,7 +706,7 @@ describe('ReactIncremental', () => {
     }
 
     class Child extends React.Component {
-      state = {step: 0};
+      state = { step: 0 };
       render() {
         child = this;
         Scheduler.unstable_yieldValue('Child');
@@ -743,7 +743,7 @@ describe('ReactIncremental', () => {
 
     // Begin working on a low priority update to Child, but stop before
     // GreatGrandchild. Child and Grandchild begin but don't complete.
-    child.setState({step: 1});
+    child.setState({ step: 1 });
     ReactNoop.flushDeferredPri(30);
     expect(Scheduler).toHaveYielded(['Child', 'Grandchild']);
 
@@ -879,7 +879,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = {a: 'a'};
+        this.state = { a: 'a' };
         instance = this;
       }
       render() {
@@ -897,10 +897,10 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(instance.state).toEqual({a: 'a'});
-    instance.setState({b: 'b'});
+    expect(instance.state).toEqual({ a: 'a' });
+    instance.setState({ b: 'b' });
     expect(Scheduler).toFlushWithoutYielding();
-    expect(instance.state).toEqual({a: 'a', b: 'b'});
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
   });
 
   it('can queue multiple state updates', () => {
@@ -908,7 +908,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = {a: 'a'};
+        this.state = { a: 'a' };
         instance = this;
       }
       render() {
@@ -927,11 +927,11 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
     // Call setState multiple times before flushing
-    instance.setState({b: 'b'});
-    instance.setState({c: 'c'});
-    instance.setState({d: 'd'});
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.setState({ d: 'd' });
     expect(Scheduler).toFlushWithoutYielding();
-    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c', d: 'd'});
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
   });
 
   it('can use updater form of setState', () => {
@@ -939,7 +939,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = {num: 1};
+        this.state = { num: 1 };
         instance = this;
       }
       render() {
@@ -947,7 +947,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({multiplier}) {
+    function Foo({ multiplier }) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -956,7 +956,7 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return {num: state.num * props.multiplier};
+      return { num: state.num * props.multiplier };
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -977,7 +977,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = {num: 1};
+        this.state = { num: 1 };
         instance = this;
       }
       render() {
@@ -985,7 +985,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({multiplier}) {
+    function Foo({ multiplier }) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -994,11 +994,11 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return {num: state.num * props.multiplier};
+      return { num: state.num * props.multiplier };
     }
 
     function callback() {
-      this.setState({called: true});
+      this.setState({ called: true });
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -1007,13 +1007,13 @@ describe('ReactIncremental', () => {
     instance.setState(updater, callback);
     expect(Scheduler).toFlushWithoutYielding();
     expect(instance.state.num).toEqual(4);
-    expect(instance.state.called).toEqual(true);
+    expect(instance.state.called).toBe(true);
   });
 
   it('can replaceState', () => {
     let instance;
     class Bar extends React.Component {
-      state = {a: 'a'};
+      state = { a: 'a' };
       render() {
         instance = this;
         return <div>{this.props.children}</div>;
@@ -1030,11 +1030,11 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
-    instance.setState({b: 'b'});
-    instance.setState({c: 'c'});
-    instance.updater.enqueueReplaceState(instance, {d: 'd'});
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.updater.enqueueReplaceState(instance, { d: 'd' });
     expect(Scheduler).toFlushWithoutYielding();
-    expect(instance.state).toEqual({d: 'd'});
+    expect(instance.state).toEqual({ d: 'd' });
   });
 
   it('can forceUpdate', () => {
@@ -1100,7 +1100,7 @@ describe('ReactIncremental', () => {
     const instances = new Set();
 
     class Bar extends React.Component {
-      state = {y: 'A'};
+      state = { y: 'A' };
       constructor() {
         super();
         instances.add(this);
@@ -1145,7 +1145,7 @@ describe('ReactIncremental', () => {
     const instances = [];
 
     class Bar extends React.Component {
-      state = {y: 'A'};
+      state = { y: 'A' };
       constructor() {
         super();
         instances.push(this);
@@ -1207,12 +1207,12 @@ describe('ReactIncremental', () => {
 
   xit('calls componentWillMount twice if the initial render is aborted', () => {
     class LifeCycle extends React.Component {
-      state = {x: this.props.x};
+      state = { x: this.props.x };
       UNSAFE_componentWillReceiveProps(nextProps) {
         Scheduler.unstable_yieldValue(
           'componentWillReceiveProps:' + this.state.x + '-' + nextProps.x,
         );
-        this.setState({x: nextProps.x});
+        this.setState({ x: nextProps.x });
       }
       UNSAFE_componentWillMount() {
         Scheduler.unstable_yieldValue(
@@ -1263,11 +1263,11 @@ describe('ReactIncremental', () => {
     class LifeCycle extends React.Component {
       constructor(props) {
         super(props);
-        this.state = {x: this.props.x + '(ctor)'};
+        this.state = { x: this.props.x + '(ctor)' };
       }
       UNSAFE_componentWillMount() {
         Scheduler.unstable_yieldValue('componentWillMount:' + this.state.x);
-        this.setState({x: this.props.x + '(willMount)'});
+        this.setState({ x: this.props.x + '(willMount)' });
       }
       componentDidMount() {
         Scheduler.unstable_yieldValue('componentDidMount:' + this.state.x);
@@ -1391,10 +1391,10 @@ describe('ReactIncremental', () => {
       state = {};
       static getDerivedStateFromProps(props, prevState) {
         Scheduler.unstable_yieldValue('getDerivedStateFromProps');
-        return {foo: 'foo'};
+        return { foo: 'foo' };
       }
       changeState() {
-        this.setState({foo: 'bar'});
+        this.setState({ foo: 'bar' });
       }
       componentDidUpdate() {
         Scheduler.unstable_yieldValue('componentDidUpdate');
@@ -1408,7 +1408,7 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<LifeCycle />);
     expect(Scheduler).toFlushAndYield(['getDerivedStateFromProps', 'render']);
-    expect(instance.state).toEqual({foo: 'foo'});
+    expect(instance.state).toEqual({ foo: 'foo' });
 
     instance.changeState();
     expect(Scheduler).toFlushAndYield([
@@ -1416,12 +1416,12 @@ describe('ReactIncremental', () => {
       'render',
       'componentDidUpdate',
     ]);
-    expect(instance.state).toEqual({foo: 'foo'});
+    expect(instance.state).toEqual({ foo: 'foo' });
   });
 
   it('does not call getDerivedStateFromProps if neither state nor props have changed', () => {
     class Parent extends React.Component {
-      state = {parentRenders: 0};
+      state = { parentRenders: 0 };
       static getDerivedStateFromProps(props, prevState) {
         Scheduler.unstable_yieldValue('getDerivedStateFromProps');
         return prevState.parentRenders + 1;
@@ -1456,7 +1456,7 @@ describe('ReactIncremental', () => {
     const instances = [];
 
     class LifeCycle extends React.Component {
-      state = {x: 0};
+      state = { x: 0 };
       tick() {
         this.setState({
           x: this.state.x + 1,
@@ -1498,7 +1498,7 @@ describe('ReactIncremental', () => {
     // there is currently an issue where a component can't reuse its render
     // output unless it fully completed.
     class Wrap extends React.Component {
-      state = {y: 0};
+      state = { y: 0 };
       UNSAFE_componentWillMount() {
         instances.push(this);
       }
@@ -1679,7 +1679,7 @@ describe('ReactIncremental', () => {
     let instance;
 
     class Foo extends React.Component {
-      state = {n: 0};
+      state = { n: 0 };
       render() {
         instance = this;
         return <div />;
@@ -1691,17 +1691,17 @@ describe('ReactIncremental', () => {
 
     ReactNoop.flushSync(() => {
       ReactNoop.batchedUpdates(() => {
-        instance.setState({n: 1}, () =>
+        instance.setState({ n: 1 }, () =>
           Scheduler.unstable_yieldValue('setState 1'),
         );
-        instance.setState({n: 2}, () =>
+        instance.setState({ n: 2 }, () =>
           Scheduler.unstable_yieldValue('setState 2'),
         );
         ReactNoop.batchedUpdates(() => {
-          instance.setState({n: 3}, () =>
+          instance.setState({ n: 3 }, () =>
             Scheduler.unstable_yieldValue('setState 3'),
           );
-          instance.setState({n: 4}, () =>
+          instance.setState({ n: 4 }, () =>
             Scheduler.unstable_yieldValue('setState 4'),
           );
           Scheduler.unstable_yieldValue('end inner batchedUpdates');
@@ -1727,7 +1727,7 @@ describe('ReactIncremental', () => {
     let instance;
 
     class Foo extends React.Component {
-      state = {n: 0};
+      state = { n: 0 };
       render() {
         instance = this;
         return <div />;
@@ -1737,8 +1737,8 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
 
-    function updater({n}) {
-      return {n: n + 1};
+    function updater({ n }) {
+      return { n: n + 1 };
     }
 
     instance.setState(updater, () =>
@@ -1936,7 +1936,7 @@ describe('ReactIncremental', () => {
         n: PropTypes.number,
       };
       getChildContext() {
-        return {n: (this.context.n || 3) - 1};
+        return { n: (this.context.n || 3) - 1 };
       }
       render() {
         Scheduler.unstable_yieldValue(
@@ -1963,7 +1963,7 @@ describe('ReactIncremental', () => {
       function Recurse(props, context) {
         return {
           getChildContext() {
-            return {n: (context.n || 3) - 1};
+            return { n: (context.n || 3) - 1 };
           },
           render() {
             Scheduler.unstable_yieldValue('Recurse ' + JSON.stringify(context));
@@ -1991,10 +1991,10 @@ describe('ReactIncremental', () => {
         ]),
       ).toErrorDev([
         'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
-          'Change Recurse to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Recurse.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
+        'Change Recurse to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Recurse.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
       ]);
     });
   }
@@ -2117,7 +2117,7 @@ describe('ReactIncremental', () => {
     };
 
     class Stateful extends React.Component {
-      state = {x: 0};
+      state = { x: 0 };
       render() {
         statefulInst = this;
         return this.props.children;
@@ -2159,7 +2159,7 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
 
-    statefulInst.setState({x: 1});
+    statefulInst.setState({ x: 1 });
     expect(Scheduler).toFlushWithoutYielding();
     // All work has been memoized because setState()
     // happened below the context and could not have affected it.
@@ -2227,7 +2227,7 @@ describe('ReactIncremental', () => {
     }
 
     class Stateful extends React.Component {
-      state = {locale: 'fr'};
+      state = { locale: 'fr' };
       render() {
         statefulInst = this;
         return <Intl locale={this.state.locale}>{this.props.children}</Intl>;
@@ -2253,7 +2253,7 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
 
-    statefulInst.setState({locale: 'gr'});
+    statefulInst.setState({ locale: 'gr' });
     expect(Scheduler).toFlushAndYield([
       // Intl is below setState() so it might have been
       // affected by it. Therefore we re-render and recompute
@@ -2371,17 +2371,17 @@ describe('ReactIncremental', () => {
       static contextTypes = {};
       componentDidMount(prevProps, prevState) {
         Scheduler.unstable_yieldValue('componentDidMount');
-        this.setState({setStateInCDU: true});
+        this.setState({ setStateInCDU: true });
       }
       componentDidUpdate(prevProps, prevState) {
         Scheduler.unstable_yieldValue('componentDidUpdate');
         if (this.state.setStateInCDU) {
-          this.setState({setStateInCDU: false});
+          this.setState({ setStateInCDU: false });
         }
       }
       UNSAFE_componentWillReceiveProps(nextProps) {
         Scheduler.unstable_yieldValue('componentWillReceiveProps');
-        this.setState({setStateInCDU: true});
+        this.setState({ setStateInCDU: true });
       }
       render() {
         Scheduler.unstable_yieldValue('render');
@@ -2468,8 +2468,8 @@ describe('ReactIncremental', () => {
     // At this point our FirstChild component has rendered a second time,
     // But since the render is not completed cDU should not be called yet.
     expect(renderCounter).toBe(2);
-    expect(scuPrevProps).toEqual([{children: 'A'}]);
-    expect(scuNextProps).toEqual([{children: 'B'}]);
+    expect(scuPrevProps).toEqual([{ children: 'A' }]);
+    expect(scuNextProps).toEqual([{ children: 'B' }]);
     expect(cduPrevProps).toEqual([]);
     expect(cduNextProps).toEqual([]);
 
@@ -2483,10 +2483,10 @@ describe('ReactIncremental', () => {
     // Since FirstChild props didn't change, sCU returned false.
     // The previous memoized copy should be used.
     expect(renderCounter).toBe(2);
-    expect(scuPrevProps).toEqual([{children: 'A'}, {children: 'B'}]);
-    expect(scuNextProps).toEqual([{children: 'B'}, {children: 'B'}]);
-    expect(cduPrevProps).toEqual([{children: 'A'}]);
-    expect(cduNextProps).toEqual([{children: 'B'}]);
+    expect(scuPrevProps).toEqual([{ children: 'A' }, { children: 'B' }]);
+    expect(scuNextProps).toEqual([{ children: 'B' }, { children: 'B' }]);
+    expect(cduPrevProps).toEqual([{ children: 'A' }]);
+    expect(cduNextProps).toEqual([{ children: 'B' }]);
   });
 
   it('updates descendants with new context values', () => {
@@ -2498,7 +2498,7 @@ describe('ReactIncremental', () => {
       };
       constructor() {
         super();
-        this.state = {count: 0};
+        this.state = { count: 0 };
         instance = this;
       }
       getChildContext = () => ({
@@ -2547,7 +2547,7 @@ describe('ReactIncremental', () => {
       };
       constructor() {
         super();
-        this.state = {count: 0};
+        this.state = { count: 0 };
         instance = this;
       }
       getChildContext = () => ({
@@ -2602,7 +2602,7 @@ describe('ReactIncremental', () => {
       };
       constructor() {
         super();
-        this.state = {count: 0};
+        this.state = { count: 0 };
         instance = this;
       }
       getChildContext = () => ({
@@ -2667,7 +2667,7 @@ describe('ReactIncremental', () => {
       };
       constructor() {
         super();
-        this.state = {count: 0};
+        this.state = { count: 0 };
         topInstance = this;
       }
       getChildContext = () => ({
@@ -2693,14 +2693,14 @@ describe('ReactIncremental', () => {
       };
       constructor() {
         super();
-        this.state = {name: 'brian'};
+        this.state = { name: 'brian' };
         middleInstance = this;
       }
       getChildContext = () => ({
         name: this.state.name,
       });
       updateName = name => {
-        this.setState({name});
+        this.setState({ name });
       };
       render = () => this.props.children;
     }
@@ -2826,9 +2826,9 @@ describe('ReactIncremental', () => {
       // This class uses legacy context, which triggers warnings,
       // the procedures for which use a Map to store fibers.
       class Boundary extends React.Component {
-        state = {didError: false};
+        state = { didError: false };
         componentDidCatch() {
-          this.setState({didError: true});
+          this.setState({ didError: true });
         }
         static contextTypes = {
           color: () => null,

@@ -58,7 +58,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    const {onMouseDown: setStateA, onMouseUp: setStateB} =
+    const { onMouseDown: setStateA, onMouseUp: setStateB } =
       renderer.root.findByType('div').props;
 
     act(() => setStateA('Hi'));
@@ -108,7 +108,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should inspect the current state of all stateful hooks', () => {
     const outsideRef = React.createRef();
-    function effect() {}
+    function effect() { }
     function Foo(props) {
       const [state1, setState] = React.useState('a');
       const [state2, dispatch] = React.useReducer((s, a) => a.value, 'b');
@@ -121,7 +121,7 @@ describe('ReactHooksInspectionIntegration', () => {
         outsideRef,
         () => {
           // Return a function so that jest treats them as non-equal.
-          return function Instance() {};
+          return function Instance() { };
         },
         [],
       );
@@ -133,7 +133,7 @@ describe('ReactHooksInspectionIntegration', () => {
           setState('A');
         });
         act(() => {
-          dispatch({value: 'B'});
+          dispatch({ value: 'B' });
         });
         ref.current = 'C';
       }
@@ -151,7 +151,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
 
-    const {onClick: updateStates} = renderer.root.findByType('div').props;
+    const { onClick: updateStates } = renderer.root.findByType('div').props;
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
@@ -169,7 +169,7 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'b',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      { isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: [] },
       {
         isStateEditable: false,
         id: 3,
@@ -227,7 +227,7 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      { isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: [] },
       {
         isStateEditable: false,
         id: 3,
@@ -269,7 +269,7 @@ describe('ReactHooksInspectionIntegration', () => {
   it('should inspect the current state of all stateful hooks, including useInsertionEffect', () => {
     const useInsertionEffect = React.useInsertionEffect;
     const outsideRef = React.createRef();
-    function effect() {}
+    function effect() { }
     function Foo(props) {
       const [state1, setState] = React.useState('a');
       const [state2, dispatch] = React.useReducer((s, a) => a.value, 'b');
@@ -283,7 +283,7 @@ describe('ReactHooksInspectionIntegration', () => {
         outsideRef,
         () => {
           // Return a function so that jest treats them as non-equal.
-          return function Instance() {};
+          return function Instance() { };
         },
         [],
       );
@@ -295,7 +295,7 @@ describe('ReactHooksInspectionIntegration', () => {
           setState('A');
         });
         act(() => {
-          dispatch({value: 'B'});
+          dispatch({ value: 'B' });
         });
         ref.current = 'C';
       }
@@ -313,7 +313,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
 
-    const {onClick: updateStates} = renderer.root.findByType('div').props;
+    const { onClick: updateStates } = renderer.root.findByType('div').props;
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
@@ -331,7 +331,7 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'b',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      { isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: [] },
       {
         isStateEditable: false,
         id: 3,
@@ -396,7 +396,7 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      { isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: [] },
       {
         isStateEditable: false,
         id: 3,
@@ -467,7 +467,7 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   it('should inspect forwardRef', () => {
-    const obj = function () {};
+    const obj = function () { };
     const Foo = React.forwardRef(function (props, ref) {
       React.useImperativeHandle(ref, () => obj);
       return <div />;
@@ -626,7 +626,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree.length).toEqual(2);
 
     expect(tree[0].id).toEqual(0);
-    expect(tree[0].isStateEditable).toEqual(false);
+    expect(tree[0].isStateEditable).toBe(false);
     expect(tree[0].name).toEqual('Id');
     expect(String(tree[0].value).startsWith(':r')).toBe(true);
 
@@ -841,7 +841,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     it('should support an optional formatter function param', () => {
       function useCustom() {
-        React.useDebugValue({bar: 123}, object => `bar:${object.bar}`);
+        React.useDebugValue({ bar: 123 }, object => `bar:${object.bar}`);
         React.useState(0);
       }
       function Example() {
@@ -883,7 +883,7 @@ describe('ReactHooksInspectionIntegration', () => {
     };
 
     async function fakeImport(result) {
-      return {default: result};
+      return { default: result };
     }
 
     const LazyFoo = React.lazy(() => fakeImport(Foo));
@@ -948,11 +948,11 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(error.cause).toBeInstanceOf(Error);
       expect(error.cause.message).toBe(
         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-          ' one of the following reasons:\n' +
-          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-          '2. You might be breaking the Rules of Hooks\n' +
-          '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
       didCatch = true;
     }
@@ -974,9 +974,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
     function Foo(props) {
       const context = React.useContext(MyContext);
-      const [data, setData] = React.useState({count: context});
+      const [data, setData] = React.useState({ count: context });
 
-      incrementCount = () => setData(({count}) => ({count: count + 1}));
+      incrementCount = () => setData(({ count }) => ({ count: count + 1 }));
 
       return <div>count: {data.count}</div>;
     }
@@ -1009,7 +1009,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: true,
         id: 0,
         name: 'State',
-        value: {count: 2},
+        value: { count: 2 },
         subHooks: [],
       },
     ]);
@@ -1027,7 +1027,7 @@ describe('ReactHooksInspectionIntegration', () => {
       useMutableSource(
         mutableSource,
         () => 'snapshot',
-        () => {},
+        () => { },
       );
       React.useMemo(() => 'memo', []);
       React.useMemo(() => 'not used', []);
@@ -1065,7 +1065,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const useSyncExternalStore = React.useSyncExternalStore;
     function Foo() {
       const value = useSyncExternalStore(
-        () => () => {},
+        () => () => { },
         () => 'snapshot',
       );
       React.useMemo(() => 'memo', []);
