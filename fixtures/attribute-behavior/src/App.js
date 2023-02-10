@@ -284,12 +284,12 @@ function getRenderedAttributeValue(
   try {
     let container = createContainer();
     renderer.render(react.createElement(tagName, baseProps), container);
-    defaultValue = read(container.firstChild);
+    defaultValue = read(container.lastChild);
     canonicalDefaultValue = getCanonicalizedValue(defaultValue);
 
     container = createContainer();
     renderer.render(react.createElement(tagName, props), container);
-    result = read(container.firstChild);
+    result = read(container.lastChild);
     canonicalResult = getCanonicalizedValue(result);
     didWarn = _didWarn;
     didError = false;
