@@ -1,4 +1,4 @@
-## `about` (on `<div>` inside `<div>`)
+﻿## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -1998,7 +1998,7 @@
 | `colSpan=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `colSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `content` (on `<meta>` inside `<div>`)
+## `content` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `content=(string)`| (changed)| `"a string"` |
@@ -5123,7 +5123,7 @@
 | `htmlFor=(null)`| (initial)| `<empty string>` |
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
-## `http-equiv` (on `<meta>` inside `<div>`)
+## `http-equiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `http-equiv=(string)`| (changed, warning)| `"a string"` |
@@ -5148,7 +5148,7 @@
 | `http-equiv=(null)`| (initial, warning)| `<empty string>` |
 | `http-equiv=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `httpEquiv` (on `<meta>` inside `<div>`)
+## `httpEquiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `httpEquiv=(string)`| (changed)| `"a string"` |
@@ -6193,6 +6193,31 @@
 | `lang=(string 'false')`| (changed)| `"false"` |
 | `lang=(string 'on')`| (changed)| `"on"` |
 | `lang=(string 'off')`| (changed)| `"off"` |
+| `lang=(symbol)`| (initial, warning)| `<empty string>` |
+| `lang=(function)`| (initial, warning)| `<empty string>` |
+| `lang=(null)`| (initial)| `<empty string>` |
+| `lang=(undefined)`| (initial)| `<empty string>` |
+
+## `lang` (on `<html>` inside `<document>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `lang=(string)`| (changed, ssr mismatch)| `"a string"` |
+| `lang=(empty string)`| (initial)| `<empty string>` |
+| `lang=(array with string)`| (changed, ssr mismatch)| `"string"` |
+| `lang=(empty array)`| (initial)| `<empty string>` |
+| `lang=(object)`| (changed, ssr mismatch)| `"result of toString()"` |
+| `lang=(numeric string)`| (changed, ssr mismatch)| `"42"` |
+| `lang=(-1)`| (changed, ssr mismatch)| `"-1"` |
+| `lang=(0)`| (changed, ssr mismatch)| `"0"` |
+| `lang=(integer)`| (changed, ssr mismatch)| `"1"` |
+| `lang=(NaN)`| (changed, warning, ssr mismatch)| `"NaN"` |
+| `lang=(float)`| (changed, ssr mismatch)| `"99.99"` |
+| `lang=(true)`| (initial, warning)| `<empty string>` |
+| `lang=(false)`| (initial, warning)| `<empty string>` |
+| `lang=(string 'true')`| (changed, ssr mismatch)| `"true"` |
+| `lang=(string 'false')`| (changed, ssr mismatch)| `"false"` |
+| `lang=(string 'on')`| (changed, ssr mismatch)| `"on"` |
+| `lang=(string 'off')`| (changed, ssr mismatch)| `"off"` |
 | `lang=(symbol)`| (initial, warning)| `<empty string>` |
 | `lang=(function)`| (initial, warning)| `<empty string>` |
 | `lang=(null)`| (initial)| `<empty string>` |
@@ -12526,23 +12551,23 @@
 ## `viewTarget` (on `<view>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `viewTarget=(string)`| (changed, ssr mismatch)| `"a string"` |
-| `viewTarget=(empty string)`| (changed, ssr mismatch)| `<empty string>` |
-| `viewTarget=(array with string)`| (changed, ssr mismatch)| `"string"` |
-| `viewTarget=(empty array)`| (changed, ssr mismatch)| `<empty string>` |
-| `viewTarget=(object)`| (changed, ssr mismatch)| `"result of toString()"` |
-| `viewTarget=(numeric string)`| (changed, ssr mismatch)| `"42"` |
-| `viewTarget=(-1)`| (changed, ssr mismatch)| `"-1"` |
-| `viewTarget=(0)`| (changed, ssr mismatch)| `"0"` |
-| `viewTarget=(integer)`| (changed, ssr mismatch)| `"1"` |
-| `viewTarget=(NaN)`| (changed, warning, ssr mismatch)| `"NaN"` |
-| `viewTarget=(float)`| (changed, ssr mismatch)| `"99.99"` |
+| `viewTarget=(string)`| (changed)| `"a string"` |
+| `viewTarget=(empty string)`| (changed)| `<empty string>` |
+| `viewTarget=(array with string)`| (changed)| `"string"` |
+| `viewTarget=(empty array)`| (changed)| `<empty string>` |
+| `viewTarget=(object)`| (changed)| `"result of toString()"` |
+| `viewTarget=(numeric string)`| (changed)| `"42"` |
+| `viewTarget=(-1)`| (changed)| `"-1"` |
+| `viewTarget=(0)`| (changed)| `"0"` |
+| `viewTarget=(integer)`| (changed)| `"1"` |
+| `viewTarget=(NaN)`| (changed, warning)| `"NaN"` |
+| `viewTarget=(float)`| (changed)| `"99.99"` |
 | `viewTarget=(true)`| (initial, warning)| `<null>` |
 | `viewTarget=(false)`| (initial, warning)| `<null>` |
-| `viewTarget=(string 'true')`| (changed, ssr mismatch)| `"true"` |
-| `viewTarget=(string 'false')`| (changed, ssr mismatch)| `"false"` |
-| `viewTarget=(string 'on')`| (changed, ssr mismatch)| `"on"` |
-| `viewTarget=(string 'off')`| (changed, ssr mismatch)| `"off"` |
+| `viewTarget=(string 'true')`| (changed)| `"true"` |
+| `viewTarget=(string 'false')`| (changed)| `"false"` |
+| `viewTarget=(string 'on')`| (changed)| `"on"` |
+| `viewTarget=(string 'off')`| (changed)| `"off"` |
 | `viewTarget=(symbol)`| (initial, warning)| `<null>` |
 | `viewTarget=(function)`| (initial, warning)| `<null>` |
 | `viewTarget=(null)`| (initial)| `<null>` |
