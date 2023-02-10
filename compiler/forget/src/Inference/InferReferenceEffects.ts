@@ -563,7 +563,9 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "ArrayExpression": {
-        valueKind = ValueKind.Mutable;
+        valueKind = hasContextRefOperand(env, instrValue)
+          ? ValueKind.Context
+          : ValueKind.Mutable;
         effectKind = Effect.Capture;
         lvalueEffect = Effect.Store;
         break;
