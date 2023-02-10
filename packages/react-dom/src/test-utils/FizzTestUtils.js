@@ -133,13 +133,6 @@ async function replaceScriptsAndMove(
   }
 }
 
-function mergeOptions(options: Object, defaultOptions: Object): Object {
-  return {
-    ...defaultOptions,
-    ...options,
-  };
-}
-
 function stripExternalRuntimeInNodes(
   nodes: HTMLElement[] | HTMLCollection<HTMLElement>,
   externalRuntimeSrc: string | null,
@@ -192,7 +185,6 @@ async function withLoadingReadyState<T>(
 
 export {
   replaceScriptsAndMove,
-  mergeOptions,
   stripExternalRuntimeInNodes,
   withLoadingReadyState,
 };
