@@ -1,0 +1,40 @@
+
+## Input
+
+```javascript
+function component(a) {
+  let x = { a };
+  let y;
+  (function () {
+    y["x"] = x;
+  })();
+  mutate(y);
+  return y;
+}
+
+```
+
+## Code
+
+```javascript
+function component(a) {
+  const $ = React.unstable_useMemoCache();
+  const c_0 = $[0] !== a;
+  let y;
+  if (c_0) {
+    const x = { a: a };
+    y = undefined;
+    (function () {
+      y["x"] = x;
+    })();
+    $[0] = a;
+    $[1] = y;
+  } else {
+    y = $[1];
+  }
+  mutate(y);
+  return y;
+}
+
+```
+      

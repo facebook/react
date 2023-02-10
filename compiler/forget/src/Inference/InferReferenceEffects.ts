@@ -26,6 +26,7 @@ import {
 } from "../HIR/PrintHIR";
 import {
   eachInstructionOperand,
+  eachInstructionValueOperand,
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from "../HIR/visitors";
@@ -100,7 +101,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
       properties: null,
       loc: ref.loc,
     };
-    initialEnvironment.initialize(value, ValueKind.Mutable);
+    initialEnvironment.initialize(value, ValueKind.Context);
     initialEnvironment.define(ref, value);
   }
 
@@ -274,6 +275,7 @@ class Environment {
       case Effect.Freeze: {
         if (
           valueKind === ValueKind.Mutable ||
+          valueKind === ValueKind.Context ||
           valueKind === ValueKind.MaybeFrozen
         ) {
           effect = Effect.Freeze;
@@ -285,7 +287,10 @@ class Environment {
         break;
       }
       case Effect.Mutate: {
-        if (valueKind === ValueKind.Mutable) {
+        if (
+          valueKind === ValueKind.Mutable ||
+          valueKind === ValueKind.Context
+        ) {
           effect = Effect.Mutate;
         } else {
           effect = Effect.Read;
@@ -488,6 +493,9 @@ class Environment {
  *    types. To ensure that any sequence of joins btw those three states yields the
  *    correct maybe-frozen, these two have to produce a frozen value.
  * - <any> | maybe-frozen => maybe-frozen
+ * - immutable | context => context
+ * - mutable | context => context
+ * - frozen | context => maybe-frozen
  *
  * ┌──────────────────────────┐
  * │        Immutable         │───┐
@@ -513,9 +521,20 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
     if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
       // frozen | mutable
       return ValueKind.MaybeFrozen;
+    } else if (a === ValueKind.Context || b === ValueKind.Context) {
+      // context | mutable
+      return ValueKind.Context;
     } else {
       // mutable | immutable
       return ValueKind.Mutable;
+    }
+  } else if (a === ValueKind.Context || b === ValueKind.Context) {
+    if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
+      // frozen | context
+      return ValueKind.MaybeFrozen;
+    } else {
+      // context | immutable
+      return ValueKind.Context;
     }
   } else {
     // frozen | immutable
@@ -664,7 +683,11 @@ function inferBlock(env: Environment, block: BasicBlock) {
         continue;
       }
       case "PropertyStore": {
-        env.reference(instrValue.value, Effect.Capture);
+        const effect =
+          env.kind(instrValue.object) === ValueKind.Context
+            ? Effect.Mutate
+            : Effect.Capture;
+        env.reference(instrValue.value, effect);
         env.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
@@ -692,7 +715,11 @@ function inferBlock(env: Environment, block: BasicBlock) {
         continue;
       }
       case "ComputedStore": {
-        env.reference(instrValue.value, Effect.Capture);
+        const effect =
+          env.kind(instrValue.object) === ValueKind.Context
+            ? Effect.Mutate
+            : Effect.Capture;
+        env.reference(instrValue.value, effect);
         env.reference(instrValue.property, Effect.Capture);
         env.reference(instrValue.object, Effect.Store);
 

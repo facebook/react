@@ -531,6 +531,7 @@ export enum ValueKind {
   Frozen = "frozen",
   Immutable = "immutable",
   Mutable = "mutable",
+  Context = "context",
 }
 
 /**
