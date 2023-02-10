@@ -356,12 +356,7 @@ const attributes = [
   },
   {name: 'cols', tagName: 'textarea'},
   {name: 'colSpan', containerTagName: 'tr', tagName: 'td'},
-  {
-    name: 'content',
-    containerTagName: 'head',
-    tagName: 'meta',
-    extraProps: {name: 'description'},
-  },
+  {name: 'content', containerTagName: 'head', tagName: 'meta'},
   {name: 'contentEditable'},
   {
     name: 'contentScriptType',
