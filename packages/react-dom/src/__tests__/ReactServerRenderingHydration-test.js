@@ -694,16 +694,4 @@ describe('ReactDOMServerHydration', () => {
       );
     }
   });
-  it('should not warn about style mismatch due to empty values', () => {
-    const domElement = document.createElement('div');
-    const App = () => <div style={{transform: ''}} />;
-
-    const markup = ReactDOMServer.renderToString(<App />);
-    domElement.innerHTML = markup;
-
-    expect(() => {
-      ReactDOM.hydrate(<App />, domElement);
-      expect(domElement.innerHTML).toEqual(markup);
-    }).toErrorDev([]);
-  });
 });

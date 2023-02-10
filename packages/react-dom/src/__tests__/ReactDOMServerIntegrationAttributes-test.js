@@ -416,6 +416,12 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.style.width).toBe('30px');
       });
 
+      itRenders('no zero-length styles', async render => {
+        const e = await render(<div style={{color: '', width: '30px'}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
       itRenders('no empty styles', async render => {
         const e = await render(<div style={{color: null, width: null}} />);
         expect(e.style.color).toBe('');
