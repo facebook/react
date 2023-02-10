@@ -10277,13 +10277,6 @@ isurl@^1.0.0-alpha5:
     has-to-string-tag-x "^1.2.0"
     is-object "^1.0.1"
 
-jasmine-check@^1.0.0-rc.0:
-  version "1.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/jasmine-check/-/jasmine-check-1.0.0-rc.0.tgz#117728c150078ecf211986c5f164275b71e937a4"
-  integrity sha512-V11aKvbAAEN34vVMRQVqylq3j8kw1Hmkf8JOVLYPcVpQX1jZ5pQPTYwbSnjMEjuRp5XQnI0qOqd2yosJoH7Vzw==
-  dependencies:
-    testcheck "^1.0.0-rc"
-
 jed@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/jed/-/jed-1.1.1.tgz#7a549bbd9ffe1585b0cd0a191e203055bee574b4"
@@ -10468,29 +10461,6 @@ jest-haste-map@^29.4.1:
     walker "^1.0.8"
   optionalDependencies:
     fsevents "^2.3.2"
-
-jest-jasmine2@^29.4.1:
-  version "29.4.1"
-  resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-29.4.1.tgz#67fbf2a729889ea390a8aa70ba3582e9d6c32603"
-  integrity sha512-fuwfsso6Kc7eGjNCWfWQgW4lcJwdkbfnVx6KQSw2a6a2VBOcxUSn/q8lAwblvJc6hYB7XhGfSVLDw2mvjYDZ0A==
-  dependencies:
-    "@jest/environment" "^29.4.1"
-    "@jest/expect" "^29.4.1"
-    "@jest/source-map" "^29.2.0"
-    "@jest/test-result" "^29.4.1"
-    "@jest/types" "^29.4.1"
-    "@types/node" "*"
-    chalk "^4.0.0"
-    co "^4.6.0"
-    is-generator-fn "^2.0.0"
-    jest-each "^29.4.1"
-    jest-matcher-utils "^29.4.1"
-    jest-message-util "^29.4.1"
-    jest-runtime "^29.4.1"
-    jest-snapshot "^29.4.1"
-    jest-util "^29.4.1"
-    p-limit "^3.1.0"
-    pretty-format "^29.4.1"
 
 jest-leak-detector@^29.4.1:
   version "29.4.1"
@@ -16038,11 +16008,6 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
-
-testcheck@^1.0.0-rc:
-  version "1.0.0-rc.2"
-  resolved "https://registry.yarnpkg.com/testcheck/-/testcheck-1.0.0-rc.2.tgz#11356a25b84575efe0b0857451e85b5fa74ee4e4"
-  integrity sha512-lY0PM4ypOuf3WenJkx/C8+LeLPucHnnRAOtHRQkm8K6pG170tYw0xmxyVjrejJ2bpHWHn5EUkoC+qhnhFAUcvg==
 
 text-table@^0.2.0:
   version "0.2.0"

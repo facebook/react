@@ -2121,7 +2121,7 @@ describe('InspectedElement', () => {
   });
 
   it('should gracefully surface backend errors on the frontend rather than timing out', async () => {
-    spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     let shouldThrow = false;
 
@@ -2738,7 +2738,7 @@ describe('InspectedElement', () => {
 
   it('inspecting nested renderers should not throw', async () => {
     // Ignoring react art warnings
-    spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const ReactArt = require('react-art');
     const ArtSVGMode = require('art/modes/svg');
     const ARTCurrentMode = require('art/modes/current');

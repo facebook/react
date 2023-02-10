@@ -1135,7 +1135,7 @@ describe('Timeline profiler', () => {
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
@@ -1153,7 +1153,7 @@ describe('Timeline profiler', () => {
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
@@ -1748,7 +1748,7 @@ describe('Timeline profiler', () => {
         describe('errors thrown while rendering', () => {
           // @reactVersion >= 18.0
           it('shoult parse Errors thrown during render', async () => {
-            spyOn(console, 'error');
+            jest.spyOn(console, 'error');
 
             class ErrorBoundary extends React.Component {
               state = {error: null};

@@ -47,6 +47,10 @@ describe('Timeline profiler', () => {
     store = global.store;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('User Timing API', () => {
     let clearedMarks;
     let featureDetectionMarkName = null;
@@ -517,7 +521,7 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      jest.spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
@@ -571,7 +575,7 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      jest.spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
@@ -740,7 +744,7 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark sync render that throws', async () => {
-      spyOn(console, 'error');
+      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
@@ -802,7 +806,7 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark concurrent render that throws', async () => {
-      spyOn(console, 'error');
+      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
@@ -1697,7 +1701,7 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        jest.spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
@@ -1766,7 +1770,7 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        jest.spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
@@ -1993,7 +1997,7 @@ describe('Timeline profiler', () => {
       });
 
       it('should mark sync render that throws', async () => {
-        spyOn(console, 'error');
+        jest.spyOn(console, 'error').mockImplementation(() => {});
 
         class ErrorBoundary extends React.Component {
           state = {error: null};
@@ -2088,7 +2092,7 @@ describe('Timeline profiler', () => {
       });
 
       it('should mark concurrent render that throws', async () => {
-        spyOn(console, 'error');
+        jest.spyOn(console, 'error').mockImplementation(() => {});
 
         class ErrorBoundary extends React.Component {
           state = {error: null};

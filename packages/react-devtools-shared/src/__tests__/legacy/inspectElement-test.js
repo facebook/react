@@ -760,7 +760,7 @@ describe('InspectedElementContext', () => {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
 
     const logSpy = jest.fn();
-    spyOn(console, 'log').and.callFake(logSpy);
+    jest.spyOn(console, 'log').mockImplementation(logSpy);
 
     // Should store the whole value (not just the hydrated parts)
     backendAPI.storeAsGlobal({

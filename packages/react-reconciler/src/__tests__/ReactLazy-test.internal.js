@@ -161,7 +161,7 @@ describe('ReactLazy', () => {
   });
 
   it('does not support arbitrary promises, only module objects', async () => {
-    spyOnDev(console, 'error');
+    spyOnDev(console, 'error').mockImplementation(() => {});
 
     const LazyText = lazy(async () => Text);
 
@@ -181,7 +181,7 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndThrow('Element type is invalid');
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(3);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'Expected the result of a dynamic import() call',
       );
     }

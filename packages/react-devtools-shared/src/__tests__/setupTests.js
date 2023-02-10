@@ -32,8 +32,7 @@ if (compactConsole) {
   global.console = new CustomConsole(process.stdout, process.stderr, formatter);
 }
 
-const env = jasmine.getEnv();
-env.beforeEach(() => {
+beforeEach(() => {
   global.mockClipboardCopy = jest.fn();
 
   // Test environment doesn't support document methods like execCommand()
@@ -169,7 +168,7 @@ env.beforeEach(() => {
   }
   global.fetch = mockFetch;
 });
-env.afterEach(() => {
+afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
   // It's important to reset modules between test runs;
