@@ -14,5 +14,5 @@ function foo(a, b, c) {
     },
     o,
   } = b);
-  return { e, g, n, o };
+  return { d, g, n, o };
 }
