@@ -12,7 +12,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
   ClientReference,
-  ModuleMetaData,
+  ClientReferenceMetadata,
   UninitializedModel,
   Response,
   BundlerConfig,
@@ -28,6 +28,8 @@ import {
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
+
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
 
 export type JSONValue =
   | number
@@ -148,6 +150,7 @@ Chunk.prototype.then = function <T>(
 
 export type ResponseBase = {
   _bundlerConfig: BundlerConfig,
+  _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   ...
 };
@@ -468,6 +471,28 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
+function createServerReferenceProxy<A: Iterable<any>, T>(
+  response: Response,
+  metaData: any,
+): (...A) => Promise<T> {
+  const callServer = response._callServer;
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    const p = metaData.bound;
+    if (p.status === INITIALIZED) {
+      const bound = p.value;
+      return callServer(metaData, bound.concat(args));
+    }
+    // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
+    // TODO: Remove the wrapper once that's fixed.
+    return Promise.resolve(p).then(function (bound) {
+      return callServer(metaData, bound.concat(args));
+    });
+  };
+  return proxy;
+}
+
 export function parseModelString(
   response: Response,
   parentObject: Object,
@@ -499,10 +524,32 @@ export function parseModelString(
         return chunk;
       }
       case 'S': {
+        // Symbol
         return Symbol.for(value.substring(2));
       }
       case 'P': {
+        // Server Context Provider
         return getOrCreateServerContext(value.substring(2)).Provider;
+      }
+      case 'F': {
+        // Server Reference
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        switch (chunk.status) {
+          case RESOLVED_MODEL:
+            initializeModelChunk(chunk);
+            break;
+        }
+        // The status might have changed after initialization.
+        switch (chunk.status) {
+          case INITIALIZED: {
+            const metadata = chunk.value;
+            return createServerReferenceProxy(response, metadata);
+          }
+          // We always encode it first in the stream so it won't be pending.
+          default:
+            throw chunk.reason;
+        }
       }
       default: {
         // We assume that anything else is a reference ID.
@@ -551,10 +598,21 @@ export function parseModelTuple(
   return value;
 }
 
-export function createResponse(bundlerConfig: BundlerConfig): ResponseBase {
+function missingCall() {
+  throw new Error(
+    'Trying to call a function from "use server" but the callServer option ' +
+      'was not implemented in your router runtime.',
+  );
+}
+
+export function createResponse(
+  bundlerConfig: BundlerConfig,
+  callServer: void | CallServerCallback,
+): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response = {
     _bundlerConfig: bundlerConfig,
+    _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
   };
   return response;
@@ -581,16 +639,19 @@ export function resolveModule(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveClientReference<$FlowFixMe>(
+  const clientReferenceMetadata: ClientReferenceMetadata = parseModel(
+    response,
+    model,
+  );
+  const clientReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
-    moduleMetaData,
+    clientReferenceMetadata,
   );
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
-  const promise = preloadModule(moduleReference);
+  const promise = preloadModule(clientReference);
   if (promise) {
     let blockedChunk: BlockedChunk<any>;
     if (!chunk) {
@@ -605,16 +666,16 @@ export function resolveModule(
       blockedChunk.status = BLOCKED;
     }
     promise.then(
-      () => resolveModuleChunk(blockedChunk, moduleReference),
+      () => resolveModuleChunk(blockedChunk, clientReference),
       error => triggerErrorOnChunk(blockedChunk, error),
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+      chunks.set(id, createResolvedModuleChunk(response, clientReference));
     } else {
       // This can't actually happen because we don't have any forward
       // references to modules.
-      resolveModuleChunk(chunk, moduleReference);
+      resolveModuleChunk(chunk, clientReference);
     }
   }
 }

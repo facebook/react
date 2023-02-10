@@ -11,9 +11,11 @@ import type {
   Destination,
   Chunk,
   BundlerConfig,
-  ModuleMetaData,
+  ClientReferenceMetadata,
   ClientReference,
   ClientReferenceKey,
+  ServerReference,
+  ServerReferenceMetadata,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -37,13 +39,15 @@ import {
   close,
   closeWithError,
   processModelChunk,
-  processModuleChunk,
+  processImportChunk,
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
-  resolveModuleMetaData,
+  resolveClientReferenceMetadata,
+  resolveServerReferenceMetadata,
   getClientReferenceKey,
   isClientReference,
+  isServerReference,
   supportsRequestStorage,
   requestStorage,
 } from './ReactFlightServerConfig';
@@ -101,7 +105,8 @@ export type ReactModel =
   | symbol
   | null
   | Iterable<ReactModel>
-  | ReactModelObject;
+  | ReactModelObject
+  | Promise<ReactModel>;
 
 type ReactModelObject = {+[key: string]: ReactModel};
 
@@ -129,11 +134,12 @@ export type Request = {
   pendingChunks: number,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
-  completedModuleChunks: Array<Chunk>,
+  completedImportChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
-  writtenModules: Map<ClientReferenceKey, number>,
+  writtenClientReferences: Map<ClientReferenceKey, number>,
+  writtenServerReferences: Map<ServerReference<any>, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
@@ -182,11 +188,12 @@ export function createRequest(
     pendingChunks: 0,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    completedModuleChunks: [],
-    completedJSONChunks: [],
-    completedErrorChunks: [],
+    completedImportChunks: ([]: Array<Chunk>),
+    completedJSONChunks: ([]: Array<Chunk>),
+    completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
-    writtenModules: new Map(),
+    writtenClientReferences: new Map(),
+    writtenServerReferences: new Map(),
     writtenProviders: new Map(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
@@ -509,6 +516,10 @@ function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
 }
 
+function serializeServerReferenceID(id: number): string {
+  return '$F' + id.toString(16);
+}
+
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -521,11 +532,12 @@ function serializeClientReference(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
-  moduleReference: ClientReference<any>,
+  clientReference: ClientReference<any>,
 ): string {
-  const moduleKey: ClientReferenceKey = getClientReferenceKey(moduleReference);
-  const writtenModules = request.writtenModules;
-  const existingId = writtenModules.get(moduleKey);
+  const clientReferenceKey: ClientReferenceKey =
+    getClientReferenceKey(clientReference);
+  const writtenClientReferences = request.writtenClientReferences;
+  const existingId = writtenClientReferences.get(clientReferenceKey);
   if (existingId !== undefined) {
     if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
       // If we're encoding the "type" of an element, we can refer
@@ -538,23 +550,21 @@ function serializeClientReference(
     return serializeByValueID(existingId);
   }
   try {
-    const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
-      request.bundlerConfig,
-      moduleReference,
-    );
+    const clientReferenceMetadata: ClientReferenceMetadata =
+      resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
     request.pendingChunks++;
-    const moduleId = request.nextChunkId++;
-    emitModuleChunk(request, moduleId, moduleMetaData);
-    writtenModules.set(moduleKey, moduleId);
+    const importId = request.nextChunkId++;
+    emitImportChunk(request, importId, clientReferenceMetadata);
+    writtenClientReferences.set(clientReferenceKey, importId);
     if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
       // If we're encoding the "type" of an element, we can refer
       // to that by a lazy reference instead of directly since React
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeLazyID(moduleId);
+      return serializeLazyID(importId);
     }
-    return serializeByValueID(moduleId);
+    return serializeByValueID(importId);
   } catch (x) {
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
@@ -567,6 +577,32 @@ function serializeClientReference(
     }
     return serializeByValueID(errorId);
   }
+}
+
+function serializeServerReference(
+  request: Request,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
+  serverReference: ServerReference<any>,
+): string {
+  const writtenServerReferences = request.writtenServerReferences;
+  const existingId = writtenServerReferences.get(serverReference);
+  if (existingId !== undefined) {
+    return serializeServerReferenceID(existingId);
+  }
+  const serverReferenceMetadata: ServerReferenceMetadata =
+    resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
+  request.pendingChunks++;
+  const metadataId = request.nextChunkId++;
+  // We assume that this object doesn't suspend.
+  const processedChunk = processModelChunk(
+    request,
+    metadataId,
+    serverReferenceMetadata,
+  );
+  request.completedJSONChunks.push(processedChunk);
+  writtenServerReferences.set(serverReference, metadataId);
+  return serializeServerReferenceID(metadataId);
 }
 
 function escapeStringValue(value: string): string {
@@ -991,6 +1027,7 @@ export function resolveModelToJSON(
   if (typeof value === 'object') {
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
+      // $FlowFixMe[method-unbinding]
     } else if (typeof value.then === 'function') {
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
@@ -1067,6 +1104,9 @@ export function resolveModelToJSON(
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
     }
+    if (isServerReference(value)) {
+      return serializeServerReference(request, parent, key, (value: any));
+    }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
@@ -1076,7 +1116,7 @@ export function resolveModelToJSON(
     } else {
       throw new Error(
         'Functions cannot be passed directly to Client Components ' +
-          "because they're not serializable." +
+          'unless you explicitly expose it by marking it with "use server".' +
           describeObjectForErrorMessage(parent, key),
       );
     }
@@ -1203,19 +1243,23 @@ function emitErrorChunkDev(
   request.completedErrorChunks.push(processedChunk);
 }
 
-function emitModuleChunk(
+function emitImportChunk(
   request: Request,
   id: number,
-  moduleMetaData: ModuleMetaData,
+  clientReferenceMetadata: ClientReferenceMetadata,
 ): void {
-  const processedChunk = processModuleChunk(request, id, moduleMetaData);
-  request.completedModuleChunks.push(processedChunk);
+  const processedChunk = processImportChunk(
+    request,
+    id,
+    clientReferenceMetadata,
+  );
+  request.completedImportChunks.push(processedChunk);
 }
 
 function emitSymbolChunk(request: Request, id: number, name: string): void {
   const symbolReference = serializeSymbolReference(name);
   const processedChunk = processReferenceChunk(request, id, symbolReference);
-  request.completedModuleChunks.push(processedChunk);
+  request.completedImportChunks.push(processedChunk);
 }
 
 function emitProviderChunk(
@@ -1367,11 +1411,11 @@ function flushCompletedChunks(
   try {
     // We emit module chunks first in the stream so that
     // they can be preloaded as early as possible.
-    const moduleChunks = request.completedModuleChunks;
+    const importsChunks = request.completedImportChunks;
     let i = 0;
-    for (; i < moduleChunks.length; i++) {
+    for (; i < importsChunks.length; i++) {
       request.pendingChunks--;
-      const chunk = moduleChunks[i];
+      const chunk = importsChunks[i];
       const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
       if (!keepWriting) {
         request.destination = null;
@@ -1379,7 +1423,7 @@ function flushCompletedChunks(
         break;
       }
     }
-    moduleChunks.splice(0, i);
+    importsChunks.splice(0, i);
     // Next comes model data.
     const jsonChunks = request.completedJSONChunks;
     i = 0;

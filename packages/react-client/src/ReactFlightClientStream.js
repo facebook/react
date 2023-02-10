@@ -7,8 +7,8 @@
  * @flow
  */
 
+import type {CallServerCallback} from './ReactFlightClient';
 import type {Response} from './ReactFlightClientHostConfigStream';
-
 import type {BundlerConfig} from './ReactFlightClientHostConfig';
 
 import {
@@ -120,11 +120,14 @@ function createFromJSONCallback(response: Response) {
   };
 }
 
-export function createResponse(bundlerConfig: BundlerConfig): Response {
+export function createResponse(
+  bundlerConfig: BundlerConfig,
+  callServer: void | CallServerCallback,
+): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase(bundlerConfig);
+  const response: any = createResponseBase(bundlerConfig, callServer);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;

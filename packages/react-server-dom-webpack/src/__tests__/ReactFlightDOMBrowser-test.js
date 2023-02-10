@@ -16,8 +16,10 @@ global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 let clientExports;
+let serverExports;
 let webpackMap;
 let webpackModules;
+let webpackServerMap;
 let act;
 let React;
 let ReactDOMClient;
@@ -33,8 +35,10 @@ describe('ReactFlightDOMBrowser', () => {
     act = require('jest-react').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
+    serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
+    webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server.browser');
@@ -478,10 +482,10 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath]['*'];
+    const ssrMetadata = webpackMap[ClientComponentOnTheServer.filepath]['*'];
     const translationMap = {
       [clientId]: {
-        '*': ssrMetaData,
+        '*': ssrMetadata,
       },
     };
 
@@ -810,5 +814,102 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<Client />);
     });
     expect(container.innerHTML).toBe('Hi');
+  });
+
+  function requireServerRef(ref) {
+    const metaData = webpackServerMap[ref.id][ref.name];
+    const mod = __webpack_require__(metaData.id);
+    if (metaData.name === '*') {
+      return mod;
+    }
+    return mod[metaData.name];
+  }
+
+  it('can pass a function by reference from server to client', async () => {
+    let actionProxy;
+
+    function Client({action}) {
+      actionProxy = action;
+      return 'Click Me';
+    }
+
+    function send(text) {
+      return text.toUpperCase();
+    }
+
+    const ServerModule = serverExports({
+      send,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <ClientRef action={ServerModule.send} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const fn = requireServerRef(ref);
+        return fn.apply(null, args);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy).toBe('function');
+    expect(actionProxy).not.toBe(send);
+
+    const result = await actionProxy('hi');
+    expect(result).toBe('HI');
+  });
+
+  it('can bind arguments to a server reference', async () => {
+    let actionProxy;
+
+    function Client({action}) {
+      actionProxy = action;
+      return 'Click Me';
+    }
+
+    const greet = serverExports(function greet(a, b, c) {
+      return a + ' ' + b + c;
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <ClientRef action={greet.bind(null, 'Hello', 'World')} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const fn = requireServerRef(ref);
+        return fn.apply(null, args);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy).toBe('function');
+    expect(actionProxy).not.toBe(greet);
+
+    const result = await actionProxy('!');
+    expect(result).toBe('Hello World!');
   });
 });
