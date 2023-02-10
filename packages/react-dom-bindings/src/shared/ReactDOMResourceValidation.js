@@ -7,32 +7,6 @@
  * @flow
  */
 
-import hasOwnProperty from 'shared/hasOwnProperty';
-
-function getResourceNameForWarning(
-  type: string,
-  props: Object,
-  implicit: boolean,
-) {
-  if (__DEV__) {
-    switch (type) {
-      case 'style': {
-        return 'style Resource';
-      }
-      case 'script': {
-        return 'script Resource';
-      }
-      case 'preload': {
-        if (implicit) {
-          return `preload for a ${props.as} Resource`;
-        }
-        return `preload Resource (as "${props.as}")`;
-      }
-    }
-  }
-  return 'Resource';
-}
-
 export function validateLinkPropsForStyleResource(props: any): boolean {
   if (__DEV__) {
     // This should only be called when we know we are opting into Resource semantics (i.e. precedence is not null)
@@ -220,7 +194,7 @@ type PropDifferences = {
     },
   },
 };
-export function compareResourcePropsForWarning(
+function compareResourcePropsForWarning(
   newProps: any,
   currentProps: any,
 ): null | PropDifferences {

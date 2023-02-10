@@ -843,7 +843,7 @@ export function hydrateHoistable(
   internalInstanceHandle: Object,
 ): Instance {
   const ownerDocument = getDocumentFromRoot(hoistableRoot);
-  const nodes = ownerDocument.querySelectorAll(type);
+  const nodes = ownerDocument.getElementsByTagName(type);
 
   const children = props.children;
   let child, childString;

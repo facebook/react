@@ -1643,10 +1643,7 @@ function updateHostHoistable(
   ));
   if (current === null) {
     if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the
-      // We we aren't hydrating and can potentially prepare the hoistable instance now during
-      // render. Note that in some Hosts not all Hoistables will be able to produce an
-      // instance during render and they may be constructed during acquisition in the commit phase
+      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
       workInProgress.stateNode = createHoistableInstance(
         workInProgress.type,
         workInProgress.pendingProps,
