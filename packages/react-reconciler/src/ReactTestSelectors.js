@@ -12,7 +12,7 @@ import type {Instance} from './ReactFiberHostConfig';
 
 import {
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -158,7 +158,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
     case ROLE_TYPE:
       if (
         tag === HostComponent ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton
       ) {
         const node = fiber.stateNode;
@@ -173,7 +173,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       if (
         tag === HostComponent ||
         tag === HostText ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton
       ) {
         const textContent = getTextContent(fiber);
@@ -188,7 +188,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
     case TEST_NAME_TYPE:
       if (
         tag === HostComponent ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton
       ) {
         const dataTestID = fiber.memoizedProps['data-testname'];
@@ -239,7 +239,7 @@ function findPaths(root: Fiber, selectors: Array<Selector>): Array<Fiber> {
 
     if (
       (tag === HostComponent ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       isHiddenSubtree(fiber)
     ) {
@@ -277,7 +277,7 @@ function hasMatchingPaths(root: Fiber, selectors: Array<Selector>): boolean {
 
     if (
       (tag === HostComponent ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       isHiddenSubtree(fiber)
     ) {
@@ -323,7 +323,7 @@ export function findAllNodes(
     const tag = node.tag;
     if (
       tag === HostComponent ||
-      tag === HostResource ||
+      tag === HostHoistable ||
       tag === HostSingleton
     ) {
       if (isHiddenSubtree(node)) {
@@ -366,7 +366,7 @@ export function getFindAllNodesFailureDescription(
 
     if (
       (tag === HostComponent ||
-        tag === HostResource ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       isHiddenSubtree(fiber)
     ) {
@@ -524,7 +524,7 @@ export function focusWithin(
     }
     if (
       tag === HostComponent ||
-      tag === HostResource ||
+      tag === HostHoistable ||
       tag === HostSingleton
     ) {
       const node = fiber.stateNode;

@@ -333,6 +333,7 @@ describe('ReactDOM HostSingleton', () => {
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
           <title>a client title</title>
+          <meta />
         </head>
         <body data-client-baz="baz">
           <style>
@@ -828,14 +829,7 @@ describe('ReactDOM HostSingleton', () => {
     });
     container = document.body;
 
-    let root;
-    // Given our new capabilities to render "safely" into the body we should consider removing this warning
-    expect(() => {
-      root = ReactDOMClient.createRoot(container);
-    }).toErrorDev(
-      'Warning: createRoot(): Creating roots directly with document.body is discouraged, since its children are often manipulated by third-party scripts and browser extensions. This may lead to subtle reconciliation issues. Try using a container element created for your app.',
-      {withoutStack: true},
-    );
+    const root = ReactDOMClient.createRoot(container);
     root.render(<div>something new</div>);
     expect(Scheduler).toFlushWithoutYielding();
     expect(getVisibleChildren(document)).toEqual(
