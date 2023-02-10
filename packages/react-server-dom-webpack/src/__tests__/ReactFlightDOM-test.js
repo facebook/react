@@ -466,6 +466,13 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('does not throw when React inspects any deep props', () => {
+    const ClientModule = clientExports({
+      Component: function () {},
+    });
+    <ClientModule.Component key="this adds instrumentation" />;
+  });
+
   it('throws when accessing a Context.Provider below the client exports', () => {
     const Context = React.createContext();
     const ClientModule = clientExports({

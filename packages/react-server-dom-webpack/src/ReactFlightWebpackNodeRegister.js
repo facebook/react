@@ -48,6 +48,8 @@ module.exports = function register() {
           return target.filepath;
         case 'name':
           return target.name;
+        case 'displayName':
+          return undefined;
         case 'async':
           return target.async;
         // We need to special case this because createElement reads it if we pass this
