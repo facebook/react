@@ -259,7 +259,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     expect(snapshots).toMatchInlineSnapshot(`
-      Array [
+      [
         "[root]
         ▾ <Root>
             <A key="a">",
@@ -430,7 +430,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     expect(snapshots).toMatchInlineSnapshot(`
-      Array [
+      [
         "[root]
         ▾ <Root>
             <X>
@@ -950,7 +950,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     expect(snapshots).toMatchInlineSnapshot(`
-      Array [
+      [
         "[root]
         ▾ <Root>
             <X>

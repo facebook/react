@@ -103,7 +103,7 @@ exports[`ReactFabric renders and reorders children 2`] = `
 `;
 
 exports[`ReactFabric should call complete after inserting children 1`] = `
-Array [
+[
   "RCTView {"foo":"a"}
   RCTView {"foo":"b"}",
 ]
