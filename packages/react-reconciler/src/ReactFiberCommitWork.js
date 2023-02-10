@@ -1389,7 +1389,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
     // the map.
 
     // We use stateNode on the Offscreen component as a stable object
-    // that doesnt change from render to render. This way we can
+    // that doesn't change from render to render. This way we can
     // distinguish between different Offscreen instances (vs. the same
     // Offscreen instance with different fibers)
     const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
@@ -2977,7 +2977,7 @@ function commitMutationEffectsOnFiber(
           const isUpdate = current !== null;
           const wasHiddenByAncestorOffscreen =
             offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
-          // Only trigger disapper layout effects if:
+          // Only trigger disappear layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
           //   - Ancestor Offscreen was not hidden in previous commit.
@@ -3058,7 +3058,7 @@ function commitMutationEffectsOnFiber(
 }
 function commitReconciliationEffects(finishedWork: Fiber) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
-  // type. They needs to happen after the children effects have fired, but
+  // type. They need to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
   const flags = finishedWork.flags;
   if (flags & Placement) {
@@ -4235,7 +4235,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
         HookPassive,
       );
       // When disconnecting passive effects, we fire the effects in the same
-      // order as during a deletiong: parent before child
+      // order as during a deletion: parent before child
       recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       break;
     }

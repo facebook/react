@@ -1006,7 +1006,7 @@ function completeWork(
           markUpdate(workInProgress);
         } else if (workInProgress.memoizedState === null) {
           // We may have props to update on the Hoistable instance. We use the
-          // updateHostComponent path becuase it produces the update queue
+          // updateHostComponent path because it produces the update queue
           // we need for Hoistables
           updateHostComponent(
             current,

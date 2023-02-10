@@ -28,8 +28,8 @@ const suspenseHandlerStackCursor: StackCursor<Fiber | null> =
 // deeper than the shell, inside a new tree that wasn't already visible.
 //
 // The main way we use this concept is to determine whether showing a fallback
-// would result in a desirable or undesirable loading state. Activing a fallback
-// in the shell is considered an undersirable loading state, because it would
+// would result in a desirable or undesirable loading state. Activating a fallback
+// in the shell is considered an undesirable loading state, because it would
 // mean hiding visible (albeit stale) content in the current tree — we prefer to
 // show the stale content, rather than switch to a fallback. But showing a
 // fallback in a new tree is fine, because there's no stale content to

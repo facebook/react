@@ -147,7 +147,7 @@ describe('ReactLazyContextPropagation', () => {
     if (caches.length === 0) {
       throw Error('Cache does not exist.');
     } else {
-      // Resolve the most recently created cache. An older cache can by
+      // Resolve the most recently created cache. An older cache can be
       // resolved with `caches[index].resolve(text)`.
       caches[caches.length - 1].resolve(text);
     }
@@ -159,7 +159,7 @@ describe('ReactLazyContextPropagation', () => {
   //   if (caches.length === 0) {
   //     throw Error('Cache does not exist.');
   //   } else {
-  //     // Resolve the most recently created cache. An older cache can by
+  //     // Resolve the most recently created cache. An older cache can be
   //     // resolved with `caches[index].reject(text, error)`.
   //     caches[caches.length - 1].reject(text, error);
   //   }
@@ -391,7 +391,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('AA');
 
     await act(async () => {
-      // Intentionally not wrapping in startTransition, so that the fallback
+      // Intentionally not wrapping in startTransition, so that
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
@@ -471,7 +471,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('AAA');
 
     await act(async () => {
-      // Intentionally not wrapping in startTransition, so that the fallback
+      // Intentionally not wrapping in startTransition, so that
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
@@ -532,7 +532,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('AA');
 
     await act(async () => {
-      // Intentionally not wrapping in startTransition, so that the fallback
+      // Intentionally not wrapping in startTransition, so that
       // the fallback displays despite this being a refresh.
       setContext('B');
     });

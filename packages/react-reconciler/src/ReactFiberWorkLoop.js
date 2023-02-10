@@ -1064,7 +1064,7 @@ function performConcurrentWorkOnRoot(
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
       // render synchronously to block concurrent data mutations, and we'll
-      // includes all pending updates are included. If it still fails after
+      // include all pending updates are included. If it still fails after
       // the second attempt, we'll give up and commit the resulting tree.
       const originallyAttemptedLanes = lanes;
       const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
@@ -1211,7 +1211,7 @@ function recoverFromConcurrentError(
       // During the synchronous render, we attached additional ping listeners.
       // This is highly suggestive of an uncached promise (though it's not the
       // only reason this would happen). If it was an uncached promise, then
-      // it may have masked a downstream error from ocurring without actually
+      // it may have masked a downstream error from occurring without actually
       // fixing it. Example:
       //
       //    use(Promise.resolve('uncached'))
@@ -1482,7 +1482,7 @@ function performSyncWorkOnRoot(root: FiberRoot) {
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
     // If something threw an error, try rendering one more time. We'll render
-    // synchronously to block concurrent data mutations, and we'll includes
+    // synchronously to block concurrent data mutations, and we'll include
     // all pending updates are included. If it still fails after the second
     // attempt, we'll give up and commit the resulting tree.
     const originallyAttemptedLanes = lanes;
@@ -2334,7 +2334,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
-  // This is a fork of performUnitOfWork specifcally for replaying a fiber that
+  // This is a fork of performUnitOfWork specifically for replaying a fiber that
   // just suspended.
   //
   const current = unitOfWork.alternate;

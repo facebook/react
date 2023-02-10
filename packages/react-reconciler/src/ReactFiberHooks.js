@@ -764,7 +764,7 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
-  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // This is called immediately after a throw. It shouldn't reset the entire
   // module state, because the work loop might decide to replay the component
   // again without rewinding.
   //
@@ -1354,7 +1354,7 @@ function readFromUnsubscribedMutableSource<Source, Snapshot>(
     // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
     markSourceAsDirty(source);
 
-    // Intentioally throw an error to force React to retry synchronously. During
+    // Intentionally throw an error to force React to retry synchronously. During
     // the synchronous retry, it will block interleaved mutations, so we should
     // get a consistent read. Therefore, the following error should never be
     // visible to the user.
@@ -1497,7 +1497,7 @@ function useMutableSource<Source, Snapshot>(
   // Maybe the source changed in a way that the old subscription ignored but the new one depends on.
   //
   // If the getSnapshot function changed, we also shouldn't rely on the update queue.
-  // It's possible that the underlying source was mutated between the when the last "change" event fired,
+  // It's possible that the underlying source was mutated between when the last "change" event fired,
   // and when the current render (with the new getSnapshot function) is processed.
   //
   // In both cases, we need to throw away pending updates (since they are no longer relevant)
@@ -1699,7 +1699,7 @@ function updateSyncExternalStore<T>(
   if (
     inst.getSnapshot !== getSnapshot ||
     snapshotChanged ||
-    // Check if the susbcribe function changed. We can save some memory by
+    // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HookHasEffect)
@@ -1770,7 +1770,7 @@ function updateStoreInstance<T>(
   // Something may have been mutated in between render and commit. This could
   // have been in an event that fired before the passive effects, or it could
   // have been in a layout effect. In that case, we would have used the old
-  // snapsho and getSnapshot values to bail out. We need to check one more time.
+  // snapshot and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
     forceStoreRerender(fiber);

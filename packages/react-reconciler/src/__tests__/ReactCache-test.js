@@ -176,7 +176,7 @@ describe('ReactCache', () => {
     if (textCaches.length === 0) {
       throw Error('Cache does not exist.');
     } else {
-      // Resolve the most recently created cache. An older cache can by
+      // Resolve the most recently created cache. An older cache can be
       // resolved with `textCaches[index].resolve(text)`.
       textCaches[textCaches.length - 1].resolve(text);
     }

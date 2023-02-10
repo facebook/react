@@ -270,7 +270,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // We use a double buffering pooling technique because we know that we'll
     // only ever need at most two versions of a tree. We pool the "other" unused
     // node that we're free to reuse. This is lazily created to avoid allocating
-    // extra objects for things that are never updated. It also allow us to
+    // extra objects for things that are never updated. It also allows us to
     // reclaim the extra memory if needed.
     workInProgress = createFiber(
       current.tag,

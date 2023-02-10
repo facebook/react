@@ -85,7 +85,7 @@ export function trackUsedThenable<T>(
     }
     default: {
       if (typeof thenable.status === 'string') {
-        // Only instrument the thenable if the status if not defined. If
+        // Only instrument the thenable if the status is not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
         // Attach a dummy listener, to ensure that any lazy initialization can

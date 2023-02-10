@@ -223,7 +223,7 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     }
 
     const markerInstances = [];
-    // For ever transition on the suspense boundary, we push the transition
+    // For every transition on the suspense boundary, we push the transition
     // along with its map of pending suspense boundaries onto the marker
     // instance stack.
     root.incompleteTransitions.forEach(markerInstance => {

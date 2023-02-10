@@ -65,7 +65,7 @@ If these links break please file an issue and we’ll fix them. They intentional
 
 ## An (Incomplete!) Reference
 
-At the moment, we can't commit to documenting every API detail because the host config still changes very often between the releases. The documentation below is **provided in the spirit of making our best effort rather than an API guarantee**. It focuses on the parts that don't change too often. This is a compromise that strikes a balance between the need for a fast-paced development of React itself, and the usefulness of this package to the custom renderer community. If you notice parts that are out of date or don't match how the latest stable update is behaving, please file an issue or send a pull request, although a response might take time.
+At the moment, we can't commit to documenting every API detail because the host config still changes very often between releases. The documentation below is **provided in the spirit of making our best effort rather than an API guarantee**. It focuses on the parts that don't change too often. This is a compromise that strikes a balance between the need for a fast-paced development of React itself, and the usefulness of this package to the custom renderer community. If you notice parts that are out of date or don't match how the latest stable update is behaving, please file an issue or send a pull request, although a response might take time.
 
 #### Modes
 
@@ -125,7 +125,7 @@ In this method, you can perform some final mutations on the `instance`. Unlike w
 
 This method happens **in the render phase**. It can mutate `instance`, but it must not modify any other nodes. It's called while the tree is still being built up and not connected to the actual tree on the screen.
 
-There is a second purpose to this method. It lets you specify whether there is some work that needs to happen when the node is connected to the tree on the screen. If you return `true`, the instance will receive a `commitMount` call later. See its documentation below.
+There is a second purpose to this method. It lets you specify whether some work needs to happen when the node is connected to the tree on the screen. If you return `true`, the instance will receive a `commitMount` call later. See its documentation below.
 
 If you don't want to do anything here, you should return `false`.
 

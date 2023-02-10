@@ -3278,7 +3278,7 @@ function initSuspenseListRenderState(
 // We first render the head. If anything is in fallback state, we do another
 // pass through beginWork to rerender all children (including the tail) with
 // the force suspend context. If the first render didn't have anything in
-// in fallback state. Then we render each row in the tail one-by-one.
+// fallback state. Then we render each row in the tail one-by-one.
 // That happens in the completeWork phase without going back to beginWork.
 function updateSuspenseListComponent(
   current: Fiber | null,
@@ -4021,7 +4021,7 @@ function beginWork(
     didReceiveUpdate = false;
 
     if (getIsHydrating() && isForkedChild(workInProgress)) {
-      // Check if this child belongs to a list of muliple children in
+      // Check if this child belongs to a list of multiple children in
       // its parent.
       //
       // In a true multi-threaded implementation, we would render children on

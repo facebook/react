@@ -291,7 +291,7 @@ describe(
         // Expire the task
         Scheduler.unstable_advanceTime(10000);
         // Scheduling a new update is a trick to force the expiration to kick
-        // in. We don't check if a update has been starved at the beginning of
+        // in. We don't check if an update has been starved at the beginning of
         // working on it, since there's no point — we're already working on it.
         // We only check before yielding to the main thread (to avoid starvation
         // by other main thread work) or when receiving an update (to avoid
