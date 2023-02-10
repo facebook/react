@@ -1596,51 +1596,60 @@ export function isHostHoistableType(
     namespace = hostContextProd;
   }
   switch (type) {
-    case 'meta': {
-      return true;
-    }
+    case 'meta':
     case 'title': {
       return namespace !== SVG_NAMESPACE;
     }
     case 'style': {
-      if (__DEV__) {
-        if (outsideHostContainerContext) {
-          console.error(
-            'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
-              ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
-              ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
-              ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
-              ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
-              ' to the <style> tag.',
-          );
-        }
-      }
-      return (
-        namespace !== SVG_NAMESPACE && typeof props.precedence === 'string'
-      );
-    }
-    case 'link': {
-      const {onLoad, onError, rel, href} = props;
       if (
-        namespace === SVG_NAMESPACE ||
-        typeof rel !== 'string' ||
-        typeof href !== 'string' ||
-        href === '' ||
-        onLoad ||
-        onError
+        typeof props.precedence !== 'string' ||
+        typeof props.href !== 'string' ||
+        props.href === '' ||
+        namespace === SVG_NAMESPACE
       ) {
         if (__DEV__) {
           if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
+                ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
+                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
+                ' to the <style> tag.',
+            );
+          }
+        }
+        return false;
+      }
+      return true;
+    }
+    case 'link': {
+      if (
+        typeof props.rel !== 'string' ||
+        typeof props.href !== 'string' ||
+        props.href === '' ||
+        props.onLoad ||
+        props.onError ||
+        namespace === SVG_NAMESPACE
+      ) {
+        if (__DEV__) {
+          if (
+            props.rel === 'stylesheet' &&
+            typeof props.precedence === 'string'
+          ) {
+            validateLinkPropsForStyleResource(props);
+          }
+          if (outsideHostContainerContext) {
             if (
-              typeof rel !== 'string' ||
-              typeof href !== 'string' ||
-              href === ''
+              typeof props.rel !== 'string' ||
+              typeof props.href !== 'string' ||
+              props.href === ''
             ) {
               console.error(
                 'Cannot render a <link> outside the main document without a `rel` and `href` prop.' +
                   ' Try adding a `rel` and/or `href` prop to this <link> or moving the link into the <head> tag',
               );
-            } else if (onError || onLoad) {
+            } else if (props.onError || props.onLoad) {
               console.error(
                 'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
                   ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
@@ -1655,7 +1664,6 @@ export function isHostHoistableType(
         case 'stylesheet': {
           const {precedence, disabled} = props;
           if (__DEV__) {
-            validateLinkPropsForStyleResource(props);
             if (typeof precedence !== 'string') {
               if (outsideHostContainerContext) {
                 console.error(
@@ -1673,34 +1681,39 @@ export function isHostHoistableType(
       }
     }
     case 'script': {
-      // We don't validate because it is valid to use async with onLoad/onError unlike combining
-      // precedence with these for style resources
-      const {src, async, onLoad, onError} = props;
-      if (__DEV__) {
-        if (async !== true) {
+      if (
+        props.async !== true ||
+        props.onLoad ||
+        props.onError ||
+        typeof props.src !== 'string' ||
+        !props.src ||
+        namespace === SVG_NAMESPACE
+      ) {
+        if (__DEV__) {
           if (outsideHostContainerContext) {
-            console.error(
-              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
-                ' Try adding async="" or moving it into the root <head> tag.',
-            );
-          }
-        } else if (onLoad || onError) {
-          if (outsideHostContainerContext) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
+            if (props.async !== true) {
+              console.error(
+                'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+                  ' Try adding async="" or moving it into the root <head> tag.',
+              );
+            } else if (props.onLoad || props.onError) {
+              console.error(
+                'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+                  ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            } else {
+              console.error(
+                'Cannot render a <script> outside the main document without `async={true}` and a non-empty `src` prop.' +
+                  ' Ensure there is a valid `src` and either make the script async or move it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            }
           }
         }
+        return false;
       }
-      return (
-        namespace !== SVG_NAMESPACE &&
-        (async: any) &&
-        typeof src === 'string' &&
-        !onLoad &&
-        !onError
-      );
+      return true;
     }
     case 'noscript':
     case 'template': {

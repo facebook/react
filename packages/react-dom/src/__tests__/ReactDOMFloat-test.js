@@ -326,8 +326,8 @@ describe('ReactDOMFloat', () => {
         <head>
           <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
-          <link rel="foo" href="bar" />
           <title>foo</title>
+          <link rel="foo" href="bar" />
           <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
           <base target="foo" href="bar" />
         </head>
@@ -357,8 +357,8 @@ describe('ReactDOMFloat', () => {
         <head>
           <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
-          <link rel="foo" href="bar" />
           <title>foo</title>
+          <link rel="foo" href="bar" />
           <link rel="foo" href="bar" />
           <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
           <base target="foo" href="bar" />
@@ -3629,6 +3629,26 @@ body {
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
         ].filter(Boolean),
       );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <link
+              rel="stylesheet"
+              href="foo"
+              precedence="default"
+              onLoad={() => {}}
+              onError={() => {}}
+            />
+          </body>
+        </html>,
+      );
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev([
+        'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` prop that also included the `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
+      ]);
     });
 
     // @gate enableFloat

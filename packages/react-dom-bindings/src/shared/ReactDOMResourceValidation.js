@@ -37,24 +37,27 @@ export function validateLinkPropsForStyleResource(props: any): boolean {
   if (__DEV__) {
     // This should only be called when we know we are opting into Resource semantics (i.e. precedence is not null)
     const {href, onLoad, onError, disabled} = props;
-    const allProps = ['onLoad', 'onError', 'disabled'];
     const includedProps = [];
-    if (onLoad) includedProps.push('onLoad');
-    if (onError) includedProps.push('onError');
-    if (disabled != null) includedProps.push('disabled');
+    if (onLoad) includedProps.push('`onLoad`');
+    if (onError) includedProps.push('`onError`');
+    if (disabled != null) includedProps.push('`disabled`');
 
-    const allPropsUnionPhrase = propNamesListJoin(allProps, 'or');
     let includedPropsPhrase = propNamesListJoin(includedProps, 'and');
     includedPropsPhrase += includedProps.length === 1 ? ' prop' : ' props';
+    const withArticlePhrase =
+      includedProps.length === 1
+        ? 'an ' + includedPropsPhrase
+        : 'the ' + includedPropsPhrase;
 
     if (includedProps.length) {
       console.error(
-        'A link (rel="stylesheet") element with href "%s" has the precedence prop but also included the %s.' +
-          ' When using %s React will opt out of Resource behavior. If you meant for this' +
-          ' element to be treated as a Resource remove the %s. Otherwise remove the precedence prop.',
+        'React encountered a <link rel="stylesheet" href="%s" ... /> with a `precedence` prop that' +
+          ' also included %s. The presence of loading and error handlers indicates an intent to manage' +
+          ' the stylesheet loading state from your from your Component code and React will not hoist or' +
+          ' deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet' +
+          ' using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
         href,
-        includedPropsPhrase,
-        allPropsUnionPhrase,
+        withArticlePhrase,
         includedPropsPhrase,
       );
       return true;

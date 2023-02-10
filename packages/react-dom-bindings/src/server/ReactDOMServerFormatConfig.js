@@ -1277,199 +1277,194 @@ function pushLink(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-): ReactNodeList {
+): null {
   if (enableFloat) {
+    const rel = props.rel;
+    const href = props.href;
+    const precedence = props.precedence;
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      typeof props.rel !== 'string' ||
-      typeof props.href !== 'string' ||
-      props.href === ''
+      typeof rel !== 'string' ||
+      typeof href !== 'string' ||
+      href === ''
     ) {
       if (__DEV__) {
-        if (
-          props.rel === 'stylesheet' &&
-          typeof props.precedence === 'string'
-        ) {
-          if (typeof props.href !== 'string' || !props.href) {
+        if (rel === 'stylesheet' && typeof props.precedence === 'string') {
+          if (typeof href !== 'string' || !href) {
             console.error(
               'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered %s instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
-              getValueDescriptorExpectingObjectForWarning(props.href),
+              getValueDescriptorExpectingObjectForWarning(href),
             );
           }
         }
       }
-      return pushLinkImpl(target, props);
+      pushLinkImpl(target, props);
+      return null;
     }
 
-    switch (props.rel) {
-      case 'stylesheet': {
-        // This <link> may be convertible to a stylesheet Resource. We will either
-        // make it into a Resource or emit it in place and preload. Stylesheets are
-        // never hoisted like other link tags
-        const {onLoad, onError, precedence, disabled, href} = props;
-        const key = getResourceKey('style', href);
-        if (
-          typeof precedence !== 'string' ||
-          onLoad ||
-          onError ||
-          disabled != null
-        ) {
-          // This stylesheet is either not opted into Resource semantics or has conflicting properties which
-          // disqualify it for such. We can still create a preload resource to help it load faster on the
-          // client
-          if (__DEV__) {
-            if (typeof precedence === 'string') {
-              if (onLoad || onError) {
-                const propDescription =
-                  onLoad && onError
-                    ? '`onLoad` and `onError` props'
-                    : onLoad
-                    ? '`onLoad` prop'
-                    : '`onError` prop';
-                console.error(
-                  'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
-                  propDescription,
-                  propDescription,
-                );
-              } else if (disabled != null) {
-                console.error(
-                  'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
-                );
-              }
-            }
-          }
-          let resource = resources.preloadsMap.get(key);
-          if (!resource) {
-            resource = {
-              type: 'preload',
-              chunks: ([]: Array<Chunk | PrecomputedChunk>),
-              state: NoState,
-              props: preloadAsStylePropsFromProps(href, props),
-            };
-            resources.preloadsMap.set(key, resource);
-            if (__DEV__) {
-              markAsImplicitResourceDEV(resource, props, resource.props);
-            }
-          }
-          pushLinkImpl(resource.chunks, resource.props);
-          resources.usedStylesheets.add(resource);
-          return pushLinkImpl(target, props);
-        } else {
-          // This stylesheet refers to a Resource and we create a new one if necessary
-          let resource = resources.stylesMap.get(key);
-          if (__DEV__) {
-            const devResource = getAsResourceDEV(resource);
-            if (devResource) {
-              switch (devResource.__provenance) {
-                case 'rendered': {
-                  const differenceDescription =
-                    describeDifferencesForStylesheets(
-                      // Diff the props from the JSX element, not the derived resource props
-                      props,
-                      devResource.__originalProps,
-                    );
-                  if (differenceDescription) {
-                    console.error(
-                      'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
-                        ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
-                        ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
-                        ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
-                      href,
-                      differenceDescription,
-                    );
-                  }
-                  break;
-                }
-                case 'preinit': {
-                  const differenceDescription =
-                    describeDifferencesForStylesheetOverPreinit(
-                      // Diff the props from the JSX element, not the derived resource props
-                      props,
-                      devResource.__propsEquivalent,
-                    );
-                  if (differenceDescription) {
-                    console.error(
-                      'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
-                        ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
-                        ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
-                        ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
-                        ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
-                        ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
-                        ' <link> tags only.%s',
-                      precedence,
-                      href,
-                      href,
-                      differenceDescription,
-                    );
-                  }
-                  break;
-                }
-              }
-            }
-          }
-          if (!resource) {
-            const resourceProps = stylesheetPropsFromRawProps(props);
-            const preloadResource = resources.preloadsMap.get(key);
-            if (preloadResource) {
-              // If we already had a preload we don't want that resource to flush directly.
-              // We let the newly created resource govern flushing.
-              preloadResource.state |= Blocked;
-              adoptPreloadPropsForStylesheetProps(
-                resourceProps,
-                preloadResource.props,
+    if (props.rel === 'stylesheet') {
+      // This <link> may hoistable as a Stylesheet Resource, otherwise it will emit in place
+      const key = getResourceKey('style', href);
+      if (
+        typeof precedence !== 'string' ||
+        props.disabled != null ||
+        props.onLoad ||
+        props.onError
+      ) {
+        // This stylesheet is either not opted into Resource semantics or has conflicting properties which
+        // disqualify it for such. We can still create a preload resource to help it load faster on the
+        // client
+        if (__DEV__) {
+          if (typeof precedence === 'string') {
+            if (props.disabled != null) {
+              console.error(
+                'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
+              );
+            } else if (props.onLoad || props.onError) {
+              const propDescription =
+                props.onLoad && props.onError
+                  ? '`onLoad` and `onError` props'
+                  : props.onLoad
+                  ? '`onLoad` prop'
+                  : '`onError` prop';
+              console.error(
+                'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
+                propDescription,
+                propDescription,
               );
             }
-            resource = {
-              type: 'stylesheet',
-              chunks: ([]: Array<Chunk | PrecomputedChunk>),
-              state: resources.boundaryResources ? Blocked : NoState,
-              props: resourceProps,
-            };
-            resources.stylesMap.set(key, resource);
-            if (__DEV__) {
-              markAsRenderedResourceDEV(resource, props);
-            }
-            let precedenceSet = resources.precedences.get(precedence);
-            if (!precedenceSet) {
-              precedenceSet = new Set();
-              resources.precedences.set(precedence, precedenceSet);
-            }
-            precedenceSet.add(resource);
           }
-          if (resources.boundaryResources) {
-            resources.boundaryResources.add(resource);
-          }
-          if (textEmbedded) {
-            // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-            // to be safe and assume text will follow by inserting a textSeparator
-            target.push(textSeparator);
-          }
-          return null;
         }
+        let resource = resources.preloadsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'preload',
+            chunks: ([]: Array<Chunk | PrecomputedChunk>),
+            state: NoState,
+            props: preloadAsStylePropsFromProps(href, props),
+          };
+          resources.preloadsMap.set(key, resource);
+          if (__DEV__) {
+            markAsImplicitResourceDEV(resource, props, resource.props);
+          }
+        }
+        pushLinkImpl(resource.chunks, resource.props);
+        resources.usedStylesheets.add(resource);
+        return pushLinkImpl(target, props);
+      } else {
+        // This stylesheet refers to a Resource and we create a new one if necessary
+        let resource = resources.stylesMap.get(key);
+        if (__DEV__) {
+          const devResource = getAsResourceDEV(resource);
+          if (devResource) {
+            switch (devResource.__provenance) {
+              case 'rendered': {
+                const differenceDescription = describeDifferencesForStylesheets(
+                  // Diff the props from the JSX element, not the derived resource props
+                  props,
+                  devResource.__originalProps,
+                );
+                if (differenceDescription) {
+                  console.error(
+                    'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
+                      ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
+                      ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
+                      ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
+                    href,
+                    differenceDescription,
+                  );
+                }
+                break;
+              }
+              case 'preinit': {
+                const differenceDescription =
+                  describeDifferencesForStylesheetOverPreinit(
+                    // Diff the props from the JSX element, not the derived resource props
+                    props,
+                    devResource.__propsEquivalent,
+                  );
+                if (differenceDescription) {
+                  console.error(
+                    'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
+                      ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
+                      ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
+                      ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
+                      ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
+                      ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
+                      ' <link> tags only.%s',
+                    precedence,
+                    href,
+                    href,
+                    differenceDescription,
+                  );
+                }
+                break;
+              }
+            }
+          }
+        }
+        if (!resource) {
+          const resourceProps = stylesheetPropsFromRawProps(props);
+          const preloadResource = resources.preloadsMap.get(key);
+          if (preloadResource) {
+            // If we already had a preload we don't want that resource to flush directly.
+            // We let the newly created resource govern flushing.
+            preloadResource.state |= Blocked;
+            adoptPreloadPropsForStylesheetProps(
+              resourceProps,
+              preloadResource.props,
+            );
+          }
+          resource = {
+            type: 'stylesheet',
+            chunks: ([]: Array<Chunk | PrecomputedChunk>),
+            state: resources.boundaryResources ? Blocked : NoState,
+            props: resourceProps,
+          };
+          resources.stylesMap.set(key, resource);
+          if (__DEV__) {
+            markAsRenderedResourceDEV(resource, props);
+          }
+          let precedenceSet = resources.precedences.get(precedence);
+          if (!precedenceSet) {
+            precedenceSet = new Set();
+            resources.precedences.set(precedence, precedenceSet);
+          }
+          precedenceSet.add(resource);
+        }
+        if (resources.boundaryResources) {
+          resources.boundaryResources.add(resource);
+        }
+        if (textEmbedded) {
+          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+          // to be safe and assume text will follow by inserting a textSeparator
+          target.push(textSeparator);
+        }
+        return null;
       }
-      case 'preconnect':
-      case 'dns-prefetch':
-        if (textEmbedded) {
-          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-          // to be safe and assume text will follow by inserting a textSeparator
-          target.push(textSeparator);
-        }
-        return pushLinkImpl(responseState.preconnectChunks, props);
-      case 'preload':
-        if (textEmbedded) {
-          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-          // to be safe and assume text will follow by inserting a textSeparator
-          target.push(textSeparator);
-        }
-        return pushLinkImpl(responseState.preloadChunks, props);
-      default:
-        if (textEmbedded) {
-          // This link follows text but we aren't writing a tag. while not as efficient as possible we need
-          // to be safe and assume text will follow by inserting a textSeparator
-          target.push(textSeparator);
-        }
-        return pushLinkImpl(responseState.hoistableChunks, props);
+    } else if (props.onLoad || props.onError) {
+      // When using load handlers we cannot hoist and need to emit links in place
+      return pushLinkImpl(target, props);
+    } else {
+      // We can hoist this link so we may need to emit a text separator.
+      // @TODO refactor text separators so we don't have to defensively add
+      // them when we don't end up emitting a tag as a result of pushStartInstance
+      if (textEmbedded) {
+        // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+        // to be safe and assume text will follow by inserting a textSeparator
+        target.push(textSeparator);
+      }
+
+      switch (props.rel) {
+        case 'preconnect':
+        case 'dns-prefetch':
+          return pushLinkImpl(responseState.preconnectChunks, props);
+        case 'preload':
+          return pushLinkImpl(responseState.preloadChunks, props);
+        default:
+          return pushLinkImpl(responseState.hoistableChunks, props);
+      }
     }
   } else {
     return pushLinkImpl(target, props);
@@ -1479,7 +1474,7 @@ function pushLink(
 function pushLinkImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-): ReactNodeList {
+): null {
   target.push(startChunkForTag('link'));
 
   for (const propKey in props) {
