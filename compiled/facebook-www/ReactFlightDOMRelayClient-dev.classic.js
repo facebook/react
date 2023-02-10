@@ -25,10 +25,8 @@ function isArray(a) {
   return isArrayImpl(a);
 }
 
-function resolveClientReference(bundlerConfig, moduleData) {
-  return ReactFlightDOMRelayClientIntegration.resolveClientReference(
-    moduleData
-  );
+function resolveClientReference(bundlerConfig, metadata) {
+  return ReactFlightDOMRelayClientIntegration.resolveClientReference(metadata);
 }
 
 function parseModelRecursively(response, parentObj, key, value) {
@@ -466,6 +464,28 @@ function createModelReject(chunk) {
   };
 }
 
+function createServerReferenceProxy(response, metaData) {
+  var callServer = response._callServer;
+
+  var proxy = function () {
+    // $FlowFixMe[method-unbinding]
+    var args = Array.prototype.slice.call(arguments);
+    var p = metaData.bound;
+
+    if (p.status === INITIALIZED) {
+      var bound = p.value;
+      return callServer(metaData, bound.concat(args));
+    } // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
+    // TODO: Remove the wrapper once that's fixed.
+
+    return Promise.resolve(p).then(function (bound) {
+      return callServer(metaData, bound.concat(args));
+    });
+  };
+
+  return proxy;
+}
+
 function parseModelString(response, parentObject, key, value) {
   if (value[0] === "$") {
     if (value === "$") {
@@ -498,16 +518,18 @@ function parseModelString(response, parentObject, key, value) {
       }
 
       case "S": {
+        // Symbol
         return Symbol.for(value.substring(2));
       }
 
       case "P": {
+        // Server Context Provider
         return getOrCreateServerContext(value.substring(2)).Provider;
       }
 
-      default: {
-        // We assume that anything else is a reference ID.
-        var _id2 = parseInt(value.substring(1), 16);
+      case "F": {
+        // Server Reference
+        var _id2 = parseInt(value.substring(2), 16);
 
         var _chunk2 = getChunk(response, _id2);
 
@@ -515,21 +537,45 @@ function parseModelString(response, parentObject, key, value) {
           case RESOLVED_MODEL:
             initializeModelChunk(_chunk2);
             break;
-
-          case RESOLVED_MODULE:
-            initializeModuleChunk(_chunk2);
-            break;
         } // The status might have changed after initialization.
 
         switch (_chunk2.status) {
+          case INITIALIZED: {
+            var metadata = _chunk2.value;
+            return createServerReferenceProxy(response, metadata);
+          }
+          // We always encode it first in the stream so it won't be pending.
+
+          default:
+            throw _chunk2.reason;
+        }
+      }
+
+      default: {
+        // We assume that anything else is a reference ID.
+        var _id3 = parseInt(value.substring(1), 16);
+
+        var _chunk3 = getChunk(response, _id3);
+
+        switch (_chunk3.status) {
+          case RESOLVED_MODEL:
+            initializeModelChunk(_chunk3);
+            break;
+
+          case RESOLVED_MODULE:
+            initializeModuleChunk(_chunk3);
+            break;
+        } // The status might have changed after initialization.
+
+        switch (_chunk3.status) {
           case INITIALIZED:
-            return _chunk2.value;
+            return _chunk3.value;
 
           case PENDING:
           case BLOCKED:
             var parentChunk = initializingChunk;
 
-            _chunk2.then(
+            _chunk3.then(
               createModelResolver(parentChunk, parentObject, key),
               createModelReject(parentChunk)
             );
@@ -537,7 +583,7 @@ function parseModelString(response, parentObject, key, value) {
             return null;
 
           default:
-            throw _chunk2.reason;
+            throw _chunk3.reason;
         }
       }
     }
@@ -556,10 +602,19 @@ function parseModelTuple(response, value) {
 
   return value;
 }
-function createResponse(bundlerConfig) {
+
+function missingCall() {
+  throw new Error(
+    'Trying to call a function from "use server" but the callServer option ' +
+      "was not implemented in your router runtime."
+  );
+}
+
+function createResponse(bundlerConfig, callServer) {
   var chunks = new Map();
   var response = {
     _bundlerConfig: bundlerConfig,
+    _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks
   };
   return response;
@@ -577,16 +632,16 @@ function resolveModel(response, id, model) {
 function resolveModule(response, id, model) {
   var chunks = response._chunks;
   var chunk = chunks.get(id);
-  var moduleMetaData = parseModel(response, model);
-  var moduleReference = resolveClientReference(
+  var clientReferenceMetadata = parseModel(response, model);
+  var clientReference = resolveClientReference(
     response._bundlerConfig,
-    moduleMetaData
+    clientReferenceMetadata
   ); // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
 
   var promise =
-    ReactFlightDOMRelayClientIntegration.preloadModule(moduleReference);
+    ReactFlightDOMRelayClientIntegration.preloadModule(clientReference);
 
   if (promise) {
     var blockedChunk;
@@ -605,7 +660,7 @@ function resolveModule(response, id, model) {
 
     promise.then(
       function () {
-        return resolveModuleChunk(blockedChunk, moduleReference);
+        return resolveModuleChunk(blockedChunk, clientReference);
       },
       function (error) {
         return triggerErrorOnChunk(blockedChunk, error);
@@ -613,11 +668,11 @@ function resolveModule(response, id, model) {
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+      chunks.set(id, createResolvedModuleChunk(response, clientReference));
     } else {
       // This can't actually happen because we don't have any forward
       // references to modules.
-      resolveModuleChunk(chunk, moduleReference);
+      resolveModuleChunk(chunk, clientReference);
     }
   }
 }

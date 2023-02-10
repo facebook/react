@@ -81,8 +81,8 @@ function getClientReferenceKey(reference) {
   // object will be cached by the bundler runtime.
   return reference;
 }
-function resolveModuleMetaData(config, resource) {
-  return ReactFlightDOMRelayServerIntegration.resolveModuleMetaData(
+function resolveClientReferenceMetadata(config, resource) {
+  return ReactFlightDOMRelayServerIntegration.resolveClientReferenceMetadata(
     config,
     resource
   );
@@ -142,9 +142,9 @@ function processModelChunk(request, id, model) {
 function processReferenceChunk(request, id, reference) {
   return ["O", id, reference];
 }
-function processModuleChunk(request, id, moduleMetaData) {
-  // The moduleMetaData is already a JSON serializable value.
-  return ["I", id, moduleMetaData];
+function processImportChunk(request, id, clientReferenceMetadata) {
+  // The clientReferenceMetadata is already a JSON serializable value.
+  return ["I", id, clientReferenceMetadata];
 }
 function scheduleWork(callback) {
   callback();
@@ -1291,11 +1291,12 @@ function createRequest(
     pendingChunks: 0,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    completedModuleChunks: [],
+    completedImportChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
     writtenSymbols: new Map(),
-    writtenModules: new Map(),
+    writtenClientReferences: new Map(),
+    writtenServerReferences: new Map(),
     writtenProviders: new Map(),
     identifierPrefix: identifierPrefix || "",
     identifierCount: 1,
@@ -1653,10 +1654,10 @@ function serializeProviderReference(name) {
   return "$P" + name;
 }
 
-function serializeClientReference(request, parent, key, moduleReference) {
-  var moduleKey = getClientReferenceKey(moduleReference);
-  var writtenModules = request.writtenModules;
-  var existingId = writtenModules.get(moduleKey);
+function serializeClientReference(request, parent, key, clientReference) {
+  var clientReferenceKey = getClientReferenceKey(clientReference);
+  var writtenClientReferences = request.writtenClientReferences;
+  var existingId = writtenClientReferences.get(clientReferenceKey);
 
   if (existingId !== undefined) {
     if (parent[0] === REACT_ELEMENT_TYPE && key === "1") {
@@ -1672,14 +1673,14 @@ function serializeClientReference(request, parent, key, moduleReference) {
   }
 
   try {
-    var moduleMetaData = resolveModuleMetaData(
+    var clientReferenceMetadata = resolveClientReferenceMetadata(
       request.bundlerConfig,
-      moduleReference
+      clientReference
     );
     request.pendingChunks++;
-    var moduleId = request.nextChunkId++;
-    emitModuleChunk(request, moduleId, moduleMetaData);
-    writtenModules.set(moduleKey, moduleId);
+    var importId = request.nextChunkId++;
+    emitImportChunk(request, importId, clientReferenceMetadata);
+    writtenClientReferences.set(clientReferenceKey, importId);
 
     if (parent[0] === REACT_ELEMENT_TYPE && key === "1") {
       // If we're encoding the "type" of an element, we can refer
@@ -1687,10 +1688,10 @@ function serializeClientReference(request, parent, key, moduleReference) {
       // knows how to deal with lazy values. This lets us suspend
       // on this component rather than its parent until the code has
       // loaded.
-      return serializeLazyID(moduleId);
+      return serializeLazyID(importId);
     }
 
-    return serializeByValueID(moduleId);
+    return serializeByValueID(importId);
   } catch (x) {
     request.pendingChunks++;
     var errorId = request.nextChunkId++;
@@ -2175,7 +2176,7 @@ function resolveModelToJSON(request, parent, key, value) {
 
   if (typeof value === "object") {
     if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, value);
+      return serializeClientReference(request, parent, key, value); // $FlowFixMe[method-unbinding]
     } else if (typeof value.then === "function") {
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
@@ -2265,7 +2266,7 @@ function resolveModelToJSON(request, parent, key, value) {
     } else {
       throw new Error(
         "Functions cannot be passed directly to Client Components " +
-          "because they're not serializable." +
+          'unless you explicitly expose it by marking it with "use server".' +
           describeObjectForErrorMessage(parent, key)
       );
     }
@@ -2378,15 +2379,15 @@ function emitErrorChunkDev(request, id, digest, message, stack) {
   request.completedErrorChunks.push(processedChunk);
 }
 
-function emitModuleChunk(request, id, moduleMetaData) {
-  var processedChunk = processModuleChunk(request, id, moduleMetaData);
-  request.completedModuleChunks.push(processedChunk);
+function emitImportChunk(request, id, clientReferenceMetadata) {
+  var processedChunk = processImportChunk(request, id, clientReferenceMetadata);
+  request.completedImportChunks.push(processedChunk);
 }
 
 function emitSymbolChunk(request, id, name) {
   var symbolReference = serializeSymbolReference(name);
   var processedChunk = processReferenceChunk(request, id, symbolReference);
-  request.completedModuleChunks.push(processedChunk);
+  request.completedImportChunks.push(processedChunk);
 }
 
 function emitProviderChunk(request, id, contextName) {
@@ -2522,12 +2523,12 @@ function flushCompletedChunks(request, destination) {
   try {
     // We emit module chunks first in the stream so that
     // they can be preloaded as early as possible.
-    var moduleChunks = request.completedModuleChunks;
+    var importsChunks = request.completedImportChunks;
     var i = 0;
 
-    for (; i < moduleChunks.length; i++) {
+    for (; i < importsChunks.length; i++) {
       request.pendingChunks--;
-      var chunk = moduleChunks[i];
+      var chunk = importsChunks[i];
       var keepWriting = writeChunkAndReturn(destination, chunk);
 
       if (!keepWriting) {
@@ -2537,7 +2538,7 @@ function flushCompletedChunks(request, destination) {
       }
     }
 
-    moduleChunks.splice(0, i); // Next comes model data.
+    importsChunks.splice(0, i); // Next comes model data.
 
     var jsonChunks = request.completedJSONChunks;
     i = 0;

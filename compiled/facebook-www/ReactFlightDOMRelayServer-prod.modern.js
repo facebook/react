@@ -504,11 +504,12 @@ function createRequest(
       pendingChunks: 0,
       abortableTasks: abortSet,
       pingedTasks: pingedTasks,
-      completedModuleChunks: [],
+      completedImportChunks: [],
       completedJSONChunks: [],
       completedErrorChunks: [],
       writtenSymbols: new Map(),
-      writtenModules: new Map(),
+      writtenClientReferences: new Map(),
+      writtenServerReferences: new Map(),
       writtenProviders: new Map(),
       identifierPrefix: identifierPrefix || "",
       identifierCount: 1,
@@ -692,26 +693,30 @@ function createTask(request, model, context, abortSet) {
   abortSet.add(task);
   return task;
 }
-function serializeClientReference(request, parent, key, moduleReference) {
-  var writtenModules = request.writtenModules,
-    existingId = writtenModules.get(moduleReference);
+function serializeClientReference(request, parent, key, clientReference) {
+  var writtenClientReferences = request.writtenClientReferences,
+    existingId = writtenClientReferences.get(clientReference);
   if (void 0 !== existingId)
     return parent[0] === REACT_ELEMENT_TYPE && "1" === key
       ? "$L" + existingId.toString(16)
       : "$" + existingId.toString(16);
   try {
-    var moduleMetaData =
-      ReactFlightDOMRelayServerIntegration.resolveModuleMetaData(
+    var clientReferenceMetadata =
+      ReactFlightDOMRelayServerIntegration.resolveClientReferenceMetadata(
         request.bundlerConfig,
-        moduleReference
+        clientReference
       );
     request.pendingChunks++;
-    var moduleId = request.nextChunkId++;
-    request.completedModuleChunks.push(["I", moduleId, moduleMetaData]);
-    writtenModules.set(moduleReference, moduleId);
+    var importId = request.nextChunkId++;
+    request.completedImportChunks.push([
+      "I",
+      importId,
+      clientReferenceMetadata
+    ]);
+    writtenClientReferences.set(clientReference, importId);
     return parent[0] === REACT_ELEMENT_TYPE && "1" === key
-      ? "$L" + moduleId.toString(16)
-      : "$" + moduleId.toString(16);
+      ? "$L" + importId.toString(16)
+      : "$" + importId.toString(16);
   } catch (x) {
     return (
       request.pendingChunks++,
@@ -934,7 +939,7 @@ function resolveModelToJSON(request, parent, key, value) {
           "\nIf you need interactivity, consider converting part of this to a Client Component."
       );
     throw Error(
-      "Functions cannot be passed directly to Client Components because they're not serializable." +
+      'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".' +
         describeObjectForErrorMessage(parent, key)
     );
   }
@@ -951,7 +956,7 @@ function resolveModelToJSON(request, parent, key, value) {
       );
     request.pendingChunks++;
     key = request.nextChunkId++;
-    request.completedModuleChunks.push(["O", key, "$S" + init]);
+    request.completedImportChunks.push(["O", key, "$S" + init]);
     element.set(value, key);
     return "$" + key.toString(16);
   }
@@ -1079,41 +1084,41 @@ function performWork(request$jscomp$0) {
 }
 function flushCompletedChunks(request, destination) {
   for (
-    var moduleChunks = request.completedModuleChunks, i = 0;
-    i < moduleChunks.length;
+    var importsChunks = request.completedImportChunks, i = 0;
+    i < importsChunks.length;
     i++
   )
     if (
       (request.pendingChunks--,
-      !writeChunkAndReturn(destination, moduleChunks[i]))
+      !writeChunkAndReturn(destination, importsChunks[i]))
     ) {
       request.destination = null;
       i++;
       break;
     }
-  moduleChunks.splice(0, i);
-  moduleChunks = request.completedJSONChunks;
-  for (i = 0; i < moduleChunks.length; i++)
+  importsChunks.splice(0, i);
+  importsChunks = request.completedJSONChunks;
+  for (i = 0; i < importsChunks.length; i++)
     if (
       (request.pendingChunks--,
-      !writeChunkAndReturn(destination, moduleChunks[i]))
+      !writeChunkAndReturn(destination, importsChunks[i]))
     ) {
       request.destination = null;
       i++;
       break;
     }
-  moduleChunks.splice(0, i);
-  moduleChunks = request.completedErrorChunks;
-  for (i = 0; i < moduleChunks.length; i++)
+  importsChunks.splice(0, i);
+  importsChunks = request.completedErrorChunks;
+  for (i = 0; i < importsChunks.length; i++)
     if (
       (request.pendingChunks--,
-      !writeChunkAndReturn(destination, moduleChunks[i]))
+      !writeChunkAndReturn(destination, importsChunks[i]))
     ) {
       request.destination = null;
       i++;
       break;
     }
-  moduleChunks.splice(0, i);
+  importsChunks.splice(0, i);
   0 === request.pendingChunks &&
     ReactFlightDOMRelayServerIntegration.close(destination);
 }

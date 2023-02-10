@@ -226,6 +226,18 @@ function createModelReject(chunk) {
     return triggerErrorOnChunk(chunk, error);
   };
 }
+function createServerReferenceProxy(response, metaData) {
+  var callServer = response._callServer;
+  return function () {
+    var args = Array.prototype.slice.call(arguments),
+      p = metaData.bound;
+    return "fulfilled" === p.status
+      ? callServer(metaData, p.value.concat(args))
+      : Promise.resolve(p).then(function (bound) {
+          return callServer(metaData, bound.concat(args));
+        });
+  };
+}
 function parseModelString(response, parentObject, key, value) {
   if ("$" === value[0]) {
     if ("$" === value) return REACT_ELEMENT_TYPE;
@@ -255,6 +267,19 @@ function parseModelString(response, parentObject, key, value) {
             )),
           ContextRegistry[response].Provider
         );
+      case "F":
+        parentObject = parseInt(value.substring(2), 16);
+        parentObject = getChunk(response, parentObject);
+        switch (parentObject.status) {
+          case "resolved_model":
+            initializeModelChunk(parentObject);
+        }
+        switch (parentObject.status) {
+          case "fulfilled":
+            return createServerReferenceProxy(response, parentObject.value);
+          default:
+            throw parentObject.reason;
+        }
       default:
         value = parseInt(value.substring(1), 16);
         response = getChunk(response, value);
@@ -285,15 +310,18 @@ function parseModelString(response, parentObject, key, value) {
   }
   return value;
 }
+function missingCall() {
+  throw Error(formatProdErrorMessage(466));
+}
 function resolveModule(response, id, model) {
   var chunks = response._chunks,
     chunk = chunks.get(id);
   model = parseModelRecursively(response, dummy, "", model);
-  var moduleReference =
+  var clientReference =
     ReactFlightDOMRelayClientIntegration.resolveClientReference(model);
   if (
     (model =
-      ReactFlightDOMRelayClientIntegration.preloadModule(moduleReference))
+      ReactFlightDOMRelayClientIntegration.preloadModule(clientReference))
   ) {
     if (chunk) {
       var blockedChunk = chunk;
@@ -303,7 +331,7 @@ function resolveModule(response, id, model) {
         chunks.set(id, blockedChunk);
     model.then(
       function () {
-        return resolveModuleChunk(blockedChunk, moduleReference);
+        return resolveModuleChunk(blockedChunk, clientReference);
       },
       function (error) {
         return triggerErrorOnChunk(blockedChunk, error);
@@ -311,18 +339,22 @@ function resolveModule(response, id, model) {
     );
   } else
     chunk
-      ? resolveModuleChunk(chunk, moduleReference)
+      ? resolveModuleChunk(chunk, clientReference)
       : chunks.set(
           id,
-          new Chunk("resolved_module", moduleReference, null, response)
+          new Chunk("resolved_module", clientReference, null, response)
         );
 }
 exports.close = function (response) {
   reportGlobalError(response, Error(formatProdErrorMessage(412)));
 };
-exports.createResponse = function (bundlerConfig) {
+exports.createResponse = function (bundlerConfig, callServer) {
   var chunks = new Map();
-  return { _bundlerConfig: bundlerConfig, _chunks: chunks };
+  return {
+    _bundlerConfig: bundlerConfig,
+    _callServer: void 0 !== callServer ? callServer : missingCall,
+    _chunks: chunks
+  };
 };
 exports.getRoot = function (response) {
   return getChunk(response, 0);
