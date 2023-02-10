@@ -20,7 +20,8 @@ function writeChunkAndReturn(destination, chunk) {
   destination.buffer += chunk;
   return !0;
 }
-var enableFilterEmptyStringAttributesDOM =
+var assign = Object.assign,
+  enableFilterEmptyStringAttributesDOM =
     require("ReactFeatureFlags").enableFilterEmptyStringAttributesDOM,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX =
@@ -301,350 +302,11 @@ function sanitizeURL(url) {
     );
 }
 var isArrayImpl = Array.isArray,
-  assign = Object.assign,
+  ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
+  ReactDOMServerDispatcher = { preload: preload, preinit: preinit },
   currentResources = null,
   currentResourcesStack = [],
-  ReactDOMServerFloatDispatcher = { preload: preload, preinit: preinit };
-function preload(href, options) {
-  if (currentResources) {
-    var resources = currentResources;
-    if (
-      "string" === typeof href &&
-      href &&
-      "object" === typeof options &&
-      null !== options
-    ) {
-      var as = options.as,
-        resource = resources.preloadsMap.get(href);
-      resource ||
-        (resource = createPreloadResource(resources, href, as, {
-          href: href,
-          rel: "preload",
-          as: as,
-          crossOrigin: "font" === as ? "" : options.crossOrigin,
-          integrity: options.integrity
-        }));
-      switch (as) {
-        case "font":
-          resources.fontPreloads.add(resource);
-          break;
-        case "style":
-          resources.explicitStylePreloads.add(resource);
-          break;
-        case "script":
-          resources.explicitScriptPreloads.add(resource);
-      }
-    }
-  }
-}
-function preinit(href, options) {
-  currentResources && preinitImpl(currentResources, href, options);
-}
-function preinitImpl(resources, href, options) {
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options
-  )
-    switch (options.as) {
-      case "style":
-        var resource = resources.stylesMap.get(href);
-        resource ||
-          ((resource = options.precedence || "default"),
-          (resource = createStyleResource(resources, href, resource, {
-            rel: "stylesheet",
-            href: href,
-            "data-precedence": resource,
-            crossOrigin: options.crossOrigin
-          })));
-        resource.set.add(resource);
-        resources.explicitStylePreloads.add(resource.hint);
-        break;
-      case "script":
-        (resource = resources.scriptsMap.get(href)),
-          resource ||
-            ((resource = createScriptResource(resources, href, {
-              src: href,
-              async: !0,
-              crossOrigin: options.crossOrigin,
-              integrity: options.integrity
-            })),
-            resources.scripts.add(resource));
-    }
-}
-function preloadAsStylePropsFromProps(href, props) {
-  return {
-    rel: "preload",
-    as: "style",
-    href: href,
-    crossOrigin: props.crossOrigin,
-    integrity: props.integrity,
-    media: props.media,
-    hrefLang: props.hrefLang,
-    referrerPolicy: props.referrerPolicy
-  };
-}
-function preloadAsScriptPropsFromProps(href, props) {
-  return {
-    rel: "preload",
-    as: "script",
-    href: href,
-    crossOrigin: props.crossOrigin,
-    integrity: props.integrity,
-    referrerPolicy: props.referrerPolicy
-  };
-}
-function createPreloadResource(resources, href, as, props) {
-  as = { type: "preload", as: as, href: href, flushed: !1, props: props };
-  resources.preloadsMap.set(href, as);
-  return as;
-}
-function createStyleResource(resources, href, precedence, props) {
-  var stylesMap = resources.stylesMap,
-    preloadsMap = resources.preloadsMap,
-    precedences = resources.precedences,
-    precedenceSet = precedences.get(precedence);
-  precedenceSet ||
-    ((precedenceSet = new Set()), precedences.set(precedence, precedenceSet));
-  (preloadsMap = preloadsMap.get(href))
-    ? ((resources = preloadsMap.props),
-      null == props.crossOrigin && (props.crossOrigin = resources.crossOrigin),
-      null == props.referrerPolicy &&
-        (props.referrerPolicy = resources.referrerPolicy),
-      null == props.title && (props.title = resources.title))
-    : ((preloadsMap = preloadAsStylePropsFromProps(href, props)),
-      (preloadsMap = createPreloadResource(
-        resources,
-        href,
-        "style",
-        preloadsMap
-      )),
-      resources.explicitStylePreloads.add(preloadsMap));
-  precedence = {
-    type: "style",
-    href: href,
-    precedence: precedence,
-    flushed: !1,
-    inShell: !1,
-    props: props,
-    hint: preloadsMap,
-    set: precedenceSet
-  };
-  stylesMap.set(href, precedence);
-  return precedence;
-}
-function createScriptResource(resources, src, props) {
-  var scriptsMap = resources.scriptsMap,
-    hint = resources.preloadsMap.get(src);
-  hint
-    ? ((resources = hint.props),
-      null == props.crossOrigin && (props.crossOrigin = resources.crossOrigin),
-      null == props.referrerPolicy &&
-        (props.referrerPolicy = resources.referrerPolicy),
-      null == props.integrity && (props.integrity = resources.integrity))
-    : ((hint = preloadAsScriptPropsFromProps(src, props)),
-      (hint = createPreloadResource(resources, src, "script", hint)),
-      resources.explicitScriptPreloads.add(hint));
-  props = { type: "script", src: src, flushed: !1, props: props, hint: hint };
-  scriptsMap.set(src, props);
-  return props;
-}
-function resourcesFromElement(type, props) {
-  if (!currentResources)
-    throw Error(
-      '"currentResources" was expected to exist. This is a bug in React.'
-    );
-  var resources = currentResources;
-  switch (type) {
-    case "title":
-      var children = props.children;
-      children = Array.isArray(children)
-        ? 1 === children.length
-          ? children[0]
-          : null
-        : children;
-      if (
-        "function" !== typeof children &&
-        "symbol" !== typeof children &&
-        null !== children &&
-        void 0 !== children
-      ) {
-        children = "" + children;
-        var key = "title::" + children;
-        type = resources.headsMap.get(key);
-        type ||
-          ((props = assign({}, props)),
-          (props.children = children),
-          (type = { type: "title", props: props, flushed: !1 }),
-          resources.headsMap.set(key, type),
-          resources.headResources.add(type));
-      }
-      return !0;
-    case "meta":
-      if ("string" === typeof props.charSet) children = "charSet";
-      else if ("string" === typeof props.content)
-        if (
-          ((type = "::" + props.content), "string" === typeof props.httpEquiv)
-        )
-          children = "httpEquiv::" + props.httpEquiv + type;
-        else if ("string" === typeof props.name)
-          children = "name::" + props.name + type;
-        else if ("string" === typeof props.itemProp)
-          children = "itemProp::" + props.itemProp + type;
-        else if ("string" === typeof props.property) {
-          var property = props.property;
-          children = "property::" + property + type;
-          key = property;
-          type = property.split(":").slice(0, -1).join(":");
-          (type = resources.structuredMetaKeys.get(type)) &&
-            (children = type.key + "::child::" + children);
-        }
-      children &&
-        !resources.headsMap.has(children) &&
-        ((props = {
-          type: "meta",
-          key: children,
-          props: assign({}, props),
-          flushed: !1
-        }),
-        resources.headsMap.set(children, props),
-        "charSet" === children
-          ? (resources.charset = props)
-          : (key && resources.structuredMetaKeys.set(key, props),
-            resources.headResources.add(props)));
-      return !0;
-    case "base":
-      return (
-        (children = props.target),
-        (key = props.href),
-        (children =
-          "base" +
-          ("string" === typeof key ? '[href="' + key + '"]' : ":not([href])") +
-          ("string" === typeof children
-            ? '[target="' + children + '"]'
-            : ":not([target])")),
-        resources.headsMap.has(children) ||
-          ((props = { type: "base", props: assign({}, props), flushed: !1 }),
-          resources.headsMap.set(children, props),
-          resources.bases.add(props)),
-        !0
-      );
-  }
-  return !1;
-}
-function resourcesFromLink(props) {
-  if (!currentResources)
-    throw Error(
-      '"currentResources" was expected to exist. This is a bug in React.'
-    );
-  var resources = currentResources,
-    rel = props.rel,
-    href = props.href;
-  if (!href || "string" !== typeof href || !rel || "string" !== typeof rel)
-    return !1;
-  switch (rel) {
-    case "stylesheet":
-      var onLoad = props.onLoad,
-        onError = props.onError;
-      rel = props.precedence;
-      var disabled = props.disabled;
-      if ("string" !== typeof rel || onLoad || onError || null != disabled)
-        return (
-          (rel = resources.preloadsMap.get(href)),
-          rel ||
-            ((rel = createPreloadResource(
-              resources,
-              href,
-              "style",
-              preloadAsStylePropsFromProps(href, props)
-            )),
-            resources.usedStylePreloads.add(rel)),
-          !1
-        );
-      onLoad = resources.stylesMap.get(href);
-      onLoad ||
-        ((props = assign({}, props)),
-        (props.href = href),
-        (props.rel = "stylesheet"),
-        (props["data-precedence"] = rel),
-        delete props.precedence,
-        (onLoad = createStyleResource(currentResources, href, rel, props)),
-        resources.usedStylePreloads.add(onLoad.hint));
-      resources.boundaryResources
-        ? resources.boundaryResources.add(onLoad)
-        : onLoad.set.add(onLoad);
-      return !0;
-    case "preload":
-      switch (((onLoad = props.as), onLoad)) {
-        case "script":
-        case "style":
-        case "font":
-          rel = resources.preloadsMap.get(href);
-          if (!rel)
-            switch (
-              ((props = assign({}, props)),
-              (props.href = href),
-              (props.rel = "preload"),
-              (props.as = onLoad),
-              "font" === onLoad && (props.crossOrigin = ""),
-              (rel = createPreloadResource(resources, href, onLoad, props)),
-              onLoad)
-            ) {
-              case "script":
-                resources.explicitScriptPreloads.add(rel);
-                break;
-              case "style":
-                resources.explicitStylePreloads.add(rel);
-                break;
-              case "font":
-                resources.fontPreloads.add(rel);
-            }
-          return !0;
-      }
-  }
-  if (props.onLoad || props.onError) return !0;
-  href =
-    "rel:" +
-    rel +
-    "::href:" +
-    href +
-    "::sizes:" +
-    ("string" === typeof props.sizes ? props.sizes : "") +
-    "::media:" +
-    ("string" === typeof props.media ? props.media : "");
-  onLoad = resources.headsMap.get(href);
-  if (!onLoad)
-    switch (
-      ((onLoad = { type: "link", props: assign({}, props), flushed: !1 }),
-      resources.headsMap.set(href, onLoad),
-      rel)
-    ) {
-      case "preconnect":
-      case "dns-prefetch":
-        resources.preconnects.add(onLoad);
-        break;
-      default:
-        resources.headResources.add(onLoad);
-    }
-  return !0;
-}
-function hoistResources(resources, source) {
-  var currentBoundaryResources = resources.boundaryResources;
-  currentBoundaryResources &&
-    (source.forEach(function (resource) {
-      return currentBoundaryResources.add(resource);
-    }),
-    source.clear());
-}
-function hoistResourcesToRoot(resources, boundaryResources) {
-  boundaryResources.forEach(function (resource) {
-    return resource.set.add(resource);
-  });
-  boundaryResources.clear();
-}
-var ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
@@ -659,32 +321,38 @@ function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
 function getChildFormatContext(parentContext, type, props) {
   switch (type) {
     case "noscript":
-      return createFormatContext(1, null, !0);
+      return createFormatContext(2, null, !0);
     case "select":
       return createFormatContext(
-        1,
+        2,
         null != props.value ? props.value : props.defaultValue,
         parentContext.noscriptTagInScope
       );
     case "svg":
-      return createFormatContext(2, null, parentContext.noscriptTagInScope);
-    case "math":
       return createFormatContext(3, null, parentContext.noscriptTagInScope);
-    case "foreignObject":
-      return createFormatContext(1, null, parentContext.noscriptTagInScope);
-    case "table":
+    case "math":
       return createFormatContext(4, null, parentContext.noscriptTagInScope);
+    case "foreignObject":
+      return createFormatContext(2, null, parentContext.noscriptTagInScope);
+    case "table":
+      return createFormatContext(5, null, parentContext.noscriptTagInScope);
     case "thead":
     case "tbody":
     case "tfoot":
-      return createFormatContext(5, null, parentContext.noscriptTagInScope);
-    case "colgroup":
-      return createFormatContext(7, null, parentContext.noscriptTagInScope);
-    case "tr":
       return createFormatContext(6, null, parentContext.noscriptTagInScope);
+    case "colgroup":
+      return createFormatContext(8, null, parentContext.noscriptTagInScope);
+    case "tr":
+      return createFormatContext(7, null, parentContext.noscriptTagInScope);
   }
-  return 4 <= parentContext.insertionMode || 0 === parentContext.insertionMode
-    ? createFormatContext(1, null, parentContext.noscriptTagInScope)
+  return 5 <= parentContext.insertionMode
+    ? createFormatContext(2, null, parentContext.noscriptTagInScope)
+    : 0 === parentContext.insertionMode
+    ? "html" === type
+      ? createFormatContext(1, null, !1)
+      : createFormatContext(2, null, !1)
+    : 1 === parentContext.insertionMode
+    ? createFormatContext(2, null, !1)
     : parentContext;
 }
 function pushTextInstance(target, text, responseState, textEmbedded) {
@@ -694,13 +362,14 @@ function pushTextInstance(target, text, responseState, textEmbedded) {
   return !0;
 }
 var styleNameCache = new Map();
-function pushStyle(target, responseState, style) {
+function pushStyleAttribute(target, style) {
   if ("object" !== typeof style)
     throw Error(
       "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX."
     );
-  responseState = !0;
-  for (var styleName in style)
+  var isFirst = !0,
+    styleName;
+  for (styleName in style)
     if (hasOwnProperty.call(style, styleName)) {
       var styleValue = style[styleName];
       if (
@@ -732,18 +401,18 @@ function pushStyle(target, responseState, style) {
                 : styleValue + "px"
               : escapeTextForBrowser(("" + styleValue).trim());
         }
-        responseState
-          ? ((responseState = !1),
+        isFirst
+          ? ((isFirst = !1),
             target.push(' style="', nameChunk, ":", styleValue))
           : target.push(";", nameChunk, ":", styleValue);
       }
     }
-  responseState || target.push('"');
+  isFirst || target.push('"');
 }
-function pushAttribute(target, responseState, name, value) {
+function pushAttribute(target, name, value) {
   switch (name) {
     case "style":
-      pushStyle(target, responseState, value);
+      pushStyleAttribute(target, value);
       return;
     case "defaultValue":
     case "defaultChecked":
@@ -756,26 +425,27 @@ function pushAttribute(target, responseState, name, value) {
     !(2 < name.length) ||
     ("o" !== name[0] && "O" !== name[0]) ||
     ("n" !== name[1] && "N" !== name[1])
-  )
-    if (
-      ((responseState = properties.hasOwnProperty(name)
-        ? properties[name]
-        : null),
-      null !== responseState)
-    ) {
+  ) {
+    var JSCompiler_inline_result = properties.hasOwnProperty(name)
+      ? properties[name]
+      : null;
+    if (null !== JSCompiler_inline_result) {
       switch (typeof value) {
         case "function":
         case "symbol":
           return;
         case "boolean":
-          if (!responseState.acceptsBooleans) return;
+          if (!JSCompiler_inline_result.acceptsBooleans) return;
       }
       if (
         !enableFilterEmptyStringAttributesDOM ||
-        !responseState.removeEmptyString ||
+        !JSCompiler_inline_result.removeEmptyString ||
         "" !== value
       )
-        switch (((name = responseState.attributeName), responseState.type)) {
+        switch (
+          ((name = JSCompiler_inline_result.attributeName),
+          JSCompiler_inline_result.type)
+        ) {
           case 3:
             value && target.push(" ", name, '=""');
             break;
@@ -795,7 +465,7 @@ function pushAttribute(target, responseState, name, value) {
               target.push(" ", name, '="', escapeTextForBrowser(value), '"');
             break;
           default:
-            responseState.sanitizeURL &&
+            JSCompiler_inline_result.sanitizeURL &&
               ((value = "" + value), sanitizeURL(value)),
               target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
@@ -806,13 +476,15 @@ function pushAttribute(target, responseState, name, value) {
           return;
         case "boolean":
           if (
-            ((responseState = name.toLowerCase().slice(0, 5)),
-            "data-" !== responseState && "aria-" !== responseState)
+            ((JSCompiler_inline_result = name.toLowerCase().slice(0, 5)),
+            "data-" !== JSCompiler_inline_result &&
+              "aria-" !== JSCompiler_inline_result)
           )
             return;
       }
       target.push(" ", name, '="', escapeTextForBrowser(value), '"');
     }
+  }
 }
 function pushInnerHTML(target, innerHTML, children) {
   if (null != innerHTML) {
@@ -835,8 +507,88 @@ function flattenOptionChildren(children) {
   });
   return content;
 }
-function pushLinkImpl(target, props, responseState) {
-  var isStylesheet = "stylesheet" === props.rel;
+function pushLink(
+  target,
+  props,
+  responseState,
+  resources,
+  textEmbedded,
+  insertionMode,
+  noscriptTagInScope
+) {
+  var rel = props.rel,
+    href = props.href,
+    precedence = props.precedence;
+  if (
+    3 === insertionMode ||
+    noscriptTagInScope ||
+    "string" !== typeof rel ||
+    "string" !== typeof href ||
+    "" === href
+  )
+    return pushLinkImpl(target, props), null;
+  if ("stylesheet" === props.rel) {
+    responseState = "[style]" + href;
+    if (
+      "string" !== typeof precedence ||
+      null != props.disabled ||
+      props.onLoad ||
+      props.onError
+    )
+      return (
+        (textEmbedded = resources.preloadsMap.get(responseState)),
+        textEmbedded ||
+          ((textEmbedded = {
+            type: "preload",
+            chunks: [],
+            state: 0,
+            props: preloadAsStylePropsFromProps(href, props)
+          }),
+          resources.preloadsMap.set(responseState, textEmbedded)),
+        pushLinkImpl(textEmbedded.chunks, textEmbedded.props),
+        resources.usedStylesheets.add(textEmbedded),
+        pushLinkImpl(target, props)
+      );
+    href = resources.stylesMap.get(responseState);
+    if (!href) {
+      props = assign({}, props, {
+        "data-precedence": props.precedence,
+        precedence: null
+      });
+      if ((href = resources.preloadsMap.get(responseState)))
+        (href.state |= 4),
+          (href = href.props),
+          null == props.crossOrigin && (props.crossOrigin = href.crossOrigin),
+          null == props.integrity && (props.integrity = href.integrity);
+      href = {
+        type: "stylesheet",
+        chunks: [],
+        state: resources.boundaryResources ? 4 : 0,
+        props: props
+      };
+      resources.stylesMap.set(responseState, href);
+      props = resources.precedences.get(precedence);
+      props ||
+        ((props = new Set()), resources.precedences.set(precedence, props));
+      props.add(href);
+    }
+    resources.boundaryResources && resources.boundaryResources.add(href);
+    textEmbedded && target.push("\x3c!-- --\x3e");
+    return null;
+  }
+  if (props.onLoad || props.onError) return pushLinkImpl(target, props);
+  textEmbedded && target.push("\x3c!-- --\x3e");
+  switch (props.rel) {
+    case "preconnect":
+    case "dns-prefetch":
+      return pushLinkImpl(responseState.preconnectChunks, props);
+    case "preload":
+      return pushLinkImpl(responseState.preloadChunks, props);
+    default:
+      return pushLinkImpl(responseState.hoistableChunks, props);
+  }
+}
+function pushLinkImpl(target, props) {
   target.push(startChunkForTag("link"));
   for (var propKey in props)
     if (hasOwnProperty.call(props, propKey)) {
@@ -848,38 +600,17 @@ function pushLinkImpl(target, props, responseState) {
             throw Error(
               "link is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
             );
-          case "precedence":
-            if (isStylesheet) continue;
           default:
-            pushAttribute(target, responseState, propKey, propValue);
+            pushAttribute(target, propKey, propValue);
         }
     }
   target.push("/>");
   return null;
 }
-function pushSelfClosing(target, props, tag, responseState) {
-  target.push(startChunkForTag(tag));
-  for (var propKey in props)
-    if (hasOwnProperty.call(props, propKey)) {
-      var propValue = props[propKey];
-      if (null != propValue)
-        switch (propKey) {
-          case "children":
-          case "dangerouslySetInnerHTML":
-            throw Error(
-              tag +
-                " is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
-            );
-          default:
-            pushAttribute(target, responseState, propKey, propValue);
-        }
-    }
-  target.push("/>");
-  return null;
-}
-function pushTitleImpl(target, props, responseState) {
-  target.push(startChunkForTag("title"));
+function pushStyleImpl(target, props) {
+  target.push(startChunkForTag("style"));
   var children = null,
+    innerHTML = null,
     propKey;
   for (propKey in props)
     if (hasOwnProperty.call(props, propKey)) {
@@ -890,11 +621,10 @@ function pushTitleImpl(target, props, responseState) {
             children = propValue;
             break;
           case "dangerouslySetInnerHTML":
-            throw Error(
-              "`dangerouslySetInnerHTML` does not make sense on <title>."
-            );
+            innerHTML = propValue;
+            break;
           default:
-            pushAttribute(target, responseState, propKey, propValue);
+            pushAttribute(target, propKey, propValue);
         }
     }
   target.push(">");
@@ -908,10 +638,66 @@ function pushTitleImpl(target, props, responseState) {
     null !== props &&
     void 0 !== props &&
     target.push(escapeTextForBrowser("" + props));
+  pushInnerHTML(target, innerHTML, children);
+  target.push("</", "style", ">");
+  return null;
+}
+function pushSelfClosing(target, props, tag) {
+  target.push(startChunkForTag(tag));
+  for (var propKey in props)
+    if (hasOwnProperty.call(props, propKey)) {
+      var propValue = props[propKey];
+      if (null != propValue)
+        switch (propKey) {
+          case "children":
+          case "dangerouslySetInnerHTML":
+            throw Error(
+              tag +
+                " is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
+            );
+          default:
+            pushAttribute(target, propKey, propValue);
+        }
+    }
+  target.push("/>");
+  return null;
+}
+function pushTitleImpl(target, props) {
+  target.push(startChunkForTag("title"));
+  var children = null,
+    innerHTML = null,
+    propKey;
+  for (propKey in props)
+    if (hasOwnProperty.call(props, propKey)) {
+      var propValue = props[propKey];
+      if (null != propValue)
+        switch (propKey) {
+          case "children":
+            children = propValue;
+            break;
+          case "dangerouslySetInnerHTML":
+            innerHTML = propValue;
+            break;
+          default:
+            pushAttribute(target, propKey, propValue);
+        }
+    }
+  target.push(">");
+  props = Array.isArray(children)
+    ? 2 > children.length
+      ? children[0]
+      : null
+    : children;
+  "function" !== typeof props &&
+    "symbol" !== typeof props &&
+    null !== props &&
+    void 0 !== props &&
+    target.push(escapeTextForBrowser("" + props));
+  pushInnerHTML(target, innerHTML, children);
   target.push("</", "title", ">");
   return null;
 }
-function pushScriptImpl(target, props, responseState) {
+function pushScriptImpl(target, props) {
   target.push(startChunkForTag("script"));
   var children = null,
     innerHTML = null,
@@ -928,7 +714,7 @@ function pushScriptImpl(target, props, responseState) {
             innerHTML = propValue;
             break;
           default:
-            pushAttribute(target, responseState, propKey, propValue);
+            pushAttribute(target, propKey, propValue);
         }
     }
   target.push(">");
@@ -937,7 +723,7 @@ function pushScriptImpl(target, props, responseState) {
   target.push("</", "script", ">");
   return null;
 }
-function pushStartGenericElement(target, props, tag, responseState) {
+function pushStartGenericElement(target, props, tag) {
   target.push(startChunkForTag(tag));
   var innerHTML = (tag = null),
     propKey;
@@ -953,7 +739,7 @@ function pushStartGenericElement(target, props, tag, responseState) {
             innerHTML = propValue;
             break;
           default:
-            pushAttribute(target, responseState, propKey, propValue);
+            pushAttribute(target, propKey, propValue);
         }
     }
   target.push(">");
@@ -975,9 +761,9 @@ function startChunkForTag(tag) {
 }
 function pushStartInstance(
   target,
-  preamble,
   type,
   props,
+  resources,
   responseState,
   formatContext,
   textEmbedded
@@ -985,9 +771,8 @@ function pushStartInstance(
   switch (type) {
     case "select":
       target.push(startChunkForTag("select"));
-      var innerHTML = (textEmbedded = null),
-        propKey;
-      for (propKey in props)
+      resources = textEmbedded = null;
+      for (var propKey in props)
         if (hasOwnProperty.call(props, propKey)) {
           var propValue = props[propKey];
           if (null != propValue)
@@ -996,95 +781,86 @@ function pushStartInstance(
                 textEmbedded = propValue;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML = propValue;
+                resources = propValue;
                 break;
               case "defaultValue":
               case "value":
                 break;
               default:
-                pushAttribute(target, responseState, propKey, propValue);
+                pushAttribute(target, propKey, propValue);
             }
         }
       target.push(">");
-      pushInnerHTML(target, innerHTML, textEmbedded);
+      pushInnerHTML(target, resources, textEmbedded);
       return textEmbedded;
     case "option":
       textEmbedded = formatContext.selectedValue;
       target.push(startChunkForTag("option"));
-      var selected = (propKey = propValue = null),
-        innerHTML$jscomp$0 = null;
-      for (innerHTML in props)
-        if (hasOwnProperty.call(props, innerHTML)) {
-          var propValue$jscomp$0 = props[innerHTML];
+      var value = (resources = null),
+        innerHTML = (propKey = null);
+      for (propValue in props)
+        if (hasOwnProperty.call(props, propValue)) {
+          var propValue$jscomp$0 = props[propValue];
           if (null != propValue$jscomp$0)
-            switch (innerHTML) {
+            switch (propValue) {
               case "children":
-                propValue = propValue$jscomp$0;
+                resources = propValue$jscomp$0;
                 break;
               case "selected":
-                selected = propValue$jscomp$0;
+                propKey = propValue$jscomp$0;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML$jscomp$0 = propValue$jscomp$0;
+                innerHTML = propValue$jscomp$0;
                 break;
               case "value":
-                propKey = propValue$jscomp$0;
+                value = propValue$jscomp$0;
               default:
-                pushAttribute(
-                  target,
-                  responseState,
-                  innerHTML,
-                  propValue$jscomp$0
-                );
+                pushAttribute(target, propValue, propValue$jscomp$0);
             }
         }
       if (null != textEmbedded)
         if (
           ((props =
-            null !== propKey ? "" + propKey : flattenOptionChildren(propValue)),
+            null !== value ? "" + value : flattenOptionChildren(resources)),
           isArrayImpl(textEmbedded))
         )
-          for (
-            responseState = 0;
-            responseState < textEmbedded.length;
-            responseState++
-          ) {
-            if ("" + textEmbedded[responseState] === props) {
+          for (propValue = 0; propValue < textEmbedded.length; propValue++) {
+            if ("" + textEmbedded[propValue] === props) {
               target.push(' selected=""');
               break;
             }
           }
         else "" + textEmbedded === props && target.push(' selected=""');
-      else selected && target.push(' selected=""');
+      else propKey && target.push(' selected=""');
       target.push(">");
-      pushInnerHTML(target, innerHTML$jscomp$0, propValue);
-      return propValue;
+      pushInnerHTML(target, innerHTML, resources);
+      return resources;
     case "textarea":
       target.push(startChunkForTag("textarea"));
-      propValue = innerHTML = textEmbedded = null;
-      for (innerHTML$jscomp$0 in props)
+      propValue = resources = textEmbedded = null;
+      for (value in props)
         if (
-          hasOwnProperty.call(props, innerHTML$jscomp$0) &&
-          ((propKey = props[innerHTML$jscomp$0]), null != propKey)
+          hasOwnProperty.call(props, value) &&
+          ((innerHTML = props[value]), null != innerHTML)
         )
-          switch (innerHTML$jscomp$0) {
+          switch (value) {
             case "children":
-              propValue = propKey;
+              propValue = innerHTML;
               break;
             case "value":
-              textEmbedded = propKey;
+              textEmbedded = innerHTML;
               break;
             case "defaultValue":
-              innerHTML = propKey;
+              resources = innerHTML;
               break;
             case "dangerouslySetInnerHTML":
               throw Error(
                 "`dangerouslySetInnerHTML` does not make sense on <textarea>."
               );
             default:
-              pushAttribute(target, responseState, innerHTML$jscomp$0, propKey);
+              pushAttribute(target, value, innerHTML);
           }
-      null === textEmbedded && null !== innerHTML && (textEmbedded = innerHTML);
+      null === textEmbedded && null !== resources && (textEmbedded = resources);
       target.push(">");
       if (null != propValue) {
         if (null != textEmbedded)
@@ -1103,41 +879,39 @@ function pushStartInstance(
       return null;
     case "input":
       target.push(startChunkForTag("input"));
-      propKey = innerHTML$jscomp$0 = innerHTML = textEmbedded = null;
-      for (propValue in props)
+      value = propValue = resources = textEmbedded = null;
+      for (innerHTML in props)
         if (
-          hasOwnProperty.call(props, propValue) &&
-          ((selected = props[propValue]), null != selected)
+          hasOwnProperty.call(props, innerHTML) &&
+          ((propKey = props[innerHTML]), null != propKey)
         )
-          switch (propValue) {
+          switch (innerHTML) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(
                 "input is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
               );
             case "defaultChecked":
-              propKey = selected;
+              value = propKey;
               break;
             case "defaultValue":
-              innerHTML = selected;
+              resources = propKey;
               break;
             case "checked":
-              innerHTML$jscomp$0 = selected;
+              propValue = propKey;
               break;
             case "value":
-              textEmbedded = selected;
+              textEmbedded = propKey;
               break;
             default:
-              pushAttribute(target, responseState, propValue, selected);
+              pushAttribute(target, innerHTML, propKey);
           }
-      null !== innerHTML$jscomp$0
-        ? pushAttribute(target, responseState, "checked", innerHTML$jscomp$0)
-        : null !== propKey &&
-          pushAttribute(target, responseState, "checked", propKey);
+      null !== propValue
+        ? pushAttribute(target, "checked", propValue)
+        : null !== value && pushAttribute(target, "checked", value);
       null !== textEmbedded
-        ? pushAttribute(target, responseState, "value", textEmbedded)
-        : null !== innerHTML &&
-          pushAttribute(target, responseState, "value", innerHTML);
+        ? pushAttribute(target, "value", textEmbedded)
+        : null !== resources && pushAttribute(target, "value", resources);
       target.push("/>");
       return null;
     case "menuitem":
@@ -1154,116 +928,167 @@ function pushStartInstance(
                 "menuitems cannot have `children` nor `dangerouslySetInnerHTML`."
               );
             default:
-              pushAttribute(
-                target,
-                responseState,
-                propKey$jscomp$0,
-                textEmbedded
-              );
+              pushAttribute(target, propKey$jscomp$0, textEmbedded);
           }
       target.push(">");
       return null;
     case "title":
       return (
-        (target =
-          2 !== formatContext.insertionMode &&
-          !formatContext.noscriptTagInScope &&
-          resourcesFromElement("title", props)
-            ? null
-            : pushTitleImpl(target, props, responseState)),
+        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+          ? (target = pushTitleImpl(target, props))
+          : (pushTitleImpl(responseState.hoistableChunks, props),
+            (target = null)),
         target
       );
     case "link":
-      return (
-        !formatContext.noscriptTagInScope && resourcesFromLink(props)
-          ? (textEmbedded && target.push("\x3c!-- --\x3e"), (target = null))
-          : (target = pushLinkImpl(target, props, responseState)),
-        target
+      return pushLink(
+        target,
+        props,
+        responseState,
+        resources,
+        textEmbedded,
+        formatContext.insertionMode,
+        formatContext.noscriptTagInScope
       );
     case "script":
-      if ((innerHTML = !formatContext.noscriptTagInScope)) {
-        if (!currentResources)
-          throw Error(
-            '"currentResources" was expected to exist. This is a bug in React.'
-          );
-        innerHTML = currentResources;
-        propValue = props.src;
-        innerHTML$jscomp$0 = props.onLoad;
-        propKey = props.onError;
-        propValue && "string" === typeof propValue
-          ? props.async
-            ? (innerHTML$jscomp$0 || propKey
-                ? ((innerHTML$jscomp$0 = innerHTML.preloadsMap.get(propValue)),
-                  innerHTML$jscomp$0 ||
-                    ((innerHTML$jscomp$0 = createPreloadResource(
-                      innerHTML,
-                      propValue,
-                      "script",
-                      preloadAsScriptPropsFromProps(propValue, props)
-                    )),
-                    innerHTML.usedScriptPreloads.add(innerHTML$jscomp$0)))
-                : ((innerHTML$jscomp$0 = innerHTML.scriptsMap.get(propValue)),
-                  innerHTML$jscomp$0 ||
-                    ((innerHTML$jscomp$0 = assign({}, props)),
-                    (innerHTML$jscomp$0.src = propValue),
-                    (innerHTML$jscomp$0 = createScriptResource(
-                      innerHTML,
-                      propValue,
-                      innerHTML$jscomp$0
-                    )),
-                    innerHTML.scripts.add(innerHTML$jscomp$0))),
-              (innerHTML = !0))
-            : (innerHTML = !1)
-          : (innerHTML = !1);
+      a: if (
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        "string" !== typeof props.src ||
+        !props.src
+      )
+        target = pushScriptImpl(target, props);
+      else {
+        value = "[script]" + props.src;
+        if (!0 !== props.async || props.onLoad || props.onError) {
+          if (
+            ((propValue = resources.preloadsMap.get(value)),
+            propValue ||
+              ((propValue = {
+                type: "preload",
+                chunks: [],
+                state: 0,
+                props: {
+                  rel: "preload",
+                  as: "script",
+                  href: props.src,
+                  crossOrigin: props.crossOrigin,
+                  integrity: props.integrity,
+                  referrerPolicy: props.referrerPolicy
+                }
+              }),
+              resources.preloadsMap.set(value, propValue),
+              resources.usedScripts.add(propValue),
+              pushLinkImpl(propValue.chunks, propValue.props)),
+            !0 !== props.async)
+          ) {
+            pushScriptImpl(target, props);
+            target = null;
+            break a;
+          }
+        } else if (
+          ((propValue = resources.scriptsMap.get(value)), !propValue)
+        ) {
+          propValue = { type: "script", chunks: [], state: 0, props: null };
+          resources.scriptsMap.set(value, propValue);
+          resources.scripts.add(propValue);
+          innerHTML = props;
+          if ((resources = resources.preloadsMap.get(value)))
+            (resources.state |= 4),
+              (props = innerHTML = assign({}, props)),
+              (resources = resources.props),
+              null == props.crossOrigin &&
+                (props.crossOrigin = resources.crossOrigin),
+              null == props.integrity &&
+                (props.integrity = resources.integrity);
+          pushScriptImpl(propValue.chunks, innerHTML);
+        }
+        textEmbedded && target.push("\x3c!-- --\x3e");
+        target = null;
       }
-      innerHTML
-        ? (textEmbedded && target.push("\x3c!-- --\x3e"), (target = null))
-        : (target = pushScriptImpl(target, props, responseState));
       return target;
-    case "meta":
+    case "style":
       return (
-        !formatContext.noscriptTagInScope && resourcesFromElement("meta", props)
-          ? (textEmbedded && target.push("\x3c!-- --\x3e"), (target = null))
-          : (target = pushSelfClosing(target, props, "meta", responseState)),
+        (propValue = props.precedence),
+        (innerHTML = props.href),
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        "string" !== typeof propValue ||
+        "string" !== typeof innerHTML ||
+        "" === innerHTML
+          ? (target = pushStyleImpl(target, props))
+          : ((value = "[style]" + innerHTML),
+            (innerHTML = resources.stylesMap.get(value)),
+            innerHTML ||
+              ((innerHTML = {
+                type: "style",
+                chunks: [],
+                state: resources.boundaryResources ? 4 : 0,
+                props: assign({}, props, {
+                  "data-precedence": props.precedence,
+                  precedence: null,
+                  "data-href": props.href,
+                  href: null
+                })
+              }),
+              resources.stylesMap.set(value, innerHTML),
+              pushStyleImpl(innerHTML.chunks, innerHTML.props),
+              (props = resources.precedences.get(propValue)),
+              props ||
+                ((props = new Set()),
+                resources.precedences.set(propValue, props)),
+              props.add(innerHTML),
+              resources.boundaryResources &&
+                resources.boundaryResources.add(innerHTML)),
+            textEmbedded && target.push("\x3c!-- --\x3e"),
+            (target = void 0)),
         target
       );
-    case "base":
+    case "meta":
       return (
-        !formatContext.noscriptTagInScope && resourcesFromElement("base", props)
-          ? (textEmbedded && target.push("\x3c!-- --\x3e"), (target = null))
-          : (target = pushSelfClosing(target, props, "base", responseState)),
+        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+          ? (target = pushSelfClosing(target, props, "meta"))
+          : (textEmbedded && target.push("\x3c!-- --\x3e"),
+            (target =
+              "string" === typeof props.charSet
+                ? pushSelfClosing(responseState.charsetChunks, props, "meta")
+                : pushSelfClosing(
+                    responseState.hoistableChunks,
+                    props,
+                    "meta"
+                  ))),
         target
       );
     case "listing":
     case "pre":
       target.push(startChunkForTag(type));
-      innerHTML = textEmbedded = null;
-      for (selected in props)
+      resources = textEmbedded = null;
+      for (propValue$jscomp$0 in props)
         if (
-          hasOwnProperty.call(props, selected) &&
-          ((propValue = props[selected]), null != propValue)
+          hasOwnProperty.call(props, propValue$jscomp$0) &&
+          ((propValue = props[propValue$jscomp$0]), null != propValue)
         )
-          switch (selected) {
+          switch (propValue$jscomp$0) {
             case "children":
               textEmbedded = propValue;
               break;
             case "dangerouslySetInnerHTML":
-              innerHTML = propValue;
+              resources = propValue;
               break;
             default:
-              pushAttribute(target, responseState, selected, propValue);
+              pushAttribute(target, propValue$jscomp$0, propValue);
           }
       target.push(">");
-      if (null != innerHTML) {
+      if (null != resources) {
         if (null != textEmbedded)
           throw Error(
             "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
           );
-        if ("object" !== typeof innerHTML || !("__html" in innerHTML))
+        if ("object" !== typeof resources || !("__html" in resources))
           throw Error(
             "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://reactjs.org/link/dangerously-set-inner-html for more information."
           );
-        props = innerHTML.__html;
+        props = resources.__html;
         null !== props &&
           void 0 !== props &&
           ("string" === typeof props && 0 < props.length && "\n" === props[0]
@@ -1274,6 +1099,7 @@ function pushStartInstance(
         "\n" === textEmbedded[0] &&
         target.push("\n");
       return textEmbedded;
+    case "base":
     case "area":
     case "br":
     case "col":
@@ -1285,7 +1111,7 @@ function pushStartInstance(
     case "source":
     case "track":
     case "wbr":
-      return pushSelfClosing(target, props, type, responseState);
+      return pushSelfClosing(target, props, type);
     case "annotation-xml":
     case "color-profile":
     case "font-face":
@@ -1294,23 +1120,40 @@ function pushStartInstance(
     case "font-face-format":
     case "font-face-name":
     case "missing-glyph":
-      return pushStartGenericElement(target, props, type, responseState);
+      return pushStartGenericElement(target, props, type);
     case "head":
-      return pushStartGenericElement(preamble, props, type, responseState);
+      return (
+        2 > formatContext.insertionMode && null === responseState.headChunks
+          ? ((responseState.headChunks = []),
+            (target = pushStartGenericElement(
+              responseState.headChunks,
+              props,
+              "head"
+            )))
+          : (target = pushStartGenericElement(target, props, "head")),
+        target
+      );
     case "html":
       return (
-        0 === formatContext.insertionMode && preamble.push("<!DOCTYPE html>"),
-        pushStartGenericElement(preamble, props, type, responseState)
+        0 === formatContext.insertionMode && null === responseState.htmlChunks
+          ? ((responseState.htmlChunks = ["<!DOCTYPE html>"]),
+            (target = pushStartGenericElement(
+              responseState.htmlChunks,
+              props,
+              "html"
+            )))
+          : (target = pushStartGenericElement(target, props, "html")),
+        target
       );
     default:
       if (-1 === type.indexOf("-") && "string" !== typeof props.is)
-        return pushStartGenericElement(target, props, type, responseState);
+        return pushStartGenericElement(target, props, type);
       target.push(startChunkForTag(type));
-      innerHTML = textEmbedded = null;
-      for (propValue$jscomp$0 in props)
+      resources = textEmbedded = null;
+      for (var propKey$jscomp$1 in props)
         if (
-          hasOwnProperty.call(props, propValue$jscomp$0) &&
-          ((propValue = props[propValue$jscomp$0]),
+          hasOwnProperty.call(props, propKey$jscomp$1) &&
+          ((propValue = props[propKey$jscomp$1]),
           null != propValue &&
             "function" !== typeof propValue &&
             "object" !== typeof propValue &&
@@ -1318,67 +1161,37 @@ function pushStartInstance(
         )
           switch (
             (!0 === propValue && (propValue = ""),
-            "className" === propValue$jscomp$0 &&
-              (propValue$jscomp$0 = "class"),
-            propValue$jscomp$0)
+            "className" === propKey$jscomp$1 && (propKey$jscomp$1 = "class"),
+            propKey$jscomp$1)
           ) {
             case "children":
               textEmbedded = propValue;
               break;
             case "dangerouslySetInnerHTML":
-              innerHTML = propValue;
+              resources = propValue;
               break;
             case "style":
-              pushStyle(target, responseState, propValue);
+              pushStyleAttribute(target, propValue);
               break;
             case "suppressContentEditableWarning":
             case "suppressHydrationWarning":
               break;
             default:
-              isAttributeNameSafe(propValue$jscomp$0) &&
+              isAttributeNameSafe(propKey$jscomp$1) &&
                 "function" !== typeof propValue &&
                 "symbol" !== typeof propValue &&
                 target.push(
                   " ",
-                  propValue$jscomp$0,
+                  propKey$jscomp$1,
                   '="',
                   escapeTextForBrowser(propValue),
                   '"'
                 );
           }
       target.push(">");
-      pushInnerHTML(target, innerHTML, textEmbedded);
+      pushInnerHTML(target, resources, textEmbedded);
       return textEmbedded;
   }
-}
-function pushEndInstance(target, postamble, type) {
-  switch (type) {
-    case "title":
-    case "script":
-    case "area":
-    case "base":
-    case "br":
-    case "col":
-    case "embed":
-    case "hr":
-    case "img":
-    case "input":
-    case "keygen":
-    case "link":
-    case "meta":
-    case "param":
-    case "source":
-    case "track":
-    case "wbr":
-      return;
-    case "body":
-      postamble.unshift("</", type, ">");
-      return;
-    case "html":
-      postamble.push("</", type, ">");
-      return;
-  }
-  target.push("</", type, ">");
 }
 function writeStartPendingSuspenseBoundary(destination, responseState, id) {
   destination.buffer += '\x3c!--$?--\x3e<template id="';
@@ -1393,17 +1206,9 @@ function writeStartSegment(destination, responseState, formatContext, id) {
   switch (formatContext.insertionMode) {
     case 0:
     case 1:
-      return (
-        (destination.buffer += '<div hidden id="'),
-        (destination.buffer += responseState.segmentPrefix),
-        (responseState = id.toString(16)),
-        (destination.buffer += responseState),
-        writeChunkAndReturn(destination, '">')
-      );
     case 2:
       return (
-        (destination.buffer +=
-          '<svg aria-hidden="true" style="display:none" id="'),
+        (destination.buffer += '<div hidden id="'),
         (destination.buffer += responseState.segmentPrefix),
         (responseState = id.toString(16)),
         (destination.buffer += responseState),
@@ -1412,7 +1217,7 @@ function writeStartSegment(destination, responseState, formatContext, id) {
     case 3:
       return (
         (destination.buffer +=
-          '<math aria-hidden="true" style="display:none" id="'),
+          '<svg aria-hidden="true" style="display:none" id="'),
         (destination.buffer += responseState.segmentPrefix),
         (responseState = id.toString(16)),
         (destination.buffer += responseState),
@@ -1420,7 +1225,8 @@ function writeStartSegment(destination, responseState, formatContext, id) {
       );
     case 4:
       return (
-        (destination.buffer += '<table hidden id="'),
+        (destination.buffer +=
+          '<math aria-hidden="true" style="display:none" id="'),
         (destination.buffer += responseState.segmentPrefix),
         (responseState = id.toString(16)),
         (destination.buffer += responseState),
@@ -1428,7 +1234,7 @@ function writeStartSegment(destination, responseState, formatContext, id) {
       );
     case 5:
       return (
-        (destination.buffer += '<table hidden><tbody id="'),
+        (destination.buffer += '<table hidden id="'),
         (destination.buffer += responseState.segmentPrefix),
         (responseState = id.toString(16)),
         (destination.buffer += responseState),
@@ -1436,13 +1242,21 @@ function writeStartSegment(destination, responseState, formatContext, id) {
       );
     case 6:
       return (
-        (destination.buffer += '<table hidden><tr id="'),
+        (destination.buffer += '<table hidden><tbody id="'),
         (destination.buffer += responseState.segmentPrefix),
         (responseState = id.toString(16)),
         (destination.buffer += responseState),
         writeChunkAndReturn(destination, '">')
       );
     case 7:
+      return (
+        (destination.buffer += '<table hidden><tr id="'),
+        (destination.buffer += responseState.segmentPrefix),
+        (responseState = id.toString(16)),
+        (destination.buffer += responseState),
+        writeChunkAndReturn(destination, '">')
+      );
+    case 8:
       return (
         (destination.buffer += '<table hidden><colgroup id="'),
         (destination.buffer += responseState.segmentPrefix),
@@ -1458,18 +1272,19 @@ function writeEndSegment(destination, formatContext) {
   switch (formatContext.insertionMode) {
     case 0:
     case 1:
-      return writeChunkAndReturn(destination, "</div>");
     case 2:
-      return writeChunkAndReturn(destination, "</svg>");
+      return writeChunkAndReturn(destination, "</div>");
     case 3:
-      return writeChunkAndReturn(destination, "</math>");
+      return writeChunkAndReturn(destination, "</svg>");
     case 4:
-      return writeChunkAndReturn(destination, "</table>");
+      return writeChunkAndReturn(destination, "</math>");
     case 5:
-      return writeChunkAndReturn(destination, "</tbody></table>");
+      return writeChunkAndReturn(destination, "</table>");
     case 6:
-      return writeChunkAndReturn(destination, "</tr></table>");
+      return writeChunkAndReturn(destination, "</tbody></table>");
     case 7:
+      return writeChunkAndReturn(destination, "</tr></table>");
+    case 8:
       return writeChunkAndReturn(destination, "</colgroup></table>");
     default:
       throw Error("Unknown insertion mode. This is a bug in React.");
@@ -1519,17 +1334,98 @@ function escapeJSObjectForInstructionScripts(input) {
     }
   );
 }
-function writeInitialResources(
+var didWrite = !1;
+function flushStyleTagsLateForBoundary(resource) {
+  if ("style" === resource.type && 0 === (resource.state & 3)) {
+    !1 === didWrite &&
+      ((didWrite = !0), (this.buffer += '<template data-precedence="">'));
+    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
+      this.buffer += chunks[i];
+    resource.state |= 2;
+  }
+}
+function writeResourcesForBoundary(destination, boundaryResources) {
+  didWrite = !1;
+  boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
+  return didWrite ? writeChunkAndReturn(destination, "</template>") : !0;
+}
+function flushResourceInPreamble(resource) {
+  if (0 === (resource.state & 7)) {
+    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
+      this.buffer += chunks[i];
+    resource.state |= 1;
+  }
+}
+function flushResourceLate(resource) {
+  if (0 === (resource.state & 3)) {
+    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
+      this.buffer += chunks[i];
+    resource.state |= 2;
+  }
+}
+var didFlush = !1;
+function flushUnblockedStyle(resource, key, set) {
+  key = resource.chunks;
+  if (resource.state & 3) set.delete(resource);
+  else if (!(resource.state & 4)) {
+    didFlush = !0;
+    "stylesheet" === resource.type && pushLinkImpl(key, resource.props);
+    for (var i = 0; i < key.length; i++) this.buffer += key[i];
+    resource.state |= 1;
+    set.delete(resource);
+  }
+}
+function flushUnblockedStyles(set, precedence) {
+  didFlush = !1;
+  set.forEach(flushUnblockedStyle, this);
+  didFlush ||
+    ((this.buffer += '<style data-precedence="'),
+    (set = escapeTextForBrowser(precedence)),
+    (this.buffer += set),
+    (this.buffer += '"></style>'));
+}
+function preloadBlockedStyle(resource) {
+  if ("style" !== resource.type) {
+    var chunks = resource.chunks,
+      preloadProps = preloadAsStylePropsFromProps(
+        resource.props.href,
+        resource.props
+      );
+    pushLinkImpl(chunks, preloadProps);
+    for (preloadProps = 0; preloadProps < chunks.length; preloadProps++)
+      this.buffer += chunks[preloadProps];
+    resource.state |= 8;
+    chunks.length = 0;
+  }
+}
+function preloadBlockedStyles(set) {
+  set.forEach(preloadBlockedStyle, this);
+  set.clear();
+}
+function preloadLateStyle(resource) {
+  if ("style" !== resource.type) {
+    var chunks = resource.chunks,
+      preloadProps = preloadAsStylePropsFromProps(
+        resource.props.href,
+        resource.props
+      );
+    pushLinkImpl(chunks, preloadProps);
+    for (preloadProps = 0; preloadProps < chunks.length; preloadProps++)
+      this.buffer += chunks[preloadProps];
+    resource.state |= 8;
+    chunks.length = 0;
+  }
+}
+function preloadLateStyles(set) {
+  set.forEach(preloadLateStyle, this);
+  set.clear();
+}
+function writePreamble(
   destination,
   resources,
   responseState,
   willFlushAllSegments
 ) {
-  function flushLinkResource(resource) {
-    resource.flushed ||
-      (pushLinkImpl(target, resource.props, responseState),
-      (resource.flushed = !0));
-  }
   !willFlushAllSegments &&
     responseState.externalRuntimeConfig &&
     ((willFlushAllSegments = responseState.externalRuntimeConfig),
@@ -1537,174 +1433,133 @@ function writeInitialResources(
       as: "script",
       integrity: willFlushAllSegments.integrity
     }));
-  var target = [];
-  willFlushAllSegments = resources.charset;
-  var bases = resources.bases,
-    preconnects = resources.preconnects,
-    fontPreloads = resources.fontPreloads,
-    precedences = resources.precedences,
-    usedStylePreloads = resources.usedStylePreloads,
-    scripts = resources.scripts,
-    usedScriptPreloads = resources.usedScriptPreloads,
-    explicitStylePreloads = resources.explicitStylePreloads,
-    explicitScriptPreloads = resources.explicitScriptPreloads,
-    headResources = resources.headResources;
+  willFlushAllSegments = responseState.htmlChunks;
+  var headChunks = responseState.headChunks,
+    i = 0;
+  if (willFlushAllSegments) {
+    for (i = 0; i < willFlushAllSegments.length; i++)
+      destination.buffer += willFlushAllSegments[i];
+    if (headChunks)
+      for (i = 0; i < headChunks.length; i++)
+        destination.buffer += headChunks[i];
+    else
+      writeChunk(destination, startChunkForTag("head")),
+        (destination.buffer += ">");
+  } else if (headChunks)
+    for (i = 0; i < headChunks.length; i++) destination.buffer += headChunks[i];
+  var charsetChunks = responseState.charsetChunks;
+  for (i = 0; i < charsetChunks.length; i++)
+    destination.buffer += charsetChunks[i];
+  charsetChunks.length = 0;
+  charsetChunks = responseState.preconnectChunks;
+  for (i = 0; i < charsetChunks.length; i++)
+    destination.buffer += charsetChunks[i];
+  charsetChunks.length = 0;
+  resources.fontPreloads.forEach(flushResourceInPreamble, destination);
+  resources.fontPreloads.clear();
+  resources.precedences.forEach(flushUnblockedStyles, destination);
+  resources.precedences.forEach(preloadBlockedStyles, destination);
+  resources.usedStylesheets.forEach(function (resource) {
+    if (
+      !resources.stylesMap.has(
+        "[" + resource.props.as + "]" + resource.props.href
+      )
+    )
+      for (resource = resource.chunks, i = 0; i < resource.length; i++)
+        destination.buffer += resource[i];
+  });
+  resources.usedStylesheets.clear();
+  resources.scripts.forEach(flushResourceInPreamble, destination);
+  resources.scripts.clear();
+  resources.usedScripts.forEach(flushResourceInPreamble, destination);
+  resources.usedScripts.clear();
+  resources.explicitStylesheetPreloads.forEach(
+    flushResourceInPreamble,
+    destination
+  );
+  resources.explicitStylesheetPreloads.clear();
+  resources.explicitScriptPreloads.forEach(
+    flushResourceInPreamble,
+    destination
+  );
+  resources.explicitScriptPreloads.clear();
+  resources.explicitOtherPreloads.forEach(flushResourceInPreamble, destination);
+  resources.explicitOtherPreloads.clear();
+  charsetChunks = responseState.preloadChunks;
+  for (i = 0; i < charsetChunks.length; i++)
+    destination.buffer += charsetChunks[i];
+  charsetChunks.length = 0;
+  responseState = responseState.hoistableChunks;
+  for (i = 0; i < responseState.length; i++)
+    destination.buffer += responseState[i];
+  responseState.length = 0;
   willFlushAllSegments &&
-    (pushSelfClosing(target, willFlushAllSegments.props, "meta", responseState),
-    (willFlushAllSegments.flushed = !0),
-    (resources.charset = null));
-  bases.forEach(function (r) {
-    pushSelfClosing(target, r.props, "base", responseState);
-    r.flushed = !0;
-  });
-  bases.clear();
-  preconnects.forEach(function (r) {
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = !0;
-  });
-  preconnects.clear();
-  fontPreloads.forEach(function (r) {
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = !0;
-  });
-  fontPreloads.clear();
-  precedences.forEach(function (p, precedence) {
-    p.size
-      ? (p.forEach(function (r) {
-          pushLinkImpl(target, r.props, responseState);
-          r.flushed = !0;
-          r.inShell = !0;
-          r.hint.flushed = !0;
-        }),
-        p.clear())
-      : target.push(
-          '<style data-precedence="',
-          escapeTextForBrowser(precedence),
-          '"></style>'
-        );
-  });
-  usedStylePreloads.forEach(flushLinkResource);
-  usedStylePreloads.clear();
-  scripts.forEach(function (r) {
-    pushScriptImpl(target, r.props, responseState);
-    r.flushed = !0;
-    r.hint.flushed = !0;
-  });
-  scripts.clear();
-  usedScriptPreloads.forEach(flushLinkResource);
-  usedScriptPreloads.clear();
-  explicitStylePreloads.forEach(flushLinkResource);
-  explicitStylePreloads.clear();
-  explicitScriptPreloads.forEach(flushLinkResource);
-  explicitScriptPreloads.clear();
-  headResources.forEach(function (r) {
-    switch (r.type) {
-      case "title":
-        pushTitleImpl(target, r.props, responseState);
-        break;
-      case "meta":
-        pushSelfClosing(target, r.props, "meta", responseState);
-        break;
-      case "link":
-        pushLinkImpl(target, r.props, responseState);
-    }
-    r.flushed = !0;
-  });
-  headResources.clear();
-  willFlushAllSegments = !0;
-  for (resources = 0; resources < target.length - 1; resources++)
-    destination.buffer += target[resources];
-  resources < target.length &&
-    (willFlushAllSegments = writeChunkAndReturn(
-      destination,
-      target[resources]
-    ));
-  return willFlushAllSegments;
+    null === headChunks &&
+    ((destination.buffer += "</"),
+    writeChunk(destination, "head"),
+    (destination.buffer += ">"));
 }
-function writeImmediateResources(destination, resources, responseState) {
-  function flushLinkResource(resource) {
-    resource.flushed ||
-      (pushLinkImpl(target, resource.props, responseState),
-      (resource.flushed = !0));
-  }
-  var target = [],
-    charset = resources.charset,
-    preconnects = resources.preconnects,
-    fontPreloads = resources.fontPreloads,
-    usedStylePreloads = resources.usedStylePreloads,
-    scripts = resources.scripts,
-    usedScriptPreloads = resources.usedScriptPreloads,
-    explicitStylePreloads = resources.explicitStylePreloads,
-    explicitScriptPreloads = resources.explicitScriptPreloads,
-    headResources = resources.headResources;
-  charset &&
-    (pushSelfClosing(target, charset.props, "meta", responseState),
-    (charset.flushed = !0),
-    (resources.charset = null));
-  preconnects.forEach(function (r) {
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = !0;
+function writeHoistables(destination, resources, responseState) {
+  var i = 0,
+    preconnectChunks = responseState.preconnectChunks;
+  for (i = 0; i < preconnectChunks.length; i++)
+    destination.buffer += preconnectChunks[i];
+  preconnectChunks.length = 0;
+  resources.fontPreloads.forEach(flushResourceLate, destination);
+  resources.fontPreloads.clear();
+  resources.precedences.forEach(preloadLateStyles, destination);
+  resources.usedStylesheets.forEach(function (resource) {
+    if (
+      !resources.stylesMap.has(
+        "[" + resource.props.as + "]" + resource.props.href
+      )
+    )
+      for (resource = resource.chunks, i = 0; i < resource.length; i++)
+        destination.buffer += resource[i];
   });
-  preconnects.clear();
-  fontPreloads.forEach(function (r) {
-    pushLinkImpl(target, r.props, responseState);
-    r.flushed = !0;
-  });
-  fontPreloads.clear();
-  usedStylePreloads.forEach(flushLinkResource);
-  usedStylePreloads.clear();
-  scripts.forEach(function (r) {
-    pushStartGenericElement(target, r.props, "script", responseState);
-    pushEndInstance(target, target, "script", r.props);
-    r.flushed = !0;
-    r.hint.flushed = !0;
-  });
-  scripts.clear();
-  usedScriptPreloads.forEach(flushLinkResource);
-  usedScriptPreloads.clear();
-  explicitStylePreloads.forEach(flushLinkResource);
-  explicitStylePreloads.clear();
-  explicitScriptPreloads.forEach(flushLinkResource);
-  explicitScriptPreloads.clear();
-  headResources.forEach(function (r) {
-    switch (r.type) {
-      case "title":
-        pushTitleImpl(target, r.props, responseState);
-        break;
-      case "meta":
-        pushSelfClosing(target, r.props, "meta", responseState);
-        break;
-      case "link":
-        pushLinkImpl(target, r.props, responseState);
-    }
-    r.flushed = !0;
-  });
-  headResources.clear();
-  charset = !0;
-  for (resources = 0; resources < target.length - 1; resources++)
-    destination.buffer += target[resources];
-  resources < target.length &&
-    (charset = writeChunkAndReturn(destination, target[resources]));
-  return charset;
+  resources.usedStylesheets.clear();
+  resources.scripts.forEach(flushResourceLate, destination);
+  resources.scripts.clear();
+  resources.usedScripts.forEach(flushResourceLate, destination);
+  resources.usedScripts.clear();
+  resources.explicitStylesheetPreloads.forEach(flushResourceLate, destination);
+  resources.explicitStylesheetPreloads.clear();
+  resources.explicitScriptPreloads.forEach(flushResourceLate, destination);
+  resources.explicitScriptPreloads.clear();
+  resources.explicitOtherPreloads.forEach(flushResourceLate, destination);
+  resources.explicitOtherPreloads.clear();
+  preconnectChunks = responseState.preloadChunks;
+  for (i = 0; i < preconnectChunks.length; i++)
+    destination.buffer += preconnectChunks[i];
+  preconnectChunks.length = 0;
+  responseState = responseState.hoistableChunks;
+  for (i = 0; i < responseState.length; i++)
+    destination.buffer += responseState[i];
+  responseState.length = 0;
 }
 function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
   boundaryResources.forEach(function (resource) {
-    if (!resource.inShell)
-      if (resource.flushed)
+    if (!(resource.state & 1))
+      if (resource.state & 3)
         (destination.buffer += nextArrayOpenBrackChunk),
           writeChunk(
             destination,
-            escapeJSObjectForInstructionScripts("" + resource.href)
+            escapeJSObjectForInstructionScripts(
+              "" +
+                ("style" === resource.type
+                  ? resource.props["data-href"]
+                  : resource.props.href)
+            )
           ),
           (destination.buffer += "]"),
           (nextArrayOpenBrackChunk = ",[");
-      else {
+      else if ("stylesheet" === resource.type) {
         destination.buffer += nextArrayOpenBrackChunk;
-        var precedence = resource.precedence,
+        var precedence = resource.props["data-precedence"],
           props = resource.props,
-          coercedHref = "" + resource.href;
+          coercedHref = "" + resource.props.href;
         sanitizeURL(coercedHref);
         writeChunk(
           destination,
@@ -1780,8 +1635,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
           }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
-        resource.flushed = !0;
-        resource.hint.flushed = !0;
+        resource.state |= 2;
       }
   });
   destination.buffer += "]";
@@ -1790,20 +1644,27 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
   boundaryResources.forEach(function (resource) {
-    if (!resource.inShell)
-      if (resource.flushed)
+    if (!(resource.state & 1))
+      if (resource.state & 3)
         (destination.buffer += nextArrayOpenBrackChunk),
           writeChunk(
             destination,
-            escapeTextForBrowser(JSON.stringify("" + resource.href))
+            escapeTextForBrowser(
+              JSON.stringify(
+                "" +
+                  ("style" === resource.type
+                    ? resource.props["data-href"]
+                    : resource.props.href)
+              )
+            )
           ),
           (destination.buffer += "]"),
           (nextArrayOpenBrackChunk = ",[");
-      else {
+      else if ("stylesheet" === resource.type) {
         destination.buffer += nextArrayOpenBrackChunk;
-        var precedence = resource.precedence,
+        var precedence = resource.props["data-precedence"],
           props = resource.props,
-          coercedHref = "" + resource.href;
+          coercedHref = "" + resource.props.href;
         sanitizeURL(coercedHref);
         writeChunk(
           destination,
@@ -1881,11 +1742,124 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
           }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
-        resource.flushed = !0;
-        resource.hint.flushed = !0;
+        resource.state |= 2;
       }
   });
   destination.buffer += "]";
+}
+function preload(href, options) {
+  if (currentResources) {
+    var resources = currentResources;
+    if (
+      "string" === typeof href &&
+      href &&
+      "object" === typeof options &&
+      null !== options &&
+      "string" === typeof options.as
+    ) {
+      var as = options.as,
+        key = "[" + as + "]" + href,
+        resource = resources.preloadsMap.get(key);
+      resource ||
+        ((resource = {
+          type: "preload",
+          chunks: [],
+          state: 0,
+          props: {
+            rel: "preload",
+            as: as,
+            href: href,
+            crossOrigin: "font" === as ? "" : options.crossOrigin,
+            integrity: options.integrity
+          }
+        }),
+        resources.preloadsMap.set(key, resource),
+        pushLinkImpl(resource.chunks, resource.props));
+      switch (as) {
+        case "font":
+          resources.fontPreloads.add(resource);
+          break;
+        case "style":
+          resources.explicitStylesheetPreloads.add(resource);
+          break;
+        case "script":
+          resources.explicitScriptPreloads.add(resource);
+          break;
+        default:
+          resources.explicitOtherPreloads.add(resource);
+      }
+    }
+  }
+}
+function preinit(href, options) {
+  currentResources && preinitImpl(currentResources, href, options);
+}
+function preinitImpl(resources, href, options) {
+  if (
+    "string" === typeof href &&
+    href &&
+    "object" === typeof options &&
+    null !== options
+  ) {
+    var as = options.as;
+    switch (as) {
+      case "style":
+        var key = "[" + as + "]" + href;
+        as = resources.stylesMap.get(key);
+        var precedence = options.precedence || "default";
+        as ||
+          ((as = {
+            type: "stylesheet",
+            chunks: [],
+            state: 0,
+            props: {
+              rel: "stylesheet",
+              href: href,
+              "data-precedence": precedence,
+              crossOrigin: options.crossOrigin,
+              integrity: options.integrity
+            }
+          }),
+          resources.stylesMap.set(key, as),
+          (href = resources.precedences.get(precedence)),
+          href ||
+            ((href = new Set()), resources.precedences.set(precedence, href)),
+          href.add(as));
+        break;
+      case "script":
+        (precedence = "[" + as + "]" + href),
+          (as = resources.scriptsMap.get(precedence)),
+          as ||
+            ((as = { type: "script", chunks: [], state: 0, props: null }),
+            resources.scriptsMap.set(precedence, as),
+            (href = {
+              src: href,
+              async: !0,
+              crossOrigin: options.crossOrigin,
+              integrity: options.integrity
+            }),
+            resources.scripts.add(as),
+            pushScriptImpl(as.chunks, href));
+    }
+  }
+}
+function preloadAsStylePropsFromProps(href, props) {
+  return {
+    rel: "preload",
+    as: "style",
+    href: href,
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    media: props.media,
+    hrefLang: props.hrefLang,
+    referrerPolicy: props.referrerPolicy
+  };
+}
+function hoistStylesheetResource(resource) {
+  this.add(resource);
+}
+function unblockStylesheet(resource) {
+  resource.state &= -5;
 }
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -2431,6 +2405,12 @@ function fatalError(request, error) {
       (request.error = error))
     : ((request.status = 1), (request.fatalError = error));
 }
+function hoistCompletedBoundaryResources(request, completedBoundary) {
+  if (null !== request.completedRootSegment || 0 < request.pendingRootTasks)
+    (request = completedBoundary.resources),
+      request.forEach(unblockStylesheet),
+      request.clear();
+}
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
@@ -2539,29 +2519,57 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         task.treeContext = type;
       }
     } else renderNodeDestructiveImpl(request, task, null, props);
-  else if ("string" === typeof type)
-    (prevThenableState = task.blockedSegment),
-      (ref = pushStartInstance(
-        prevThenableState.chunks,
-        request.preamble,
-        type,
-        props,
-        request.responseState,
-        prevThenableState.formatContext,
-        prevThenableState.lastPushedText
-      )),
-      (prevThenableState.lastPushedText = !1),
-      (initialState = prevThenableState.formatContext),
-      (prevThenableState.formatContext = getChildFormatContext(
-        initialState,
-        type,
-        props
-      )),
-      renderNode(request, task, ref),
-      (prevThenableState.formatContext = initialState),
-      pushEndInstance(prevThenableState.chunks, request.postamble, type),
-      (prevThenableState.lastPushedText = !1);
-  else {
+  else if ("string" === typeof type) {
+    prevThenableState = task.blockedSegment;
+    initialState = pushStartInstance(
+      prevThenableState.chunks,
+      type,
+      props,
+      request.resources,
+      request.responseState,
+      prevThenableState.formatContext,
+      prevThenableState.lastPushedText
+    );
+    prevThenableState.lastPushedText = !1;
+    ref = prevThenableState.formatContext;
+    prevThenableState.formatContext = getChildFormatContext(ref, type, props);
+    renderNode(request, task, initialState);
+    prevThenableState.formatContext = ref;
+    a: {
+      task = prevThenableState.chunks;
+      switch (type) {
+        case "title":
+        case "style":
+        case "script":
+        case "area":
+        case "base":
+        case "br":
+        case "col":
+        case "embed":
+        case "hr":
+        case "img":
+        case "input":
+        case "keygen":
+        case "link":
+        case "meta":
+        case "param":
+        case "source":
+        case "track":
+        case "wbr":
+          break a;
+        case "body":
+          if (1 >= ref.insertionMode) {
+            request.responseState.hasBody = !0;
+            break a;
+          }
+          break;
+        case "html":
+          if (0 === ref.insertionMode) break a;
+      }
+      task.push("</", type, ">");
+    }
+    prevThenableState.lastPushedText = !1;
+  } else {
     switch (type) {
       case REACT_LEGACY_HIDDEN_TYPE:
       case REACT_DEBUG_TRACING_MODE_TYPE:
@@ -2629,9 +2637,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
               0 === contextType.pendingTasks &&
-                (null !== request.completedRootSegment ||
-                  0 < request.pendingRootTasks) &&
-                hoistResourcesToRoot(request.resources, contextType.resources),
+                hoistCompletedBoundaryResources(request, contextType),
               queueCompletedSegment(contextType, contentRootSegment),
               0 === contextType.pendingTasks)
             )
@@ -2836,7 +2842,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$16 = getThenableStateAfterSuspending(),
+      var thenableState$13 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -2850,7 +2856,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$16,
+        thenableState$13,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -2934,9 +2940,7 @@ function finishedTask(request, boundary, segment) {
           ? (segment.parentFlushed &&
               1 === segment.status &&
               queueCompletedSegment(boundary, segment),
-            (null !== request.completedRootSegment ||
-              0 < request.pendingRootTasks) &&
-              hoistResourcesToRoot(request.resources, boundary.resources),
+            hoistCompletedBoundaryResources(request, boundary),
             boundary.parentFlushed &&
               request.completedBoundaries.push(boundary),
             boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
@@ -3024,7 +3028,10 @@ function flushSegment(request, destination, segment) {
       ),
       flushSubtree(request, destination, segment);
   else {
-    hoistResources(request.resources, boundary.resources);
+    segment = boundary.resources;
+    if ((JSCompiler_inline_result = request.resources.boundaryResources))
+      segment.forEach(hoistStylesheetResource, JSCompiler_inline_result),
+        segment.clear();
     writeChunkAndReturn(destination, "\x3c!--$--\x3e");
     segment = boundary.completedSegments;
     if (1 !== segment.length)
@@ -3059,6 +3066,7 @@ function flushCompletedBoundary(request, destination, boundary) {
       completedSegments[i]
     );
   completedSegments.length = 0;
+  writeResourcesForBoundary(destination, boundary.resources);
   request = request.responseState;
   completedSegments = boundary.id;
   i = boundary.rootSegmentID;
@@ -3068,7 +3076,7 @@ function flushCompletedBoundary(request, destination, boundary) {
     for (hasStyleDependencies = boundary.values(); ; ) {
       var resource = hasStyleDependencies.next().value;
       if (!resource) break;
-      if (!resource.inShell) {
+      if (0 === (resource.state & 1)) {
         hasStyleDependencies = !0;
         break b;
       }
@@ -3078,27 +3086,26 @@ function flushCompletedBoundary(request, destination, boundary) {
   (resource = 0 === request.streamingFormat)
     ? (writeChunk(destination, request.startInlineScript),
       hasStyleDependencies
-        ? request.sentCompleteBoundaryFunction
-          ? request.sentStyleInsertionFunction
-            ? writeChunk(destination, '$RR("')
-            : ((request.sentStyleInsertionFunction = !0),
-              writeChunk(
-                destination,
-                '$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
-              ))
-          : ((request.sentCompleteBoundaryFunction = !0),
-            (request.sentStyleInsertionFunction = !0),
+        ? 0 === (request.instructions & 2)
+          ? ((request.instructions |= 10),
             writeChunk(
               destination,
-              '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
+              '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};$RM=new Map;\n$RR=function(p,q,w){function r(l){this.s=l}for(var t=$RC,m=$RM,u=new Map,n=new Map,g=document,h,e,f=g.querySelectorAll("template[data-precedence]"),c=0;e=f[c++];){for(var b=e.content.firstChild;b;b=b.nextSibling)u.set(b.getAttribute("data-href"),b);e.parentNode.removeChild(e)}f=g.querySelectorAll("link[data-precedence],style[data-precedence]");for(c=0;e=f[c++];)m.set(e.getAttribute("STYLE"===e.nodeName?"data-href":"href"),e),n.set(e.dataset.precedence,h=e);e=0;f=[];for(var d,\nv,a;d=w[e++];){var k=0;b=d[k++];if(!(a=m.get(b))){if(a=u.get(b))c=a.getAttribute("data-precedence");else{a=g.createElement("link");a.href=b;a.rel="stylesheet";for(a.dataset.precedence=c=d[k++];v=d[k++];)a.setAttribute(v,d[k++]);d=a._p=new Promise(function(l,x){a.onload=l;a.onerror=x});d.then(r.bind(d,"l"),r.bind(d,"e"))}m.set(b,a);b=n.get(c)||h;b===h&&(h=a);n.set(c,a);b?b.parentNode.insertBefore(a,b.nextSibling):(c=g.head,c.insertBefore(a,c.firstChild))}d=a._p;c=a.getAttribute("media");!d||"l"===\nd.s||c&&!matchMedia(c).matches||f.push(d)}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};$RR("'
             ))
-        : request.sentCompleteBoundaryFunction
-        ? writeChunk(destination, '$RC("')
-        : ((request.sentCompleteBoundaryFunction = !0),
+          : 0 === (request.instructions & 8)
+          ? ((request.instructions |= 8),
+            writeChunk(
+              destination,
+              '$RM=new Map;\n$RR=function(p,q,w){function r(l){this.s=l}for(var t=$RC,m=$RM,u=new Map,n=new Map,g=document,h,e,f=g.querySelectorAll("template[data-precedence]"),c=0;e=f[c++];){for(var b=e.content.firstChild;b;b=b.nextSibling)u.set(b.getAttribute("data-href"),b);e.parentNode.removeChild(e)}f=g.querySelectorAll("link[data-precedence],style[data-precedence]");for(c=0;e=f[c++];)m.set(e.getAttribute("STYLE"===e.nodeName?"data-href":"href"),e),n.set(e.dataset.precedence,h=e);e=0;f=[];for(var d,\nv,a;d=w[e++];){var k=0;b=d[k++];if(!(a=m.get(b))){if(a=u.get(b))c=a.getAttribute("data-precedence");else{a=g.createElement("link");a.href=b;a.rel="stylesheet";for(a.dataset.precedence=c=d[k++];v=d[k++];)a.setAttribute(v,d[k++]);d=a._p=new Promise(function(l,x){a.onload=l;a.onerror=x});d.then(r.bind(d,"l"),r.bind(d,"e"))}m.set(b,a);b=n.get(c)||h;b===h&&(h=a);n.set(c,a);b?b.parentNode.insertBefore(a,b.nextSibling):(c=g.head,c.insertBefore(a,c.firstChild))}d=a._p;c=a.getAttribute("media");!d||"l"===\nd.s||c&&!matchMedia(c).matches||f.push(d)}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};$RR("'
+            ))
+          : writeChunk(destination, '$RR("')
+        : 0 === (request.instructions & 2)
+        ? ((request.instructions |= 2),
           writeChunk(
             destination,
-            '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RC("'
-          )))
+            '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};$RC("'
+          ))
+        : writeChunk(destination, '$RC("'))
     : hasStyleDependencies
     ? writeChunk(destination, '<template data-rri="" data-bid="')
     : writeChunk(destination, '<template data-rci="" data-bid="');
@@ -3144,13 +3151,13 @@ function flushPartiallyCompletedSegment(
   request = request.responseState;
   (boundary = 0 === request.streamingFormat)
     ? (writeChunk(destination, request.startInlineScript),
-      request.sentCompleteSegmentFunction
-        ? writeChunk(destination, '$RS("')
-        : ((request.sentCompleteSegmentFunction = !0),
+      0 === (request.instructions & 1)
+        ? ((request.instructions |= 1),
           writeChunk(
             destination,
             '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};;$RS("'
-          )))
+          ))
+        : writeChunk(destination, '$RS("'))
     : writeChunk(destination, '<template data-rsi="" data-sid="');
   writeChunk(destination, request.segmentPrefix);
   segmentID = segmentID.toString(16);
@@ -3171,9 +3178,7 @@ function flushCompletedQueues(request, destination) {
       completedRootSegment = request.completedRootSegment;
     if (null !== completedRootSegment)
       if (0 === request.pendingRootTasks) {
-        var preamble = request.preamble;
-        for (i = 0; i < preamble.length; i++) destination.buffer += preamble[i];
-        writeInitialResources(
+        writePreamble(
           destination,
           request.resources,
           request.responseState,
@@ -3194,12 +3199,7 @@ function flushCompletedQueues(request, destination) {
             bootstrapChunks[completedRootSegment]
           );
       } else return;
-    else
-      writeImmediateResources(
-        destination,
-        request.resources,
-        request.responseState
-      );
+    else writeHoistables(destination, request.resources, request.responseState);
     var clientRenderedBoundaries = request.clientRenderedBoundaries;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       var boundary = clientRenderedBoundaries[i];
@@ -3212,11 +3212,11 @@ function flushCompletedQueues(request, destination) {
         scriptFormat = 0 === responseState.streamingFormat;
       scriptFormat
         ? ((bootstrapChunks.buffer += responseState.startInlineScript),
-          responseState.sentClientRenderFunction
-            ? (bootstrapChunks.buffer += '$RX("')
-            : ((responseState.sentClientRenderFunction = !0),
+          0 === (responseState.instructions & 4)
+            ? ((responseState.instructions |= 4),
               (bootstrapChunks.buffer +=
-                '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("')))
+                '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("'))
+            : (bootstrapChunks.buffer += '$RX("'))
         : (bootstrapChunks.buffer += '<template data-rxi="" data-bid="');
       if (null === boundaryID)
         throw Error(
@@ -3282,13 +3282,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$18 = partialBoundaries[i];
+      var boundary$15 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$18.resources;
-        var completedSegments = boundary$18.completedSegments;
+          boundary$15.resources;
+        var completedSegments = boundary$15.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3298,7 +3298,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$18,
+              boundary$15,
               completedSegments[responseState]
             )
           ) {
@@ -3308,7 +3308,10 @@ function flushCompletedQueues(request, destination) {
             break a;
           }
         completedSegments.splice(0, responseState);
-        JSCompiler_inline_result = !0;
+        JSCompiler_inline_result = writeResourcesForBoundary(
+          boundary,
+          boundary$15.resources
+        );
       }
       if (!JSCompiler_inline_result) {
         request.destination = null;
@@ -3328,16 +3331,20 @@ function flushCompletedQueues(request, destination) {
       }
     largeBoundaries.splice(0, i);
   } finally {
-    if (
-      0 === request.allPendingTasks &&
+    0 === request.allPendingTasks &&
       0 === request.pingedTasks.length &&
       0 === request.clientRenderedBoundaries.length &&
-      0 === request.completedBoundaries.length
-    ) {
-      request = request.postamble;
-      for (i = 0; i < request.length; i++) destination.buffer += request[i];
-      destination.done = !0;
-    }
+      0 === request.completedBoundaries.length &&
+      ((request = request.responseState),
+      request.hasBody &&
+        (writeChunk(destination, "</"),
+        writeChunk(destination, "body"),
+        writeChunk(destination, ">")),
+      request.htmlChunks &&
+        (writeChunk(destination, "</"),
+        writeChunk(destination, "html"),
+        writeChunk(destination, ">")),
+      (destination.done = !0));
   }
 }
 function abort(request, reason) {
@@ -3355,8 +3362,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$21) {
-    logRecoverableError(request, error$21), fatalError(request, error$21);
+  } catch (error$17) {
+    logRecoverableError(request, error$17), fatalError(request, error$17);
   }
 }
 exports.abortStream = function (stream) {
@@ -3389,7 +3396,7 @@ exports.renderNextChunk = function (stream) {
     currentResourcesStack.push(currentResources);
     currentResources = resources;
     resources = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = ReactDOMServerFloatDispatcher;
+    ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
     var prevResponseState = currentResponseState;
     currentResponseState = request.responseState;
     try {
@@ -3576,11 +3583,15 @@ exports.renderToStream = function (children, options) {
     nextSuspenseID: 0,
     streamingFormat: streamingFormat,
     startInlineScript: "<script>",
-    sentCompleteSegmentFunction: !1,
-    sentCompleteBoundaryFunction: !1,
-    sentClientRenderFunction: !1,
-    sentStyleInsertionFunction: !1,
-    externalRuntimeConfig: externalRuntimeDesc
+    instructions: 0,
+    externalRuntimeConfig: externalRuntimeDesc,
+    htmlChunks: null,
+    headChunks: null,
+    hasBody: !1,
+    charsetChunks: [],
+    preconnectChunks: [],
+    preloadChunks: [],
+    hoistableChunks: []
   };
   bootstrapModules = createFormatContext(0, null, !1);
   externalRuntimeDesc = options ? options.progressiveChunkSize : void 0;
@@ -3591,19 +3602,14 @@ exports.renderToStream = function (children, options) {
     preloadsMap: new Map(),
     stylesMap: new Map(),
     scriptsMap: new Map(),
-    headsMap: new Map(),
-    charset: null,
-    bases: new Set(),
-    preconnects: new Set(),
     fontPreloads: new Set(),
     precedences: new Map(),
-    usedStylePreloads: new Set(),
+    usedStylesheets: new Set(),
     scripts: new Set(),
-    usedScriptPreloads: new Set(),
-    explicitStylePreloads: new Set(),
+    usedScripts: new Set(),
+    explicitStylesheetPreloads: new Set(),
     explicitScriptPreloads: new Set(),
-    headResources: new Set(),
-    structuredMetaKeys: new Map(),
+    explicitOtherPreloads: new Set(),
     boundaryResources: null
   };
   JSCompiler_inline_result = {
@@ -3623,8 +3629,6 @@ exports.renderToStream = function (children, options) {
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    preamble: [],
-    postamble: [],
     onError: void 0 === streamingFormat ? defaultErrorHandler : streamingFormat,
     onAllReady: noop$2,
     onShellReady: noop$2,

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-ef9f6e77b-20230209";
+var ReactVersion = "18.3.0-www-modern-6396b6641-20230209";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -229,7 +229,7 @@ var OffscreenComponent = 22;
 var LegacyHiddenComponent = 23;
 var CacheComponent = 24;
 var TracingMarkerComponent = 25;
-var HostResource = 26;
+var HostHoistable = 26;
 var HostSingleton = 27;
 
 // ATTENTION
@@ -431,7 +431,7 @@ function getComponentNameFromFiber(fiber) {
     case Fragment:
       return "Fragment";
 
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent:
       // Host component type is the display name (e.g. "div", "View")
@@ -874,7 +874,7 @@ function findCurrentHostFiberImpl(node) {
 
   if (
     tag === HostComponent ||
-    tag === HostResource ||
+    tag === HostHoistable ||
     tag === HostSingleton ||
     tag === HostText
   ) {
@@ -4724,7 +4724,7 @@ function describeFiber(fiber) {
   var source = fiber._debugSource;
 
   switch (fiber.tag) {
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent:
       return describeBuiltInComponentFrame(fiber.type);
@@ -15568,7 +15568,6 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       }
       break;
 
-    case HostResource:
     case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
@@ -15910,7 +15909,7 @@ function beginWork(current, workInProgress, renderLanes) {
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
 
-    case HostResource:
+    case HostHoistable:
 
     // eslint-disable-next-line no-fallthrough
 
@@ -17614,7 +17613,7 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     }
 
-    case HostResource:
+    case HostHoistable:
     // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton:
@@ -18295,7 +18294,7 @@ function unwindWork(current, workInProgress, renderLanes) {
       return null;
     }
 
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
@@ -18421,7 +18420,7 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
       break;
     }
 
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);
@@ -18867,7 +18866,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork) {
     }
 
     case HostComponent:
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostText:
     case HostPortal:
@@ -19463,7 +19462,7 @@ function commitLayoutEffectOnFiber(
       break;
     }
 
-    case HostResource:
+    case HostHoistable:
     // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton:
@@ -19913,7 +19912,7 @@ function commitAttachRef(finishedWork) {
     var instanceToUse;
 
     switch (finishedWork.tag) {
-      case HostResource:
+      case HostHoistable:
       case HostSingleton:
       case HostComponent:
         instanceToUse = getPublicInstance(instance);
@@ -20289,7 +20288,7 @@ function commitDeletionEffectsOnFiber(
   // that don't modify the stack.
 
   switch (deletedFiber.tag) {
-    case HostResource:
+    case HostHoistable:
     // eslint-disable-next-line no-fallthrough
 
     case HostSingleton:
@@ -20795,7 +20794,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       return;
     }
 
-    case HostResource:
+    case HostHoistable:
     // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton:
@@ -20840,14 +20839,14 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var oldProps = current !== null ? current.memoizedProps : newProps;
             var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
 
-            var updatePayload = finishedWork.updateQueue;
+            var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (updatePayload !== null) {
+            if (_updatePayload !== null) {
               try {
                 commitUpdate(
                   _instance2,
-                  updatePayload,
+                  _updatePayload,
                   type,
                   oldProps,
                   newProps,
@@ -20900,15 +20899,19 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     }
 
     case HostRoot: {
-      recursivelyTraverseMutationEffects(root, finishedWork);
-      commitReconciliationEffects(finishedWork);
+      {
+        recursivelyTraverseMutationEffects(root, finishedWork);
+        commitReconciliationEffects(finishedWork);
+      }
 
       return;
     }
 
     case HostPortal: {
-      recursivelyTraverseMutationEffects(root, finishedWork);
-      commitReconciliationEffects(finishedWork);
+      {
+        recursivelyTraverseMutationEffects(root, finishedWork);
+        commitReconciliationEffects(finishedWork);
+      }
 
       return;
     }
@@ -21178,7 +21181,7 @@ function disappearLayoutEffects(finishedWork) {
       break;
     }
 
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
@@ -21280,7 +21283,7 @@ function reappearLayoutEffects(
     //  ...
     // }
 
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
@@ -26437,7 +26440,7 @@ function findChildHostInstancesForFiberShallowly(fiber, hostInstances) {
     var foundHostInstances = false;
 
     while (true) {
-      if (node.tag === HostComponent || node.tag === HostResource || false) {
+      if (node.tag === HostComponent || node.tag === HostHoistable || false) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode); // There may still be more, so keep searching.

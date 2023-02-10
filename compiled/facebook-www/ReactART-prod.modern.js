@@ -4455,7 +4455,6 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       enableTransitionTracing && pushRootMarkerInstance(workInProgress);
       pushProvider(workInProgress, CacheContext, current.memoizedState.cache);
       break;
-    case 26:
     case 27:
     case 5:
       pushHostContext(workInProgress);
@@ -9510,7 +9509,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-ef9f6e77b-20230209",
+    version: "18.3.0-www-modern-6396b6641-20230209",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1309 = {
@@ -9541,7 +9540,7 @@ var internals$jscomp$inline_1309 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-ef9f6e77b-20230209"
+  reconcilerVersion: "18.3.0-next-6396b6641-20230209"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1310 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

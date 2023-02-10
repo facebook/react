@@ -137,7 +137,7 @@ var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
 
 var HostComponent = 5;
 var HostText = 6;
-var HostResource = 26;
+var HostHoistable = 26;
 var HostSingleton = 27;
 
 var NoFlags =
@@ -1100,7 +1100,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostText ||
       node.tag === ClassComponent ||
       node.tag === FunctionComponent ||
-      node.tag === HostResource ||
+      node.tag === HostHoistable ||
       node.tag === HostSingleton
     ) {
       var publicInst = node.stateNode;
