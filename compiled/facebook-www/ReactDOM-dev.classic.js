@@ -9298,7 +9298,7 @@ var Dispatcher = Internals.Dispatcher;
 var lastCurrentDocument = null;
 var previousDispatcher = null;
 function prepareToRenderResources(rootContainer) {
-  var rootNode = getRootNode(rootContainer);
+  var rootNode = getHoistableRoot(rootContainer);
   lastCurrentDocument = getDocumentFromRoot(rootNode);
   previousDispatcher = Dispatcher.current;
   Dispatcher.current = ReactDOMClientDispatcher;
@@ -9317,7 +9317,7 @@ var ReactDOMClientDispatcher = {
 
 var preloadPropsMap = new Map(); // getRootNode is missing from IE and old jsdom versions
 
-function getRootNode(container) {
+function getHoistableRoot(container) {
   // $FlowFixMe[method-unbinding]
   return typeof container.getRootNode === "function"
     ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
@@ -9328,7 +9328,7 @@ function getRootNode(container) {
 
 function getCurrentResourceRoot() {
   var currentContainer = getCurrentRootHostContainer();
-  return currentContainer ? getRootNode(currentContainer) : null;
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
 } // Preloads are somewhat special. Even if we don't have the Document
 // used by the root that is rendering a component trying to insert a preload
 // we can still seed the file cache by doing the preload on any document we have
@@ -9352,11 +9352,6 @@ function getDocumentForPreloads() {
 
 function getDocumentFromRoot(root) {
   return root.ownerDocument || root;
-}
-
-function getHoistableRoot(container) {
-  // Flow thinks getRootNode returns Node but we know it is actualy either a Document or ShadowRoot
-  return container.getRootNode();
 } // --------------------------------------
 //      ReactDOM.Preload
 // --------------------------------------
@@ -41950,7 +41945,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-2de85d7c7-20230210";
+var ReactVersion = "18.3.0-www-classic-64acd3918-20230210";
 
 function createPortal(
   children,

@@ -4412,14 +4412,14 @@ var Dispatcher = Internals.Dispatcher,
   previousDispatcher = null,
   ReactDOMClientDispatcher = { preload: preload, preinit: preinit },
   preloadPropsMap = new Map();
-function getRootNode(container) {
+function getHoistableRoot(container) {
   return "function" === typeof container.getRootNode
     ? container.getRootNode()
     : container.ownerDocument;
 }
 function getCurrentResourceRoot() {
   var currentContainer = rootInstanceStackCursor.current;
-  return currentContainer ? getRootNode(currentContainer) : null;
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
 }
 function getDocumentForPreloads() {
   var root = getCurrentResourceRoot();
@@ -12040,7 +12040,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 3:
       propName = currentHoistableRoot;
-      currentHoistableRoot = root.containerInfo.getRootNode();
+      currentHoistableRoot = getHoistableRoot(root.containerInfo);
       recursivelyTraverseMutationEffects(root, finishedWork);
       currentHoistableRoot = propName;
       commitReconciliationEffects(finishedWork);
@@ -12053,7 +12053,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 4:
       current = currentHoistableRoot;
-      currentHoistableRoot = finishedWork.stateNode.containerInfo.getRootNode();
+      currentHoistableRoot = getHoistableRoot(
+        finishedWork.stateNode.containerInfo
+      );
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       currentHoistableRoot = current;
@@ -13746,7 +13748,7 @@ function shouldAttemptToSuspendUntilDataResolves() {
     : !1;
 }
 function pushDispatcher(container) {
-  container = getRootNode(container);
+  container = getHoistableRoot(container);
   lastCurrentDocument = container.ownerDocument || container;
   previousDispatcher = Dispatcher.current;
   Dispatcher.current = ReactDOMClientDispatcher;
@@ -15753,7 +15755,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1785 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-2de85d7c7-20230210",
+  version: "18.3.0-www-modern-64acd3918-20230210",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -15798,7 +15800,7 @@ var devToolsConfig$jscomp$inline_1785 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2de85d7c7-20230210"
+  reconcilerVersion: "18.3.0-next-64acd3918-20230210"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -15973,7 +15975,7 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-2de85d7c7-20230210";
+exports.version = "18.3.0-next-64acd3918-20230210";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
