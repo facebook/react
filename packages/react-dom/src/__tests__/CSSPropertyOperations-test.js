@@ -254,4 +254,16 @@ describe('CSSPropertyOperations', () => {
 
     expect(root.children[0].style.getPropertyValue('--foo')).toEqual('5');
   });
+
+  it('support for array of styles', () => {
+    const styles1 = {
+      left: 0
+    };
+    const styles2 = {
+      right: 0
+    };
+    const div = <div style={[styles1, styles2]} />;
+    const html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"left:0;right:0"');
+  });
 });
