@@ -736,7 +736,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         continue;
       }
       case "Identifier": {
-        env.reference(instrValue, Effect.Read);
+        env.reference(instrValue, Effect.Capture);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
