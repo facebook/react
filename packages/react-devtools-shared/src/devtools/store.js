@@ -168,7 +168,7 @@ export default class Store extends EventEmitter<{
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<number, number> = new Map();
 
-  // These options may be initially set by a confiugraiton option when constructing the Store.
+  // These options may be initially set by a configuration option when constructing the Store.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
@@ -444,7 +444,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the legacy profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }

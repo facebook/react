@@ -77,7 +77,7 @@ describe('Store', () => {
   // This test is not the same cause as what's reported on GitHub,
   // but the resulting behavior (owner mounting after descendant) is the same.
   // Thec ase below is admittedly contrived and relies on side effects.
-  // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
+  // I'm not yet sure of how to reduce the GitHub reported production case to a test though.
   // See https://github.com/facebook/react/issues/21445
   // @reactVersion >= 18.0
   it('should handle when a component mounts before its owner', () => {
