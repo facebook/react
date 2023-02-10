@@ -1086,6 +1086,7 @@ const attributes = [
   {name: 'label', tagName: 'track'},
   {name: 'LANG', read: getProperty('lang')},
   {name: 'lang'},
+  {name: 'lang', containerTagName: 'document', tagName: 'html'},
   {name: 'length', read: getAttribute('length')},
   {
     name: 'lengthAdjust',

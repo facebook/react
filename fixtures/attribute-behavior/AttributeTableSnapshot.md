@@ -6198,6 +6198,31 @@
 | `lang=(null)`| (initial)| `<empty string>` |
 | `lang=(undefined)`| (initial)| `<empty string>` |
 
+## `lang` (on `<html>` inside `<document>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `lang=(string)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(empty string)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(array with string)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(empty array)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(object)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(numeric string)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(-1)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(0)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(integer)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(NaN)`| (initial, warning, ssr mismatch)| `<undefined>` |
+| `lang=(float)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(true)`| (initial, warning, ssr mismatch)| `<undefined>` |
+| `lang=(false)`| (initial, warning, ssr mismatch)| `<undefined>` |
+| `lang=(string 'true')`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(string 'false')`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(string 'on')`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(string 'off')`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(symbol)`| (initial, warning, ssr mismatch)| `<undefined>` |
+| `lang=(function)`| (initial, warning, ssr mismatch)| `<undefined>` |
+| `lang=(null)`| (initial, ssr mismatch)| `<undefined>` |
+| `lang=(undefined)`| (initial, ssr mismatch)| `<undefined>` |
+
 ## `length` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
