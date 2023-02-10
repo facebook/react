@@ -88,7 +88,7 @@ let lastCurrentDocument: ?Document = null;
 
 let previousDispatcher = null;
 export function prepareToRenderResources(rootContainer: Container) {
-  const rootNode = getRootNode(rootContainer);
+  const rootNode = getHoistableRoot(rootContainer);
   lastCurrentDocument = getDocumentFromRoot(rootNode);
 
   previousDispatcher = Dispatcher.current;
@@ -111,7 +111,7 @@ export type HoistableRoot = Document | ShadowRoot;
 const preloadPropsMap: Map<string, PreloadProps> = new Map();
 
 // getRootNode is missing from IE and old jsdom versions
-function getRootNode(container: Container): HoistableRoot {
+export function getHoistableRoot(container: Container): HoistableRoot {
   // $FlowFixMe[method-unbinding]
   return typeof container.getRootNode === 'function'
     ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
@@ -122,7 +122,7 @@ function getRootNode(container: Container): HoistableRoot {
 
 function getCurrentResourceRoot(): null | HoistableRoot {
   const currentContainer = getCurrentRootHostContainer();
-  return currentContainer ? getRootNode(currentContainer) : null;
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
 }
 
 // Preloads are somewhat special. Even if we don't have the Document
@@ -146,11 +146,6 @@ function getDocumentForPreloads(): ?Document {
 
 function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
-}
-
-export function getHoistableRoot(container: Container): HoistableRoot {
-  // Flow thinks getRootNode returns Node but we know it is actualy either a Document or ShadowRoot
-  return ((container.getRootNode(): any): Document | ShadowRoot);
 }
 
 // --------------------------------------
