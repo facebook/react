@@ -20,7 +20,8 @@ function g() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = { y: { z: 1 } };
     x.y.z = x.y.z + 1;
-    x.y.z = x.y.z * 2;
+    const t0 = x.y;
+    t0.z = t0.z * 2;
     $[0] = x;
   } else {
     x = $[0];

@@ -1763,8 +1763,6 @@ function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   return place;
 }
 
-function lowerFooBar(): void {}
-
 function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
