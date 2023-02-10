@@ -31,7 +31,7 @@ import {
   HostRoot,
   HostPortal,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   ScopeComponent,
@@ -623,7 +623,7 @@ export function dispatchEventForPluginEventSystem(
             if (
               parentTag === HostComponent ||
               parentTag === HostText ||
-              (enableFloat ? parentTag === HostResource : false) ||
+              (enableFloat ? parentTag === HostHoistable : false) ||
               (enableHostSingletons ? parentTag === HostSingleton : false)
             ) {
               node = ancestorInst = parentNode;
@@ -681,7 +681,7 @@ export function accumulateSinglePhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
+        (enableFloat ? tag === HostHoistable : false) ||
         (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {
@@ -795,7 +795,7 @@ export function accumulateTwoPhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
+        (enableFloat ? tag === HostHoistable : false) ||
         (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {
@@ -902,7 +902,7 @@ function accumulateEnterLeaveListenersForEvent(
     }
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
+        (enableFloat ? tag === HostHoistable : false) ||
         (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {

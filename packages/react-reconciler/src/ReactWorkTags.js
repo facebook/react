@@ -62,5 +62,5 @@ export const OffscreenComponent = 22;
 export const LegacyHiddenComponent = 23;
 export const CacheComponent = 24;
 export const TracingMarkerComponent = 25;
-export const HostResource = 26;
+export const HostHoistable = 26;
 export const HostSingleton = 27;

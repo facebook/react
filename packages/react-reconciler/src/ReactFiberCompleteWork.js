@@ -51,7 +51,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   HostPortal,
@@ -989,20 +989,31 @@ function completeWork(
       }
       return null;
     }
-    case HostResource: {
+    case HostHoistable: {
       if (enableFloat && supportsResources) {
-        popHostContext(workInProgress);
         const currentRef = current ? current.ref : null;
         if (currentRef !== workInProgress.ref) {
           markRef(workInProgress);
         }
+
         if (
+          // We are mounting and must Update this Hoistable in this commit
           current === null ||
+          // We are transitioning to, from, or between Hoistable Resources
+          // and require an update
           current.memoizedState !== workInProgress.memoizedState
         ) {
-          // The workInProgress resource is different than the current one or the current
-          // one does not exist
           markUpdate(workInProgress);
+        } else if (workInProgress.memoizedState === null) {
+          // We may have props to update on the Hoistable instance. We use the
+          // updateHostComponent path becuase it produces the update queue
+          // we need for Hoistables
+          updateHostComponent(
+            current,
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+          );
         }
         bubbleProperties(workInProgress);
         return null;

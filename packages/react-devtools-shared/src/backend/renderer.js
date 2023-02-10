@@ -223,7 +223,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: 26, // In reality, 18.2+. But doesn't hurt to include it here
+      HostHoistable: 26, // In reality, 18.2+. But doesn't hurt to include it here
       HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -257,7 +257,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -290,7 +290,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -323,7 +323,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 7,
       HostPortal: 6,
       HostRoot: 5,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
@@ -356,7 +356,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
@@ -397,7 +397,7 @@ export function getInternalReactConstants(version: string): {
     IndeterminateComponent,
     ForwardRef,
     HostRoot,
-    HostResource,
+    HostHoistable,
     HostSingleton,
     HostComponent,
     HostPortal,
@@ -465,7 +465,7 @@ export function getInternalReactConstants(version: string): {
         return null;
       case HostComponent:
       case HostSingleton:
-      case HostResource:
+      case HostHoistable:
         return type;
       case HostPortal:
       case HostText:
@@ -591,7 +591,7 @@ export function attach(
     Fragment,
     FunctionComponent,
     HostRoot,
-    HostResource,
+    HostHoistable,
     HostSingleton,
     HostPortal,
     HostComponent,
@@ -1032,7 +1032,7 @@ export function attach(
       case HostRoot:
         return ElementTypeRoot;
       case HostComponent:
-      case HostResource:
+      case HostHoistable:
       case HostSingleton:
         return ElementTypeHostComponent;
       case HostPortal:

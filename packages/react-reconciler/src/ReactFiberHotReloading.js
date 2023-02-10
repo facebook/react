@@ -29,7 +29,7 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   HostRoot,
@@ -468,7 +468,7 @@ function findChildHostInstancesForFiberShallowly(
     while (true) {
       if (
         node.tag === HostComponent ||
-        (enableFloat ? node.tag === HostResource : false) ||
+        (enableFloat ? node.tag === HostHoistable : false) ||
         (enableHostSingletons && supportsSingletons
           ? node.tag === HostSingleton
           : false)
