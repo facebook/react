@@ -25,6 +25,8 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
+import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
@@ -495,6 +497,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
+  knownServerReferences.set(proxy, metaData);
   return proxy;
 }
 

@@ -33,6 +33,7 @@ if (typeof fetch === 'undefined') {
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const busboy = require('busboy');
 const app = express();
 const compress = require('compression');
 
@@ -95,9 +96,8 @@ app.get('/', async function (req, res) {
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
-  const {renderToPipeableStream} = await import(
-    'react-server-dom-webpack/server'
-  );
+  const {renderToPipeableStream, decodeReply, decodeReplyFromBusboy} =
+    await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
   const [filepath, name] = serverReference.split('#');
   const action = (await import(filepath))[name];
@@ -108,9 +108,18 @@ app.post('/', bodyParser.text(), async function (req, res) {
     throw new Error('Invalid action');
   }
 
-  const args = JSON.parse(req.body);
-  const result = action.apply(null, args);
+  let args;
+  if (req.is('multipart/form-data')) {
+    // Use busboy to streamingly parse the reply from form-data.
+    const bb = busboy({headers: req.headers});
+    const reply = decodeReplyFromBusboy(bb);
+    req.pipe(bb);
+    args = await reply;
+  } else {
+    args = await decodeReply(req.body);
+  }
 
+  const result = action.apply(null, args);
   const {pipe} = renderToPipeableStream(result, {});
   pipe(res);
 });

@@ -32,6 +32,8 @@ import isArray from 'shared/isArray';
 export type {ClientReferenceMetadata} from 'ReactFlightNativeRelayClientIntegration';
 
 export type SSRManifest = null;
+export type ServerManifest = null;
+export type ServerReferenceId = string;
 
 export type UninitializedModel = JSONValue;
 
@@ -42,6 +44,13 @@ export function resolveClientReference<T>(
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   return resolveClientReferenceImpl(metadata);
+}
+
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  throw new Error('Not implemented.');
 }
 
 function parseModelRecursively(

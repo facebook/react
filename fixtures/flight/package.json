@@ -17,6 +17,7 @@
     "babel-preset-react-app": "^10.0.1",
     "body-parser": "^1.20.1",
     "browserslist": "^4.18.1",
+    "busboy": "^1.6.0",
     "camelcase": "^6.2.1",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "compression": "^1.7.4",

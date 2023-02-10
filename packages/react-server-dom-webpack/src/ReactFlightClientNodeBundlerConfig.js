@@ -19,6 +19,10 @@ export type SSRManifest = {
   },
 };
 
+export type ServerManifest = void;
+
+export type ServerReferenceId = string;
+
 export opaque type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
@@ -37,6 +41,16 @@ export function resolveClientReference<T>(
 ): ClientReference<T> {
   const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
   return resolvedModuleData;
+}
+
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  const idx = id.lastIndexOf('#');
+  const specifier = id.substr(0, idx);
+  const name = id.substr(idx + 1);
+  return {specifier, name};
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();

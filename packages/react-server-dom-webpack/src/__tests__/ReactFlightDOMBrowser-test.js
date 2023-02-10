@@ -74,6 +74,21 @@ describe('ReactFlightDOMBrowser', () => {
     throw theInfinitePromise;
   }
 
+  function requireServerRef(ref) {
+    const metaData = webpackServerMap[ref];
+    const mod = __webpack_require__(metaData.id);
+    if (metaData.name === '*') {
+      return mod;
+    }
+    return mod[metaData.name];
+  }
+
+  async function callServer(actionId, body) {
+    const fn = requireServerRef(actionId);
+    const args = await ReactServerDOMWriter.decodeReply(body, webpackServerMap);
+    return fn.apply(null, args);
+  }
+
   it('should resolve HTML using W3C streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
@@ -754,16 +769,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('Hi');
   });
 
-  function requireServerRef(ref) {
-    const metaData = webpackServerMap[ref];
-    const mod = __webpack_require__(metaData.id);
-    if (metaData.name === '*') {
-      return mod;
-    }
-    return mod[metaData.name];
-  }
-
-  it('can pass a function by reference from server to client', async () => {
+  it('can pass a higher order function by reference from server to client', async () => {
     let actionProxy;
 
     function Client({action}) {
@@ -771,24 +777,33 @@ describe('ReactFlightDOMBrowser', () => {
       return 'Click Me';
     }
 
-    function send(text) {
+    function greet(transform, text) {
+      return 'Hello ' + transform(text);
+    }
+
+    function upper(text) {
       return text.toUpperCase();
     }
 
-    const ServerModule = serverExports({
-      send,
+    const ServerModuleA = serverExports({
+      greet,
+    });
+    const ServerModuleB = serverExports({
+      upper,
     });
     const ClientRef = clientExports(Client);
 
+    const boundFn = ServerModuleA.greet.bind(null, ServerModuleB.upper);
+
     const stream = ReactServerDOMWriter.renderToReadableStream(
-      <ClientRef action={ServerModule.send} />,
+      <ClientRef action={boundFn} />,
       webpackMap,
     );
 
     const response = ReactServerDOMReader.createFromReadableStream(stream, {
       async callServer(ref, args) {
-        const fn = requireServerRef(ref);
-        return fn.apply(null, args);
+        const body = await ReactServerDOMReader.encodeReply(args);
+        return callServer(ref, body);
       },
     });
 
@@ -803,10 +818,10 @@ describe('ReactFlightDOMBrowser', () => {
     });
     expect(container.innerHTML).toBe('Click Me');
     expect(typeof actionProxy).toBe('function');
-    expect(actionProxy).not.toBe(send);
+    expect(actionProxy).not.toBe(boundFn);
 
     const result = await actionProxy('hi');
-    expect(result).toBe('HI');
+    expect(result).toBe('Hello HI');
   });
 
   it('can bind arguments to a server reference', async () => {
@@ -828,9 +843,9 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     const response = ReactServerDOMReader.createFromReadableStream(stream, {
-      async callServer(ref, args) {
-        const fn = requireServerRef(ref);
-        return fn.apply(null, args);
+      async callServer(actionId, args) {
+        const body = await ReactServerDOMReader.encodeReply(args);
+        return callServer(actionId, body);
       },
     });
 
@@ -872,11 +887,11 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     const response = ReactServerDOMReader.createFromReadableStream(stream, {
-      async callServer(ref, args) {
-        const fn = requireServerRef(ref);
+      async callServer(actionId, args) {
+        const body = await ReactServerDOMReader.encodeReply(args);
         return ReactServerDOMReader.createFromReadableStream(
           ReactServerDOMWriter.renderToReadableStream(
-            fn.apply(null, args),
+            callServer(actionId, body),
             null,
             {onError: error => 'test-error-digest'},
           ),

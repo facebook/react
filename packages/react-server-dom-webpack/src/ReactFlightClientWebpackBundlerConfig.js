@@ -19,6 +19,12 @@ export type SSRManifest = null | {
   },
 };
 
+export type ServerManifest = {
+  [id: string]: ClientReference<any>,
+};
+
+export type ServerReferenceId = string;
+
 export opaque type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
@@ -47,6 +53,14 @@ export function resolveClientReference<T>(
     }
   }
   return metadata;
+}
+
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  // This needs to return async: true if it's an async module.
+  return bundlerConfig[id];
 }
 
 // The chunk cache contains all the chunks we've preloaded so far.

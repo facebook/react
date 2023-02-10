@@ -169,6 +169,89 @@ declare module 'util' {
   }
 }
 
+declare module 'busboy' {
+  import type {Writable, Readable} from 'stream';
+
+  declare interface Info {
+    encoding: string;
+    mimeType: string;
+  }
+
+  declare interface FileInfo extends Info {
+    filename: string;
+  }
+
+  declare interface FieldInfo extends Info {
+    nameTruncated: boolean;
+    valueTruncated: boolean;
+  }
+
+  declare interface BusboyEvents {
+    file: (name: string, stream: Readable, info: FileInfo) => void;
+    field: (name: string, value: string, info: FieldInfo) => void;
+    partsLimit: () => void;
+    filesLimit: () => void;
+    fieldsLimit: () => void;
+    error: (error: mixed) => void;
+    close: () => void;
+  }
+  declare interface Busboy extends Writable {
+    addListener<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    addListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void,
+    ): Busboy;
+
+    on<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    on(event: string | symbol, listener: (...args: any[]) => void): Busboy;
+
+    once<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    once(event: string | symbol, listener: (...args: any[]) => void): Busboy;
+
+    removeListener<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    removeListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void,
+    ): Busboy;
+
+    off<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    off(event: string | symbol, listener: (...args: any[]) => void): Busboy;
+
+    prependListener<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    prependListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void,
+    ): Busboy;
+
+    prependOnceListener<Event: $Keys<BusboyEvents>>(
+      event: Event,
+      listener: BusboyEvents[Event],
+    ): Busboy;
+    prependOnceListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void,
+    ): Busboy;
+  }
+}
+
 declare module 'pg/lib/utils' {
   declare module.exports: {
     prepareValue(val: any): mixed,

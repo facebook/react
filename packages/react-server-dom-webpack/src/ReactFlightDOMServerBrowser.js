@@ -8,8 +8,9 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerWebpackBundlerConfig';
+import type {ServerManifest} from 'react-client/src/ReactFlightClientHostConfig';
 
 import {
   createRequest,
@@ -17,6 +18,14 @@ import {
   startFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
+
+import {
+  createResponse,
+  close,
+  resolveField,
+  resolveFile,
+  getRoot,
+} from 'react-server/src/ReactFlightReplyServer';
 
 type Options = {
   identifierPrefix?: string,
@@ -66,4 +75,26 @@ function renderToReadableStream(
   return stream;
 }
 
-export {renderToReadableStream};
+function decodeReply<T>(
+  body: string | FormData,
+  webpackMap: ServerManifest,
+): Thenable<T> {
+  const response = createResponse(webpackMap);
+  if (typeof body === 'string') {
+    resolveField(response, 0, body);
+  } else {
+    // $FlowFixMe[prop-missing] Flow doesn't know that forEach exists.
+    body.forEach((value: string | File, key: string) => {
+      const id = +key;
+      if (typeof value === 'string') {
+        resolveField(response, id, value);
+      } else {
+        resolveFile(response, id, value);
+      }
+    });
+  }
+  close(response);
+  return getRoot(response);
+}
+
+export {renderToReadableStream, decodeReply};
