@@ -13,7 +13,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   const h = [...b];
   new c(...args);
   c(...args);
-  g["e"] += 1;
   const [y, ...yy] = useState(0);
   const { z, aa = "aa", ...zz } = useCustom();
 

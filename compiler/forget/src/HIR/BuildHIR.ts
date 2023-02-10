@@ -1147,25 +1147,11 @@ function lowerExpression(
         case "MemberExpression": {
           // a.b.c += <right>
           const leftExpr = left as NodePath<t.MemberExpression>;
-          // Lower everything up to the final property to a temporary, eg `a.b`
-          const object = lowerExpressionToPlace(
+          const { object, property, value } = lowerMemberExpression(
             builder,
-            leftExpr.get("object")
+            leftExpr
           );
-          // Extract the final property to be read from and re-assigned, eg 'c'
-          const property = leftExpr.get("property");
-          if (!property.isIdentifier()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${property.type} properties in MemberExpression`,
-              severity: ErrorSeverity.Todo,
-              nodePath: property,
-            });
-            return {
-              kind: "UnsupportedNode",
-              node: leftExpr.node,
-              loc: leftExpr.node.loc ?? GeneratedSource,
-            };
-          }
+
           // Store the previous value to a temporary
           const previousValuePlace: Place = buildTemporaryPlace(
             builder,
@@ -1177,13 +1163,7 @@ function lowerExpression(
               place: { ...previousValuePlace },
               kind: InstructionKind.Const,
             },
-            value: {
-              kind: "PropertyLoad",
-              object: { ...object },
-              property: property.node.name,
-              loc: leftExpr.node.loc ?? GeneratedSource,
-              optional: false, // LVal cannot be optional
-            },
+            value,
             loc: leftExpr.node.loc ?? GeneratedSource,
           });
           // Store the new value to a temporary
@@ -1205,13 +1185,23 @@ function lowerExpression(
           });
 
           // Save the result back to the property
-          return {
-            kind: "PropertyStore",
-            object: { ...object },
-            property: property.node.name,
-            value: { ...newValuePlace },
-            loc: leftExpr.node.loc ?? GeneratedSource,
-          };
+          if (typeof property === "string") {
+            return {
+              kind: "PropertyStore",
+              object: { ...object },
+              property,
+              value: { ...newValuePlace },
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            };
+          } else {
+            return {
+              kind: "ComputedStore",
+              object: { ...object },
+              property: { ...property },
+              value: { ...newValuePlace },
+              loc: leftExpr.node.loc ?? GeneratedSource,
+            };
+          }
         }
         default: {
           builder.errors.push({
