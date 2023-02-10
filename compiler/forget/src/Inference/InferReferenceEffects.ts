@@ -584,7 +584,10 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "ObjectExpression": {
-        valueKind = ValueKind.Mutable;
+        valueKind = hasContextRefOperand(env, instrValue)
+          ? ValueKind.Context
+          : ValueKind.Mutable;
+
         // Object construction captures but does not modify the key/property values
         effectKind = Effect.Capture;
         lvalueEffect = Effect.Store;
@@ -842,4 +845,11 @@ export function parseHookCall(place: Place): Hook | null {
     effectKind: Effect.Mutate,
     valueKind: ValueKind.Mutable,
   };
+}
+
+function hasContextRefOperand(env: Environment, instrValue: InstructionValue) {
+  for (const place of eachInstructionValueOperand(instrValue)) {
+    if (env.kind(place) === ValueKind.Context) return true;
+  }
+  return false;
 }
