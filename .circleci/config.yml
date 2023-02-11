@@ -225,12 +225,11 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
-            which google-chrome
             # https://github.com/microsoft/playwright/issues/11300#issuecomment-1009322833
             # TODO: apt-get can be removed once we switch to @playwright/test@^1.18.0
             apt-get update
-            which google-chrome
             sudo npx playwright install --with-deps chrome
+            which google-chrome
       - run:
           environment:
             RELEASE_CHANNEL: experimental
