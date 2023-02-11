@@ -225,8 +225,8 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
-            npx playwright install
-            sudo npx playwright install-deps
+            npx playwright install chrome
+            sudo npx playwright install-deps chrome
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -262,8 +262,8 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
-            npx playwright install
-            sudo npx playwright install-deps
+            npx playwright install chrome
+            sudo npx playwright install-deps chrome
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
       - run:
           environment:
