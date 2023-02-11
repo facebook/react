@@ -28,19 +28,19 @@ import {
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
 
-import {precacheFiberNode} from './ReactDOMComponentTree';
 import {createHTMLElement, setInitialProperties} from './ReactDOMComponent';
 import {
+  precacheFiberNode,
   getResourcesFromRoot,
-  isMarkedResource,
-  markNodeAsResource,
+  isOwnedInstance,
+  markNodeAsHoistable,
 } from './ReactDOMComponentTree';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
 type ResourceType = 'style' | 'font' | 'script';
 
-type HoistableTagType = 'link' | 'meta' | 'title' | 'script' | 'style';
+type HoistableTagType = 'link' | 'meta' | 'title';
 type TResource<T: 'stylesheet' | 'style' | 'script' | 'void'> = {
   type: T,
   instance: null | Instance,
@@ -82,6 +82,12 @@ export type RootResources = {
   hoistableScripts: Map<string, ScriptResource>,
 };
 
+export type HoistedTagsCache = {
+  title: null | Set<Element>,
+  link: null | Set<Element>,
+  meta: null | Set<Element>,
+};
+
 // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
 // called when there is no rendering we track the last used document. It is not safe to insert
 // arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
@@ -102,6 +108,25 @@ export function prepareToRenderResources(rootContainer: Container) {
 export function cleanupAfterRenderResources() {
   Dispatcher.current = previousDispatcher;
   previousDispatcher = null;
+}
+
+const hoistedTagsCaches: Map<Document, HoistedTagsCache> = new Map();
+
+export function prepareToCommitHoistables() {
+  hoistedTagsCaches.clear();
+}
+
+function getHoistedTagsCache(ownerDocument: Document): HoistedTagsCache {
+  let cache = hoistedTagsCaches.get(ownerDocument);
+  if (!cache) {
+    cache = {
+      title: null,
+      link: null,
+      meta: null,
+    };
+    hoistedTagsCaches.set(ownerDocument, cache);
+  }
+  return cache;
 }
 
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
@@ -182,7 +207,7 @@ function preconnectAs(
           ownerDocument,
         );
         setInitialProperties(preloadInstance, 'link', preconnectProps);
-        markNodeAsResource(preloadInstance);
+        markNodeAsHoistable(preloadInstance);
         (ownerDocument.head: any).appendChild(preloadInstance);
       }
     }
@@ -296,7 +321,7 @@ function preload(href: string, options: PreloadOptions) {
           ownerDocument,
         );
         setInitialProperties(preloadInstance, 'link', preloadProps);
-        markNodeAsResource(preloadInstance);
+        markNodeAsHoistable(preloadInstance);
         (ownerDocument.head: any).appendChild(preloadInstance);
       }
     }
@@ -377,7 +402,7 @@ function preinit(href: string, options: PreinitOptions) {
                 preloadDocument,
               );
               setInitialProperties(preloadInstance, 'link', preloadProps);
-              markNodeAsResource(preloadInstance);
+              markNodeAsHoistable(preloadInstance);
               (preloadDocument.head: any).appendChild(preloadInstance);
             }
           }
@@ -418,7 +443,7 @@ function preinit(href: string, options: PreinitOptions) {
           }
           const ownerDocument = getDocumentFromRoot(resourceRoot);
           instance = createHTMLElement('link', stylesheetProps, ownerDocument);
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           setInitialProperties(instance, 'link', stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
         }
@@ -460,9 +485,9 @@ function preinit(href: string, options: PreinitOptions) {
           }
           const ownerDocument = getDocumentFromRoot(resourceRoot);
           instance = createHTMLElement('script', scriptProps, ownerDocument);
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           setInitialProperties(instance, 'link', scriptProps);
-          (getDocumentFromRoot(resourceRoot).head: any).appendChild(instance);
+          (ownerDocument.head: any).appendChild(instance);
         }
 
         // Construct a Resource and cache it
@@ -700,7 +725,7 @@ function preloadStylesheet(
         ownerDocument,
       );
       setInitialProperties(preloadInstance, 'link', preloadProps);
-      markNodeAsResource(preloadInstance);
+      markNodeAsHoistable(preloadInstance);
       (ownerDocument.head: any).appendChild(preloadInstance);
     }
   }
@@ -752,7 +777,7 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           return instance;
         }
 
@@ -760,7 +785,7 @@ export function acquireResource(
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
         instance = createHTMLElement('style', styleProps, ownerDocument);
 
-        markNodeAsResource(instance);
+        markNodeAsHoistable(instance);
         setInitialProperties(instance, 'style', styleProps);
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
@@ -780,7 +805,7 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           return instance;
         }
 
@@ -793,7 +818,7 @@ export function acquireResource(
         // Construct and insert a new instance
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
         instance = createHTMLElement('link', stylesheetProps, ownerDocument);
-        markNodeAsResource(instance);
+        markNodeAsHoistable(instance);
         const linkInstance: HTMLLinkElement = (instance: any);
         (linkInstance: any)._p = new Promise((resolve, reject) => {
           linkInstance.onload = resolve;
@@ -821,7 +846,7 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           return instance;
         }
 
@@ -835,9 +860,9 @@ export function acquireResource(
         // Construct and insert a new instance
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
         instance = createHTMLElement('script', scriptProps, ownerDocument);
-        markNodeAsResource(instance);
+        markNodeAsHoistable(instance);
         setInitialProperties(instance, 'link', scriptProps);
-        (getDocumentFromRoot(hoistableRoot).head: any).appendChild(instance);
+        (ownerDocument.head: any).appendChild(instance);
         resource.instance = instance;
 
         return instance;
@@ -926,7 +951,23 @@ export function hydrateHoistable(
   internalInstanceHandle: Object,
 ): Instance {
   const ownerDocument = getDocumentFromRoot(hoistableRoot);
-  const nodes = ownerDocument.getElementsByTagName(type);
+  const hoistedTagsCache = getHoistedTagsCache(ownerDocument);
+
+  let cache = hoistedTagsCache[type];
+  if (cache === null) {
+    // The cache gets reset on every commit. We only want to query the set of valid
+    //
+    cache = hoistedTagsCache[type] = new Set();
+
+    const nodes = ownerDocument.getElementsByTagName(type);
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (!isOwnedInstance(node) && node.namespaceURI !== SVG_NAMESPACE) {
+        cache.add(node);
+      }
+    }
+  }
+  const hoistedTags = cache;
 
   const children = props.children;
   let child, childString;
@@ -948,135 +989,141 @@ export function hydrateHoistable(
   } else {
     childString = '';
   }
-  nodeLoop: for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
+
+  const attributes: Array<string> = [];
+
+  for (const propName in props) {
+    const propValue = props[propName];
+    if (!props.hasOwnProperty(propName)) {
+      continue;
+    }
     if (
-      isMarkedResource(node) ||
-      node.namespaceURI === SVG_NAMESPACE ||
-      node.textContent !== childString
+      // shouldIgnoreAttribute
+      // We have already filtered out null/undefined and reserved words.
+      propName.length > 2 &&
+      (propName[0] === 'o' || propName[0] === 'O') &&
+      (propName[1] === 'n' || propName[1] === 'N')
     ) {
       continue;
     }
-    let checkedAttributes = 0;
-    for (const propName in props) {
-      const propValue = props[propName];
-      if (!props.hasOwnProperty(propName)) {
+    switch (propName) {
+      // Reserved props will never have an attribute partner
+      case 'children':
+      case 'defaultValue':
+      case 'dangerouslySetInnerHTML':
+      case 'defaultChecked':
+      case 'innerHTML':
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'style':
+        // we advance to the next prop
         continue;
+
+      // Name remapped props used by hoistable tag types
+      case 'className': {
+        if (__DEV__) {
+          checkAttributeStringCoercion(propValue, propName);
+        }
+        attributes.push('class', '' + propValue);
+        break;
       }
-      switch (propName) {
-        // Reserved props will never have an attribute partner
-        case 'children':
-        case 'defaultValue':
-        case 'dangerouslySetInnerHTML':
-        case 'defaultChecked':
-        case 'innerHTML':
-        case 'suppressContentEditableWarning':
-        case 'suppressHydrationWarning':
-        case 'style':
-          // we advance to the next prop
-          continue;
-
-        // Name remapped props used by hoistable tag types
-        case 'className': {
-          if (__DEV__) {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-          if (node.getAttribute('class') !== '' + propValue) continue nodeLoop;
-          break;
+      case 'httpEquiv': {
+        if (__DEV__) {
+          checkAttributeStringCoercion(propValue, propName);
         }
-        case 'httpEquiv': {
-          if (__DEV__) {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-          if (node.getAttribute('http-equiv') !== '' + propValue)
-            continue nodeLoop;
-          break;
-        }
-
-        // Booleanish props used by hoistable tag types
-        case 'contentEditable':
-        case 'draggable':
-        case 'spellCheck': {
-          if (__DEV__) {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-          if (node.getAttribute(propName) !== '' + propValue) continue nodeLoop;
-          break;
-        }
-
-        // Boolean props used by hoistable tag types
-        case 'async':
-        case 'defer':
-        case 'disabled':
-        case 'hidden':
-        case 'noModule':
-        case 'scoped':
-        case 'itemScope':
-          if (propValue !== node.hasAttribute(propName)) continue nodeLoop;
-          break;
-
-        // The following properties are left out because they do not apply to
-        // the current set of hoistable types. They may have special handling
-        // requirements if they end up applying to a hoistable type in the future
-        // case 'acceptCharset':
-        // case 'value':
-        // case 'allowFullScreen':
-        // case 'autoFocus':
-        // case 'autoPlay':
-        // case 'controls':
-        // case 'default':
-        // case 'disablePictureInPicture':
-        // case 'disableRemotePlayback':
-        // case 'formNoValidate':
-        // case 'loop':
-        // case 'noValidate':
-        // case 'open':
-        // case 'playsInline':
-        // case 'readOnly':
-        // case 'required':
-        // case 'reversed':
-        // case 'seamless':
-        // case 'multiple':
-        // case 'selected':
-        // case 'capture':
-        // case 'download':
-        // case 'cols':
-        // case 'rows':
-        // case 'size':
-        // case 'span':
-        // case 'rowSpan':
-        // case 'start':
-
-        default:
-          if (isAttributeNameSafe(propName)) {
-            const attributeName = propName;
-            if (propValue == null && node.hasAttribute(attributeName))
-              continue nodeLoop;
-            if (__DEV__) {
-              checkAttributeStringCoercion(propValue, attributeName);
-            }
-            if (node.getAttribute(attributeName) !== '' + (propValue: any))
-              continue nodeLoop;
-          }
+        attributes.push('http-equiv', '' + propValue);
+        break;
       }
-      checkedAttributes++;
+
+      // Boolean props used by hoistable tag types
+      case 'async':
+      case 'defer':
+      case 'disabled':
+      case 'hidden':
+      case 'noModule':
+      case 'scoped':
+      case 'itemScope':
+        if (propValue === true) {
+          attributes.push(propName, '');
+        }
+        break;
+
+      // The following properties are left out because they do not apply to
+      // the current set of hoistable types. They may have special handling
+      // requirements if they end up applying to a hoistable type in the future
+      // case 'acceptCharset':
+      // case 'value':
+      // case 'allowFullScreen':
+      // case 'autoFocus':
+      // case 'autoPlay':
+      // case 'controls':
+      // case 'default':
+      // case 'disablePictureInPicture':
+      // case 'disableRemotePlayback':
+      // case 'formNoValidate':
+      // case 'loop':
+      // case 'noValidate':
+      // case 'open':
+      // case 'playsInline':
+      // case 'readOnly':
+      // case 'required':
+      // case 'reversed':
+      // case 'seamless':
+      // case 'multiple':
+      // case 'selected':
+      // case 'capture':
+      // case 'download':
+      // case 'cols':
+      // case 'rows':
+      // case 'size':
+      // case 'span':
+      // case 'rowSpan':
+      // case 'start':
+
+      default:
+        if (isAttributeNameSafe(propName)) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(propValue, propName);
+          }
+          attributes.push(propName, '' + propValue);
+        }
+    }
+  }
+
+  const nodesIter = hoistedTags.values();
+  let step = nodesIter.next();
+  nodeLoop: for (; !step.done; step = nodesIter.next()) {
+    const instance = step.value;
+    if (instance.textContent !== childString) {
+      continue;
     }
 
-    if (node.attributes.length !== checkedAttributes) {
-      // We didn't match ever attribute so we abandon this node
-      continue nodeLoop;
+    // attributes uses two slots per attribute. We normalize
+    // on double length to test whether we have the right number of attributes
+    if (instance.attributes.length * 2 !== attributes.length) {
+      // This node has a different number of attributes than our instance expects
+      continue;
     }
 
-    // We found a matching instance. We can return early after marking it
-    markNodeAsResource(node);
-    return node;
+    for (let i = 0; i < attributes.length; ) {
+      const name = attributes[i++];
+      const value = attributes[i++];
+      if (instance.getAttribute(name) !== value) {
+        continue nodeLoop;
+      }
+    }
+
+    precacheFiberNode(internalInstanceHandle, instance);
+    markNodeAsHoistable(instance);
+    hoistedTags.delete(instance);
+    return instance;
   }
 
   // There is no matching instance to hydrate, we create it now
   const instance = createHTMLElement(type, props, ownerDocument);
   setInitialProperties(instance, type, props);
   precacheFiberNode(internalInstanceHandle, instance);
-  markNodeAsResource(instance);
+  markNodeAsHoistable(instance);
 
   (ownerDocument.head: any).insertBefore(
     instance,

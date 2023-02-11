@@ -26,8 +26,8 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
   detachDeletedInstance,
-  isMarkedResource,
-  markNodeAsResource,
+  isMarkedHoistable,
+  markNodeAsHoistable,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -284,7 +284,7 @@ export function createHoistableInstance(
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
-  markNodeAsResource(domElement);
+  markNodeAsHoistable(domElement);
   return domElement;
 }
 
@@ -876,7 +876,7 @@ export function shouldSkipHydratableForInstance(
     return false;
   } else if (
     instance.nodeName.toLowerCase() !== type.toLowerCase() ||
-    isMarkedResource(instance)
+    isMarkedHoistable(instance)
   ) {
     // We are either about to
     return true;
@@ -1807,6 +1807,7 @@ export {
   hydrateHoistable,
   mountHoistable,
   unmountHoistable,
+  prepareToCommitHoistables,
 } from './ReactDOMFloatClient';
 
 // -------------------
@@ -1936,7 +1937,7 @@ export function clearSingleton(instance: Instance): void {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
     if (
-      isMarkedResource(node) ||
+      isMarkedHoistable(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||
