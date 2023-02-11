@@ -225,6 +225,9 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
+            # https://github.com/microsoft/playwright/issues/11300#issuecomment-1009322833
+            # TODO: apt-get can be removed once we switch to @playwright/test@^1.18.0
+            sudo apt-get update
             npx playwright install chrome
             sudo npx playwright install-deps chrome
       - run:
@@ -262,6 +265,9 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
+            # https://github.com/microsoft/playwright/issues/11300#issuecomment-1009322833
+            # TODO: apt-get can be removed once we switch to @playwright/test@^1.18.0
+            sudo apt-get update
             npx playwright install chrome
             sudo npx playwright install-deps chrome
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
