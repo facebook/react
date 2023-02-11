@@ -231,7 +231,7 @@ jobs:
             # TODO: This will install the latest version of Chrome instead of the one tested against Playwright.
             # A specific Playwright version is only tested a certain version of Chrome.
             # But since we install the latest one there's no guarantee Playwright will stop working due to breaking changes in Chrome.
-            sudo npx playwright install --with-deps chrome
+            npx playwright install --with-deps chrome
             which google-chrome
       - run:
           environment:
