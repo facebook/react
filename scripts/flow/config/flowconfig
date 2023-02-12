@@ -8,12 +8,6 @@
 .*/rollup/shims/facebook-www/.*
 .*/rollup/shims/react-native/.*
 
-.*/node_modules/@snyk/.*
-.*/node_modules/y18n/.*
-.*/node_modules/chrome-devtools-frontend/.*
-.*/node_modules/devtools-timeline-model/.*
-.*/node_modules/create-react-class/.*
-.*/node_modules/react-native-web/.*
 .*/node_modules/fbjs/lib/keyMirrorRecursive.js.flow
 .*/node_modules/resolve/test/.*
 .*/__mocks__/.*
