@@ -71,7 +71,7 @@ const {getFilename} = Bundles;
 function parseRequestedNames(names, toCase) {
   let result = [];
   for (let i = 0; i < names.length; i++) {
-    let splitNames = names[i].split(',');
+    let splitNames = names[i].split(/,| /);
     for (let j = 0; j < splitNames.length; j++) {
       let name = splitNames[j].trim();
       if (!name) {
