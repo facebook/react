@@ -851,7 +851,9 @@ export function parseHookCall(place: Place): Hook | null {
 
 function hasContextRefOperand(env: Environment, instrValue: InstructionValue) {
   for (const place of eachInstructionValueOperand(instrValue)) {
-    if (env.kind(place) === ValueKind.Context) return true;
+    if (env.isDefined(place) && env.kind(place) === ValueKind.Context) {
+      return true;
+    }
   }
   return false;
 }
