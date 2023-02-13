@@ -7,6 +7,7 @@
 
 import {
   Identifier,
+  IdentifierId,
   InstructionId,
   InstructionKind,
   LValue,
@@ -54,7 +55,7 @@ enum DeclKind {
   Dynamic = "Dynamic",
 }
 
-type DeclMap = Map<Identifier, Decl>;
+type DeclMap = Map<IdentifierId, Decl>;
 type Decl = {
   kind: DeclKind;
   id: InstructionId;
@@ -94,7 +95,7 @@ class Context {
    * on itself.
    */
   declare(identifier: Identifier, decl: Decl): void {
-    this.#declarations.set(identifier, decl);
+    this.#declarations.set(identifier.id, decl);
   }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
@@ -158,7 +159,7 @@ class Context {
       }
     }
 
-    const decl = this.#declarations.get(maybeDependency.place.identifier);
+    const decl = this.#declarations.get(maybeDependency.place.identifier.id);
     // if decl is undefined here, then this is a free var
     //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
 
@@ -172,7 +173,10 @@ class Context {
       decl.scope !== null &&
       !this.#isScopeActive(decl.scope)
     ) {
-      decl.scope.declarations.add(maybeDependency.place.identifier);
+      decl.scope.declarations.set(
+        maybeDependency.place.identifier.id,
+        maybeDependency.place.identifier
+      );
     }
 
     // If this operand is used in a scope, has a dynamic value, and was defined
@@ -188,7 +192,7 @@ class Context {
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
         // not the same identifier
-        if (dep.place.identifier !== maybeDependency.place.identifier) {
+        if (dep.place.identifier.id !== maybeDependency.place.identifier.id) {
           continue;
         }
         const depPath = dep.path;
@@ -229,7 +233,7 @@ class Context {
     if (lvalue.kind !== InstructionKind.Reassign) {
       return;
     }
-    const declaration = this.#declarations.get(lvalue.place.identifier);
+    const declaration = this.#declarations.get(lvalue.place.identifier.id);
     if (
       this.currentScope != null &&
       lvalue.place.identifier.scope != null &&

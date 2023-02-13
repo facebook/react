@@ -76,7 +76,7 @@ export function codegenReactiveFunction(
 
 class Context {
   #nextCacheIndex: number = 0;
-  #declarations: Set<Identifier> = new Set();
+  #declarations: Set<IdentifierId> = new Set();
   temp: Temporaries = new Map();
   errors: CompilerError = new CompilerError();
 
@@ -85,11 +85,11 @@ class Context {
   }
 
   declare(identifier: Identifier): void {
-    this.#declarations.add(identifier);
+    this.#declarations.add(identifier.id);
   }
 
   hasDeclared(identifier: Identifier): boolean {
-    return this.#declarations.has(identifier);
+    return this.#declarations.has(identifier.id);
   }
 }
 
@@ -179,7 +179,7 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const declaration of scope.declarations) {
+  for (const [, declaration] of scope.declarations) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;

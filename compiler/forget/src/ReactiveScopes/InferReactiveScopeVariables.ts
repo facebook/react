@@ -127,7 +127,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         id: makeScopeId(scopes.size),
         range: identifier.mutableRange,
         dependencies: new Set(),
-        declarations: new Set(),
+        declarations: new Map(),
         reassignments: new Set(),
       };
       scopes.set(groupIdentifier, scope);
