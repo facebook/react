@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction, Identifier, InstructionValue } from "../HIR";
+import { BlockId, HIRFunction, Identifier, InstructionValue } from "../HIR";
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
@@ -20,11 +20,13 @@ import { assertExhaustive, retainWhere } from "../Utils/utils";
 export function deadCodeElimination(fn: HIRFunction): void {
   const used = new Set<Identifier>();
 
-  // TODO: ensure a single iteration of the CFG if there are no back-edges,
-  // see EliminateRedundantPhi.ts for an example
-  let lastSize = -1;
-  while (used.size > lastSize) {
-    lastSize = used.size;
+  // If there are no back-edges the algorithm can terminate after a single iteration
+  // of the blocks
+  const hasLoop = hasBackEdge(fn);
+
+  let size = used.size;
+  do {
+    size = used.size;
 
     // Iterate blocks in postorder (successors before predecessors, excepting loops)
     // to find usages before declarations
@@ -57,7 +59,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
         }
       }
     }
-  }
+  } while (used.size > size && hasLoop);
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       if (!used.has(phi.id)) {
@@ -114,4 +116,17 @@ function pruneableValue(value: InstructionValue): boolean {
       assertExhaustive(value, `Unexepcted value kind '${(value as any).kind}'`);
     }
   }
+}
+
+function hasBackEdge(fn: HIRFunction): boolean {
+  const visited = new Set<BlockId>();
+  for (const [blockId, block] of fn.body.blocks) {
+    for (const predId of block.preds) {
+      if (!visited.has(predId)) {
+        return true;
+      }
+    }
+    visited.add(blockId);
+  }
+  return false;
 }
