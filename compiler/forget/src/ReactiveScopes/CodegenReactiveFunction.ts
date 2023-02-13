@@ -219,6 +219,9 @@ function codegenReactiveScope(
   }
   for (const reassignment of scope.reassignments) {
     const index = cx.nextCacheIndex;
+    if (firstOutputIndex === null) {
+      firstOutputIndex = index;
+    }
     const name = convertIdentifier(reassignment);
 
     cacheStoreStatements.push(
@@ -252,7 +255,7 @@ function codegenReactiveScope(
   if (testCondition === null) {
     invariant(
       firstOutputIndex !== null,
-      "Expected scope '@%s' to have at least one output",
+      "Expected scope '@%s' to have at least one declaration",
       scope.id
     );
     testCondition = t.binaryExpression(

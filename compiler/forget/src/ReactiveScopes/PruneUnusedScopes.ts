@@ -31,8 +31,7 @@ class Transform extends ReactiveFunctionTransform<void> {
     this.visitScope(scopeBlock, state);
     if (
       scopeBlock.scope.declarations.size === 0 &&
-      (scopeBlock.scope.dependencies.size === 0 ||
-        scopeBlock.scope.reassignments.size === 0)
+      scopeBlock.scope.reassignments.size === 0
     ) {
       return { kind: "replace-many", value: scopeBlock.instructions };
     } else {
