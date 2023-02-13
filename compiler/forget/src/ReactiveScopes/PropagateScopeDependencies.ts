@@ -380,14 +380,16 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   if (lvalue == null) {
     return;
   }
-  context.visitReassignment(lvalue);
-  // TODO: only assign Const if the value is never reassigned
-  const kind = context.isReactive(lvalue.place.identifier)
-    ? DeclKind.Dynamic
-    : DeclKind.Const;
-  context.declare(lvalue.place.identifier, {
-    kind,
-    id: lvalue.place.identifier.mutableRange.start,
-    scope: context.currentScope,
-  });
+  if (lvalue.kind === InstructionKind.Reassign) {
+    context.visitReassignment(lvalue);
+  } else {
+    const kind = context.isReactive(lvalue.place.identifier)
+      ? DeclKind.Dynamic
+      : DeclKind.Const;
+    context.declare(lvalue.place.identifier, {
+      kind,
+      id: lvalue.place.identifier.mutableRange.start,
+      scope: context.currentScope,
+    });
+  }
 }
