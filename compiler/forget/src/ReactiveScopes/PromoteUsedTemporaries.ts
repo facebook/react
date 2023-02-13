@@ -20,7 +20,7 @@ type VisitorState = {
   nextId: number;
 };
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
-  override visitScope(block: ReactiveScopeBlock, state: VisitorState) {
+  override visitScope(block: ReactiveScopeBlock, state: VisitorState): void {
     this.traverseScope(block, state);
     for (const dep of block.scope.dependencies) {
       const { identifier } = dep.place;
@@ -63,7 +63,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     }
   }
 }
-export function promoteUsedTemporaries(fn: ReactiveFunction) {
+export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const state: VisitorState = {
     nextId: 0,
     temporaries: new Map(),

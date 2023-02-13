@@ -698,8 +698,6 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      const id =
-        instrValue.name !== null ? t.identifier(instrValue.name) : null;
       value = instrValue.expr;
       break;
     }

@@ -15,7 +15,6 @@ import {
   makeScopeId,
   Place,
   ReactiveScope,
-  ScopeId,
 } from "../HIR/HIR";
 import { eachInstructionOperand } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
@@ -77,7 +76,7 @@ import { assertExhaustive } from "../Utils/utils";
  * mutate(x); // bc y is aliased here, it should still be considered mutable above
  * ```
  */
-export function inferReactiveScopeVariables(fn: HIRFunction) {
+export function inferReactiveScopeVariables(fn: HIRFunction): void {
   // Represents the set of reactive scopes as disjoint sets of identifiers
   // that mutate together.
   const scopeIdentifiers = new DisjointSet<Identifier>();
