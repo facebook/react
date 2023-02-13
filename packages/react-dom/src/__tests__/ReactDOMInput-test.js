@@ -1880,13 +1880,7 @@ describe('ReactDOMInput', () => {
       node.focus();
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
       if (disableInputAttributeSyncing) {
         expect(node.value).toBe('2');
@@ -1906,13 +1900,7 @@ describe('ReactDOMInput', () => {
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
       expect(node.getAttribute('value')).toBe('1');
     });
@@ -1926,13 +1914,7 @@ describe('ReactDOMInput', () => {
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
       expect(node.getAttribute('value')).toBe('1');
     });
