@@ -102,14 +102,14 @@ export function inferMutableLifetimes(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       let start = Number.MAX_SAFE_INTEGER;
-      let end = Number.MIN_SAFE_INTEGER;
+      let end = phi.id.mutableRange.end as number;
       for (const [_, operand] of phi.operands) {
         start = Math.min(start, operand.mutableRange.start);
         end = Math.max(end, operand.mutableRange.end);
       }
       invariant(
-        start !== Number.MAX_SAFE_INTEGER && end !== Number.MIN_SAFE_INTEGER,
-        "Expected phi to have set start/end range values"
+        start !== Number.MAX_SAFE_INTEGER,
+        "Expected phi to have a start range value"
       );
       phi.id.mutableRange = {
         start: makeInstructionId(start),

@@ -148,15 +148,6 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
     }
     vars.add(identifier);
   });
-
-  // Copy scope ranges to identifier ranges: not strictly required but this is useful
-  // for visualization
-  for (const [scope, vars] of scopeVariables) {
-    for (const identifier of vars) {
-      identifier.mutableRange.start = scope.range.start;
-      identifier.mutableRange.end = scope.range.end;
-    }
-  }
 }
 
 // Is the operand mutable at this given instruction
