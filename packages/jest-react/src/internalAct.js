@@ -128,6 +128,7 @@ function flushActWork(resolve: () => void, reject: (error: any) => void) {
       Scheduler.unstable_flushUntilNextPaint();
     } catch (error) {
       reject(error);
+      return;
     }
 
     // If Scheduler yields while there's still work, it's so that we can
