@@ -627,6 +627,7 @@ export function makeInstructionId(id: number): InstructionId {
 
 export type Type =
   | PrimitiveType
+  | HookType
   | FunctionType
   | ObjectType
   | PhiType
@@ -635,6 +636,10 @@ export type Type =
 export type PrimitiveType = { kind: "Primitive" };
 export type FunctionType = {
   kind: "Function";
+};
+export type HookType = {
+  kind: "Hook";
+  name: string;
 };
 export type ObjectType = { kind: "Object" };
 export type TypeVar = {
@@ -677,6 +682,7 @@ export function typeEquals(tA: Type, tB: Type): boolean {
   return (
     typeVarEquals(tA, tB) ||
     funcTypeEquals(tA, tB) ||
+    hookTypeEquals(tA, tB) ||
     objectTypeEquals(tA, tB) ||
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB) ||
@@ -709,6 +715,10 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
   return typeKindCheck(tA, tB, "Function");
+}
+
+function hookTypeEquals(tA: Type, tB: Type): boolean {
+  return tA.kind === "Hook" && tB.kind === "Hook" && tA.name === tB.name;
 }
 
 function phiTypeEquals(tA: Type, tB: Type): boolean {
