@@ -22,7 +22,6 @@ import {
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import { inferReactiveIdentifiers } from "./InferReactiveIdentifiers";
 import { eachReactiveValueOperand } from "./visitors";
 
 /**
@@ -32,7 +31,7 @@ import { eachReactiveValueOperand } from "./visitors";
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
-  const context = new Context(inferReactiveIdentifiers(fn));
+  const context = new Context();
   if (fn.id !== null) {
     context.declare(fn.id, {
       kind: DeclKind.Const,
@@ -67,16 +66,12 @@ type Scopes = Array<ReactiveScope>;
 class Context {
   #declarations: DeclMap = new Map();
   #dependencies: Set<ReactiveScopeDependency> = new Set();
-  #reactiveIdentifiers: Set<Identifier>;
   // Produces a de-duplicated mapping of Id -> ReactiveScopeDependency
   // This helps with.. temporaries that are created only for property loads
   //  but can be generalized to all non-allocating temporaries
   #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
   #scopes: Scopes = [];
 
-  constructor(reactiveIdentifiers: Set<Identifier>) {
-    this.#reactiveIdentifiers = reactiveIdentifiers;
-  }
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
     const previousDependencies = this.#dependencies;
     const scopedDependencies = new Set<ReactiveScopeDependency>();
@@ -118,10 +113,6 @@ class Context {
 
   get currentScope(): ReactiveScope | null {
     return this.#scopes.at(-1) ?? null;
-  }
-
-  isReactive(id: Identifier): boolean {
-    return this.#reactiveIdentifiers.has(id);
   }
 
   visitOperand(place: Place): void {
@@ -383,11 +374,8 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   if (lvalue.kind === InstructionKind.Reassign) {
     context.visitReassignment(lvalue);
   } else {
-    const kind = context.isReactive(lvalue.place.identifier)
-      ? DeclKind.Dynamic
-      : DeclKind.Const;
     context.declare(lvalue.place.identifier, {
-      kind,
+      kind: DeclKind.Dynamic,
       id: lvalue.place.identifier.mutableRange.start,
       scope: context.currentScope,
     });

@@ -35,6 +35,7 @@ import {
   renameVariables,
 } from "./ReactiveScopes";
 import { flattenScopesWithHooks } from "./ReactiveScopes/FlattenScopesWithHooks";
+import { pruneNonReactiveDependencies } from "./ReactiveScopes/PruneNonReactiveDependencies";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { inferTypes } from "./TypeInference";
 import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
@@ -134,6 +135,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PropagateScopeDependencies",
+    value: reactiveFunction,
+  });
+
+  pruneNonReactiveDependencies(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneNonReactiveDependencies",
     value: reactiveFunction,
   });
 
