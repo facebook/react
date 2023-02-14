@@ -10,7 +10,6 @@ import {
   Identifier,
   ReactiveFunction,
   ReactiveInstruction,
-  ReactiveScope,
 } from "../HIR/HIR";
 import { parseHookCall } from "../Inference/InferReferenceEffects";
 import {
@@ -118,21 +117,8 @@ export function inferReactiveIdentifiers(
   for (const param of fn.params) {
     reactivityMap.set(param.identifier, true);
   }
-  const actuallyReactiveScopes = new Set<ReactiveScope>();
-
   visitReactiveFunction(fn, visitor, reactivityMap);
 
-  for (const [id, value] of reactivityMap) {
-    const { scope } = id;
-    if (value && scope != null) {
-      actuallyReactiveScopes.add(scope);
-    }
-  }
-  for (const [id, _] of reactivityMap) {
-    if (id.scope && actuallyReactiveScopes.has(id.scope)) {
-      reactivityMap.set(id, true);
-    }
-  }
   const result = new Set<Identifier>();
   reactivityMap.forEach((isReactive, id) => {
     if (isReactive) result.add(id);

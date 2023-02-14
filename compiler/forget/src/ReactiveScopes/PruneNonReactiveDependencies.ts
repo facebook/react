@@ -31,10 +31,15 @@ class Visitor extends ReactiveFunctionVisitor<State> {
         scope.scope.dependencies.delete(dep);
       }
     }
-    // If a scope now has no dependencies, then its declarations are all non-reactive
     if (scope.scope.dependencies.size === 0) {
+      // If a scope has no dependencies, then its declarations are all non-reactive
       for (const [, declaration] of scope.scope.declarations) {
         state.delete(declaration);
+      }
+    } else {
+      // otherwise, all the scope's declarations are reactive
+      for (const [, declaration] of scope.scope.declarations) {
+        state.add(declaration);
       }
     }
   }
