@@ -59,6 +59,7 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
       // all mutating effects must also be marked as reactive
       for (const operand of eachReactiveValueOperand(value)) {
         switch (operand.effect) {
+          case Effect.Capture:
           case Effect.Store:
           case Effect.Mutate: {
             // Explicitly compare to `false` here, since absence from the
@@ -69,7 +70,6 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
             }
             break;
           }
-          case Effect.Capture:
           case Effect.Freeze:
           case Effect.Read: {
             // no-op
