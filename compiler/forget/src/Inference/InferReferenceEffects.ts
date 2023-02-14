@@ -815,6 +815,7 @@ const HOOKS: Map<string, Hook> = new Map([
     "useState",
     {
       kind: "State",
+      name: "useState",
       effectKind: Effect.Freeze,
       valueKind: ValueKind.Frozen,
     },
@@ -823,6 +824,7 @@ const HOOKS: Map<string, Hook> = new Map([
     "useRef",
     {
       kind: "Ref",
+      name: "useRef",
       effectKind: Effect.Capture,
       valueKind: ValueKind.Mutable,
     },
@@ -831,6 +833,7 @@ const HOOKS: Map<string, Hook> = new Map([
     "useFreeze",
     {
       kind: "Ref",
+      name: "useFreeze",
       effectKind: Effect.Freeze,
       valueKind: ValueKind.Frozen,
     },
@@ -839,6 +842,7 @@ const HOOKS: Map<string, Hook> = new Map([
     "useMemo",
     {
       kind: "Memo",
+      name: "useMemo",
       effectKind: Effect.Freeze,
       valueKind: ValueKind.Frozen,
     },
@@ -847,6 +851,7 @@ const HOOKS: Map<string, Hook> = new Map([
     "useCallback",
     {
       kind: "Memo",
+      name: "useCallback",
       effectKind: Effect.Freeze,
       valueKind: ValueKind.Frozen,
     },
@@ -854,7 +859,12 @@ const HOOKS: Map<string, Hook> = new Map([
 ]);
 
 type HookKind = "State" | "Ref" | "Custom" | "Memo";
-type Hook = { kind: HookKind; effectKind: Effect; valueKind: ValueKind };
+type Hook = {
+  kind: HookKind;
+  name: string;
+  effectKind: Effect;
+  valueKind: ValueKind;
+};
 
 export function parseHookCall(place: Place): Hook | null {
   const name = place.identifier.name;
@@ -867,6 +877,7 @@ export function parseHookCall(place: Place): Hook | null {
   }
   return {
     kind: "Custom",
+    name: place.identifier.name ?? "",
     effectKind: Effect.Mutate,
     valueKind: ValueKind.Mutable,
   };
