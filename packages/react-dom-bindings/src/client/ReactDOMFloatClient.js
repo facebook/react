@@ -11,6 +11,7 @@ import type {Instance, Container} from './ReactDOMHostConfig';
 
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {
@@ -34,6 +35,8 @@ import {
   getResourcesFromRoot,
   isOwnedInstance,
   markNodeAsHoistable,
+  isMarkedCached,
+  markNodeAsCached,
 } from './ReactDOMComponentTree';
 
 // The resource types we support. currently they match the form for the as argument.
@@ -82,12 +85,6 @@ export type RootResources = {
   hoistableScripts: Map<string, ScriptResource>,
 };
 
-export type HoistedTagsCache = {
-  title: null | Set<Element>,
-  link: null | Set<Element>,
-  meta: null | Set<Element>,
-};
-
 // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
 // called when there is no rendering we track the last used document. It is not safe to insert
 // arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
@@ -110,23 +107,9 @@ export function cleanupAfterRenderResources() {
   previousDispatcher = null;
 }
 
-const hoistedTagsCaches: Map<Document, HoistedTagsCache> = new Map();
-
 export function prepareToCommitHoistables() {
-  hoistedTagsCaches.clear();
-}
-
-function getHoistedTagsCache(ownerDocument: Document): HoistedTagsCache {
-  let cache = hoistedTagsCaches.get(ownerDocument);
-  if (!cache) {
-    cache = {
-      title: null,
-      link: null,
-      meta: null,
-    };
-    hoistedTagsCaches.set(ownerDocument, cache);
-  }
-  return cache;
+  linkRefreshed.clear();
+  metaRefreshed.clear();
 }
 
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
@@ -944,6 +927,12 @@ function adoptPreloadPropsForScript(
 //      Hoistable Element Reconciliation
 // --------------------------------------
 
+const metaCaches: Map<Document, Map<string, Array<Element>>> = new Map();
+const linkCaches: Map<Document, Map<string, Array<Element>>> = new Map();
+
+const metaRefreshed: Set<Document> = new Set();
+const linkRefreshed: Set<Document> = new Set();
+
 export function hydrateHoistable(
   hoistableRoot: HoistableRoot,
   type: HoistableTagType,
@@ -951,172 +940,256 @@ export function hydrateHoistable(
   internalInstanceHandle: Object,
 ): Instance {
   const ownerDocument = getDocumentFromRoot(hoistableRoot);
-  const hoistedTagsCache = getHoistedTagsCache(ownerDocument);
 
-  let cache = hoistedTagsCache[type];
-  if (cache === null) {
-    // The cache gets reset on every commit. We only want to query the set of valid
-    //
-    cache = hoistedTagsCache[type] = new Set();
+  let candidates: void | null | Array<Element> = null;
 
-    const nodes = ownerDocument.getElementsByTagName(type);
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      if (!isOwnedInstance(node) && node.namespaceURI !== SVG_NAMESPACE) {
-        cache.add(node);
+  let key = '';
+  let keyAttribute = '';
+  let caches = null;
+  let cache = null;
+  let nodes = null;
+  switch (type) {
+    case 'title': {
+      const titles = ownerDocument.getElementsByTagName('title');
+      candidates = [];
+      for (let i = 0; i < titles.length; i++) {
+        const node = titles[i];
+        if (!isOwnedInstance(node) && node.namespaceURI !== SVG_NAMESPACE) {
+          candidates.push(node);
+        }
+      }
+      break;
+    }
+    case 'link': {
+      if (!linkRefreshed.has(ownerDocument)) {
+        nodes = ownerDocument.getElementsByTagName('link');
+        linkRefreshed.add(ownerDocument);
+      }
+      key = props.href || '';
+      keyAttribute = 'href';
+      caches = linkCaches;
+      break;
+    }
+    case 'meta': {
+      if (!metaRefreshed.has(ownerDocument)) {
+        nodes = ownerDocument.getElementsByTagName('meta');
+        metaRefreshed.add(ownerDocument);
+      }
+      key = props.content || '';
+      keyAttribute = 'content';
+      caches = metaCaches;
+      break;
+    }
+    default:
+      throw new Error(
+        `getNodesForType encountered a type it did not expect: "${type}". This is a bug in React.`,
+      );
+  }
+
+  // If we are using a persistent (per commit) cache we will get it now and if necessary refresh it with
+  // potential candidate nodes. If we aren't using a cache (title tags for instance) we skip this and
+  // use the candidate nodes derived above.
+  if (caches) {
+    cache = caches.get(ownerDocument);
+    if (!cache) {
+      cache = new Map();
+      caches.set(ownerDocument, cache);
+    }
+    if (nodes) {
+      // We need to refresh the cache for this type (once per commit) and nodes is all
+      // the potential candidates to include
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (
+          !isOwnedInstance(node) &&
+          !isMarkedCached(node) &&
+          (type !== 'link' ||
+            (node.getAttribute('rel') !== 'stylesheet' &&
+              !node.hasAttribute('data-precedence'))) &&
+          node.namespaceURI !== SVG_NAMESPACE
+        ) {
+          markNodeAsCached(node);
+          const nodeKey = node.getAttribute(keyAttribute) || '';
+          const existing = cache.get(nodeKey);
+          if (existing) {
+            existing.push(node);
+          } else {
+            cache.set(nodeKey, [node]);
+          }
+        }
       }
     }
-  }
-  const hoistedTags = cache;
-
-  const children = props.children;
-  let child, childString;
-  if (Array.isArray(children)) {
-    child = children.length === 1 ? children[0] : null;
-  } else {
-    child = children;
-  }
-  if (
-    typeof child !== 'function' &&
-    typeof child !== 'symbol' &&
-    child !== null &&
-    child !== undefined
-  ) {
-    if (__DEV__) {
-      checkPropStringCoercion(child, 'children');
-    }
-    childString = '' + (child: any);
-  } else {
-    childString = '';
+    candidates = cache.get(key);
   }
 
-  const attributes: Array<string> = [];
+  if (candidates && candidates.length) {
+    // There is at least one potential hydratable node in the Document. We need to figure out
+    // our textContent and attributes list from props to decide if any of the candidates are a
+    // match
+    const nodesToMatch: Array<Element> = candidates;
+    const children = props.children;
+    let child, childString;
 
-  for (const propName in props) {
-    const propValue = props[propName];
-    if (!props.hasOwnProperty(propName)) {
-      continue;
+    // We only check textContent for title hoistables. The other types are void elements
+    if (type === 'title') {
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
+      }
+      if (
+        typeof child !== 'function' &&
+        typeof child !== 'symbol' &&
+        child !== null &&
+        child !== undefined
+      ) {
+        if (__DEV__) {
+          checkPropStringCoercion(child, 'children');
+        }
+        childString = '' + (child: any);
+      } else {
+        childString = '';
+      }
     }
-    if (
-      // shouldIgnoreAttribute
-      // We have already filtered out null/undefined and reserved words.
-      propName.length > 2 &&
-      (propName[0] === 'o' || propName[0] === 'O') &&
-      (propName[1] === 'n' || propName[1] === 'N')
-    ) {
-      continue;
-    }
-    switch (propName) {
-      // Reserved props will never have an attribute partner
-      case 'children':
-      case 'defaultValue':
-      case 'dangerouslySetInnerHTML':
-      case 'defaultChecked':
-      case 'innerHTML':
-      case 'suppressContentEditableWarning':
-      case 'suppressHydrationWarning':
-      case 'style':
-        // we advance to the next prop
+
+    // To match we need to exhaustively check each attribute so we produce the attribute list
+    // upfront and then only check if the candidate has a matching number of attributes
+    const attributes: Array<string> = [];
+
+    for (const propName in props) {
+      const propValue = props[propName];
+      if (!hasOwnProperty.call(props, propName)) {
         continue;
-
-      // Name remapped props used by hoistable tag types
-      case 'className': {
-        if (__DEV__) {
-          checkAttributeStringCoercion(propValue, propName);
-        }
-        attributes.push('class', '' + propValue);
-        break;
       }
-      case 'httpEquiv': {
-        if (__DEV__) {
-          checkAttributeStringCoercion(propValue, propName);
-        }
-        attributes.push('http-equiv', '' + propValue);
-        break;
+      if (
+        // shouldIgnoreAttribute
+        // We have already filtered out null/undefined and reserved words.
+        propName.length > 2 &&
+        (propName[0] === 'o' || propName[0] === 'O') &&
+        (propName[1] === 'n' || propName[1] === 'N')
+      ) {
+        continue;
       }
+      switch (propName) {
+        // Reserved props will never have an attribute partner
+        case 'children':
+        case 'defaultValue':
+        case 'dangerouslySetInnerHTML':
+        case 'defaultChecked':
+        case 'innerHTML':
+        case 'suppressContentEditableWarning':
+        case 'suppressHydrationWarning':
+        case 'style':
+          // we advance to the next prop
+          continue;
 
-      // Boolean props used by hoistable tag types
-      case 'async':
-      case 'defer':
-      case 'disabled':
-      case 'hidden':
-      case 'noModule':
-      case 'scoped':
-      case 'itemScope':
-        if (propValue === true) {
-          attributes.push(propName, '');
-        }
-        break;
-
-      // The following properties are left out because they do not apply to
-      // the current set of hoistable types. They may have special handling
-      // requirements if they end up applying to a hoistable type in the future
-      // case 'acceptCharset':
-      // case 'value':
-      // case 'allowFullScreen':
-      // case 'autoFocus':
-      // case 'autoPlay':
-      // case 'controls':
-      // case 'default':
-      // case 'disablePictureInPicture':
-      // case 'disableRemotePlayback':
-      // case 'formNoValidate':
-      // case 'loop':
-      // case 'noValidate':
-      // case 'open':
-      // case 'playsInline':
-      // case 'readOnly':
-      // case 'required':
-      // case 'reversed':
-      // case 'seamless':
-      // case 'multiple':
-      // case 'selected':
-      // case 'capture':
-      // case 'download':
-      // case 'cols':
-      // case 'rows':
-      // case 'size':
-      // case 'span':
-      // case 'rowSpan':
-      // case 'start':
-
-      default:
-        if (isAttributeNameSafe(propName)) {
+        // Name remapped props used by hoistable tag types
+        case 'className': {
           if (__DEV__) {
             checkAttributeStringCoercion(propValue, propName);
           }
-          attributes.push(propName, '' + propValue);
+          attributes.push('class', '' + propValue);
+          break;
         }
-    }
-  }
+        case 'httpEquiv': {
+          if (__DEV__) {
+            checkAttributeStringCoercion(propValue, propName);
+          }
+          attributes.push('http-equiv', '' + propValue);
+          break;
+        }
 
-  const nodesIter = hoistedTags.values();
-  let step = nodesIter.next();
-  nodeLoop: for (; !step.done; step = nodesIter.next()) {
-    const instance = step.value;
-    if (instance.textContent !== childString) {
-      continue;
-    }
+        // Boolean props used by hoistable tag types
+        case 'async':
+        case 'defer':
+        case 'disabled':
+        case 'hidden':
+        case 'noModule':
+        case 'scoped':
+        case 'itemScope':
+          if (propValue === true) {
+            attributes.push(propName, '');
+          }
+          break;
 
-    // attributes uses two slots per attribute. We normalize
-    // on double length to test whether we have the right number of attributes
-    if (instance.attributes.length * 2 !== attributes.length) {
-      // This node has a different number of attributes than our instance expects
-      continue;
-    }
+        // The following properties are left out because they do not apply to
+        // the current set of hoistable types. They may have special handling
+        // requirements if they end up applying to a hoistable type in the future
+        // case 'acceptCharset':
+        // case 'value':
+        // case 'allowFullScreen':
+        // case 'autoFocus':
+        // case 'autoPlay':
+        // case 'controls':
+        // case 'default':
+        // case 'disablePictureInPicture':
+        // case 'disableRemotePlayback':
+        // case 'formNoValidate':
+        // case 'loop':
+        // case 'noValidate':
+        // case 'open':
+        // case 'playsInline':
+        // case 'readOnly':
+        // case 'required':
+        // case 'reversed':
+        // case 'seamless':
+        // case 'multiple':
+        // case 'selected':
+        // case 'capture':
+        // case 'download':
+        // case 'cols':
+        // case 'rows':
+        // case 'size':
+        // case 'span':
+        // case 'rowSpan':
+        // case 'start':
 
-    for (let i = 0; i < attributes.length; ) {
-      const name = attributes[i++];
-      const value = attributes[i++];
-      if (instance.getAttribute(name) !== value) {
-        continue nodeLoop;
+        default:
+          if (isAttributeNameSafe(propName)) {
+            if (__DEV__) {
+              checkAttributeStringCoercion(propValue, propName);
+            }
+            attributes.push(propName, '' + propValue);
+          }
       }
     }
 
-    precacheFiberNode(internalInstanceHandle, instance);
-    markNodeAsHoistable(instance);
-    hoistedTags.delete(instance);
-    return instance;
+    // We check each node in sequence. If we find some reason to disqualify
+    // the candidate we continue to the next node. If we cannot disqualify the node
+    // we remove it the cache (if there is a cache) and bind it to this hoistable fiber
+    // and return
+    nodeLoop: for (let i = 0; i < nodesToMatch.length; i++) {
+      const node = nodesToMatch[i];
+      if (type === 'title' && node.textContent !== childString) {
+        continue;
+      }
+
+      // attributes uses two slots per attribute. We normalize
+      // on double length to test whether we have the right number of attributes
+      if (node.attributes.length * 2 !== attributes.length) {
+        // This node has a different number of attributes than our instance expects
+        continue;
+      }
+
+      for (let j = 0; j < attributes.length; ) {
+        const name = attributes[j++];
+        const value = attributes[j++];
+        if (node.getAttribute(name) !== value) {
+          continue nodeLoop;
+        }
+      }
+
+      precacheFiberNode(internalInstanceHandle, node);
+      markNodeAsHoistable(node);
+      if (cache) {
+        if (nodesToMatch.length === 1) {
+          cache.delete(key);
+        } else {
+          nodesToMatch.splice(i, 1);
+        }
+      }
+      return node;
+    }
   }
 
   // There is no matching instance to hydrate, we create it now
