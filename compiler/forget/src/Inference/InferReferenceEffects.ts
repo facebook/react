@@ -837,8 +837,8 @@ const HOOKS: Map<string, Hook> = new Map([
   ],
 ]);
 
-type HookKind = { kind: "State" } | { kind: "Ref" } | { kind: "Custom" };
-type Hook = HookKind & { effectKind: Effect; valueKind: ValueKind };
+type HookKind = "State" | "Ref" | "Custom";
+type Hook = { kind: HookKind; effectKind: Effect; valueKind: ValueKind };
 
 export function parseHookCall(place: Place): Hook | null {
   const name = place.identifier.name;
