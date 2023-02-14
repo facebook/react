@@ -308,7 +308,14 @@ class Environment {
         break;
       }
       case Effect.Capture: {
-        effect = Effect.Capture;
+        if (
+          valueKind === ValueKind.Frozen ||
+          valueKind === ValueKind.MaybeFrozen
+        ) {
+          effect = Effect.Read;
+        } else {
+          effect = Effect.Capture;
+        }
         break;
       }
       case Effect.Read: {
