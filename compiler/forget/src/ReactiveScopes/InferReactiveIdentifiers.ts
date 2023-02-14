@@ -7,7 +7,7 @@
 
 import {
   Effect,
-  Identifier,
+  IdentifierId,
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
@@ -18,7 +18,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-type IdentifierReactivity = Map<Identifier, boolean>;
+type IdentifierReactivity = Map<IdentifierId, boolean>;
 class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
   override visitInstruction(
     instr: ReactiveInstruction,
@@ -26,7 +26,7 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
   ) {
     this.traverseInstruction(instr, reactivityMap);
     const lval = instr.lvalue;
-    if (lval == null || reactivityMap.get(lval.place.identifier) === true) {
+    if (lval == null || reactivityMap.get(lval.place.identifier.id) === true) {
       return;
     }
     const { value } = instr;
@@ -35,7 +35,7 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
       // We currently treat free variables (from module or global scope) as
       // non-reactive. We may later want type information about specific
       // free variables, or a toggle `treatFreeVarsAsReactive`.
-      if (reactivityMap.get(operand.identifier)) {
+      if (reactivityMap.get(operand.identifier.id)) {
         hasReactiveInput = true;
         break;
       }
@@ -51,7 +51,7 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
         hasReactiveInput = true;
       }
     }
-    reactivityMap.set(lval.place.identifier, hasReactiveInput);
+    reactivityMap.set(lval.place.identifier.id, hasReactiveInput);
 
     if (hasReactiveInput) {
       // all mutating effects must also be marked as reactive
@@ -63,8 +63,8 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
           // Explicitly compare to `false` here, since absence from the
           // map indicates a free variable
           // todo [@mofeiZ] add knowledge about free variables
-          if (reactivityMap.get(operand.identifier) === false) {
-            reactivityMap.set(operand.identifier, true);
+          if (reactivityMap.get(operand.identifier.id) === false) {
+            reactivityMap.set(operand.identifier.id, true);
           }
         }
       }
@@ -111,15 +111,15 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
  */
 export function inferReactiveIdentifiers(
   fn: ReactiveFunction
-): Set<Identifier> {
+): Set<IdentifierId> {
   const visitor = new Environment();
   const reactivityMap: IdentifierReactivity = new Map();
   for (const param of fn.params) {
-    reactivityMap.set(param.identifier, true);
+    reactivityMap.set(param.identifier.id, true);
   }
   visitReactiveFunction(fn, visitor, reactivityMap);
 
-  const result = new Set<Identifier>();
+  const result = new Set<IdentifierId>();
   reactivityMap.forEach((isReactive, id) => {
     if (isReactive) result.add(id);
   });

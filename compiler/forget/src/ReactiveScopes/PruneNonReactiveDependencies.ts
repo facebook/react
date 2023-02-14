@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Identifier, ReactiveFunction, ReactiveScopeBlock } from "../HIR";
+import { IdentifierId, ReactiveFunction, ReactiveScopeBlock } from "../HIR";
 import { inferReactiveIdentifiers } from "./InferReactiveIdentifiers";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -20,13 +20,13 @@ export function pruneNonReactiveDependencies(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Visitor(), state);
 }
 
-type State = Set<Identifier>;
+type State = Set<IdentifierId>;
 
 class Visitor extends ReactiveFunctionVisitor<State> {
   override visitScope(scope: ReactiveScopeBlock, state: State): void {
     this.traverseScope(scope, state);
     for (const dep of scope.scope.dependencies) {
-      const isReactive = state.has(dep.place.identifier);
+      const isReactive = state.has(dep.place.identifier.id);
       if (!isReactive) {
         scope.scope.dependencies.delete(dep);
       }
@@ -34,12 +34,12 @@ class Visitor extends ReactiveFunctionVisitor<State> {
     if (scope.scope.dependencies.size === 0) {
       // If a scope has no dependencies, then its declarations are all non-reactive
       for (const [, declaration] of scope.scope.declarations) {
-        state.delete(declaration);
+        state.delete(declaration.id);
       }
     } else {
       // otherwise, all the scope's declarations are reactive
       for (const [, declaration] of scope.scope.declarations) {
-        state.add(declaration);
+        state.add(declaration.id);
       }
     }
   }
