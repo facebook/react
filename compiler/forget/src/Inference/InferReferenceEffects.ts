@@ -835,9 +835,25 @@ const HOOKS: Map<string, Hook> = new Map([
       valueKind: ValueKind.Frozen,
     },
   ],
+  [
+    "useMemo",
+    {
+      kind: "Memo",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
+  [
+    "useCallback",
+    {
+      kind: "Memo",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
 ]);
 
-type HookKind = "State" | "Ref" | "Custom";
+type HookKind = "State" | "Ref" | "Custom" | "Memo";
 type Hook = { kind: HookKind; effectKind: Effect; valueKind: ValueKind };
 
 export function parseHookCall(place: Place): Hook | null {
