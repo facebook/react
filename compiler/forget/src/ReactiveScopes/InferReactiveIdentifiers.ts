@@ -119,23 +119,18 @@ export function inferReactiveIdentifiers(
     reactivityMap.set(param.identifier, true);
   }
   const actuallyReactiveScopes = new Set<ReactiveScope>();
-  let prevScopesSize = -1;
 
-  // TODO(mofeiZ): avoid fixpoint iteration
-  while (actuallyReactiveScopes.size > prevScopesSize) {
-    prevScopesSize = actuallyReactiveScopes.size;
-    visitReactiveFunction(fn, visitor, reactivityMap);
+  visitReactiveFunction(fn, visitor, reactivityMap);
 
-    for (const [id, value] of reactivityMap) {
-      const { scope } = id;
-      if (value && scope != null) {
-        actuallyReactiveScopes.add(scope);
-      }
+  for (const [id, value] of reactivityMap) {
+    const { scope } = id;
+    if (value && scope != null) {
+      actuallyReactiveScopes.add(scope);
     }
-    for (const [id, _] of reactivityMap) {
-      if (id.scope && actuallyReactiveScopes.has(id.scope)) {
-        reactivityMap.set(id, true);
-      }
+  }
+  for (const [id, _] of reactivityMap) {
+    if (id.scope && actuallyReactiveScopes.has(id.scope)) {
+      reactivityMap.set(id, true);
     }
   }
   const result = new Set<Identifier>();
