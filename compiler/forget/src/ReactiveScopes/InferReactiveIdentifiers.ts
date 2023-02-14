@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "../CompilerError";
 import {
   Effect,
   IdentifierId,
@@ -12,6 +13,7 @@ import {
   ReactiveInstruction,
 } from "../HIR/HIR";
 import { parseHookCall } from "../Inference/InferReferenceEffects";
+import { assertExhaustive } from "../Utils/utils";
 import {
   eachReactiveValueOperand,
   ReactiveFunctionVisitor,
@@ -56,15 +58,31 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
     if (hasReactiveInput) {
       // all mutating effects must also be marked as reactive
       for (const operand of eachReactiveValueOperand(value)) {
-        if (
-          operand.effect === Effect.Store ||
-          operand.effect === Effect.Mutate
-        ) {
-          // Explicitly compare to `false` here, since absence from the
-          // map indicates a free variable
-          // todo [@mofeiZ] add knowledge about free variables
-          if (reactivityMap.get(operand.identifier.id) === false) {
-            reactivityMap.set(operand.identifier.id, true);
+        switch (operand.effect) {
+          case Effect.Store:
+          case Effect.Mutate: {
+            // Explicitly compare to `false` here, since absence from the
+            // map indicates a free variable
+            // todo [@mofeiZ] add knowledge about free variables
+            if (reactivityMap.get(operand.identifier.id) === false) {
+              reactivityMap.set(operand.identifier.id, true);
+            }
+            break;
+          }
+          case Effect.Capture:
+          case Effect.Freeze:
+          case Effect.Read: {
+            // no-op
+            break;
+          }
+          case Effect.Unknown: {
+            CompilerError.invariant("Unexpected unknown effect", operand.loc);
+          }
+          default: {
+            assertExhaustive(
+              operand.effect,
+              `Unexpected effect kind '${operand.effect}'`
+            );
           }
         }
       }
