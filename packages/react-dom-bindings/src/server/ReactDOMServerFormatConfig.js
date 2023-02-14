@@ -190,6 +190,11 @@ const scriptReplacer = (
   suffix: string,
 ) => `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
 
+export type BootscrapScriptContentDescriptor = {
+  type: string,
+  dataset: {[string]: string},
+  content: string,
+};
 export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
@@ -200,7 +205,7 @@ export type BootstrapScriptDescriptor = {
 export function createResponseState(
   identifierPrefix: string | void,
   nonce: string | void,
-  bootstrapScriptContent: string | void,
+  bootstrapScriptContent: string | BootscrapScriptContentDescriptor | void,
   bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
@@ -215,11 +220,38 @@ export function createResponseState(
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeDesc = null;
   let streamingFormat = ScriptStreamingFormat;
-  if (bootstrapScriptContent !== undefined) {
+  if (typeof bootstrapScriptContent === 'string') {
     bootstrapChunks.push(
       inlineScriptWithNonce,
       stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
       endInlineScript,
+    );
+  } else if (bootstrapScriptContent !== undefined) {
+    const attributeEnd = stringToPrecomputedChunk('"');
+    bootstrapChunks.push(
+      stringToChunk('<script type="'),
+      stringToChunk(bootstrapScriptContent.type),
+      attributeEnd,
+    );
+    const {dataset, content} = bootstrapScriptContent;
+    const datasetChunk1 = stringToPrecomputedChunk(' data-');
+    const datasetChunk2 = stringToPrecomputedChunk('="');
+    const datasetChunk3 = attributeEnd;
+
+    for (const name in dataset) {
+      const value = dataset[name];
+      bootstrapChunks.push(
+        datasetChunk1,
+        stringToChunk(name),
+        datasetChunk2,
+        stringToChunk(value),
+        datasetChunk3,
+      );
+    }
+    bootstrapChunks.push(
+      stringToChunk('>'),
+      stringToChunk(content),
+      stringToChunk('</script>'),
     );
   }
   if (enableFizzExternalRuntime) {

@@ -12,7 +12,10 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Request} from 'react-server/src/ReactFizzServer';
 
 import type {Destination} from 'react-server/src/ReactServerStreamConfig';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {
+  BootstrapScriptDescriptor,
+  BootscrapScriptContentDescriptor,
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import {
   createRequest,
@@ -29,7 +32,7 @@ import {
 
 type Options = {
   identifierPrefix?: string,
-  bootstrapScriptContent?: string,
+  bootstrapScriptContent?: string | BootscrapScriptContentDescriptor,
   bootstrapScripts: Array<string>,
   bootstrapModules: Array<string>,
   progressiveChunkSize?: number,
