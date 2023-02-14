@@ -691,20 +691,24 @@ function typeVarEquals(tA: Type, tB: Type): boolean {
   return false;
 }
 
+function typeKindCheck(tA: Type, tb: Type, type: string): boolean {
+  return tA.kind === type && tb.kind === type;
+}
+
 function primitiveTypeEquals(tA: Type, tB: Type): boolean {
-  return tA.kind === "Primitive" && tB.kind === "Primitive";
+  return typeKindCheck(tA, tB, "Primitive");
 }
 
 function polyTypeEquals(tA: Type, tB: Type): boolean {
-  return tA.kind === "Poly" && tB.kind === "Poly";
+  return typeKindCheck(tA, tB, "Poly");
 }
 
 function objectTypeEquals(tA: Type, tB: Type): boolean {
-  return tA.kind === "Object" && tB.kind === "Object";
+  return typeKindCheck(tA, tB, "Object");
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
-  return tA.kind === "Function" && tB.kind === "Function";
+  return typeKindCheck(tA, tB, "Function");
 }
 
 function phiTypeEquals(tA: Type, tB: Type): boolean {
