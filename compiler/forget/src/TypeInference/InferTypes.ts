@@ -9,6 +9,7 @@ import {
   TypeVar,
 } from "../HIR/HIR";
 import { eachInstructionOperand } from "../HIR/visitors";
+import { parseHookCall } from "../Inference/InferReferenceEffects";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   switch (op) {
@@ -120,7 +121,14 @@ function* generateInstructionTypes(
     }
 
     case "CallExpression": {
-      yield equation(value.callee.identifier.type, { kind: "Function" });
+      const hook = parseHookCall(value.callee);
+      let type: Type;
+      if (hook !== null) {
+        type = { kind: "Hook", name: hook.name };
+      } else {
+        type = { kind: "Function" };
+      }
+      yield equation(value.callee.identifier.type, type);
       break;
     }
 
