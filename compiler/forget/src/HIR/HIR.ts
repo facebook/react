@@ -745,3 +745,7 @@ export function isObjectType(id: Identifier): boolean {
 export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === "Primitive";
 }
+
+export function isHookType(id: Identifier): boolean {
+  return id.type.kind === "Hook";
+}

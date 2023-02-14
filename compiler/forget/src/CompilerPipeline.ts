@@ -14,6 +14,7 @@ import {
 } from "./HIR";
 import {
   analyseFunctions,
+  dropMemoCalls,
   inferMutableRanges,
   inferReferenceEffects,
 } from "./Inference";
@@ -64,6 +65,9 @@ export function* run(
 
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
+
+  dropMemoCalls(hir);
+  yield log({ kind: "hir", name: "DropMemoCalls", value: hir });
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });

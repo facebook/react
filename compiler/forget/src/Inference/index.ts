@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export { default as dropMemoCalls } from "./DropMemoCalls";
 export { inferMutableRanges } from "./InferMutableRanges";
 export { default as analyseFunctions } from "./AnalyseFunctions";
 export { default as inferReferenceEffects } from "./InferReferenceEffects";
