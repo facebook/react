@@ -86,7 +86,7 @@ import {
  * )
  * ```
  */
-export function leaveSSA(fn: HIRFunction) {
+export function leaveSSA(fn: HIRFunction): void {
   // For "memoizable" phis (see docblock), this maps the original identifiers to the identifier they
   // should be reassigned to. The keys are phi operands, and the values are the phi id to which
   // they are being explicitly reassigned.
@@ -101,7 +101,7 @@ export function leaveSSA(fn: HIRFunction) {
     phi: Phi;
     block: BasicBlock;
   };
-  function pushPhis(arr: Array<PhiState>, block: BasicBlock) {
+  function pushPhis(arr: Array<PhiState>, block: BasicBlock): void {
     for (const phi of block.phis) {
       arr.push({ phi, block });
     }
@@ -335,7 +335,10 @@ export function leaveSSA(fn: HIRFunction) {
 // Rewrite @param place's identifier based on the given rewrite mapping, if the identifier
 // is present. Also expands the mutable range of the target identifier to include the
 // place's range.
-function rewritePlace(place: Place, rewrites: Map<Identifier, Identifier>) {
+function rewritePlace(
+  place: Place,
+  rewrites: Map<Identifier, Identifier>
+): void {
   const prevIdentifier = place.identifier;
   const nextIdentifier = rewrites.get(prevIdentifier);
   if (nextIdentifier === undefined || nextIdentifier === prevIdentifier) {
