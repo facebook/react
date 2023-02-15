@@ -35,13 +35,13 @@ function component(a) {
   } else {
     z = $[3];
   }
-  const c_4 = $[4] !== z.a.a;
+  const c_4 = $[4] !== z.a;
   let x;
   if (c_4) {
     x = function () {
       z.a.a();
     };
-    $[4] = z.a.a;
+    $[4] = z.a;
     $[5] = x;
   } else {
     x = $[5];
