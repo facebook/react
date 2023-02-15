@@ -46,8 +46,9 @@ function Component(props) {
     y$0 = $[3];
   }
   const c_4 = $[4] !== x;
+  const c_5 = $[5] !== y$0;
   let t0;
-  if (c_4) {
+  if (c_4 || c_5) {
     t0 = (
       <Component>
         {x}
@@ -55,9 +56,10 @@ function Component(props) {
       </Component>
     );
     $[4] = x;
-    $[5] = t0;
+    $[5] = y$0;
+    $[6] = t0;
   } else {
-    t0 = $[5];
+    t0 = $[6];
   }
   return t0;
 }

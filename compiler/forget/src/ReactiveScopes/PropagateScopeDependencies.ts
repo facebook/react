@@ -151,6 +151,7 @@ class Context {
     }
 
     const decl = this.#declarations.get(maybeDependency.place.identifier.id);
+
     // if decl is undefined here, then this is a free var
     //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
 
@@ -376,7 +377,7 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   } else {
     context.declare(lvalue.place.identifier, {
       kind: DeclKind.Dynamic,
-      id: lvalue.place.identifier.mutableRange.start,
+      id: instr.id,
       scope: context.currentScope,
     });
   }

@@ -66,14 +66,16 @@ function Component(props) {
     child = $[6];
   }
   y$0.push(props.p4);
-  const c_7 = $[7] !== child;
+  const c_7 = $[7] !== y$0;
+  const c_8 = $[8] !== child;
   let t0;
-  if (c_7) {
+  if (c_7 || c_8) {
     t0 = <Component data={y$0}>{child}</Component>;
-    $[7] = child;
-    $[8] = t0;
+    $[7] = y$0;
+    $[8] = child;
+    $[9] = t0;
   } else {
-    t0 = $[8];
+    t0 = $[9];
   }
   return t0;
 }
