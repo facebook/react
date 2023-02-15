@@ -3,11 +3,9 @@
 
 ```javascript
 function foo(a, b) {
-  let x;
+  let x = [];
   if (a) {
     x = 1;
-  } else {
-    x = 2;
   }
 
   let y = x;
@@ -20,11 +18,16 @@ function foo(a, b) {
 
 ```javascript
 function foo(a, b) {
-  let x = undefined;
+  const $ = React.unstable_useMemoCache();
+  let x;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    x = [];
+    $[0] = x;
+  } else {
+    x = $[0];
+  }
   if (a) {
     x = 1;
-  } else {
-    x = 2;
   }
 
   const y = x;

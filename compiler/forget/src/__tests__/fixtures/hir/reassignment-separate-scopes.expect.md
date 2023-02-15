@@ -56,48 +56,43 @@ function foo(a, b, c) {
   } else {
     y = $[3];
   }
-  let x$0 = undefined;
   bb3: switch (b) {
     case 0: {
       const c_4 = $[4] !== b;
-      let x$1;
       if (c_4) {
-        x$1 = [];
-        x$1.push(b);
+        x = [];
+        x.push(b);
         $[4] = b;
-        $[5] = x$1;
+        $[5] = x;
       } else {
-        x$1 = $[5];
+        x = $[5];
       }
-      x$0 = x$1;
       break bb3;
     }
     default: {
       const c_6 = $[6] !== c;
-      let x$2;
       if (c_6) {
-        x$2 = [];
-        x$2.push(c);
+        x = [];
+        x.push(c);
         $[6] = c;
-        $[7] = x$2;
+        $[7] = x;
       } else {
-        x$2 = $[7];
+        x = $[7];
       }
-      x$0 = x$2;
     }
   }
   const c_8 = $[8] !== y;
-  const c_9 = $[9] !== x$0;
+  const c_9 = $[9] !== x;
   let t0;
   if (c_8 || c_9) {
     t0 = (
       <div>
         {y}
-        {x$0}
+        {x}
       </div>
     );
     $[8] = y;
-    $[9] = x$0;
+    $[9] = x;
     $[10] = t0;
   } else {
     t0 = $[10];

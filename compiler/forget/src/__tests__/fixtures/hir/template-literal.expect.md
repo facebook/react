@@ -19,9 +19,9 @@ function componentB(props) {
 
 ```javascript
 function componentA(props) {
-  const t = `hello ${props.a}, ${props.b}!`;
-  const t$0 = t + ``;
-  return t$0;
+  let t = `hello ${props.a}, ${props.b}!`;
+  t = t + ``;
+  return t;
 }
 
 function componentB(props) {

@@ -69,33 +69,32 @@ function foo(props) {
   const c_4 = $[4] !== x;
   const c_5 = $[5] !== props.b;
   const c_6 = $[6] !== props.c;
-  let x$0;
   let y;
   if (c_4 || c_5 || c_6) {
     y = [x];
-    x$0 = [];
+    x = [];
     y.push(props.b);
-    x$0.push(props.c);
+    x.push(props.c);
     $[4] = x;
     $[5] = props.b;
     $[6] = props.c;
-    $[7] = x$0;
-    $[8] = y;
+    $[7] = y;
+    $[8] = x;
   } else {
-    x$0 = $[7];
-    y = $[8];
+    y = $[7];
+    x = $[8];
   }
-  const c_9 = $[9] !== x$0;
+  const c_9 = $[9] !== x;
   const c_10 = $[10] !== y;
   let content;
   if (c_9 || c_10) {
     content = (
       <div>
-        {x$0}
+        {x}
         {y}
       </div>
     );
-    $[9] = x$0;
+    $[9] = x;
     $[10] = y;
     $[11] = content;
   } else {

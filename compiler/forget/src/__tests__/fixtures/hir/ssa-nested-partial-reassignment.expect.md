@@ -20,18 +20,15 @@ function foo(a, b, c, d, e) {
 
 ```javascript
 function foo(a, b, c, d, e) {
-  const x = null;
-  let x$0 = x;
+  let x = null;
   if (a) {
-    const x$1 = b;
-    x$0 = x$1;
+    x = b;
   } else {
     if (c) {
-      const x$2 = d;
-      x$0 = x$2;
+      x = d;
     }
   }
-  return x$0;
+  return x;
 }
 
 ```

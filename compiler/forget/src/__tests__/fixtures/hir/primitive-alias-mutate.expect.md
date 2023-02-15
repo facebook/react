@@ -22,11 +22,9 @@ function component(a) {
 function component(a) {
   let x = undefined;
   if (a) {
-    const x$0 = "bar";
-    x = x$0;
+    x = "bar";
   } else {
-    const x$1 = "baz";
-    x = x$1;
+    x = "baz";
   }
 
   const y = x;

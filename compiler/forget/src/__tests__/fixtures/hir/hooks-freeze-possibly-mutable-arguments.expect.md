@@ -31,17 +31,14 @@ function Component(props) {
   const x = props.x;
   let a = undefined;
   if (cond) {
-    const a$0 = x;
-    a = a$0;
+    a = x;
   } else {
-    let a$1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      a$1 = [];
-      $[0] = a$1;
+      a = [];
+      $[0] = a;
     } else {
-      a$1 = $[0];
+      a = $[0];
     }
-    a = a$1;
   }
 
   useFreeze(a);

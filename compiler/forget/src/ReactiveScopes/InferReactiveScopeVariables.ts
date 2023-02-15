@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import {
   HIRFunction,
   Identifier,
@@ -81,10 +80,21 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
   // that mutate together.
   const scopeIdentifiers = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
-    invariant(
-      block.phis.size === 0,
-      "Expected phis to be cleared by LeaveSSA pass"
-    );
+    // If a phi is mutated after creation, then we need to alias all of its operands such that they
+    // are assigned to the same scope.
+    for (const phi of block.phis) {
+      if (
+        // The phi was reset because it was not mutated after creation
+        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
+        phi.id.mutableRange.end >
+          (block.instructions.at(0)?.id ?? block.terminal.id)
+      ) {
+        for (const [, phiId] of phi.operands) {
+          scopeIdentifiers.union([phi.id, phiId]);
+        }
+      }
+      block.phis.clear();
+    }
 
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];

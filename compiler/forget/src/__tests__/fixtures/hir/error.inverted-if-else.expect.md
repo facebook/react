@@ -20,7 +20,7 @@ function foo(a, b, c) {
 ## Error
 
 ```
-Expected all phis to be cleared by predecessors
+Expected a break target
 ```
           
       

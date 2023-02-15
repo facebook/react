@@ -65,6 +65,7 @@ type Scopes = Array<ReactiveScope>;
 
 class Context {
   #declarations: DeclMap = new Map();
+  #reassignments: Map<Identifier, Decl> = new Map();
   #dependencies: Set<ReactiveScopeDependency> = new Set();
   // Produces a de-duplicated mapping of Id -> ReactiveScopeDependency
   // This helps with.. temporaries that are created only for property loads
@@ -90,7 +91,10 @@ class Context {
    * on itself.
    */
   declare(identifier: Identifier, decl: Decl): void {
-    this.#declarations.set(identifier.id, decl);
+    if (!this.#declarations.has(identifier.id)) {
+      this.#declarations.set(identifier.id, decl);
+    }
+    this.#reassignments.set(identifier, decl);
   }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
@@ -150,22 +154,23 @@ class Context {
       }
     }
 
-    const decl = this.#declarations.get(maybeDependency.place.identifier.id);
-
-    // if decl is undefined here, then this is a free var
-    //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
-
-    // Any value used after its defining scope has concluded must be added as an
+    // Any value used after its originally defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
     // some later code needs access to the value. If the current
-    // scope we are visiting is the same scope where the value originates,
-    // it can't be a dependency on itself.
+    // scope we are visiting is the same scope where the value originates, it can't be a dependency
+    // on itself.
+
+    // if originalDeclaration is undefined here, then this is a free var
+    //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
+    const originalDeclaration = this.#declarations.get(
+      maybeDependency.place.identifier.id
+    );
     if (
-      decl !== undefined &&
-      decl.scope !== null &&
-      !this.#isScopeActive(decl.scope)
+      originalDeclaration !== undefined &&
+      originalDeclaration.scope !== null &&
+      !this.#isScopeActive(originalDeclaration.scope)
     ) {
-      decl.scope.declarations.set(
+      originalDeclaration.scope.declarations.set(
         maybeDependency.place.identifier.id,
         maybeDependency.place.identifier
       );
@@ -173,13 +178,17 @@ class Context {
 
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.
+    const currentDeclaration =
+      this.#reassignments.get(maybeDependency.place.identifier) ??
+      this.#declarations.get(maybeDependency.place.identifier.id);
     const currentScope = this.currentScope;
     if (
       currentScope != null &&
-      decl !== undefined &&
-      decl.kind !== DeclKind.Const &&
-      decl.id < currentScope.range.start &&
-      (decl.scope == null || !this.#isScopeActive(decl.scope))
+      currentDeclaration !== undefined &&
+      currentDeclaration.kind !== DeclKind.Const &&
+      currentDeclaration.id < currentScope.range.start &&
+      (currentDeclaration.scope == null ||
+        !this.#isScopeActive(currentDeclaration.scope))
     ) {
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
@@ -374,11 +383,10 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   }
   if (lvalue.kind === InstructionKind.Reassign) {
     context.visitReassignment(lvalue);
-  } else {
-    context.declare(lvalue.place.identifier, {
-      kind: DeclKind.Dynamic,
-      id: instr.id,
-      scope: context.currentScope,
-    });
   }
+  context.declare(lvalue.place.identifier, {
+    kind: DeclKind.Dynamic,
+    id: instr.id,
+    scope: context.currentScope,
+  });
 }

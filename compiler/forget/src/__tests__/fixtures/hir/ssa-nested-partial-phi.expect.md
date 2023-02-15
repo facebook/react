@@ -19,14 +19,12 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const x = a;
+  let x = a;
   if (b) {
-    let x$0 = x;
     if (c) {
-      const x$1 = c;
-      x$0 = x$1;
+      x = c;
     }
-    return x$0;
+    return x;
   }
 }
 

@@ -15,6 +15,7 @@ import {
   Instruction,
   InstructionId,
   InstructionKind,
+  LValue,
   makeInstructionId,
   Phi,
   Place,
@@ -87,10 +88,8 @@ import {
  * ```
  */
 export function leaveSSA(fn: HIRFunction): void {
-  // For "memoizable" phis (see docblock), this maps the original identifiers to the identifier they
-  // should be reassigned to. The keys are phi operands, and the values are the phi id to which
-  // they are being explicitly reassigned.
-  const reassignments: Map<Identifier, Identifier> = new Map();
+  // Maps identifier names to their original declaration.
+  const declarations: Map<string, LValue> = new Map();
 
   // For non-memoizable phis, this maps original identifiers to the identifier they should be
   // *rewritten* to. The keys are the original identifiers, and the value will be _either_ the
@@ -108,17 +107,48 @@ export function leaveSSA(fn: HIRFunction): void {
   }
 
   for (const [, block] of fn.body.blocks) {
-    invariant(
-      block.phis.size === 0,
-      "Expected all phis to be cleared by predecessors"
-    );
+    for (const instr of block.instructions) {
+      // Iterate the instructions and perform any rewrites as well as promoting SSA variables to
+      // `let` or `reassign` where possible.
+      const { lvalue } = instr;
+      if (
+        lvalue.kind === InstructionKind.Const &&
+        rewrites.has(lvalue.place.identifier)
+      ) {
+        // For rewrites, the declaration of the canonical identifier has to be `let`,
+        // all other assignments are reassignments (which we annotate for codegen
+        // purposes).
+        lvalue.kind =
+          rewrites.get(lvalue.place.identifier) === lvalue.place.identifier
+            ? InstructionKind.Let
+            : InstructionKind.Reassign;
+      } else if (lvalue.place.identifier.name != null) {
+        const originalLVal = declarations.get(lvalue.place.identifier.name);
+        if (originalLVal === undefined) {
+          declarations.set(lvalue.place.identifier.name, lvalue);
+        } else {
+          // This is an instance of the original id, so we need to promote the original declaration
+          // to a `let` and the current lval to a `reassign`
+          originalLVal.kind = InstructionKind.Let;
+          lvalue.kind = InstructionKind.Reassign;
+        }
+      }
+      rewritePlace(lvalue.place, rewrites, declarations);
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        rewritePlace(operand, rewrites, declarations);
+      }
+    }
+
+    const terminal = block.terminal;
+    for (const operand of eachTerminalOperand(terminal)) {
+      rewritePlace(operand, rewrites, declarations);
+    }
 
     // Find any phi nodes which need a variable declaration in the current block
     // This includes phis in fallthrough nodes, or blocks that form part of control flow
     // such as for or while (and later if/switch).
     const reassignmentPhis: Array<PhiState> = [];
     const rewritePhis: Array<PhiState> = [];
-    const terminal = block.terminal;
     if (
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
@@ -127,8 +157,13 @@ export function leaveSSA(fn: HIRFunction): void {
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      pushPhis(reassignmentPhis, fallthrough);
-      fallthrough.phis.clear();
+      for (const phi of fallthrough.phis) {
+        if (phi.id.name == null) {
+          rewritePhis.push({ phi, block: fallthrough });
+        } else {
+          reassignmentPhis.push({ phi, block: fallthrough });
+        }
+      }
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
       const test = fn.body.blocks.get(terminal.test)!;
@@ -160,52 +195,34 @@ export function leaveSSA(fn: HIRFunction): void {
       // an if but not another. In this case we populate the let binding with this initial
       // value rather than generate an extra assignment.
       let initOperand: Identifier | null = null;
-
-      // Determine the canonical id to use for this phi. In general this is the phi id,
-      // but if one phi flows into another as an operand, this will be the final phi.
-      let canonicalId = reassignments.get(phi.id);
-      if (canonicalId === undefined) {
-        canonicalId = phi.id;
-        canonicalId.mutableRange.start = Math.min(
-          canonicalId.mutableRange.start,
-          terminal.id
-        ) as InstructionId;
-        reassignments.set(phi.id, canonicalId);
-      }
-
-      // all versions of the variable need to be remapped to the canonical id
       for (const [, operand] of phi.operands) {
-        reassignments.set(operand, canonicalId);
         if (operand.mutableRange.start < terminal.id) {
-          invariant(
-            initOperand === null,
-            "A phi cannot have two operands initialized before its declaration"
-          );
-          initOperand = operand;
+          if (initOperand == null) {
+            initOperand = operand;
+          }
         }
       }
 
-      // If there are no instructions in the block then there's just a terminal
-      // node, which has no mutation, so that should be false.
-      //
-      // TODO(joe): This above statement is true, right? Could there be a value
-      // block with instructions in terminals?
+      // If the phi is mutated after its creation, then any values which flow into the phi
+      // must also have their ranges extended accordingly.
       const isPhiMutatedAfterCreation: boolean =
         phi.id.mutableRange.end >
         (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
 
       // If a phi is never mutated after creation, reset its mutable range to be itself
       if (!isPhiMutatedAfterCreation) {
-        canonicalId.mutableRange.start = phiBlock.terminal.id;
-        canonicalId.mutableRange.end = makeInstructionId(
-          phiBlock.terminal.id + 1
-        );
+        phi.id.mutableRange.start = terminal.id;
+        phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
       }
 
-      // If this phi id is the canonical id we need to generate a let binding for it
-      // (otherwise, it means this phi merges into some other phi which already generated
-      // a binding
-      if (canonicalId === phi.id) {
+      // If we never saw a declaration for this phi, it may have been pruned by DCE, so synthesize
+      // a new Let binding
+      invariant(
+        phi.id.name != null,
+        "Expected reassignment phis to have a name"
+      );
+      const declaration = declarations.get(phi.id.name);
+      if (declaration === undefined) {
         const instr: Instruction = {
           // NOTE: reuse the terminal id since these lets must be scoped with the terminal anyway.
           // the mutable range of this canonical id must by definition span from the binding (before
@@ -214,7 +231,7 @@ export function leaveSSA(fn: HIRFunction): void {
           lvalue: {
             place: {
               kind: "Identifier",
-              identifier: canonicalId,
+              identifier: phi.id,
               effect: Effect.Mutate,
               loc: GeneratedSource,
             },
@@ -237,37 +254,19 @@ export function leaveSSA(fn: HIRFunction): void {
           loc: GeneratedSource,
         };
         block.instructions.push(instr);
+        declarations.set(phi.id.name, instr.lvalue);
+        phi.id.mutableRange.start = terminal.id;
+        if (!isPhiMutatedAfterCreation) {
+          phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
+        }
+      } else if (isPhiMutatedAfterCreation) {
+        declaration.place.identifier.mutableRange.end = phi.id.mutableRange.end;
       }
 
-      // Generate an assignment in each predecessor
-      for (const [predecessorId, operand] of phi.operands) {
+      for (const [, operand] of phi.operands) {
         if (isPhiMutatedAfterCreation) {
           operand.mutableRange.end = phi.id.mutableRange.end;
         }
-        if (operand === initOperand) {
-          continue;
-        }
-        const predecessor = fn.body.blocks.get(predecessorId)!;
-        const instr: Instruction = {
-          id: predecessor.terminal.id,
-          lvalue: {
-            place: {
-              kind: "Identifier",
-              identifier: canonicalId,
-              effect: Effect.Mutate,
-              loc: GeneratedSource,
-            },
-            kind: InstructionKind.Reassign,
-          },
-          value: {
-            kind: "Identifier",
-            identifier: operand,
-            effect: Effect.Read,
-            loc: GeneratedSource,
-          },
-          loc: GeneratedSource,
-        };
-        predecessor.instructions.push(instr);
       }
     }
 
@@ -289,6 +288,13 @@ export function leaveSSA(fn: HIRFunction): void {
           terminal.id
         ) as InstructionId;
         rewrites.set(phi.id, canonicalId);
+
+        if (canonicalId.name !== null) {
+          const declaration = declarations.get(canonicalId.name);
+          if (declaration !== undefined) {
+            declaration.kind = InstructionKind.Let;
+          }
+        }
       }
 
       // all versions of the variable need to be remapped to the canonical id
@@ -304,31 +310,6 @@ export function leaveSSA(fn: HIRFunction): void {
       canonicalId.mutableRange.start = makeInstructionId(start);
       canonicalId.mutableRange.end = makeInstructionId(end);
     }
-
-    // Finally, iterate the instructions and perform any rewrites as well as converting
-    // SSA variables to `const` where possible
-    for (const instr of block.instructions) {
-      const { lvalue } = instr;
-      if (
-        lvalue.kind === InstructionKind.Const &&
-        rewrites.has(lvalue.place.identifier)
-      ) {
-        // For rewrites, the declaration of the canonical identifier has to be `let`,
-        // all other assignments are reassignments (which we annotate for codegen
-        // purposes).
-        lvalue.kind =
-          rewrites.get(lvalue.place.identifier) === lvalue.place.identifier
-            ? InstructionKind.Let
-            : InstructionKind.Reassign;
-      }
-      rewritePlace(lvalue.place, rewrites);
-      for (const operand of eachInstructionValueOperand(instr.value)) {
-        rewritePlace(operand, rewrites);
-      }
-    }
-    for (const operand of eachTerminalOperand(terminal)) {
-      rewritePlace(operand, rewrites);
-    }
   }
 }
 
@@ -337,21 +318,29 @@ export function leaveSSA(fn: HIRFunction): void {
 // place's range.
 function rewritePlace(
   place: Place,
-  rewrites: Map<Identifier, Identifier>
+  rewrites: Map<Identifier, Identifier>,
+  declarations: Map<string, LValue>
 ): void {
   const prevIdentifier = place.identifier;
   const nextIdentifier = rewrites.get(prevIdentifier);
-  if (nextIdentifier === undefined || nextIdentifier === prevIdentifier) {
-    return;
+
+  if (nextIdentifier !== undefined) {
+    if (nextIdentifier === prevIdentifier) return;
+    nextIdentifier.mutableRange.start = makeInstructionId(
+      Math.min(
+        nextIdentifier.mutableRange.start,
+        prevIdentifier.mutableRange.start
+      )
+    );
+    nextIdentifier.mutableRange.end = makeInstructionId(
+      Math.max(nextIdentifier.mutableRange.end, prevIdentifier.mutableRange.end)
+    );
+    place.identifier = nextIdentifier;
+  } else if (prevIdentifier.name != null) {
+    const declaration = declarations.get(prevIdentifier.name);
+    if (declaration === undefined) return;
+    // Only rewrite identifiers that were declared within the function
+    const originalIdentifier = declaration.place.identifier;
+    prevIdentifier.id = originalIdentifier.id;
   }
-  nextIdentifier.mutableRange.start = makeInstructionId(
-    Math.min(
-      nextIdentifier.mutableRange.start,
-      prevIdentifier.mutableRange.start
-    )
-  );
-  nextIdentifier.mutableRange.end = makeInstructionId(
-    Math.max(nextIdentifier.mutableRange.end, prevIdentifier.mutableRange.end)
-  );
-  place.identifier = nextIdentifier;
 }

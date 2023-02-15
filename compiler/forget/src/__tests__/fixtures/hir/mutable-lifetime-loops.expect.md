@@ -50,10 +50,6 @@ function Component(props) {
   let b = {};
   let c = {};
   let d = {};
-  let a$0 = a;
-  let b$1 = b;
-  let c$2 = c;
-  let d$3 = d;
   while (true) {
     const z = a;
     a = b;
@@ -61,24 +57,20 @@ function Component(props) {
     c = d;
     d = z;
     mutate(a, b);
-    a$0 = a;
-    b$1 = b;
-    c$2 = c;
-    d$3 = d;
     if (cond(a)) {
       break;
     }
   }
-  if (a$0) {
+  if (a) {
   }
-  if (b$1) {
+  if (b) {
   }
-  if (c$2) {
+  if (c) {
   }
-  if (d$3) {
+  if (d) {
   }
 
-  mutate(d$3, null);
+  mutate(d, null);
 }
 
 ```

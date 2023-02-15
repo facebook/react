@@ -23,17 +23,15 @@ function Foo(cond) {
 function log() {}
 
 function Foo(cond) {
-  const str = "";
-  let str$0 = str;
+  let str = "";
   if (cond) {
     const str_0 = "other test";
     log(str_0);
   } else {
-    const str$1 = "fallthrough test";
-    str$0 = str$1;
+    str = "fallthrough test";
   }
 
-  log(str$0);
+  log(str);
 }
 
 ```

@@ -32,29 +32,27 @@ function Component(props) {
   const c_1 = $[1] !== props.p2;
   const c_2 = $[2] !== props.p3;
   let x;
-  let y$0;
+  let y;
   if (c_0 || c_1 || c_2) {
     x = [];
-    const y = undefined;
-    y$0 = y;
+    y = undefined;
     switch (props.p0) {
       case true: {
         x.push(props.p2);
         x.push(props.p3);
       }
       case false: {
-        const y$1 = x;
-        y$0 = y$1;
+        y = x;
       }
     }
     $[0] = props.p0;
     $[1] = props.p2;
     $[2] = props.p3;
     $[3] = x;
-    $[4] = y$0;
+    $[4] = y;
   } else {
     x = $[3];
-    y$0 = $[4];
+    y = $[4];
   }
   const c_5 = $[5] !== x;
   let child;
@@ -65,13 +63,13 @@ function Component(props) {
   } else {
     child = $[6];
   }
-  y$0.push(props.p4);
-  const c_7 = $[7] !== y$0;
+  y.push(props.p4);
+  const c_7 = $[7] !== y;
   const c_8 = $[8] !== child;
   let t0;
   if (c_7 || c_8) {
-    t0 = <Component data={y$0}>{child}</Component>;
-    $[7] = y$0;
+    t0 = <Component data={y}>{child}</Component>;
+    $[7] = y;
     $[8] = child;
     $[9] = t0;
   } else {

@@ -30,21 +30,18 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  let x$0 = x;
   if (props.cond) {
     const c_2 = $[2] !== props.foo;
-    let x$1;
     if (c_2) {
-      x$1 = [];
-      x$1.push(props.foo);
+      x = [];
+      x.push(props.foo);
       $[2] = props.foo;
-      $[3] = x$1;
+      $[3] = x;
     } else {
-      x$1 = $[3];
+      x = $[3];
     }
-    x$0 = x$1;
   }
-  return x$0;
+  return x;
 }
 
 ```

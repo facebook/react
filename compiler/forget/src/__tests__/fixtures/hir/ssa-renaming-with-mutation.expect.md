@@ -24,26 +24,24 @@ function foo(props) {
   const c_0 = $[0] !== props.bar;
   const c_1 = $[1] !== props.cond;
   const c_2 = $[2] !== props.foo;
-  let x$0;
+  let x;
   if (c_0 || c_1 || c_2) {
-    const x = [];
+    x = [];
     x.push(props.bar);
-    x$0 = x;
     if (props.cond) {
-      const x$1 = [];
-      x$1.push(props.foo);
-      x$0 = x$1;
+      x = [];
+      x.push(props.foo);
     }
 
-    mut(x$0);
+    mut(x);
     $[0] = props.bar;
     $[1] = props.cond;
     $[2] = props.foo;
-    $[3] = x$0;
+    $[3] = x;
   } else {
-    x$0 = $[3];
+    x = $[3];
   }
-  return x$0;
+  return x;
 }
 
 ```

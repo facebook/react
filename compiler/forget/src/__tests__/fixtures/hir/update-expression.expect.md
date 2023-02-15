@@ -16,18 +16,18 @@ function foo(props) {
 ```javascript
 function foo(props) {
   const $ = React.unstable_useMemoCache();
-  const x = props.x;
-  const x$0 = x + 1;
-  const y = x$0;
-  const x$1 = x$0 - 1;
-  const z = x$1;
-  const c_0 = $[0] !== x$1;
+  let x = props.x;
+  x = x + 1;
+  const y = x;
+  x = x - 1;
+  const z = x;
+  const c_0 = $[0] !== x;
   const c_1 = $[1] !== y;
   const c_2 = $[2] !== z;
   let t0;
   if (c_0 || c_1 || c_2) {
-    t0 = { x: x$1, y: y, z: z };
-    $[0] = x$1;
+    t0 = { x: x, y: y, z: z };
+    $[0] = x;
     $[1] = y;
     $[2] = z;
     $[3] = t0;

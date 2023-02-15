@@ -21,25 +21,22 @@ function foo(a, b, c, d) {
 ```javascript
 function foo(a, b, c, d) {
   const $ = React.unstable_useMemoCache();
-  const x = someObj();
   const c_0 = $[0] !== a;
-  let x$0;
+  let x;
   if (c_0) {
-    x$0 = undefined;
+    x = someObj();
     if (a) {
-      const x$1 = someObj();
-      x$0 = x$1;
+      x = someObj();
     } else {
-      const x$2 = someObj();
-      x$0 = x$2;
+      x = someObj();
     }
-    x$0.f = 1;
+    x.f = 1;
     $[0] = a;
-    $[1] = x$0;
+    $[1] = x;
   } else {
-    x$0 = $[1];
+    x = $[1];
   }
-  return x$0;
+  return x;
 }
 
 ```
