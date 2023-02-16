@@ -3,96 +3,18 @@ name: Commit Artifacts for Facebook WWW
 on:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
-  download_artifacts:
+  build_artifacts:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and unzip artifacts
-        uses: actions/github-script@v6
+      - uses: actions/checkout@v3
         with:
-          script: |
-            const cp = require('child_process');
-
-            function sleep(ms) {
-              return new Promise(resolve => setTimeout(resolve, ms));
-            }
-
-            function execHelper(command, options, streamStdout = false) {
-              return new Promise((resolve, reject) => {
-                const proc = cp.exec(
-                  command,
-                  options,
-                  (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
-                );
-                if (streamStdout) {
-                  proc.stdout.pipe(process.stdout);
-                }
-              });
-            }
-
-            let artifactsUrl = null;
-            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-            // workflow to notify this GitHub action. Sorry!
-            let iter = 0;
-            spinloop: while (iter < 15) {
-              const res = await github.rest.repos.listCommitStatusesForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.sha
-              });
-              for (const status of res.data) {
-                if (/process_artifacts_combined/.test(status.context)) {
-                  switch (status.state) {
-                    case 'pending': {
-                      console.log(`${status.context} is still pending`);
-                      break;
-                    }
-                    case 'failure':
-                    case 'error': {
-                      throw new Error(`${status.context} has failed or errored`);
-                    }
-                    case 'success': {
-                      // The status does not include a build ID, but we can extract it
-                      // from the URL. I couldn't find a better way to do this.
-                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-                        status.target_url,
-                      )[1];
-                      console.log(`CircleCI build id found: ${ciBuildId}`);
-                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-                        artifactsUrl =
-                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-                        break spinloop;
-                      } else {
-                        throw new Error(`${ciBuildId} isn't a number`);
-                      }
-                      break;
-                    }
-                    default: {
-                      throw new Error(`Unhandled status state: ${status.state}`);
-                      break;
-                    }
-                  }
-                }
-              }
-              iter++;
-              console.log("Sleeping for 60s...");
-              await sleep(60_000);
-            }
-            if (artifactsUrl != null) {
-              const res = await fetch(artifactsUrl);
-              const data = await res.json();
-              for (const artifact of data) {
-                if (artifact.path === 'build.tgz') {
-                  console.log(`Downloading and unzipping ${artifact.url}`);
-                  await execHelper(
-                    `curl -L ${artifact.url} | tar -xvz`
-                  );
-                }
-              }
-            } else {
-              process.exitCode = 1;
-            }
+          ref: main
+      - name: Build from source
+        run: |
+          yarn install --frozen-lockfile && yarn build-combined
       - name: Strip @license from eslint plugin and react-refresh
         run: |
           sed -i -e 's/ @license React*//' \
@@ -133,12 +55,12 @@ jobs:
           path: compiled/
 
   commit_artifacts:
-    needs: download_artifacts
+    needs: build_artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: builds/facebook-www
+          ref: builds/facebook-www-temp
       - name: Ensure clean directory
         run: rm -rf compiled
       - uses: actions/download-artifact@v3
