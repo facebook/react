@@ -12,11 +12,11 @@ import generate from "@babel/generator";
 import jsx from "@babel/plugin-syntax-jsx";
 import * as t from "@babel/types";
 import prettier from "prettier";
-import { CompilerFlags, parseCompilerFlags } from "../CompilerFlags";
 import { compile } from "../CompilerPipeline";
+import { parsePluginOptions, PluginOptions } from "./PluginOptions";
 
 type BabelPluginPass = {
-  opts: CompilerFlags;
+  opts: PluginOptions;
 };
 
 /**
@@ -47,7 +47,7 @@ export default function ReactForgetBabelPlugin(
       if (fn.scope.getProgramParent() !== fn.scope.parent) {
         return;
       }
-      const ast = compile(fn, null);
+      const ast = compile(fn, pass.opts.environment);
 
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
       // traversal will loop infinitely.
@@ -73,7 +73,7 @@ export default function ReactForgetBabelPlugin(
       // prior to B, if A does not have a Program visitor and B does, B will run first. We always
       // want Forget to run true to source as possible.
       Program(path, pass) {
-        const flags = parseCompilerFlags(pass.opts);
+        const flags = parsePluginOptions(pass.opts);
         path.traverse(visitor, {
           ...pass,
           opts: { ...pass.opts, ...flags },

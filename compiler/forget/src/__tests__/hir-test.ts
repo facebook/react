@@ -10,6 +10,7 @@
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
+import { Effect, ValueKind } from "../HIR";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -60,7 +61,22 @@ describe("React Forget (HIR version)", () => {
       }
       try {
         items.push({
-          js: runReactForgetBabelPlugin(input, file, language).code,
+          js: runReactForgetBabelPlugin(input, file, language, {
+            enableOnlyOnUseForgetDirective: false,
+            environment: {
+              customHooks: new Map([
+                [
+                  "useFreeze",
+                  {
+                    name: "useFreeze",
+                    kind: "Custom",
+                    valueKind: ValueKind.Frozen,
+                    effectKind: Effect.Freeze,
+                  },
+                ],
+              ]),
+            },
+          }).code,
         });
       } catch (e) {
         error = e;

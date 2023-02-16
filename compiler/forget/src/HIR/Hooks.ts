@@ -27,15 +27,6 @@ export const BUILTIN_HOOKS: Map<string, Hook> = new Map([
     },
   ],
   [
-    "useFreeze",
-    {
-      kind: "Ref",
-      name: "useFreeze",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
-  ],
-  [
     "useMemo",
     {
       kind: "Memo",
