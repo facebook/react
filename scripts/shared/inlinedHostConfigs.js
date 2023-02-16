@@ -50,7 +50,6 @@ module.exports = [
     entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
     paths: [
       'react-dom',
-      'react-dom/server',
       'react-dom/server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom-bindings',
