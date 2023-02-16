@@ -442,6 +442,7 @@ export type InstructionData =
   | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
   // load `object[index]` - like PropertyLoad but with a dynamic property
   | { kind: "ComputedLoad"; object: Place; property: Place }
+  | { kind: "LoadGlobal"; name: string }
   | FunctionExpression
   | {
       kind: "TaggedTemplateExpression";

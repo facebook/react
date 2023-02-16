@@ -168,6 +168,7 @@ function isMutable({ id }: Instruction, place: Place): boolean {
 
 function mayAllocate(value: InstructionValue): boolean {
   switch (value.kind) {
+    case "LoadGlobal":
     case "TypeCastExpression":
     case "BinaryExpression":
     case "Identifier":

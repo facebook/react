@@ -131,6 +131,7 @@ export function* eachInstructionValueOperand(
       yield* instrValue.subexprs;
       break;
     }
+    case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {
@@ -259,6 +260,7 @@ export function mapInstructionOperands(
       instrValue.subexprs = instrValue.subexprs.map(fn);
       break;
     }
+    case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":
     case "JSXText": {

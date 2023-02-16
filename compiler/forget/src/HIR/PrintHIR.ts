@@ -381,6 +381,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value += instrValue.quasis.at(-1)!.raw + "`";
       break;
     }
+    case "LoadGlobal": {
+      value = `Global ${instrValue.name}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

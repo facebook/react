@@ -94,6 +94,7 @@ function pruneableValue(value: InstructionValue): boolean {
       // Potentially safe to prune, since they should just be creating new values
       return false;
     }
+    case "LoadGlobal":
     case "ArrayExpression":
     case "BinaryExpression":
     case "ComputedLoad":

@@ -640,6 +640,7 @@ function inferBlock(
         effectKind = Effect.Read;
         break;
       }
+      case "LoadGlobal":
       case "JSXText":
       case "Primitive": {
         valueKind = ValueKind.Immutable;

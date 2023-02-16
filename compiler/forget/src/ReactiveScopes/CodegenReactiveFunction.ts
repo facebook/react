@@ -788,6 +788,10 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "LoadGlobal": {
+      value = t.identifier(instrValue.name);
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,
