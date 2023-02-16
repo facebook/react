@@ -341,7 +341,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "TaggedTemplateExpression": {
-      value = `${instrValue.tag}\`${instrValue.value.raw}\``;
+      value = `${printPlace(instrValue.tag)}\`${instrValue.value.raw}\``;
       break;
     }
     case "LogicalExpression": {
