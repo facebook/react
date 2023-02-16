@@ -6,7 +6,7 @@ function Component(props) {
   const [value, setValue] = useState(null);
   // NOTE: this lambda does not capture any mutable values (only the state setter)
   // and thus should be treated as readonly
-  const onChange = (e) => setX((value) => value + e.target.value);
+  const onChange = (e) => setValue((value) => value + e.target.value);
 
   useOtherHook();
 
@@ -22,9 +22,9 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  useState(null);
+  const setValue = useState(null)[1];
 
-  const onChange = (e) => setX((value) => value + e.target.value);
+  const onChange = (e) => setValue((value) => value + e.target.value);
 
   useOtherHook();
 
