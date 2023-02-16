@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './client.browser';
+export * from 'react-dom-bindings/src/client/ReactDOMHostConfig';
