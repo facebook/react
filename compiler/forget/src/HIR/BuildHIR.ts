@@ -11,7 +11,7 @@ import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
-import { Environment } from "./Environment";
+import { Environment, EnvironmentOptions } from "./Environment";
 import {
   BlockId,
   BranchTerminal,
@@ -51,9 +51,10 @@ import HIRBuilder from "./HIRBuilder";
  */
 export function lower(
   func: NodePath<t.Function>,
+  options: EnvironmentOptions | null,
   capturedRefs: t.Identifier[] = []
 ): Result<HIRFunction, CompilerError> {
-  const env = new Environment();
+  const env = new Environment(options);
   const builder = new HIRBuilder(env, capturedRefs);
   const context: Place[] = [];
 
@@ -1334,7 +1335,7 @@ function lowerExpression(
       //
       // This isn't a problem in practice because use Babel's scope analysis to
       // identify the correct references.
-      const lowering = lower(expr, [
+      const lowering = lower(expr, builder.environment.options, [
         ...builder.context,
         ...captured.identifiers,
       ]);

@@ -12,6 +12,7 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
 } from "./HIR";
+import { EnvironmentOptions } from "./HIR/Environment";
 import {
   analyseFunctions,
   dropMemoCalls,
@@ -47,9 +48,10 @@ export type CompilerPipelineValue =
   | { kind: "reactive"; name: string; value: ReactiveFunction };
 
 export function* run(
-  func: NodePath<t.FunctionDeclaration>
+  func: NodePath<t.FunctionDeclaration>,
+  options?: EnvironmentOptions | null
 ): Generator<CompilerPipelineValue, t.Function> {
-  const hir = lower(func).unwrap();
+  const hir = lower(func, options ?? null).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   mergeConsecutiveBlocks(hir);
@@ -186,8 +188,11 @@ export function* run(
   return ast;
 }
 
-export function compile(func: NodePath<t.FunctionDeclaration>): t.Function {
-  let generator = run(func);
+export function compile(
+  func: NodePath<t.FunctionDeclaration>,
+  options?: EnvironmentOptions | null
+): t.Function {
+  let generator = run(func, options);
   while (true) {
     const next = generator.next();
     if (next.done) {

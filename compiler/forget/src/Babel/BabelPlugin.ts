@@ -7,12 +7,12 @@
 
 /// <reference path="./plugin-syntax-jsx.d.ts" />
 
-import * as t from "@babel/types";
 import type * as BabelCore from "@babel/core";
 import generate from "@babel/generator";
 import jsx from "@babel/plugin-syntax-jsx";
-import { CompilerFlags, parseCompilerFlags } from "../CompilerFlags";
+import * as t from "@babel/types";
 import prettier from "prettier";
+import { CompilerFlags, parseCompilerFlags } from "../CompilerFlags";
 import { compile } from "../CompilerPipeline";
 
 type BabelPluginPass = {
@@ -47,7 +47,7 @@ export default function ReactForgetBabelPlugin(
       if (fn.scope.getProgramParent() !== fn.scope.parent) {
         return;
       }
-      const ast = compile(fn);
+      const ast = compile(fn, null);
 
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
       // traversal will loop infinitely.

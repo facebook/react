@@ -93,6 +93,10 @@ export default class HIRBuilder {
     return this.#context;
   }
 
+  get environment(): Environment {
+    return this.#env;
+  }
+
   constructor(env: Environment, context: t.Identifier[]) {
     this.#env = env;
     this.#context = context;

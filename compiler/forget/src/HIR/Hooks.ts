@@ -7,7 +7,7 @@
 
 import { Effect, Place, ValueKind } from "./HIR";
 
-export const HOOKS: Map<string, Hook> = new Map([
+export const BUILTIN_HOOKS: Map<string, Hook> = new Map([
   [
     "useState",
     {
@@ -68,7 +68,7 @@ export function parseHookCall(place: Place): Hook | null {
   if (name === null || !name.match(/^_?use/)) {
     return null;
   }
-  const hook = HOOKS.get(name);
+  const hook = BUILTIN_HOOKS.get(name);
   if (hook != null) {
     return hook;
   }
