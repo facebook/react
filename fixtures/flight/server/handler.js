@@ -1,47 +1,62 @@
 'use strict';
 
 const {renderToPipeableStream} = require('react-server-dom-webpack/server');
-const {readFile} = require('fs').promises;
-const {resolve} = require('path');
 const React = require('react');
+const fs = require('fs');
+const { promisify }= require('util');
+const path = require('path');
 
+// Convert the `fs.readFile` function to an asynchronous function using `promisify`
+const readFileAsync = promisify(fs.readFile);
+
+// Validates the action received in the POST
+const validateAction = (action) => {
+  if(action.$$typeof !== Symbol.for('reac.server.reference')){
+    throw new Error('Invalid action');
+  }
+}
+
+// Export an asynchronous function that handles requests
 module.exports = async function (req, res) {
   switch (req.method) {
     case 'POST': {
-      const serverReference = JSON.parse(req.get('rsc-action'));
-      const {filepath, name} = serverReference;
-      const action = (await import(filepath))[name];
-      // Validate that this is actually a function we intended to expose and
-      // not the client trying to invoke arbitrary functions. In a real app,
-      // you'd have a manifest verifying this before even importing it.
-      if (action.$$typeof !== Symbol.for('react.server.reference')) {
-        throw new Error('Invalid action');
-      }
+      // Extract the file path from the request
+      const { filepath } = JSON.parse(req.get('rsc-action'));
+      const { default: action } = await import(filepath);
+      validateAction(action);
 
+      // Extract the arguments from the request and execute the action
       const args = JSON.parse(req.body);
-      const result = action.apply(null, args);
+      const result = action(...args);
 
+      // Set the response header
       res.setHeader('Access-Control-Allow-Origin', '*');
-      const {pipe} = renderToPipeableStream(result, {});
+      // Render the result of the action as a stream of data and send the response
+      const { pipe } = renderToPipeableStream(result, {});
       pipe(res);
 
-      return;
+      break;
     }
+    // If the request method is different from POST, do the following:
     default: {
       // const m = require('../src/App.js');
-      const m = await import('../src/App.js');
+      const { default: App} = await import('../src/App.js');
+      /// Determine destination directory based on runtime
       const dist = process.env.NODE_ENV === 'development' ? 'dist' : 'build';
-      const data = await readFile(
-        resolve(__dirname, `../${dist}/react-client-manifest.json`),
-        'utf8'
-      );
-      const App = m.default.default || m.default;
+      // Read the `react-client-manifest.json` file from the destination directory
+      const manifestPath = path.join(__dirname, '..', dist, 'react-client-manifest.json');
+
+      if(!fs.existsSync(manifestPath)) {
+        throw new Error (`Manifest file not found: ${manifestPath}`);
+      }
+
+      const data = await readFileAsync(manifestPath, 'utf-8');
+
+      // Set the response header
       res.setHeader('Access-Control-Allow-Origin', '*');
+      // Convert the `App` component to a data stream and send the response
       const moduleMap = JSON.parse(data);
-      const {pipe} = renderToPipeableStream(
-        React.createElement(App),
-        moduleMap
-      );
+      const { pipe } = renderToPipeableStream(React.createElement(App),moduleMap);
       pipe(res);
       return;
     }
