@@ -7,6 +7,7 @@
 
 import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
+import { Environment } from "../HIR";
 import {
   BasicBlock,
   BlockId,
@@ -19,7 +20,6 @@ import {
   Place,
   ValueKind,
 } from "../HIR/HIR";
-import { parseHookCall } from "../HIR/Hooks";
 import {
   printMixedHIR,
   printPlace,
@@ -151,7 +151,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
-      inferBlock(state, block);
+      inferBlock(fn.env, state, block);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
         queue(nextBlockId, state);
@@ -551,7 +551,12 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
  * Iterates over the given @param block, defining variables and
  * recording references on the @param state according to JS semantics.
  */
-function inferBlock(state: InferenceState, block: BasicBlock) {
+function inferBlock(
+  env: Environment,
+
+  state: InferenceState,
+  block: BasicBlock
+) {
   for (const phi of block.phis) {
     state.inferPhi(phi);
   }
@@ -583,7 +588,10 @@ function inferBlock(state: InferenceState, block: BasicBlock) {
       case "CallExpression": {
         valueKind = ValueKind.Mutable;
         effectKind = Effect.Mutate;
-        const hook = parseHookCall(instrValue.callee);
+        const hook =
+          instrValue.callee.identifier.name !== null
+            ? env.getHookDeclaration(instrValue.callee.identifier.name)
+            : null;
         if (hook !== null) {
           effectKind = hook.effectKind;
           valueKind = hook.valueKind;

@@ -48,6 +48,7 @@ export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
     generator: fn.generator,
     async: fn.async,
     body,
+    env: fn.env,
   };
 }
 

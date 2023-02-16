@@ -1,5 +1,6 @@
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { Environment } from "../HIR";
 import {
   HIRFunction,
   Instruction,
@@ -8,7 +9,6 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
-import { parseHookCall } from "../HIR/Hooks";
 import { eachInstructionOperand } from "../HIR/visitors";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
@@ -83,12 +83,13 @@ function* generate(
     }
 
     for (const instr of block.instructions) {
-      yield* generateInstructionTypes(instr);
+      yield* generateInstructionTypes(func.env, instr);
     }
   }
 }
 
 function* generateInstructionTypes(
+  env: Environment,
   instr: Instruction
 ): Generator<TypeEquation, void, undefined> {
   const { lvalue, value } = instr;
@@ -121,7 +122,10 @@ function* generateInstructionTypes(
     }
 
     case "CallExpression": {
-      const hook = parseHookCall(value.callee);
+      const hook =
+        value.callee.identifier.name !== null
+          ? env.getHookDeclaration(value.callee.identifier.name)
+          : null;
       let type: Type;
       if (hook !== null) {
         type = { kind: "Hook", name: hook.name };

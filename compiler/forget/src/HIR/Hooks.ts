@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, Place, ValueKind } from "./HIR";
+import { Effect, ValueKind } from "./HIR";
 
 export const BUILTIN_HOOKS: Map<string, Hook> = new Map([
   [
@@ -62,20 +62,3 @@ export type Hook = {
   effectKind: Effect;
   valueKind: ValueKind;
 };
-
-export function parseHookCall(place: Place): Hook | null {
-  const name = place.identifier.name;
-  if (name === null || !name.match(/^_?use/)) {
-    return null;
-  }
-  const hook = BUILTIN_HOOKS.get(name);
-  if (hook != null) {
-    return hook;
-  }
-  return {
-    kind: "Custom",
-    name: place.identifier.name ?? "",
-    effectKind: Effect.Mutate,
-    valueKind: ValueKind.Mutable,
-  };
-}

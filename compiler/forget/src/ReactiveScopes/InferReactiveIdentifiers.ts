@@ -6,13 +6,13 @@
  */
 
 import { CompilerError } from "../CompilerError";
+import { Environment } from "../HIR";
 import {
   Effect,
   IdentifierId,
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
-import { parseHookCall } from "../HIR/Hooks";
 import { assertExhaustive } from "../Utils/utils";
 import {
   eachReactiveValueOperand,
@@ -21,7 +21,14 @@ import {
 } from "./visitors";
 
 type IdentifierReactivity = Map<IdentifierId, boolean>;
-class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
+class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
+  env: Environment;
+
+  constructor(env: Environment) {
+    super();
+    this.env = env;
+  }
+
   override visitInstruction(
     instr: ReactiveInstruction,
     reactivityMap: IdentifierReactivity
@@ -42,13 +49,19 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
         break;
       }
     }
-    if (!hasReactiveInput && instr.value.kind === "CallExpression") {
+    if (
+      !hasReactiveInput &&
+      instr.value.kind === "CallExpression" &&
+      instr.value.callee.identifier.name !== null
+    ) {
       // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
       // they are not guaranteed to memoize their return value, and their result
       // must be assumed to be reactive.
       // TODO: use types or an opt-in registry of custom hook information to
       // allow treating safe hooks as non-reactive.
-      const hook = parseHookCall(instr.value.callee);
+      const hook = this.env.getHookDeclaration(
+        instr.value.callee.identifier.name
+      );
       if (hook !== null) {
         hasReactiveInput = true;
       }
@@ -130,7 +143,7 @@ class Environment extends ReactiveFunctionVisitor<IdentifierReactivity> {
 export function inferReactiveIdentifiers(
   fn: ReactiveFunction
 ): Set<IdentifierId> {
-  const visitor = new Environment();
+  const visitor = new Visitor(fn.env);
   const reactivityMap: IdentifierReactivity = new Map();
   for (const param of fn.params) {
     reactivityMap.set(param.identifier.id, true);

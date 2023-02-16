@@ -1,4 +1,4 @@
-import { IdentifierId, makeIdentifierId } from "./HIR";
+import { Effect, IdentifierId, makeIdentifierId, ValueKind } from "./HIR";
 import { BUILTIN_HOOKS, Hook } from "./Hooks";
 
 const HOOK_PATTERN = /^_?use/;
@@ -35,6 +35,11 @@ export class Environment {
     if (hook !== undefined) {
       return hook;
     }
-    return null;
+    return {
+      kind: "Custom",
+      name,
+      effectKind: Effect.Mutate,
+      valueKind: ValueKind.Mutable,
+    };
   }
 }

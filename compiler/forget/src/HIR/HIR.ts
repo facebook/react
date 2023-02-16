@@ -49,6 +49,7 @@ export type ReactiveFunction = {
   generator: boolean;
   async: boolean;
   body: ReactiveBlock;
+  env: Environment;
 };
 
 export type ReactiveScopeBlock = {
