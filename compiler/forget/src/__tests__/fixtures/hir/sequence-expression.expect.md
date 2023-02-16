@@ -18,7 +18,7 @@ function foo() {}
 
 ```javascript
 function sequence(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(2);
   Math.max(1, 2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

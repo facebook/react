@@ -18,7 +18,7 @@ function MyApp(props) {
 ```javascript
 // This caused an infinite loop in the compiler
 function MyApp(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(1);
   let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     y = makeObj();

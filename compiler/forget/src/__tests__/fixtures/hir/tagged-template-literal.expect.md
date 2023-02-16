@@ -25,7 +25,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(1);
   let t;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t = graphql`

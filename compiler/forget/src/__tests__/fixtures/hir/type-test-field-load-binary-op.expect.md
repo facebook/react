@@ -20,7 +20,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeSomePrimitive();

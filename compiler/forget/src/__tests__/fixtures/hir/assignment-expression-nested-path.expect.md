@@ -15,7 +15,7 @@ function g(props) {
 
 ```javascript
 function g(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== props.c;
   let a;
   if (c_0) {

@@ -65,7 +65,7 @@ function ComponentD(props) {
  * props.b does *not* influence `a`
  */
 function ComponentA(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.d;
@@ -92,7 +92,7 @@ function ComponentA(props) {
  * props.b *does* influence `a`
  */
 function ComponentB(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(5);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;
@@ -121,7 +121,7 @@ function ComponentB(props) {
  * props.b *does* influence `a`, but only in a way that is never observable
  */
 function ComponentC(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(5);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;
@@ -151,7 +151,7 @@ function ComponentC(props) {
  * props.b *does* influence `a`
  */
 function ComponentD(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(5);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;

@@ -27,7 +27,7 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(5);
 
   const d = a[0];
   const g = a[1][0].e.f;

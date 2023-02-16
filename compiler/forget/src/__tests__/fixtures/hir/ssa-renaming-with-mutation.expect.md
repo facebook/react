@@ -20,7 +20,7 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.bar;
   const c_1 = $[1] !== props.cond;
   const c_2 = $[2] !== props.foo;

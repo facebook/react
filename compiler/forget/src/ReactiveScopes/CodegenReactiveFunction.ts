@@ -41,7 +41,8 @@ export function codegenReactiveFunction(
       statements.pop();
     }
   }
-  if (cx.nextCacheIndex !== 0) {
+  const cacheCount = cx.nextCacheIndex;
+  if (cacheCount !== 0) {
     statements.unshift(
       t.variableDeclaration("const", [
         t.variableDeclarator(
@@ -51,7 +52,7 @@ export function codegenReactiveFunction(
               t.identifier("React"),
               t.identifier("unstable_useMemoCache")
             ),
-            []
+            [t.numericLiteral(cacheCount)]
           )
         ),
       ])

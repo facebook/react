@@ -35,7 +35,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(10);
   const items = props.items;
   const maxItems = props.maxItems;
   const c_0 = $[0] !== maxItems;

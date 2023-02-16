@@ -18,7 +18,7 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== props.max;
   let y;
   if (c_0) {

@@ -20,7 +20,7 @@ function component({ mutator }) {
 
 ```javascript
 function component(t10) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(7);
   const t0 = t10;
   const mutator = t0.mutator;
   const c_0 = $[0] !== mutator;

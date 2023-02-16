@@ -20,7 +20,7 @@ function component(foo, bar) {
 
 ```javascript
 function component(foo, bar) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== foo;
   const c_1 = $[1] !== bar;
   let x;

@@ -15,7 +15,7 @@ export default function foo(x, y) {
 
 ```javascript
 export default function foo(x, y) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(4);
   if (x) {
     const c_0 = $[0] !== y;
     let t0;

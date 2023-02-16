@@ -18,7 +18,7 @@ function foo(a, b) {
 
 ```javascript
 function foo(a, b) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(1);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = [];

@@ -19,7 +19,7 @@ function call(x) {}
 
 ```javascript
 function Component() {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(1);
   let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a = [];

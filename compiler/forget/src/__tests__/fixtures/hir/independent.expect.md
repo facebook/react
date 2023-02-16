@@ -38,7 +38,7 @@ function Foo() {}
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== props.a;
   let a;
   if (c_0) {

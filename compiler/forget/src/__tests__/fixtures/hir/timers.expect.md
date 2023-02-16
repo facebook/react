@@ -19,7 +19,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(4);
   let start;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     start = performance.now();

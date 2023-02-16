@@ -22,7 +22,7 @@ function foo() {
 
 ```javascript
 function foo() {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(1);
   const x = 1;
 
   const y = 3;

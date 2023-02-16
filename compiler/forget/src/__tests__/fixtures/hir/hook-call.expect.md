@@ -26,7 +26,7 @@ function useFreeze() {}
 function foo() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(3);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = [];

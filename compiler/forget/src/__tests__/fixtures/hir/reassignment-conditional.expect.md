@@ -23,7 +23,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(6);
   const c_0 = $[0] !== props.p0;
   let x;
   if (c_0) {

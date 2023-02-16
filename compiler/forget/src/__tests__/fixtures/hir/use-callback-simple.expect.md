@@ -15,7 +15,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(5);
   const t2 = useState(0);
   const count = t2[0];
   const setCount = t2[1];

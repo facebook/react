@@ -19,7 +19,7 @@ function Foo(props) {
 
 ```javascript
 function Foo(props) {
-  const $ = React.unstable_useMemoCache();
+  const $ = React.unstable_useMemoCache(4);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = <>Text</>;
