@@ -202,16 +202,52 @@ const ReactElement = function (type, key, ref, self, source, owner, props) {
 };
 
 /**
+ * @param {object} config
+ * @param {object|undefined} defaultProps
+ * * @param {boolean|undefined} isForceConfig
+ */
+function getElementProps(config, defaultProps, isForcedDefaultProps) {
+  let propName;
+  const props = {};
+  for (propName in config) {
+    if (
+      hasOwnProperty.call(config, propName) &&
+      !RESERVED_PROPS.hasOwnProperty(propName)
+    ) {
+      if (config[propName] === undefined && defaultProps !== undefined) {
+        props[propName] = defaultProps[propName];
+      } else {
+        props[propName] = config[propName];
+      }
+    }
+  }
+
+  // It isn't defined in config, but in the presence of default props
+  if (defaultProps && isForcedDefaultProps) {
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  return props;
+}
+
+/**
  * https://github.com/reactjs/rfcs/pull/107
  * @param {*} type
  * @param {object} props
  * @param {string} key
  */
 export function jsx(type, config, maybeKey) {
-  let propName;
+  let defaultProps;
+  if (type && type.defaultProps) {
+    defaultProps = type.defaultProps;
+  }
 
   // Reserved names are extracted
-  const props = {};
+  const props = getElementProps(config, defaultProps, true);
 
   let key = null;
   let ref = null;
@@ -238,26 +274,6 @@ export function jsx(type, config, maybeKey) {
 
   if (hasValidRef(config)) {
     ref = config.ref;
-  }
-
-  // Remaining properties are added to a new props object
-  for (propName in config) {
-    if (
-      hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName)
-    ) {
-      props[propName] = config[propName];
-    }
-  }
-
-  // Resolve default props
-  if (type && type.defaultProps) {
-    const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
   }
 
   return ReactElement(
@@ -360,10 +376,13 @@ export function jsxDEV(type, config, maybeKey, source, self) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
-  let propName;
+  let defaultProps;
+  if (type && type.defaultProps) {
+    defaultProps = type.defaultProps;
+  }
 
   // Reserved names are extracted
-  const props = {};
+  const props = getElementProps(config, defaultProps, true);
 
   let key = null;
   let ref = null;
@@ -387,15 +406,6 @@ export function createElement(type, config, children) {
 
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
-    // Remaining properties are added to a new props object
-    for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
-        props[propName] = config[propName];
-      }
-    }
   }
 
   // Children can be more than one argument, and those are transferred onto
@@ -416,15 +426,6 @@ export function createElement(type, config, children) {
     props.children = childArray;
   }
 
-  // Resolve default props
-  if (type && type.defaultProps) {
-    const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
-  }
   if (__DEV__) {
     if (key || ref) {
       const displayName =
@@ -489,11 +490,18 @@ export function cloneElement(element, config, children) {
       `React.cloneElement(...): The argument must be a React element, but you passed ${element}.`,
     );
   }
-
-  let propName;
+  // Remaining properties override existing props
+  let defaultProps;
+  if (element.type && element.type.defaultProps) {
+    defaultProps = element.type.defaultProps;
+  }
 
   // Original props are copied
-  const props = assign({}, element.props);
+  const props = assign(
+    {},
+    element.props,
+    getElementProps(config || {}, defaultProps),
+  );
 
   // Reserved names are extracted
   let key = element.key;
@@ -519,25 +527,6 @@ export function cloneElement(element, config, children) {
         checkKeyStringCoercion(config.key);
       }
       key = '' + config.key;
-    }
-
-    // Remaining properties override existing props
-    let defaultProps;
-    if (element.type && element.type.defaultProps) {
-      defaultProps = element.type.defaultProps;
-    }
-    for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
-        if (config[propName] === undefined && defaultProps !== undefined) {
-          // Resolve default props
-          props[propName] = defaultProps[propName];
-        } else {
-          props[propName] = config[propName];
-        }
-      }
     }
   }
 
