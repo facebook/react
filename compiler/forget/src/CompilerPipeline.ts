@@ -25,17 +25,17 @@ import {
   buildReactiveFunction,
   codegenReactiveFunction,
   flattenReactiveLoops,
+  flattenScopesWithHooks,
   inferReactiveScopeVariables,
   mergeOverlappingReactiveScopes,
   promoteUsedTemporaries,
   propagateScopeDependencies,
+  pruneNonReactiveDependencies,
   pruneUnusedLabels,
   pruneUnusedLValues,
   pruneUnusedScopes,
   renameVariables,
 } from "./ReactiveScopes";
-import { flattenScopesWithHooks } from "./ReactiveScopes/FlattenScopesWithHooks";
-import { pruneNonReactiveDependencies } from "./ReactiveScopes/PruneNonReactiveDependencies";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
 import { inferTypes } from "./TypeInference";
 import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
@@ -155,7 +155,7 @@ export function* run(
   promoteUsedTemporaries(reactiveFunction);
   yield log({
     kind: "reactive",
-    name: "promoteUsedTemporaries",
+    name: "PromoteUsedTemporaries",
     value: reactiveFunction,
   });
 
