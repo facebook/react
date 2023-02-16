@@ -3825,6 +3825,7 @@ var isUnitlessNumber = {
   opacity: true,
   order: true,
   orphans: true,
+  scale: true,
   tabSize: true,
   widows: true,
   zIndex: true,
@@ -31317,7 +31318,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-fccf3a9fb-20230213";
+var ReactVersion = "18.3.0-www-classic-21b49103d-20230216";
 
 function createPortal(
   children,

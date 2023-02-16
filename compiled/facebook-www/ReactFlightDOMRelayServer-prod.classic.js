@@ -221,6 +221,7 @@ var isUnitlessNumber = {
     opacity: !0,
     order: !0,
     orphans: !0,
+    scale: !0,
     tabSize: !0,
     widows: !0,
     zIndex: !0,

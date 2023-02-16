@@ -808,6 +808,7 @@ var isUnitlessNumber = {
   opacity: true,
   order: true,
   orphans: true,
+  scale: true,
   tabSize: true,
   widows: true,
   zIndex: true,

@@ -246,6 +246,7 @@ var isUnitlessNumber = {
     opacity: !0,
     order: !0,
     orphans: !0,
+    scale: !0,
     tabSize: !0,
     widows: !0,
     zIndex: !0,
@@ -3561,4 +3562,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-fccf3a9fb-20230213";
+exports.version = "18.3.0-www-modern-21b49103d-20230216";

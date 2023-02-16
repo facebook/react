@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-fccf3a9fb-20230213";
+var ReactVersion = "18.3.0-www-classic-21b49103d-20230216";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -807,6 +807,7 @@ var isUnitlessNumber = {
   opacity: true,
   order: true,
   orphans: true,
+  scale: true,
   tabSize: true,
   widows: true,
   zIndex: true,

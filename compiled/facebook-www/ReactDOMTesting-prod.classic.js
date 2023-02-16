@@ -1143,6 +1143,7 @@ var isUnitlessNumber = {
     opacity: !0,
     order: !0,
     orphans: !0,
+    scale: !0,
     tabSize: !0,
     widows: !0,
     zIndex: !0,
@@ -11555,7 +11556,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1538 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-fccf3a9fb-20230213",
+  version: "18.3.0-www-classic-21b49103d-20230216",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2057 = {
@@ -11585,7 +11586,7 @@ var internals$jscomp$inline_2057 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-fccf3a9fb-20230213"
+  reconcilerVersion: "18.3.0-next-21b49103d-20230216"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2058 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14763,4 +14764,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-fccf3a9fb-20230213";
+exports.version = "18.3.0-next-21b49103d-20230216";
