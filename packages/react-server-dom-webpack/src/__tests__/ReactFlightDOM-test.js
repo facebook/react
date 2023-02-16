@@ -45,7 +45,7 @@ describe('ReactFlightDOM', () => {
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.node');
+    ReactServerDOMWriter = require('react-server-dom-webpack/server.node.unbundled');
     ReactServerDOMReader = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {

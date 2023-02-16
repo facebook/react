@@ -16,8 +16,8 @@ module.exports = [
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/server.node',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server.node.unbundled',
+      'react-server-dom-webpack/client.node.unbundled',
     ],
     paths: [
       'react-dom',
@@ -30,9 +30,9 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
-      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/server.node.unbundled',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
@@ -54,11 +54,6 @@ module.exports = [
       'react-dom/server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom-bindings',
-      'react-dom/server.node',
-      'react-server-dom-webpack',
-      'react-server-dom-webpack/client',
-      'react-server-dom-webpack/server',
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
@@ -74,7 +69,7 @@ module.exports = [
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
       'react-server-dom-webpack/server.browser',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.browser',
     ],
     paths: [
       'react-dom',
@@ -87,6 +82,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.browser',
       'react-server-dom-webpack/server.browser',
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
@@ -109,7 +105,7 @@ module.exports = [
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
       'react-server-dom-webpack/server.edge',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.edge',
     ],
     paths: [
       'react-dom',
@@ -121,7 +117,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
       'react-dom/src/server/ReactDOMFizzStaticEdge.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.edge',
       'react-server-dom-webpack/server.edge',
       'react-server-dom-webpack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
