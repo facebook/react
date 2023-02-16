@@ -76,15 +76,15 @@ import { assertExhaustive } from "../Utils/utils";
  * types forming a lattice to ensure convergence.
  */
 export default function inferReferenceEffects(fn: HIRFunction) {
-  // Initial environment contains function params
+  // Initial state contains function params
   // TODO: include module declarations here as well
-  const initialEnvironment = Environment.empty();
+  const initialState = InferenceState.empty();
   const value: InstructionValue = {
     kind: "Primitive",
     loc: fn.loc,
     value: undefined,
   };
-  initialEnvironment.initialize(value, ValueKind.Frozen);
+  initialState.initialize(value, ValueKind.Frozen);
   if (fn.id !== null) {
     const id: Place = {
       kind: "Identifier",
@@ -92,7 +92,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
       loc: fn.loc,
       effect: Effect.Freeze,
     };
-    initialEnvironment.define(id, value);
+    initialState.define(id, value);
   }
 
   for (const ref of fn.context) {
@@ -102,8 +102,8 @@ export default function inferReferenceEffects(fn: HIRFunction) {
       properties: null,
       loc: ref.loc,
     };
-    initialEnvironment.initialize(value, ValueKind.Context);
-    initialEnvironment.define(ref, value);
+    initialState.initialize(value, ValueKind.Context);
+    initialState.define(ref, value);
   }
 
   for (const param of fn.params) {
@@ -112,52 +112,49 @@ export default function inferReferenceEffects(fn: HIRFunction) {
       loc: param.loc,
       value: undefined,
     };
-    initialEnvironment.initialize(value, ValueKind.Frozen);
-    initialEnvironment.define(param, value);
+    initialState.initialize(value, ValueKind.Frozen);
+    initialState.define(param, value);
   }
 
-  // Map of blocks to the last (merged) incoming environment that was processed
-  const environmentsByBlock: Map<BlockId, Environment> = new Map();
+  // Map of blocks to the last (merged) incoming state that was processed
+  const statesByBlock: Map<BlockId, InferenceState> = new Map();
 
   // Multiple predecessors may be visited prior to reaching a given successor,
-  // so track the list of incoming environments for each successor block.
+  // so track the list of incoming state for each successor block.
   // These are merged when reaching that block again.
-  const queuedEnvironments: Map<BlockId, Environment> = new Map();
-  function queue(blockId: BlockId, environment: Environment) {
-    let queuedEnvironment = queuedEnvironments.get(blockId);
-    if (queuedEnvironment != null) {
-      // merge the queued environments for this block
-      environment = queuedEnvironment.merge(environment) ?? environment;
-      queuedEnvironments.set(blockId, environment);
+  const queuedStates: Map<BlockId, InferenceState> = new Map();
+  function queue(blockId: BlockId, state: InferenceState) {
+    let queuedState = queuedStates.get(blockId);
+    if (queuedState != null) {
+      // merge the queued states for this block
+      state = queuedState.merge(state) ?? state;
+      queuedStates.set(blockId, state);
     } else {
-      // this is the first queued environment for this block, see whether
+      // this is the first queued state for this block, see whether
       // there are changed relative to the last time it was processed.
-      const prevEnvironment = environmentsByBlock.get(blockId);
-      const nextEnvironment =
-        prevEnvironment != null
-          ? prevEnvironment.merge(environment)
-          : environment;
-      if (nextEnvironment != null) {
-        queuedEnvironments.set(blockId, nextEnvironment);
+      const prevState = statesByBlock.get(blockId);
+      const nextState = prevState != null ? prevState.merge(state) : state;
+      if (nextState != null) {
+        queuedStates.set(blockId, nextState);
       }
     }
   }
-  queue(fn.body.entry, initialEnvironment);
+  queue(fn.body.entry, initialState);
 
-  while (queuedEnvironments.size !== 0) {
+  while (queuedStates.size !== 0) {
     for (const [blockId, block] of fn.body.blocks) {
-      const incomingEnvironment = queuedEnvironments.get(blockId);
-      queuedEnvironments.delete(blockId);
-      if (incomingEnvironment == null) {
+      const incomingState = queuedStates.get(blockId);
+      queuedStates.delete(blockId);
+      if (incomingState == null) {
         continue;
       }
 
-      environmentsByBlock.set(blockId, incomingEnvironment);
-      const environment = incomingEnvironment.clone();
-      inferBlock(environment, block);
+      statesByBlock.set(blockId, incomingState);
+      const state = incomingState.clone();
+      inferBlock(state, block);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
-        queue(nextBlockId, environment);
+        queue(nextBlockId, state);
       }
     }
   }
@@ -166,7 +163,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
 /**
  * Maintains a mapping of top-level variables to the kind of value they hold
  */
-class Environment {
+class InferenceState {
   // The kind of reach value, based on its allocation site
   #values: Map<InstructionValue, ValueKind>;
   // The set of values pointed to by each identifier. This is a set
@@ -182,8 +179,8 @@ class Environment {
     this.#variables = variables;
   }
 
-  static empty(): Environment {
-    return new Environment(new Map(), new Map());
+  static empty(): InferenceState {
+    return new InferenceState(new Map(), new Map());
   }
 
   /**
@@ -352,7 +349,7 @@ class Environment {
    * Note that values are joined using a lattice operation to ensure
    * termination.
    */
-  merge(other: Environment): Environment | null {
+  merge(other: InferenceState): InferenceState | null {
     let nextValues: Map<InstructionValue, ValueKind> | null = null;
     let nextVariables: Map<IdentifierId, Set<InstructionValue>> | null = null;
 
@@ -402,7 +399,7 @@ class Environment {
     if (nextVariables === null && nextValues === null) {
       return null;
     } else {
-      return new Environment(
+      return new InferenceState(
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables)
       );
@@ -410,16 +407,16 @@ class Environment {
   }
 
   /**
-   * Returns a copy of this environment.
+   * Returns a copy of this state.
    * TODO: consider using persistent data structures to make
    * clone cheaper.
    */
-  clone(): Environment {
-    return new Environment(new Map(this.#values), new Map(this.#variables));
+  clone(): InferenceState {
+    return new InferenceState(new Map(this.#values), new Map(this.#variables));
   }
 
   /**
-   * For debugging purposes, dumps the environment to a plain
+   * For debugging purposes, dumps the state to a plain
    * object so that it can printed as JSON.
    */
   debug(): any {
@@ -447,7 +444,7 @@ class Environment {
     const values: Set<InstructionValue> = new Set();
     for (const [_, operand] of phi.operands) {
       const operandValues = this.#variables.get(operand.id);
-      // This is a backedge that will be handled later by Environment.merge
+      // This is a backedge that will be handled later by State.merge
       if (operandValues === undefined) continue;
       for (const v of operandValues) {
         values.add(v);
@@ -552,11 +549,11 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
 
 /**
  * Iterates over the given @param block, defining variables and
- * recording references on the @param env according to JS semantics.
+ * recording references on the @param state according to JS semantics.
  */
-function inferBlock(env: Environment, block: BasicBlock) {
+function inferBlock(state: InferenceState, block: BasicBlock) {
   for (const phi of block.phis) {
-    env.inferPhi(phi);
+    state.inferPhi(phi);
   }
 
   for (const instr of block.instructions) {
@@ -571,7 +568,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "ArrayExpression": {
-        valueKind = hasContextRefOperand(env, instrValue)
+        valueKind = hasContextRefOperand(state, instrValue)
           ? ValueKind.Context
           : ValueKind.Mutable;
         effectKind = Effect.Capture;
@@ -594,7 +591,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "ObjectExpression": {
-        valueKind = hasContextRefOperand(env, instrValue)
+        valueKind = hasContextRefOperand(state, instrValue)
           ? ValueKind.Context
           : ValueKind.Mutable;
 
@@ -642,123 +639,123 @@ function inferBlock(env: Environment, block: BasicBlock) {
       }
       case "FunctionExpression": {
         for (const operand of eachInstructionOperand(instr)) {
-          env.reference(
+          state.reference(
             operand,
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect
           );
         }
-        env.initialize(instrValue, ValueKind.Mutable);
-        env.define(instr.lvalue.place, instrValue);
+        state.initialize(instrValue, ValueKind.Mutable);
+        state.define(instr.lvalue.place, instrValue);
         instr.lvalue.place.effect = Effect.Store;
         continue;
       }
       case "PropertyCall": {
-        if (!env.isDefined(instrValue.receiver)) {
+        if (!state.isDefined(instrValue.receiver)) {
           // TODO @josephsavona: improve handling of globals
           const value: InstructionValue = {
             kind: "Primitive",
             loc: instrValue.loc,
             value: undefined,
           };
-          env.initialize(value, ValueKind.Frozen);
-          env.define(instrValue.receiver, value);
+          state.initialize(value, ValueKind.Frozen);
+          state.define(instrValue.receiver, value);
         }
 
-        env.reference(instrValue.receiver, Effect.Mutate);
+        state.reference(instrValue.receiver, Effect.Mutate);
         for (const arg of instrValue.args) {
-          env.reference(arg, Effect.Mutate);
+          state.reference(arg, Effect.Mutate);
         }
-        env.initialize(instrValue, ValueKind.Mutable);
-        env.define(instr.lvalue.place, instrValue);
+        state.initialize(instrValue, ValueKind.Mutable);
+        state.define(instr.lvalue.place, instrValue);
         instr.lvalue.place.effect = Effect.Mutate;
         continue;
       }
       case "ComputedCall": {
-        if (!env.isDefined(instrValue.receiver)) {
+        if (!state.isDefined(instrValue.receiver)) {
           // TODO @josephsavona: improve handling of globals
           const value: InstructionValue = {
             kind: "Primitive",
             loc: instrValue.loc,
             value: undefined,
           };
-          env.initialize(value, ValueKind.Frozen);
-          env.define(instrValue.receiver, value);
+          state.initialize(value, ValueKind.Frozen);
+          state.define(instrValue.receiver, value);
         }
 
-        env.reference(instrValue.receiver, Effect.Mutate);
-        env.reference(instrValue.property, Effect.Read);
+        state.reference(instrValue.receiver, Effect.Mutate);
+        state.reference(instrValue.property, Effect.Read);
         for (const arg of instrValue.args) {
-          env.reference(arg, Effect.Mutate);
+          state.reference(arg, Effect.Mutate);
         }
-        env.initialize(instrValue, ValueKind.Mutable);
-        env.define(instr.lvalue.place, instrValue);
+        state.initialize(instrValue, ValueKind.Mutable);
+        state.define(instr.lvalue.place, instrValue);
         instr.lvalue.place.effect = Effect.Mutate;
         continue;
       }
       case "PropertyStore": {
         const effect =
-          env.kind(instrValue.object) === ValueKind.Context
+          state.kind(instrValue.object) === ValueKind.Context
             ? Effect.Mutate
             : Effect.Capture;
-        env.reference(instrValue.value, effect);
-        env.reference(instrValue.object, Effect.Store);
+        state.reference(instrValue.value, effect);
+        state.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
-        env.alias(lvalue.place, instrValue.value);
+        state.alias(lvalue.place, instrValue.value);
         lvalue.place.effect = Effect.Store;
         continue;
       }
       case "PropertyLoad": {
-        if (!env.isDefined(instrValue.object)) {
+        if (!state.isDefined(instrValue.object)) {
           // TODO @josephsavona: improve handling of globals
           const value: InstructionValue = {
             kind: "Primitive",
             loc: instrValue.loc,
             value: undefined,
           };
-          env.initialize(value, ValueKind.Frozen);
-          env.define(instrValue.object, value);
+          state.initialize(value, ValueKind.Frozen);
+          state.define(instrValue.object, value);
         }
 
-        env.reference(instrValue.object, Effect.Read);
+        state.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
-        env.initialize(instrValue, env.kind(instrValue.object));
-        env.define(lvalue.place, instrValue);
+        state.initialize(instrValue, state.kind(instrValue.object));
+        state.define(lvalue.place, instrValue);
         continue;
       }
       case "ComputedStore": {
         const effect =
-          env.kind(instrValue.object) === ValueKind.Context
+          state.kind(instrValue.object) === ValueKind.Context
             ? Effect.Mutate
             : Effect.Capture;
-        env.reference(instrValue.value, effect);
-        env.reference(instrValue.property, Effect.Capture);
-        env.reference(instrValue.object, Effect.Store);
+        state.reference(instrValue.value, effect);
+        state.reference(instrValue.property, Effect.Capture);
+        state.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
-        env.alias(lvalue.place, instrValue.value);
+        state.alias(lvalue.place, instrValue.value);
         lvalue.place.effect = Effect.Store;
         continue;
       }
       case "ComputedLoad": {
-        if (!env.isDefined(instrValue.object)) {
+        if (!state.isDefined(instrValue.object)) {
           // TODO @josephsavona: improve handling of globals
           const value: InstructionValue = {
             kind: "Primitive",
             loc: instrValue.loc,
             value: undefined,
           };
-          env.initialize(value, ValueKind.Frozen);
-          env.define(instrValue.object, value);
+          state.initialize(value, ValueKind.Frozen);
+          state.define(instrValue.object, value);
         }
 
-        env.reference(instrValue.object, Effect.Read);
-        env.reference(instrValue.property, Effect.Read);
+        state.reference(instrValue.object, Effect.Read);
+        state.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
-        env.initialize(instrValue, env.kind(instrValue.object));
-        env.define(lvalue.place, instrValue);
+        state.initialize(instrValue, state.kind(instrValue.object));
+        state.define(lvalue.place, instrValue);
         continue;
       }
       case "TypeCastExpression": {
@@ -768,19 +765,19 @@ function inferBlock(env: Environment, block: BasicBlock) {
         // x = (y: type)  // is equivalent to...
         // x = y
         // ```
-        env.initialize(instrValue, env.kind(instrValue.value));
-        env.reference(instrValue.value, Effect.Read);
+        state.initialize(instrValue, state.kind(instrValue.value));
+        state.reference(instrValue.value, Effect.Read);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
-        env.alias(lvalue.place, instrValue.value);
+        state.alias(lvalue.place, instrValue.value);
         continue;
       }
       case "Identifier": {
-        env.reference(instrValue, Effect.Capture);
+        state.reference(instrValue, Effect.Capture);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
-        env.alias(lvalue.place, instrValue);
+        state.alias(lvalue.place, instrValue);
         continue;
       }
       default: {
@@ -794,11 +791,11 @@ function inferBlock(env: Environment, block: BasicBlock) {
         "effectKind must be set for instruction value `%s`",
         instrValue.kind
       );
-      env.reference(operand, effectKind);
+      state.reference(operand, effectKind);
     }
 
-    env.initialize(instrValue, valueKind);
-    env.define(instr.lvalue.place, instrValue);
+    state.initialize(instrValue, valueKind);
+    state.define(instr.lvalue.place, instrValue);
     instr.lvalue.place.effect = lvalueEffect;
   }
 
@@ -807,13 +804,16 @@ function inferBlock(env: Environment, block: BasicBlock) {
       ? Effect.Freeze
       : Effect.Read;
   for (const operand of eachTerminalOperand(block.terminal)) {
-    env.reference(operand, effect);
+    state.reference(operand, effect);
   }
 }
 
-function hasContextRefOperand(env: Environment, instrValue: InstructionValue) {
+function hasContextRefOperand(
+  state: InferenceState,
+  instrValue: InstructionValue
+) {
   for (const place of eachInstructionValueOperand(instrValue)) {
-    if (env.isDefined(place) && env.kind(place) === ValueKind.Context) {
+    if (state.isDefined(place) && state.kind(place) === ValueKind.Context) {
       return true;
     }
   }
