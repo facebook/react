@@ -520,6 +520,7 @@ class Driver {
       const sequence: ReactiveSequenceValue = {
         kind: "SequenceExpression",
         instructions: [
+          ...defaultBlock.instructions,
           {
             id: init.id,
             loc,
