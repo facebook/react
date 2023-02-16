@@ -1,17 +1,19 @@
 'use strict';
 
-const { register } = require('react-server-dom-webpack/node-register');
+const {register} = require('react-server-dom-webpack/node-register');
 register();
 
-const { register: babelRegister } = require('@babel/register');
+const {register: babelRegister} = require('@babel/register');
 const path = require('path');
 
 babelRegister({
   babelrc: false,
   ignore: [
     /\/(build|node_modules)\//,
-    (file) => {
-      const isFileInThisDirectory = (path.dirname(file) + '/').startsWith(__dirname + '/');
+    file => {
+      const isFileInThisDirectory = (path.dirname(file) + '/').startsWith(
+        __dirname + '/'
+      );
       return isFileInThisDirectory;
     },
   ],
@@ -24,7 +26,7 @@ const app = express();
 
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-app.use(jsonParser)
+app.use(jsonParser);
 
 const handler = require('./handler.js');
 
@@ -34,11 +36,13 @@ app.get('/', (req, res) => {
 });
 
 app.options('/', (req, res) => {
-  res.set({
-    'Allow': 'GET,HEAD,POST',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'rsc-action',
-  }).end();
+  res
+    .set({
+      Allow: 'GET,HEAD,POST',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'rsc-action',
+    })
+    .end();
 });
 
 app.post('/', jsonParser, (req, res) => {
@@ -46,12 +50,14 @@ app.post('/', jsonParser, (req, res) => {
 });
 
 app.get('/todos', (req, res) => {
-  res.set({
-    'Access-Control-Allow-Origin': '*'
-  }).json( [
-    { id: 1, text: 'Shave yaks'},
-    { id: 2, text: 'Eat kale'},
-  ])
+  res
+    .set({
+      'Access-Control-Allow-Origin': '*',
+    })
+    .json([
+      {id: 1, text: 'Shave yaks'},
+      {id: 2, text: 'Eat kale'},
+    ]);
 });
 
 const PORT = process.env.PORT || 3001;
@@ -59,7 +65,7 @@ const server = app.listen(PORT, () => {
   console.log(`Flight Server listening on port ${PORT}`);
 });
 
-server.on('error', (error) => {
+server.on('error', error => {
   if (error.syscall !== 'listen') {
     throw error;
   }
