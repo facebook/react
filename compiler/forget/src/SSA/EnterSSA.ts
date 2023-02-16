@@ -1,5 +1,6 @@
 import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
+import { Environment } from "../HIR/Environment";
 import {
   BasicBlock,
   BlockId,
@@ -12,14 +13,12 @@ import {
   Phi,
   Place,
 } from "../HIR/HIR";
-import { Environment } from "../HIR/HIRBuilder";
 import { printIdentifier } from "../HIR/PrintHIR";
 import {
   eachTerminalSuccessor,
   mapInstructionOperands,
   mapTerminalOperands,
 } from "../HIR/visitors";
-import { todoInvariant } from "../Utils/todo";
 
 type IncompletePhi = {
   oldId: Identifier;

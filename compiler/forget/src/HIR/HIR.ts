@@ -7,7 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
-import { Environment } from "./HIRBuilder";
+import { Environment } from "./Environment";
 
 // *******************************************************************************************
 // *******************************************************************************************

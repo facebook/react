@@ -6,9 +6,9 @@
  */
 
 export { lower } from "./BuildHIR";
+export { Environment } from "./Environment";
 export * from "./HIR";
 export {
-  Environment,
   markInstructionIds,
   markPredecessors,
   removeUnreachableFallthroughs,

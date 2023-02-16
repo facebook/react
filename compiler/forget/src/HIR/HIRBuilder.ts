@@ -11,6 +11,7 @@ import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
+import { Environment } from "./Environment";
 import { getOrAddGlobal } from "./Globals";
 import {
   BasicBlock,
@@ -20,10 +21,8 @@ import {
   GotoVariant,
   HIR,
   Identifier,
-  IdentifierId,
   Instruction,
   makeBlockId,
-  makeIdentifierId,
   makeInstructionId,
   makeType,
   Terminal,
@@ -69,14 +68,6 @@ type LabelScope = {
 
 function newBlock(id: BlockId, kind: BlockKind): WipBlock {
   return { id, kind, instructions: [] };
-}
-
-export class Environment {
-  #nextIdentifer: number = 0;
-
-  get nextIdentifierId(): IdentifierId {
-    return makeIdentifierId(this.#nextIdentifer++);
-  }
 }
 
 /**

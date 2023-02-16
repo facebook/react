@@ -11,6 +11,7 @@ import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
+import { Environment } from "./Environment";
 import {
   BlockId,
   BranchTerminal,
@@ -29,7 +30,7 @@ import {
   SourceLocation,
   ThrowTerminal,
 } from "./HIR";
-import HIRBuilder, { Environment } from "./HIRBuilder";
+import HIRBuilder from "./HIRBuilder";
 
 // *******************************************************************************************
 // *******************************************************************************************
