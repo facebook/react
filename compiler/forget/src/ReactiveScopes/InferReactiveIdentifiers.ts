@@ -12,7 +12,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
-import { parseHookCall } from "../Inference/InferReferenceEffects";
+import { parseHookCall } from "../HIR/Hooks";
 import { assertExhaustive } from "../Utils/utils";
 import {
   eachReactiveValueOperand,

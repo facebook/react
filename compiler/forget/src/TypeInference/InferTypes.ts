@@ -8,8 +8,8 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
+import { parseHookCall } from "../HIR/Hooks";
 import { eachInstructionOperand } from "../HIR/visitors";
-import { parseHookCall } from "../Inference/InferReferenceEffects";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   switch (op) {
