@@ -32,6 +32,7 @@ export const {
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
+  enableCustomElementPropertySupport,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -99,8 +100,6 @@ export const enableServerContext = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
-
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
