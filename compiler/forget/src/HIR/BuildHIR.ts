@@ -1790,7 +1790,36 @@ function lowerAssignment(
   switch (lvalueNode.type) {
     case "Identifier": {
       const lvalue = lvaluePath as NodePath<t.Identifier>;
-      const place = lowerIdentifier(builder, lvalue);
+      const identifier = builder.resolveIdentifier(lvalue);
+      if (identifier == null) {
+        if (kind === InstructionKind.Reassign) {
+          // Trying to reassign a global is not allowed
+          builder.errors.push({
+            reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: lvalue,
+          });
+        } else {
+          // Else its an internal error bc we couldn't find the binding
+          builder.errors.push({
+            reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
+            severity: ErrorSeverity.Invariant,
+            nodePath: lvalue,
+          });
+        }
+        return {
+          kind: "UnsupportedNode",
+          loc: lvalue.node.loc ?? GeneratedSource,
+          node: lvalue.node,
+        };
+      }
+
+      const place: Place = {
+        kind: "Identifier",
+        identifier: identifier,
+        effect: Effect.Unknown,
+        loc: lvalue.node.loc ?? GeneratedSource,
+      };
       builder.push({
         id: makeInstructionId(0),
         lvalue: { place: { ...place }, kind },
