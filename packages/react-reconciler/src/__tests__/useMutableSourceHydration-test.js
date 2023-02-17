@@ -254,23 +254,14 @@ describe('useMutableSourceHydration', () => {
 
     expect(() => {
       act(() => {
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            ReactDOMClient.hydrateRoot(container, <TestComponent />, {
-              mutableSources: [mutableSource],
-              onRecoverableError(error) {
-                Scheduler.unstable_yieldValue('Log error: ' + error.message);
-              },
-            });
-          });
-        } else {
+        React.startTransition(() => {
           ReactDOMClient.hydrateRoot(container, <TestComponent />, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
               Scheduler.unstable_yieldValue('Log error: ' + error.message);
             },
           });
-        }
+        });
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
       });
@@ -347,23 +338,14 @@ describe('useMutableSourceHydration', () => {
             />
           </>
         );
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            ReactDOMClient.hydrateRoot(container, fragment, {
-              mutableSources: [mutableSource],
-              onRecoverableError(error) {
-                Scheduler.unstable_yieldValue('Log error: ' + error.message);
-              },
-            });
-          });
-        } else {
+        React.startTransition(() => {
           ReactDOMClient.hydrateRoot(container, fragment, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
               Scheduler.unstable_yieldValue('Log error: ' + error.message);
             },
           });
-        }
+        });
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
         source.valueB = 'b:two';
       });

@@ -135,9 +135,6 @@ export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
 
-// Enables time slicing for updates that aren't wrapped in startTransition.
-export const enableSyncDefaultUpdates = true;
-
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in

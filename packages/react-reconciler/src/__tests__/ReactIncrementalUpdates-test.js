@@ -152,21 +152,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates || flags.enableUnifiedSyncLane,
-      )
-    ) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
@@ -183,11 +173,7 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates && flags.enableUnifiedSyncLane,
-      )
-    ) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
     } else {
@@ -199,11 +185,7 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates && !flags.enableUnifiedSyncLane,
-      )
-    ) {
+    if (gate(flags => !flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toFlushAndYield([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
@@ -257,21 +239,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates || flags.enableUnifiedSyncLane,
-      )
-    ) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
@@ -291,11 +263,7 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates && flags.enableUnifiedSyncLane,
-      )
-    ) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
     } else {
       // Update d was dropped and replaced by e.
@@ -306,11 +274,7 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    if (
-      gate(
-        flags => flags.enableSyncDefaultUpdates && !flags.enableUnifiedSyncLane,
-      )
-    ) {
+    if (gate(flags => !flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toFlushAndYield([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
@@ -566,13 +530,9 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     act(() => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactNoop.render(<App />);
-        });
-      } else {
+      React.startTransition(() => {
         ReactNoop.render(<App />);
-      }
+      });
       flushNextRenderIfExpired();
       expect(Scheduler).toHaveYielded([]);
       expect(Scheduler).toFlushAndYield([
@@ -582,13 +542,9 @@ describe('ReactIncrementalUpdates', () => {
       ]);
 
       Scheduler.unstable_advanceTime(10000);
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          setCount(2);
-        });
-      } else {
+      React.startTransition(() => {
         setCount(2);
-      }
+      });
       flushNextRenderIfExpired();
       expect(Scheduler).toHaveYielded([]);
     });
@@ -607,13 +563,9 @@ describe('ReactIncrementalUpdates', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Text text="B" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Text text="B" />);
-    }
+    });
     flushNextRenderIfExpired();
     expect(Scheduler).toHaveYielded([]);
   });
@@ -624,26 +576,18 @@ describe('ReactIncrementalUpdates', () => {
       return text;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Text text="A" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Text text="A" />);
-    }
+    });
     Scheduler.unstable_advanceTime(10000);
     flushNextRenderIfExpired();
     expect(Scheduler).toHaveYielded(['A']);
 
     Scheduler.unstable_advanceTime(10000);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Text text="B" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Text text="B" />);
-    }
+    });
     flushNextRenderIfExpired();
     expect(Scheduler).toHaveYielded([]);
   });
@@ -680,13 +624,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          pushToLog('A');
-        });
-      } else {
+      React.startTransition(() => {
         pushToLog('A');
-      }
+      });
 
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
@@ -749,13 +689,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          pushToLog('A');
-        });
-      } else {
+      React.startTransition(() => {
         pushToLog('A');
-      }
+      });
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );

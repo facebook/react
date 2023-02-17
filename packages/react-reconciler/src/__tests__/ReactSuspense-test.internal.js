@@ -124,13 +124,9 @@ describe('ReactSuspense', () => {
 
     // Navigate the shell to now render the child content.
     // This should suspend.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(<Foo renderBar={true} />);
-      });
-    } else {
+    React.startTransition(() => {
       root.update(<Foo renderBar={true} />);
-    }
+    });
 
     expect(Scheduler).toFlushAndYield([
       'Foo',
@@ -239,19 +235,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(
-          <>
-            <Suspense fallback={<Text text="Loading..." />}>
-              <Async />
-            </Suspense>
-            <Text text="After Suspense" />
-            <Text text="Sibling" />
-          </>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       root.update(
         <>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -261,8 +245,7 @@ describe('ReactSuspense', () => {
           <Text text="Sibling" />
         </>,
       );
-    }
-
+    });
     // Yield past the Suspense boundary but don't complete the last sibling.
     expect(Scheduler).toFlushAndYieldThrough([
       'Suspend!',
@@ -395,76 +378,6 @@ describe('ReactSuspense', () => {
     expect(Scheduler).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
-
-  // @gate !enableSyncDefaultUpdates
-  it(
-    'interrupts current render when something suspends with a ' +
-      "delay and we've already skipped over a lower priority update in " +
-      'a parent',
-    () => {
-      function interrupt() {
-        // React has a heuristic to batch all updates that occur within the same
-        // event. This is a trick to circumvent that heuristic.
-        ReactTestRenderer.create('whatever');
-      }
-
-      function App({shouldSuspend, step}) {
-        return (
-          <>
-            <Text text={`A${step}`} />
-            <Suspense fallback={<Text text="Loading..." />}>
-              {shouldSuspend ? <AsyncText text="Async" ms={2000} /> : null}
-            </Suspense>
-            <Text text={`B${step}`} />
-            <Text text={`C${step}`} />
-          </>
-        );
-      }
-
-      const root = ReactTestRenderer.create(null, {
-        unstable_isConcurrent: true,
-      });
-
-      root.update(<App shouldSuspend={false} step={0} />);
-      expect(Scheduler).toFlushAndYield(['A0', 'B0', 'C0']);
-      expect(root).toMatchRenderedOutput('A0B0C0');
-
-      // This update will suspend.
-      root.update(<App shouldSuspend={true} step={1} />);
-
-      // Do a bit of work
-      expect(Scheduler).toFlushAndYieldThrough(['A1']);
-
-      // Schedule another update. This will have lower priority because it's
-      // a transition.
-      React.startTransition(() => {
-        root.update(<App shouldSuspend={false} step={2} />);
-      });
-
-      // Interrupt to trigger a restart.
-      interrupt();
-
-      expect(Scheduler).toFlushAndYieldThrough([
-        // Should have restarted the first update, because of the interruption
-        'A1',
-        'Suspend! [Async]',
-        'Loading...',
-        'B1',
-      ]);
-
-      // Should not have committed loading state
-      expect(root).toMatchRenderedOutput('A0B0C0');
-
-      // After suspending, should abort the first update and switch to the
-      // second update. So, C1 should not appear in the log.
-      // TODO: This should work even if React does not yield to the main
-      // thread. Should use same mechanism as selective hydration to interrupt
-      // the render before the end of the current slice of work.
-      expect(Scheduler).toFlushAndYield(['A2', 'B2', 'C2']);
-
-      expect(root).toMatchRenderedOutput('A2B2C2');
-    },
-  );
 
   it('mounts a lazy class component in non-concurrent mode', async () => {
     class Class extends React.Component {

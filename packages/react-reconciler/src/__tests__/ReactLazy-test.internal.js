@@ -1560,13 +1560,9 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(<Parent swap={true} />);
-      });
-    } else {
+    React.startTransition(() => {
       root.update(<Parent swap={true} />);
-    }
+    });
     expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
     await lazyChildB2;
     // We need to flush to trigger the second one to load.
