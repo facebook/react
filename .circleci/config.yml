@@ -110,14 +110,14 @@ jobs:
           paths:
             - build
 
-  yarn_build_combined:
+  yarn_build:
     docker: *docker
     environment: *environment
     parallelism: 40
     steps:
       - checkout
       - setup_node_modules
-      - run: yarn build-combined
+      - run: yarn build
       - persist_to_workspace:
           root: .
           paths:
@@ -451,7 +451,7 @@ workflows:
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
                 - '-r=experimental --env=development --persistent'
-      - yarn_build_combined:
+      - yarn_build:
           filters:
             branches:
               ignore:
@@ -464,10 +464,10 @@ workflows:
       - process_artifacts_combined:
           requires:
             - scrape_warning_messages
-            - yarn_build_combined
+            - yarn_build
       - yarn_test_build:
           requires:
-            - yarn_build_combined
+            - yarn_build
           matrix:
             parameters:
               args:
@@ -506,22 +506,22 @@ workflows:
                 - main
           requires:
             - download_base_build_for_sizebot
-            - yarn_build_combined
+            - yarn_build
       - yarn_lint_build:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - yarn_check_release_dependencies:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - check_error_codes:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - build_devtools_and_process_artifacts:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
