@@ -6,7 +6,7 @@
  */
 import type {ServerOptions} from './ReactPartialRenderer';
 
-import {Readable} from 'stream';
+import {Readable, PassThrough} from 'stream';
 
 import ReactPartialRenderer from './ReactPartialRenderer';
 
@@ -42,7 +42,7 @@ class ReactMarkupReadableStream extends Readable {
  * See https://reactjs.org/docs/react-dom-server.html#rendertonodestream
  */
 export function renderToNodeStream(element, options?: ServerOptions) {
-  return new ReactMarkupReadableStream(element, false, options);
+  return new ReactMarkupReadableStream(element, false, options).pipe(new PassThrough());
 }
 
 /**
