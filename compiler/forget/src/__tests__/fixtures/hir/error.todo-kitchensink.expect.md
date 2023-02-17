@@ -71,7 +71,10 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 
   // Cannot assign to globals
   someUnknownGlobal = true;
+  moduleLocal = true;
 }
+
+let moduleLocal = false;
 
 ```
 
@@ -409,8 +412,18 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   68 |   // Cannot assign to globals
 > 69 |   someUnknownGlobal = true;
      |   ^^^^^^^^^^^^^^^^^
-  70 | }
-  71 |
+  70 |   moduleLocal = true;
+  71 | }
+  72 |
+
+[ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
+  68 |   // Cannot assign to globals
+  69 |   someUnknownGlobal = true;
+> 70 |   moduleLocal = true;
+     |   ^^^^^^^^^^^
+  71 | }
+  72 |
+  73 | let moduleLocal = false;
 ```
           
       

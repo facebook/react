@@ -20,6 +20,7 @@ import {
   GeneratedSource,
   GotoVariant,
   HIRFunction,
+  Identifier,
   IfTerminal,
   InstructionKind,
   InstructionValue,
@@ -52,10 +53,12 @@ import HIRBuilder from "./HIRBuilder";
 export function lower(
   func: NodePath<t.Function>,
   options: EnvironmentOptions | null,
-  capturedRefs: t.Identifier[] = []
+  capturedRefs: t.Identifier[] = [],
+  // the outermost function being compiled, in case lower() is called recursively (for lambdas)
+  parent: NodePath<t.Function> | null = null
 ): Result<HIRFunction, CompilerError> {
   const env = new Environment(options);
-  const builder = new HIRBuilder(env, capturedRefs);
+  const builder = new HIRBuilder(env, parent ?? func, capturedRefs);
   const context: Place[] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -70,11 +73,10 @@ export function lower(
   // Internal babel is on an older version that does not have hasNode (v7.17)
   // See https://github.com/babel/babel/pull/13940/files for impl
   // TODO: write helper function for NodePath.node != null
-  const id =
-    func.isFunctionDeclaration() && func.get("id").node != null
-      ? builder.resolveIdentifier(func.get("id") as NodePath<t.Identifier>)
-      : null;
-
+  let id: Identifier | null = null;
+  if (func.isFunctionDeclaration() && func.get("id").node != null) {
+    id = builder.resolveIdentifier(func.get("id") as NodePath<t.Identifier>);
+  }
   const params: Array<Place> = [];
   func.get("params").forEach((param) => {
     if (param.isIdentifier()) {
@@ -1343,10 +1345,12 @@ function lowerExpression(
       //
       // This isn't a problem in practice because use Babel's scope analysis to
       // identify the correct references.
-      const lowering = lower(expr, builder.environment.options, [
-        ...builder.context,
-        ...captured.identifiers,
-      ]);
+      const lowering = lower(
+        expr,
+        builder.environment.options,
+        [...builder.context, ...captured.identifiers],
+        builder.parentFunction
+      );
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {
         lowering

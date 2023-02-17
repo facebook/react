@@ -83,6 +83,7 @@ export default class HIRBuilder {
   #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
     new Map();
   #env: Environment;
+  parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
 
   get nextIdentifierId() {
@@ -97,8 +98,13 @@ export default class HIRBuilder {
     return this.#env;
   }
 
-  constructor(env: Environment, context: t.Identifier[]) {
+  constructor(
+    env: Environment,
+    parentFunction: NodePath<t.Function>, // the outermost function being compiled
+    context: t.Identifier[]
+  ) {
     this.#env = env;
+    this.parentFunction = parentFunction;
     this.#context = context;
   }
 
@@ -174,11 +180,30 @@ export default class HIRBuilder {
     path: NodePath<t.Identifier | t.JSXIdentifier>
   ): Identifier | null {
     const originalName = path.node.name;
-    const node = path.scope.getBindingIdentifier(originalName);
-    if (node == null) {
+    const binding = path.scope.getBinding(originalName);
+    if (binding == null) {
       return null;
     }
-    return this.resolveBinding(node);
+    // If the binding is from the parent function's outer scope, then
+    // we treat it equivalently to a global.
+    //
+    // TODO: remove the exception that resolves references to the
+    // parent function itself. We don't need to support self-recursion,
+    // so we can treat such references as globals.
+    const outerBinding =
+      this.parentFunction.scope.parent.getBinding(originalName);
+    if (binding === outerBinding) {
+      const func = this.parentFunction;
+      const isParentFunctionReference =
+        func.isFunctionDeclaration() &&
+        func.get("id").node != null &&
+        func.get("id").node!.name === originalName;
+      if (!isParentFunctionReference) {
+        return null;
+      }
+    }
+
+    return this.resolveBinding(binding.identifier);
   }
 
   resolveBinding(node: t.Identifier): Identifier {

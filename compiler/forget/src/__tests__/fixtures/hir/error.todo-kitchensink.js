@@ -67,4 +67,7 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 
   // Cannot assign to globals
   someUnknownGlobal = true;
+  moduleLocal = true;
 }
+
+let moduleLocal = false;
