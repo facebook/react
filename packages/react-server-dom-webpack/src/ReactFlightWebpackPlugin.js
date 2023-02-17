@@ -55,7 +55,8 @@ type Options = {
   isServer: boolean,
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
-  manifestFilename?: string,
+  clientManifestFilename?: string,
+  ssrManifestFilename?: string,
 };
 
 const PLUGIN_NAME = 'React Server Plugin';
@@ -63,7 +64,8 @@ const PLUGIN_NAME = 'React Server Plugin';
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;
   chunkName: string;
-  manifestFilename: string;
+  clientManifestFilename: string;
+  ssrManifestFilename: string;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
@@ -99,8 +101,10 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
-    this.manifestFilename =
-      options.manifestFilename || 'react-client-manifest.json';
+    this.clientManifestFilename =
+      options.clientManifestFilename || 'react-client-manifest.json';
+    this.ssrManifestFilename =
+      options.ssrManifestFilename || 'react-ssr-manifest.json';
   }
 
   apply(compiler: any) {
@@ -209,15 +213,20 @@ export default class ReactFlightWebpackPlugin {
           if (clientFileNameFound === false) {
             compilation.warnings.push(
               new WebpackError(
-                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.manifestFilename} was not created.`,
+                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.clientManifestFilename} was not created.`,
               ),
             );
             return;
           }
 
-          const json: {
+          const clientManifest: {
             [string]: {
-              [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
+              [string]: {chunks: $FlowFixMe, id: string, name: string},
+            },
+          } = {};
+          const ssrManifest: {
+            [string]: {
+              [string]: {specifier: string, name: string},
             },
           } = {};
           compilation.chunkGroups.forEach(function (chunkGroup) {
@@ -239,9 +248,16 @@ export default class ReactFlightWebpackPlugin {
                 .getExportsInfo(module)
                 .getProvidedExports();
 
-              const moduleExports: {
+              const clientExports: {
                 [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
               } = {};
+
+              const ssrExports: {
+                [string]: {specifier: string, name: string},
+              } = {};
+
+              ssrManifest[id] = ssrExports;
+
               ['', '*']
                 .concat(
                   Array.isArray(moduleProvidedExports)
@@ -249,16 +265,21 @@ export default class ReactFlightWebpackPlugin {
                     : [],
                 )
                 .forEach(function (name) {
-                  moduleExports[name] = {
+                  clientExports[name] = {
                     id,
                     chunks: chunkIds,
+                    name: name,
+                  };
+                  ssrExports[name] = {
+                    specifier: module.resource,
                     name: name,
                   };
                 });
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
-                json[href] = moduleExports;
+                clientManifest[href] = clientExports;
+                ssrManifest[href] = ssrExports;
               }
             }
 
@@ -280,10 +301,15 @@ export default class ReactFlightWebpackPlugin {
             });
           });
 
-          const output = JSON.stringify(json, null, 2);
+          const clientOutput = JSON.stringify(clientManifest, null, 2);
           compilation.emitAsset(
-            _this.manifestFilename,
-            new sources.RawSource(output, false),
+            _this.clientManifestFilename,
+            new sources.RawSource(clientOutput, false),
+          );
+          const ssrOutput = JSON.stringify(ssrManifest, null, 2);
+          compilation.emitAsset(
+            _this.ssrManifestFilename,
+            new sources.RawSource(ssrOutput, false),
           );
         },
       );
