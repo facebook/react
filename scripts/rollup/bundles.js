@@ -360,7 +360,7 @@ const bundles = [
     externals: ['react', 'util', 'async_hooks', 'react-dom'],
   },
   {
-    bundleTypes: [ESM_DEV, ESM_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/server.node.unbundled',
     global: 'ReactServerDOMServer',
@@ -398,7 +398,7 @@ const bundles = [
     externals: ['react', 'util'],
   },
   {
-    bundleTypes: [ESM_DEV, ESM_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/client.node.unbundled',
     global: 'ReactServerDOMClient',

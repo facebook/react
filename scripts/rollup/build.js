@@ -19,6 +19,7 @@ const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
+const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
@@ -332,6 +333,8 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
+    // Keep dynamic imports as externals
+    dynamicImports(),
     {
       name: 'rollup-plugin-flow-remove-types',
       transform(code) {
@@ -410,6 +413,7 @@ function getPlugins(
         process_common_js_modules: false,
         rewrite_polyfills: false,
         inject_libraries: false,
+        allow_dynamic_import: true,
 
         // Don't let it create global variables in the browser.
         // https://github.com/facebook/react/issues/10909

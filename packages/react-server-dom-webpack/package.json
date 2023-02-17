@@ -38,8 +38,7 @@
       "worker": "./client.edge.js",
       "node": {
         "webpack": "./client.node.js",
-        "production": "./esm/react-server-dom-webpack-client.node.unbundled.production.min.js",
-        "default": "./esm/react-server-dom-webpack-client.node.unbundled.development.js"
+        "default": "./client.node.unbundled.js"
       },
       "browser": "./client.browser.js",
       "default": "./client.browser.js"
@@ -47,10 +46,7 @@
     "./client.browser": "./client.browser.js",
     "./client.edge": "./client.edge.js",
     "./client.node": "./client.node.js",
-    "./client.node.unbundled": {
-      "production": "./esm/react-server-dom-webpack-client.node.unbundled.production.min.js",
-      "default": "./esm/react-server-dom-webpack-client.node.unbundled.development.js"
-    },
+    "./client.node.unbundled": "./client.node.unbundled.js",
     "./server": {
       "react-server": {
         "workerd": "./server.edge.js",
@@ -58,8 +54,7 @@
         "deno": "./server.browser.js",
         "node": {
           "webpack": "./server.node.js",
-          "production": "./esm/react-server-dom-webpack-server.node.unbundled.production.min.js",
-          "default": "./esm/react-server-dom-webpack-server.node.unbundled.development.js"
+          "default": "./server.node.unbundled.js"
         },
         "browser": "./server.browser.js"
       },
@@ -68,10 +63,7 @@
     "./server.browser": "./server.browser.js",
     "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
-    "./server.node.unbundled": {
-      "production": "./esm/react-server-dom-webpack-server.node.unbundled.production.min.js",
-      "default": "./esm/react-server-dom-webpack-server.node.unbundled.development.js"
-    },
+    "./server.node.unbundled": "./server.node.unbundled.js",
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.production.min.js",
     "./node-register": "./node-register.js",
     "./src/*": "./src/*",

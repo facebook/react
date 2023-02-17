@@ -53,7 +53,7 @@ module.exports = {
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
   },
   parserOptions: {
-    ecmaVersion: 5,
+    ecmaVersion: 2020,
     sourceType: 'script',
   },
   rules: {

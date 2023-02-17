@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../src/ReactFlightDOMServerNode.js';
+export * from './src/ReactFlightDOMServerNode';

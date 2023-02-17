@@ -33,8 +33,6 @@ module.exports = [
       'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node.unbundled',
-      'react-server-dom-webpack/esm/react-server-dom-webpack-server.node.unbundled.production.min.js',
-      'react-server-dom-webpack/esm/react-server-dom-webpack-server.node.unbundled.development.js',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
