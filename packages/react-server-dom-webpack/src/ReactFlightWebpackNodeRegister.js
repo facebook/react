@@ -7,13 +7,34 @@
  * @flow
  */
 
+const acorn = require('acorn');
+
 const url = require('url');
 
 const Module = require('module');
 
 module.exports = function register() {
   const CLIENT_REFERENCE = Symbol.for('react.client.reference');
+  const SERVER_REFERENCE = Symbol.for('react.server.reference');
   const PROMISE_PROTOTYPE = Promise.prototype;
+
+  // Patch bind on the server to ensure that this creates another
+  // bound server reference with the additional arguments.
+  const originalBind = Function.prototype.bind;
+  /*eslint-disable no-extend-native */
+  Function.prototype.bind = (function bind(this: any, self: any) {
+    // $FlowFixMe[unsupported-syntax]
+    const newFn = originalBind.apply(this, arguments);
+    if (this.$$typeof === SERVER_REFERENCE) {
+      // $FlowFixMe[method-unbinding]
+      const args = Array.prototype.slice.call(arguments, 1);
+      newFn.$$typeof = SERVER_REFERENCE;
+      newFn.$$filepath = this.$$filepath;
+      newFn.$$name = this.$$name;
+      newFn.$$bound = this.$$bound.concat(args);
+    }
+    return newFn;
+  }: any);
 
   const deepProxyHandlers = {
     get: function (target: Function, name: string, receiver: Proxy<Function>) {
@@ -27,6 +48,8 @@ module.exports = function register() {
           return target.filepath;
         case 'name':
           return target.name;
+        case 'displayName':
+          return undefined;
         case 'async':
           return target.async;
         // We need to special case this because createElement reads it if we pass this
@@ -72,7 +95,11 @@ module.exports = function register() {
   };
 
   const proxyHandlers = {
-    get: function (target: Function, name: string, receiver: Proxy<Function>) {
+    get: function (
+      target: Function,
+      name: string,
+      receiver: Proxy<Function>,
+    ): $FlowFixMe {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -102,9 +129,9 @@ module.exports = function register() {
           target.default = Object.defineProperties(
             (function () {
               throw new Error(
-                `Attempted to call the default export of ${moduleId} from the server` +
+                `Attempted to call the default export of ${moduleId} from the server ` +
                   `but it's on the client. It's not possible to invoke a client function from ` +
-                  `the server, it can only be rendered as a Component or passed to props of a` +
+                  `the server, it can only be rendered as a Component or passed to props of a ` +
                   `Client Component.`,
               );
             }: any),
@@ -141,14 +168,10 @@ module.exports = function register() {
             target.status = 'fulfilled';
             target.value = proxy;
 
-            // $FlowFixMe[missing-local-annot]
             const then = (target.then = Object.defineProperties(
               (function then(resolve, reject: any) {
                 // Expose to React.
-                return Promise.resolve(
-                  // $FlowFixMe[incompatible-call] found when upgrading Flow
-                  resolve(proxy),
-                );
+                return Promise.resolve(resolve(proxy));
               }: any),
               // If this is not used as a Promise but is treated as a reference to a `.then`
               // export then we should treat it as a reference to that name.
@@ -198,51 +221,105 @@ module.exports = function register() {
       // Pretend to be a Promise in case anyone asks.
       return PROMISE_PROTOTYPE;
     },
-    set: function () {
+    set: function (): empty {
       throw new Error('Cannot assign to a client module from a server module.');
     },
   };
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  Module._extensions['.client.js'] = function (module, path) {
-    const moduleId: string = (url.pathToFileURL(path).href: any);
-    const clientReference = Object.defineProperties(({}: any), {
-      // Represents the whole Module object instead of a particular import.
-      name: {value: '*'},
-      $$typeof: {value: CLIENT_REFERENCE},
-      filepath: {value: moduleId},
-      async: {value: false},
+  const originalCompile = Module.prototype._compile;
+
+  // $FlowFixMe[prop-missing] found when upgrading Flow
+  Module.prototype._compile = function (
+    this: any,
+    content: string,
+    filename: string,
+  ): void {
+    // Do a quick check for the exact string. If it doesn't exist, don't
+    // bother parsing.
+    if (
+      content.indexOf('use client') === -1 &&
+      content.indexOf('use server') === -1
+    ) {
+      return originalCompile.apply(this, arguments);
+    }
+
+    const {body} = acorn.parse(content, {
+      ecmaVersion: '2019',
+      sourceType: 'source',
     });
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
-    module.exports = new Proxy(clientReference, proxyHandlers);
-  };
 
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  const originalResolveFilename = Module._resolveFilename;
-
-  // $FlowFixMe[prop-missing] found when upgrading Flow
-  // $FlowFixMe[missing-this-annot]
-  Module._resolveFilename = function (request, parent, isMain, options) {
-    const resolved = originalResolveFilename.apply(this, arguments);
-    if (resolved.endsWith('.server.js')) {
-      if (
-        parent &&
-        parent.filename &&
-        !parent.filename.endsWith('.server.js')
-      ) {
-        let reason;
-        if (request.endsWith('.server.js')) {
-          reason = `"${request}"`;
-        } else {
-          reason = `"${request}" (which expands to "${resolved}")`;
-        }
-        throw new Error(
-          `Cannot import ${reason} from "${parent.filename}". ` +
-            'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
-            'That way nobody accidentally sends these to the client by indirectly importing it.',
-        );
+    let useClient = false;
+    let useServer = false;
+    for (let i = 0; i < body.length; i++) {
+      const node = body[i];
+      if (node.type !== 'ExpressionStatement' || !node.directive) {
+        break;
+      }
+      if (node.directive === 'use client') {
+        useClient = true;
+      }
+      if (node.directive === 'use server') {
+        useServer = true;
       }
     }
-    return resolved;
+
+    if (!useClient && !useServer) {
+      return originalCompile.apply(this, arguments);
+    }
+
+    if (useClient && useServer) {
+      throw new Error(
+        'Cannot have both "use client" and "use server" directives in the same file.',
+      );
+    }
+
+    if (useClient) {
+      const moduleId: string = (url.pathToFileURL(filename).href: any);
+      const clientReference = Object.defineProperties(({}: any), {
+        // Represents the whole Module object instead of a particular import.
+        name: {value: '*'},
+        $$typeof: {value: CLIENT_REFERENCE},
+        filepath: {value: moduleId},
+        async: {value: false},
+      });
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
+      this.exports = new Proxy(clientReference, proxyHandlers);
+    }
+
+    if (useServer) {
+      originalCompile.apply(this, arguments);
+
+      const moduleId: string = (url.pathToFileURL(filename).href: any);
+
+      const exports = this.exports;
+
+      // This module is imported server to server, but opts in to exposing functions by
+      // reference. If there are any functions in the export.
+      if (typeof exports === 'function') {
+        // The module exports a function directly,
+        Object.defineProperties((exports: any), {
+          // Represents the whole Module object instead of a particular import.
+          $$typeof: {value: SERVER_REFERENCE},
+          $$filepath: {value: moduleId},
+          $$name: {value: '*'},
+          $$bound: {value: []},
+        });
+      } else {
+        const keys = Object.keys(exports);
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const value = exports[keys[i]];
+          if (typeof value === 'function') {
+            Object.defineProperties((value: any), {
+              $$typeof: {value: SERVER_REFERENCE},
+              $$filepath: {value: moduleId},
+              $$name: {value: key},
+              $$bound: {value: []},
+            });
+          }
+        }
+      }
+    }
   };
 };

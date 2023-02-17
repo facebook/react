@@ -51,7 +51,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
-const nodeToInstanceMap = new WeakMap();
+const nodeToInstanceMap = new WeakMap<any, Instance>();
 
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);

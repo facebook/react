@@ -9,6 +9,7 @@
  */
 
 import {copy} from 'clipboard-js';
+import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
@@ -143,7 +144,7 @@ export function getEffectDurations(root: Object): {
 }
 
 export function serializeToString(data: any): string {
-  const cache = new Set();
+  const cache = new Set<mixed>();
   // Use a custom replacer function to protect against circular references.
   return JSON.stringify(data, (key, value) => {
     if (typeof value === 'object' && value !== null) {
@@ -274,4 +275,12 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy &&
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
+}
+
+export function gt(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) === 1;
+}
+
+export function gte(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) > -1;
 }

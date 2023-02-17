@@ -22,8 +22,14 @@ import {
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
+type CallServerCallback = <A, T>(
+  {filepath: string, name: string},
+  args: A,
+) => Promise<T>;
+
 export type Options = {
   moduleMap?: BundlerConfig,
+  callServer?: CallServerCallback,
 };
 
 function startReadingFromStream(
@@ -31,7 +37,14 @@ function startReadingFromStream(
   stream: ReadableStream,
 ): void {
   const reader = stream.getReader();
-  function progress({done, value}: {done: boolean, value: ?any, ...}) {
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: ?any,
+    ...
+  }): void | Promise<void> {
     if (done) {
       close(response);
       return;
@@ -52,6 +65,7 @@ function createFromReadableStream<T>(
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
+    options && options.callServer ? options.callServer : undefined,
   );
   startReadingFromStream(response, stream);
   return getRoot(response);
@@ -63,6 +77,7 @@ function createFromFetch<T>(
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
+    options && options.callServer ? options.callServer : undefined,
   );
   promiseForResponse.then(
     function (r) {
@@ -81,6 +96,7 @@ function createFromXHR<T>(
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
+    options && options.callServer ? options.callServer : undefined,
   );
   let processedLength = 0;
   function progress(e: ProgressEvent): void {

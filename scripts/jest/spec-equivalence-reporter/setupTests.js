@@ -7,16 +7,7 @@
 
 'use strict';
 
-const expect = global.expect;
-
-let numExpectations = 0;
-
-global.expect = function () {
-  numExpectations += 1;
-  return expect.apply(this, arguments);
-};
-
-const spyOn = global.spyOn;
+const spyOn = jest.spyOn;
 
 // Spying on console methods in production builds can mask errors.
 // This is why we added an explicit spyOnDev() helper.
@@ -49,16 +40,4 @@ expect.extend({
   ...require('../matchers/reactTestMatchers'),
   ...require('../matchers/toThrow'),
   ...require('../matchers/toWarnDev'),
-});
-
-beforeEach(() => (numExpectations = 0));
-
-jasmine.currentEnv_.addReporter({
-  specDone: spec => {
-    console.log(
-      `EQUIVALENCE: ${spec.description}, ` +
-        `status: ${spec.status}, ` +
-        `numExpectations: ${numExpectations}`
-    );
-  },
 });

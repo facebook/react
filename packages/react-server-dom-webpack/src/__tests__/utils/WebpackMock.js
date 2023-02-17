@@ -11,40 +11,43 @@ const url = require('url');
 const Module = require('module');
 
 let webpackModuleIdx = 0;
-const webpackModules = {};
+const webpackServerModules = {};
+const webpackClientModules = {};
 const webpackErroredModules = {};
-const webpackMap = {clientManifest: {}};
+const webpackServerMap = {};
+const webpackClientMap = {};
 global.__webpack_require__ = function (id) {
   if (webpackErroredModules[id]) {
     throw webpackErroredModules[id];
   }
-  return webpackModules[id];
+  return webpackClientModules[id] || webpackServerModules[id];
 };
 
-const previousLoader = Module._extensions['.client.js'];
+const previousCompile = Module.prototype._compile;
 
 const register = require('react-server-dom-webpack/node-register');
-// Register node loader
+// Register node compile
 register();
 
-const nodeLoader = Module._extensions['.client.js'];
+const nodeCompile = Module.prototype._compile;
 
-if (previousLoader === nodeLoader) {
+if (previousCompile === nodeCompile) {
   throw new Error(
-    'Expected the Node loader to register the .client.js extension',
+    'Expected the Node loader to register the _compile extension',
   );
 }
 
-Module._extensions['.client.js'] = previousLoader;
+Module.prototype._compile = previousCompile;
 
-exports.webpackMap = webpackMap;
-exports.webpackModules = webpackModules;
+exports.webpackMap = webpackClientMap;
+exports.webpackModules = webpackClientModules;
+exports.webpackServerMap = webpackServerMap;
 
 exports.clientModuleError = function clientModuleError(moduleError) {
   const idx = '' + webpackModuleIdx++;
   webpackErroredModules[idx] = moduleError;
   const path = url.pathToFileURL(idx).href;
-  webpackMap.clientManifest[path] = {
+  webpackClientMap[path] = {
     '': {
       id: idx,
       chunks: [],
@@ -57,15 +60,15 @@ exports.clientModuleError = function clientModuleError(moduleError) {
     },
   };
   const mod = {exports: {}};
-  nodeLoader(mod, idx);
+  nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
 
 exports.clientExports = function clientExports(moduleExports) {
   const idx = '' + webpackModuleIdx++;
-  webpackModules[idx] = moduleExports;
+  webpackClientModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
-  webpackMap.clientManifest[path] = {
+  webpackClientMap[path] = {
     '': {
       id: idx,
       chunks: [],
@@ -81,7 +84,7 @@ exports.clientExports = function clientExports(moduleExports) {
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
-          webpackMap.clientManifest[path][name] = {
+          webpackClientMap[path][name] = {
             id: idx,
             chunks: [],
             name: name,
@@ -92,13 +95,42 @@ exports.clientExports = function clientExports(moduleExports) {
     );
   }
   for (const name in moduleExports) {
-    webpackMap.clientManifest[path][name] = {
+    webpackClientMap[path][name] = {
       id: idx,
       chunks: [],
       name: name,
     };
   }
   const mod = {exports: {}};
-  nodeLoader(mod, idx);
+  nodeCompile.call(mod, '"use client"', idx);
+  return mod.exports;
+};
+
+// This tests server to server references. There's another case of client to server references.
+exports.serverExports = function serverExports(moduleExports) {
+  const idx = '' + webpackModuleIdx++;
+  webpackServerModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+  webpackServerMap[path] = {
+    '': {
+      id: idx,
+      chunks: [],
+      name: '',
+    },
+    '*': {
+      id: idx,
+      chunks: [],
+      name: '*',
+    },
+  };
+  for (const name in moduleExports) {
+    webpackServerMap[path][name] = {
+      id: idx,
+      chunks: [],
+      name: name,
+    };
+  }
+  const mod = {exports: moduleExports};
+  nodeCompile.call(mod, '"use server"', idx);
   return mod.exports;
 };

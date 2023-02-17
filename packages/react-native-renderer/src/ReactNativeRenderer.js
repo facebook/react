@@ -10,6 +10,7 @@
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
 import './ReactNativeInjection';
 
@@ -263,7 +264,7 @@ function computeComponentStackForErrorReporting(reactTag: number): string {
   return getStackByFiberInDevAndProd(fiber);
 }
 
-const roots = new Map();
+const roots = new Map<number, FiberRoot>();
 
 const Internals = {
   computeComponentStackForErrorReporting,

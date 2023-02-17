@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {gt, gte} from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -39,6 +38,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {gt, gte} from 'react-devtools-shared/src/backend/utils';
 import {
   cleanForBridge,
   copyToClipboard,
@@ -223,7 +223,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: 26, // In reality, 18.2+. But doesn't hurt to include it here
+      HostHoistable: 26, // In reality, 18.2+. But doesn't hurt to include it here
       HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -257,7 +257,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -290,7 +290,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
@@ -323,7 +323,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 7,
       HostPortal: 6,
       HostRoot: 5,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
@@ -356,7 +356,7 @@ export function getInternalReactConstants(version: string): {
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
-      HostResource: -1, // Doesn't exist yet
+      HostHoistable: -1, // Doesn't exist yet
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
@@ -397,7 +397,7 @@ export function getInternalReactConstants(version: string): {
     IndeterminateComponent,
     ForwardRef,
     HostRoot,
-    HostResource,
+    HostHoistable,
     HostSingleton,
     HostComponent,
     HostPortal,
@@ -415,7 +415,7 @@ export function getInternalReactConstants(version: string): {
     TracingMarkerComponent,
   } = ReactTypeOfWork;
 
-  function resolveFiberType(type: any) {
+  function resolveFiberType(type: any): $FlowFixMe {
     const typeSymbol = getTypeSymbol(type);
     switch (typeSymbol) {
       case MEMO_NUMBER:
@@ -465,7 +465,7 @@ export function getInternalReactConstants(version: string): {
         return null;
       case HostComponent:
       case HostSingleton:
-      case HostResource:
+      case HostHoistable:
         return type;
       case HostPortal:
       case HostText:
@@ -591,7 +591,7 @@ export function attach(
     Fragment,
     FunctionComponent,
     HostRoot,
-    HostResource,
+    HostHoistable,
     HostSingleton,
     HostPortal,
     HostComponent,
@@ -1032,7 +1032,7 @@ export function attach(
       case HostRoot:
         return ElementTypeRoot;
       case HostComponent:
-      case HostResource:
+      case HostHoistable:
       case HostSingleton:
         return ElementTypeHostComponent;
       case HostPortal:
@@ -1627,7 +1627,7 @@ export function attach(
     }
   }
 
-  let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+  let flushPendingErrorsAndWarningsAfterDelayTimeoutID: null | TimeoutID = null;
 
   function clearPendingErrorsAndWarningsAfterDelay() {
     if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
@@ -1790,7 +1790,7 @@ export function attach(
       pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Array(
+    const operations = new Array<number>(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
         // How big is the string table?
@@ -4144,7 +4144,7 @@ export function attach(
 
   // Map of id and its force error status: true (error), false (toggled off),
   // null (do nothing)
-  const forceErrorForFiberIDs = new Map();
+  const forceErrorForFiberIDs = new Map<number | null, $FlowFixMe>();
 
   function shouldErrorFiberAccordingToMap(fiber: any) {
     if (typeof setErrorHandler !== 'function') {
@@ -4209,7 +4209,7 @@ export function attach(
     return false;
   }
 
-  const forceFallbackForSuspenseIDs = new Set();
+  const forceFallbackForSuspenseIDs = new Set<number>();
 
   function shouldSuspendFiberAccordingToSet(fiber: any) {
     const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));

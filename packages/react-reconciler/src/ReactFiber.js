@@ -24,7 +24,7 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import {
   supportsResources,
   supportsSingletons,
-  isHostResourceType,
+  isHostHoistableType,
   isHostSingletonType,
 } from './ReactFiberHostConfig';
 import {
@@ -49,7 +49,7 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   ForwardRef,
   Fragment,
@@ -511,15 +511,15 @@ export function createFiberFromTypeAndProps(
       supportsSingletons
     ) {
       const hostContext = getHostContext();
-      fiberTag = isHostResourceType(type, pendingProps, hostContext)
-        ? HostResource
+      fiberTag = isHostHoistableType(type, pendingProps, hostContext)
+        ? HostHoistable
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
     } else if (enableFloat && supportsResources) {
       const hostContext = getHostContext();
-      fiberTag = isHostResourceType(type, pendingProps, hostContext)
-        ? HostResource
+      fiberTag = isHostHoistableType(type, pendingProps, hostContext)
+        ? HostHoistable
         : HostComponent;
     } else if (enableHostSingletons && supportsSingletons) {
       fiberTag = isHostSingletonType(type) ? HostSingleton : HostComponent;

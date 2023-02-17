@@ -982,6 +982,10 @@ describe('context legacy', () => {
     PropTypes = require('prop-types');
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should warn if the legacy context API have been used in strict mode', () => {
     class LegacyContextProvider extends React.Component {
       getChildContext() {

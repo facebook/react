@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 let JSDOM;
@@ -60,6 +61,10 @@ describe('ReactDOMFizzShellHydration', () => {
       hasErrored = true;
       fatalError = error;
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   async function serverAct(callback) {
@@ -285,7 +290,7 @@ describe('ReactDOMFizzShellHydration', () => {
   });
 
   test('TODO: A large component stack causes SSR to stack overflow', async () => {
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
 
     function NestedComponent({depth}: {depth: number}) {
       if (depth <= 0) {
@@ -301,7 +306,7 @@ describe('ReactDOMFizzShellHydration', () => {
       );
     });
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error.calls.argsFor(0)[0].toString()).toBe(
+    expect(console.error.mock.calls[0][0].toString()).toBe(
       'RangeError: Maximum call stack size exceeded',
     );
   });

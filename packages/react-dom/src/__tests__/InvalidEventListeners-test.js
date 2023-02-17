@@ -65,9 +65,14 @@ describe('InvalidEventListeners', () => {
 
     if (!__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
-        'Expected `onClick` listener to be a function, ' +
-          'instead got a value of `string` type.',
+      expect(console.error.mock.calls[0][0]).toEqual(
+        expect.objectContaining({
+          detail: expect.objectContaining({
+            message:
+              'Expected `onClick` listener to be a function, instead got a value of `string` type.',
+          }),
+          type: 'unhandled exception',
+        }),
       );
     }
   });

@@ -45,7 +45,7 @@ describe('ReactFlightDOM', () => {
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.node');
+    ReactServerDOMWriter = require('react-server-dom-webpack/server.node.unbundled');
     ReactServerDOMReader = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {
@@ -464,6 +464,13 @@ describe('ReactFlightDOM', () => {
         'You cannot dot into a client module from a server component. ' +
         'You can only pass the imported name through.',
     );
+  });
+
+  it('does not throw when React inspects any deep props', () => {
+    const ClientModule = clientExports({
+      Component: function () {},
+    });
+    <ClientModule.Component key="this adds instrumentation" />;
   });
 
   it('throws when accessing a Context.Provider below the client exports', () => {
@@ -936,8 +943,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in webpackMap.clientManifest) {
-      Object.defineProperty(webpackMap.clientManifest, id, {
+    for (const id in webpackMap) {
+      Object.defineProperty(webpackMap, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },

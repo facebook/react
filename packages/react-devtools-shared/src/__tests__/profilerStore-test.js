@@ -73,7 +73,7 @@ describe('ProfilerStore', () => {
     const fauxProfilingData = {
       dataForRoots: new Map(),
     };
-    spyOn(console, 'warn');
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     store.profilerStore.profilingData = fauxProfilingData;
     expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
     expect(console.warn).toHaveBeenCalledTimes(1);

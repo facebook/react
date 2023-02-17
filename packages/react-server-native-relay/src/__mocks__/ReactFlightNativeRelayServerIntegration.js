@@ -12,7 +12,7 @@ const ReactFlightNativeRelayServerIntegration = {
     destination.push(json);
   },
   close(destination) {},
-  resolveModuleMetaData(config, resource) {
+  resolveClientReferenceMetadata(config, resource) {
     return resource._moduleId;
   },
 };

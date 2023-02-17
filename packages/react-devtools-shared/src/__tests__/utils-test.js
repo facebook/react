@@ -15,6 +15,8 @@ import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils'
 import {
   format,
   formatWithStyles,
+  gt,
+  gte,
 } from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
@@ -250,6 +252,20 @@ describe('utils', () => {
         {foo: 'bar'},
         'hi',
       ]);
+    });
+  });
+
+  describe('semver comparisons', () => {
+    it('gte should compare versions correctly', () => {
+      expect(gte('1.2.3', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.2')).toBe(false);
+    });
+
+    it('gt should compare versions correctly', () => {
+      expect(gt('1.2.3', '1.2.1')).toBe(true);
+      expect(gt('1.2.1', '1.2.1')).toBe(false);
+      expect(gt('1.2.1', '1.2.2')).toBe(false);
     });
   });
 });

@@ -66,9 +66,9 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
   }
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -155,6 +155,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
     moduleLoaderFunctionToModuleMap.set(moduleLoaderFunction, record);
   }
 
+  // $FlowFixMe[underconstrained-implicit-instantiation]
   const response = readRecord(record).value;
   return response;
 }

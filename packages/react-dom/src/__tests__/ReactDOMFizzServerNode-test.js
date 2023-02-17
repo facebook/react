@@ -73,9 +73,16 @@ describe('ReactDOMFizzServerNode', () => {
     );
     pipe(writable);
     jest.runAllTimers();
-    expect(output.result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFloat)) {
+      // with Float, we emit empty heads if they are elided when rendering <html>
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    } else {
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', () => {
@@ -91,7 +98,7 @@ describe('ReactDOMFizzServerNode', () => {
     pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+      `"<div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

@@ -15,7 +15,7 @@ import {
   ClassComponent,
   FunctionComponent,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -65,7 +65,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostText ||
       node.tag === ClassComponent ||
       node.tag === FunctionComponent ||
-      (enableFloat ? node.tag === HostResource : false) ||
+      (enableFloat ? node.tag === HostHoistable : false) ||
       (enableHostSingletons ? node.tag === HostSingleton : false)
     ) {
       const publicInst = node.stateNode;

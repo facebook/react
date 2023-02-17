@@ -20,7 +20,9 @@ import createReactNoop from './createReactNoop';
 export const {
   _Scheduler,
   getChildren,
+  dangerouslyGetChildren,
   getPendingChildren,
+  dangerouslyGetPendingChildren,
   getOrCreateRootContainer,
   createRoot,
   createLegacyRoot,

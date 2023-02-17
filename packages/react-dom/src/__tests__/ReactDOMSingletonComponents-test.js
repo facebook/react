@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -13,6 +14,7 @@ let JSDOM;
 let Stream;
 let Scheduler;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let document;
@@ -28,6 +30,7 @@ describe('ReactDOM HostSingleton', () => {
     JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
@@ -330,6 +333,7 @@ describe('ReactDOM HostSingleton', () => {
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
           <title>a client title</title>
+          <meta />
         </head>
         <body data-client-baz="baz">
           <style>
@@ -825,14 +829,7 @@ describe('ReactDOM HostSingleton', () => {
     });
     container = document.body;
 
-    let root;
-    // Given our new capabilities to render "safely" into the body we should consider removing this warning
-    expect(() => {
-      root = ReactDOMClient.createRoot(container);
-    }).toErrorDev(
-      'Warning: createRoot(): Creating roots directly with document.body is discouraged, since its children are often manipulated by third-party scripts and browser extensions. This may lead to subtle reconciliation issues. Try using a container element created for your app.',
-      {withoutStack: true},
-    );
+    const root = ReactDOMClient.createRoot(container);
     root.render(<div>something new</div>);
     expect(Scheduler).toFlushWithoutYielding();
     expect(getVisibleChildren(document)).toEqual(
@@ -1006,5 +1003,20 @@ describe('ReactDOM HostSingleton', () => {
         <body>foo</body>
       </html>,
     );
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at body', async () => {
+    ReactDOM.render(<div />, document.body);
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at <html>', async () => {
+    ReactDOM.render(<body />, document.documentElement);
+  });
+
+  // https://github.com/facebook/react/issues/26128
+  it('(#26128) does not throw when rendering at document', async () => {
+    ReactDOM.render(<html />, document);
   });
 });

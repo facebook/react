@@ -58,7 +58,7 @@ if (__DEV__) {
   let pendingUNSAFE_ComponentWillUpdateWarnings: Array<Fiber> = [];
 
   // Tracks components we have already warned about.
-  const didWarnAboutUnsafeLifecycles = new Set();
+  const didWarnAboutUnsafeLifecycles = new Set<mixed>();
 
   ReactStrictModeWarnings.recordUnsafeLifecycleWarnings = (
     fiber: Fiber,
@@ -115,7 +115,7 @@ if (__DEV__) {
 
   ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
     // We do an initial pass to gather component names
-    const componentWillMountUniqueNames = new Set();
+    const componentWillMountUniqueNames = new Set<string>();
     if (pendingComponentWillMountWarnings.length > 0) {
       pendingComponentWillMountWarnings.forEach(fiber => {
         componentWillMountUniqueNames.add(
@@ -126,7 +126,7 @@ if (__DEV__) {
       pendingComponentWillMountWarnings = [];
     }
 
-    const UNSAFE_componentWillMountUniqueNames = new Set();
+    const UNSAFE_componentWillMountUniqueNames = new Set<string>();
     if (pendingUNSAFE_ComponentWillMountWarnings.length > 0) {
       pendingUNSAFE_ComponentWillMountWarnings.forEach(fiber => {
         UNSAFE_componentWillMountUniqueNames.add(
@@ -137,7 +137,7 @@ if (__DEV__) {
       pendingUNSAFE_ComponentWillMountWarnings = [];
     }
 
-    const componentWillReceivePropsUniqueNames = new Set();
+    const componentWillReceivePropsUniqueNames = new Set<string>();
     if (pendingComponentWillReceivePropsWarnings.length > 0) {
       pendingComponentWillReceivePropsWarnings.forEach(fiber => {
         componentWillReceivePropsUniqueNames.add(
@@ -149,7 +149,7 @@ if (__DEV__) {
       pendingComponentWillReceivePropsWarnings = [];
     }
 
-    const UNSAFE_componentWillReceivePropsUniqueNames = new Set();
+    const UNSAFE_componentWillReceivePropsUniqueNames = new Set<string>();
     if (pendingUNSAFE_ComponentWillReceivePropsWarnings.length > 0) {
       pendingUNSAFE_ComponentWillReceivePropsWarnings.forEach(fiber => {
         UNSAFE_componentWillReceivePropsUniqueNames.add(
@@ -161,7 +161,7 @@ if (__DEV__) {
       pendingUNSAFE_ComponentWillReceivePropsWarnings = [];
     }
 
-    const componentWillUpdateUniqueNames = new Set();
+    const componentWillUpdateUniqueNames = new Set<string>();
     if (pendingComponentWillUpdateWarnings.length > 0) {
       pendingComponentWillUpdateWarnings.forEach(fiber => {
         componentWillUpdateUniqueNames.add(
@@ -173,7 +173,7 @@ if (__DEV__) {
       pendingComponentWillUpdateWarnings = [];
     }
 
-    const UNSAFE_componentWillUpdateUniqueNames = new Set();
+    const UNSAFE_componentWillUpdateUniqueNames = new Set<string>();
     if (pendingUNSAFE_ComponentWillUpdateWarnings.length > 0) {
       pendingUNSAFE_ComponentWillUpdateWarnings.forEach(fiber => {
         UNSAFE_componentWillUpdateUniqueNames.add(
@@ -288,7 +288,7 @@ if (__DEV__) {
   let pendingLegacyContextWarning: FiberToFiberComponentsMap = new Map();
 
   // Tracks components we have already warned about.
-  const didWarnAboutLegacyContext = new Set();
+  const didWarnAboutLegacyContext = new Set<mixed>();
 
   ReactStrictModeWarnings.recordLegacyContextWarning = (
     fiber: Fiber,
@@ -331,7 +331,7 @@ if (__DEV__) {
         }
         const firstFiber = fiberArray[0];
 
-        const uniqueNames = new Set();
+        const uniqueNames = new Set<string>();
         fiberArray.forEach(fiber => {
           uniqueNames.add(getComponentNameFromFiber(fiber) || 'Component');
           didWarnAboutLegacyContext.add(fiber.type);

@@ -107,9 +107,9 @@ describe('profiling charts', () => {
       const firstCommitData = getFlamegraphChartData(rootID, 0);
       expect(firstCommitData.commitTree.nodes.size).toBe(5);
       expect(firstCommitData.chartData.rows).toMatchInlineSnapshot(`
-        Array [
-          Array [
-            Object {
+        [
+          [
+            {
               "actualDuration": 15,
               "didRender": true,
               "id": 2,
@@ -120,32 +120,32 @@ describe('profiling charts', () => {
               "treeBaseDuration": 15,
             },
           ],
-          Array [
-            Object {
+          [
+            {
               "actualDuration": 0,
               "didRender": true,
               "id": 5,
-              "label": "Memo(Child) key=\\"third\\" (<0.1ms of <0.1ms)",
+              "label": "Memo(Child) key="third" (<0.1ms of <0.1ms)",
               "name": "Memo(Child)",
               "offset": 15,
               "selfDuration": 0,
               "treeBaseDuration": 0,
             },
-            Object {
+            {
               "actualDuration": 2,
               "didRender": true,
               "id": 4,
-              "label": "Memo(Child) key=\\"second\\" (2ms of 2ms)",
+              "label": "Memo(Child) key="second" (2ms of 2ms)",
               "name": "Memo(Child)",
               "offset": 13,
               "selfDuration": 2,
               "treeBaseDuration": 2,
             },
-            Object {
+            {
               "actualDuration": 3,
               "didRender": true,
               "id": 3,
-              "label": "Memo(Child) key=\\"first\\" (3ms of 3ms)",
+              "label": "Memo(Child) key="first" (3ms of 3ms)",
               "name": "Memo(Child)",
               "offset": 10,
               "selfDuration": 3,
@@ -158,9 +158,9 @@ describe('profiling charts', () => {
       const secondCommitData = getFlamegraphChartData(rootID, 1);
       expect(secondCommitData.commitTree.nodes.size).toBe(5);
       expect(secondCommitData.chartData.rows).toMatchInlineSnapshot(`
-        Array [
-          Array [
-            Object {
+        [
+          [
+            {
               "actualDuration": 10,
               "didRender": true,
               "id": 2,
@@ -171,32 +171,32 @@ describe('profiling charts', () => {
               "treeBaseDuration": 15,
             },
           ],
-          Array [
-            Object {
+          [
+            {
               "actualDuration": 0,
               "didRender": false,
               "id": 5,
-              "label": "Memo(Child) key=\\"third\\"",
+              "label": "Memo(Child) key="third"",
               "name": "Memo(Child)",
               "offset": 15,
               "selfDuration": 0,
               "treeBaseDuration": 0,
             },
-            Object {
+            {
               "actualDuration": 0,
               "didRender": false,
               "id": 4,
-              "label": "Memo(Child) key=\\"second\\"",
+              "label": "Memo(Child) key="second"",
               "name": "Memo(Child)",
               "offset": 13,
               "selfDuration": 0,
               "treeBaseDuration": 2,
             },
-            Object {
+            {
               "actualDuration": 0,
               "didRender": false,
               "id": 3,
-              "label": "Memo(Child) key=\\"first\\"",
+              "label": "Memo(Child) key="first"",
               "name": "Memo(Child)",
               "offset": 10,
               "selfDuration": 0,
@@ -258,28 +258,28 @@ describe('profiling charts', () => {
       const firstCommitData = getRankedChartData(rootID, 0);
       expect(firstCommitData.commitTree.nodes.size).toBe(5);
       expect(firstCommitData.chartData.nodes).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "id": 2,
             "label": "Parent (10ms)",
             "name": "Parent",
             "value": 10,
           },
-          Object {
+          {
             "id": 3,
-            "label": "Memo(Child) (Memo) key=\\"first\\" (3ms)",
+            "label": "Memo(Child) (Memo) key="first" (3ms)",
             "name": "Memo(Child)",
             "value": 3,
           },
-          Object {
+          {
             "id": 4,
-            "label": "Memo(Child) (Memo) key=\\"second\\" (2ms)",
+            "label": "Memo(Child) (Memo) key="second" (2ms)",
             "name": "Memo(Child)",
             "value": 2,
           },
-          Object {
+          {
             "id": 5,
-            "label": "Memo(Child) (Memo) key=\\"third\\" (<0.1ms)",
+            "label": "Memo(Child) (Memo) key="third" (<0.1ms)",
             "name": "Memo(Child)",
             "value": 0,
           },
@@ -290,8 +290,8 @@ describe('profiling charts', () => {
       const secondCommitData = getRankedChartData(rootID, 1);
       expect(secondCommitData.commitTree.nodes.size).toBe(5);
       expect(secondCommitData.chartData.nodes).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "id": 2,
             "label": "Parent (10ms)",
             "name": "Parent",

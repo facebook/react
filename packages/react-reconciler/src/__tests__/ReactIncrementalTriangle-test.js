@@ -316,7 +316,8 @@ describe('ReactIncrementalTriangle', () => {
     reset();
 
     function assertConsistentTree(activeTriangleIndices = new Set(), counter) {
-      const children = ReactNoop.getChildren(rootID);
+      const childrenJSX = ReactNoop.getPendingChildrenAsJSX(rootID);
+      const children = childrenJSX === null ? [] : childrenJSX.props.children;
 
       if (children.length !== TOTAL_CHILDREN) {
         throw new Error('Wrong number of children.');
@@ -327,7 +328,7 @@ describe('ReactIncrementalTriangle', () => {
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
-        const output = JSON.parse(child.prop);
+        const output = JSON.parse(child.props.prop);
         const prop = output.prop;
         const isActive = output.isActive;
         const counterContext = output.counterContext;

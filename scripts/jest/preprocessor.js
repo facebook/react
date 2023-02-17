@@ -60,16 +60,16 @@ module.exports = {
   process: function (src, filePath) {
     if (filePath.match(/\.css$/)) {
       // Don't try to parse CSS modules; they aren't needed for tests anyway.
-      return '';
+      return {code: ''};
     }
     if (filePath.match(/\.coffee$/)) {
-      return coffee.compile(src, {bare: true});
+      return {code: coffee.compile(src, {bare: true})};
     }
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
-      return tsPreprocessor.compile(src, filePath);
+      return {code: tsPreprocessor.compile(src, filePath)};
     }
     if (filePath.match(/\.json$/)) {
-      return src;
+      return {code: src};
     }
     if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
@@ -95,22 +95,24 @@ module.exports = {
         plugins.push(pathToTransformReactVersionPragma);
       }
       let sourceAst = hermesParser.parse(src, {babel: true});
-      return babel.transformFromAstSync(
-        sourceAst,
-        src,
-        Object.assign(
-          {filename: path.relative(process.cwd(), filePath)},
-          babelOptions,
-          {
-            plugins,
-            sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
-              ? process.env.JEST_ENABLE_SOURCE_MAPS
-              : false,
-          }
-        )
-      );
+      return {
+        code: babel.transformFromAstSync(
+          sourceAst,
+          src,
+          Object.assign(
+            {filename: path.relative(process.cwd(), filePath)},
+            babelOptions,
+            {
+              plugins,
+              sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
+                ? process.env.JEST_ENABLE_SOURCE_MAPS
+                : false,
+            }
+          )
+        ).code,
+      };
     }
-    return src;
+    return {code: src};
   },
 
   getCacheKey: createCacheKeyFunction(

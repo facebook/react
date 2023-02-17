@@ -58,7 +58,7 @@ export default function ElementTypes(): React.Node {
     <Profiler id="test" onRender={() => {}}>
       <Fragment>
         <Context.Provider value={'def'}>
-          <Context.Consumer>{value => null}</Context.Consumer>
+          <Context.Consumer>{(value: $FlowFixMe) => null}</Context.Consumer>
         </Context.Provider>
         <StrictMode>
           <Cache>

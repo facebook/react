@@ -391,7 +391,7 @@ function processResourceSendRequest(
   const data = event.args.data;
   const requestId = data.requestId;
 
-  const availableDepths = new Array(
+  const availableDepths = new Array<boolean>(
     state.requestIdToNetworkMeasureMap.size + 1,
   ).fill(true);
   state.requestIdToNetworkMeasureMap.forEach(({depth}) => {
@@ -557,7 +557,7 @@ function processTimelineEvent(
           .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        const availableDepths = new Array(
+        const availableDepths = new Array<boolean>(
           state.unresolvedSuspenseEvents.size + 1,
         ).fill(true);
         state.unresolvedSuspenseEvents.forEach(({depth}) => {
@@ -1009,7 +1009,7 @@ export default async function preprocessData(
 ): Promise<TimelineData> {
   const flamechart = preprocessFlamechart(timeline);
 
-  const laneToReactMeasureMap = new Map();
+  const laneToReactMeasureMap: Map<ReactLane, Array<ReactMeasure>> = new Map();
   for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
     laneToReactMeasureMap.set(lane, []);
   }

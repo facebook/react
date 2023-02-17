@@ -57,7 +57,6 @@ export function getCacheSignal(): AbortSignal {
       'This CacheSignal was requested outside React which means that it is ' +
         'immediately aborted.',
     );
-    // $FlowFixMe Flow doesn't yet know about this argument.
     controller.abort(reason);
     return controller.signal;
   }

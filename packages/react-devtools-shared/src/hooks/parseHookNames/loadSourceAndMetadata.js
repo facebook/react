@@ -136,7 +136,7 @@ function extractAndLoadSourceMapJSON(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
 ): Promise<Array<$Call<<T>(p: Promise<T> | T) => T, Promise<void>>>> {
   // Deduplicate fetches, since there can be multiple location keys per source map.
-  const dedupedFetchPromises = new Map();
+  const dedupedFetchPromises = new Map<string, Promise<$FlowFixMe>>();
 
   if (__DEBUG__) {
     console.log(
@@ -463,7 +463,7 @@ function loadSourceFiles(
   fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<Array<$Call<<T>(p: Promise<T> | T) => T, Promise<void>>>> {
   // Deduplicate fetches, since there can be multiple location keys per file.
-  const dedupedFetchPromises = new Map();
+  const dedupedFetchPromises = new Map<string, Promise<$FlowFixMe>>();
 
   const setterPromises = [];
   locationKeyToHookSourceAndMetadata.forEach(hookSourceAndMetadata => {
