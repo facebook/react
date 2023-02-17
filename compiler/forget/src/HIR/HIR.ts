@@ -373,17 +373,12 @@ export enum InstructionKind {
   Reassign = "Reassign",
 }
 
-/**
- * A value that may be assigned to a place. Similar to instructions, values
- * are not recursive: complex values such as objects or arrays are always
- * defined by Instructions to construct a temporary Place, and then referring
- * to that Place.
- *
- * Values are therefore only a Place or a primitive value.
- */
-export type InstructionValue =
-  | (InstructionData & { loc: SourceLocation })
-  | Place;
+function _staticInvariantInstructionValueHasLocation(
+  value: InstructionValue
+): SourceLocation {
+  // If this fails, it is because a variant of InstructionValue is missing a .loc - add it!
+  return value.loc;
+}
 
 export type Phi = {
   kind: "Phi";
@@ -392,68 +387,127 @@ export type Phi = {
   type: Type;
 };
 
-export type InstructionData =
-  | { kind: "Primitive"; value: number | boolean | string | null | undefined }
-  | { kind: "JSXText"; value: string }
+/**
+ * The value of a given instruction. Note that values are not recursive: complex
+ * values such as objects or arrays are always defined by instructions to define
+ * their operands (saving to a temporary), then passing those temporaries as
+ * the operands to the final instruction (ObjectExpression, ArrayExpression, etc).
+ *
+ * Operands are therefore always a Place.
+ */
+export type InstructionValue =
+  | Place
+  | {
+      kind: "Primitive";
+      value: number | boolean | string | null | undefined;
+      loc: SourceLocation;
+    }
+  | { kind: "JSXText"; value: string; loc: SourceLocation }
   | {
       kind: "BinaryExpression";
       operator: t.BinaryExpression["operator"];
       left: Place;
       right: Place;
+      loc: SourceLocation;
     }
-  | { kind: "NewExpression"; callee: Place; args: Array<Place> }
+  | {
+      kind: "NewExpression";
+      callee: Place;
+      args: Array<Place>;
+      loc: SourceLocation;
+    }
   | {
       kind: "CallExpression";
       callee: Place;
       args: Array<Place>;
+      loc: SourceLocation;
     }
   | {
       kind: "PropertyCall";
       receiver: Place;
       property: string;
       args: Array<Place>;
+      loc: SourceLocation;
     }
   | {
       kind: "ComputedCall";
       receiver: Place;
       property: Place;
       args: Array<Place>;
+      loc: SourceLocation;
     }
-  | { kind: "UnaryExpression"; operator: string; value: Place }
-  | { kind: "TypeCastExpression"; value: Place; type: t.TypeAnnotation }
+  | {
+      kind: "UnaryExpression";
+      operator: string;
+      value: Place;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "TypeCastExpression";
+      value: Place;
+      type: t.TypeAnnotation;
+      loc: SourceLocation;
+    }
   | {
       kind: "JsxExpression";
       tag: Place;
       props: Array<JsxAttribute>;
       children: Array<Place> | null; // null === no children
+      loc: SourceLocation;
     }
   | {
       kind: "ObjectExpression";
       properties: Map<string, Place> | null; // null === empty object
+      loc: SourceLocation;
     }
-  | { kind: "ArrayExpression"; elements: Array<Place> }
-  | { kind: "JsxFragment"; children: Array<Place> }
+  | { kind: "ArrayExpression"; elements: Array<Place>; loc: SourceLocation }
+  | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
 
   // store `object.property = value`
-  | { kind: "PropertyStore"; object: Place; property: string; value: Place }
+  | {
+      kind: "PropertyStore";
+      object: Place;
+      property: string;
+      value: Place;
+      loc: SourceLocation;
+    }
   // load `object.property`
-  | { kind: "PropertyLoad"; object: Place; property: string; optional: boolean }
+  | {
+      kind: "PropertyLoad";
+      object: Place;
+      property: string;
+      optional: boolean;
+      loc: SourceLocation;
+    }
 
   // store `object[index] = value` - like PropertyStore but with a dynamic property
-  | { kind: "ComputedStore"; object: Place; property: Place; value: Place }
+  | {
+      kind: "ComputedStore";
+      object: Place;
+      property: Place;
+      value: Place;
+      loc: SourceLocation;
+    }
   // load `object[index]` - like PropertyLoad but with a dynamic property
-  | { kind: "ComputedLoad"; object: Place; property: Place }
-  | { kind: "LoadGlobal"; name: string }
+  | {
+      kind: "ComputedLoad";
+      object: Place;
+      property: Place;
+      loc: SourceLocation;
+    }
+  | { kind: "LoadGlobal"; name: string; loc: SourceLocation }
   | FunctionExpression
   | {
       kind: "TaggedTemplateExpression";
       tag: Place;
       value: { raw: string; cooked?: string };
+      loc: SourceLocation;
     }
   | {
       kind: "TemplateLiteral";
       subexprs: Array<Place>;
       quasis: Array<{ raw: string; cooked?: string }>;
+      loc: SourceLocation;
     }
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
@@ -463,6 +517,7 @@ export type InstructionData =
   | {
       kind: "UnsupportedNode";
       node: t.Node;
+      loc: SourceLocation;
     };
 
 export type JsxAttribute =
@@ -475,6 +530,7 @@ export type FunctionExpression = {
   dependencies: Array<Place>;
   loweredFunc: HIRFunction;
   expr: t.ArrowFunctionExpression | t.FunctionExpression;
+  loc: SourceLocation;
 };
 /**
  * A place where data may be read from / written to:
