@@ -45,7 +45,8 @@ process.on('unhandledRejection', err => {
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -216,7 +217,8 @@ function getFormat(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       return `cjs`;
-    case NODE_ESM:
+    case ESM_DEV:
+    case ESM_PROD:
       return `es`;
     case BROWSER_SCRIPT:
       return `iife`;
@@ -226,8 +228,8 @@ function getFormat(bundleType) {
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
       return true;
+    case ESM_DEV:
     case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
@@ -235,6 +237,7 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
+    case ESM_PROD:
     case UMD_PROD:
     case NODE_PROD:
     case BUN_PROD:
@@ -256,7 +259,6 @@ function isProductionBundleType(bundleType) {
 function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case NODE_DEV:
@@ -267,6 +269,8 @@ function isProfilingBundleType(bundleType) {
     case RN_FB_PROD:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
     case UMD_DEV:
     case UMD_PROD:
     case BROWSER_SCRIPT:
@@ -385,7 +389,7 @@ function getPlugins(
     // Apply dead code elimination and/or minification.
     // closure doesn't yet support leaving ESM imports intact
     isProduction &&
-      bundleType !== NODE_ESM &&
+      bundleType !== ESM_PROD &&
       closure({
         compilation_level: 'SIMPLE',
         language_in: 'ECMASCRIPT_2020',
@@ -396,7 +400,9 @@ function getPlugins(
             ? 'ECMASCRIPT5'
             : 'ECMASCRIPT5_STRICT',
         emit_use_strict:
-          bundleType !== BROWSER_SCRIPT && bundleType !== NODE_ESM,
+          bundleType !== BROWSER_SCRIPT &&
+          bundleType !== ESM_PROD &&
+          bundleType !== ESM_DEV,
         env: 'CUSTOM',
         warning_level: 'QUIET',
         apply_input_source_maps: false,
@@ -744,7 +750,8 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     bundles.push(
       [bundle, NODE_ES2015],
-      [bundle, NODE_ESM],
+      [bundle, ESM_DEV],
+      [bundle, ESM_PROD],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING],

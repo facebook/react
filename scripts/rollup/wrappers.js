@@ -6,7 +6,8 @@ const {bundleTypes, moduleTypes} = require('./bundles');
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -66,8 +67,20 @@ ${license}
 ${source}`;
   },
 
-  /***************** NODE_ESM *****************/
-  [NODE_ESM](source, globalName, filename, moduleType) {
+  /***************** ESM_DEV *****************/
+  [ESM_DEV](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** ESM_PROD *****************/
+  [ESM_PROD](source, globalName, filename, moduleType) {
     return `/**
 * @license React
  * ${filename}

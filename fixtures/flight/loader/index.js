@@ -23,8 +23,17 @@ async function babelLoad(url, context, defaultLoad) {
   const result = await defaultLoad(url, context, defaultLoad);
   if (result.format === 'module') {
     const opt = Object.assign({filename: url}, babelOptions);
-    const {code} = await babel.transformAsync(result.source, opt);
-    return {source: code, format: 'module'};
+    const newResult = await babel.transformAsync(result.source, opt);
+    if (!newResult) {
+      if (typeof result.source === 'string') {
+        return result;
+      }
+      return {
+        source: Buffer.from(result.source).toString('utf8'),
+        format: 'module',
+      };
+    }
+    return {source: newResult.code, format: 'module'};
   }
   return defaultLoad(url, context, defaultLoad);
 }
@@ -39,8 +48,16 @@ async function babelTransformSource(source, context, defaultTransformSource) {
   const {format} = context;
   if (format === 'module') {
     const opt = Object.assign({filename: context.url}, babelOptions);
-    const {code} = await babel.transformAsync(source, opt);
-    return {source: code};
+    const newResult = await babel.transformAsync(source, opt);
+    if (!newResult) {
+      if (typeof source === 'string') {
+        return {source};
+      }
+      return {
+        source: Buffer.from(source).toString('utf8'),
+      };
+    }
+    return {source: newResult.code};
   }
   return defaultTransformSource(source, context, defaultTransformSource);
 }
