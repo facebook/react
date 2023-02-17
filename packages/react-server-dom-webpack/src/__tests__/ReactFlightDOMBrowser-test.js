@@ -18,12 +18,10 @@ global.TextDecoder = require('util').TextDecoder;
 let clientExports;
 let serverExports;
 let webpackMap;
-let webpackModules;
 let webpackServerMap;
 let act;
 let React;
 let ReactDOMClient;
-let ReactDOMServer;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 let Suspense;
@@ -37,28 +35,14 @@ describe('ReactFlightDOMBrowser', () => {
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
-    webpackModules = WebpackMock.webpackModules;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactDOMServer = require('react-dom/server.browser');
     ReactServerDOMWriter = require('react-server-dom-webpack/server.browser');
     ReactServerDOMReader = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
     use = React.use;
   });
-
-  async function readResult(stream) {
-    const reader = stream.getReader();
-    let result = '';
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) {
-        return result;
-      }
-      result += Buffer.from(value).toString('utf8');
-    }
-  }
 
   function makeDelayedText(Model) {
     let error, _resolve, _reject;
@@ -464,52 +448,6 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Final pending chunk is written; stream should be closed.
     expect(isDone).toBeTruthy();
-  });
-
-  // @gate enableUseHook
-  it('should allow an alternative module mapping to be used for SSR', async () => {
-    function ClientComponent() {
-      return <span>Client Component</span>;
-    }
-    // The Client build may not have the same IDs as the Server bundles for the same
-    // component.
-    const ClientComponentOnTheClient = clientExports(ClientComponent);
-    const ClientComponentOnTheServer = clientExports(ClientComponent);
-
-    // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.filepath]['*'].id;
-    delete webpackModules[clientId];
-
-    // Instead, we have to provide a translation from the client meta data to the SSR
-    // meta data.
-    const ssrMetadata = webpackMap[ClientComponentOnTheServer.filepath]['*'];
-    const translationMap = {
-      [clientId]: {
-        '*': ssrMetadata,
-      },
-    };
-
-    function App() {
-      return <ClientComponentOnTheClient />;
-    }
-
-    const stream = ReactServerDOMWriter.renderToReadableStream(
-      <App />,
-      webpackMap,
-    );
-    const response = ReactServerDOMReader.createFromReadableStream(stream, {
-      moduleMap: translationMap,
-    });
-
-    function ClientRoot() {
-      return use(response);
-    }
-
-    const ssrStream = await ReactDOMServer.renderToReadableStream(
-      <ClientRoot />,
-    );
-    const result = await readResult(ssrStream);
-    expect(result).toEqual('<span>Client Component</span>');
   });
 
   // @gate enableUseHook

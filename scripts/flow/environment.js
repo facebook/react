@@ -141,6 +141,23 @@ declare module 'util' {
   declare function deprecate(f: Function, string: string): Function;
   declare function promisify(f: Function): Function;
   declare function callbackify(f: Function): Function;
+  declare class TextDecoder {
+    constructor(
+      encoding?: string,
+      options?: {
+        fatal?: boolean,
+        ignoreBOM?: boolean,
+        ...
+      },
+    ): void;
+    decode(
+      input?: ArrayBuffer | DataView | $TypedArray,
+      options?: {stream?: boolean, ...},
+    ): string;
+    encoding: string;
+    fatal: boolean;
+    ignoreBOM: boolean;
+  }
   declare class TextEncoder {
     constructor(encoding?: string): TextEncoder;
     encode(buffer: string): Uint8Array;
