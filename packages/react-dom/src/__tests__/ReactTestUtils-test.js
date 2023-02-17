@@ -463,4 +463,19 @@ describe('ReactTestUtils', () => {
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(mockArgs.length).toEqual(0);
   });
+  it('should find rendered component with type in document', () => {
+    class MyComponent extends React.Component {
+      render() {
+        return true;
+      }
+    }
+
+    const instance = ReactTestUtils.renderIntoDocument(<MyComponent />);
+    const renderedComponentType = ReactTestUtils.findRenderedComponentWithType(
+      instance,
+      MyComponent,
+    );
+
+    expect(renderedComponentType).toBe(instance);
+  });
 });
