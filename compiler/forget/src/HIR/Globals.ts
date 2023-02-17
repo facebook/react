@@ -5,25 +5,51 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-
-const GLOBALS: Map<string, t.Identifier> = new Map([
-  ["Map", t.identifier("Map")],
-  ["Set", t.identifier("Set")],
-  ["Math", t.identifier("Math")],
+export const DEFAULT_GLOBALS: Set<string> = new Set([
+  "String",
+  "Object",
+  "Function",
+  "Array",
+  "Number",
+  "RegExp",
+  "Date",
+  "Math",
+  "Error",
+  "Function",
+  "TypeError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "URIError",
+  "EvalError",
+  "Boolean",
+  "DataView",
+  "Float32Array",
+  "Float64Array",
+  "Int8Array",
+  "Int16Array",
+  "Int32Array",
+  "Map",
+  "Set",
+  "WeakMap",
+  "Uint8Array",
+  "Uint8ClampedArray",
+  "Uint16Array",
+  "Uint32Array",
+  "ArrayBuffer",
+  "JSON",
+  "parseFloat",
+  "parseInt",
+  "console",
+  "isNaN",
+  "eval",
+  "isFinite",
+  "encodeURI",
+  "decodeURI",
+  "encodeURIComponent",
+  "decodeURIComponent",
 ]);
 
 export type Global = {
   name: string;
 };
-
-// TODO: This will work as a stopgap but it isn't really correct. We need proper handling of globals
-// and module-scoped variables, which means understanding module constants and imports.
-export function getGlobalDeclaration(identifierName: string): Global | null {
-  const ident = GLOBALS.get(identifierName);
-  if (ident != null) {
-    return ident;
-  }
-  // TODO: return null if not explicitly configured by the user
-  return { name: identifierName };
-}

@@ -12,7 +12,7 @@ import { CompilerError } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
-import { getGlobalDeclaration, Global } from "./Globals";
+import { Global } from "./Globals";
 import {
   BasicBlock,
   BlockId,
@@ -137,7 +137,7 @@ export default class HIRBuilder {
   }
 
   resolveGlobal(path: NodePath<t.Identifier | t.JSXIdentifier>): Global | null {
-    return getGlobalDeclaration(path.node.name);
+    return this.#env.getGlobalDeclaration(path.node.name);
   }
 
   /**

@@ -13,7 +13,7 @@ export type PluginOptions = {
    */
   enableOnlyOnUseForgetDirective: boolean;
 
-  environment: EnvironmentOptions | null;
+  environment: Partial<EnvironmentOptions> | null;
 };
 
 export const defaultOptions: PluginOptions = {
