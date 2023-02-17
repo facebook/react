@@ -2251,15 +2251,15 @@ rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-"react-art@link:../../build/node_modules/react-art":
+"react-art@link:../../build/oss-experimental/react-art":
   version "0.0.0"
   uid ""
 
-"react-dom@link:../../build/node_modules/react-dom":
+"react-dom@link:../../build/oss-experimental/react-dom":
   version "0.0.0"
   uid ""
 
-"react@link:../../build/node_modules/react":
+"react@link:../../build/oss-experimental/react":
   version "0.0.0"
   uid ""
 
