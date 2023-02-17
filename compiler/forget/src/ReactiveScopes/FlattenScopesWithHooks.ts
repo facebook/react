@@ -6,8 +6,8 @@
  */
 
 import {
-  Environment,
   InstructionId,
+  isHookType,
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveStatement,
@@ -31,19 +31,12 @@ import {
  * to ensure the hook call does not inadvertently become conditional.
  */
 export function flattenScopesWithHooks(fn: ReactiveFunction): void {
-  visitReactiveFunction(fn, new Transform(fn.env), { hasHook: false });
+  visitReactiveFunction(fn, new Transform(), { hasHook: false });
 }
 
 type State = { hasHook: boolean };
 
 class Transform extends ReactiveFunctionTransform<State> {
-  env: Environment;
-
-  constructor(env: Environment) {
-    super();
-    this.env = env;
-  }
-
   override transformScope(
     scope: ReactiveScopeBlock,
     outerState: State
@@ -65,12 +58,9 @@ class Transform extends ReactiveFunctionTransform<State> {
   ): void {
     if (
       value.kind === "CallExpression" &&
-      value.callee.identifier.name !== null
+      isHookType(value.callee.identifier)
     ) {
-      const hook = this.env.getHookDeclaration(value.callee.identifier.name);
-      if (hook !== null) {
-        state.hasHook = true;
-      }
+      state.hasHook = true;
     }
   }
 }

@@ -121,6 +121,15 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "LoadGlobal": {
+      const hook = env.getHookDeclaration(value.name);
+      if (hook !== null) {
+        const type: Type = { kind: "Hook", definition: hook };
+        yield equation(left, type);
+      }
+      break;
+    }
+
     case "CallExpression": {
       const hook =
         value.callee.identifier.name !== null
@@ -128,7 +137,7 @@ function* generateInstructionTypes(
           : null;
       let type: Type;
       if (hook !== null) {
-        type = { kind: "Hook", name: hook.name };
+        type = { kind: "Hook", definition: hook };
       } else {
         type = { kind: "Function" };
       }

@@ -12,7 +12,7 @@ import { CompilerError } from "../CompilerError";
 import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
-import { getOrAddGlobal } from "./Globals";
+import { getGlobalDeclaration, Global } from "./Globals";
 import {
   BasicBlock,
   BlockId,
@@ -136,6 +136,10 @@ export default class HIRBuilder {
     };
   }
 
+  resolveGlobal(path: NodePath<t.Identifier | t.JSXIdentifier>): Global | null {
+    return getGlobalDeclaration(path.node.name);
+  }
+
   /**
    * Maps an Identifier (or JSX identifier) Babel node to an internal `Identifier`
    * which represents the variable being referenced, according to the JS scoping rules.
@@ -168,15 +172,16 @@ export default class HIRBuilder {
    */
   resolveIdentifier(
     path: NodePath<t.Identifier | t.JSXIdentifier>
-  ): Identifier {
+  ): Identifier | null {
     const originalName = path.node.name;
-    const node =
-      path.scope.getBindingIdentifier(originalName) ??
-      getOrAddGlobal(originalName);
+    const node = path.scope.getBindingIdentifier(originalName);
+    if (node == null) {
+      return null;
+    }
     return this.resolveBinding(node);
   }
 
-  resolveBinding(node: t.Identifier) {
+  resolveBinding(node: t.Identifier): Identifier {
     const originalName = node.name;
     let name = originalName;
     let index = 0;

@@ -1,11 +1,4 @@
-import invariant from "invariant";
-import {
-  Effect,
-  HIRFunction,
-  HookType,
-  InstructionValue,
-  isHookType,
-} from "../HIR";
+import { Effect, HIRFunction, HookType, isHookType } from "../HIR";
 
 export default function (func: HIRFunction) {
   for (const [_, block] of func.body.blocks) {
@@ -13,7 +6,8 @@ export default function (func: HIRFunction) {
       switch (instr.value.kind) {
         case "CallExpression": {
           if (isHookType(instr.value.callee.identifier)) {
-            const name = (instr.value.callee.identifier.type as HookType).name;
+            const name = (instr.value.callee.identifier.type as HookType)
+              .definition.name;
             if (name === "useMemo") {
               const [fn] = instr.value.args;
 

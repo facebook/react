@@ -8,6 +8,7 @@
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { Environment } from "./Environment";
+import { Hook } from "./Hooks";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -641,7 +642,7 @@ export type FunctionType = {
 };
 export type HookType = {
   kind: "Hook";
-  name: string;
+  definition: Hook;
 };
 export type ObjectType = { kind: "Object" };
 export type TypeVar = {
@@ -720,7 +721,9 @@ function funcTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function hookTypeEquals(tA: Type, tB: Type): boolean {
-  return tA.kind === "Hook" && tB.kind === "Hook" && tA.name === tB.name;
+  return (
+    tA.kind === "Hook" && tB.kind === "Hook" && tA.definition === tB.definition
+  );
 }
 
 function phiTypeEquals(tA: Type, tB: Type): boolean {

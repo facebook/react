@@ -589,8 +589,8 @@ function inferBlock(
         valueKind = ValueKind.Mutable;
         effectKind = Effect.Mutate;
         const hook =
-          instrValue.callee.identifier.name !== null
-            ? env.getHookDeclaration(instrValue.callee.identifier.name)
+          instrValue.callee.identifier.type.kind === "Hook"
+            ? instrValue.callee.identifier.type.definition
             : null;
         if (hook !== null) {
           effectKind = hook.effectKind;

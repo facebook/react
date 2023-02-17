@@ -79,6 +79,14 @@ export function lower(
   func.get("params").forEach((param) => {
     if (param.isIdentifier()) {
       const identifier = builder.resolveIdentifier(param);
+      if (identifier === null) {
+        builder.errors.push({
+          reason: `(BuildHIR::lower) Could not find binding for param '${param.node.name}'`,
+          severity: ErrorSeverity.Invariant,
+          nodePath: param,
+        });
+        return;
+      }
       const place: Place = {
         kind: "Identifier",
         identifier,
@@ -1591,14 +1599,7 @@ function lowerJsxElementName(
   }
   const tag: string = exprPath.node.name;
   if (tag.match(/^[A-Z]/)) {
-    const identifier = builder.resolveIdentifier(exprPath);
-    const place: Place = {
-      kind: "Identifier",
-      identifier: identifier,
-      effect: Effect.Unknown,
-      loc: exprLoc,
-    };
-    return place;
+    return lowerIdentifier(builder, exprPath);
   } else {
     const place: Place = buildTemporaryPlace(builder, exprLoc);
     builder.push({
@@ -1728,11 +1729,34 @@ function lowerExpressionToVoid(
 
 function lowerIdentifier(
   builder: HIRBuilder,
-  exprPath: NodePath<t.Identifier>
+  exprPath: NodePath<t.Identifier | t.JSXIdentifier>
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   const identifier = builder.resolveIdentifier(exprPath);
+  if (identifier === null) {
+    const place = buildTemporaryPlace(
+      builder,
+      exprPath.node.loc ?? GeneratedSource
+    );
+    const global = builder.resolveGlobal(exprPath);
+    let value: InstructionValue;
+    if (global !== null) {
+      value = { kind: "LoadGlobal", name: global.name, loc: place.loc };
+    } else {
+      value = { kind: "UnsupportedNode", node: exprPath.node, loc: place.loc };
+    }
+    builder.push({
+      id: makeInstructionId(0),
+      value,
+      loc: place.loc,
+      lvalue: {
+        place: { ...place },
+        kind: InstructionKind.Const,
+      },
+    });
+    return place;
+  }
   const place: Place = {
     kind: "Identifier",
     identifier: identifier,

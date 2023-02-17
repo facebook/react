@@ -6,10 +6,10 @@
  */
 
 import { CompilerError } from "../CompilerError";
-import { Environment } from "../HIR";
 import {
   Effect,
   IdentifierId,
+  isHookType,
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
@@ -22,13 +22,6 @@ import {
 
 type IdentifierReactivity = Map<IdentifierId, boolean>;
 class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
-  env: Environment;
-
-  constructor(env: Environment) {
-    super();
-    this.env = env;
-  }
-
   override visitInstruction(
     instr: ReactiveInstruction,
     reactivityMap: IdentifierReactivity
@@ -52,19 +45,14 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
     if (
       !hasReactiveInput &&
       instr.value.kind === "CallExpression" &&
-      instr.value.callee.identifier.name !== null
+      isHookType(instr.value.callee.identifier)
     ) {
       // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
       // they are not guaranteed to memoize their return value, and their result
       // must be assumed to be reactive.
       // TODO: use types or an opt-in registry of custom hook information to
       // allow treating safe hooks as non-reactive.
-      const hook = this.env.getHookDeclaration(
-        instr.value.callee.identifier.name
-      );
-      if (hook !== null) {
-        hasReactiveInput = true;
-      }
+      hasReactiveInput = true;
     }
     reactivityMap.set(lval.place.identifier.id, hasReactiveInput);
 
@@ -143,7 +131,7 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
 export function inferReactiveIdentifiers(
   fn: ReactiveFunction
 ): Set<IdentifierId> {
-  const visitor = new Visitor(fn.env);
+  const visitor = new Visitor();
   const reactivityMap: IdentifierReactivity = new Map();
   for (const param of fn.params) {
     reactivityMap.set(param.identifier.id, true);
