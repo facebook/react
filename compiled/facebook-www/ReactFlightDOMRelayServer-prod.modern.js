@@ -60,7 +60,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
     "react.default_value"
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-require("ReactFeatureFlags");
 function PropertyInfoRecord(
   name,
   type,
@@ -83,7 +82,8 @@ var reservedProps =
   "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
     " "
   );
-reservedProps.push("innerText", "textContent");
+require("ReactFeatureFlags").enableCustomElementPropertySupport &&
+  reservedProps.push("innerText", "textContent");
 reservedProps.forEach(function (name) {
   new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
 });

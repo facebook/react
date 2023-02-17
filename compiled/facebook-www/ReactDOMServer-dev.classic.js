@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-1a49e2d83-20230217";
+var ReactVersion = "18.3.0-www-classic-c9d9f524d-20230217";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -258,7 +258,9 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, false is used for a new modern build.
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 var enableFloat = true;
@@ -404,6 +406,10 @@ var reservedProps = [
   "suppressHydrationWarning",
   "style"
 ];
+
+if (enableCustomElementPropertySupport) {
+  reservedProps.push("innerText", "textContent");
+}
 
 reservedProps.forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -4675,6 +4681,30 @@ function pushStartCustomElement(target, props, tag) {
 
       if (propValue == null) {
         continue;
+      }
+
+      if (
+        enableCustomElementPropertySupport &&
+        (typeof propValue === "function" || typeof propValue === "object")
+      ) {
+        // It is normal to render functions and objects on custom elements when
+        // client rendering, but when server rendering the output isn't useful,
+        // so skip it.
+        continue;
+      }
+
+      if (enableCustomElementPropertySupport && propValue === false) {
+        continue;
+      }
+
+      if (enableCustomElementPropertySupport && propValue === true) {
+        propValue = "";
+      }
+
+      if (enableCustomElementPropertySupport && propKey === "className") {
+        // className gets rendered as class on the client, so it should be
+        // rendered as class on the server.
+        propKey = "class";
       }
 
       switch (propKey) {

@@ -21,8 +21,11 @@ function writeChunkAndReturn(destination, chunk) {
   return !0;
 }
 var assign = Object.assign,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableFilterEmptyStringAttributesDOM =
-    require("ReactFeatureFlags").enableFilterEmptyStringAttributesDOM,
+    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX =
     /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
@@ -60,7 +63,8 @@ var properties = {},
     "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
       " "
     );
-reservedProps.push("innerText", "textContent");
+enableCustomElementPropertySupport &&
+  reservedProps.push("innerText", "textContent");
 reservedProps.forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
 });
@@ -1155,14 +1159,21 @@ function pushStartInstance(
         if (
           hasOwnProperty.call(props, propKey$jscomp$1) &&
           ((propValue = props[propKey$jscomp$1]),
-          null != propValue &&
-            "function" !== typeof propValue &&
-            "object" !== typeof propValue &&
-            !1 !== propValue)
+          !(
+            null == propValue ||
+            (enableCustomElementPropertySupport &&
+              ("function" === typeof propValue ||
+                "object" === typeof propValue)) ||
+            (enableCustomElementPropertySupport && !1 === propValue)
+          ))
         )
           switch (
-            (!0 === propValue && (propValue = ""),
-            "className" === propKey$jscomp$1 && (propKey$jscomp$1 = "class"),
+            (enableCustomElementPropertySupport &&
+              !0 === propValue &&
+              (propValue = ""),
+            enableCustomElementPropertySupport &&
+              "className" === propKey$jscomp$1 &&
+              (propKey$jscomp$1 = "class"),
             propKey$jscomp$1)
           ) {
             case "children":

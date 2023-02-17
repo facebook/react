@@ -37,6 +37,8 @@ var assign = Object.assign,
   enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX =
     /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
@@ -69,12 +71,16 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var properties = {};
-"children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style"
-  .split(" ")
-  .forEach(function (name) {
-    properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
-  });
+var properties = {},
+  reservedProps =
+    "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
+      " "
+    );
+enableCustomElementPropertySupport &&
+  reservedProps.push("innerText", "textContent");
+reservedProps.forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
+});
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
@@ -1126,9 +1132,24 @@ function pushStartInstance(
       for (var propKey$jscomp$1 in props)
         if (
           hasOwnProperty.call(props, propKey$jscomp$1) &&
-          ((propValue = props[propKey$jscomp$1]), null != propValue)
+          ((propValue = props[propKey$jscomp$1]),
+          !(
+            null == propValue ||
+            (enableCustomElementPropertySupport &&
+              ("function" === typeof propValue ||
+                "object" === typeof propValue)) ||
+            (enableCustomElementPropertySupport && !1 === propValue)
+          ))
         )
-          switch (propKey$jscomp$1) {
+          switch (
+            (enableCustomElementPropertySupport &&
+              !0 === propValue &&
+              (propValue = ""),
+            enableCustomElementPropertySupport &&
+              "className" === propKey$jscomp$1 &&
+              (propKey$jscomp$1 = "class"),
+            propKey$jscomp$1)
+          ) {
             case "children":
               textEmbedded = propValue;
               break;
@@ -3654,4 +3675,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-1a49e2d83-20230217";
+exports.version = "18.3.0-www-classic-c9d9f524d-20230217";

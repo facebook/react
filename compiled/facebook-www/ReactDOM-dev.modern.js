@@ -165,7 +165,9 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, true is used for a new modern build.
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -176,7 +178,6 @@ var enableClientRenderFallbackOnTextMismatch = false; // Logs additional User Ti
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var enableSuspenseCallback = true;
-var enableCustomElementPropertySupport = true;
 
 var randomKey = Math.random().toString(36).slice(2);
 var internalInstanceKey = "__reactFiber$" + randomKey;
@@ -751,7 +752,7 @@ function shouldRemoveAttribute(
   }
 
   if (isCustomComponentTag) {
-    {
+    if (enableCustomElementPropertySupport) {
       if (value === false) {
         return true;
       }
@@ -848,7 +849,7 @@ var reservedProps = [
   "style"
 ];
 
-{
+if (enableCustomElementPropertySupport) {
   reservedProps.push("innerText", "textContent");
 }
 
@@ -1329,7 +1330,7 @@ function getValueForAttribute(node, name, expected, isCustomComponentTag) {
 
     var value = node.getAttribute(name);
 
-    {
+    if (enableCustomElementPropertySupport) {
       if (isCustomComponentTag && value === "") {
         return true;
       }
@@ -1361,7 +1362,12 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     return;
   }
 
-  if (isCustomComponentTag && name[0] === "o" && name[1] === "n") {
+  if (
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name[0] === "o" &&
+    name[1] === "n"
+  ) {
     var eventName = name.replace(/Capture$/, "");
     var useCapture = name !== eventName;
     eventName = eventName.slice(2);
@@ -1388,7 +1394,11 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     }
   }
 
-  if (isCustomComponentTag && name in node) {
+  if (
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name in node
+  ) {
     node[name] = value;
     return;
   }
@@ -1397,7 +1407,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     value = null;
   }
 
-  {
+  if (enableCustomElementPropertySupport) {
     if (isCustomComponentTag && value === true) {
       value = "";
     }
@@ -9890,6 +9900,7 @@ function extractEvents$1(
   } else if (shouldUseClickEvent(targetNode)) {
     getTargetInstFunc = getTargetInstForClickEvent;
   } else if (
+    enableCustomElementPropertySupport &&
     targetInst &&
     isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
   ) {
@@ -12981,6 +12992,7 @@ function diffHydratedProperties(
           }
         }
       } else if (
+        enableCustomElementPropertySupport &&
         isCustomComponentTag &&
         (propKey === "offsetParent" ||
           propKey === "offsetTop" ||
@@ -13069,6 +13081,7 @@ function diffHydratedProperties(
         }
 
         var dontWarnCustomElement =
+          enableCustomElementPropertySupport &&
           isCustomComponentTag &&
           (typeof nextProp === "function" || typeof nextProp === "object");
 
@@ -41670,7 +41683,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1a49e2d83-20230217";
+var ReactVersion = "18.3.0-www-modern-c9d9f524d-20230217";
 
 function createPortal(
   children,

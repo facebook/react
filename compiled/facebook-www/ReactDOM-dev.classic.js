@@ -61,7 +61,9 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing; // On WWW, false is used for a new modern build.
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -72,7 +74,6 @@ var enableClientRenderFallbackOnTextMismatch = false; // Logs additional User Ti
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var enableSuspenseCallback = true;
-var enableCustomElementPropertySupport = false;
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -1358,6 +1359,12 @@ function shouldRemoveAttribute(
   }
 
   if (isCustomComponentTag) {
+    if (enableCustomElementPropertySupport) {
+      if (value === false) {
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -1448,6 +1455,10 @@ var reservedProps = [
   "suppressHydrationWarning",
   "style"
 ];
+
+if (enableCustomElementPropertySupport) {
+  reservedProps.push("innerText", "textContent");
+}
 
 reservedProps.forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -1926,6 +1937,12 @@ function getValueForAttribute(node, name, expected, isCustomComponentTag) {
 
     var value = node.getAttribute(name);
 
+    if (enableCustomElementPropertySupport) {
+      if (isCustomComponentTag && value === "") {
+        return true;
+      }
+    }
+
     {
       checkAttributeStringCoercion(expected, name);
     }
@@ -1952,9 +1969,56 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     return;
   }
 
+  if (
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name[0] === "o" &&
+    name[1] === "n"
+  ) {
+    var eventName = name.replace(/Capture$/, "");
+    var useCapture = name !== eventName;
+    eventName = eventName.slice(2);
+    var prevProps = getFiberCurrentPropsFromNode(node);
+    var prevValue = prevProps != null ? prevProps[name] : null;
+
+    if (typeof prevValue === "function") {
+      node.removeEventListener(eventName, prevValue, useCapture);
+    }
+
+    if (typeof value === "function") {
+      if (typeof prevValue !== "function" && prevValue !== null) {
+        // If we previously assigned a non-function type into this node, then
+        // remove it when switching to event listener mode.
+        if (name in node) {
+          node[name] = null;
+        } else if (node.hasAttribute(name)) {
+          node.removeAttribute(name);
+        }
+      } // $FlowFixMe value can't be casted to EventListener.
+
+      node.addEventListener(eventName, value, useCapture);
+      return;
+    }
+  }
+
+  if (
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name in node
+  ) {
+    node[name] = value;
+    return;
+  }
+
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
+
+  if (enableCustomElementPropertySupport) {
+    if (isCustomComponentTag && value === true) {
+      value = "";
+    }
+  } // If the prop isn't in the special list, treat it as a simple attribute.
 
   if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
@@ -6320,10 +6384,36 @@ function diffHydratedProperties(
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         }
+      } else if (
+        enableCustomElementPropertySupport &&
+        isCustomComponentTag &&
+        (propKey === "offsetParent" ||
+          propKey === "offsetTop" ||
+          propKey === "offsetLeft" ||
+          propKey === "offsetWidth" ||
+          propKey === "offsetHeight" ||
+          propKey === "isContentEditable" ||
+          propKey === "outerText" ||
+          propKey === "outerHTML")
+      ) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey.toLowerCase());
+
+        {
+          error(
+            "Assignment to read-only property will result in a no-op: `%s`",
+            propKey
+          );
+        }
       } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());
-        serverValue = getValueForAttribute(domElement, propKey, nextProp);
+        serverValue = getValueForAttribute(
+          domElement,
+          propKey,
+          nextProp,
+          isCustomComponentTag
+        );
 
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
@@ -6375,10 +6465,18 @@ function diffHydratedProperties(
             extraAttributeNames.delete(propKey);
           }
 
-          serverValue = getValueForAttribute(domElement, propKey, nextProp);
+          serverValue = getValueForAttribute(
+            domElement,
+            propKey,
+            nextProp,
+            isCustomComponentTag
+          );
         }
 
-        var dontWarnCustomElement = enableCustomElementPropertySupport;
+        var dontWarnCustomElement =
+          enableCustomElementPropertySupport &&
+          isCustomComponentTag &&
+          (typeof nextProp === "function" || typeof nextProp === "object");
 
         if (
           !dontWarnCustomElement &&
@@ -13554,6 +13652,12 @@ function extractEvents$1(
     }
   } else if (shouldUseClickEvent(targetNode)) {
     getTargetInstFunc = getTargetInstForClickEvent;
+  } else if (
+    enableCustomElementPropertySupport &&
+    targetInst &&
+    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+  ) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
   }
 
   if (getTargetInstFunc) {
@@ -41946,7 +42050,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-1a49e2d83-20230217";
+var ReactVersion = "18.3.0-www-classic-c9d9f524d-20230217";
 
 function createPortal(
   children,

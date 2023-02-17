@@ -40,7 +40,9 @@ var Scheduler = require("scheduler"),
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport;
 function formatProdErrorMessage(code) {
   for (
     var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
@@ -416,7 +418,8 @@ function shouldRemoveAttribute(
     )
   )
     return !0;
-  if (isCustomComponentTag) return !1;
+  if (isCustomComponentTag)
+    return enableCustomElementPropertySupport && !1 === value ? !0 : !1;
   if (null !== propertyInfo) {
     if (
       enableFilterEmptyStringAttributesDOM &&
@@ -455,12 +458,16 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var properties = {};
-"children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style"
-  .split(" ")
-  .forEach(function (name) {
-    properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
-  });
+var properties = {},
+  reservedProps =
+    "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
+      " "
+    );
+enableCustomElementPropertySupport &&
+  reservedProps.push("innerText", "textContent");
+reservedProps.forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
+});
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
@@ -612,14 +619,47 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
         !(2 < name.length) ||
         ("o" !== name[0] && "O" !== name[0]) ||
         ("n" !== name[1] && "N" !== name[1])
-  )
+  ) {
     if (
+      enableCustomElementPropertySupport &&
+      isCustomComponentTag &&
+      "o" === name[0] &&
+      "n" === name[1]
+    ) {
+      var eventName = name.replace(/Capture$/, ""),
+        useCapture = name !== eventName;
+      eventName = eventName.slice(2);
+      var prevProps = getFiberCurrentPropsFromNode(node);
+      prevProps = null != prevProps ? prevProps[name] : null;
+      "function" === typeof prevProps &&
+        node.removeEventListener(eventName, prevProps, useCapture);
+      if ("function" === typeof value) {
+        "function" !== typeof prevProps &&
+          null !== prevProps &&
+          (name in node
+            ? (node[name] = null)
+            : node.hasAttribute(name) && node.removeAttribute(name));
+        node.addEventListener(eventName, value, useCapture);
+        return;
+      }
+    }
+    if (
+      enableCustomElementPropertySupport &&
+      isCustomComponentTag &&
+      name in node
+    )
+      node[name] = value;
+    else if (
       (shouldRemoveAttribute(
         name,
         value,
         JSCompiler_inline_result,
         isCustomComponentTag
       ) && (value = null),
+      enableCustomElementPropertySupport &&
+        isCustomComponentTag &&
+        !0 === value &&
+        (value = ""),
       isCustomComponentTag || null === JSCompiler_inline_result)
     )
       isAttributeNameSafe(name) &&
@@ -643,8 +683,8 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     )
       node.removeAttribute(name);
     else {
-      var type$3 = JSCompiler_inline_result.type;
-      if (3 === type$3 || (4 === type$3 && !0 === value)) value = "";
+      eventName = JSCompiler_inline_result.type;
+      if (3 === eventName || (4 === eventName && !0 === value)) value = "";
       else if (
         ((value = enableTrustedTypesIntegration ? value : "" + value),
         JSCompiler_inline_result.sanitizeURL &&
@@ -655,6 +695,7 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
         ? node.setAttributeNS(isCustomComponentTag, name, value)
         : node.setAttribute(name, value);
     }
+  }
 }
 var prefix;
 function describeBuiltInComponentFrame(name) {
@@ -4010,10 +4051,18 @@ function dispatchEventForPluginEventSystem(
             var handleEventFunc = handleEventsForInputEventPolyfill;
           }
         else
-          (SyntheticEventCtor = reactName.nodeName) &&
-            "input" === SyntheticEventCtor.toLowerCase() &&
-            ("checkbox" === reactName.type || "radio" === reactName.type) &&
-            (getTargetInstFunc = getTargetInstForClickEvent);
+          (SyntheticEventCtor = reactName.nodeName),
+            !SyntheticEventCtor ||
+            "input" !== SyntheticEventCtor.toLowerCase() ||
+            ("checkbox" !== reactName.type && "radio" !== reactName.type)
+              ? enableCustomElementPropertySupport &&
+                targetInst &&
+                isCustomComponent(
+                  targetInst.elementType,
+                  targetInst.memoizedProps
+                ) &&
+                (getTargetInstFunc = getTargetInstForChangeEvent)
+              : (getTargetInstFunc = getTargetInstForClickEvent);
         if (
           getTargetInstFunc &&
           (getTargetInstFunc = getTargetInstFunc(domEventName, targetInst))
@@ -15436,7 +15485,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1743 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1a49e2d83-20230217",
+  version: "18.3.0-www-classic-c9d9f524d-20230217",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2106 = {
@@ -15466,7 +15515,7 @@ var internals$jscomp$inline_2106 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1a49e2d83-20230217"
+  reconcilerVersion: "18.3.0-next-c9d9f524d-20230217"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2107 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15714,4 +15763,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1a49e2d83-20230217";
+exports.version = "18.3.0-next-c9d9f524d-20230217";

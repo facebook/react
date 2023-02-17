@@ -61,6 +61,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
   randomKey = Math.random().toString(36).slice(2),
   internalInstanceKey = "__reactFiber$" + randomKey,
   internalPropsKey = "__reactProps$" + randomKey,
@@ -227,7 +229,8 @@ function shouldRemoveAttribute(
     )
   )
     return !0;
-  if (isCustomComponentTag) return !1 === value ? !0 : !1;
+  if (isCustomComponentTag)
+    return enableCustomElementPropertySupport && !1 === value ? !0 : !1;
   if (null !== propertyInfo) {
     if (
       enableFilterEmptyStringAttributesDOM &&
@@ -271,7 +274,8 @@ var properties = {},
     "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
       " "
     );
-reservedProps.push("innerText", "textContent");
+enableCustomElementPropertySupport &&
+  reservedProps.push("innerText", "textContent");
 reservedProps.forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
 });
@@ -427,7 +431,12 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
         ("o" !== name[0] && "O" !== name[0]) ||
         ("n" !== name[1] && "N" !== name[1])
   ) {
-    if (isCustomComponentTag && "o" === name[0] && "n" === name[1]) {
+    if (
+      enableCustomElementPropertySupport &&
+      isCustomComponentTag &&
+      "o" === name[0] &&
+      "n" === name[1]
+    ) {
       var eventName = name.replace(/Capture$/, ""),
         useCapture = name !== eventName;
       eventName = eventName.slice(2);
@@ -445,7 +454,12 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
         return;
       }
     }
-    if (isCustomComponentTag && name in node) node[name] = value;
+    if (
+      enableCustomElementPropertySupport &&
+      isCustomComponentTag &&
+      name in node
+    )
+      node[name] = value;
     else if (
       (shouldRemoveAttribute(
         name,
@@ -453,7 +467,10 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
         JSCompiler_inline_result,
         isCustomComponentTag
       ) && (value = null),
-      isCustomComponentTag && !0 === value && (value = ""),
+      enableCustomElementPropertySupport &&
+        isCustomComponentTag &&
+        !0 === value &&
+        (value = ""),
       isCustomComponentTag || null === JSCompiler_inline_result)
     )
       isAttributeNameSafe(name) &&
@@ -3713,7 +3730,8 @@ function dispatchEventForPluginEventSystem(
             !SyntheticEventCtor ||
             "input" !== SyntheticEventCtor.toLowerCase() ||
             ("checkbox" !== reactName.type && "radio" !== reactName.type)
-              ? targetInst &&
+              ? enableCustomElementPropertySupport &&
+                targetInst &&
                 isCustomComponent(
                   targetInst.elementType,
                   targetInst.memoizedProps
@@ -14996,7 +15014,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1711 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1a49e2d83-20230217",
+  version: "18.3.0-www-modern-c9d9f524d-20230217",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2081 = {
@@ -15027,7 +15045,7 @@ var internals$jscomp$inline_2081 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1a49e2d83-20230217"
+  reconcilerVersion: "18.3.0-next-c9d9f524d-20230217"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2082 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15215,4 +15233,4 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1a49e2d83-20230217";
+exports.version = "18.3.0-next-c9d9f524d-20230217";
