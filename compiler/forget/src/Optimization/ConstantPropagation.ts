@@ -5,10 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { isValidIdentifier } from "@babel/types";
+import invariant from "invariant";
 import {
   GotoVariant,
   HIRFunction,
   IdentifierId,
+  Instruction,
   InstructionValue,
   markInstructionIds,
   markPredecessors,
@@ -97,7 +100,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
     }
 
     for (const instr of block.instructions) {
-      const value = evaluateInstruction(constants, instr.value);
+      const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         instr.value = value;
         constants.set(instr.lvalue.place.identifier.id, value);
@@ -137,78 +140,149 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
 
 function evaluateInstruction(
   constants: Constants,
-  instr: InstructionValue
+  instr: Instruction
 ): Constant | null {
-  switch (instr.kind) {
+  const value = instr.value;
+  switch (value.kind) {
     case "Primitive": {
-      return instr;
+      return value;
+    }
+    case "ComputedLoad": {
+      const property = read(constants, value.property);
+      if (
+        property !== null &&
+        typeof property.value === "string" &&
+        isValidIdentifier(property.value)
+      ) {
+        const nextValue: InstructionValue = {
+          kind: "PropertyLoad",
+          loc: value.loc,
+          property: property.value,
+          object: value.object,
+          optional: false,
+        };
+        // Future-proofing: when we add support for optional computed properties,
+        // we'll need to copy the value here
+        if ((value as any).optional) {
+          invariant(
+            false,
+            "TODO: translate optional computed load to optional property load"
+          );
+        }
+        instr.value = nextValue;
+      }
+      return null;
+    }
+    case "ComputedStore": {
+      const property = read(constants, value.property);
+      if (
+        property !== null &&
+        typeof property.value === "string" &&
+        isValidIdentifier(property.value)
+      ) {
+        const nextValue: InstructionValue = {
+          kind: "PropertyStore",
+          loc: value.loc,
+          property: property.value,
+          object: value.object,
+          value: value.value,
+        };
+        instr.value = nextValue;
+      }
+      return null;
+    }
+    case "ComputedCall": {
+      const property = read(constants, value.property);
+      if (
+        property !== null &&
+        typeof property.value === "string" &&
+        isValidIdentifier(property.value)
+      ) {
+        const nextValue: InstructionValue = {
+          kind: "PropertyCall",
+          args: value.args,
+          loc: value.loc,
+          property: property.value,
+          receiver: value.receiver,
+        };
+        // Future-proofing: when we add support for optional computed calls,
+        // we'll need to copy the value here
+        if ((value as any).optional) {
+          invariant(
+            false,
+            "TODO: translate optional computed load to optional property load"
+          );
+        }
+        instr.value = nextValue;
+      }
+      return null;
     }
     case "BinaryExpression": {
-      const lhsValue = read(constants, instr.left);
-      const rhsValue = read(constants, instr.right);
+      const lhsValue = read(constants, value.left);
+      const rhsValue = read(constants, value.right);
       if (lhsValue !== null && rhsValue !== null) {
         const lhs = lhsValue.value;
         const rhs = rhsValue.value;
-        switch (instr.operator) {
+        switch (value.operator) {
           case "+": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs + rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs + rhs, loc: value.loc };
             }
             return null;
           }
           case "-": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs - rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs - rhs, loc: value.loc };
             }
             return null;
           }
           case "*": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs * rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs * rhs, loc: value.loc };
             }
             return null;
           }
           case "/": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs / rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs / rhs, loc: value.loc };
             }
             return null;
           }
           case "<": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs < rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs < rhs, loc: value.loc };
             }
             return null;
           }
           case "<=": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs <= rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs <= rhs, loc: value.loc };
             }
             return null;
           }
           case ">": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs > rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs > rhs, loc: value.loc };
             }
             return null;
           }
           case ">=": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs >= rhs, loc: instr.loc };
+              return { kind: "Primitive", value: lhs >= rhs, loc: value.loc };
             }
             return null;
           }
           case "==": {
-            return { kind: "Primitive", value: lhs == rhs, loc: instr.loc };
+            return { kind: "Primitive", value: lhs == rhs, loc: value.loc };
           }
           case "===": {
-            return { kind: "Primitive", value: lhs === rhs, loc: instr.loc };
+            return { kind: "Primitive", value: lhs === rhs, loc: value.loc };
           }
           case "!=": {
-            return { kind: "Primitive", value: lhs != rhs, loc: instr.loc };
+            return { kind: "Primitive", value: lhs != rhs, loc: value.loc };
           }
           case "!==": {
-            return { kind: "Primitive", value: lhs !== rhs, loc: instr.loc };
+            return { kind: "Primitive", value: lhs !== rhs, loc: value.loc };
           }
           default: {
             // TODO: handle more cases
@@ -219,23 +293,23 @@ function evaluateInstruction(
       return null;
     }
     case "PropertyLoad": {
-      const objectValue = read(constants, instr.object);
+      const objectValue = read(constants, value.object);
       if (objectValue !== null) {
         if (
           typeof objectValue.value === "string" &&
-          instr.property === "length"
+          value.property === "length"
         ) {
           return {
             kind: "Primitive",
             value: objectValue.value.length,
-            loc: instr.loc,
+            loc: value.loc,
           };
         }
       }
       return null;
     }
     case "Identifier": {
-      return read(constants, instr);
+      return read(constants, value);
     }
     default: {
       // TODO: handle more cases

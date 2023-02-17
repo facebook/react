@@ -23,7 +23,7 @@ function component(a, b) {
   if (c_0 || c_1) {
     const y = { a: a };
     x = { b: b };
-    x["y"] = y;
+    x.y = y;
 
     mutate(x);
     $[0] = a;
