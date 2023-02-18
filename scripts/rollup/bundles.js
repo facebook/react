@@ -360,6 +360,15 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/server.node.unbundled',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
     entry: 'react-server-dom-webpack/server.edge',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -371,7 +380,34 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-webpack/client',
+    entry: 'react-server-dom-webpack/client.browser',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.node',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.node.unbundled',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -417,7 +453,7 @@ const bundles = [
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/server',
-    global: 'ReactFlightDOMRelayServer', // TODO: Rename to Writer
+    global: 'ReactFlightDOMRelayServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [
@@ -465,7 +501,7 @@ const bundles = [
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
     entry: 'react-server-native-relay',
-    global: 'ReactFlightNativeRelayClient', // TODO: Rename to Reader
+    global: 'ReactFlightNativeRelayClient',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: [

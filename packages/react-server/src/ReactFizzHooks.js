@@ -461,7 +461,7 @@ function dispatchAction<A>(
   componentIdentity: Object,
   queue: UpdateQueue<A>,
   action: A,
-) {
+): void {
   if (numberOfReRenders >= RE_RENDER_LIMIT) {
     throw new Error(
       'Too many re-renders. React limits the number of renders to prevent ' +
@@ -615,7 +615,7 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
 }
 
 function useMemoCache(size: number): Array<any> {
-  const data = new Array(size);
+  const data = new Array<any>(size);
   for (let i = 0; i < size; i++) {
     data[i] = REACT_MEMO_CACHE_SENTINEL;
   }

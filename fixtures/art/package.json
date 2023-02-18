@@ -5,9 +5,9 @@
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
-    "react": "link:../../build/node_modules/react",
-    "react-art": "link:../../build/node_modules/react-art/",
-    "react-dom": "link:../../build/node_modules/react-dom",
+    "react": "link:../../build/oss-experimental/react",
+    "react-art": "link:../../build/oss-experimental/react-art/",
+    "react-dom": "link:../../build/oss-experimental/react-dom",
     "webpack": "^1.14.0"
   },
   "scripts": {

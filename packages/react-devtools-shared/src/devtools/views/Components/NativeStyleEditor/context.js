@@ -72,9 +72,9 @@ const resource: Resource<Element, Element, StyleAndLayoutFrontend> =
         resolveFn = resolve;
       });
 
-      inProgressRequests.set(element, {promise, resolveFn});
+      inProgressRequests.set(element, ({promise, resolveFn}: $FlowFixMe));
 
-      return promise;
+      return (promise: $FlowFixMe);
     },
     (element: Element) => element,
     {useWeakMap: true},

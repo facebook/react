@@ -342,16 +342,21 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns if creating a root on the document.body', async () => {
-    expect(() => {
+    if (gate(flags => flags.enableFloat)) {
+      // we no longer expect an error for this if float is enabled
       ReactDOMClient.createRoot(document.body);
-    }).toErrorDev(
-      'createRoot(): Creating roots directly with document.body is ' +
-        'discouraged, since its children are often manipulated by third-party ' +
-        'scripts and browser extensions. This may lead to subtle ' +
-        'reconciliation issues. Try using a container element created ' +
-        'for your app.',
-      {withoutStack: true},
-    );
+    } else {
+      expect(() => {
+        ReactDOMClient.createRoot(document.body);
+      }).toErrorDev(
+        'createRoot(): Creating roots directly with document.body is ' +
+          'discouraged, since its children are often manipulated by third-party ' +
+          'scripts and browser extensions. This may lead to subtle ' +
+          'reconciliation issues. Try using a container element created ' +
+          'for your app.',
+        {withoutStack: true},
+      );
+    }
   });
 
   it('warns if updating a root that has had its contents removed', async () => {

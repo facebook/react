@@ -60,13 +60,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
   // most stack frames added by calling the primitive hook can be removed.
   if (primitiveStackCache === null) {
-    const cache = new Map();
+    const cache = new Map<string, Array<any>>();
     let readHookLog;
     try {
       // Use all hooks here to add them to the hook log.
       Dispatcher.useContext(({_currentValue: null}: any));
       Dispatcher.useState(null);
-      Dispatcher.useReducer((s, a) => s, null);
+      Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
       if (typeof Dispatcher.useCacheRefresh === 'function') {
         // This type check is for Flow only.
@@ -809,7 +809,7 @@ export function inspectHooksOfFiber(
   // Set up the current hook so that we can step through and read the
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
-  const contextMap = new Map();
+  const contextMap = new Map<ReactContext<$FlowFixMe>, $FlowFixMe>();
   try {
     setupContexts(contextMap, fiber);
     if (fiber.tag === ForwardRef) {

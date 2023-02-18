@@ -5,7 +5,7 @@
 
 const expect = global.expect;
 
-const jestDiff = require('jest-diff').default;
+const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
 
 function shouldIgnoreConsoleError(format, args) {

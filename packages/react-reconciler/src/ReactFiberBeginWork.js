@@ -51,7 +51,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   HostPortal,
@@ -167,10 +167,15 @@ import {
   supportsSingletons,
   isPrimaryRenderer,
   getResource,
+  createHoistableInstance,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {
+  pushHostContext,
+  pushHostContainer,
+  getRootHostContainer,
+} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseListContext,
@@ -1492,7 +1497,7 @@ function updateHostRoot(
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
       // forced a client render.
-      const recoverableError = createCapturedValueAtFiber(
+      const recoverableError = createCapturedValueAtFiber<mixed>(
         new Error(
           'There was an error while hydrating. Because the error happened outside ' +
             'of a Suspense boundary, the entire root will switch to ' +
@@ -1508,7 +1513,7 @@ function updateHostRoot(
         recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
-      const recoverableError = createCapturedValueAtFiber(
+      const recoverableError = createCapturedValueAtFiber<mixed>(
         new Error(
           'This root received an early update, before anything was able ' +
             'hydrate. Switched the entire root to client rendering.',
@@ -1624,19 +1629,30 @@ function updateHostComponent(
   return workInProgress.child;
 }
 
-function updateHostResource(
+function updateHostHoistable(
   current: null | Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  pushHostContext(workInProgress);
   markRef(current, workInProgress);
   const currentProps = current === null ? null : current.memoizedProps;
-  workInProgress.memoizedState = getResource(
+  const resource = (workInProgress.memoizedState = getResource(
     workInProgress.type,
-    workInProgress.pendingProps,
     currentProps,
-  );
+    workInProgress.pendingProps,
+  ));
+  if (current === null) {
+    if (!getIsHydrating() && resource === null) {
+      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+      workInProgress.stateNode = createHoistableInstance(
+        workInProgress.type,
+        workInProgress.pendingProps,
+        getRootHostContainer(),
+        workInProgress,
+      );
+    }
+  }
+
   // Resources never have reconciler managed children. It is possible for
   // the host implementation of getResource to consider children in the
   // resource construction but they will otherwise be discarded. In practice
@@ -2820,7 +2836,7 @@ function updateDehydratedSuspenseComponent(
         );
       }
       (error: any).digest = digest;
-      const capturedValue = createCapturedValue(error, digest, stack);
+      const capturedValue = createCapturedValue<mixed>(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -2955,7 +2971,7 @@ function updateDehydratedSuspenseComponent(
       pushPrimaryTreeSuspenseHandler(workInProgress);
 
       workInProgress.flags &= ~ForceClientRender;
-      const capturedValue = createCapturedValue(
+      const capturedValue = createCapturedValue<mixed>(
         new Error(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',
@@ -3742,7 +3758,6 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       }
       resetHydrationState();
       break;
-    case HostResource:
     case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
@@ -4078,9 +4093,9 @@ function beginWork(
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
-    case HostResource:
+    case HostHoistable:
       if (enableFloat && supportsResources) {
-        return updateHostResource(current, workInProgress, renderLanes);
+        return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // eslint-disable-next-line no-fallthrough
     case HostSingleton:

@@ -106,7 +106,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       });
 
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
           thenable.then(
             returnValue => {
@@ -184,7 +184,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         ReactCurrentActQueue.current = null;
       }
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
           if (prevActScopeDepth === 0) {
             // If the `act` call is awaited, restore the queue we were

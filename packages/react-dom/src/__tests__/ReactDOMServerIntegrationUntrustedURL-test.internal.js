@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 /* eslint-disable no-script-url */
@@ -149,7 +150,7 @@ function runTests(itRenders, itRejectsRendering, expectToReject) {
 
 describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   function initModules() {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -181,7 +182,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
 
 describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', () => {
   function initModules() {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.disableJavaScriptURLs = true;
 

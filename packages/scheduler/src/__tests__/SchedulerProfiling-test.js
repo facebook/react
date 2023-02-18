@@ -481,14 +481,14 @@ Task 1 [Normal]              │                    █████████�
   it('automatically stops profiling and warns if event log gets too big', async () => {
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
 
     // Increase infinite loop guard limit
     const originalMaxIterations = global.__MAX_ITERATIONS__;
     global.__MAX_ITERATIONS__ = 120000;
 
     let taskId = 1;
-    while (console.error.calls.count() === 0) {
+    while (console.error.mock.calls.length === 0) {
       taskId++;
       const task = scheduleCallback(NormalPriority, () => {});
       cancelCallback(task);
@@ -496,7 +496,7 @@ Task 1 [Normal]              │                    █████████�
     }
 
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expect(console.error.mock.calls[0][0]).toBe(
       "Scheduler Profiling: Event log exceeded maximum size. Don't forget " +
         'to call `stopLoggingProfilingEvents()`.',
     );

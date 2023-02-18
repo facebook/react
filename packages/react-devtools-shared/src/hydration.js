@@ -429,41 +429,49 @@ export function hydrate(
 
 function upgradeUnserializable(destination: Object, source: Object) {
   Object.defineProperties(destination, {
+    // $FlowFixMe[invalid-computed-prop]
     [meta.inspected]: {
       configurable: true,
       enumerable: false,
       value: !!source.inspected,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.name]: {
       configurable: true,
       enumerable: false,
       value: source.name,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.preview_long]: {
       configurable: true,
       enumerable: false,
       value: source.preview_long,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.preview_short]: {
       configurable: true,
       enumerable: false,
       value: source.preview_short,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.size]: {
       configurable: true,
       enumerable: false,
       value: source.size,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.readonly]: {
       configurable: true,
       enumerable: false,
       value: !!source.readonly,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.type]: {
       configurable: true,
       enumerable: false,
       value: source.type,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.unserializable]: {
       configurable: true,
       enumerable: false,

@@ -162,14 +162,14 @@ function resolveFamily(type: any) {
 
 // If we didn't care about IE11, we could use new Map/Set(iterable).
 function cloneMap<K, V>(map: Map<K, V>): Map<K, V> {
-  const clone = new Map();
+  const clone = new Map<K, V>();
   map.forEach((value, key) => {
     clone.set(key, value);
   });
   return clone;
 }
 function cloneSet<T>(set: Set<T>): Set<T> {
-  const clone = new Set();
+  const clone = new Set<T>();
   set.forEach(value => {
     clone.add(value);
   });
@@ -201,8 +201,8 @@ export function performReactRefresh(): RefreshUpdate | null {
 
   isPerformingRefresh = true;
   try {
-    const staleFamilies = new Set();
-    const updatedFamilies = new Set();
+    const staleFamilies = new Set<Family>();
+    const updatedFamilies = new Set<Family>();
 
     const updates = pendingUpdates;
     pendingUpdates = [];
@@ -418,7 +418,7 @@ export function findAffectedHostInstances(
   families: Array<Family>,
 ): Set<Instance> {
   if (__DEV__) {
-    const affectedInstances = new Set();
+    const affectedInstances = new Set<Instance>();
     mountedRoots.forEach(root => {
       const helpers = helpersByRoot.get(root);
       if (helpers === undefined) {

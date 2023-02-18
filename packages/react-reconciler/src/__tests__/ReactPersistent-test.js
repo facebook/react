@@ -49,8 +49,12 @@ describe('ReactPersistent', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
-  function getChildren() {
-    return ReactNoopPersistent.getChildren();
+  // For persistent renderers we have to mix deep equality and reference equality checks
+  //  for which we need the actual children.
+  //  None of the tests are gated and the underlying implementation is rarely touch
+  //  so it's unlikely we deal with failing `toEqual` checks which cause bad performance.
+  function dangerouslyGetChildren() {
+    return ReactNoopPersistent.dangerouslyGetChildren();
   }
 
   it('can update child nodes of a host instance', () => {
@@ -69,12 +73,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const originalChildren = getChildren();
+    const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div(span())]);
 
     render(<Foo text="World" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const newChildren = getChildren();
+    const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div(span(), span())]);
 
     expect(originalChildren).toEqual([div(span())]);
@@ -103,12 +107,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const originalChildren = getChildren();
+    const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div(span('Hello'))]);
 
     render(<Foo text="World" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const newChildren = getChildren();
+    const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
 
     expect(originalChildren).toEqual([div(span('Hello'))]);
@@ -129,12 +133,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const originalChildren = getChildren();
+    const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div('Hello', span())]);
 
     render(<Foo text="World" />);
     expect(Scheduler).toFlushWithoutYielding();
-    const newChildren = getChildren();
+    const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div('World', span())]);
 
     expect(originalChildren).toEqual([div('Hello', span())]);
@@ -173,7 +177,7 @@ describe('ReactPersistent', () => {
 
     expect(emptyPortalChildSet).toEqual([]);
 
-    const originalChildren = getChildren();
+    const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div()]);
     const originalPortalChildren = portalContainer.children;
     expect(originalPortalChildren).toEqual([div(span())]);
@@ -185,7 +189,7 @@ describe('ReactPersistent', () => {
     );
     expect(Scheduler).toFlushWithoutYielding();
 
-    const newChildren = getChildren();
+    const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div()]);
     const newPortalChildren = portalContainer.children;
     expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);

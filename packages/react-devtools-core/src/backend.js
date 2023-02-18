@@ -67,7 +67,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     useHttps = false,
     port = 8097,
     websocket,
-    resolveRNStyle = null,
+    resolveRNStyle = (null: $FlowFixMe),
     retryConnectionDelay = 2000,
     isAppActive = () => true,
     devToolsSettingsManager,
@@ -230,7 +230,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             get() {
               return lazyResolveRNStyle;
             },
-            set(value) {
+            set(value: $FlowFixMe) {
               lazyResolveRNStyle = value;
               initAfterTick();
             },
@@ -246,7 +246,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             get() {
               return lazyNativeStyleEditorValidAttributes;
             },
-            set(value) {
+            set(value: $FlowFixMe) {
               lazyNativeStyleEditorValidAttributes = value;
               initAfterTick();
             },

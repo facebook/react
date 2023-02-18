@@ -54,12 +54,12 @@ function PrimaryFallbackTest({initialSuspend}) {
 
 function useTestSequence(label: string, T1: any => any, T2: any => any) {
   const [step, setStep] = useState(0);
-  const next = (
+  const next: $FlowFixMe = (
     <button onClick={() => setStep(s => (s + 1) % allSteps.length)}>
       next {label} content
     </button>
   );
-  const allSteps = [
+  const allSteps: $FlowFixMe = [
     <Fragment>{next}</Fragment>,
     <Fragment>
       {next} <T1 prop={step}>mount</T1>

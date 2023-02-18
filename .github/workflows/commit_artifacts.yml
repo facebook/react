@@ -8,17 +8,11 @@ jobs:
   download_artifacts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - run: npm init -y
-      - run: npm install node-fetch@2
       - name: Download and unzip artifacts
         uses: actions/github-script@v6
         with:
           script: |
             const cp = require('child_process');
-            const fetch = require('node-fetch');
 
             function sleep(ms) {
               return new Promise(resolve => setTimeout(resolve, ms));

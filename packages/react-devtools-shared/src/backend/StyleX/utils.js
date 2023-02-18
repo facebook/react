@@ -13,7 +13,7 @@ import isArray from 'react-devtools-shared/src/isArray';
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
 export function getStyleXData(data: any): StyleXPlugin {
-  const sources = new Set();
+  const sources = new Set<string>();
   const resolvedStyles = {};
 
   crawlData(data, sources, resolvedStyles);

@@ -27,7 +27,7 @@ declare var $$$hostConfig: any;
 
 export type Response = any;
 export opaque type BundlerConfig = mixed;
-export opaque type ModuleMetaData = mixed;
+export opaque type ClientReferenceMetadata = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
 export const resolveClientReference = $$$hostConfig.resolveClientReference;
 export const preloadModule = $$$hostConfig.preloadModule;

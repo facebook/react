@@ -61,7 +61,7 @@ const resource: Resource<
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     inProgressRequests.set(element, {promise, resolveFn});
 
-    return promise;
+    return (promise: $FlowFixMe);
   },
   (element: Element) => element,
   {useWeakMap: true},

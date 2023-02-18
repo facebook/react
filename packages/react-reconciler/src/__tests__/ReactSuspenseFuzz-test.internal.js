@@ -10,7 +10,7 @@ const SEED = process.env.FUZZ_TEST_SEED || 'default';
 const prettyFormatPkg = require('pretty-format');
 
 function prettyFormat(thing) {
-  return prettyFormatPkg(thing, {
+  return prettyFormatPkg.format(thing, {
     plugins: [
       prettyFormatPkg.plugins.ReactElement,
       prettyFormatPkg.plugins.ReactTestComponent,

@@ -34,7 +34,7 @@ let getInspectorDataForInstance: (
   closestInstance: Fiber | null,
 ) => InspectorData;
 let getOwnerHierarchy;
-let traverseOwnerTreeUp;
+let traverseOwnerTreeUp: (hierarchy: Array<$FlowFixMe>, instance: any) => void;
 
 if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
   // $FlowFixMe[missing-local-annot]
@@ -124,7 +124,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
   };
 
   getOwnerHierarchy = function (instance: any) {
-    const hierarchy = [];
+    const hierarchy: Array<$FlowFixMe> = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
   };
@@ -142,7 +142,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
   };
 
   // $FlowFixMe[missing-local-annot]
-  traverseOwnerTreeUp = function (hierarchy, instance: any) {
+  traverseOwnerTreeUp = function (hierarchy, instance: any): void {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);

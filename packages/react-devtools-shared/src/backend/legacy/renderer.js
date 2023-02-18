@@ -503,7 +503,7 @@ export function attach(
     const numUnmountIDs =
       pendingUnmountedIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Array(
+    const operations = new Array<number>(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
         // How big is the string table?

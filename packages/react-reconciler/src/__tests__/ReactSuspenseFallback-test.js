@@ -127,10 +127,6 @@ describe('ReactSuspenseFallback', () => {
     return <span prop={fullText} />;
   }
 
-  function span(prop) {
-    return {type: 'span', children: [], prop, hidden: false};
-  }
-
   // @gate enableLegacyCache
   it('suspends and shows fallback', () => {
     ReactNoop.render(
@@ -140,7 +136,7 @@ describe('ReactSuspenseFallback', () => {
     );
 
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
   // @gate enableLegacyCache
@@ -155,7 +151,7 @@ describe('ReactSuspenseFallback', () => {
       'Suspend! [A]',
       // null
     ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
   // @gate enableLegacyCache
@@ -170,7 +166,7 @@ describe('ReactSuspenseFallback', () => {
       'Suspend! [A]',
       // null
     ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
   // @gate enableLegacyCache
@@ -184,7 +180,7 @@ describe('ReactSuspenseFallback', () => {
     );
 
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
   // @gate enableLegacyCache
@@ -201,7 +197,7 @@ describe('ReactSuspenseFallback', () => {
       'Suspend! [A]',
       // null
     ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
   // @gate enableLegacyCache
@@ -218,6 +214,6 @@ describe('ReactSuspenseFallback', () => {
       'Suspend! [A]',
       // null
     ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 });

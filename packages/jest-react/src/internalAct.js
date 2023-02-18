@@ -29,8 +29,8 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     );
   }
 
-  // $FlowFixMe: _isMockFunction doesn't exist on function
-  if (setTimeout._isMockFunction !== true) {
+  // $FlowFixMe: Flow doesn't know about global Jest object
+  if (!jest.isMockFunction(setTimeout)) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +
         '(i.e. jest.useFakeTimers).',
@@ -77,7 +77,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     ) {
       const thenableResult: Thenable<T> = (result: any);
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           thenableResult.then(
             returnValue => {
               flushActWork(
@@ -108,7 +108,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
         } while (didFlushWork);
         return {
-          then(resolve, reject) {
+          then(resolve: T => mixed, reject: mixed => mixed) {
             resolve(returnValue);
           },
         };
@@ -128,6 +128,7 @@ function flushActWork(resolve: () => void, reject: (error: any) => void) {
       Scheduler.unstable_flushUntilNextPaint();
     } catch (error) {
       reject(error);
+      return;
     }
 
     // If Scheduler yields while there's still work, it's so that we can

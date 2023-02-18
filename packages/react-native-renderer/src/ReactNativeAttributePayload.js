@@ -212,7 +212,7 @@ function addNestedProperty(
   updatePayload: null | Object,
   nextProp: NestedNode,
   validAttributes: AttributeConfiguration,
-) {
+): $FlowFixMe {
   if (!nextProp) {
     return updatePayload;
   }

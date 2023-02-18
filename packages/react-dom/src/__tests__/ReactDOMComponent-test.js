@@ -24,6 +24,10 @@ describe('ReactDOMComponent', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('updateDOM', () => {
     it('should handle className', () => {
       const container = document.createElement('div');
@@ -1239,7 +1243,7 @@ describe('ReactDOMComponent', () => {
 
       if (__DEV__) {
         expect(console.log).toHaveBeenCalledTimes(1);
-        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
+        expect(console.log.mock.calls[0][0]).toContain('onError called');
       }
     });
 
@@ -1464,7 +1468,7 @@ describe('ReactDOMComponent', () => {
 
     it('should support custom elements which extend native elements', () => {
       const container = document.createElement('div');
-      spyOnDevAndProd(document, 'createElement').and.callThrough();
+      spyOnDevAndProd(document, 'createElement');
       ReactDOM.render(<div is="custom-div" />, container);
       expect(document.createElement).toHaveBeenCalledWith('div', {
         is: 'custom-div',
@@ -1496,8 +1500,8 @@ describe('ReactDOMComponent', () => {
 
       if (__DEV__) {
         expect(console.log).toHaveBeenCalledTimes(2);
-        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
-        expect(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
+        expect(console.log.mock.calls[0][0]).toContain('onError called');
+        expect(console.log.mock.calls[1][0]).toContain('onLoad called');
       }
     });
 

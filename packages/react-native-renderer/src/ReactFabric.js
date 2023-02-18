@@ -10,6 +10,7 @@
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
 import './ReactFabricInjection';
 
@@ -257,7 +258,7 @@ function createPortal(
 
 setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
-const roots = new Map();
+const roots = new Map<number, FiberRoot>();
 
 export {
   // This is needed for implementation details of TouchableNativeFeedback

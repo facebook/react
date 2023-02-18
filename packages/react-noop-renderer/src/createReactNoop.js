@@ -789,11 +789,35 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     _Scheduler: Scheduler,
 
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getPendingChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetPendingChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    /**
+     * Prefer using `getChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getChildren(container);
     },
 
-    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+    /**
+     * Prefer using `getPendingChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getPendingChildren(container);
     },

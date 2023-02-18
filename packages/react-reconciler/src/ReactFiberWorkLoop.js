@@ -404,7 +404,8 @@ export function addTransitionStartCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.transitionStart === null) {
-      currentPendingTransitionCallbacks.transitionStart = [];
+      currentPendingTransitionCallbacks.transitionStart =
+        ([]: Array<Transition>);
     }
 
     currentPendingTransitionCallbacks.transitionStart.push(transition);
@@ -537,7 +538,8 @@ export function addTransitionCompleteCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.transitionComplete === null) {
-      currentPendingTransitionCallbacks.transitionComplete = [];
+      currentPendingTransitionCallbacks.transitionComplete =
+        ([]: Array<Transition>);
     }
 
     currentPendingTransitionCallbacks.transitionComplete.push(transition);
@@ -1000,7 +1002,10 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
-function performConcurrentWorkOnRoot(root: FiberRoot, didTimeout: boolean) {
+function performConcurrentWorkOnRoot(
+  root: FiberRoot,
+  didTimeout: boolean,
+): $FlowFixMe {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
@@ -3329,7 +3334,7 @@ export function attachPingListener(
   let threadIDs;
   if (pingCache === null) {
     pingCache = root.pingCache = new PossiblyWeakMap();
-    threadIDs = new Set();
+    threadIDs = new Set<mixed>();
     pingCache.set(wakeable, threadIDs);
   } else {
     threadIDs = pingCache.get(wakeable);
@@ -3829,7 +3834,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 let didWarnAboutUpdateInRender = false;
 let didWarnAboutUpdateInRenderForAnotherComponent;
 if (__DEV__) {
-  didWarnAboutUpdateInRenderForAnotherComponent = new Set();
+  didWarnAboutUpdateInRenderForAnotherComponent = new Set<string>();
 }
 
 function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {

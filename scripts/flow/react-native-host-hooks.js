@@ -201,6 +201,14 @@ declare var nativeFabricUIManager: {
     onFail: () => void,
     onSuccess: __MeasureLayoutOnSuccessCallback,
   ) => void,
+  getBoundingClientRect: (
+    node: Node,
+  ) => [
+    /* x:*/ number,
+    /* y:*/ number,
+    /* width:*/ number,
+    /* height:*/ number,
+  ],
   findNodeAtPoint: (
     node: Node,
     locationX: number,

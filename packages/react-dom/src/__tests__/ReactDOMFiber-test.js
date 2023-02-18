@@ -24,6 +24,7 @@ describe('ReactDOMFiber', () => {
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
+    jest.restoreAllMocks();
   });
 
   it('should render strings as children', () => {
@@ -1154,11 +1155,11 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual(['A']);
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.mock.calls[0][0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
-      expect(console.error.calls.argsFor(1)[0]).toMatch(
+      expect(console.error.mock.calls[1][0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
     }
@@ -1257,7 +1258,7 @@ describe('ReactDOMFiber', () => {
     let actualDocument;
     let textNode;
 
-    spyOnDevAndProd(iframeContainer, 'appendChild').and.callFake(node => {
+    spyOnDevAndProd(iframeContainer, 'appendChild').mockImplementation(node => {
       actualDocument = node.ownerDocument;
       textNode = node;
     });

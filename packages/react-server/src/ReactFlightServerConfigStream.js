@@ -141,12 +141,12 @@ export function processReferenceChunk(
   return stringToChunk(row);
 }
 
-export function processModuleChunk(
+export function processImportChunk(
   request: Request,
   id: number,
-  moduleMetaData: ReactModel,
+  clientReferenceMetadata: ReactModel,
 ): Chunk {
-  const json: string = stringify(moduleMetaData);
+  const json: string = stringify(clientReferenceMetadata);
   const row = serializeRowHeader('I', id) + json + '\n';
   return stringToChunk(row);
 }

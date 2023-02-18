@@ -4,6 +4,15 @@
 
 ---
 
+### 4.27.2
+February 16, 2023
+
+* Replace DevTools `semver` usages with `compare-versions` for smaller bundle size ([markerikson](https://github.com/markerikson) in [#26122](https://github.com/facebook/react/pull/26122))
+* Support highlights for React Native apps in dev tools ([ryancat](https://github.com/ryancat) in [#26060](https://github.com/facebook/react/pull/26060))
+* improve error handling in extension ([mondaychen](https://github.com/mondaychen) in [#26068](https://github.com/facebook/react/pull/26068))
+
+---
+
 ### 4.27.1
 December 6, 2022
 

@@ -51,8 +51,7 @@ function registerEvents() {
 }
 
 function createAndAccumulateChangeEvent(
-  // $FlowFixMe[missing-local-annot]
-  dispatchQueue,
+  dispatchQueue: DispatchQueue,
   inst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   target: null | EventTarget,
@@ -89,7 +88,7 @@ function shouldUseChangeEvent(elem: Instance | TextInstance) {
 }
 
 function manualDispatchChangeEvent(nativeEvent: AnyNativeEvent) {
-  const dispatchQueue = [];
+  const dispatchQueue: DispatchQueue = [];
   createAndAccumulateChangeEvent(
     dispatchQueue,
     activeElementInst,

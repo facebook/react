@@ -144,7 +144,7 @@ export function getEffectDurations(root: Object): {
 }
 
 export function serializeToString(data: any): string {
-  const cache = new Set();
+  const cache = new Set<mixed>();
   // Use a custom replacer function to protect against circular references.
   return JSON.stringify(data, (key, value) => {
     if (typeof value === 'object' && value !== null) {

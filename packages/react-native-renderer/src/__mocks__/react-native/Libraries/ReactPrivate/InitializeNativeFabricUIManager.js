@@ -149,6 +149,19 @@ const RCTFabricUIManager = {
 
     callback(10, 10, 100, 100);
   }),
+  getBoundingClientRect: jest.fn(function getBoundingClientRect(node) {
+    if (typeof node !== 'object') {
+      throw new Error(
+        `Expected node to be an object, was passed "${typeof node}"`,
+      );
+    }
+
+    if (typeof node.viewName !== 'string') {
+      throw new Error('Expected node to be a host node.');
+    }
+
+    return [10, 10, 100, 100];
+  }),
   measureLayout: jest.fn(function measureLayout(
     node,
     relativeNode,
@@ -181,3 +194,19 @@ const RCTFabricUIManager = {
 };
 
 global.nativeFabricUIManager = RCTFabricUIManager;
+
+// DOMRect isn't provided by jsdom, but it's used by `ReactFabricHostComponent`.
+// This is a basic implementation for testing.
+global.DOMRect = class DOMRect {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  toJSON() {
+    const {x, y, width, height} = this;
+    return {x, y, width, height};
+  }
+};

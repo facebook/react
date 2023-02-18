@@ -77,7 +77,7 @@ async function main() {
   // Fizz runtime, and should break immediately if there were a mistake, so I'm
   // not too worried about it.
   outputCode = outputCode.replace(
-    /window\.(\$[A-z0-9_]*)/g,
+    /window\.(\$[A-z0-9_]*|matchMedia)/g,
     (_, variableName) => variableName
   );
 

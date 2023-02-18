@@ -83,7 +83,7 @@ export function getNestedBoundingClientRect(
 ): Rect {
   const ownerIframe = getOwnerIframe(node);
   if (ownerIframe && ownerIframe !== boundaryWindow) {
-    const rects = [node.getBoundingClientRect()];
+    const rects: Array<Rect | ClientRect> = [node.getBoundingClientRect()];
     let currentIframe: null | HTMLElement = ownerIframe;
     let onlyOneMore = false;
     while (currentIframe) {

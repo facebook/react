@@ -188,7 +188,7 @@ export function launchEditor(
   }
   childProcess.on('error', function () {});
   // $FlowFixMe[incompatible-use] found when upgrading Flow
-  childProcess.on('exit', function (errorCode) {
+  childProcess.on('exit', function () {
     childProcess = null;
   });
 }

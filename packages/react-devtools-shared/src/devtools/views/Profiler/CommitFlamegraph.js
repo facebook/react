@@ -45,7 +45,7 @@ export default function CommitFlamegraphAutoSizer(_: {}): React.Node {
   const {profilingCache} = profilerStore;
 
   const deselectCurrentFiber = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       event.stopPropagation();
       selectFiber(null, null);
     },
@@ -126,7 +126,7 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
   const handleElementMouseEnter = useCallback(
-    ({id, name}) => {
+    ({id, name}: $FlowFixMe) => {
       highlightNativeElement(id); // Highlight last hovered element.
       setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
     },

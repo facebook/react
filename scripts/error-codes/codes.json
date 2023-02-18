@@ -361,7 +361,7 @@
   "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React.",
   "373": "This Hook is not supported in Server Components.",
   "374": "Event handlers cannot be passed to Client Component props.%s\nIf you need interactivity, consider converting part of this to a Client Component.",
-  "375": "Functions cannot be passed directly to Client Components because they're not serializable.%s",
+  "375": "Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with \"use server\".%s",
   "376": "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(%s) cannot be found among global symbols.%s",
   "377": "BigInt (%s) is not yet supported in Client Component props.%s",
   "378": "Type %s is not supported in Client Component props.%s",
@@ -429,7 +429,7 @@
   "441": "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
   "442": "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue.",
   "443": "acquireResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
-  "444": "getResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
+  "444": "getResource encountered a type it did not expect: \"%s\". this is a bug in React.",
   "445": "\"currentResources\" was expected to exist. This is a bug in React.",
   "446": "\"resourceRoot\" was expected to exist. This is a bug in React.",
   "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found.",
@@ -450,5 +450,6 @@
   "462": "Unexpected SuspendedReason. This is a bug in React.",
   "463": "ReactDOMServer.renderToNodeStream(): The Node Stream API is not available in Bun. Use ReactDOMServer.renderToReadableStream() instead.",
   "464": "ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available in Bun. Use ReactDOMServer.renderToReadableStream() instead.",
-  "465": "enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle."
+  "465": "enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.",
+  "466": "Trying to call a function from \"use server\" but the callServer option was not implemented in your router runtime."
 }

@@ -1706,7 +1706,7 @@ describe('ReactUpdates', () => {
 
   it('prevents infinite update loop triggered by synchronous updates in useEffect', () => {
     // Ignore flushSync warning
-    spyOnDev(console, 'error');
+    spyOnDev(console, 'error').mockImplementation(() => {});
 
     function NonTerminating() {
       const [step, setStep] = React.useState(0);

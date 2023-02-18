@@ -1904,7 +1904,7 @@ describe('useMutableSource', () => {
           // Get a new copy of ReactNoop.
           loadModules();
 
-          spyOnDev(console, 'error');
+          spyOnDev(console, 'error').mockImplementation(() => {});
 
           // Use the mutablesource again but with a different renderer.
           ReactNoop.render(
@@ -1917,7 +1917,7 @@ describe('useMutableSource', () => {
           );
           expect(Scheduler).toFlushAndYieldThrough(['c:one']);
 
-          expect(console.error.calls.argsFor(0)[0]).toContain(
+          expect(console.error.mock.calls[0][0]).toContain(
             'Detected multiple renderers concurrently rendering the ' +
               'same mutable source. This is currently unsupported.',
           );
@@ -1985,7 +1985,7 @@ describe('useMutableSource', () => {
           // Get a new copy of ReactNoop.
           loadModules();
 
-          spyOnDev(console, 'error');
+          spyOnDev(console, 'error').mockImplementation(() => {});
 
           // Mutate before the new render reads from the source.
           source.value = 'two';
@@ -2001,7 +2001,7 @@ describe('useMutableSource', () => {
           );
           expect(Scheduler).toFlushAndYieldThrough(['c:two']);
 
-          expect(console.error.calls.argsFor(0)[0]).toContain(
+          expect(console.error.mock.calls[0][0]).toContain(
             'Detected multiple renderers concurrently rendering the ' +
               'same mutable source. This is currently unsupported.',
           );

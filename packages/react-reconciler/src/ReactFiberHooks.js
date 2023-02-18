@@ -168,8 +168,8 @@ let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot;
 let didWarnAboutUseWrappedInTryCatch;
 if (__DEV__) {
-  didWarnAboutMismatchedHooksForComponent = new Set();
-  didWarnAboutUseWrappedInTryCatch = new Set();
+  didWarnAboutMismatchedHooksForComponent = new Set<string | null>();
+  didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
 }
 
 export type Hook = {
@@ -1112,7 +1112,7 @@ function updateReducer<S, I, A>(
 
     let newBaseState = null;
     let newBaseQueueFirst = null;
-    let newBaseQueueLast = null;
+    let newBaseQueueLast: Update<S, A> | null = null;
     let update = first;
     do {
       // An extra OffscreenLane bit is added to updates that were made to

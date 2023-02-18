@@ -3,14 +3,14 @@
 exports[`ReactFlightNativeRelay can render a Client Component using a module reference and render there 1`] = `
 "1
  RCTText null
-   RCTRawText {\\"text\\":\\"Hello\\"}
-   RCTRawText {\\"text\\":\\", \\"}
-   RCTRawText {\\"text\\":\\"Seb Smith\\"}"
+   RCTRawText {"text":"Hello"}
+   RCTRawText {"text":", "}
+   RCTRawText {"text":"Seb Smith"}"
 `;
 
 exports[`ReactFlightNativeRelay can render a Server Component 1`] = `
-Object {
-  "foo": Object {
+{
+  "foo": {
     "bar": <RCTView>
       <RCTText>
         A

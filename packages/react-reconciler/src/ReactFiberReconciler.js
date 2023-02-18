@@ -554,7 +554,7 @@ if (__DEV__) {
     obj: Object | Array<any>,
     path: Array<string | number>,
     index: number,
-  ) => {
+  ): $FlowFixMe => {
     const key = path[index];
     const updated = isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === path.length) {
@@ -582,7 +582,7 @@ if (__DEV__) {
     oldPath: Array<string | number>,
     newPath: Array<string | number>,
     index: number,
-  ) => {
+  ): $FlowFixMe => {
     const oldKey = oldPath[index];
     const updated = isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === oldPath.length) {
@@ -633,7 +633,7 @@ if (__DEV__) {
     path: Array<string | number>,
     index: number,
     value: any,
-  ) => {
+  ): $FlowFixMe => {
     if (index >= path.length) {
       return value;
     }

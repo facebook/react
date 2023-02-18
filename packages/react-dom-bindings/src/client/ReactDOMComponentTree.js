@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FloatRoot, RootResources} from './ReactDOMFloatClient';
+import type {HoistableRoot, RootResources} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -24,7 +24,7 @@ import type {
 
 import {
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   HostRoot,
@@ -178,7 +178,7 @@ export function getInstanceFromNode(node: Node): Fiber | null {
       tag === HostComponent ||
       tag === HostText ||
       tag === SuspenseComponent ||
-      (enableFloat ? tag === HostResource : false) ||
+      (enableFloat ? tag === HostHoistable : false) ||
       (enableHostSingletons ? tag === HostSingleton : false) ||
       tag === HostRoot
     ) {
@@ -198,7 +198,7 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
   const tag = inst.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
+    (enableFloat ? tag === HostHoistable : false) ||
     (enableHostSingletons ? tag === HostSingleton : false) ||
     tag === HostText
   ) {
@@ -277,14 +277,12 @@ export function doesTargetHaveEventHandle(
   return eventHandles.has(eventHandle);
 }
 
-export function getResourcesFromRoot(root: FloatRoot): RootResources {
+export function getResourcesFromRoot(root: HoistableRoot): RootResources {
   let resources = (root: any)[internalRootNodeResourcesKey];
   if (!resources) {
     resources = (root: any)[internalRootNodeResourcesKey] = {
-      styles: new Map(),
-      scripts: new Map(),
-      head: new Map(),
-      lastStructuredMeta: new Map(),
+      hoistableStyles: new Map(),
+      hoistableScripts: new Map(),
     };
   }
   return resources;

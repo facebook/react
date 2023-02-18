@@ -58,6 +58,6 @@ describe('internal act()', () => {
     });
     expect(Scheduler).toHaveYielded(['stage 1', 'stage 2']);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}]);
+    expect(ReactNoop).toMatchRenderedOutput('1');
   });
 });

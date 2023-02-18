@@ -6,6 +6,9 @@ import {Counter} from './Counter.js';
 import {Counter as Counter2} from './Counter2.js';
 
 import ShowMore from './ShowMore.js';
+import Button from './Button.js';
+
+import {like} from './actions.js';
 
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
@@ -23,6 +26,9 @@ export default async function App() {
       <ShowMore>
         <p>Lorem ipsum</p>
       </ShowMore>
+      <div>
+        <Button action={like}>Like</Button>
+      </div>
     </Container>
   );
 }

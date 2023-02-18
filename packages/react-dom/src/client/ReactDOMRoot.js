@@ -385,6 +385,7 @@ export function isValidContainerLegacy(node: any): boolean {
 function warnIfReactDOMContainerInDEV(container: any) {
   if (__DEV__) {
     if (
+      !enableHostSingletons &&
       container.nodeType === ELEMENT_NODE &&
       ((container: any): Element).tagName &&
       ((container: any): Element).tagName.toUpperCase() === 'BODY'

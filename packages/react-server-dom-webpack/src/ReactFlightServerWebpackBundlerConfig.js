@@ -7,13 +7,28 @@
  * @flow
  */
 
+import type {ReactModel} from 'react-server/src/ReactFlightServer';
+
 type WebpackMap = {
   [filepath: string]: {
-    [name: string]: ModuleMetaData,
+    [name: string]: ClientReferenceMetadata,
   },
 };
 
 export type BundlerConfig = WebpackMap;
+
+export type ServerReference<T: Function> = T & {
+  $$typeof: symbol,
+  $$filepath: string,
+  $$name: string,
+  $$bound: Array<ReactModel>,
+};
+
+export type ServerReferenceMetadata = {
+  id: string,
+  name: string,
+  bound: Promise<Array<ReactModel>>,
+};
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
@@ -23,7 +38,7 @@ export type ClientReference<T> = {
   async: boolean,
 };
 
-export type ModuleMetaData = {
+export type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
   name: string,
@@ -33,6 +48,7 @@ export type ModuleMetaData = {
 export type ClientReferenceKey = string;
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
+const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
@@ -49,10 +65,14 @@ export function isClientReference(reference: Object): boolean {
   return reference.$$typeof === CLIENT_REFERENCE_TAG;
 }
 
-export function resolveModuleMetaData<T>(
+export function isServerReference(reference: Object): boolean {
+  return reference.$$typeof === SERVER_REFERENCE_TAG;
+}
+
+export function resolveClientReferenceMetadata<T>(
   config: BundlerConfig,
   clientReference: ClientReference<T>,
-): ModuleMetaData {
+): ClientReferenceMetadata {
   const resolvedModuleData =
     config[clientReference.filepath][clientReference.name];
   if (clientReference.async) {
@@ -65,4 +85,15 @@ export function resolveModuleMetaData<T>(
   } else {
     return resolvedModuleData;
   }
+}
+
+export function resolveServerReferenceMetadata<T>(
+  config: BundlerConfig,
+  serverReference: ServerReference<T>,
+): ServerReferenceMetadata {
+  return {
+    id: serverReference.$$filepath,
+    name: serverReference.$$name,
+    bound: Promise.resolve(serverReference.$$bound),
+  };
 }

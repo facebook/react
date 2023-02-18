@@ -65,7 +65,7 @@ export function generateHookMap(sourceAST: File): HookMap {
   const names = [];
   const mappings: Array<HookMapLine> = [];
 
-  let currentLine = null;
+  let currentLine: $FlowFixMe | null = null;
   hookNamesMapping.forEach(({name, start}) => {
     let nameIndex = namesMap.get(name);
     if (nameIndex == null) {

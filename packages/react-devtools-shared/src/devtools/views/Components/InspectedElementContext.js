@@ -177,7 +177,7 @@ export function InspectedElementContextController({
     [setState, state],
   );
 
-  const inspectedElementRef = useRef(null);
+  const inspectedElementRef = useRef<null | InspectedElement>(null);
   useEffect(() => {
     if (
       inspectedElement !== null &&

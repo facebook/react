@@ -25,10 +25,22 @@ babelRegister({
 });
 
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 
 // Application
 app.get('/', function (req, res) {
+  require('./handler.js')(req, res);
+});
+
+app.options('/', function (req, res) {
+  res.setHeader('Allow', 'Allow: GET,HEAD,POST');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'rsc-action');
+  res.end();
+});
+
+app.post('/', bodyParser.text(), function (req, res) {
   require('./handler.js')(req, res);
 });
 

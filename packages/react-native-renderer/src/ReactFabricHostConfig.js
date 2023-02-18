@@ -56,6 +56,7 @@ const {
   unstable_DiscreteEventPriority: FabricDiscretePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
   setNativeProps,
+  getBoundingClientRect: fabricGetBoundingClientRect,
 } = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
@@ -208,6 +209,20 @@ class ReactFabricHostComponent {
         mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
       );
     }
+  }
+
+  unstable_getBoundingClientRect(): DOMRect {
+    const {stateNode} = this._internalInstanceHandle;
+    if (stateNode != null) {
+      const rect = fabricGetBoundingClientRect(stateNode.node);
+
+      if (rect) {
+        return new DOMRect(rect[0], rect[1], rect[2], rect[3]);
+      }
+    }
+
+    // Empty rect if any of the above failed
+    return new DOMRect(0, 0, 0, 0);
   }
 
   setNativeProps(nativeProps: Object) {

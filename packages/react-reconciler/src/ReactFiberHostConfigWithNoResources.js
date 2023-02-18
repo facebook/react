@@ -18,9 +18,16 @@ function shim(...args: any): empty {
   );
 }
 
+export type HoistableRoot = mixed;
+
 // Resources (when unsupported)
 export const supportsResources = false;
-export const isHostResourceType = shim;
+export const isHostHoistableType = shim;
+export const getHoistableRoot = shim;
 export const getResource = shim;
 export const acquireResource = shim;
 export const releaseResource = shim;
+export const hydrateHoistable = shim;
+export const mountHoistable = shim;
+export const unmountHoistable = shim;
+export const createHoistableInstance = shim;

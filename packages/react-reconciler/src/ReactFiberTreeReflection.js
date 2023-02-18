@@ -17,7 +17,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import {
   ClassComponent,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostRoot,
   HostPortal,
@@ -275,12 +275,12 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberImpl(node: Fiber) {
+function findCurrentHostFiberImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
+    (enableFloat ? tag === HostHoistable : false) ||
     (enableHostSingletons ? tag === HostSingleton : false) ||
     tag === HostText
   ) {
@@ -306,12 +306,12 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
+function findCurrentHostFiberWithNoPortalsImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
+    (enableFloat ? tag === HostHoistable : false) ||
     (enableHostSingletons ? tag === HostSingleton : false) ||
     tag === HostText
   ) {
