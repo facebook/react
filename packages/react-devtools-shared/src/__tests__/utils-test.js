@@ -32,7 +32,7 @@ describe('utils', () => {
       expect(getDisplayName(FauxComponent)).toEqual('FauxComponent');
     });
 
-    // @reactVersion >= 16.0
+    // @reactVersion >，= 16.0
     it('should return a displayName name if specified', () => {
       function FauxComponent() {}
       FauxComponent.displayName = 'OverrideDisplayName';
@@ -260,12 +260,14 @@ describe('utils', () => {
       expect(gte('1.2.3', '1.2.1')).toBe(true);
       expect(gte('1.2.1', '1.2.1')).toBe(true);
       expect(gte('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
     });
 
     it('gt should compare versions correctly', () => {
       expect(gt('1.2.3', '1.2.1')).toBe(true);
       expect(gt('1.2.1', '1.2.1')).toBe(false);
       expect(gt('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
     });
   });
 });
