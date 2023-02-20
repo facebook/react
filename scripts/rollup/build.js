@@ -388,13 +388,15 @@ function getPlugins(
       bundleType !== NODE_ESM &&
       closure({
         compilation_level: 'SIMPLE',
-        language_in: 'ECMASCRIPT_2018',
+        language_in: 'ECMASCRIPT_2020',
         language_out:
           bundleType === NODE_ES2015
-            ? 'ECMASCRIPT_2018'
+            ? 'ECMASCRIPT_2020'
             : bundleType === BROWSER_SCRIPT
             ? 'ECMASCRIPT5'
             : 'ECMASCRIPT5_STRICT',
+        emit_use_strict:
+          bundleType !== BROWSER_SCRIPT && bundleType !== NODE_ESM,
         env: 'CUSTOM',
         warning_level: 'QUIET',
         apply_input_source_maps: false,

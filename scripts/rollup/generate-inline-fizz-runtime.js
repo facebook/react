@@ -45,6 +45,8 @@ async function main() {
           instructionDir + '/ReactDOMFizzInstructionSetShared.js',
         ],
         compilation_level: 'ADVANCED',
+        language_in: 'ECMASCRIPT_2020',
+        language_out: 'ECMASCRIPT5_STRICT',
         module_resolution: 'NODE',
         // This is necessary to prevent Closure from inlining a Promise polyfill
         rewrite_polyfills: false,
