@@ -571,6 +571,7 @@ async function createBundle(bundle, bundleType) {
     treeshake: {
       moduleSideEffects: (id, external) =>
         !(external && pureExternalModules.includes(id)),
+      propertyReadSideEffects: false,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
