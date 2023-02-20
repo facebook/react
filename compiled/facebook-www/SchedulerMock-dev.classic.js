@@ -19,14 +19,8 @@ if (__DEV__) {
 // $FlowFixMe[cannot-resolve-module]
 var dynamicFeatureFlags = require("SchedulerFeatureFlags"); // Re-export dynamic flags from the www version.
 
-var enableIsInputPending = dynamicFeatureFlags.enableIsInputPending,
-  enableSchedulerDebugging = dynamicFeatureFlags.enableSchedulerDebugging,
-  enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling,
-  enableIsInputPendingContinuous =
-    dynamicFeatureFlags.enableIsInputPendingContinuous,
-  frameYieldMs = dynamicFeatureFlags.frameYieldMs,
-  continuousYieldMs = dynamicFeatureFlags.continuousYieldMs,
-  maxYieldMs = dynamicFeatureFlags.maxYieldMs;
+var enableSchedulerDebugging = dynamicFeatureFlags.enableSchedulerDebugging,
+  enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling;
 var enableProfiling = enableProfilingFeatureFlag;
 
 function push(heap, node) {

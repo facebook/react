@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-bc38a3dfa-20230220";
+var ReactVersion = "18.3.0-www-modern-6b6d0617e-20230220";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -232,40 +232,14 @@ function checkHtmlStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
+var enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 var enableFloat = true;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -984,17 +958,20 @@ var ariaProperties = {
   "aria-setsize": 0
 };
 
-var warnedProperties = {};
-var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+var warnedProperties$1 = {};
+var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-function validateProperty(tagName, name) {
+function validateProperty$1(tagName, name) {
   {
-    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+    if (
+      hasOwnProperty.call(warnedProperties$1, name) &&
+      warnedProperties$1[name]
+    ) {
       return true;
     }
 
-    if (rARIACamel.test(name)) {
+    if (rARIACamel$1.test(name)) {
       var ariaName = "aria-" + name.slice(4).toLowerCase();
       var correctName = ariaProperties.hasOwnProperty(ariaName)
         ? ariaName
@@ -1007,7 +984,7 @@ function validateProperty(tagName, name) {
           name
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       } // aria-* attributes should be lowercase; suggest the lowercase version.
 
@@ -1018,12 +995,12 @@ function validateProperty(tagName, name) {
           correctName
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       }
     }
 
-    if (rARIA.test(name)) {
+    if (rARIA$1.test(name)) {
       var lowerCasedName = name.toLowerCase();
       var standardName = ariaProperties.hasOwnProperty(lowerCasedName)
         ? lowerCasedName
@@ -1031,7 +1008,7 @@ function validateProperty(tagName, name) {
       // DOM properties, then it is an invalid aria-* attribute.
 
       if (standardName == null) {
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return false;
       } // aria-* attributes should be lowercase; suggest the lowercase version.
 
@@ -1042,7 +1019,7 @@ function validateProperty(tagName, name) {
           standardName
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       }
     }
@@ -1056,7 +1033,7 @@ function warnInvalidARIAProps(type, props) {
     var invalidProps = [];
 
     for (var key in props) {
-      var isValid = validateProperty(type, key);
+      var isValid = validateProperty$1(type, key);
 
       if (!isValid) {
         invalidProps.push(key);
@@ -1087,7 +1064,7 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties(type, props) {
+function validateProperties$2(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
@@ -1620,20 +1597,17 @@ var possibleStandardNames = {
   zoomandpan: "zoomAndPan"
 };
 
-var validateProperty$1 = function () {};
+var validateProperty = function () {};
 
 {
-  var warnedProperties$1 = {};
+  var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on./;
   var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-  var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+  var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+  var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-  validateProperty$1 = function (tagName, name, value, eventRegistry) {
-    if (
-      hasOwnProperty.call(warnedProperties$1, name) &&
-      warnedProperties$1[name]
-    ) {
+  validateProperty = function (tagName, name, value, eventRegistry) {
+    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
@@ -1646,7 +1620,7 @@ var validateProperty$1 = function () {};
           "are not needed/supported by React."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // We can't rely on the event system being injected on the server.
 
@@ -1672,14 +1646,14 @@ var validateProperty$1 = function () {};
           registrationName
         );
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
 
       if (EVENT_NAME_REGEX.test(name)) {
         error("Unknown event handler property `%s`. It will be ignored.", name);
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
     } else if (EVENT_NAME_REGEX.test(name)) {
@@ -1694,11 +1668,11 @@ var validateProperty$1 = function () {};
         );
       }
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // Let the ARIA attribute hook validate ARIA attributes
 
-    if (rARIA$1.test(name) || rARIACamel$1.test(name)) {
+    if (rARIA.test(name) || rARIACamel.test(name)) {
       return true;
     }
 
@@ -1708,7 +1682,7 @@ var validateProperty$1 = function () {};
           "For more information, lookup documentation on `dangerouslySetInnerHTML`."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1718,7 +1692,7 @@ var validateProperty$1 = function () {};
           "Pass individual `aria-` attributes instead."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1734,7 +1708,7 @@ var validateProperty$1 = function () {};
         typeof value
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1745,7 +1719,7 @@ var validateProperty$1 = function () {};
         name
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1762,7 +1736,7 @@ var validateProperty$1 = function () {};
           standardName
         );
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
     } else if (!isReserved && name !== lowerCasedName) {
@@ -1778,7 +1752,7 @@ var validateProperty$1 = function () {};
         lowerCasedName
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1814,7 +1788,7 @@ var validateProperty$1 = function () {};
         );
       }
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // Now that we've validated casing, do not validate
     // data types for reserved props
@@ -1824,7 +1798,7 @@ var validateProperty$1 = function () {};
     } // Warn when a known attribute is a bad type
 
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return false;
     } // Warn when passing the strings 'false' or 'true' into a boolean prop
 
@@ -1846,7 +1820,7 @@ var validateProperty$1 = function () {};
         value
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1859,7 +1833,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
     var unknownProps = [];
 
     for (var key in props) {
-      var isValid = validateProperty$1(type, key, props[key], eventRegistry);
+      var isValid = validateProperty(type, key, props[key], eventRegistry);
 
       if (!isValid) {
         unknownProps.push(key);
@@ -1892,7 +1866,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
   }
 };
 
-function validateProperties$2(type, props, eventRegistry) {
+function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {
     return;
   }
@@ -1905,7 +1879,7 @@ var warnValidStyle = function () {};
 {
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-  var msPattern = /^-ms-/;
+  var msPattern$1 = /^-ms-/;
   var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
 
   var badStyleValueWithSemicolonPattern = /;\s*$/;
@@ -1932,7 +1906,7 @@ var warnValidStyle = function () {};
       name, // As Andi Smith suggests
       // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
       // is converted to lowercase `ms`.
-      camelize(name.replace(msPattern, "ms-"))
+      camelize(name.replace(msPattern$1, "ms-"))
     );
   };
 
@@ -2098,7 +2072,7 @@ function escapeTextForBrowser(text) {
 }
 
 var uppercasePattern = /([A-Z])/g;
-var msPattern$1 = /^ms-/;
+var msPattern = /^ms-/;
 /**
  * Hyphenates a camelcased CSS property name, for example:
  *
@@ -2117,7 +2091,7 @@ function hyphenateStyleName(name) {
   return name
     .replace(uppercasePattern, "-$1")
     .toLowerCase()
-    .replace(msPattern$1, "-ms-");
+    .replace(msPattern, "-ms-");
 }
 
 // and any newline or tab are filtered out as if they're not part of the URL.
@@ -2709,7 +2683,7 @@ var scriptReplacer = function (match, prefix, s, suffix) {
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 
-function createResponseState(
+function createResponseState$1(
   identifierPrefix,
   nonce,
   bootstrapScriptContent,
@@ -2962,7 +2936,7 @@ function encodeHTMLTextNode(text) {
 }
 
 var textSeparator = stringToPrecomputedChunk("<!-- -->");
-function pushTextInstance(target, text, responseState, textEmbedded) {
+function pushTextInstance$1(target, text, responseState, textEmbedded) {
   if (text === "") {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
     return textEmbedded;
@@ -2977,7 +2951,7 @@ function pushTextInstance(target, text, responseState, textEmbedded) {
 } // Called when Fizz is done with a Segment. Currently the only purpose is to conditionally
 // emit a text separator when we don't know for sure it is safe to omit
 
-function pushSegmentFinale(
+function pushSegmentFinale$1(
   target,
   responseState,
   lastPushedText,
@@ -4863,9 +4837,9 @@ function pushStartInstance(
   textEmbedded
 ) {
   {
-    validateProperties(type, props);
+    validateProperties$2(type, props);
     validateProperties$1(type, props);
-    validateProperties$2(type, props, null);
+    validateProperties(type, props, null);
 
     if (
       !props.suppressContentEditableWarning &&
@@ -5135,7 +5109,7 @@ var clientRenderedSuspenseBoundaryError1C =
   stringToPrecomputedChunk(' data-stck="');
 var clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk("></template>");
-function writeStartCompletedSuspenseBoundary(destination, responseState) {
+function writeStartCompletedSuspenseBoundary$1(destination, responseState) {
   return writeChunkAndReturn(destination, startCompletedSuspenseBoundary);
 }
 function writeStartPendingSuspenseBoundary(destination, responseState, id) {
@@ -5150,7 +5124,7 @@ function writeStartPendingSuspenseBoundary(destination, responseState, id) {
   writeChunk(destination, id);
   return writeChunkAndReturn(destination, startPendingSuspenseBoundary2);
 }
-function writeStartClientRenderedSuspenseBoundary(
+function writeStartClientRenderedSuspenseBoundary$1(
   destination,
   responseState,
   errorDigest,
@@ -5205,13 +5179,13 @@ function writeStartClientRenderedSuspenseBoundary(
   );
   return result;
 }
-function writeEndCompletedSuspenseBoundary(destination, responseState) {
+function writeEndCompletedSuspenseBoundary$1(destination, responseState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 function writeEndPendingSuspenseBoundary(destination, responseState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
-function writeEndClientRenderedSuspenseBoundary(destination, responseState) {
+function writeEndClientRenderedSuspenseBoundary$1(destination, responseState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 var startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
@@ -7148,12 +7122,12 @@ function getAsResourceDEV(resource) {
   }
 }
 
-function createResponseState$1(
+function createResponseState(
   generateStaticMarkup,
   identifierPrefix,
   externalRuntimeConfig
 ) {
-  var responseState = createResponseState(
+  var responseState = createResponseState$1(
     identifierPrefix,
     undefined,
     undefined,
@@ -7192,15 +7166,15 @@ function createRootFormatContext() {
     noscriptTagInScope: false
   };
 }
-function pushTextInstance$1(target, text, responseState, textEmbedded) {
+function pushTextInstance(target, text, responseState, textEmbedded) {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
     return false;
   } else {
-    return pushTextInstance(target, text, responseState, textEmbedded);
+    return pushTextInstance$1(target, text, responseState, textEmbedded);
   }
 }
-function pushSegmentFinale$1(
+function pushSegmentFinale(
   target,
   responseState,
   lastPushedText,
@@ -7209,7 +7183,7 @@ function pushSegmentFinale$1(
   if (responseState.generateStaticMarkup) {
     return;
   } else {
-    return pushSegmentFinale(
+    return pushSegmentFinale$1(
       target,
       responseState,
       lastPushedText,
@@ -7217,16 +7191,16 @@ function pushSegmentFinale$1(
     );
   }
 }
-function writeStartCompletedSuspenseBoundary$1(destination, responseState) {
+function writeStartCompletedSuspenseBoundary(destination, responseState) {
   if (responseState.generateStaticMarkup) {
     // A completed boundary is done and doesn't need a representation in the HTML
     // if we're not going to be hydrating it.
     return true;
   }
 
-  return writeStartCompletedSuspenseBoundary(destination);
+  return writeStartCompletedSuspenseBoundary$1(destination);
 }
-function writeStartClientRenderedSuspenseBoundary$1(
+function writeStartClientRenderedSuspenseBoundary(
   destination,
   responseState, // flushing these error arguments are not currently supported in this legacy streaming format.
   errorDigest,
@@ -7239,7 +7213,7 @@ function writeStartClientRenderedSuspenseBoundary$1(
     return true;
   }
 
-  return writeStartClientRenderedSuspenseBoundary(
+  return writeStartClientRenderedSuspenseBoundary$1(
     destination,
     responseState,
     errorDigest,
@@ -7247,19 +7221,19 @@ function writeStartClientRenderedSuspenseBoundary$1(
     errorComponentStack
   );
 }
-function writeEndCompletedSuspenseBoundary$1(destination, responseState) {
+function writeEndCompletedSuspenseBoundary(destination, responseState) {
   if (responseState.generateStaticMarkup) {
     return true;
   }
 
-  return writeEndCompletedSuspenseBoundary(destination);
+  return writeEndCompletedSuspenseBoundary$1(destination);
 }
-function writeEndClientRenderedSuspenseBoundary$1(destination, responseState) {
+function writeEndClientRenderedSuspenseBoundary(destination, responseState) {
   if (responseState.generateStaticMarkup) {
     return true;
   }
 
-  return writeEndClientRenderedSuspenseBoundary(destination);
+  return writeEndClientRenderedSuspenseBoundary$1(destination);
 }
 
 // ATTENTION
@@ -7524,7 +7498,7 @@ function reenableLogs() {
 var ReactSharedInternals =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
 var prefix;
 function describeBuiltInComponentFrame(name, source, ownerFn) {
   {
@@ -7571,10 +7545,10 @@ function describeNativeComponentFrame(fn, construct) {
   var previousDispatcher;
 
   {
-    previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+    previousDispatcher = ReactCurrentDispatcher$1.current; // Set the dispatcher in DEV because this might be call in the render function
     // for warnings.
 
-    ReactCurrentDispatcher.current = null;
+    ReactCurrentDispatcher$1.current = null;
     disableLogs();
   }
 
@@ -7688,7 +7662,7 @@ function describeNativeComponentFrame(fn, construct) {
     reentry = false;
 
     {
-      ReactCurrentDispatcher.current = previousDispatcher;
+      ReactCurrentDispatcher$1.current = previousDispatcher;
       reenableLogs();
     }
 
@@ -7717,8 +7691,6 @@ function describeFunctionComponentFrame(fn, source, ownerFn) {
     return describeNativeComponentFrame(fn, false);
   }
 }
-
-var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 var emptyContextObject = {};
 
@@ -7952,7 +7924,7 @@ function popProvider(context) {
 function getActiveContext() {
   return currentActiveSnapshot;
 }
-function readContext(context) {
+function readContext$1(context) {
   var value = context._currentValue2;
   return value;
 }
@@ -8167,7 +8139,7 @@ function constructClassInstance(ctor, props, maskedLegacyContext) {
   }
 
   if (typeof contextType === "object" && contextType !== null) {
-    context = readContext(contextType);
+    context = readContext$1(contextType);
   }
 
   var instance = new ctor(props, context);
@@ -8591,7 +8563,7 @@ function mountClassInstance(instance, ctor, newProps, maskedLegacyContext) {
   var contextType = ctor.contextType;
 
   if (typeof contextType === "object" && contextType !== null) {
-    instance.context = readContext(contextType);
+    instance.context = readContext$1(contextType);
   } else {
     instance.context = emptyContextObject;
   }
@@ -8808,7 +8780,7 @@ function createThenableState() {
   return [];
 }
 
-function noop() {}
+function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   var previous = thenableState[index];
@@ -8821,7 +8793,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // they represent the same value, because components are idempotent.
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.
-      thenable.then(noop, noop);
+      thenable.then(noop$2, noop$2);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -9113,7 +9085,7 @@ function resetHooksState() {
   workInProgressHook = null;
 }
 
-function readContext$1(context) {
+function readContext(context) {
   {
     if (isInHookUserCodeInDev) {
       error(
@@ -9125,7 +9097,7 @@ function readContext$1(context) {
     }
   }
 
-  return readContext(context);
+  return readContext$1(context);
 }
 
 function useContext(context) {
@@ -9134,7 +9106,7 @@ function useContext(context) {
   }
 
   resolveCurrentlyRenderingComponent();
-  return readContext(context);
+  return readContext$1(context);
 }
 
 function basicStateReducer(state, action) {
@@ -9433,7 +9405,7 @@ function use(usable) {
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
     ) {
       var context = usable;
-      return readContext$1(context);
+      return readContext(context);
     }
   } // eslint-disable-next-line react-internal/safe-string-coercion
 
@@ -9461,7 +9433,7 @@ function useMemoCache(size) {
 function noop$1() {}
 
 var HooksDispatcher = {
-  readContext: readContext$1,
+  readContext: readContext,
   useContext: useContext,
   useMemo: useMemo,
   useReducer: useReducer,
@@ -9547,9 +9519,9 @@ function getStackByComponentStackNode(componentStack) {
   }
 }
 
-var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 var PENDING = 0;
 var COMPLETED = 1;
 var FLUSHED = 2;
@@ -9581,7 +9553,7 @@ function defaultErrorHandler(error) {
   return null;
 }
 
-function noop$2() {}
+function noop() {}
 
 function createRequest(
   children,
@@ -9617,10 +9589,10 @@ function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
-    onAllReady: onAllReady === undefined ? noop$2 : onAllReady,
-    onShellReady: onShellReady === undefined ? noop$2 : onShellReady,
-    onShellError: onShellError === undefined ? noop$2 : onShellError,
-    onFatalError: onFatalError === undefined ? noop$2 : onFatalError
+    onAllReady: onAllReady === undefined ? noop : onAllReady,
+    onShellReady: onShellReady === undefined ? noop : onShellReady,
+    onShellError: onShellError === undefined ? noop : onShellError,
+    onFatalError: onFatalError === undefined ? noop : onFatalError
   }; // This segment represents the root fallback.
 
   var rootSegment = createPendingSegment(
@@ -9907,7 +9879,7 @@ function renderSuspenseBoundary(request, task, props) {
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content);
-    pushSegmentFinale$1(
+    pushSegmentFinale(
       contentRootSegment.chunks,
       request.responseState,
       contentRootSegment.lastPushedText,
@@ -10340,7 +10312,7 @@ function renderContextConsumer(request, task, context, props) {
     }
   }
 
-  var newValue = readContext(context);
+  var newValue = readContext$1(context);
   var newChildren = render(newValue);
   renderNodeDestructive(request, task, null, newChildren);
 }
@@ -10695,7 +10667,7 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
 
   if (typeof node === "string") {
     var segment = task.blockedSegment;
-    segment.lastPushedText = pushTextInstance$1(
+    segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       node,
       request.responseState,
@@ -10706,7 +10678,7 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
 
   if (typeof node === "number") {
     var _segment = task.blockedSegment;
-    _segment.lastPushedText = pushTextInstance$1(
+    _segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       "" + node,
       request.responseState,
@@ -10992,7 +10964,7 @@ function finishedTask(request, boundary, segment) {
 
     if (request.pendingRootTasks === 0) {
       // We have completed the shell so the shell can't error anymore.
-      request.onShellError = noop$2;
+      request.onShellError = noop;
       var onShellReady = request.onShellReady;
       onShellReady();
     }
@@ -11092,7 +11064,7 @@ function retryTask(request, task) {
     var prevThenableState = task.thenableState;
     task.thenableState = null;
     renderNodeDestructive(request, task, prevThenableState, task.node);
-    pushSegmentFinale$1(
+    pushSegmentFinale(
       segment.chunks,
       request.responseState,
       segment.lastPushedText,
@@ -11139,8 +11111,8 @@ function performWork(request) {
   }
 
   var prevContext = getActiveContext();
-  var prevDispatcher = ReactCurrentDispatcher$1.current;
-  ReactCurrentDispatcher$1.current = HooksDispatcher;
+  var prevDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = HooksDispatcher;
   var prevCacheDispatcher;
 
   {
@@ -11152,8 +11124,8 @@ function performWork(request) {
   var prevGetCurrentStackImpl;
 
   {
-    prevGetCurrentStackImpl = ReactDebugCurrentFrame$1.getCurrentStack;
-    ReactDebugCurrentFrame$1.getCurrentStack = getCurrentStackInDEV;
+    prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
   }
 
   var prevResponseState = currentResponseState;
@@ -11178,7 +11150,7 @@ function performWork(request) {
     fatalError(request, error);
   } finally {
     setCurrentResponseState(prevResponseState);
-    ReactCurrentDispatcher$1.current = prevDispatcher;
+    ReactCurrentDispatcher.current = prevDispatcher;
 
     {
       ReactCurrentCache.current = prevCacheDispatcher;
@@ -11187,7 +11159,7 @@ function performWork(request) {
     cleanupAfterRender(previousHostDispatcher);
 
     {
-      ReactDebugCurrentFrame$1.getCurrentStack = prevGetCurrentStackImpl;
+      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }
 
     if (prevDispatcher === HooksDispatcher) {
@@ -11267,7 +11239,7 @@ function flushSegment(request, destination, segment) {
   if (boundary.forceClientRender) {
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
-    writeStartClientRenderedSuspenseBoundary$1(
+    writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
       boundary.errorDigest,
@@ -11276,7 +11248,7 @@ function flushSegment(request, destination, segment) {
     ); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndClientRenderedSuspenseBoundary$1(
+    return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.responseState
     );
@@ -11294,7 +11266,7 @@ function flushSegment(request, destination, segment) {
     writeStartPendingSuspenseBoundary(destination, request.responseState, id); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination);
   } else if (boundary.byteSize > request.progressiveChunkSize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
@@ -11312,13 +11284,13 @@ function flushSegment(request, destination, segment) {
     ); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination);
   } else {
     {
       hoistResources(request.resources, boundary.resources);
     } // We can inline this boundary's content as a complete boundary.
 
-    writeStartCompletedSuspenseBoundary$1(destination, request.responseState);
+    writeStartCompletedSuspenseBoundary(destination, request.responseState);
     var completedSegments = boundary.completedSegments;
 
     if (completedSegments.length !== 1) {
@@ -11329,7 +11301,7 @@ function flushSegment(request, destination, segment) {
 
     var contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
-    return writeEndCompletedSuspenseBoundary$1(
+    return writeEndCompletedSuspenseBoundary(
       destination,
       request.responseState
     );
@@ -11679,7 +11651,7 @@ function renderToStringImpl(
 
   var request = createRequest(
     children,
-    createResponseState$1(
+    createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
       unstable_externalRuntimeSrc

@@ -92,45 +92,8 @@ function get(key) {
   return key._reactInternals;
 }
 
-var ReactSharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
 // Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+require("ReactFeatureFlags");
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -152,7 +115,6 @@ var Hydrating =
   /*                    */
   4096; // You can change the rest (and add more).
 
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function getNearestMountedFiber(fiber) {
   var node = fiber;
   var nearestMounted = fiber;
@@ -542,7 +504,7 @@ var UIEventInterface = assign({}, EventInterface, {
   detail: 0
 });
 
-var SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
+createSyntheticEvent(UIEventInterface);
 var lastMovementX;
 var lastMovementY;
 var lastMouseEvent;
@@ -607,7 +569,7 @@ var MouseEventInterface = assign({}, UIEventInterface, {
   }
 });
 
-var SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
+createSyntheticEvent(MouseEventInterface);
 /**
  * @interface DragEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -617,7 +579,7 @@ var DragEventInterface = assign({}, MouseEventInterface, {
   dataTransfer: 0
 });
 
-var SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
+createSyntheticEvent(DragEventInterface);
 /**
  * @interface FocusEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -627,7 +589,7 @@ var FocusEventInterface = assign({}, UIEventInterface, {
   relatedTarget: 0
 });
 
-var SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
+createSyntheticEvent(FocusEventInterface);
 /**
  * @interface Event
  * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
@@ -640,7 +602,7 @@ var AnimationEventInterface = assign({}, EventInterface, {
   pseudoElement: 0
 });
 
-var SyntheticAnimationEvent = createSyntheticEvent(AnimationEventInterface);
+createSyntheticEvent(AnimationEventInterface);
 /**
  * @interface Event
  * @see http://www.w3.org/TR/clipboard-apis/
@@ -654,7 +616,7 @@ var ClipboardEventInterface = assign({}, EventInterface, {
   }
 });
 
-var SyntheticClipboardEvent = createSyntheticEvent(ClipboardEventInterface);
+createSyntheticEvent(ClipboardEventInterface);
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
@@ -664,7 +626,7 @@ var CompositionEventInterface = assign({}, EventInterface, {
   data: 0
 });
 
-var SyntheticCompositionEvent = createSyntheticEvent(CompositionEventInterface);
+createSyntheticEvent(CompositionEventInterface);
 /**
  * Normalization of deprecated HTML5 `key` values
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
@@ -858,7 +820,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
   }
 });
 
-var SyntheticKeyboardEvent = createSyntheticEvent(KeyboardEventInterface);
+createSyntheticEvent(KeyboardEventInterface);
 /**
  * @interface PointerEvent
  * @see http://www.w3.org/TR/pointerevents/
@@ -877,7 +839,7 @@ var PointerEventInterface = assign({}, MouseEventInterface, {
   isPrimary: 0
 });
 
-var SyntheticPointerEvent = createSyntheticEvent(PointerEventInterface);
+createSyntheticEvent(PointerEventInterface);
 /**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
@@ -894,7 +856,7 @@ var TouchEventInterface = assign({}, UIEventInterface, {
   getModifierState: getEventModifierState
 });
 
-var SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
+createSyntheticEvent(TouchEventInterface);
 /**
  * @interface Event
  * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
@@ -907,7 +869,7 @@ var TransitionEventInterface = assign({}, EventInterface, {
   pseudoElement: 0
 });
 
-var SyntheticTransitionEvent = createSyntheticEvent(TransitionEventInterface);
+createSyntheticEvent(TransitionEventInterface);
 /**
  * @interface WheelEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -938,7 +900,7 @@ var WheelEventInterface = assign({}, MouseEventInterface, {
   deltaMode: 0
 });
 
-var SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
+createSyntheticEvent(WheelEventInterface);
 
 /**
  * HTML nodeType values that represent the type of the node

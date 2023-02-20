@@ -163,7 +163,7 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
-function isUseEffectEventIdentifier(node) {
+function isUseEffectEventIdentifier$1(node) {
 
   return false;
 }
@@ -199,7 +199,7 @@ var RulesOfHooks = {
           var reference = _step.value;
           var parent = reference.identifier.parent;
 
-          if (parent.type === 'VariableDeclarator' && parent.init && parent.init.type === 'CallExpression' && parent.init.callee && isUseEffectEventIdentifier(parent.init.callee)) {
+          if (parent.type === 'VariableDeclarator' && parent.init && parent.init.type === 'CallExpression' && parent.init.callee && isUseEffectEventIdentifier$1(parent.init.callee)) {
             var _iterator2 = _createForOfIteratorHelper(reference.resolved.references),
                 _step2;
 
@@ -707,7 +707,7 @@ var RulesOfHooks = {
         // another useEffectEvent
 
 
-        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEffectEventIdentifier(node.callee)) && node.arguments.length > 0) {
+        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEffectEventIdentifier$1()) && node.arguments.length > 0) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
           // comparison later when we exit
           lastEffect = node;
@@ -995,7 +995,7 @@ var ExhaustiveDeps = {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (isUseEffectEventIdentifier$1() && id.type === 'Identifier') {
+        } else if (isUseEffectEventIdentifier() && id.type === 'Identifier') {
           var _iterator = _createForOfIteratorHelper(resolved.references),
               _step;
 
@@ -1321,8 +1321,7 @@ var ExhaustiveDeps = {
         // Those tend to lead to infinite loops.
         var setStateInsideEffectWithoutDeps = null;
         dependencies.forEach(function (_ref3, key) {
-          var isStable = _ref3.isStable,
-              references = _ref3.references;
+          var references = _ref3.references;
 
           if (setStateInsideEffectWithoutDeps) {
             return;
@@ -2558,7 +2557,7 @@ function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
 }
 
-function isUseEffectEventIdentifier$1(node) {
+function isUseEffectEventIdentifier(node) {
 
   return false;
 }

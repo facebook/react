@@ -19,7 +19,6 @@ if (__DEV__) {
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl");
 var ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration");
 var React = require("react");
-var ReactDOM = require("react-dom");
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -179,39 +178,8 @@ var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+var enableCustomElementPropertySupport =
+  dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
 
 // It is handled by React separately and shouldn't be written to the DOM.
 
@@ -261,10 +229,6 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 } // When adding attributes to this list, be sure to also add them to
-// the `possibleStandardNames` module to ensure casing and incorrect
-// name warnings.
-
-var properties = {}; // These props are reserved by React. They shouldn't be written to the DOM.
 
 var reservedProps = [
   "children",
@@ -285,7 +249,7 @@ if (enableCustomElementPropertySupport) {
 
 reservedProps.forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     RESERVED,
     false, // mustUseProperty
@@ -306,7 +270,7 @@ reservedProps.forEach(function (name) {
   var name = _ref[0],
     attributeName = _ref[1];
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     STRING,
     false, // mustUseProperty
@@ -323,7 +287,7 @@ reservedProps.forEach(function (name) {
   name
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     BOOLEANISH_STRING,
     false, // mustUseProperty
@@ -344,7 +308,7 @@ reservedProps.forEach(function (name) {
   "preserveAlpha"
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     BOOLEANISH_STRING,
     false, // mustUseProperty
@@ -382,7 +346,7 @@ reservedProps.forEach(function (name) {
   "itemScope"
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     BOOLEAN,
     false, // mustUseProperty
@@ -404,7 +368,7 @@ reservedProps.forEach(function (name) {
   // instead in the assignment below.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     BOOLEAN,
     true, // mustUseProperty
@@ -423,7 +387,7 @@ reservedProps.forEach(function (name) {
   // instead in the assignment below.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     OVERLOADED_BOOLEAN,
     false, // mustUseProperty
@@ -443,7 +407,7 @@ reservedProps.forEach(function (name) {
   // instead in the assignment below.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     POSITIVE_NUMERIC,
     false, // mustUseProperty
@@ -456,7 +420,7 @@ reservedProps.forEach(function (name) {
 
 ["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     NUMERIC,
     false, // mustUseProperty
@@ -556,7 +520,7 @@ var capitalize = function (token) {
 ].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     STRING,
     false, // mustUseProperty
@@ -579,7 +543,7 @@ var capitalize = function (token) {
 ].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     STRING,
     false, // mustUseProperty
@@ -599,7 +563,7 @@ var capitalize = function (token) {
 ].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
-  properties[name] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     name,
     STRING,
     false, // mustUseProperty
@@ -614,7 +578,7 @@ var capitalize = function (token) {
 
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     attributeName,
     STRING,
     false, // mustUseProperty
@@ -624,11 +588,8 @@ var capitalize = function (token) {
     false
   );
 }); // These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
 
-var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[xlinkHref] = new PropertyInfoRecord(
+new PropertyInfoRecord(
   "xlinkHref",
   STRING,
   false, // mustUseProperty
@@ -639,7 +600,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
 );
 ["src", "href", "action", "formAction"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
+  new PropertyInfoRecord(
     attributeName,
     STRING,
     false, // mustUseProperty
@@ -723,11 +684,6 @@ Object.keys(isUnitlessNumber).forEach(function (prop) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
-
-var ReactDOMSharedInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
 var rendererSigil;
 
@@ -932,7 +888,7 @@ function popProvider() {
 function getActiveContext() {
   return currentActiveSnapshot;
 }
-function readContext(context) {
+function readContext$1(context) {
   var value = context._currentValue;
   return value;
 }
@@ -1078,7 +1034,7 @@ function getThenableStateAfterSuspending() {
   return state;
 }
 
-function readContext$1(context) {
+function readContext(context) {
   {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
       if (isClientReference(context)) {
@@ -1098,7 +1054,7 @@ function readContext$1(context) {
     }
   }
 
-  return readContext(context);
+  return readContext$1(context);
 }
 
 var HooksDispatcher = {
@@ -1111,8 +1067,8 @@ var HooksDispatcher = {
   useDebugValue: function () {},
   useDeferredValue: unsupportedHook,
   useTransition: unsupportedHook,
-  readContext: readContext$1,
-  useContext: readContext$1,
+  readContext: readContext,
+  useContext: readContext,
   useReducer: unsupportedHook,
   useRef: unsupportedHook,
   useState: unsupportedHook,
@@ -1178,7 +1134,7 @@ function use(usable) {
       return trackUsedThenable(thenableState, thenable, index);
     } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
       var context = usable;
-      return readContext$1(context);
+      return readContext(context);
     }
   }
 
@@ -2599,7 +2555,7 @@ function startWork(request) {
 function startFlowing(request, destination) {
   if (request.status === CLOSING) {
     request.status = CLOSED;
-    closeWithError(destination, request.fatalError);
+    closeWithError(destination);
     return;
   }
 

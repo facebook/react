@@ -99,9 +99,9 @@ var isArrayImpl = Array.isArray,
   enableTransitionTracing =
     require("ReactFeatureFlags").enableTransitionTracing,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner = { current: null },
-  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
-function createElement(type, config, children) {
+  ReactCurrentOwner$1 = { current: null },
+  RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
+function createElement$1(type, config, children) {
   var propName,
     props = {},
     key = null,
@@ -111,7 +111,7 @@ function createElement(type, config, children) {
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName) &&
+        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
         (props[propName] = config[propName]);
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
@@ -130,7 +130,7 @@ function createElement(type, config, children) {
     key: key,
     ref: ref,
     props: props,
-    _owner: ReactCurrentOwner.current
+    _owner: ReactCurrentOwner$1.current
   };
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -312,10 +312,10 @@ var ReactCurrentBatchConfig = { transition: null },
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner,
+    ReactCurrentOwner: ReactCurrentOwner$1,
     ContextRegistry: {}
   },
-  ContextRegistry$1 = ReactSharedInternals.ContextRegistry;
+  ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createMutableSource(source, getVersion) {
   return {
     _getVersion: getVersion,
@@ -338,9 +338,9 @@ function startTransition(scope, options) {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-  RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
-function jsx(type, config, maybeKey) {
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
+  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
+function jsx$1(type, config, maybeKey) {
   var propName,
     props = {},
     key = null,
@@ -350,7 +350,7 @@ function jsx(type, config, maybeKey) {
   void 0 !== config.ref && (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+      !RESERVED_PROPS.hasOwnProperty(propName) &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -361,7 +361,7 @@ function jsx(type, config, maybeKey) {
     key: key,
     ref: ref,
     props: props,
-    _owner: ReactCurrentOwner$1.current
+    _owner: ReactCurrentOwner.current
   };
 }
 exports.Children = {
@@ -459,13 +459,13 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((ref = config.ref), (owner = ReactCurrentOwner.current));
+      ((ref = config.ref), (owner = ReactCurrentOwner$1.current));
     void 0 !== config.key && (key = "" + config.key);
     if (element.type && element.type.defaultProps)
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName) &&
+        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
         (props[propName] =
           void 0 === config[propName] && void 0 !== defaultProps
             ? defaultProps[propName]
@@ -504,9 +504,9 @@ exports.createContext = function (defaultValue) {
   };
   return (defaultValue.Consumer = defaultValue);
 };
-exports.createElement = createElement;
+exports.createElement = createElement$1;
 exports.createFactory = function (type) {
-  var factory = createElement.bind(null, type);
+  var factory = createElement$1.bind(null, type);
   factory.type = type;
   return factory;
 };
@@ -516,7 +516,7 @@ exports.createRef = function () {
 };
 exports.createServerContext = function (globalName, defaultValue) {
   var wasDefined = !0;
-  if (!ContextRegistry$1[globalName]) {
+  if (!ContextRegistry[globalName]) {
     wasDefined = !1;
     var context$1 = {
       $$typeof: REACT_SERVER_CONTEXT_TYPE,
@@ -529,9 +529,9 @@ exports.createServerContext = function (globalName, defaultValue) {
       _globalName: globalName
     };
     context$1.Provider = { $$typeof: REACT_PROVIDER_TYPE, _context: context$1 };
-    ContextRegistry$1[globalName] = context$1;
+    ContextRegistry[globalName] = context$1;
   }
-  context$1 = ContextRegistry$1[globalName];
+  context$1 = ContextRegistry[globalName];
   if (context$1._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED)
     (context$1._defaultValue = defaultValue),
       context$1._currentValue ===
@@ -551,9 +551,9 @@ exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
 exports.isValidElement = isValidElement;
-exports.jsx = jsx;
+exports.jsx = jsx$1;
 exports.jsxDEV = void 0;
-exports.jsxs = jsx;
+exports.jsxs = jsx$1;
 exports.lazy = function (ctor) {
   return {
     $$typeof: REACT_LAZY_TYPE,
@@ -657,7 +657,7 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-classic-bc38a3dfa-20230220";
+exports.version = "18.3.0-www-classic-6b6d0617e-20230220";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

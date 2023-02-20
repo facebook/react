@@ -43,39 +43,9 @@ var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+// On WWW, true is used for a new modern build.
 
 var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function isValidElementType(type) {

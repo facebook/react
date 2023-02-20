@@ -255,7 +255,7 @@ function markSchedulerUnsuspended(ms) {
 }
 
 /* eslint-disable no-var */
-
+exports.unstable_now = void 0;
 var hasPerformanceNow = // $FlowFixMe[method-unbinding]
   typeof performance === "object" && typeof performance.now === "function";
 

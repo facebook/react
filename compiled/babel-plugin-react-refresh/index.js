@@ -169,7 +169,7 @@ function ReactFreshBabelPlugin (babel) {
                   } // Neither require nor import. Might be a HOC.
                   // Pass through.
 
-                }
+                } else ;
 
                 break;
               }

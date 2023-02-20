@@ -2019,12 +2019,12 @@ function clz32Fallback(x) {
 var SuspenseException = Error(
   "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
 );
-function noop() {}
+function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2335,13 +2335,13 @@ var HooksDispatcher = {
       throw Error("Not implemented.");
     }
   },
-  ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
+  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error) {
   console.error(error);
   return null;
 }
-function noop$2() {}
+function noop() {}
 function createTask(
   request,
   thenableState,
@@ -2942,7 +2942,7 @@ function finishedTask(request, boundary, segment) {
     }
     request.pendingRootTasks--;
     0 === request.pendingRootTasks &&
-      ((request.onShellError = noop$2),
+      ((request.onShellError = noop),
       (boundary = request.onShellReady),
       boundary());
   } else
@@ -3400,8 +3400,8 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactCurrentDispatcher$1.current;
-    ReactCurrentDispatcher$1.current = HooksDispatcher;
+      prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = HooksDispatcher;
     var prevCacheDispatcher = ReactCurrentCache.current;
     ReactCurrentCache.current = DefaultCacheDispatcher;
     var resources = request.resources;
@@ -3484,7 +3484,7 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error), fatalError(request, error);
     } finally {
       (currentResponseState = prevResponseState),
-        (ReactCurrentDispatcher$1.current = prevDispatcher),
+        (ReactCurrentDispatcher.current = prevDispatcher),
         (ReactCurrentCache.current = prevCacheDispatcher),
         (currentResources = currentResourcesStack.pop()),
         (ReactDOMCurrentDispatcher.current = resources),
@@ -3642,10 +3642,10 @@ exports.renderToStream = function (children, options) {
     completedBoundaries: [],
     partialBoundaries: [],
     onError: void 0 === streamingFormat ? defaultErrorHandler : streamingFormat,
-    onAllReady: noop$2,
-    onShellReady: noop$2,
-    onShellError: noop$2,
-    onFatalError: noop$2
+    onAllReady: noop,
+    onShellReady: noop,
+    onShellError: noop,
+    onFatalError: noop
   };
   bootstrapModules = createPendingSegment(
     JSCompiler_inline_result,

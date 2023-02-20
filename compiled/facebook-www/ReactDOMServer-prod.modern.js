@@ -1816,7 +1816,7 @@ function hoistStylesheetResource(resource) {
 function unblockStylesheet(resource) {
   resource.state &= -5;
 }
-function createResponseState$1(
+function createResponseState(
   generateStaticMarkup,
   identifierPrefix,
   externalRuntimeConfig
@@ -1851,7 +1851,7 @@ function createResponseState$1(
     generateStaticMarkup: generateStaticMarkup
   };
 }
-function pushTextInstance$1(target, text, responseState, textEmbedded) {
+function pushTextInstance(target, text, responseState, textEmbedded) {
   if (responseState.generateStaticMarkup)
     return target.push(escapeTextForBrowser(text)), !1;
   "" === text
@@ -1993,12 +1993,12 @@ function clz32Fallback(x) {
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
 var SuspenseException = Error(formatProdErrorMessage(460));
-function noop() {}
+function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2293,13 +2293,13 @@ var HooksDispatcher = {
       throw Error(formatProdErrorMessage(248));
     }
   },
-  ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
+  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error) {
   console.error(error);
   return null;
 }
-function noop$2() {}
+function noop() {}
 function createRequest(
   children,
   responseState,
@@ -2345,10 +2345,10 @@ function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError: void 0 === onError ? defaultErrorHandler : onError,
-    onAllReady: void 0 === onAllReady ? noop$2 : onAllReady,
-    onShellReady: void 0 === onShellReady ? noop$2 : onShellReady,
-    onShellError: void 0 === onShellError ? noop$2 : onShellError,
-    onFatalError: void 0 === onFatalError ? noop$2 : onFatalError
+    onAllReady: void 0 === onAllReady ? noop : onAllReady,
+    onShellReady: void 0 === onShellReady ? noop : onShellReady,
+    onShellError: void 0 === onShellError ? noop : onShellError,
+    onFatalError: void 0 === onFatalError ? noop : onFatalError
   };
   rootFormatContext = createPendingSegment(
     responseState,
@@ -2836,7 +2836,7 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
   }
   "string" === typeof node
     ? ((prevThenableState = task.blockedSegment),
-      (prevThenableState.lastPushedText = pushTextInstance$1(
+      (prevThenableState.lastPushedText = pushTextInstance(
         task.blockedSegment.chunks,
         node,
         request.responseState,
@@ -2844,7 +2844,7 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
       )))
     : "number" === typeof node &&
       ((prevThenableState = task.blockedSegment),
-      (prevThenableState.lastPushedText = pushTextInstance$1(
+      (prevThenableState.lastPushedText = pushTextInstance(
         task.blockedSegment.chunks,
         "" + node,
         request.responseState,
@@ -2965,7 +2965,7 @@ function finishedTask(request, boundary, segment) {
     }
     request.pendingRootTasks--;
     0 === request.pendingRootTasks &&
-      ((request.onShellError = noop$2),
+      ((request.onShellError = noop),
       (boundary = request.onShellReady),
       boundary());
   } else
@@ -2992,8 +2992,8 @@ function finishedTask(request, boundary, segment) {
 function performWork(request$jscomp$1) {
   if (2 !== request$jscomp$1.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactCurrentDispatcher$1.current;
-    ReactCurrentDispatcher$1.current = HooksDispatcher;
+      prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = HooksDispatcher;
     var prevCacheDispatcher = ReactCurrentCache.current;
     ReactCurrentCache.current = DefaultCacheDispatcher;
     var resources = request$jscomp$1.resources;
@@ -3085,7 +3085,7 @@ function performWork(request$jscomp$1) {
         fatalError(request$jscomp$1, error);
     } finally {
       (currentResponseState = prevResponseState),
-        (ReactCurrentDispatcher$1.current = prevDispatcher),
+        (ReactCurrentDispatcher.current = prevDispatcher),
         (ReactCurrentCache.current = prevCacheDispatcher),
         (currentResources = currentResourcesStack.pop()),
         (ReactDOMCurrentDispatcher.current = resources),
@@ -3519,7 +3519,7 @@ function renderToStringImpl(
     readyToStream = !1;
   children = createRequest(
     children,
-    createResponseState$1(
+    createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : void 0,
       unstable_externalRuntimeSrc
@@ -3573,4 +3573,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-bc38a3dfa-20230220";
+exports.version = "18.3.0-www-modern-6b6d0617e-20230220";

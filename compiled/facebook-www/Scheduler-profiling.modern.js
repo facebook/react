@@ -119,6 +119,7 @@ function stopLoggingProfilingEvents() {
   eventLogIndex = 0;
   return buffer;
 }
+exports.unstable_now = void 0;
 if ("object" === typeof performance && "function" === typeof performance.now) {
   var localPerformance = performance;
   exports.unstable_now = function () {

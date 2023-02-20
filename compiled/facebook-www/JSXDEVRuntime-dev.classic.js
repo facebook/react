@@ -105,41 +105,13 @@ function printWarning(level, format, args) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
+var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+// On WWW, false is used for a new modern build.
 
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
-
-var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
 function isValidElementType(type) {
   if (typeof type === "string" || typeof type === "function") {
     return true;
@@ -171,7 +143,7 @@ function isValidElementType(type) {
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_CLIENT_REFERENCE ||
+      type.$$typeof === REACT_CLIENT_REFERENCE$1 ||
       type.getModuleId !== undefined
     ) {
       return true;
@@ -649,9 +621,9 @@ function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var loggedTypeFailures = {};
-var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
 
-function setCurrentlyValidatingElement(element) {
+function setCurrentlyValidatingElement$1(element) {
   {
     if (element) {
       var owner = element._owner;
@@ -660,9 +632,9 @@ function setCurrentlyValidatingElement(element) {
         element._source,
         owner ? owner.type : null
       );
-      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+      ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
     } else {
-      ReactDebugCurrentFrame.setExtraStackFrame(null);
+      ReactDebugCurrentFrame$1.setExtraStackFrame(null);
     }
   }
 }
@@ -712,7 +684,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
         }
 
         if (error$1 && !(error$1 instanceof Error)) {
-          setCurrentlyValidatingElement(element);
+          setCurrentlyValidatingElement$1(element);
 
           error(
             "%s: type specification of %s" +
@@ -727,7 +699,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
             typeof error$1
           );
 
-          setCurrentlyValidatingElement(null);
+          setCurrentlyValidatingElement$1(null);
         }
 
         if (
@@ -737,11 +709,11 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
           loggedTypeFailures[error$1.message] = true;
-          setCurrentlyValidatingElement(element);
+          setCurrentlyValidatingElement$1(element);
 
           error("Failed %s type: %s", location, error$1.message);
 
-          setCurrentlyValidatingElement(null);
+          setCurrentlyValidatingElement$1(null);
         }
       }
     }
@@ -828,7 +800,7 @@ function checkKeyStringCoercion(value) {
   }
 }
 
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
 var RESERVED_PROPS = {
   key: true,
   ref: true,
@@ -875,12 +847,12 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
   {
     if (
       typeof config.ref === "string" &&
-      ReactCurrentOwner.current &&
+      ReactCurrentOwner$1.current &&
       self &&
-      ReactCurrentOwner.current.stateNode !== self
+      ReactCurrentOwner$1.current.stateNode !== self
     ) {
       var componentName = getComponentNameFromType(
-        ReactCurrentOwner.current.type
+        ReactCurrentOwner$1.current.type
       );
 
       if (!didWarnAboutStringRefs[componentName]) {
@@ -891,7 +863,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             "We ask you to manually fix this case by using useRef() or createRef() instead. " +
             "Learn more about using refs safely here: " +
             "https://reactjs.org/link/strict-mode-string-ref",
-          getComponentNameFromType(ReactCurrentOwner.current.type),
+          getComponentNameFromType(ReactCurrentOwner$1.current.type),
           config.ref
         );
 
@@ -1029,7 +1001,7 @@ var ReactElement = function (type, key, ref, self, source, owner, props) {
  * @param {string} key
  */
 
-function jsxDEV(type, config, maybeKey, source, self) {
+function jsxDEV$1(type, config, maybeKey, source, self) {
   {
     var propName; // Reserved names are extracted
 
@@ -1103,17 +1075,17 @@ function jsxDEV(type, config, maybeKey, source, self) {
       ref,
       self,
       source,
-      ReactCurrentOwner.current,
+      ReactCurrentOwner$1.current,
       props
     );
   }
 }
 
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
-var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 
-function setCurrentlyValidatingElement$1(element) {
+function setCurrentlyValidatingElement(element) {
   {
     if (element) {
       var owner = element._owner;
@@ -1122,9 +1094,9 @@ function setCurrentlyValidatingElement$1(element) {
         element._source,
         owner ? owner.type : null
       );
-      ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
+      ReactDebugCurrentFrame.setExtraStackFrame(stack);
     } else {
-      ReactDebugCurrentFrame$1.setExtraStackFrame(null);
+      ReactDebugCurrentFrame.setExtraStackFrame(null);
     }
   }
 }
@@ -1154,8 +1126,8 @@ function isValidElement(object) {
 
 function getDeclarationErrorAddendum() {
   {
-    if (ReactCurrentOwner$1.current) {
-      var name = getComponentNameFromType(ReactCurrentOwner$1.current.type);
+    if (ReactCurrentOwner.current) {
+      var name = getComponentNameFromType(ReactCurrentOwner.current.type);
 
       if (name) {
         return "\n\nCheck the render method of `" + name + "`.";
@@ -1238,7 +1210,7 @@ function validateExplicitKey(element, parentType) {
     if (
       element &&
       element._owner &&
-      element._owner !== ReactCurrentOwner$1.current
+      element._owner !== ReactCurrentOwner.current
     ) {
       // Give the component that originally created this child.
       childOwner =
@@ -1247,7 +1219,7 @@ function validateExplicitKey(element, parentType) {
         ".";
     }
 
-    setCurrentlyValidatingElement$1(element);
+    setCurrentlyValidatingElement(element);
 
     error(
       'Each child in a list should have a unique "key" prop.' +
@@ -1256,7 +1228,7 @@ function validateExplicitKey(element, parentType) {
       childOwner
     );
 
-    setCurrentlyValidatingElement$1(null);
+    setCurrentlyValidatingElement(null);
   }
 }
 /**
@@ -1275,7 +1247,7 @@ function validateChildKeys(node, parentType) {
       return;
     }
 
-    if (node.$$typeof === REACT_CLIENT_REFERENCE$1);
+    if (node.$$typeof === REACT_CLIENT_REFERENCE);
     else if (isArray(node)) {
       for (var i = 0; i < node.length; i++) {
         var child = node[i];
@@ -1324,7 +1296,7 @@ function validatePropTypes(element) {
       return;
     }
 
-    if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
+    if (type.$$typeof === REACT_CLIENT_REFERENCE) {
       return;
     }
 
@@ -1382,7 +1354,7 @@ function validateFragmentProps(fragment) {
       var key = keys[i];
 
       if (key !== "children" && key !== "key") {
-        setCurrentlyValidatingElement$1(fragment);
+        setCurrentlyValidatingElement(fragment);
 
         error(
           "Invalid prop `%s` supplied to `React.Fragment`. " +
@@ -1390,17 +1362,17 @@ function validateFragmentProps(fragment) {
           key
         );
 
-        setCurrentlyValidatingElement$1(null);
+        setCurrentlyValidatingElement(null);
         break;
       }
     }
 
     if (fragment.ref !== null) {
-      setCurrentlyValidatingElement$1(fragment);
+      setCurrentlyValidatingElement(fragment);
 
       error("Invalid attribute `ref` supplied to `React.Fragment`.");
 
-      setCurrentlyValidatingElement$1(null);
+      setCurrentlyValidatingElement(null);
     }
   }
 }
@@ -1457,7 +1429,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
       );
     }
 
-    var element = jsxDEV(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
+    var element = jsxDEV$1(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
 
     if (element == null) {
@@ -1535,10 +1507,10 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
   }
 } // These two functions exist to still get child warnings in dev
 
-var jsxDEV$1 = jsxWithValidation;
+var jsxDEV = jsxWithValidation;
 
 exports.Fragment = REACT_FRAGMENT_TYPE;
-exports.jsxDEV = jsxDEV$1;
+exports.jsxDEV = jsxDEV;
 
   })();
 }

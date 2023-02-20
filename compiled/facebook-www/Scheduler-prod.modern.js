@@ -67,6 +67,7 @@ function compare(a, b) {
   var diff = a.sortIndex - b.sortIndex;
   return 0 !== diff ? diff : a.id - b.id;
 }
+exports.unstable_now = void 0;
 if ("object" === typeof performance && "function" === typeof performance.now) {
   var localPerformance = performance;
   exports.unstable_now = function () {
@@ -155,9 +156,9 @@ function flushWork(hasTimeRemaining, initialTime) {
             advanceTimers(initialTime);
             var JSCompiler_inline_result = !0;
             break a;
-          }
-          currentTask === peek(taskQueue) && pop(taskQueue);
-          advanceTimers(initialTime);
+          } else
+            currentTask === peek(taskQueue) && pop(taskQueue),
+              advanceTimers(initialTime);
         } else pop(taskQueue);
         currentTask = peek(taskQueue);
       }

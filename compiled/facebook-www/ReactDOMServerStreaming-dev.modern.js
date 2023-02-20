@@ -229,40 +229,14 @@ function checkHtmlStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
+var enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 var enableFloat = true;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -981,17 +955,20 @@ var ariaProperties = {
   "aria-setsize": 0
 };
 
-var warnedProperties = {};
-var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+var warnedProperties$1 = {};
+var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-function validateProperty(tagName, name) {
+function validateProperty$1(tagName, name) {
   {
-    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+    if (
+      hasOwnProperty.call(warnedProperties$1, name) &&
+      warnedProperties$1[name]
+    ) {
       return true;
     }
 
-    if (rARIACamel.test(name)) {
+    if (rARIACamel$1.test(name)) {
       var ariaName = "aria-" + name.slice(4).toLowerCase();
       var correctName = ariaProperties.hasOwnProperty(ariaName)
         ? ariaName
@@ -1004,7 +981,7 @@ function validateProperty(tagName, name) {
           name
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       } // aria-* attributes should be lowercase; suggest the lowercase version.
 
@@ -1015,12 +992,12 @@ function validateProperty(tagName, name) {
           correctName
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       }
     }
 
-    if (rARIA.test(name)) {
+    if (rARIA$1.test(name)) {
       var lowerCasedName = name.toLowerCase();
       var standardName = ariaProperties.hasOwnProperty(lowerCasedName)
         ? lowerCasedName
@@ -1028,7 +1005,7 @@ function validateProperty(tagName, name) {
       // DOM properties, then it is an invalid aria-* attribute.
 
       if (standardName == null) {
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return false;
       } // aria-* attributes should be lowercase; suggest the lowercase version.
 
@@ -1039,7 +1016,7 @@ function validateProperty(tagName, name) {
           standardName
         );
 
-        warnedProperties[name] = true;
+        warnedProperties$1[name] = true;
         return true;
       }
     }
@@ -1053,7 +1030,7 @@ function warnInvalidARIAProps(type, props) {
     var invalidProps = [];
 
     for (var key in props) {
-      var isValid = validateProperty(type, key);
+      var isValid = validateProperty$1(type, key);
 
       if (!isValid) {
         invalidProps.push(key);
@@ -1084,7 +1061,7 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties(type, props) {
+function validateProperties$2(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
@@ -1617,20 +1594,17 @@ var possibleStandardNames = {
   zoomandpan: "zoomAndPan"
 };
 
-var validateProperty$1 = function () {};
+var validateProperty = function () {};
 
 {
-  var warnedProperties$1 = {};
+  var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on./;
   var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-  var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+  var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+  var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-  validateProperty$1 = function (tagName, name, value, eventRegistry) {
-    if (
-      hasOwnProperty.call(warnedProperties$1, name) &&
-      warnedProperties$1[name]
-    ) {
+  validateProperty = function (tagName, name, value, eventRegistry) {
+    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
@@ -1643,7 +1617,7 @@ var validateProperty$1 = function () {};
           "are not needed/supported by React."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // We can't rely on the event system being injected on the server.
 
@@ -1669,14 +1643,14 @@ var validateProperty$1 = function () {};
           registrationName
         );
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
 
       if (EVENT_NAME_REGEX.test(name)) {
         error("Unknown event handler property `%s`. It will be ignored.", name);
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
     } else if (EVENT_NAME_REGEX.test(name)) {
@@ -1691,11 +1665,11 @@ var validateProperty$1 = function () {};
         );
       }
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // Let the ARIA attribute hook validate ARIA attributes
 
-    if (rARIA$1.test(name) || rARIACamel$1.test(name)) {
+    if (rARIA.test(name) || rARIACamel.test(name)) {
       return true;
     }
 
@@ -1705,7 +1679,7 @@ var validateProperty$1 = function () {};
           "For more information, lookup documentation on `dangerouslySetInnerHTML`."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1715,7 +1689,7 @@ var validateProperty$1 = function () {};
           "Pass individual `aria-` attributes instead."
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1731,7 +1705,7 @@ var validateProperty$1 = function () {};
         typeof value
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1742,7 +1716,7 @@ var validateProperty$1 = function () {};
         name
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1759,7 +1733,7 @@ var validateProperty$1 = function () {};
           standardName
         );
 
-        warnedProperties$1[name] = true;
+        warnedProperties[name] = true;
         return true;
       }
     } else if (!isReserved && name !== lowerCasedName) {
@@ -1775,7 +1749,7 @@ var validateProperty$1 = function () {};
         lowerCasedName
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1811,7 +1785,7 @@ var validateProperty$1 = function () {};
         );
       }
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     } // Now that we've validated casing, do not validate
     // data types for reserved props
@@ -1821,7 +1795,7 @@ var validateProperty$1 = function () {};
     } // Warn when a known attribute is a bad type
 
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return false;
     } // Warn when passing the strings 'false' or 'true' into a boolean prop
 
@@ -1843,7 +1817,7 @@ var validateProperty$1 = function () {};
         value
       );
 
-      warnedProperties$1[name] = true;
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -1856,7 +1830,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
     var unknownProps = [];
 
     for (var key in props) {
-      var isValid = validateProperty$1(type, key, props[key], eventRegistry);
+      var isValid = validateProperty(type, key, props[key], eventRegistry);
 
       if (!isValid) {
         unknownProps.push(key);
@@ -1889,7 +1863,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
   }
 };
 
-function validateProperties$2(type, props, eventRegistry) {
+function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {
     return;
   }
@@ -1902,7 +1876,7 @@ var warnValidStyle = function () {};
 {
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-  var msPattern = /^-ms-/;
+  var msPattern$1 = /^-ms-/;
   var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
 
   var badStyleValueWithSemicolonPattern = /;\s*$/;
@@ -1929,7 +1903,7 @@ var warnValidStyle = function () {};
       name, // As Andi Smith suggests
       // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
       // is converted to lowercase `ms`.
-      camelize(name.replace(msPattern, "ms-"))
+      camelize(name.replace(msPattern$1, "ms-"))
     );
   };
 
@@ -2095,7 +2069,7 @@ function escapeTextForBrowser(text) {
 }
 
 var uppercasePattern = /([A-Z])/g;
-var msPattern$1 = /^ms-/;
+var msPattern = /^ms-/;
 /**
  * Hyphenates a camelcased CSS property name, for example:
  *
@@ -2114,7 +2088,7 @@ function hyphenateStyleName(name) {
   return name
     .replace(uppercasePattern, "-$1")
     .toLowerCase()
-    .replace(msPattern$1, "-ms-");
+    .replace(msPattern, "-ms-");
 }
 
 // and any newline or tab are filtered out as if they're not part of the URL.
@@ -4870,9 +4844,9 @@ function pushStartInstance(
   textEmbedded
 ) {
   {
-    validateProperties(type, props);
+    validateProperties$2(type, props);
     validateProperties$1(type, props);
-    validateProperties$2(type, props, null);
+    validateProperties(type, props, null);
 
     if (
       !props.suppressContentEditableWarning &&
@@ -7417,7 +7391,7 @@ function reenableLogs() {
 var ReactSharedInternals =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
 var prefix;
 function describeBuiltInComponentFrame(name, source, ownerFn) {
   {
@@ -7464,10 +7438,10 @@ function describeNativeComponentFrame(fn, construct) {
   var previousDispatcher;
 
   {
-    previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+    previousDispatcher = ReactCurrentDispatcher$1.current; // Set the dispatcher in DEV because this might be call in the render function
     // for warnings.
 
-    ReactCurrentDispatcher.current = null;
+    ReactCurrentDispatcher$1.current = null;
     disableLogs();
   }
 
@@ -7581,7 +7555,7 @@ function describeNativeComponentFrame(fn, construct) {
     reentry = false;
 
     {
-      ReactCurrentDispatcher.current = previousDispatcher;
+      ReactCurrentDispatcher$1.current = previousDispatcher;
       reenableLogs();
     }
 
@@ -7610,8 +7584,6 @@ function describeFunctionComponentFrame(fn, source, ownerFn) {
     return describeNativeComponentFrame(fn, false);
   }
 }
-
-var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 var emptyContextObject = {};
 
@@ -7845,7 +7817,7 @@ function popProvider(context) {
 function getActiveContext() {
   return currentActiveSnapshot;
 }
-function readContext(context) {
+function readContext$1(context) {
   var value = context._currentValue;
   return value;
 }
@@ -8060,7 +8032,7 @@ function constructClassInstance(ctor, props, maskedLegacyContext) {
   }
 
   if (typeof contextType === "object" && contextType !== null) {
-    context = readContext(contextType);
+    context = readContext$1(contextType);
   }
 
   var instance = new ctor(props, context);
@@ -8484,7 +8456,7 @@ function mountClassInstance(instance, ctor, newProps, maskedLegacyContext) {
   var contextType = ctor.contextType;
 
   if (typeof contextType === "object" && contextType !== null) {
-    instance.context = readContext(contextType);
+    instance.context = readContext$1(contextType);
   } else {
     instance.context = emptyContextObject;
   }
@@ -8701,7 +8673,7 @@ function createThenableState() {
   return [];
 }
 
-function noop() {}
+function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   var previous = thenableState[index];
@@ -8714,7 +8686,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // they represent the same value, because components are idempotent.
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.
-      thenable.then(noop, noop);
+      thenable.then(noop$2, noop$2);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -9006,7 +8978,7 @@ function resetHooksState() {
   workInProgressHook = null;
 }
 
-function readContext$1(context) {
+function readContext(context) {
   {
     if (isInHookUserCodeInDev) {
       error(
@@ -9018,7 +8990,7 @@ function readContext$1(context) {
     }
   }
 
-  return readContext(context);
+  return readContext$1(context);
 }
 
 function useContext(context) {
@@ -9027,7 +8999,7 @@ function useContext(context) {
   }
 
   resolveCurrentlyRenderingComponent();
-  return readContext(context);
+  return readContext$1(context);
 }
 
 function basicStateReducer(state, action) {
@@ -9326,7 +9298,7 @@ function use(usable) {
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
     ) {
       var context = usable;
-      return readContext$1(context);
+      return readContext(context);
     }
   } // eslint-disable-next-line react-internal/safe-string-coercion
 
@@ -9354,7 +9326,7 @@ function useMemoCache(size) {
 function noop$1() {}
 
 var HooksDispatcher = {
-  readContext: readContext$1,
+  readContext: readContext,
   useContext: useContext,
   useMemo: useMemo,
   useReducer: useReducer,
@@ -9440,9 +9412,9 @@ function getStackByComponentStackNode(componentStack) {
   }
 }
 
-var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 var PENDING = 0;
 var COMPLETED = 1;
 var FLUSHED = 2;
@@ -9474,7 +9446,7 @@ function defaultErrorHandler(error) {
   return null;
 }
 
-function noop$2() {}
+function noop() {}
 
 function createRequest(
   children,
@@ -9510,10 +9482,10 @@ function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
-    onAllReady: onAllReady === undefined ? noop$2 : onAllReady,
-    onShellReady: onShellReady === undefined ? noop$2 : onShellReady,
-    onShellError: onShellError === undefined ? noop$2 : onShellError,
-    onFatalError: onFatalError === undefined ? noop$2 : onFatalError
+    onAllReady: onAllReady === undefined ? noop : onAllReady,
+    onShellReady: onShellReady === undefined ? noop : onShellReady,
+    onShellError: onShellError === undefined ? noop : onShellError,
+    onFatalError: onFatalError === undefined ? noop : onFatalError
   }; // This segment represents the root fallback.
 
   var rootSegment = createPendingSegment(
@@ -9544,8 +9516,6 @@ function createRequest(
 function pingTask(request, task) {
   var pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
-
-  if (pingedTasks.length === 1);
 }
 
 function createSuspenseBoundary(request, fallbackAbortableTasks) {
@@ -10229,7 +10199,7 @@ function renderContextConsumer(request, task, context, props) {
     }
   }
 
-  var newValue = readContext(context);
+  var newValue = readContext$1(context);
   var newChildren = render(newValue);
   renderNodeDestructive(request, task, null, newChildren);
 }
@@ -10881,7 +10851,7 @@ function finishedTask(request, boundary, segment) {
 
     if (request.pendingRootTasks === 0) {
       // We have completed the shell so the shell can't error anymore.
-      request.onShellError = noop$2;
+      request.onShellError = noop;
       var onShellReady = request.onShellReady;
       onShellReady();
     }
@@ -11028,8 +10998,8 @@ function performWork(request) {
   }
 
   var prevContext = getActiveContext();
-  var prevDispatcher = ReactCurrentDispatcher$1.current;
-  ReactCurrentDispatcher$1.current = HooksDispatcher;
+  var prevDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = HooksDispatcher;
   var prevCacheDispatcher;
 
   {
@@ -11041,8 +11011,8 @@ function performWork(request) {
   var prevGetCurrentStackImpl;
 
   {
-    prevGetCurrentStackImpl = ReactDebugCurrentFrame$1.getCurrentStack;
-    ReactDebugCurrentFrame$1.getCurrentStack = getCurrentStackInDEV;
+    prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
   }
 
   var prevResponseState = currentResponseState;
@@ -11067,7 +11037,7 @@ function performWork(request) {
     fatalError(request, error);
   } finally {
     setCurrentResponseState(prevResponseState);
-    ReactCurrentDispatcher$1.current = prevDispatcher;
+    ReactCurrentDispatcher.current = prevDispatcher;
 
     {
       ReactCurrentCache.current = prevCacheDispatcher;
@@ -11076,7 +11046,7 @@ function performWork(request) {
     cleanupAfterRender(previousHostDispatcher);
 
     {
-      ReactDebugCurrentFrame$1.getCurrentStack = prevGetCurrentStackImpl;
+      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }
 
     if (prevDispatcher === HooksDispatcher) {
@@ -11165,10 +11135,7 @@ function flushSegment(request, destination, segment) {
     ); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndClientRenderedSuspenseBoundary(
-      destination,
-      request.responseState
-    );
+    return writeEndClientRenderedSuspenseBoundary(destination);
   } else if (boundary.pendingTasks > 0) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
     // Assign an ID to refer to the future content by.
@@ -11183,7 +11150,7 @@ function flushSegment(request, destination, segment) {
     writeStartPendingSuspenseBoundary(destination, request.responseState, id); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination);
   } else if (boundary.byteSize > request.progressiveChunkSize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
@@ -11201,13 +11168,13 @@ function flushSegment(request, destination, segment) {
     ); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination);
   } else {
     {
       hoistResources(request.resources, boundary.resources);
     } // We can inline this boundary's content as a complete boundary.
 
-    writeStartCompletedSuspenseBoundary(destination, request.responseState);
+    writeStartCompletedSuspenseBoundary(destination);
     var completedSegments = boundary.completedSegments;
 
     if (completedSegments.length !== 1) {
@@ -11218,10 +11185,7 @@ function flushSegment(request, destination, segment) {
 
     var contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.responseState
-    );
+    return writeEndCompletedSuspenseBoundary(destination);
   }
 }
 

@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-bc38a3dfa-20230220";
+var ReactVersion = "18.3.0-www-classic-6b6d0617e-20230220";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -476,39 +476,11 @@ function checkKeyStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime =
-    dynamicFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
+var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+// On WWW, false is used for a new modern build.
 
 function getWrappedName(outerType, innerType, wrapperName) {
   var displayName = outerType.displayName;
@@ -636,7 +608,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
  * The current owner is the component who should own any components that are
  * currently being constructed.
  */
-var ReactCurrentOwner = {
+var ReactCurrentOwner$2 = {
   /**
    * @internal
    * @type {ReactComponent}
@@ -644,21 +616,21 @@ var ReactCurrentOwner = {
   current: null
 };
 
-var RESERVED_PROPS = {
+var RESERVED_PROPS$1 = {
   key: true,
   ref: true,
   __self: true,
   __source: true
 };
-var specialPropKeyWarningShown,
-  specialPropRefWarningShown,
-  didWarnAboutStringRefs;
+var specialPropKeyWarningShown$1,
+  specialPropRefWarningShown$1,
+  didWarnAboutStringRefs$1;
 
 {
-  didWarnAboutStringRefs = {};
+  didWarnAboutStringRefs$1 = {};
 }
 
-function hasValidRef(config) {
+function hasValidRef$1(config) {
   {
     if (hasOwnProperty.call(config, "ref")) {
       var getter = Object.getOwnPropertyDescriptor(config, "ref").get;
@@ -672,7 +644,7 @@ function hasValidRef(config) {
   return config.ref !== undefined;
 }
 
-function hasValidKey(config) {
+function hasValidKey$1(config) {
   {
     if (hasOwnProperty.call(config, "key")) {
       var getter = Object.getOwnPropertyDescriptor(config, "key").get;
@@ -686,11 +658,11 @@ function hasValidKey(config) {
   return config.key !== undefined;
 }
 
-function defineKeyPropWarningGetter(props, displayName) {
+function defineKeyPropWarningGetter$1(props, displayName) {
   var warnAboutAccessingKey = function () {
     {
-      if (!specialPropKeyWarningShown) {
-        specialPropKeyWarningShown = true;
+      if (!specialPropKeyWarningShown$1) {
+        specialPropKeyWarningShown$1 = true;
 
         error(
           "%s: `key` is not a prop. Trying to access it will result " +
@@ -710,11 +682,11 @@ function defineKeyPropWarningGetter(props, displayName) {
   });
 }
 
-function defineRefPropWarningGetter(props, displayName) {
+function defineRefPropWarningGetter$1(props, displayName) {
   var warnAboutAccessingRef = function () {
     {
-      if (!specialPropRefWarningShown) {
-        specialPropRefWarningShown = true;
+      if (!specialPropRefWarningShown$1) {
+        specialPropRefWarningShown$1 = true;
 
         error(
           "%s: `ref` is not a prop. Trying to access it will result " +
@@ -734,19 +706,19 @@ function defineRefPropWarningGetter(props, displayName) {
   });
 }
 
-function warnIfStringRefCannotBeAutoConverted(config) {
+function warnIfStringRefCannotBeAutoConverted$1(config) {
   {
     if (
       typeof config.ref === "string" &&
-      ReactCurrentOwner.current &&
+      ReactCurrentOwner$2.current &&
       config.__self &&
-      ReactCurrentOwner.current.stateNode !== config.__self
+      ReactCurrentOwner$2.current.stateNode !== config.__self
     ) {
       var componentName = getComponentNameFromType(
-        ReactCurrentOwner.current.type
+        ReactCurrentOwner$2.current.type
       );
 
-      if (!didWarnAboutStringRefs[componentName]) {
+      if (!didWarnAboutStringRefs$1[componentName]) {
         error(
           'Component "%s" contains the string ref "%s". ' +
             "Support for string refs will be removed in a future major release. " +
@@ -758,7 +730,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
           config.ref
         );
 
-        didWarnAboutStringRefs[componentName] = true;
+        didWarnAboutStringRefs$1[componentName] = true;
       }
     }
   }
@@ -784,7 +756,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
  * @internal
  */
 
-var ReactElement = function (type, key, ref, self, source, owner, props) {
+var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -842,7 +814,7 @@ var ReactElement = function (type, key, ref, self, source, owner, props) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 
-function createElement(type, config, children) {
+function createElement$1(type, config, children) {
   var propName; // Reserved names are extracted
 
   var props = {};
@@ -852,15 +824,15 @@ function createElement(type, config, children) {
   var source = null;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (hasValidRef$1(config)) {
       ref = config.ref;
 
       {
-        warnIfStringRefCannotBeAutoConverted(config);
+        warnIfStringRefCannotBeAutoConverted$1(config);
       }
     }
 
-    if (hasValidKey(config)) {
+    if (hasValidKey$1(config)) {
       {
         checkKeyStringCoercion(config.key);
       }
@@ -874,7 +846,7 @@ function createElement(type, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        !RESERVED_PROPS$1.hasOwnProperty(propName)
       ) {
         props[propName] = config[propName];
       }
@@ -920,27 +892,27 @@ function createElement(type, config, children) {
           : type;
 
       if (key) {
-        defineKeyPropWarningGetter(props, displayName);
+        defineKeyPropWarningGetter$1(props, displayName);
       }
 
       if (ref) {
-        defineRefPropWarningGetter(props, displayName);
+        defineRefPropWarningGetter$1(props, displayName);
       }
     }
   }
 
-  return ReactElement(
+  return ReactElement$1(
     type,
     key,
     ref,
     self,
     source,
-    ReactCurrentOwner.current,
+    ReactCurrentOwner$2.current,
     props
   );
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  var newElement = ReactElement(
+  var newElement = ReactElement$1(
     oldElement.type,
     newKey,
     oldElement.ref,
@@ -956,7 +928,7 @@ function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 
-function cloneElement(element, config, children) {
+function cloneElement$1(element, config, children) {
   if (element === null || element === undefined) {
     throw new Error(
       "React.cloneElement(...): The argument must be a React element, but you passed " +
@@ -981,13 +953,13 @@ function cloneElement(element, config, children) {
   var owner = element._owner;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (hasValidRef$1(config)) {
       // Silently steal the ref from the parent.
       ref = config.ref;
-      owner = ReactCurrentOwner.current;
+      owner = ReactCurrentOwner$2.current;
     }
 
-    if (hasValidKey(config)) {
+    if (hasValidKey$1(config)) {
       {
         checkKeyStringCoercion(config.key);
       }
@@ -1004,7 +976,7 @@ function cloneElement(element, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        !RESERVED_PROPS$1.hasOwnProperty(propName)
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
@@ -1031,7 +1003,7 @@ function cloneElement(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(element.type, key, ref, self, source, owner, props);
+  return ReactElement$1(element.type, key, ref, self, source, owner, props);
 }
 /**
  * Verifies the object is a ReactElement.
@@ -1041,7 +1013,7 @@ function cloneElement(element, config, children) {
  * @final
  */
 
-function isValidElement(object) {
+function isValidElement$1(object) {
   return (
     typeof object === "object" &&
     object !== null &&
@@ -1150,7 +1122,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         return c;
       });
     } else if (mappedChild != null) {
-      if (isValidElement(mappedChild)) {
+      if (isValidElement$1(mappedChild)) {
         {
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
@@ -1345,7 +1317,7 @@ function toArray(children) {
  */
 
 function onlyChild(children) {
-  if (!isValidElement(children)) {
+  if (!isValidElement$1(children)) {
     throw new Error(
       "React.Children.only expected to receive a single React element child."
     );
@@ -1688,7 +1660,7 @@ function forwardRef(render) {
   return elementType;
 }
 
-var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
 function isValidElementType(type) {
   if (typeof type === "string" || typeof type === "function") {
     return true;
@@ -1720,7 +1692,7 @@ function isValidElementType(type) {
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_CLIENT_REFERENCE ||
+      type.$$typeof === REACT_CLIENT_REFERENCE$2 ||
       type.getModuleId !== undefined
     ) {
       return true;
@@ -1891,12 +1863,12 @@ function cache(fn) {
 /**
  * Keeps track of the current dispatcher.
  */
-var ReactCurrentDispatcher = {
+var ReactCurrentDispatcher$1 = {
   current: null
 };
 
 function resolveDispatcher() {
-  var dispatcher = ReactCurrentDispatcher.current;
+  var dispatcher = ReactCurrentDispatcher$1.current;
 
   {
     if (dispatcher === null) {
@@ -2175,7 +2147,7 @@ var ReactCurrentActQueue = {
   didUsePromise: false
 };
 
-var ReactDebugCurrentFrame = {};
+var ReactDebugCurrentFrame$2 = {};
 var currentExtraStackFrame = null;
 function setExtraStackFrame(stack) {
   {
@@ -2184,22 +2156,22 @@ function setExtraStackFrame(stack) {
 }
 
 {
-  ReactDebugCurrentFrame.setExtraStackFrame = function (stack) {
+  ReactDebugCurrentFrame$2.setExtraStackFrame = function (stack) {
     {
       currentExtraStackFrame = stack;
     }
   }; // Stack implementation injected by the current renderer.
 
-  ReactDebugCurrentFrame.getCurrentStack = null;
+  ReactDebugCurrentFrame$2.getCurrentStack = null;
 
-  ReactDebugCurrentFrame.getStackAddendum = function () {
+  ReactDebugCurrentFrame$2.getStackAddendum = function () {
     var stack = ""; // Add an extra top frame while an element is being validated
 
     if (currentExtraStackFrame) {
       stack += currentExtraStackFrame;
     } // Delegate to the injected renderer-specific implementation
 
-    var impl = ReactDebugCurrentFrame.getCurrentStack;
+    var impl = ReactDebugCurrentFrame$2.getCurrentStack;
 
     if (impl) {
       stack += impl() || "";
@@ -2209,25 +2181,25 @@ function setExtraStackFrame(stack) {
   };
 }
 
-var ContextRegistry = {};
+var ContextRegistry$1 = {};
 
 var ReactSharedInternals = {
-  ReactCurrentDispatcher: ReactCurrentDispatcher,
+  ReactCurrentDispatcher: ReactCurrentDispatcher$1,
   ReactCurrentCache: ReactCurrentCache,
   ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-  ReactCurrentOwner: ReactCurrentOwner
+  ReactCurrentOwner: ReactCurrentOwner$2
 };
 
 {
-  ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
+  ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$2;
   ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
 }
 
 {
-  ReactSharedInternals.ContextRegistry = ContextRegistry;
+  ReactSharedInternals.ContextRegistry = ContextRegistry$1;
 }
 
-var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var prefix;
 function describeBuiltInComponentFrame(name, source, ownerFn) {
   {
@@ -2274,10 +2246,10 @@ function describeNativeComponentFrame(fn, construct) {
   var previousDispatcher;
 
   {
-    previousDispatcher = ReactCurrentDispatcher$1.current; // Set the dispatcher in DEV because this might be call in the render function
+    previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
     // for warnings.
 
-    ReactCurrentDispatcher$1.current = null;
+    ReactCurrentDispatcher.current = null;
     disableLogs();
   }
 
@@ -2391,7 +2363,7 @@ function describeNativeComponentFrame(fn, construct) {
     reentry = false;
 
     {
-      ReactCurrentDispatcher$1.current = previousDispatcher;
+      ReactCurrentDispatcher.current = previousDispatcher;
       reenableLogs();
     }
 
@@ -2475,7 +2447,7 @@ function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
 var loggedTypeFailures = {};
 var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
 
-function setCurrentlyValidatingElement(element) {
+function setCurrentlyValidatingElement$2(element) {
   {
     if (element) {
       var owner = element._owner;
@@ -2536,7 +2508,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
         }
 
         if (error$1 && !(error$1 instanceof Error)) {
-          setCurrentlyValidatingElement(element);
+          setCurrentlyValidatingElement$2(element);
 
           error(
             "%s: type specification of %s" +
@@ -2551,7 +2523,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
             typeof error$1
           );
 
-          setCurrentlyValidatingElement(null);
+          setCurrentlyValidatingElement$2(null);
         }
 
         if (
@@ -2561,11 +2533,11 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
           loggedTypeFailures[error$1.message] = true;
-          setCurrentlyValidatingElement(element);
+          setCurrentlyValidatingElement$2(element);
 
           error("Failed %s type: %s", location, error$1.message);
 
-          setCurrentlyValidatingElement(null);
+          setCurrentlyValidatingElement$2(null);
         }
       }
     }
@@ -2590,15 +2562,15 @@ function setCurrentlyValidatingElement$1(element) {
   }
 }
 
-var propTypesMisspellWarningShown;
+var propTypesMisspellWarningShown$1;
 
 {
-  propTypesMisspellWarningShown = false;
+  propTypesMisspellWarningShown$1 = false;
 }
 
-function getDeclarationErrorAddendum() {
-  if (ReactCurrentOwner.current) {
-    var name = getComponentNameFromType(ReactCurrentOwner.current.type);
+function getDeclarationErrorAddendum$1() {
+  if (ReactCurrentOwner$2.current) {
+    var name = getComponentNameFromType(ReactCurrentOwner$2.current.type);
 
     if (name) {
       return "\n\nCheck the render method of `" + name + "`.";
@@ -2608,7 +2580,7 @@ function getDeclarationErrorAddendum() {
   return "";
 }
 
-function getSourceInfoErrorAddendum(source) {
+function getSourceInfoErrorAddendum$1(source) {
   if (source !== undefined) {
     var fileName = source.fileName.replace(/^.*[\\\/]/, "");
     var lineNumber = source.lineNumber;
@@ -2620,7 +2592,7 @@ function getSourceInfoErrorAddendum(source) {
 
 function getSourceInfoErrorAddendumForProps(elementProps) {
   if (elementProps !== null && elementProps !== undefined) {
-    return getSourceInfoErrorAddendum(elementProps.__source);
+    return getSourceInfoErrorAddendum$1(elementProps.__source);
   }
 
   return "";
@@ -2631,10 +2603,10 @@ function getSourceInfoErrorAddendumForProps(elementProps) {
  * updates.
  */
 
-var ownerHasKeyUseWarning = {};
+var ownerHasKeyUseWarning$1 = {};
 
-function getCurrentComponentErrorInfo(parentType) {
-  var info = getDeclarationErrorAddendum();
+function getCurrentComponentErrorInfo$1(parentType) {
+  var info = getDeclarationErrorAddendum$1();
 
   if (!info) {
     var parentName =
@@ -2661,19 +2633,19 @@ function getCurrentComponentErrorInfo(parentType) {
  * @param {*} parentType element's parent's type.
  */
 
-function validateExplicitKey(element, parentType) {
+function validateExplicitKey$1(element, parentType) {
   if (!element._store || element._store.validated || element.key != null) {
     return;
   }
 
   element._store.validated = true;
-  var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
+  var currentComponentErrorInfo = getCurrentComponentErrorInfo$1(parentType);
 
-  if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
+  if (ownerHasKeyUseWarning$1[currentComponentErrorInfo]) {
     return;
   }
 
-  ownerHasKeyUseWarning[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
+  ownerHasKeyUseWarning$1[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
 
@@ -2682,7 +2654,7 @@ function validateExplicitKey(element, parentType) {
   if (
     element &&
     element._owner &&
-    element._owner !== ReactCurrentOwner.current
+    element._owner !== ReactCurrentOwner$2.current
   ) {
     // Give the component that originally created this child.
     childOwner =
@@ -2714,7 +2686,7 @@ function validateExplicitKey(element, parentType) {
  * @param {*} parentType node's parent's type.
  */
 
-function validateChildKeys(node, parentType) {
+function validateChildKeys$1(node, parentType) {
   if (typeof node !== "object" || !node) {
     return;
   }
@@ -2724,11 +2696,11 @@ function validateChildKeys(node, parentType) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
 
-      if (isValidElement(child)) {
-        validateExplicitKey(child, parentType);
+      if (isValidElement$1(child)) {
+        validateExplicitKey$1(child, parentType);
       }
     }
-  } else if (isValidElement(node)) {
+  } else if (isValidElement$1(node)) {
     // This element was passed in a valid location.
     if (node._store) {
       node._store.validated = true;
@@ -2744,8 +2716,8 @@ function validateChildKeys(node, parentType) {
         var step;
 
         while (!(step = iterator.next()).done) {
-          if (isValidElement(step.value)) {
-            validateExplicitKey(step.value, parentType);
+          if (isValidElement$1(step.value)) {
+            validateExplicitKey$1(step.value, parentType);
           }
         }
       }
@@ -2759,7 +2731,7 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 
-function validatePropTypes(element) {
+function validatePropTypes$1(element) {
   {
     var type = element.type;
 
@@ -2790,8 +2762,11 @@ function validatePropTypes(element) {
       // Intentionally inside to avoid triggering lazy initializers:
       var name = getComponentNameFromType(type);
       checkPropTypes(propTypes, element.props, "prop", name, element);
-    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-      propTypesMisspellWarningShown = true; // Intentionally inside to avoid triggering lazy initializers:
+    } else if (
+      type.PropTypes !== undefined &&
+      !propTypesMisspellWarningShown$1
+    ) {
+      propTypesMisspellWarningShown$1 = true; // Intentionally inside to avoid triggering lazy initializers:
 
       var _name = getComponentNameFromType(type);
 
@@ -2817,7 +2792,7 @@ function validatePropTypes(element) {
  * @param {ReactElement} fragment
  */
 
-function validateFragmentProps(fragment) {
+function validateFragmentProps$1(fragment) {
   {
     var keys = Object.keys(fragment.props);
 
@@ -2870,7 +2845,7 @@ function createElementWithValidation(type, props, children) {
     if (sourceInfo) {
       info += sourceInfo;
     } else {
-      info += getDeclarationErrorAddendum();
+      info += getDeclarationErrorAddendum$1();
     }
 
     var typeString;
@@ -2899,7 +2874,7 @@ function createElementWithValidation(type, props, children) {
     }
   }
 
-  var element = createElement.apply(this, arguments); // The result can be nullish if a mock or a custom function is used.
+  var element = createElement$1.apply(this, arguments); // The result can be nullish if a mock or a custom function is used.
   // TODO: Drop this when these are no longer allowed as the type argument.
 
   if (element == null) {
@@ -2912,14 +2887,14 @@ function createElementWithValidation(type, props, children) {
 
   if (validType) {
     for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], type);
+      validateChildKeys$1(arguments[i], type);
     }
   }
 
   if (type === REACT_FRAGMENT_TYPE) {
-    validateFragmentProps(element);
+    validateFragmentProps$1(element);
   } else {
-    validatePropTypes(element);
+    validatePropTypes$1(element);
   }
 
   return element;
@@ -2959,21 +2934,21 @@ function createFactoryWithValidation(type) {
   return validatedFactory;
 }
 function cloneElementWithValidation(element, props, children) {
-  var newElement = cloneElement.apply(this, arguments);
+  var newElement = cloneElement$1.apply(this, arguments);
 
   for (var i = 2; i < arguments.length; i++) {
-    validateChildKeys(arguments[i], newElement.type);
+    validateChildKeys$1(arguments[i], newElement.type);
   }
 
-  validatePropTypes(newElement);
+  validatePropTypes$1(newElement);
   return newElement;
 }
 
-var ContextRegistry$1 = ReactSharedInternals.ContextRegistry;
+var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createServerContext(globalName, defaultValue) {
   var wasDefined = true;
 
-  if (!ContextRegistry$1[globalName]) {
+  if (!ContextRegistry[globalName]) {
     wasDefined = false;
     var _context = {
       $$typeof: REACT_SERVER_CONTEXT_TYPE,
@@ -3017,10 +2992,10 @@ function createServerContext(globalName, defaultValue) {
       });
     }
 
-    ContextRegistry$1[globalName] = _context;
+    ContextRegistry[globalName] = _context;
   }
 
-  var context = ContextRegistry$1[globalName];
+  var context = ContextRegistry[globalName];
 
   if (context._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
     context._defaultValue = defaultValue;
@@ -3447,8 +3422,8 @@ var queueSeveralMicrotasks =
       }
     : enqueueTask;
 
-var createElement$1 = createElementWithValidation;
-var cloneElement$1 = cloneElementWithValidation;
+var createElement = createElementWithValidation;
+var cloneElement = cloneElementWithValidation;
 var createFactory = createFactoryWithValidation;
 var Children = {
   map: mapChildren,
@@ -3459,21 +3434,21 @@ var Children = {
 };
 
 var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-var RESERVED_PROPS$1 = {
+var RESERVED_PROPS = {
   key: true,
   ref: true,
   __self: true,
   __source: true
 };
-var specialPropKeyWarningShown$1;
-var specialPropRefWarningShown$1;
-var didWarnAboutStringRefs$1;
+var specialPropKeyWarningShown;
+var specialPropRefWarningShown;
+var didWarnAboutStringRefs;
 
 {
-  didWarnAboutStringRefs$1 = {};
+  didWarnAboutStringRefs = {};
 }
 
-function hasValidRef$1(config) {
+function hasValidRef(config) {
   {
     if (hasOwnProperty.call(config, "ref")) {
       var getter = Object.getOwnPropertyDescriptor(config, "ref").get;
@@ -3487,7 +3462,7 @@ function hasValidRef$1(config) {
   return config.ref !== undefined;
 }
 
-function hasValidKey$1(config) {
+function hasValidKey(config) {
   {
     if (hasOwnProperty.call(config, "key")) {
       var getter = Object.getOwnPropertyDescriptor(config, "key").get;
@@ -3501,7 +3476,7 @@ function hasValidKey$1(config) {
   return config.key !== undefined;
 }
 
-function warnIfStringRefCannotBeAutoConverted$1(config, self) {
+function warnIfStringRefCannotBeAutoConverted(config, self) {
   {
     if (
       typeof config.ref === "string" &&
@@ -3513,7 +3488,7 @@ function warnIfStringRefCannotBeAutoConverted$1(config, self) {
         ReactCurrentOwner$1.current.type
       );
 
-      if (!didWarnAboutStringRefs$1[componentName]) {
+      if (!didWarnAboutStringRefs[componentName]) {
         error(
           'Component "%s" contains the string ref "%s". ' +
             "Support for string refs will be removed in a future major release. " +
@@ -3525,17 +3500,17 @@ function warnIfStringRefCannotBeAutoConverted$1(config, self) {
           config.ref
         );
 
-        didWarnAboutStringRefs$1[componentName] = true;
+        didWarnAboutStringRefs[componentName] = true;
       }
     }
   }
 }
 
-function defineKeyPropWarningGetter$1(props, displayName) {
+function defineKeyPropWarningGetter(props, displayName) {
   {
     var warnAboutAccessingKey = function () {
-      if (!specialPropKeyWarningShown$1) {
-        specialPropKeyWarningShown$1 = true;
+      if (!specialPropKeyWarningShown) {
+        specialPropKeyWarningShown = true;
 
         error(
           "%s: `key` is not a prop. Trying to access it will result " +
@@ -3555,11 +3530,11 @@ function defineKeyPropWarningGetter$1(props, displayName) {
   }
 }
 
-function defineRefPropWarningGetter$1(props, displayName) {
+function defineRefPropWarningGetter(props, displayName) {
   {
     var warnAboutAccessingRef = function () {
-      if (!specialPropRefWarningShown$1) {
-        specialPropRefWarningShown$1 = true;
+      if (!specialPropRefWarningShown) {
+        specialPropRefWarningShown = true;
 
         error(
           "%s: `ref` is not a prop. Trying to access it will result " +
@@ -3599,7 +3574,7 @@ function defineRefPropWarningGetter$1(props, displayName) {
  * @internal
  */
 
-var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
+var ReactElement = function (type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -3659,7 +3634,7 @@ var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
  * @param {string} key
  */
 
-function jsxDEV(type, config, maybeKey, source, self) {
+function jsxDEV$1(type, config, maybeKey, source, self) {
   {
     var propName; // Reserved names are extracted
 
@@ -3680,7 +3655,7 @@ function jsxDEV(type, config, maybeKey, source, self) {
       key = "" + maybeKey;
     }
 
-    if (hasValidKey$1(config)) {
+    if (hasValidKey(config)) {
       {
         checkKeyStringCoercion(config.key);
       }
@@ -3688,15 +3663,15 @@ function jsxDEV(type, config, maybeKey, source, self) {
       key = "" + config.key;
     }
 
-    if (hasValidRef$1(config)) {
+    if (hasValidRef(config)) {
       ref = config.ref;
-      warnIfStringRefCannotBeAutoConverted$1(config, self);
+      warnIfStringRefCannotBeAutoConverted(config, self);
     } // Remaining properties are added to a new props object
 
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName)
+        !RESERVED_PROPS.hasOwnProperty(propName)
       ) {
         props[propName] = config[propName];
       }
@@ -3719,15 +3694,15 @@ function jsxDEV(type, config, maybeKey, source, self) {
           : type;
 
       if (key) {
-        defineKeyPropWarningGetter$1(props, displayName);
+        defineKeyPropWarningGetter(props, displayName);
       }
 
       if (ref) {
-        defineRefPropWarningGetter$1(props, displayName);
+        defineRefPropWarningGetter(props, displayName);
       }
     }
 
-    return ReactElement$1(
+    return ReactElement(
       type,
       key,
       ref,
@@ -3739,11 +3714,11 @@ function jsxDEV(type, config, maybeKey, source, self) {
   }
 }
 
-var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
-var ReactDebugCurrentFrame$2 = ReactSharedInternals.ReactDebugCurrentFrame;
-var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 
-function setCurrentlyValidatingElement$2(element) {
+function setCurrentlyValidatingElement(element) {
   {
     if (element) {
       var owner = element._owner;
@@ -3752,17 +3727,17 @@ function setCurrentlyValidatingElement$2(element) {
         element._source,
         owner ? owner.type : null
       );
-      ReactDebugCurrentFrame$2.setExtraStackFrame(stack);
+      ReactDebugCurrentFrame.setExtraStackFrame(stack);
     } else {
-      ReactDebugCurrentFrame$2.setExtraStackFrame(null);
+      ReactDebugCurrentFrame.setExtraStackFrame(null);
     }
   }
 }
 
-var propTypesMisspellWarningShown$1;
+var propTypesMisspellWarningShown;
 
 {
-  propTypesMisspellWarningShown$1 = false;
+  propTypesMisspellWarningShown = false;
 }
 /**
  * Verifies the object is a ReactElement.
@@ -3772,7 +3747,7 @@ var propTypesMisspellWarningShown$1;
  * @final
  */
 
-function isValidElement$1(object) {
+function isValidElement(object) {
   {
     return (
       typeof object === "object" &&
@@ -3782,10 +3757,10 @@ function isValidElement$1(object) {
   }
 }
 
-function getDeclarationErrorAddendum$1() {
+function getDeclarationErrorAddendum() {
   {
-    if (ReactCurrentOwner$2.current) {
-      var name = getComponentNameFromType(ReactCurrentOwner$2.current.type);
+    if (ReactCurrentOwner.current) {
+      var name = getComponentNameFromType(ReactCurrentOwner.current.type);
 
       if (name) {
         return "\n\nCheck the render method of `" + name + "`.";
@@ -3796,7 +3771,7 @@ function getDeclarationErrorAddendum$1() {
   }
 }
 
-function getSourceInfoErrorAddendum$1(source) {
+function getSourceInfoErrorAddendum(source) {
   {
     if (source !== undefined) {
       var fileName = source.fileName.replace(/^.*[\\\/]/, "");
@@ -3813,11 +3788,11 @@ function getSourceInfoErrorAddendum$1(source) {
  * updates.
  */
 
-var ownerHasKeyUseWarning$1 = {};
+var ownerHasKeyUseWarning = {};
 
-function getCurrentComponentErrorInfo$1(parentType) {
+function getCurrentComponentErrorInfo(parentType) {
   {
-    var info = getDeclarationErrorAddendum$1();
+    var info = getDeclarationErrorAddendum();
 
     if (!info) {
       var parentName =
@@ -3846,20 +3821,20 @@ function getCurrentComponentErrorInfo$1(parentType) {
  * @param {*} parentType element's parent's type.
  */
 
-function validateExplicitKey$1(element, parentType) {
+function validateExplicitKey(element, parentType) {
   {
     if (!element._store || element._store.validated || element.key != null) {
       return;
     }
 
     element._store.validated = true;
-    var currentComponentErrorInfo = getCurrentComponentErrorInfo$1(parentType);
+    var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
 
-    if (ownerHasKeyUseWarning$1[currentComponentErrorInfo]) {
+    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
       return;
     }
 
-    ownerHasKeyUseWarning$1[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
+    ownerHasKeyUseWarning[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
     // property, it may be the creator of the child that's responsible for
     // assigning it a key.
 
@@ -3868,7 +3843,7 @@ function validateExplicitKey$1(element, parentType) {
     if (
       element &&
       element._owner &&
-      element._owner !== ReactCurrentOwner$2.current
+      element._owner !== ReactCurrentOwner.current
     ) {
       // Give the component that originally created this child.
       childOwner =
@@ -3877,7 +3852,7 @@ function validateExplicitKey$1(element, parentType) {
         ".";
     }
 
-    setCurrentlyValidatingElement$2(element);
+    setCurrentlyValidatingElement(element);
 
     error(
       'Each child in a list should have a unique "key" prop.' +
@@ -3886,7 +3861,7 @@ function validateExplicitKey$1(element, parentType) {
       childOwner
     );
 
-    setCurrentlyValidatingElement$2(null);
+    setCurrentlyValidatingElement(null);
   }
 }
 /**
@@ -3899,22 +3874,22 @@ function validateExplicitKey$1(element, parentType) {
  * @param {*} parentType node's parent's type.
  */
 
-function validateChildKeys$1(node, parentType) {
+function validateChildKeys(node, parentType) {
   {
     if (typeof node !== "object" || !node) {
       return;
     }
 
-    if (node.$$typeof === REACT_CLIENT_REFERENCE$2);
+    if (node.$$typeof === REACT_CLIENT_REFERENCE);
     else if (isArray(node)) {
       for (var i = 0; i < node.length; i++) {
         var child = node[i];
 
-        if (isValidElement$1(child)) {
-          validateExplicitKey$1(child, parentType);
+        if (isValidElement(child)) {
+          validateExplicitKey(child, parentType);
         }
       }
-    } else if (isValidElement$1(node)) {
+    } else if (isValidElement(node)) {
       // This element was passed in a valid location.
       if (node._store) {
         node._store.validated = true;
@@ -3930,8 +3905,8 @@ function validateChildKeys$1(node, parentType) {
           var step;
 
           while (!(step = iterator.next()).done) {
-            if (isValidElement$1(step.value)) {
-              validateExplicitKey$1(step.value, parentType);
+            if (isValidElement(step.value)) {
+              validateExplicitKey(step.value, parentType);
             }
           }
         }
@@ -3946,7 +3921,7 @@ function validateChildKeys$1(node, parentType) {
  * @param {ReactElement} element
  */
 
-function validatePropTypes$1(element) {
+function validatePropTypes(element) {
   {
     var type = element.type;
 
@@ -3954,7 +3929,7 @@ function validatePropTypes$1(element) {
       return;
     }
 
-    if (type.$$typeof === REACT_CLIENT_REFERENCE$2) {
+    if (type.$$typeof === REACT_CLIENT_REFERENCE) {
       return;
     }
 
@@ -3977,11 +3952,8 @@ function validatePropTypes$1(element) {
       // Intentionally inside to avoid triggering lazy initializers:
       var name = getComponentNameFromType(type);
       checkPropTypes(propTypes, element.props, "prop", name, element);
-    } else if (
-      type.PropTypes !== undefined &&
-      !propTypesMisspellWarningShown$1
-    ) {
-      propTypesMisspellWarningShown$1 = true; // Intentionally inside to avoid triggering lazy initializers:
+    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+      propTypesMisspellWarningShown = true; // Intentionally inside to avoid triggering lazy initializers:
 
       var _name = getComponentNameFromType(type);
 
@@ -4007,7 +3979,7 @@ function validatePropTypes$1(element) {
  * @param {ReactElement} fragment
  */
 
-function validateFragmentProps$1(fragment) {
+function validateFragmentProps(fragment) {
   {
     var keys = Object.keys(fragment.props);
 
@@ -4015,7 +3987,7 @@ function validateFragmentProps$1(fragment) {
       var key = keys[i];
 
       if (key !== "children" && key !== "key") {
-        setCurrentlyValidatingElement$2(fragment);
+        setCurrentlyValidatingElement(fragment);
 
         error(
           "Invalid prop `%s` supplied to `React.Fragment`. " +
@@ -4023,17 +3995,17 @@ function validateFragmentProps$1(fragment) {
           key
         );
 
-        setCurrentlyValidatingElement$2(null);
+        setCurrentlyValidatingElement(null);
         break;
       }
     }
 
     if (fragment.ref !== null) {
-      setCurrentlyValidatingElement$2(fragment);
+      setCurrentlyValidatingElement(fragment);
 
       error("Invalid attribute `ref` supplied to `React.Fragment`.");
 
-      setCurrentlyValidatingElement$2(null);
+      setCurrentlyValidatingElement(null);
     }
   }
 }
@@ -4058,12 +4030,12 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
           "it's defined in, or you might have mixed up default and named imports.";
       }
 
-      var sourceInfo = getSourceInfoErrorAddendum$1(source);
+      var sourceInfo = getSourceInfoErrorAddendum(source);
 
       if (sourceInfo) {
         info += sourceInfo;
       } else {
-        info += getDeclarationErrorAddendum$1();
+        info += getDeclarationErrorAddendum();
       }
 
       var typeString;
@@ -4090,7 +4062,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
       );
     }
 
-    var element = jsxDEV(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
+    var element = jsxDEV$1(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
 
     if (element == null) {
@@ -4108,7 +4080,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
         if (isStaticChildren) {
           if (isArray(children)) {
             for (var i = 0; i < children.length; i++) {
-              validateChildKeys$1(children[i], type);
+              validateChildKeys(children[i], type);
             }
 
             if (Object.freeze) {
@@ -4122,7 +4094,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
             );
           }
         } else {
-          validateChildKeys$1(children, type);
+          validateChildKeys(children, type);
         }
       }
     }
@@ -4159,9 +4131,9 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
     }
 
     if (type === REACT_FRAGMENT_TYPE) {
-      validateFragmentProps$1(element);
+      validateFragmentProps(element);
     } else {
-      validatePropTypes$1(element);
+      validatePropTypes(element);
     }
 
     return element;
@@ -4186,7 +4158,7 @@ var jsx = jsxWithValidationDynamic; // we may want to special case jsxs internal
 // for now we can ship identical prod functions
 
 var jsxs = jsxWithValidationStatic;
-var jsxDEV$1 = jsxWithValidation;
+var jsxDEV = jsxWithValidation;
 
 exports.Children = Children;
 exports.Component = Component;
@@ -4199,18 +4171,18 @@ exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.cache = cache;
-exports.cloneElement = cloneElement$1;
+exports.cloneElement = cloneElement;
 exports.createContext = createContext;
-exports.createElement = createElement$1;
+exports.createElement = createElement;
 exports.createFactory = createFactory;
 exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
 exports.forwardRef = forwardRef;
-exports.isValidElement = isValidElement;
+exports.isValidElement = isValidElement$1;
 exports.jsx = jsx;
-exports.jsxDEV = jsxDEV$1;
+exports.jsxDEV = jsxDEV;
 exports.jsxs = jsxs;
 exports.lazy = lazy;
 exports.memo = memo;

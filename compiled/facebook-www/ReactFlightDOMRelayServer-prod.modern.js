@@ -13,8 +13,8 @@
 "use strict";
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl"),
   ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration"),
-  React = require("react");
-var hasOwnProperty = Object.prototype.hasOwnProperty,
+  React = require("react"),
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   isArrayImpl = Array.isArray;
 function convertModelToJSON(request, parent, key, model) {
   parent = resolveModelToJSON(request, parent, key, model);
@@ -389,7 +389,7 @@ function getThenableStateAfterSuspending() {
   thenableState = null;
   return state;
 }
-function readContext$1(context) {
+function readContext(context) {
   return context._currentValue;
 }
 var HooksDispatcher = {
@@ -402,8 +402,8 @@ var HooksDispatcher = {
   useDebugValue: function () {},
   useDeferredValue: unsupportedHook,
   useTransition: unsupportedHook,
-  readContext: readContext$1,
-  useContext: readContext$1,
+  readContext: readContext,
+  useContext: readContext,
   useReducer: unsupportedHook,
   useRef: unsupportedHook,
   useState: unsupportedHook,
@@ -1089,36 +1089,15 @@ function flushCompletedChunks(request, destination) {
     i < importsChunks.length;
     i++
   )
-    if (
-      (request.pendingChunks--,
-      !writeChunkAndReturn(destination, importsChunks[i]))
-    ) {
-      request.destination = null;
-      i++;
-      break;
-    }
+    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
   importsChunks.splice(0, i);
   importsChunks = request.completedJSONChunks;
   for (i = 0; i < importsChunks.length; i++)
-    if (
-      (request.pendingChunks--,
-      !writeChunkAndReturn(destination, importsChunks[i]))
-    ) {
-      request.destination = null;
-      i++;
-      break;
-    }
+    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
   importsChunks.splice(0, i);
   importsChunks = request.completedErrorChunks;
   for (i = 0; i < importsChunks.length; i++)
-    if (
-      (request.pendingChunks--,
-      !writeChunkAndReturn(destination, importsChunks[i]))
-    ) {
-      request.destination = null;
-      i++;
-      break;
-    }
+    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
   importsChunks.splice(0, i);
   0 === request.pendingChunks &&
     ReactFlightDOMRelayServerIntegration.close(destination);
