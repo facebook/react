@@ -527,10 +527,6 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
 }
 
 async function createBundle(bundle, bundleType) {
-  if (shouldSkipBundle(bundle, bundleType)) {
-    return;
-  }
-
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -765,6 +761,10 @@ async function buildEverything() {
       [bundle, BROWSER_SCRIPT]
     );
   }
+
+  bundles = bundles.filter(([bundle, bundleType]) => {
+    return !shouldSkipBundle(bundle, bundleType);
+  });
 
   if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.
