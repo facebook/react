@@ -63,14 +63,14 @@
     "workbox-webpack-plugin": "^6.4.1"
   },
   "scripts": {
-    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
-    "start:client": "NODE_ENV=development BUILD_PATH=dist node scripts/start.js",
-    "start:server": "NODE_ENV=development BUILD_PATH=dist nodemon -- --experimental-loader ./loader/index.js --conditions=react-server server",
-    "start:prod": "node scripts/build.js && concurrently \"npm run start:prod-server\" \"npm run start:prod-client\"",
-    "start:prod-client": "cd ./build && python -m SimpleHTTPServer 3000",
-    "start:prod-server": "NODE_ENV=production node --experimental-loader ./loader/index.js --conditions=react-server server",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "NODE_ENV=development BUILD_PATH=dist node scripts/start.js",
+    "dev:server": "NODE_ENV=development BUILD_PATH=dist nodemon -- --experimental-loader ./loader/index.js --conditions=react-server server",
+    "start": "node scripts/build.js && concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:client": "cd ./build && python3 -m http.server 3000",
+    "start:server": "NODE_ENV=production node --experimental-loader ./loader/index.js --conditions=react-server server",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
   },

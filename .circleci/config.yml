@@ -366,7 +366,7 @@ jobs:
             RELEASE_CHANNEL: stable
           working_directory: fixtures/dom
           command: |
-            yarn prestart
+            yarn predev
             yarn test --maxWorkers=2
 
   test_fuzz:

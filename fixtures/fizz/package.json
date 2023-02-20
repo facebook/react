@@ -28,12 +28,12 @@
     "prettier": "1.19.1"
   },
   "scripts": {
-    "start": "concurrently \"npm run server:dev\" \"npm run bundler:dev\"",
-    "start:prod": "concurrently \"npm run server:prod\" \"npm run bundler:prod\"",
-    "server:dev": "cross-env NODE_ENV=development nodemon -- --inspect server/server.js",
-    "server:prod": "cross-env NODE_ENV=production nodemon -- server/server.js",
-    "bundler:dev": "cross-env NODE_ENV=development nodemon -- scripts/build.js",
-    "bundler:prod": "cross-env NODE_ENV=production nodemon -- scripts/build.js"
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:bundler\"",
+    "start": "concurrently \"npm run start:server\" \"npm run start:bundler\"",
+    "dev:server": "cross-env NODE_ENV=development nodemon -- --inspect server/server.js",
+    "start:server": "cross-env NODE_ENV=production nodemon -- server/server.js",
+    "dev:bundler": "cross-env NODE_ENV=development nodemon -- scripts/build.js",
+    "start:bundler": "cross-env NODE_ENV=production nodemon -- scripts/build.js"
   },
   "babel": {
     "presets": [
