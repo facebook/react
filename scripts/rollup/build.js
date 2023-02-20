@@ -190,6 +190,7 @@ function getRollupOutputOptions(
     name: globalName,
     sourcemap: false,
     esModule: false,
+    exports: 'auto',
   };
 }
 
