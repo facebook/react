@@ -1,15 +1,15 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
 const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
@@ -146,6 +146,7 @@ function getBabelConfig(
     configFile: false,
     presets: [],
     plugins: [...babelPlugins],
+    babelHelpers: 'bundled',
   };
   if (isDevelopment) {
     options.plugins.push(
@@ -189,6 +190,7 @@ function getRollupOutputOptions(
     name: globalName,
     sourcemap: false,
     esModule: false,
+    exports: 'auto',
   };
 }
 
@@ -342,7 +344,7 @@ function getPlugins(
     forbidFBJSImports(),
     // Use Node resolution mechanism.
     resolve({
-      skip: externals,
+      // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
     }),
     // Remove license headers from individual modules
     stripBanner({
@@ -367,11 +369,14 @@ function getPlugins(
     },
     // Turn __DEV__ and process.env checks into constants.
     replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
+      preventAssignment: true,
+      values: {
+        __DEV__: isProduction ? 'false' : 'true',
+        __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+        __UMD__: isUMDBundle ? 'true' : 'false',
+        'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+        __EXPERIMENTAL__,
+      },
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
@@ -566,6 +571,7 @@ async function createBundle(bundle, bundleType) {
     treeshake: {
       moduleSideEffects: (id, external) =>
         !(external && pureExternalModules.includes(id)),
+      propertyReadSideEffects: false,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
@@ -655,7 +661,7 @@ async function createBundle(bundle, bundleType) {
 
 function handleRollupWarning(warning) {
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
-    const match = warning.message.match(/external module '([^']+)'/);
+    const match = warning.message.match(/external module "([^"]+)"/);
     if (!match || typeof match[1] !== 'string') {
       throw new Error(
         'Could not parse a Rollup warning. ' + 'Fix this method.'
