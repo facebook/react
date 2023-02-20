@@ -204,24 +204,13 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
   return true;
 }
 
-let appendAllChildren: (
+function appendAllChildren(
   parent: Instance,
   workInProgress: Fiber,
   needsVisibilityToggle: boolean,
   isHidden: boolean,
-) => void;
-let updateHostContainer;
-let updateHostComponent;
-let updateHostText;
-if (supportsMutation) {
-  // Mutation mode
-
-  appendAllChildren = function (
-    parent: Instance,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ) {
+) {
+  if (supportsMutation) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -258,73 +247,7 @@ if (supportsMutation) {
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  };
-
-  updateHostContainer = function (
-    current: null | Fiber,
-    workInProgress: Fiber,
-  ) {
-    // Noop
-  };
-  updateHostComponent = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    type: Type,
-    newProps: Props,
-  ) {
-    // If we have an alternate, that means this is an update and we need to
-    // schedule a side-effect to do the updates.
-    const oldProps = current.memoizedProps;
-    if (oldProps === newProps) {
-      // In mutation mode, this is sufficient for a bailout because
-      // we won't touch this node even if children changed.
-      return;
-    }
-
-    // If we get updated because one of our children updated, we don't
-    // have newProps so we'll have to reuse them.
-    // TODO: Split the update API as separate for the props vs. children.
-    // Even better would be if children weren't special cased at all tho.
-    const instance: Instance = workInProgress.stateNode;
-    const currentHostContext = getHostContext();
-    // TODO: Experiencing an error where oldProps is null. Suggests a host
-    // component is hitting the resume path. Figure out why. Possibly
-    // related to `hidden`.
-    const updatePayload = prepareUpdate(
-      instance,
-      type,
-      oldProps,
-      newProps,
-      currentHostContext,
-    );
-    // TODO: Type this specific to this type of component.
-    workInProgress.updateQueue = (updatePayload: any);
-    // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update. All the work is done in commitWork.
-    if (updatePayload) {
-      markUpdate(workInProgress);
-    }
-  };
-  updateHostText = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    oldText: string,
-    newText: string,
-  ) {
-    // If the text differs, mark it as an update. All the work in done in commitWork.
-    if (oldText !== newText) {
-      markUpdate(workInProgress);
-    }
-  };
-} else if (supportsPersistence) {
-  // Persistent host tree mode
-
-  appendAllChildren = function (
-    parent: Instance,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ) {
+  } else if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -383,15 +306,17 @@ if (supportsMutation) {
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  };
+  }
+}
 
-  // An unfortunate fork of appendAllChildren because we have two different parent types.
-  const appendAllChildrenToContainer = function (
-    containerChildSet: ChildSet,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ) {
+// An unfortunate fork of appendAllChildren because we have two different parent types.
+function appendAllChildrenToContainer(
+  containerChildSet: ChildSet,
+  workInProgress: Fiber,
+  needsVisibilityToggle: boolean,
+  isHidden: boolean,
+) {
+  if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -457,11 +382,10 @@ if (supportsMutation) {
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  };
-  updateHostContainer = function (
-    current: null | Fiber,
-    workInProgress: Fiber,
-  ) {
+  }
+}
+function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
+  if (supportsPersistence) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
@@ -480,13 +404,48 @@ if (supportsMutation) {
       markUpdate(workInProgress);
       finalizeContainerChildren(container, newChildSet);
     }
-  };
-  updateHostComponent = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    type: Type,
-    newProps: Props,
-  ) {
+  }
+}
+function updateHostComponent(
+  current: Fiber,
+  workInProgress: Fiber,
+  type: Type,
+  newProps: Props,
+) {
+  if (supportsMutation) {
+    // If we have an alternate, that means this is an update and we need to
+    // schedule a side-effect to do the updates.
+    const oldProps = current.memoizedProps;
+    if (oldProps === newProps) {
+      // In mutation mode, this is sufficient for a bailout because
+      // we won't touch this node even if children changed.
+      return;
+    }
+
+    // If we get updated because one of our children updated, we don't
+    // have newProps so we'll have to reuse them.
+    // TODO: Split the update API as separate for the props vs. children.
+    // Even better would be if children weren't special cased at all tho.
+    const instance: Instance = workInProgress.stateNode;
+    const currentHostContext = getHostContext();
+    // TODO: Experiencing an error where oldProps is null. Suggests a host
+    // component is hitting the resume path. Figure out why. Possibly
+    // related to `hidden`.
+    const updatePayload = prepareUpdate(
+      instance,
+      type,
+      oldProps,
+      newProps,
+      currentHostContext,
+    );
+    // TODO: Type this specific to this type of component.
+    workInProgress.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update. All the work is done in commitWork.
+    if (updatePayload) {
+      markUpdate(workInProgress);
+    }
+  } else if (supportsPersistence) {
     const currentInstance = current.stateNode;
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
@@ -541,13 +500,20 @@ if (supportsMutation) {
       // If children might have changed, we have to add them all to the set.
       appendAllChildren(newInstance, workInProgress, false, false);
     }
-  };
-  updateHostText = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    oldText: string,
-    newText: string,
-  ) {
+  }
+}
+function updateHostText(
+  current: Fiber,
+  workInProgress: Fiber,
+  oldText: string,
+  newText: string,
+) {
+  if (supportsMutation) {
+    // If the text differs, mark it as an update. All the work in done in commitWork.
+    if (oldText !== newText) {
+      markUpdate(workInProgress);
+    }
+  } else if (supportsPersistence) {
     if (oldText !== newText) {
       // If the text content differs, we'll create a new text instance for it.
       const rootContainerInstance = getRootHostContainer();
@@ -564,31 +530,7 @@ if (supportsMutation) {
     } else {
       workInProgress.stateNode = current.stateNode;
     }
-  };
-} else {
-  // No host operations
-  updateHostContainer = function (
-    current: null | Fiber,
-    workInProgress: Fiber,
-  ) {
-    // Noop
-  };
-  updateHostComponent = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    type: Type,
-    newProps: Props,
-  ) {
-    // Noop
-  };
-  updateHostText = function (
-    current: Fiber,
-    workInProgress: Fiber,
-    oldText: string,
-    newText: string,
-  ) {
-    // Noop
-  };
+  }
 }
 
 function cutOffTailIfNeeded(
