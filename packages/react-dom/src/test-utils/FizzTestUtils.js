@@ -10,8 +10,8 @@
 
 import * as tmp from 'tmp';
 import * as fs from 'fs';
-import replace from 'rollup-plugin-replace';
-import resolve from 'rollup-plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import resolve from '@rollup/plugin-node-resolve';
 import {rollup} from 'rollup';
 import path from 'path';
 
@@ -30,7 +30,7 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
       input: require.resolve(scriptSrc),
       onwarn: console.warn,
       plugins: [
-        replace({__DEV__: 'true'}),
+        replace({__DEV__: 'true', preventAssignment: true}),
         resolve({
           rootDir: path.join(__dirname, '..', '..', '..'),
         }),
