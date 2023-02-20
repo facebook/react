@@ -368,8 +368,9 @@ var canUseDOM = !(
     "undefined" === typeof window.document.createElement
   ),
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  VALID_ATTRIBUTE_NAME_REGEX =
-    /^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,
+  VALID_ATTRIBUTE_NAME_REGEX = RegExp(
+    "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
+  ),
   illegalAttributeNameCache = {},
   validatedAttributeNameCache = {};
 function isAttributeNameSafe(attributeName) {
@@ -15481,10 +15482,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1731 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-2cc54b57e-20230220",
+  version: "18.3.0-www-classic-80cf4a099-20230220",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2096 = {
+var internals$jscomp$inline_2095 = {
   bundleType: devToolsConfig$jscomp$inline_1731.bundleType,
   version: devToolsConfig$jscomp$inline_1731.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1731.rendererPackageName,
@@ -15511,19 +15512,19 @@ var internals$jscomp$inline_2096 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2cc54b57e-20230220"
+  reconcilerVersion: "18.3.0-next-80cf4a099-20230220"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2097 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2096 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2097.isDisabled &&
-    hook$jscomp$inline_2097.supportsFiber
+    !hook$jscomp$inline_2096.isDisabled &&
+    hook$jscomp$inline_2096.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2097.inject(
-        internals$jscomp$inline_2096
+      (rendererID = hook$jscomp$inline_2096.inject(
+        internals$jscomp$inline_2095
       )),
-        (injectedHook = hook$jscomp$inline_2097);
+        (injectedHook = hook$jscomp$inline_2096);
     } catch (err) {}
 }
 assign(Internals, {
@@ -15759,4 +15760,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-2cc54b57e-20230220";
+exports.version = "18.3.0-next-80cf4a099-20230220";
