@@ -9717,26 +9717,7 @@ function markUpdate(workInProgress) {
 function markRef(workInProgress) {
   workInProgress.flags |= 2097664;
 }
-var appendAllChildren, updateHostContainer, updateHostComponent, updateHostText;
-appendAllChildren = function (parent, workInProgress) {
-  for (var node = workInProgress.child; null !== node; ) {
-    if (5 === node.tag || 6 === node.tag) parent.appendChild(node.stateNode);
-    else if (4 !== node.tag && 27 !== node.tag && null !== node.child) {
-      node.child.return = node;
-      node = node.child;
-      continue;
-    }
-    if (node === workInProgress) break;
-    for (; null === node.sibling; ) {
-      if (null === node.return || node.return === workInProgress) return;
-      node = node.return;
-    }
-    node.sibling.return = node.return;
-    node = node.sibling;
-  }
-};
-updateHostContainer = function () {};
-updateHostComponent = function (current, workInProgress, type, newProps) {
+function updateHostComponent(current, workInProgress, type, newProps) {
   var oldProps = current.memoizedProps;
   if (oldProps !== newProps) {
     current = workInProgress.stateNode;
@@ -9851,10 +9832,7 @@ updateHostComponent = function (current, workInProgress, type, newProps) {
     (workInProgress.updateQueue = JSCompiler_inline_result) &&
       markUpdate(workInProgress);
   }
-};
-updateHostText = function (current, workInProgress, oldText, newText) {
-  oldText !== newText && markUpdate(workInProgress);
-};
+}
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   if (!isHydrating)
     switch (renderState.tailMode) {
@@ -9956,7 +9934,6 @@ function completeWork(current, workInProgress, renderLanes) {
             null !== hydrationErrors &&
               (queueRecoverableErrors(hydrationErrors),
               (hydrationErrors = null)));
-      updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
       enableTransitionTracing &&
         0 !== (workInProgress.subtreeFlags & 8192) &&
@@ -10032,7 +10009,23 @@ function completeWork(current, workInProgress, renderLanes) {
           );
           current[internalInstanceKey] = workInProgress;
           current[internalPropsKey] = newProps;
-          appendAllChildren(current, workInProgress, !1, !1);
+          a: for (type = workInProgress.child; null !== type; ) {
+            if (5 === type.tag || 6 === type.tag)
+              current.appendChild(type.stateNode);
+            else if (4 !== type.tag && 27 !== type.tag && null !== type.child) {
+              type.child.return = type;
+              type = type.child;
+              continue;
+            }
+            if (type === workInProgress) break a;
+            for (; null === type.sibling; ) {
+              if (null === type.return || type.return === workInProgress)
+                break a;
+              type = type.return;
+            }
+            type.sibling.return = type.return;
+            type = type.sibling;
+          }
           workInProgress.stateNode = current;
           a: switch (
             (setInitialProperties(current, renderLanes, newProps), renderLanes)
@@ -10057,12 +10050,7 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     case 6:
       if (current && null != workInProgress.stateNode)
-        updateHostText(
-          current,
-          workInProgress,
-          current.memoizedProps,
-          newProps
-        );
+        current.memoizedProps !== newProps && markUpdate(workInProgress);
       else {
         if ("string" !== typeof newProps && null === workInProgress.stateNode)
           throw Error(formatProdErrorMessage(166));
@@ -10166,7 +10154,6 @@ function completeWork(current, workInProgress, renderLanes) {
     case 4:
       return (
         popHostContainer(),
-        updateHostContainer(current, workInProgress),
         null === current &&
           listenToAllSupportedEvents(workInProgress.stateNode.containerInfo),
         bubbleProperties(workInProgress),
@@ -15479,17 +15466,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates
 ];
-var devToolsConfig$jscomp$inline_1731 = {
+var devToolsConfig$jscomp$inline_1742 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-80cf4a099-20230220",
+  version: "18.3.0-www-classic-62e6c4612-20230220",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2095 = {
-  bundleType: devToolsConfig$jscomp$inline_1731.bundleType,
-  version: devToolsConfig$jscomp$inline_1731.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1731.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1731.rendererConfig,
+var internals$jscomp$inline_2109 = {
+  bundleType: devToolsConfig$jscomp$inline_1742.bundleType,
+  version: devToolsConfig$jscomp$inline_1742.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1742.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1742.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15505,26 +15492,26 @@ var internals$jscomp$inline_2095 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1731.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1742.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-80cf4a099-20230220"
+  reconcilerVersion: "18.3.0-next-62e6c4612-20230220"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2096 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2096.isDisabled &&
-    hook$jscomp$inline_2096.supportsFiber
+    !hook$jscomp$inline_2110.isDisabled &&
+    hook$jscomp$inline_2110.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2096.inject(
-        internals$jscomp$inline_2095
+      (rendererID = hook$jscomp$inline_2110.inject(
+        internals$jscomp$inline_2109
       )),
-        (injectedHook = hook$jscomp$inline_2096);
+        (injectedHook = hook$jscomp$inline_2110);
     } catch (err) {}
 }
 assign(Internals, {
@@ -15760,4 +15747,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-80cf4a099-20230220";
+exports.version = "18.3.0-next-62e6c4612-20230220";

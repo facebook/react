@@ -36,6 +36,7 @@ var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableFilterEmptyStringAttributesDOM =
     dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
   hasOwnProperty = Object.prototype.hasOwnProperty,
@@ -1873,15 +1874,80 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
+  REACT_CACHE_TYPE = Symbol.for("react.cache"),
+  REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
     "react.default_value"
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-  ReactSharedInternals =
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+function getComponentNameFromType(type) {
+  if (null == type) return null;
+  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return "Fragment";
+    case REACT_PORTAL_TYPE:
+      return "Portal";
+    case REACT_PROFILER_TYPE:
+      return "Profiler";
+    case REACT_STRICT_MODE_TYPE:
+      return "StrictMode";
+    case REACT_SUSPENSE_TYPE:
+      return "Suspense";
+    case REACT_SUSPENSE_LIST_TYPE:
+      return "SuspenseList";
+    case REACT_CACHE_TYPE:
+      return "Cache";
+    case REACT_TRACING_MARKER_TYPE:
+      if (enableTransitionTracing) return "TracingMarker";
+  }
+  if ("object" === typeof type)
+    switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return (type.displayName || "Context") + ".Consumer";
+      case REACT_PROVIDER_TYPE:
+        return (type._context.displayName || "Context") + ".Provider";
+      case REACT_FORWARD_REF_TYPE:
+        var innerType = type.render;
+        type = type.displayName;
+        type ||
+          ((type = innerType.displayName || innerType.name || ""),
+          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
+        return type;
+      case REACT_MEMO_TYPE:
+        return (
+          (innerType = type.displayName || null),
+          null !== innerType
+            ? innerType
+            : getComponentNameFromType(type.type) || "Memo"
+        );
+      case REACT_LAZY_TYPE:
+        innerType = type._payload;
+        type = type._init;
+        try {
+          return getComponentNameFromType(type(innerType));
+        } catch (x) {
+          break;
+        }
+      case REACT_SERVER_CONTEXT_TYPE:
+        return (type.displayName || type._globalName) + ".Provider";
+    }
+  return null;
+}
+var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  emptyContextObject = {},
-  currentActiveSnapshot = null;
+  emptyContextObject = {};
+function getMaskedContext(type, unmaskedContext) {
+  type = type.contextTypes;
+  if (!type) return emptyContextObject;
+  var context = {},
+    key;
+  for (key in type) context[key] = unmaskedContext[key];
+  return context;
+}
+var currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {
   if (prev !== next) {
     prev.context._currentValue2 = prev.parentValue;
@@ -2461,24 +2527,26 @@ function resolveDefaultProps(Component, baseProps) {
 function renderElement(request, task, prevThenableState, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
-      prevThenableState = emptyContextObject;
-      ref = type.contextType;
-      "object" === typeof ref &&
-        null !== ref &&
-        (prevThenableState = ref._currentValue2);
-      prevThenableState = new type(props, prevThenableState);
+      ref = getMaskedContext(type, task.legacyContext);
+      prevThenableState = type.contextType;
+      prevThenableState = new type(
+        props,
+        "object" === typeof prevThenableState && null !== prevThenableState
+          ? prevThenableState._currentValue2
+          : ref
+      );
       var initialState =
         void 0 !== prevThenableState.state ? prevThenableState.state : null;
       prevThenableState.updater = classComponentUpdater;
       prevThenableState.props = props;
       prevThenableState.state = initialState;
-      ref = { queue: [], replace: !1 };
-      prevThenableState._reactInternals = ref;
+      var internalInstance = { queue: [], replace: !1 };
+      prevThenableState._reactInternals = internalInstance;
       var contextType = type.contextType;
       prevThenableState.context =
         "object" === typeof contextType && null !== contextType
           ? contextType._currentValue2
-          : emptyContextObject;
+          : ref;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
         ((contextType = contextType(props, initialState)),
@@ -2494,57 +2562,84 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           "function" === typeof prevThenableState.componentWillMount)
       )
         if (
-          ((type = prevThenableState.state),
+          ((initialState = prevThenableState.state),
           "function" === typeof prevThenableState.componentWillMount &&
             prevThenableState.componentWillMount(),
           "function" === typeof prevThenableState.UNSAFE_componentWillMount &&
             prevThenableState.UNSAFE_componentWillMount(),
-          type !== prevThenableState.state &&
+          initialState !== prevThenableState.state &&
             classComponentUpdater.enqueueReplaceState(
               prevThenableState,
               prevThenableState.state,
               null
             ),
-          null !== ref.queue && 0 < ref.queue.length)
-        )
-          if (
-            ((type = ref.queue),
-            (contextType = ref.replace),
-            (ref.queue = null),
-            (ref.replace = !1),
-            contextType && 1 === type.length)
-          )
-            prevThenableState.state = type[0];
+          null !== internalInstance.queue && 0 < internalInstance.queue.length)
+        ) {
+          initialState = internalInstance.queue;
+          var oldReplace = internalInstance.replace;
+          internalInstance.queue = null;
+          internalInstance.replace = !1;
+          if (oldReplace && 1 === initialState.length)
+            prevThenableState.state = initialState[0];
           else {
-            ref = contextType ? type[0] : prevThenableState.state;
-            initialState = !0;
+            internalInstance = oldReplace
+              ? initialState[0]
+              : prevThenableState.state;
+            contextType = !0;
             for (
-              contextType = contextType ? 1 : 0;
-              contextType < type.length;
-              contextType++
+              oldReplace = oldReplace ? 1 : 0;
+              oldReplace < initialState.length;
+              oldReplace++
             ) {
-              var partial = type[contextType];
+              var partial = initialState[oldReplace];
               partial =
                 "function" === typeof partial
-                  ? partial.call(prevThenableState, ref, props, void 0)
+                  ? partial.call(
+                      prevThenableState,
+                      internalInstance,
+                      props,
+                      ref
+                    )
                   : partial;
               null != partial &&
-                (initialState
-                  ? ((initialState = !1), (ref = assign({}, ref, partial)))
-                  : assign(ref, partial));
+                (contextType
+                  ? ((contextType = !1),
+                    (internalInstance = assign({}, internalInstance, partial)))
+                  : assign(internalInstance, partial));
             }
-            prevThenableState.state = ref;
+            prevThenableState.state = internalInstance;
           }
-        else ref.queue = null;
+        } else internalInstance.queue = null;
       props = prevThenableState.render();
-      renderNodeDestructiveImpl(request, task, null, props);
+      internalInstance = type.childContextTypes;
+      if (null !== internalInstance && void 0 !== internalInstance) {
+        ref = task.legacyContext;
+        if ("function" !== typeof prevThenableState.getChildContext) type = ref;
+        else {
+          prevThenableState = prevThenableState.getChildContext();
+          for (var contextKey in prevThenableState)
+            if (!(contextKey in internalInstance))
+              throw Error(
+                formatProdErrorMessage(
+                  108,
+                  getComponentNameFromType(type) || "Unknown",
+                  contextKey
+                )
+              );
+          type = assign({}, ref, prevThenableState);
+        }
+        task.legacyContext = type;
+        renderNodeDestructiveImpl(request, task, null, props);
+        task.legacyContext = ref;
+      } else renderNodeDestructiveImpl(request, task, null, props);
     } else if (
-      ((currentlyRenderingComponent = {}),
+      ((contextKey = getMaskedContext(type, task.legacyContext)),
+      (currentlyRenderingComponent = {}),
       (currentlyRenderingTask = task),
       (thenableIndexCounter = localIdCounter = 0),
       (thenableState = prevThenableState),
-      (prevThenableState = type(props, void 0)),
-      (props = finishHooks(type, props, prevThenableState, void 0)),
+      (prevThenableState = type(props, contextKey)),
+      (props = finishHooks(type, props, prevThenableState, contextKey)),
       0 !== localIdCounter)
     ) {
       type = task.treeContext;
@@ -2556,23 +2651,27 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       }
     } else renderNodeDestructiveImpl(request, task, null, props);
   else if ("string" === typeof type) {
-    prevThenableState = task.blockedSegment;
-    initialState = pushStartInstance(
-      prevThenableState.chunks,
+    contextKey = task.blockedSegment;
+    ref = pushStartInstance(
+      contextKey.chunks,
       type,
       props,
       request.resources,
       request.responseState,
-      prevThenableState.formatContext,
-      prevThenableState.lastPushedText
+      contextKey.formatContext,
+      contextKey.lastPushedText
     );
-    prevThenableState.lastPushedText = !1;
-    ref = prevThenableState.formatContext;
-    prevThenableState.formatContext = getChildFormatContext(ref, type, props);
-    renderNode(request, task, initialState);
-    prevThenableState.formatContext = ref;
+    contextKey.lastPushedText = !1;
+    prevThenableState = contextKey.formatContext;
+    contextKey.formatContext = getChildFormatContext(
+      prevThenableState,
+      type,
+      props
+    );
+    renderNode(request, task, ref);
+    contextKey.formatContext = prevThenableState;
     a: {
-      task = prevThenableState.chunks;
+      task = contextKey.chunks;
       switch (type) {
         case "title":
         case "style":
@@ -2594,17 +2693,17 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         case "wbr":
           break a;
         case "body":
-          if (1 >= ref.insertionMode) {
+          if (1 >= prevThenableState.insertionMode) {
             request.responseState.hasBody = !0;
             break a;
           }
           break;
         case "html":
-          if (0 === ref.insertionMode) break a;
+          if (0 === prevThenableState.insertionMode) break a;
       }
       task.push("</", type, ">");
     }
-    prevThenableState.lastPushedText = !1;
+    contextKey.lastPushedText = !1;
   } else {
     switch (type) {
       case REACT_LEGACY_HIDDEN_TYPE:
@@ -2627,11 +2726,11 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       case REACT_SUSPENSE_TYPE:
         a: {
           type = task.blockedBoundary;
-          prevThenableState = task.blockedSegment;
-          ref = props.fallback;
+          contextKey = task.blockedSegment;
+          prevThenableState = props.fallback;
           props = props.children;
-          initialState = new Set();
-          contextType = {
+          ref = new Set();
+          internalInstance = {
             id: null,
             rootSegmentID: -1,
             parentFlushed: !1,
@@ -2639,64 +2738,67 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             forceClientRender: !1,
             completedSegments: [],
             byteSize: 0,
-            fallbackAbortableTasks: initialState,
+            fallbackAbortableTasks: ref,
             errorDigest: null,
             resources: new Set()
           };
-          partial = createPendingSegment(
+          initialState = createPendingSegment(
             request,
-            prevThenableState.chunks.length,
-            contextType,
-            prevThenableState.formatContext,
+            contextKey.chunks.length,
+            internalInstance,
+            contextKey.formatContext,
             !1,
             !1
           );
-          prevThenableState.children.push(partial);
-          prevThenableState.lastPushedText = !1;
-          var contentRootSegment = createPendingSegment(
+          contextKey.children.push(initialState);
+          contextKey.lastPushedText = !1;
+          contextType = createPendingSegment(
             request,
             0,
             null,
-            prevThenableState.formatContext,
+            contextKey.formatContext,
             !1,
             !1
           );
-          contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = contextType;
-          task.blockedSegment = contentRootSegment;
-          request.resources.boundaryResources = contextType.resources;
+          contextType.parentFlushed = !0;
+          task.blockedBoundary = internalInstance;
+          task.blockedSegment = contextType;
+          request.resources.boundaryResources = internalInstance.resources;
           try {
             if (
               (renderNode(request, task, props),
               request.responseState.generateStaticMarkup ||
-                (contentRootSegment.lastPushedText &&
-                  contentRootSegment.textEmbedded &&
-                  contentRootSegment.chunks.push("\x3c!-- --\x3e")),
-              (contentRootSegment.status = 1),
-              0 === contextType.pendingTasks &&
-                hoistCompletedBoundaryResources(request, contextType),
-              queueCompletedSegment(contextType, contentRootSegment),
-              0 === contextType.pendingTasks)
+                (contextType.lastPushedText &&
+                  contextType.textEmbedded &&
+                  contextType.chunks.push("\x3c!-- --\x3e")),
+              (contextType.status = 1),
+              0 === internalInstance.pendingTasks &&
+                hoistCompletedBoundaryResources(request, internalInstance),
+              queueCompletedSegment(internalInstance, contextType),
+              0 === internalInstance.pendingTasks)
             )
               break a;
           } catch (error) {
-            (contentRootSegment.status = 4),
-              (contextType.forceClientRender = !0),
-              (contextType.errorDigest = logRecoverableError(request, error));
+            (contextType.status = 4),
+              (internalInstance.forceClientRender = !0),
+              (internalInstance.errorDigest = logRecoverableError(
+                request,
+                error
+              ));
           } finally {
             (request.resources.boundaryResources = type
               ? type.resources
               : null),
               (task.blockedBoundary = type),
-              (task.blockedSegment = prevThenableState);
+              (task.blockedSegment = contextKey);
           }
           task = createTask(
             request,
             null,
-            ref,
+            prevThenableState,
             type,
-            partial,
             initialState,
+            ref,
             task.legacyContext,
             task.context,
             task.treeContext
@@ -2713,8 +2815,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           currentlyRenderingTask = task;
           thenableIndexCounter = localIdCounter = 0;
           thenableState = prevThenableState;
-          prevThenableState = type(props, ref);
-          props = finishHooks(type, props, prevThenableState, ref);
+          contextKey = type(props, ref);
+          props = finishHooks(type, props, contextKey, ref);
           if (0 !== localIdCounter) {
             type = task.treeContext;
             task.treeContext = pushTreeContext(type, 1, 0);
@@ -2731,21 +2833,21 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           renderElement(request, task, prevThenableState, type, props, ref);
           return;
         case REACT_PROVIDER_TYPE:
-          prevThenableState = props.children;
+          contextKey = props.children;
           type = type._context;
           props = props.value;
-          ref = type._currentValue2;
+          prevThenableState = type._currentValue2;
           type._currentValue2 = props;
-          initialState = currentActiveSnapshot;
+          ref = currentActiveSnapshot;
           currentActiveSnapshot = props = {
-            parent: initialState,
-            depth: null === initialState ? 0 : initialState.depth + 1,
+            parent: ref,
+            depth: null === ref ? 0 : ref.depth + 1,
             context: type,
-            parentValue: ref,
+            parentValue: prevThenableState,
             value: props
           };
           task.context = props;
-          renderNodeDestructiveImpl(request, task, null, prevThenableState);
+          renderNodeDestructiveImpl(request, task, null, contextKey);
           request = currentActiveSnapshot;
           if (null === request) throw Error(formatProdErrorMessage(403));
           props = request.parentValue;
@@ -2762,8 +2864,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           renderNodeDestructiveImpl(request, task, null, props);
           return;
         case REACT_LAZY_TYPE:
-          ref = type._init;
-          type = ref(type._payload);
+          contextKey = type._init;
+          type = contextKey(type._payload);
           props = resolveDefaultProps(type, props);
           renderElement(request, task, prevThenableState, type, props, void 0);
           return;
@@ -3568,4 +3670,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-62e6c4612-20230220";
+exports.version = "18.3.0-www-classic-62e6c4612-20230220";

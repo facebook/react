@@ -21799,47 +21799,13 @@ function markRef(workInProgress) {
   workInProgress.flags |= Ref | RefStatic;
 }
 
-function hadNoMutationsEffects(current, completedWork) {
-  var didBailout = current !== null && current.child === completedWork.child;
-
-  if (didBailout) {
-    return true;
-  }
-
-  if ((completedWork.flags & ChildDeletion) !== NoFlags$1) {
-    return false;
-  } // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
-  // then we only have to check the `completedWork.subtreeFlags`.
-
-  var child = completedWork.child;
-
-  while (child !== null) {
-    if (
-      (child.flags & MutationMask) !== NoFlags$1 ||
-      (child.subtreeFlags & MutationMask) !== NoFlags$1
-    ) {
-      return false;
-    }
-
-    child = child.sibling;
-  }
-
-  return true;
-}
-
-var appendAllChildren;
-var updateHostContainer;
-var updateHostComponent;
-var updateHostText;
-
-if (supportsMutation) {
-  // Mutation mode
-  appendAllChildren = function (
-    parent,
-    workInProgress,
-    needsVisibilityToggle,
-    isHidden
-  ) {
+function appendAllChildren(
+  parent,
+  workInProgress,
+  needsVisibilityToggle,
+  isHidden
+) {
+  {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     var node = workInProgress.child;
@@ -21870,13 +21836,11 @@ if (supportsMutation) {
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  };
+  }
+} // An unfortunate fork of appendAllChildren because we have two different parent types.
 
-  updateHostContainer = function (current, workInProgress) {
-    // Noop
-  };
-
-  updateHostComponent = function (current, workInProgress, type, newProps) {
+function updateHostComponent(current, workInProgress, type, newProps) {
+  {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
     var oldProps = current.memoizedProps;
@@ -21909,250 +21873,16 @@ if (supportsMutation) {
     if (updatePayload) {
       markUpdate(workInProgress);
     }
-  };
+  }
+}
 
-  updateHostText = function (current, workInProgress, oldText, newText) {
+function updateHostText(current, workInProgress, oldText, newText) {
+  {
     // If the text differs, mark it as an update. All the work in done in commitWork.
     if (oldText !== newText) {
       markUpdate(workInProgress);
     }
-  };
-} else if (supportsPersistence) {
-  // Persistent host tree mode
-  appendAllChildren = function (
-    parent,
-    workInProgress,
-    needsVisibilityToggle,
-    isHidden
-  ) {
-    // We only have the top Fiber that was created but we need recurse down its
-    // children to find all the terminal nodes.
-    var node = workInProgress.child;
-
-    while (node !== null) {
-      // eslint-disable-next-line no-labels
-      if (node.tag === HostComponent) {
-        var instance = node.stateNode;
-
-        if (needsVisibilityToggle && isHidden) {
-          instance = cloneHiddenInstance();
-        }
-
-        appendInitialChild(parent, instance);
-      } else if (node.tag === HostText) {
-        var _instance = node.stateNode;
-
-        if (needsVisibilityToggle && isHidden) {
-          _instance = cloneHiddenTextInstance();
-        }
-
-        appendInitialChild(parent, _instance);
-      } else if (node.tag === HostPortal);
-      else if (node.tag === OffscreenComponent && node.memoizedState !== null) {
-        // The children in this boundary are hidden. Toggle their visibility
-        // before appending.
-        var child = node.child;
-
-        if (child !== null) {
-          child.return = node;
-        }
-
-        appendAllChildren(parent, node, true, true);
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-
-      node = node;
-
-      if (node === workInProgress) {
-        return;
-      } // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-      while (node.sibling === null) {
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
-        if (node.return === null || node.return === workInProgress) {
-          return;
-        }
-
-        node = node.return;
-      } // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }; // An unfortunate fork of appendAllChildren because we have two different parent types.
-
-  var appendAllChildrenToContainer = function (
-    containerChildSet,
-    workInProgress,
-    needsVisibilityToggle,
-    isHidden
-  ) {
-    // We only have the top Fiber that was created but we need recurse down its
-    // children to find all the terminal nodes.
-    var node = workInProgress.child;
-
-    while (node !== null) {
-      // eslint-disable-next-line no-labels
-      if (node.tag === HostComponent) {
-        if (needsVisibilityToggle && isHidden) {
-          cloneHiddenInstance();
-        }
-
-        appendChildToContainerChildSet();
-      } else if (node.tag === HostText) {
-        if (needsVisibilityToggle && isHidden) {
-          cloneHiddenTextInstance();
-        }
-
-        appendChildToContainerChildSet();
-      } else if (node.tag === HostPortal);
-      else if (node.tag === OffscreenComponent && node.memoizedState !== null) {
-        // The children in this boundary are hidden. Toggle their visibility
-        // before appending.
-        var child = node.child;
-
-        if (child !== null) {
-          child.return = node;
-        } // If Offscreen is not in manual mode, detached tree is hidden from user space.
-
-        var _needsVisibilityToggle = !isOffscreenManual(node);
-
-        appendAllChildrenToContainer(
-          containerChildSet,
-          node,
-          _needsVisibilityToggle,
-          true
-        );
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-
-      node = node;
-
-      if (node === workInProgress) {
-        return;
-      } // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-      while (node.sibling === null) {
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
-        if (node.return === null || node.return === workInProgress) {
-          return;
-        }
-
-        node = node.return;
-      } // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  };
-
-  updateHostContainer = function (current, workInProgress) {
-    var portalOrRoot = workInProgress.stateNode;
-    var childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-
-    if (childrenUnchanged);
-    else {
-      var newChildSet = createContainerChildSet(); // If children might have changed, we have to add them all to the set.
-
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
-      portalOrRoot.pendingChildren = newChildSet; // Schedule an update on the container to swap out the container.
-
-      markUpdate(workInProgress);
-      finalizeContainerChildren();
-    }
-  };
-
-  updateHostComponent = function (current, workInProgress, type, newProps) {
-    var currentInstance = current.stateNode;
-    var oldProps = current.memoizedProps; // If there are no effects associated with this node, then none of our children had any updates.
-    // This guarantees that we can reuse all of them.
-
-    var childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-
-    if (childrenUnchanged && oldProps === newProps) {
-      // No changes, just reuse the existing instance.
-      // Note that this might release a previous clone.
-      workInProgress.stateNode = currentInstance;
-      return;
-    }
-
-    var recyclableInstance = workInProgress.stateNode;
-    var currentHostContext = getHostContext();
-    var updatePayload = null;
-
-    if (oldProps !== newProps) {
-      updatePayload = prepareUpdate(
-        recyclableInstance,
-        type,
-        oldProps,
-        newProps,
-        currentHostContext
-      );
-    }
-
-    if (childrenUnchanged && updatePayload === null) {
-      // No changes, just reuse the existing instance.
-      // Note that this might release a previous clone.
-      workInProgress.stateNode = currentInstance;
-      return;
-    }
-
-    var newInstance = cloneInstance();
-
-    if (finalizeInitialChildren(newInstance, type, newProps)) {
-      markUpdate(workInProgress);
-    }
-
-    workInProgress.stateNode = newInstance;
-
-    if (childrenUnchanged) {
-      // If there are no other effects in this tree, we need to flag this node as having one.
-      // Even though we're not going to use it for anything.
-      // Otherwise parents won't know that there are new children to propagate upwards.
-      markUpdate(workInProgress);
-    } else {
-      // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
-    }
-  };
-
-  updateHostText = function (current, workInProgress, oldText, newText) {
-    if (oldText !== newText) {
-      // If the text content differs, we'll create a new text instance for it.
-      var rootContainerInstance = getRootHostContainer();
-      var currentHostContext = getHostContext();
-      workInProgress.stateNode = createTextInstance(
-        newText,
-        rootContainerInstance,
-        currentHostContext,
-        workInProgress
-      ); // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-      // This lets the parents know that at least one of their children has changed.
-
-      markUpdate(workInProgress);
-    } else {
-      workInProgress.stateNode = current.stateNode;
-    }
-  };
-} else {
-  // No host operations
-  updateHostContainer = function (current, workInProgress) {
-    // Noop
-  };
-
-  updateHostComponent = function (current, workInProgress, type, newProps) {
-    // Noop
-  };
-
-  updateHostText = function (current, workInProgress, oldText, newText) {
-    // Noop
-  };
+  }
 }
 
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
@@ -22447,8 +22177,6 @@ function completeWork(current, workInProgress, renderLanes) {
           }
         }
       }
-
-      updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
 
       return null;
@@ -22567,7 +22295,7 @@ function completeWork(current, workInProgress, renderLanes) {
           return null;
         }
 
-        var _currentHostContext = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
+        var _currentHostContext2 = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
@@ -22578,7 +22306,7 @@ function completeWork(current, workInProgress, renderLanes) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
           if (
-            prepareToHydrateHostInstance(workInProgress, _currentHostContext)
+            prepareToHydrateHostInstance(workInProgress, _currentHostContext2)
           ) {
             // If changes to the hydrated node need to be applied at the
             // commit-phase we mark this as such.
@@ -22591,10 +22319,10 @@ function completeWork(current, workInProgress, renderLanes) {
             _type,
             newProps,
             _rootContainerInstance,
-            _currentHostContext,
+            _currentHostContext2,
             workInProgress
           );
-          appendAllChildren(instance, workInProgress, false, false);
+          appendAllChildren(instance, workInProgress);
           workInProgress.stateNode = instance; // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
@@ -22634,7 +22362,7 @@ function completeWork(current, workInProgress, renderLanes) {
 
         var _rootContainerInstance2 = getRootHostContainer();
 
-        var _currentHostContext2 = getHostContext();
+        var _currentHostContext3 = getHostContext();
 
         var _wasHydrated3 = popHydrationState(workInProgress);
 
@@ -22646,7 +22374,7 @@ function completeWork(current, workInProgress, renderLanes) {
           workInProgress.stateNode = createTextInstance(
             newText,
             _rootContainerInstance2,
-            _currentHostContext2,
+            _currentHostContext3,
             workInProgress
           );
         }
@@ -22770,7 +22498,6 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(current, workInProgress);
 
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
@@ -31506,7 +31233,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-80cf4a099-20230220";
+var ReactVersion = "18.3.0-www-classic-62e6c4612-20230220";
 
 function createPortal$1(
   children,
@@ -34336,24 +34063,6 @@ function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
   );
 }
 
-// Renderers that don't support persistence
-// can re-export everything from this module.
-function shim() {
-  throw new Error(
-    "The current renderer does not support persistence. " +
-      "This error is likely caused by a bug in React. " +
-      "Please file an issue."
-  );
-} // Persistence (when unsupported)
-
-var supportsPersistence = false;
-var cloneInstance = shim;
-var createContainerChildSet = shim;
-var appendChildToContainerChildSet = shim;
-var finalizeContainerChildren = shim;
-var cloneHiddenInstance = shim;
-var cloneHiddenTextInstance = shim;
-
 var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
 var SUSPENSE_START_DATA = "$";
 var SUSPENSE_END_DATA = "/$";
@@ -34627,10 +34336,6 @@ function handleErrorInNextTick(error) {
     throw error;
   });
 } // -------------------
-//     Mutation
-// -------------------
-
-var supportsMutation = true;
 function commitMount(domElement, type, newProps, internalInstanceHandle) {
   // Despite the naming that might imply otherwise, this method only
   // fires if there is an `Update` effect scheduled during mounting.

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-80cf4a099-20230220";
+var ReactVersion = "18.3.0-www-modern-62e6c4612-20230220";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -17039,19 +17039,13 @@ function markRef(workInProgress) {
   workInProgress.flags |= Ref | RefStatic;
 }
 
-var appendAllChildren;
-var updateHostContainer;
-var updateHostComponent;
-var updateHostText;
-
-{
-  // Mutation mode
-  appendAllChildren = function (
-    parent,
-    workInProgress,
-    needsVisibilityToggle,
-    isHidden
-  ) {
+function appendAllChildren(
+  parent,
+  workInProgress,
+  needsVisibilityToggle,
+  isHidden
+) {
+  {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     var node = workInProgress.child;
@@ -17082,13 +17076,11 @@ var updateHostText;
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  };
+  }
+} // An unfortunate fork of appendAllChildren because we have two different parent types.
 
-  updateHostContainer = function (current, workInProgress) {
-    // Noop
-  };
-
-  updateHostComponent = function (current, workInProgress, type, newProps) {
+function updateHostComponent(current, workInProgress, type, newProps) {
+  {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
     var oldProps = current.memoizedProps;
@@ -17110,14 +17102,16 @@ var updateHostText;
     if (updatePayload) {
       markUpdate(workInProgress);
     }
-  };
+  }
+}
 
-  updateHostText = function (current, workInProgress, oldText, newText) {
+function updateHostText(current, workInProgress, oldText, newText) {
+  {
     // If the text differs, mark it as an update. All the work in done in commitWork.
     if (oldText !== newText) {
       markUpdate(workInProgress);
     }
-  };
+  }
 }
 
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
@@ -17482,8 +17476,6 @@ function completeWork(current, workInProgress, renderLanes) {
           }
         }
       }
-
-      updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
 
       if (enableTransitionTracing) {
@@ -17546,7 +17538,7 @@ function completeWork(current, workInProgress, renderLanes) {
           getRootHostContainer();
 
           var instance = createInstance(_type, newProps);
-          appendAllChildren(instance, workInProgress, false, false);
+          appendAllChildren(instance, workInProgress);
           workInProgress.stateNode = instance; // Certain renderers require commit-time effects for initial mount.
         }
 
@@ -17734,7 +17726,6 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(current, workInProgress);
 
       bubbleProperties(workInProgress);
       return null;
