@@ -64,7 +64,7 @@
     "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
     "./server.node.unbundled": "./server.node.unbundled.js",
-    "./node-loader": "./esm/react-server-dom-webpack-node-loader.js",
+    "./node-loader": "./esm/react-server-dom-webpack-node-loader.production.min.js",
     "./node-register": "./node-register.js",
     "./src/*": "./src/*",
     "./package.json": "./package.json"

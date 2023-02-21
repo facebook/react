@@ -1,11 +1,13 @@
 'use strict';
 
-const {renderToPipeableStream} = require('react-server-dom-webpack/server');
 const {readFile} = require('fs').promises;
 const {resolve} = require('path');
 const React = require('react');
 
 module.exports = async function (req, res) {
+  const {renderToPipeableStream} = await import(
+    'react-server-dom-webpack/server'
+  );
   switch (req.method) {
     case 'POST': {
       const serverReference = JSON.parse(req.get('rsc-action'));

@@ -9,7 +9,8 @@ const __EXPERIMENTAL__ =
 
 const bundleTypes = {
   NODE_ES2015: 'NODE_ES2015',
-  NODE_ESM: 'NODE_ESM',
+  ESM_DEV: 'ESM_DEV',
+  ESM_PROD: 'ESM_PROD',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -32,7 +33,8 @@ const bundleTypes = {
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -393,7 +395,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -402,7 +404,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -427,7 +429,7 @@ const bundles = [
 
   /******* React Server DOM Webpack Node.js Loader *******/
   {
-    bundleTypes: [NODE_ESM],
+    bundleTypes: [ESM_PROD],
     moduleType: RENDERER_UTILS,
     entry: 'react-server-dom-webpack/node-loader',
     global: 'ReactServerWebpackNodeLoader',
@@ -1025,11 +1027,13 @@ function getFilename(bundle, bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
       return `${name}.js`;
-    case NODE_ESM:
-      return `${name}.js`;
     case BUN_DEV:
       return `${name}.development.js`;
     case BUN_PROD:
+      return `${name}.production.min.js`;
+    case ESM_DEV:
+      return `${name}.development.js`;
+    case ESM_PROD:
       return `${name}.production.min.js`;
     case UMD_DEV:
       return `${name}.development.js`;
