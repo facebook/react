@@ -35,6 +35,8 @@ if (document.readyState === 'loading') {
           installFizzInstrObserver(document.body);
         }
         handleExistingNodes();
+        // We can call disconnect without takeRecord here,
+        // since we only expect a single document.body
         domBodyObserver.disconnect();
       }
     });
@@ -54,7 +56,7 @@ function handleExistingNodes() {
 }
 
 function installFizzInstrObserver(target /*: Node */) {
-  const fizzInstrObserver = new MutationObserver(mutations => {
+  const handleMutations = (mutations /*: Array<MutationRecord> */) => {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
@@ -63,13 +65,16 @@ function installFizzInstrObserver(target /*: Node */) {
         }
       }
     }
-  });
+  };
+
+  const fizzInstrObserver = new MutationObserver(handleMutations);
   // We assume that instruction data nodes are eventually appended to the
   // body, even if Fizz is streaming to a shell / subtree.
   fizzInstrObserver.observe(target, {
     childList: true,
   });
   window.addEventListener('DOMContentLoaded', () => {
+    handleMutations(fizzInstrObserver.takeRecords());
     fizzInstrObserver.disconnect();
   });
 }
