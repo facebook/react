@@ -63,8 +63,8 @@
     "workbox-webpack-plugin": "^6.4.1"
   },
   "scripts": {
-    "prestart": "cp -r ../../build/node_modules/* ./node_modules/",
-    "prebuild": "cp -r ../../build/node_modules/* ./node_modules/",
+    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "start:client": "NODE_ENV=development BUILD_PATH=dist node scripts/start.js",
     "start:server": "NODE_ENV=development BUILD_PATH=dist nodemon -- --experimental-loader ./loader/index.js --conditions=react-server server",

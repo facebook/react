@@ -5490,7 +5490,7 @@ react-dev-utils@^0.5.2:
     sockjs-client "1.0.1"
     strip-ansi "3.0.1"
 
-"react-dom@link:../../build/node_modules/react-dom":
+"react-dom@link:../../build/oss-experimental/react-dom":
   version "0.0.0"
 
 react-scripts@0.9.5:
@@ -5539,7 +5539,7 @@ react-scripts@0.9.5:
   optionalDependencies:
     fsevents "1.0.17"
 
-"react@link:../../build/node_modules/react":
+"react@link:../../build/oss-experimental/react":
   version "0.0.0"
 
 read-pkg-up@^1.0.1:

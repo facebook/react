@@ -93,15 +93,24 @@ if (process.env.CIRCLE_NODE_TOTAL) {
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
-  spawnSync('node', ['./scripts/rollup/build.js', ...process.argv.slice(2)], {
-    stdio: ['pipe', process.stdout, process.stderr],
-    env: {
-      ...process.env,
-      RELEASE_CHANNEL: channel,
-      CIRCLE_NODE_TOTAL: nodeTotal,
-      CIRCLE_NODE_INDEX: nodeIndex,
-    },
-  });
+  const {status} = spawnSync(
+    'node',
+    ['./scripts/rollup/build.js', ...process.argv.slice(2)],
+    {
+      stdio: ['pipe', process.stdout, process.stderr],
+      env: {
+        ...process.env,
+        RELEASE_CHANNEL: channel,
+        CIRCLE_NODE_TOTAL: nodeTotal,
+        CIRCLE_NODE_INDEX: nodeIndex,
+      },
+    }
+  );
+
+  if (status !== 0) {
+    // Error of spawned process is already piped to this stderr
+    process.exit(status);
+  }
 }
 
 function processStable(buildDir) {

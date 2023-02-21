@@ -152,8 +152,7 @@ jobs:
           commit_message: |
             ${{ github.event.head_commit.message }}
 
-            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
-            [View git log for this commit](https://github.com/facebook/react/commits/${{ github.sha }})
+            DiffTrain build for commit ${{ github.sha }}.
           branch: builds/facebook-www
           commit_user_name: ${{ github.actor }}
           commit_user_email: ${{ github.actor }}@users.noreply.github.com

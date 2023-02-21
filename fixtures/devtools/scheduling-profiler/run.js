@@ -18,7 +18,7 @@ const DEPENDENCIES = [
   ['react-dom/umd/react-dom.development.js', 'react-dom.js'],
 ];
 
-const BUILD_DIRECTORY = '../../../build/node_modules/';
+const BUILD_DIRECTORY = '../../../build/oss-experimental/';
 const DEPENDENCIES_DIRECTORY = 'dependencies';
 
 function initDependencies() {
