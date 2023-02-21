@@ -146,6 +146,8 @@ function warnIfStringRefCannotBeAutoConverted(config) {
  * @internal
  */
 const ReactElement = function (type, key, ref, self, source, owner, props) {
+  // 做的事情很简单，就是包装一层
+  // 传入的第一个 props 对应的是 type
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -360,6 +362,7 @@ export function jsxDEV(type, config, maybeKey, source, self) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
+  // 编译后调用的函数
   let propName;
 
   // Reserved names are extracted
@@ -402,6 +405,7 @@ export function createElement(type, config, children) {
   // the newly allocated props object.
   const childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
+    // 如果仅仅只有一个 chilren 的话，直接赋值给 props.children
     props.children = children;
   } else if (childrenLength > 1) {
     const childArray = Array(childrenLength);
@@ -439,6 +443,8 @@ export function createElement(type, config, children) {
       }
     }
   }
+
+  // 最终通过 ReactElement 进行包装
   return ReactElement(
     type,
     key,
