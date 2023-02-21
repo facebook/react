@@ -22,19 +22,13 @@ function foo(a, b, c, d) {
 
 ```javascript
 function foo(a, b, c, d) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;
   let x;
   if (c_0) {
     x = someObj();
     if (a) {
-      let y;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        y = someObj();
-        $[2] = y;
-      } else {
-        y = $[2];
-      }
+      const y = someObj();
       const z = y;
       x = z;
     } else {

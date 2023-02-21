@@ -24,7 +24,7 @@ export function inferMutableRanges(ir: HIRFunction) {
   do {
     size = aliases.size;
     // Infer mutable ranges for aliases that are not fields
-    inferMutableRangesForAlias(aliases);
+    inferMutableRangesForAlias(ir, aliases);
 
     // Update aliasing information of fields
     inferAliasForStores(ir, aliases);
@@ -34,5 +34,5 @@ export function inferMutableRanges(ir: HIRFunction) {
   inferMutableLifetimes(ir, true);
 
   // Re-infer mutable ranges for aliases
-  inferMutableRangesForAlias(aliases);
+  inferMutableRangesForAlias(ir, aliases);
 }

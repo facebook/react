@@ -28,7 +28,7 @@ function foo(a, b, c, d) {
 
 ```javascript
 function foo(a, b, c, d) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== a;
   const c_1 = $[1] !== b;
   let x;
@@ -37,21 +37,10 @@ function foo(a, b, c, d) {
     if (a) {
       let z = undefined;
       if (b) {
-        let w;
-        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-          w = someObj();
-          $[3] = w;
-        } else {
-          w = $[3];
-        }
+        const w = someObj();
         z = w;
       } else {
-        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-          z = someObj();
-          $[4] = z;
-        } else {
-          z = $[4];
-        }
+        z = someObj();
       }
 
       x = z;
