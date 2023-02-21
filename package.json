@@ -135,7 +135,7 @@
     "test-build-prod": "yarn test --deprecated 'yarn test --build --prod'",
     "test-build-devtools": "node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental",
     "debug-test-build-devtools": "yarn test --deprecated 'yarn test-build-devtools --debug'",
-    "test-dom-fixture": "cd fixtures/dom && yarn && yarn prestart && yarn test",
+    "test-dom-fixture": "cd fixtures/dom && yarn && yarn predev && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",

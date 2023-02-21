@@ -16,10 +16,10 @@
     "react-dom": "link:../../build/oss-experimental/react-dom"
   },
   "scripts": {
-    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
-    "start:client": "PORT=3001 react-scripts start",
-    "start:server": "NODE_ENV=development node server",
-    "start:prod": "react-scripts build && NODE_ENV=production node server",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "PORT=3001 react-scripts start",
+    "dev:server": "NODE_ENV=development node server",
+    "start": "react-scripts build && NODE_ENV=production node server",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
