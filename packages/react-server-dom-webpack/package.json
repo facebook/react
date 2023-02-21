@@ -67,6 +67,7 @@
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.js",
     "./node-register": "./node-register.js",
     "./src/ReactFlightServerWebpackBundlerConfig": "./src/ReactFlightServerWebpackBundlerConfig.js",
+    "./src/ReactFlightClientWebpackBundlerConfig": "./src/ReactFlightClientWebpackBundlerConfig.js",
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
