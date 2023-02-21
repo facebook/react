@@ -10,7 +10,8 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
-import {Writable, Readable} from 'stream';
+import type {Writable} from 'stream';
+import {Readable} from 'stream';
 
 import ReactVersion from 'shared/ReactVersion';
 
