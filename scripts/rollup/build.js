@@ -186,7 +186,7 @@ function getRollupOutputOptions(
     format,
     globals,
     freeze: !isProduction,
-    interop: false,
+    interop: 'default',
     name: globalName,
     sourcemap: false,
     esModule: false,
@@ -608,7 +608,7 @@ async function createBundle(bundle, bundleType) {
     output: {
       externalLiveBindings: false,
       freeze: false,
-      interop: false,
+      interop: 'default',
       esModule: false,
     },
   };

@@ -38,7 +38,7 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
       output: {
         externalLiveBindings: false,
         freeze: false,
-        interop: false,
+        interop: 'default',
         esModule: false,
       },
     };
