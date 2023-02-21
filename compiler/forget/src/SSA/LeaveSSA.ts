@@ -260,13 +260,14 @@ export function leaveSSA(fn: HIRFunction): void {
           phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
         }
       } else if (isPhiMutatedAfterCreation) {
+        // The declaration is not guaranteed to flow into the phi, for example in the case of a variable
+        // that is reassigned in all control flow paths to a given phi. The original declaration's range
+        // has to be extended in this case (if the phi is later mutated) since we are reusing the original
+        // declaration instead of creating a new declaration.
+        //
+        // NOTE: this can *only* happen if the original declaration involves an instruction that DCE does
+        // not prune. Otherwise, the declaration would have been pruned and we'd synthesize a new one.
         declaration.place.identifier.mutableRange.end = phi.id.mutableRange.end;
-      }
-
-      for (const [, operand] of phi.operands) {
-        if (isPhiMutatedAfterCreation) {
-          operand.mutableRange.end = phi.id.mutableRange.end;
-        }
       }
     }
 
