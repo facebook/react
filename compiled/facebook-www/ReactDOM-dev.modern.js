@@ -17764,9 +17764,8 @@ function cloneUpdateQueue(current, workInProgress) {
     workInProgress.updateQueue = clone;
   }
 }
-function createUpdate(eventTime, lane) {
+function createUpdate(lane) {
   var update = {
-    eventTime: eventTime,
     lane: lane,
     tag: UpdateState,
     payload: null,
@@ -17882,7 +17881,6 @@ function enqueueCapturedUpdate(workInProgress, capturedUpdate) {
 
         do {
           var clone = {
-            eventTime: update.eventTime,
             lane: update.lane,
             tag: update.tag,
             payload: update.payload,
@@ -18095,11 +18093,9 @@ function processUpdateQueue(workInProgress, props, instance, renderLanes) {
     var update = firstBaseUpdate;
 
     do {
-      // TODO: Don't need this field anymore
-      var updateEventTime = update.eventTime; // An extra OffscreenLane bit is added to updates that were made to
+      // An extra OffscreenLane bit is added to updates that were made to
       // a hidden tree, so that we can distinguish them from updates that were
       // already there when the tree was hidden.
-
       var updateLane = removeLanes(update.lane, OffscreenLane);
       var isHiddenUpdate = updateLane !== update.lane; // Check if this update was made while the tree was hidden. If so, then
       // it's not a "base" update and we should disregard the extra base lanes
@@ -18114,7 +18110,6 @@ function processUpdateQueue(workInProgress, props, instance, renderLanes) {
         // skipped update, the previous update/state is the new base
         // update/state.
         var clone = {
-          eventTime: updateEventTime,
           lane: updateLane,
           tag: update.tag,
           payload: update.payload,
@@ -18134,7 +18129,6 @@ function processUpdateQueue(workInProgress, props, instance, renderLanes) {
         // This update does have sufficient priority.
         if (newLastBaseUpdate !== null) {
           var _clone = {
-            eventTime: updateEventTime,
             // This update is going to be committed so we never want uncommit
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
@@ -22617,11 +22611,11 @@ function refreshCache(fiber, seedKey, seedValue) {
       case HostRoot: {
         // Schedule an update on the cache boundary to trigger a refresh.
         var lane = requestUpdateLane(provider);
-        var eventTime = requestEventTime();
-        var refreshUpdate = createUpdate(eventTime, lane);
+        var refreshUpdate = createUpdate(lane);
         var root = enqueueUpdate(provider, refreshUpdate, lane);
 
         if (root !== null) {
+          var eventTime = requestEventTime();
           scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleTransitions(root, provider, lane);
         } // TODO: If a refresh never commits, the new cache created here must be
@@ -24228,9 +24222,8 @@ var classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueSetState: function (inst, payload, callback) {
     var fiber = get(inst);
-    var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
-    var update = createUpdate(eventTime, lane);
+    var update = createUpdate(lane);
     update.payload = payload;
 
     if (callback !== undefined && callback !== null) {
@@ -24244,6 +24237,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
+      var eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -24263,9 +24257,8 @@ var classComponentUpdater = {
   },
   enqueueReplaceState: function (inst, payload, callback) {
     var fiber = get(inst);
-    var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
-    var update = createUpdate(eventTime, lane);
+    var update = createUpdate(lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -24280,6 +24273,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
+      var eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -24300,9 +24294,8 @@ var classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate: function (inst, callback) {
     var fiber = get(inst);
-    var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
-    var update = createUpdate(eventTime, lane);
+    var update = createUpdate(lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -24316,6 +24309,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
+      var eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -25359,7 +25353,7 @@ function logCapturedError(boundary, errorInfo) {
 }
 
 function createRootErrorUpdate(fiber, errorInfo, lane) {
-  var update = createUpdate(NoTimestamp, lane); // Unmount the root by rendering null.
+  var update = createUpdate(lane); // Unmount the root by rendering null.
 
   update.tag = CaptureUpdate; // Caution: React DevTools currently depends on this property
   // being called "element".
@@ -25378,7 +25372,7 @@ function createRootErrorUpdate(fiber, errorInfo, lane) {
 }
 
 function createClassErrorUpdate(fiber, errorInfo, lane) {
-  var update = createUpdate(NoTimestamp, lane);
+  var update = createUpdate(lane);
   update.tag = CaptureUpdate;
   var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
 
@@ -25538,7 +25532,7 @@ function markSuspenseBoundaryShouldCapture(
           // When we try rendering again, we should not reuse the current fiber,
           // since it's known to be in an inconsistent state. Use a force update to
           // prevent a bail out.
-          var update = createUpdate(NoTimestamp, SyncLane);
+          var update = createUpdate(SyncLane);
           update.tag = ForceUpdate;
           enqueueUpdate(sourceFiber, update, SyncLane);
         }
@@ -30022,7 +30016,7 @@ function propagateContextChange_eager(workInProgress, context, renderLanes) {
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             var lane = pickArbitraryLane(renderLanes);
-            var update = createUpdate(NoTimestamp, lane);
+            var update = createUpdate(lane);
             update.tag = ForceUpdate; // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
             // this render is thrown away. Since it's a race condition, not sure it's
@@ -41600,7 +41594,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-212b89fa2-20230221";
+var ReactVersion = "18.3.0-www-modern-c04b18070-20230222";
 
 function createPortal$1(
   children,
@@ -41710,11 +41704,11 @@ function createHydrationContainer(
   // enqueue the callback if one is provided).
 
   var current = root.current;
-  var eventTime = requestEventTime();
   var lane = requestUpdateLane(current);
-  var update = createUpdate(eventTime, lane);
+  var update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
+  var eventTime = requestEventTime();
   enqueueUpdate(current, update, lane);
   scheduleInitialHydrationOnRoot(root, lane, eventTime);
   return root;
@@ -41725,7 +41719,6 @@ function updateContainer(element, container, parentComponent, callback) {
   }
 
   var current$1 = container.current;
-  var eventTime = requestEventTime();
   var lane = requestUpdateLane(current$1);
 
   if (enableSchedulingProfiler) {
@@ -41754,7 +41747,7 @@ function updateContainer(element, container, parentComponent, callback) {
     }
   }
 
-  var update = createUpdate(eventTime, lane); // Caution: React DevTools currently depends on this property
+  var update = createUpdate(lane); // Caution: React DevTools currently depends on this property
   // being called "element".
 
   update.payload = {
@@ -41779,6 +41772,7 @@ function updateContainer(element, container, parentComponent, callback) {
   var root = enqueueUpdate(current$1, update, lane);
 
   if (root !== null) {
+    var eventTime = requestEventTime();
     scheduleUpdateOnFiber(root, current$1, lane, eventTime);
     entangleTransitions(root, current$1, lane);
   }
