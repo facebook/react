@@ -55,9 +55,10 @@ export function lower(
   options: EnvironmentOptions | null,
   capturedRefs: t.Identifier[] = [],
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null
+  parent: NodePath<t.Function> | null = null,
+  environment: Environment | null = null
 ): Result<HIRFunction, CompilerError> {
-  const env = new Environment(options);
+  const env = environment ?? new Environment(options);
   const builder = new HIRBuilder(env, parent ?? func, capturedRefs);
   const context: Place[] = [];
 
@@ -1349,7 +1350,8 @@ function lowerExpression(
         expr,
         builder.environment.options,
         [...builder.context, ...captured.identifiers],
-        builder.parentFunction
+        builder.parentFunction,
+        builder.environment
       );
       let loweredFunc: HIRFunction;
       if (lowering.isErr()) {

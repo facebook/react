@@ -19,9 +19,9 @@ function component({ mutator }) {
 ## Code
 
 ```javascript
-function component(t10) {
+function component(t15) {
   const $ = React.unstable_useMemoCache(7);
-  const t0 = t10;
+  const t0 = t15;
   const mutator = t0.mutator;
   const c_0 = $[0] !== mutator;
   let poke;
