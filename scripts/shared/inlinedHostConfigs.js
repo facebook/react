@@ -83,6 +83,7 @@ module.exports = [
       'react-server-dom-webpack/client',
       'react-server-dom-webpack/client.browser',
       'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/src/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
@@ -114,6 +115,7 @@ module.exports = [
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.edge',
       'react-server-dom-webpack/server.edge',
+      'react-server-dom-webpack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',

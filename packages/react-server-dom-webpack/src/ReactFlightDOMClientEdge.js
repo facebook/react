@@ -17,20 +17,28 @@ import {
   createResponse,
   getRoot,
   reportGlobalError,
-  processStringChunk,
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-type CallServerCallback = <A, T>(
-  {filepath: string, name: string},
-  args: A,
-) => Promise<T>;
+function noServerCall() {
+  throw new Error(
+    'Server Functions cannot be called during initial render. ' +
+      'This would create a fetch waterfall. Try to use a Server Component ' +
+      'to pass data to Client Components instead.',
+  );
+}
 
 export type Options = {
   moduleMap?: BundlerConfig,
-  callServer?: CallServerCallback,
 };
+
+function createResponseFromOptions(options: void | Options) {
+  return createResponse(
+    options && options.moduleMap ? options.moduleMap : null,
+    noServerCall,
+  );
+}
 
 function startReadingFromStream(
   response: FlightResponse,
@@ -63,10 +71,7 @@ function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
@@ -75,10 +80,7 @@ function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
       startReadingFromStream(response, (r.body: any));
@@ -90,33 +92,4 @@ function createFromFetch<T>(
   return getRoot(response);
 }
 
-function createFromXHR<T>(
-  request: XMLHttpRequest,
-  options?: Options,
-): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
-  let processedLength = 0;
-  function progress(e: ProgressEvent): void {
-    const chunk = request.responseText;
-    processStringChunk(response, chunk, processedLength);
-    processedLength = chunk.length;
-  }
-  function load(e: ProgressEvent): void {
-    progress(e);
-    close(response);
-  }
-  function error(e: ProgressEvent): void {
-    reportGlobalError(response, new TypeError('Network error'));
-  }
-  request.addEventListener('progress', progress);
-  request.addEventListener('load', load);
-  request.addEventListener('error', error);
-  request.addEventListener('abort', error);
-  request.addEventListener('timeout', error);
-  return getRoot(response);
-}
-
-export {createFromXHR, createFromFetch, createFromReadableStream};
+export {createFromFetch, createFromReadableStream};
