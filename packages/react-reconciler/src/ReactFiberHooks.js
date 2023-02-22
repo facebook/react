@@ -2525,10 +2525,10 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
       case HostRoot: {
         // Schedule an update on the cache boundary to trigger a refresh.
         const lane = requestUpdateLane(provider);
-        const eventTime = requestEventTime();
-        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
+        const refreshUpdate = createLegacyQueueUpdate(lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
+          const eventTime = requestEventTime();
           scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleLegacyQueueTransitions(root, provider, lane);
         }

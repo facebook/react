@@ -26,7 +26,6 @@ import {
 } from './ReactWorkTags';
 import {
   NoLanes,
-  NoTimestamp,
   isSubsetOfLanes,
   includesSomeLane,
   mergeLanes,
@@ -271,7 +270,7 @@ function propagateContextChange_eager<T>(
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const lane = pickArbitraryLane(renderLanes);
-            const update = createUpdate(NoTimestamp, lane);
+            const update = createUpdate(lane);
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
