@@ -333,11 +333,15 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "FunctionExpression": {
-      const fn = generate(instrValue.expr).code;
+      // const fn = generate(instrValue.expr).code;
+      const fn = printFunction(instrValue.loweredFunc)
+        .split("\n")
+        .map((line) => `      ${line}`)
+        .join("\n");
       const deps = instrValue.dependencies
         .map((i) => printIdentifier(i.identifier))
         .join(",");
-      value = `Function @deps[${deps}]{${fn}}`;
+      value = `Function @deps[${deps}]:\n${fn}`;
       break;
     }
     case "TaggedTemplateExpression": {
