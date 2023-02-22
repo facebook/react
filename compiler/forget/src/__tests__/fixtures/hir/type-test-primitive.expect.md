@@ -15,8 +15,7 @@ function component() {
 
 ```javascript
 function component() {
-  const y = 2;
-  return y;
+  return 2;
 }
 
 ```

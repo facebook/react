@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction } from "../HIR/HIR";
+import { HIRFunction, Identifier } from "../HIR/HIR";
 import { inferAliases } from "./InferAlias";
 import { inferAliasForStores } from "./InferAliasForStores";
 import { inferMutableLifetimes } from "./InferMutableLifetimes";
@@ -17,22 +17,41 @@ export function inferMutableRanges(ir: HIRFunction) {
 
   // Calculate aliases
   const aliases = inferAliases(ir);
-  let size = aliases.size;
   // Eagerly canonicalize so that if nothing changes we can bail out
   // after a single iteration
-  aliases.canonicalize();
-  do {
-    size = aliases.size;
+  let prevAliases: Map<Identifier, Identifier> = aliases.canonicalize();
+  while (true) {
     // Infer mutable ranges for aliases that are not fields
     inferMutableRangesForAlias(ir, aliases);
 
     // Update aliasing information of fields
     inferAliasForStores(ir, aliases);
-  } while (aliases.size > size || !aliases.canonicalize());
+
+    const nextAliases = aliases.canonicalize();
+    if (areEqualMaps(prevAliases, nextAliases)) {
+      break;
+    }
+    prevAliases = nextAliases;
+  }
 
   // Re-infer mutable ranges for all values
   inferMutableLifetimes(ir, true);
 
   // Re-infer mutable ranges for aliases
   inferMutableRangesForAlias(ir, aliases);
+}
+
+function areEqualMaps<T>(a: Map<T, T>, b: Map<T, T>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+  for (const [key, value] of a) {
+    if (!b.has(key)) {
+      return false;
+    }
+    if (b.get(key) !== value) {
+      return false;
+    }
+  }
+  return true;
 }

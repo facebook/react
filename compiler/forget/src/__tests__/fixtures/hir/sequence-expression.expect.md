@@ -18,18 +18,25 @@ function foo() {}
 
 ```javascript
 function sequence(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(2);
   Math.max(1, 2);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = foo();
+    t0 = foo();
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  let x;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    x = t0;
     while ((foo(), true)) {
       foo();
       x = 2;
     }
-    $[0] = x;
+    $[1] = x;
   } else {
-    x = $[0];
+    x = $[1];
   }
   return x;
 }

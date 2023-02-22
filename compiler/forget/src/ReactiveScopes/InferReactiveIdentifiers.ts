@@ -28,18 +28,20 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
   ) {
     this.traverseInstruction(instr, reactivityMap);
     const lval = instr.lvalue;
-    if (lval == null || reactivityMap.get(lval.place.identifier.id) === true) {
+    if (lval == null) {
       return;
     }
     const { value } = instr;
-    let hasReactiveInput = false;
-    for (const operand of eachReactiveValueOperand(value)) {
-      // We currently treat free variables (from module or global scope) as
-      // non-reactive. We may later want type information about specific
-      // free variables, or a toggle `treatFreeVarsAsReactive`.
-      if (reactivityMap.get(operand.identifier.id)) {
-        hasReactiveInput = true;
-        break;
+    let hasReactiveInput = reactivityMap.get(lval.place.identifier.id) === true;
+    if (!hasReactiveInput && value.kind !== "LoadGlobal") {
+      for (const operand of eachReactiveValueOperand(value)) {
+        // We currently treat free variables (from module or global scope) as
+        // non-reactive. We may later want type information about specific
+        // free variables, or a toggle `treatFreeVarsAsReactive`.
+        if (reactivityMap.get(operand.identifier.id)) {
+          hasReactiveInput = true;
+          break;
+        }
       }
     }
     if (
@@ -136,7 +138,11 @@ export function inferReactiveIdentifiers(
   for (const param of fn.params) {
     reactivityMap.set(param.identifier.id, true);
   }
-  visitReactiveFunction(fn, visitor, reactivityMap);
+  let size: number;
+  do {
+    size = reactivityMap.size;
+    visitReactiveFunction(fn, visitor, reactivityMap);
+  } while (reactivityMap.size > size);
 
   const result = new Set<IdentifierId>();
   reactivityMap.forEach((isReactive, id) => {

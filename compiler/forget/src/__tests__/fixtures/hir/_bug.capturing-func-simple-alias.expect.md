@@ -28,12 +28,12 @@ function component(a) {
   } else {
     x = $[1];
   }
-  const y = undefined;
+
   (function () {
     y = x;
   })();
-  mutate(y);
-  return y;
+  mutate(undefined);
+  return undefined;
 }
 
 ```

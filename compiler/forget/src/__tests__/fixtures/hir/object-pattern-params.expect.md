@@ -13,10 +13,10 @@ function component({ a, b }) {
 ## Code
 
 ```javascript
-function component(t8) {
+function component(t12) {
   const $ = React.unstable_useMemoCache(7);
-  const a = t8.a;
-  const b = t8.b;
+  const a = t12.a;
+  const b = t12.b;
   const c_0 = $[0] !== a;
   let y;
   if (c_0) {

@@ -4,7 +4,7 @@
 ```javascript
 function component(a) {
   let x = { a };
-  let y;
+  let y = {};
   (function () {
     y["x"] = x;
   })();
@@ -23,16 +23,16 @@ function component(a) {
   let y;
   if (c_0) {
     const x = { a: a };
-    y = undefined;
+    y = {};
     (function () {
       y["x"] = x;
     })();
+    mutate(y);
     $[0] = a;
     $[1] = y;
   } else {
     y = $[1];
   }
-  mutate(y);
   return y;
 }
 

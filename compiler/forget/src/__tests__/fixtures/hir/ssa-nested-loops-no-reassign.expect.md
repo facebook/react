@@ -22,13 +22,12 @@ function foo(a, b, c) {
 ```javascript
 // @xonly
 function foo(a, b, c) {
-  const x = 0;
   while (a) {
     while (b) {
       while (c) {}
     }
   }
-  return x;
+  return 0;
 }
 
 ```

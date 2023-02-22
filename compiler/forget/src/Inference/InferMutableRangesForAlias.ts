@@ -5,19 +5,6 @@ export function inferMutableRangesForAlias(
   fn: HIRFunction,
   aliases: DisjointSet<Identifier>
 ) {
-  for (const [_, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
-        (block.instructions.at(0)?.id ?? block.terminal.id);
-      if (isPhiMutatedAfterCreation) {
-        for (const [, operand] of phi.operands) {
-          aliases.union([phi.id, operand]);
-        }
-      }
-    }
-  }
-
   const aliasSets = aliases.buildSets();
   for (const aliasSet of aliasSets) {
     // Update mutableRange.end only if the identifiers have actually been
@@ -40,6 +27,19 @@ export function inferMutableRangesForAlias(
       for (const alias of aliasSet) {
         if (alias.mutableRange.end < lastMutatingInstructionId) {
           alias.mutableRange.end = lastMutatingInstructionId as InstructionId;
+        }
+      }
+    }
+  }
+
+  for (const [_, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      const isPhiMutatedAfterCreation: boolean =
+        phi.id.mutableRange.end >
+        (block.instructions.at(0)?.id ?? block.terminal.id);
+      if (isPhiMutatedAfterCreation) {
+        for (const [, operand] of phi.operands) {
+          aliases.union([phi.id, operand]);
         }
       }
     }

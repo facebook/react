@@ -21,10 +21,11 @@ function Component(props) {
   let x;
   if (c_0) {
     x = [props.x];
-    const index = 0;
-    x[index] = x[index] * 2;
-    const t0 = "0";
-    x[t0] = x[t0] + 3;
+
+    const t0 = 0;
+    x[t0] = x[t0] * 2;
+    const t1 = "0";
+    x[t1] = x[t1] + 3;
     $[0] = props.x;
     $[1] = x;
   } else {

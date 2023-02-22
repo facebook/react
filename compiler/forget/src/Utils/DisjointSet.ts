@@ -75,19 +75,16 @@ export default class DisjointSet<T> {
 
   /**
    * Forces the set into canonical form, ie with all items pointing directly to
-   * their root. Returns true if the set was already in canonical form, false
-   * otherwise.
+   * their root, and returns a Map representing the mapping of items to their roots.
    */
-  canonicalize(): boolean {
-    let isCanonical = true;
+  canonicalize(): Map<T, T> {
+    const entries = new Map<T, T>();
     for (const item of this.#entries.keys()) {
       const parent = this.#entries.get(item)!;
-      const root = this.find(item);
-      if (parent !== root) {
-        isCanonical = false;
-      }
+      const root = this.find(item)!;
+      entries.set(item, root);
     }
-    return isCanonical;
+    return entries;
   }
 
   /**

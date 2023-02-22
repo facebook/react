@@ -28,8 +28,7 @@ function foo() {
 
 ```javascript
 function foo() {
-  const x = 1;
-  bb1: switch (x) {
+  bb1: switch (1) {
     case 1: {
       break bb1;
     }

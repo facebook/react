@@ -1,11 +1,12 @@
 import invariant from "invariant";
 import {
-  HIRFunction,
+  Effect,
   FunctionExpression,
+  HIRFunction,
   Identifier,
   mergeConsecutiveBlocks,
   Place,
-  Effect,
+  ReactiveScopeDependency,
 } from "../HIR";
 import { constantPropagation } from "../Optimization";
 import { eliminateRedundantPhi, enterSSA } from "../SSA";
@@ -14,48 +15,58 @@ import { logHIRFunction } from "../Utils/logger";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
 
-type Dependency = {
-  place: Place;
-  path: Array<string> | null;
-};
+class State {
+  properties: Map<Identifier, ReactiveScopeDependency> = new Map();
 
-function declareProperty(
-  properties: Map<Identifier, Dependency>,
-  lvalue: Place,
-  object: Place,
-  property: string
-): void {
-  const objectDependency = properties.get(object.identifier);
-  let nextDependency: Dependency;
-  if (objectDependency === undefined) {
-    nextDependency = { place: object, path: [property] };
-  } else {
-    nextDependency = {
-      place: objectDependency.place,
-      path: [...(objectDependency.path ?? []), property],
-    };
+  declareProperty(lvalue: Place, object: Place, property: string): void {
+    const objectDependency = this.properties.get(object.identifier);
+    let nextDependency: ReactiveScopeDependency;
+    if (objectDependency === undefined) {
+      nextDependency = { place: object, path: [property] };
+    } else {
+      nextDependency = {
+        place: objectDependency.place,
+        path: [...(objectDependency.path ?? []), property],
+      };
+    }
+    this.properties.set(lvalue.identifier, nextDependency);
   }
-  properties.set(lvalue.identifier, nextDependency);
+
+  declareTemporary(lvalue: Place, value: Place): void {
+    const resolved: ReactiveScopeDependency = this.properties.get(
+      value.identifier
+    ) ?? {
+      place: value,
+      path: null,
+    };
+    this.properties.set(lvalue.identifier, resolved);
+  }
 }
 
 export default function analyseFunctions(func: HIRFunction) {
-  const properties: Map<Identifier, Dependency> = new Map();
+  const state = new State();
 
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case "FunctionExpression": {
           lower(instr.value.loweredFunc);
-          infer(instr.value, properties, func.context);
+          infer(instr.value, state, func.context);
           break;
         }
         case "PropertyLoad": {
-          declareProperty(
-            properties,
+          state.declareProperty(
             instr.lvalue.place,
             instr.value.object,
             instr.value.property
           );
+          break;
+        }
+        case "Identifier": {
+          if (instr.lvalue.place.identifier.name === null) {
+            state.declareTemporary(instr.lvalue.place, instr.value);
+          }
+          break;
         }
       }
     }
@@ -74,11 +85,7 @@ function lower(func: HIRFunction) {
   logHIRFunction("AnalyseFunction (inner)", func);
 }
 
-function infer(
-  value: FunctionExpression,
-  properties: Map<Identifier, Dependency>,
-  context: Place[]
-) {
+function infer(value: FunctionExpression, state: State, context: Place[]) {
   const mutations = new Set(
     value.loweredFunc.context
       .filter((dep) => isMutated(dep.identifier))
@@ -89,8 +96,8 @@ function infer(
   for (const dep of value.dependencies) {
     let name: string | null = null;
 
-    if (properties.has(dep.identifier)) {
-      const receiver = properties.get(dep.identifier)!;
+    if (state.properties.has(dep.identifier)) {
+      const receiver = state.properties.get(dep.identifier)!;
       name = receiver.place.identifier.name;
     } else {
       name = dep.identifier.name;

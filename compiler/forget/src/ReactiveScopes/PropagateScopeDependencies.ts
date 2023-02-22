@@ -71,6 +71,7 @@ class Context {
   // This helps with.. temporaries that are created only for property loads
   //  but can be generalized to all non-allocating temporaries
   #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
+  #temporaries: Map<Identifier, Place> = new Map();
   #scopes: Scopes = [];
 
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
@@ -97,11 +98,16 @@ class Context {
     this.#reassignments.set(identifier, decl);
   }
 
+  declareTemporary(lvalue: Place, value: Place): void {
+    this.#temporaries.set(lvalue.identifier, value);
+  }
+
   declareProperty(lvalue: Place, object: Place, property: string): void {
-    const objectDependency = this.#properties.get(object.identifier);
+    const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
+    const objectDependency = this.#properties.get(resolvedObject.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { place: object, path: [property] };
+      nextDependency = { place: resolvedObject, path: [property] };
     } else {
       nextDependency = {
         place: objectDependency.place,
@@ -120,14 +126,16 @@ class Context {
   }
 
   visitOperand(place: Place): void {
-    this.visitDependency({ place, path: null });
+    const resolved = this.#temporaries.get(place.identifier) ?? place;
+    this.visitDependency({ place: resolved, path: null });
   }
 
   visitProperty(object: Place, property: string): void {
-    const objectDependency = this.#properties.get(object.identifier);
+    const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
+    const objectDependency = this.#properties.get(resolvedObject.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { place: object, path: [property] };
+      nextDependency = { place: resolvedObject, path: [property] };
     } else {
       nextDependency = {
         place: objectDependency.place,
@@ -362,7 +370,16 @@ function visitInstructionValue(
   value: ReactiveValue,
   lvalue: LValue | null
 ): void {
-  if (value.kind === "PropertyLoad") {
+  if (value.kind === "Identifier" && lvalue !== null) {
+    if (
+      value.identifier.name !== null &&
+      lvalue.place.identifier.name === null
+    ) {
+      context.declareTemporary(lvalue.place, value);
+    } else {
+      context.visitOperand(value);
+    }
+  } else if (value.kind === "PropertyLoad") {
     if (lvalue !== null) {
       context.declareProperty(lvalue.place, value.object, value.property);
     } else {

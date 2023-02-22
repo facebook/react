@@ -11,7 +11,6 @@ import {
   InstructionId,
   Place,
 } from "../HIR/HIR";
-import { printInstructionValue } from "../HIR/PrintHIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 
@@ -25,30 +24,12 @@ export function inferAliasForStores(
       if (lvalue.place.effect !== Effect.Store) {
         continue;
       }
-      switch (value.kind) {
-        case "ArrayExpression":
-        case "ObjectExpression":
-        case "ComputedStore":
-        case "PropertyStore":
-        case "FunctionExpression": {
-          for (const operand of eachInstructionValueOperand(value)) {
-            if (
-              operand.effect === Effect.Capture ||
-              operand.effect === Effect.Store
-            ) {
-              maybeAlias(aliases, lvalue.place, operand, instr.id);
-            }
-          }
-          break;
-        }
-        default: {
-          // Effect.Capture & Effect.Store are only used for aliasing
-          // instructions.
-          throw new Error(
-            `Unexpected capture/store instruction: ${printInstructionValue(
-              value
-            )}`
-          );
+      for (const operand of eachInstructionValueOperand(value)) {
+        if (
+          operand.effect === Effect.Capture ||
+          operand.effect === Effect.Store
+        ) {
+          maybeAlias(aliases, lvalue.place, operand, instr.id);
         }
       }
     }

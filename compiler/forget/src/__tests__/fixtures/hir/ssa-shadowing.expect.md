@@ -25,8 +25,7 @@ function log() {}
 function Foo(cond) {
   let str = "";
   if (cond) {
-    const str_0 = "other test";
-    log(str_0);
+    log("other test");
   } else {
     str = "fallthrough test";
   }

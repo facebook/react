@@ -28,9 +28,7 @@ function foo() {
 ```javascript
 function foo() {
   console.log("foo");
-
-  const j = -6;
-  return j;
+  return -6;
 }
 
 ```
