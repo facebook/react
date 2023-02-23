@@ -1682,7 +1682,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
   // tree, which has its own pointers to children, parents, and siblings.
   // The other host nodes also point back to fibers, so we should detach that
   // one, too.
-  if (fiber.tag === HostComponent) {
+  if (fiber.tag === HostComponent || fiber.tag === HostPortal) {
     const hostInstance: Instance = fiber.stateNode;
     if (hostInstance !== null) {
       detachDeletedInstance(hostInstance);
