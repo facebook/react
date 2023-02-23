@@ -638,4 +638,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-modern-bfb9cbd8c-20230223";
+exports.version = "18.3.0-www-modern-ca2cf319f-20230223";
