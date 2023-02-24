@@ -198,10 +198,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -212,6 +211,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -231,10 +231,9 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -247,6 +246,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -267,10 +267,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -282,6 +281,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
