@@ -19804,7 +19804,6 @@ function replaySuspendedComponentWithHooks(
   // only get reset when the component either completes (finishRenderingHooks)
   // or unwinds (resetHooksOnUnwind).
   {
-    hookTypesDev = current !== null ? current._debugHookTypes : null;
     hookTypesUpdateIndexDev = -1; // Used for hot reloading:
 
     ignorePreviousDependencies =
@@ -19836,8 +19835,14 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   var children;
 
   do {
-    didScheduleRenderPhaseUpdateDuringThisPass = false;
+    if (didScheduleRenderPhaseUpdateDuringThisPass) {
+      // It's possible that a use() value depended on a state that was updated in
+      // this rerender, so we need to watch for different thenables this time.
+      thenableState = null;
+    }
+
     thenableIndexCounter = 0;
+    didScheduleRenderPhaseUpdateDuringThisPass = false;
 
     if (numberOfReRenders >= RE_RENDER_LIMIT) {
       throw new Error(
@@ -19972,8 +19977,7 @@ function updateWorkInProgressHook() {
   // This function is used both for updates and for re-renders triggered by a
   // render phase update. It assumes there is either a current hook we can
   // clone, or a work-in-progress hook from a previous render pass that we can
-  // use as a base. When we reach the end of the base list, we must switch to
-  // the dispatcher used for mounts.
+  // use as a base.
   var nextCurrentHook;
 
   if (currentHook === null) {
@@ -20009,14 +20013,10 @@ function updateWorkInProgressHook() {
       if (currentFiber === null) {
         // This is the initial render. This branch is reached when the component
         // suspends, resumes, then renders an additional hook.
-        var _newHook = {
-          memoizedState: null,
-          baseState: null,
-          baseQueue: null,
-          queue: null,
-          next: null
-        };
-        nextCurrentHook = _newHook;
+        // Should never be reached because we should switch to the mount dispatcher first.
+        throw new Error(
+          "Update hook called on initial render. This is likely a bug in React. Please file an issue."
+        );
       } else {
         // This is an update. We should always have a current hook.
         throw new Error("Rendered more hooks than during the previous render.");
@@ -20071,7 +20071,24 @@ function use(usable) {
         thenableState = createThenableState();
       }
 
-      return trackUsedThenable(thenableState, thenable, index);
+      var result = trackUsedThenable(thenableState, thenable, index);
+
+      if (
+        currentlyRenderingFiber$1.alternate === null &&
+        (workInProgressHook === null
+          ? currentlyRenderingFiber$1.memoizedState === null
+          : workInProgressHook.next === null)
+      ) {
+        // Initial render, and either this is the first time the component is
+        // called, or there were no Hooks called after this use() the previous
+        // time (perhaps because it threw). Subsequent Hook calls should use the
+        // mount dispatcher.
+        {
+          ReactCurrentDispatcher$1.current = HooksDispatcherOnMountInDEV;
+        }
+      }
+
+      return result;
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -20896,7 +20913,7 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   var nextDeps = deps === undefined ? null : deps;
-  var destroy = undefined;
+  var destroy = undefined; // currentHook is null when rerendering after a render phase state update.
 
   if (currentHook !== null) {
     var prevEffect = currentHook.memoizedState;
@@ -21058,13 +21075,11 @@ function updateCallback(callback, deps) {
   var nextDeps = deps === undefined ? null : deps;
   var prevState = hook.memoizedState;
 
-  if (prevState !== null) {
-    if (nextDeps !== null) {
-      var prevDeps = prevState[1];
+  if (nextDeps !== null) {
+    var prevDeps = prevState[1];
 
-      if (areHookInputsEqual(nextDeps, prevDeps)) {
-        return prevState[0];
-      }
+    if (areHookInputsEqual(nextDeps, prevDeps)) {
+      return prevState[0];
     }
   }
 
@@ -21088,16 +21103,13 @@ function mountMemo(nextCreate, deps) {
 function updateMemo(nextCreate, deps) {
   var hook = updateWorkInProgressHook();
   var nextDeps = deps === undefined ? null : deps;
-  var prevState = hook.memoizedState;
+  var prevState = hook.memoizedState; // Assume these are defined. If they're not, areHookInputsEqual will warn.
 
-  if (prevState !== null) {
-    // Assume these are defined. If they're not, areHookInputsEqual will warn.
-    if (nextDeps !== null) {
-      var prevDeps = prevState[1];
+  if (nextDeps !== null) {
+    var prevDeps = prevState[1];
 
-      if (areHookInputsEqual(nextDeps, prevDeps)) {
-        return prevState[0];
-      }
+    if (areHookInputsEqual(nextDeps, prevDeps)) {
+      return prevState[0];
     }
   }
 
@@ -37618,7 +37630,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-96cdeaf89-20230224";
+var ReactVersion = "18.3.0-www-modern-a8f971b7a-20230224";
 
 function createPortal$1(
   children,
