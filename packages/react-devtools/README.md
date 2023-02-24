@@ -105,7 +105,7 @@ Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.c
 
 **If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/main/packages/react-devtools). Chrome apps are currently not inspectable.
 
-**If your Components tab is empty, refer to "Chrome v101 and earlier" section below**, please read the "the issue with Chrome v101 and earlier versions" part below.
+**If your Components tab is empty, refer to "The React Tab Shows Empty Tree" section below**.
 
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
 
