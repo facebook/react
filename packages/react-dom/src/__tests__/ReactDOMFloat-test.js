@@ -2295,6 +2295,106 @@ body {
     );
   });
 
+  describe('ReactDOM.prefetchDNS(href)', () => {
+    it('creates a dns-prefetch resource when called', async () => {
+      function App({url}) {
+        ReactDOM.prefetchDNS(url);
+        ReactDOM.prefetchDNS(url);
+        return (
+          <html>
+            <body>hello world</body>
+          </html>
+        );
+      }
+
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      root.render(<App url="bar" />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+            <link rel="dns-prefetch" href="bar" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+    });
+  });
+
+  describe('ReactDOM.preconnect(href)', () => {
+    it('creates a preconnect resource when called', async () => {
+      function App({url}) {
+        ReactDOM.preconnect(url);
+        ReactDOM.preconnect(url);
+        return (
+          <html>
+            <body>hello world</body>
+          </html>
+        );
+      }
+
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      root.render(<App url="bar" />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+            <link rel="preconnect" href="bar" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+    });
+  });
+
   describe('ReactDOM.preload(href, { as: ... })', () => {
     // @gate enableFloat
     it('creates a preload resource when called', async () => {

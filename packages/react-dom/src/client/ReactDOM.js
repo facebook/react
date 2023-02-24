@@ -75,7 +75,12 @@ import {
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
-export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';
+export {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preinit,
+} from 'react-dom-bindings/src/shared/ReactDOMFloat';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);

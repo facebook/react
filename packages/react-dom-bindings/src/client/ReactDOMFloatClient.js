@@ -18,6 +18,8 @@ import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {
   validatePreloadArguments,
   validatePreinitArguments,
+  getValueDescriptorExpectingObjectForWarning,
+  getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
 import {createElement, setInitialProperties} from './ReactDOMComponent';
 import {
@@ -103,12 +105,18 @@ export function cleanupAfterRenderResources() {
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
 // internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher = {preload, preinit};
+export const ReactDOMClientDispatcher = {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preinit,
+};
 
 export type HoistableRoot = Document | ShadowRoot;
 
-// global maps of Resources
+// global collections of Resources
 const preloadPropsMap: Map<string, PreloadProps> = new Map();
+const preconnectsSet: Set<string> = new Set();
 
 // getRootNode is missing from IE and old jsdom versions
 export function getHoistableRoot(container: Container): HoistableRoot {
@@ -148,8 +156,73 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
 
+function preconnectAs(rel: 'preconnect' | 'dns-prefetch', href: string) {
+  const ownerDocument = getDocumentForPreloads();
+  if (typeof href === 'string' && href && ownerDocument) {
+    const limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    const key = `link[rel="${rel}"][href="${limitedEscapedHref}"]`;
+    if (!preconnectsSet.has(key)) {
+      preconnectsSet.add(key);
+
+      const preconnectProps = {rel, href};
+      if (null === ownerDocument.querySelector(key)) {
+        const preloadInstance = createElement(
+          'link',
+          preconnectProps,
+          ownerDocument,
+          HTML_NAMESPACE,
+        );
+        setInitialProperties(preloadInstance, 'link', preconnectProps);
+        markNodeAsResource(preloadInstance);
+        (ownerDocument.head: any).appendChild(preloadInstance);
+      }
+    }
+  }
+}
+
 // --------------------------------------
-//      ReactDOM.Preload
+//      ReactDOM.prefetchDNS
+// --------------------------------------
+function prefetchDNS(href: string, options?: mixed) {
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options != null) {
+      console.error(
+        'ReactDOM.prefetchDNS(): Expected only one argument (href) but encountered a second argument, %s, instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    }
+  }
+  preconnectAs('dns-prefetch', href);
+}
+
+// --------------------------------------
+//      ReactDOM.preconnect
+// --------------------------------------
+function preconnect(href: string, options?: mixed) {
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options != null) {
+      console.error(
+        'ReactDOM.preconnect(): Expected only one argument (href) but encountered a second argument, %s, instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.preconnect() with just a single string argument, `href`.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    }
+  }
+  preconnectAs('preconnect', href);
+}
+
+// --------------------------------------
+//      ReactDOM.preload
 // --------------------------------------
 type PreloadAs = ResourceType;
 type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
