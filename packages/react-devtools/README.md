@@ -109,8 +109,13 @@ Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.c
 
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
 
-### The Issue with Chrome v101 and earlier
-As we migrate to a Chrome Extension Manifest V3, we start to use a new method to hook the DevTools with the inspected page. This new method is more secure, but relies on a new API that's only supported in Chrome v102+. For Chrome v101 or earlier, we use a fallback method, which can cause malfunctions (e.g. empty React component tab) if the JS resources on your page is loaded from cache. Please upgrade to Chrome v102+ to avoid this issue.
+### The React Tab Shows Empty Tree
+
+#### The Issue with Chrome v101 and earlier
+As we migrate to a Chrome Extension Manifest V3, we start to use a new method to hook the DevTools with the inspected page. This new method is more secure, but relies on a new API that's only supported in Chrome v102+. For Chrome v101 or earlier, we use a fallback method, which can cause malfunctions (e.g. failure to load React Elements in the Components tab) if the JS resources on your page is loaded from cache. Please upgrade to Chrome v102+ to avoid this issue.
+
+#### Service Worker malfunction
+Go to chrome://extensions. If you see "service worker (inactive)" in the React Developer Tools extension, try disabling and re-enabling the extension. This will restart the service worker. Then go to the page you want to inspect, close the DevTools, and reload the page. Open the DevTools again and you should see the React tab.
 
 ## Local development
 The standalone DevTools app can be built and tested from source following the instructions below.
