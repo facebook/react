@@ -33,8 +33,6 @@ const ReactTestRenderer = require('react-test-renderer');
 
 // Isolate the noop renderer
 jest.resetModules();
-const ReactNoop = require('react-noop-renderer');
-const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
