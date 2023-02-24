@@ -1,7 +1,6 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {IS_FIREFOX} from '../utils';
 
 function injectScriptSync(src) {
