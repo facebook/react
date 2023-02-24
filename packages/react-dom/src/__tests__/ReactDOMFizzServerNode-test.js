@@ -635,4 +635,17 @@ describe('ReactDOMFizzServerNode', () => {
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
   });
+
+  it('should encode multibyte characters correctly without nulls (#24985)', () => {
+    const {writable, output} = getTestWritable();
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>{Array(700).fill('ののの')}</div>,
+    );
+    pipe(writable);
+    jest.runAllTimers();
+    expect(output.result.indexOf('\u0000')).toBe(-1);
+    expect(output.result).toEqual(
+      '<div>' + Array(700).fill('ののの').join('<!-- -->') + '</div>',
+    );
+  });
 });
