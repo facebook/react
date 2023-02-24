@@ -60,10 +60,13 @@ export function detachDeletedInstance(node: Instance): void {
 }
 
 export function detachDeletedContainer(node: Container): void {
+  delete (node: any)[internalInstanceKey];
+  delete (node: any)[internalPropsKey];
   delete (node: any)[internalContainerInstanceKey];
   delete (node: any)[internalEventHandlersKey];
   delete (node: any)[internalEventHandlerListenersKey];
   delete (node: any)[internalEventHandlesSetKey];
+  delete (node: any)[internalRootNodeResourcesKey];
 }
 
 export function precacheFiberNode(
