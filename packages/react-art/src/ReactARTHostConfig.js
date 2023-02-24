@@ -451,6 +451,11 @@ export function preparePortalMount(portalInstance: any): void {
 }
 
 // eslint-disable-next-line no-undef
+export function detachDeletedContainer(node: Container): void {
+  // noop
+}
+
+// eslint-disable-next-line no-undef
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }

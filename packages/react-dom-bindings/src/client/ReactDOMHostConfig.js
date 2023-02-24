@@ -25,11 +25,12 @@ import {
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
+  detachDeletedContainer,
   detachDeletedInstance,
   isMarkedResource,
   markNodeAsResource,
 } from './ReactDOMComponentTree';
-export {detachDeletedInstance};
+export {detachDeletedContainer, detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,

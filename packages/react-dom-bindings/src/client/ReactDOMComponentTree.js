@@ -59,6 +59,13 @@ export function detachDeletedInstance(node: Instance): void {
   delete (node: any)[internalEventHandlesSetKey];
 }
 
+export function detachDeletedContainer(node: Container): void {
+  delete (node: any)[internalContainerInstanceKey];
+  delete (node: any)[internalEventHandlersKey];
+  delete (node: any)[internalEventHandlerListenersKey];
+  delete (node: any)[internalEventHandlesSetKey];
+}
+
 export function precacheFiberNode(
   hostInst: Fiber,
   node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,

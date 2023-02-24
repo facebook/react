@@ -312,6 +312,10 @@ export function getInstanceFromScope(scopeInstance: Object): null | Object {
   return nodeToInstanceMap.get(scopeInstance) || null;
 }
 
+export function detachDeletedContainer(node: Container): void {
+  // noop
+}
+
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }

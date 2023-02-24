@@ -147,6 +147,7 @@ import {
   prepareScopeUpdate,
   prepareForCommit,
   beforeActiveInstanceBlur,
+  detachDeletedContainer,
   detachDeletedInstance,
   clearSingleton,
   acquireSingletonInstance,
@@ -1682,10 +1683,15 @@ function detachFiberAfterEffects(fiber: Fiber) {
   // tree, which has its own pointers to children, parents, and siblings.
   // The other host nodes also point back to fibers, so we should detach that
   // one, too.
-  if (fiber.tag === HostComponent || fiber.tag === HostPortal) {
+  if (fiber.tag === HostComponent) {
     const hostInstance: Instance = fiber.stateNode;
     if (hostInstance !== null) {
       detachDeletedInstance(hostInstance);
+    }
+  } else if (fiber.tag === HostPortal || fiber.tag === HostRoot) {
+    if (fiber.stateNode != null && fiber.stateNode.containerInfo != null) {
+      const hostContainer: Container = fiber.stateNode.containerInfo;
+      detachDeletedContainer(hostContainer);
     }
   }
   fiber.stateNode = null;

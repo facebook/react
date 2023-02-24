@@ -633,6 +633,10 @@ export function preparePortalMount(portalInstance: Instance): void {
   // noop
 }
 
+export function detachDeletedContainer(node: Container): void {
+  // noop
+}
+
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
