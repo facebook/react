@@ -41990,7 +41990,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ca2cf319f-20230223";
+var ReactVersion = "18.3.0-www-classic-96cdeaf89-20230224";
 
 function createPortal$1(
   children,
