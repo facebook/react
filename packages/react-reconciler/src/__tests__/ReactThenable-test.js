@@ -5,6 +5,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let use;
+let useDebugValue;
 let useState;
 let useMemo;
 let Suspense;
@@ -21,6 +22,7 @@ describe('ReactThenable', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     use = React.use;
+    useDebugValue = React.useDebugValue;
     useState = React.useState;
     useMemo = React.useMemo;
     Suspense = React.Suspense;
@@ -794,7 +796,7 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput('(empty)');
   });
 
-  test('when replaying a suspended component, reuses the hooks computed during the previous attempt', async () => {
+  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (Memo)', async () => {
     function ExcitingText({text}) {
       // This computes the uppercased version of some text. Pretend it's an
       // expensive operation that we want to reuse.
@@ -844,6 +846,118 @@ describe('ReactThenable', () => {
       'Add sparkles: HELLO!',
       '✨ HELLO! ✨',
     ]);
+  });
+
+  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (State)', async () => {
+    let _setFruit;
+    let _setVegetable;
+    function Kitchen() {
+      const [fruit, setFruit] = useState('apple');
+      _setFruit = setFruit;
+      const usedFruit = use(getAsyncText(fruit));
+      const [vegetable, setVegetable] = useState('carrot');
+      _setVegetable = setVegetable;
+      return <Text text={usedFruit + ' ' + vegetable} />;
+    }
+
+    // Initial render.
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<Kitchen />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [apple]']);
+    expect(root).toMatchRenderedOutput(null);
+    await act(async () => {
+      resolveTextRequests('apple');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [apple]',
+      'apple carrot',
+    ]);
+    expect(root).toMatchRenderedOutput('apple carrot');
+
+    // Update the state variable after the use().
+    await act(async () => {
+      startTransition(() => {
+        _setVegetable('dill');
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [apple]']);
+    expect(root).toMatchRenderedOutput('apple carrot');
+    await act(async () => {
+      resolveTextRequests('apple');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [apple]',
+      'apple dill',
+    ]);
+    expect(root).toMatchRenderedOutput('apple dill');
+
+    // Update the state variable before the use(). The second state is maintained.
+    await act(async () => {
+      startTransition(() => {
+        _setFruit('banana');
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [banana]']);
+    expect(root).toMatchRenderedOutput('apple dill');
+    await act(async () => {
+      resolveTextRequests('banana');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [banana]',
+      'banana dill',
+    ]);
+    expect(root).toMatchRenderedOutput('banana dill');
+  });
+
+  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (DebugValue+State)', async () => {
+    // Make sure we don't get a Hook mismatch warning on updates if there were non-stateful Hooks before the use().
+    let _setLawyer;
+    function Lexicon() {
+      useDebugValue(123);
+      const avocado = use(getAsyncText('aguacate'));
+      const [lawyer, setLawyer] = useState('abogado');
+      _setLawyer = setLawyer;
+      return <Text text={avocado + ' ' + lawyer} />;
+    }
+
+    // Initial render.
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<Lexicon />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [aguacate]']);
+    expect(root).toMatchRenderedOutput(null);
+    await act(async () => {
+      resolveTextRequests('aguacate');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [aguacate]',
+      'aguacate abogado',
+    ]);
+    expect(root).toMatchRenderedOutput('aguacate abogado');
+
+    // Now update the state.
+    await act(async () => {
+      startTransition(() => {
+        _setLawyer('avocat');
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [aguacate]']);
+    expect(root).toMatchRenderedOutput('aguacate abogado');
+    await act(async () => {
+      resolveTextRequests('aguacate');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [aguacate]',
+      'aguacate avocat',
+    ]);
+    expect(root).toMatchRenderedOutput('aguacate avocat');
   });
 
   // @gate enableUseHook
@@ -1020,5 +1134,35 @@ describe('ReactThenable', () => {
     });
     expect(Scheduler).toHaveYielded(['Async text requested [C]', 'C']);
     expect(root).toMatchRenderedOutput('ABC');
+  });
+
+  // @gate enableUseHook
+  test('use() combined with render phase updates', async () => {
+    function Async() {
+      const a = use(Promise.resolve('A'));
+      const [count, setCount] = useState(0);
+      if (count === 0) {
+        setCount(1);
+      }
+      const usedCount = use(Promise.resolve(count));
+      return <Text text={a + usedCount} />;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['A1']);
+    expect(root).toMatchRenderedOutput('A1');
   });
 });
