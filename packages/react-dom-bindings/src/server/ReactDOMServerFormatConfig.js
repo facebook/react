@@ -4243,10 +4243,20 @@ export function prefetchDNS(href: string, options?: mixed) {
         getValueDescriptorExpectingObjectForWarning(href),
       );
     } else if (options != null) {
-      console.error(
-        'ReactDOM.prefetchDNS(): Expected only one argument (href) but encountered a second argument, %s, instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        getValueDescriptorExpectingEnumForWarning(options),
-      );
+      if (
+        typeof options === 'object' &&
+        options.hasOwnProperty('crossOrigin')
+      ) {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      } else {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      }
     }
   }
 
@@ -4270,7 +4280,7 @@ export function prefetchDNS(href: string, options?: mixed) {
   }
 }
 
-export function preconnect(href: string, options?: mixed) {
+export function preconnect(href: string, options?: {crossOrigin?: string}) {
   if (!currentResources) {
     // While we expect that preconnect calls are primarily going to be observed
     // during render because effects and events don't run on the server it is
@@ -4287,16 +4297,30 @@ export function preconnect(href: string, options?: mixed) {
         'ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
         getValueDescriptorExpectingObjectForWarning(href),
       );
-    } else if (options != null) {
+    } else if (options != null && typeof options !== 'object') {
       console.error(
-        'ReactDOM.preconnect(): Expected only one argument (href) but encountered a second argument, %s, instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.preconnect() with just a single string argument, `href`.',
+        'ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.',
         getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (options != null && typeof options.crossOrigin !== 'string') {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.',
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin),
       );
     }
   }
 
   if (typeof href === 'string' && href) {
-    const key = getResourceKey('preconnect', href);
+    const crossOrigin =
+      options == null || typeof options.crossOrigin !== 'string'
+        ? null
+        : options.crossOrigin === 'use-credentials'
+        ? 'use-credentials'
+        : '';
+
+    const key = `[preconnect][${
+      crossOrigin === null ? 'null' : crossOrigin
+    }]${href}`;
     let resource = resources.preconnectsMap.get(key);
     if (!resource) {
       resource = {
@@ -4308,7 +4332,7 @@ export function preconnect(href: string, options?: mixed) {
       resources.preconnectsMap.set(key, resource);
       pushLinkImpl(
         resource.chunks,
-        ({href, rel: 'preconnect'}: PreconnectProps),
+        ({rel: 'preconnect', href, crossOrigin}: PreconnectProps),
       );
     }
     resources.preconnects.add(resource);
