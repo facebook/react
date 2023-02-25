@@ -4203,7 +4203,6 @@ type PreloadOptions = {
   as: PreloadAs,
   crossOrigin?: string,
   integrity?: string,
-  media?: string,
   type?: string,
 };
 export function preload(href: string, options: PreloadOptions) {
