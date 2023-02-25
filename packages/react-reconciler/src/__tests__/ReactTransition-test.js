@@ -951,4 +951,43 @@ describe('ReactTransition', () => {
 
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });
+
+  it('tracks two pending flags for nested startTransition (#26226)', async () => {
+    let update;
+    function App() {
+      const [isPendingA, startTransitionA] = useTransition();
+      const [isPendingB, startTransitionB] = useTransition();
+      const [state, setState] = useState(0);
+
+      update = function () {
+        startTransitionA(() => {
+          startTransitionB(() => {
+            setState(1);
+          });
+        });
+      };
+
+      return (
+        <>
+          <Text text={state} />
+          {', '}
+          <Text text={'A ' + isPendingA} />
+          {', '}
+          <Text text={'B ' + isPendingB} />
+        </>
+      );
+    }
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog([0, 'A false', 'B false']);
+    expect(root).toMatchRenderedOutput('0, A false, B false');
+
+    await act(async () => {
+      update();
+    });
+    assertLog([0, 'A true', 'B true', 1, 'A false', 'B false']);
+    expect(root).toMatchRenderedOutput('1, A false, B false');
+  });
 });
