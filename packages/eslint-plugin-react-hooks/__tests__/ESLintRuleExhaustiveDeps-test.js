@@ -36,6 +36,66 @@ const tests = {
   valid: [
     {
       code: normalizeIndent`
+        import { useRouter } from 'next/router';
+        function MyComponent() {
+          const local = someFunc();
+          const router = useRouter();
+          useEffect(() => {
+            console.log(local);
+            router.push('/foo');
+          }, [local]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import { useRouter } from 'next/router';
+        function MyComponent() {
+          const local = someFunc();
+          const router2 = useRouter();
+          const router = useRouter();
+          useEffect(() => {
+            console.log(local);
+            if (true) {
+              router.push('/foo');
+              router2.push('/foo');
+            }
+          }, [local]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import { useRouter  } from 'next/router';
+        function MyComponent() {
+          const local = someFunc();
+          const router = useRouter();
+          useEffect(() => {
+            console.log(local);
+            if (router.isReady) {
+              router.push('/foo');
+            }
+          }, [local, router.isReady]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import { useRouter } from 'next/navigation';
+        function MyComponent() {
+          const local = someFunc();
+          const router = useRouter();
+          useEffect(() => {
+            console.log(local);
+            if (router.isReady) {
+              router.push('/foo');
+            }
+          }, [local, router]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -1454,6 +1514,112 @@ const tests = {
     },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        import { useRouter } from 'next/router';
+        function MyComponent() {
+          const router = useRouter();
+          useEffect(() => {
+            const routerReady = router.isReady;
+            if (routerReady) {
+            }
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'router.isReady'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [router.isReady]',
+              output: normalizeIndent`
+                import { useRouter } from 'next/router';
+                function MyComponent() {
+                  const router = useRouter();
+                  useEffect(() => {
+                    const routerReady = router.isReady;
+                    if (routerReady) {
+                    }
+                  }, [router.isReady]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        import { useRouter } from 'next/router';
+        function MyComponent() {
+          const router = useRouter();
+          useEffect(() => {
+            if (router.isReady) {
+            }
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'router.isReady'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [router.isReady]',
+              output: normalizeIndent`
+                import { useRouter } from 'next/router';
+                function MyComponent() {
+                  const router = useRouter();
+                  useEffect(() => {
+                    if (router.isReady) {
+                    }
+                  }, [router.isReady]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        import { useRouter } from 'next/router';
+        function MyComponent() {
+          const local = someFunc();
+          const router = useRouter();
+          useEffect(() => {
+            console.log(local);
+            router.push('/foo');
+          }, [local, router]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has an unnecessary dependency: 'router'. " +
+            'Either exclude it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                import { useRouter } from 'next/router';
+                function MyComponent() {
+                  const local = someFunc();
+                  const router = useRouter();
+                  useEffect(() => {
+                    console.log(local);
+                    router.push('/foo');
+                  }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
         function MyComponent(props) {

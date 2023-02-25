@@ -148,6 +148,83 @@ export default {
 
       const isArray = Array.isArray;
 
+      // next/router is unstable but should not be included in deps
+      // import { useRouter } from 'next/router'
+      // ...
+      // const router = useRouter()
+      //       ^^^ true for this reference to 'next/router'
+      // False for everything else, including router from 'next/navigation'
+      function isPagesNextRouter(resolved) {
+        if (!isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+
+        if (def.node.type !== 'VariableDeclarator') {
+          return false;
+        }
+
+        let init = def.node.init;
+        if (init == null) {
+          return false;
+        }
+
+        while (init.type === 'TSAsExpression') {
+          init = init.expression;
+        }
+        // Detect primitive constants
+        // const foo = 42
+        let declaration = def.node.parent;
+        if (declaration == null) {
+          // This might happen if variable is declared after the callback.
+          // In that case ESLint won't set up .parent refs.
+          // So we'll set them up manually.
+          fastFindReferenceWithParent(componentScope.block, def.node.id);
+          declaration = def.node.parent;
+          if (declaration == null) {
+            return false;
+          }
+        }
+
+        // Detect useRouter() CallExpression
+        if (init.type !== 'CallExpression') {
+          return false;
+        }
+        const callee = init.callee;
+        if (callee.type !== 'Identifier') {
+          return false;
+        }
+        const id = def.node.id;
+        const {name} = callee;
+        if (name === 'useRouter' && id.type === 'Identifier') {
+          // Found the useRouter hook
+          const useRouterImport = componentScope.references.find(ref => {
+            if (!isSameIdentifier(ref.identifier, callee)) {
+              return false;
+            }
+            if (!ref.resolved || !ref.resolved.defs || !ref.resolved.defs[0]) {
+              return false;
+            }
+            return ref.resolved.defs[0].type === 'ImportBinding';
+          });
+
+          if (!useRouterImport) {
+            return false;
+          }
+          const useRouterImportSource = useRouterImport.resolved.defs[0];
+          if (
+            useRouterImportSource.parent.type === 'ImportDeclaration' &&
+            useRouterImportSource.parent.source.value === 'next/router'
+          ) {
+            // Check that the reference is an import declartion with source 'next/router'
+            return true;
+          }
+        }
+        return false;
+      }
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
@@ -458,7 +535,19 @@ export default {
             const isStable =
               memoizedIsStableKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
+
+            // { ignoreImportFields: { module: 'next/router', imports: [ { name: 'useRouter' } ] } }
+            const isNextRouter = isPagesNextRouter(resolved);
+
+            let exemptedProperty = true;
+            if (isNextRouter && dependencyNode.type === 'MemberExpression') {
+              // fields: ['push', 'replace']
+              if (!['push', 'replace'].includes(dependencyNode.property.name)) {
+                exemptedProperty = false;
+              }
+            }
             dependencies.set(dependency, {
+              isConfigExemptDependency: exemptedProperty && isNextRouter,
               isStable,
               references: [reference],
             });
@@ -1341,14 +1430,19 @@ function collectRecommendations({
     };
   }
 
+  const exemptDependencies = new Set();
   // Mark all required nodes first.
   // Imagine exclamation marks next to each used deep property.
-  dependencies.forEach((_, key) => {
+  dependencies.forEach(({isConfigExemptDependency}, key) => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isUsed = true;
     markAllParentsByPath(depTree, key, parent => {
       parent.isSubtreeUsed = true;
     });
+    if (isConfigExemptDependency) {
+      node.isConfigExemptDependency = true;
+      exemptDependencies.add(key);
+    }
   });
 
   // Mark all satisfied nodes.
@@ -1411,7 +1505,7 @@ function collectRecommendations({
         // `props.foo` is enough if you read `props.foo.id`.
         return;
       }
-      if (child.isUsed) {
+      if (child.isUsed && !child.isConfigExemptDependency) {
         // Remember that no declared deps satisfied this node.
         missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
@@ -1426,14 +1520,13 @@ function collectRecommendations({
       );
     });
   }
-
   // Collect suggestions in the order they were originally specified.
   const suggestedDependencies = [];
   const unnecessaryDependencies = new Set();
   const duplicateDependencies = new Set();
   declaredDependencies.forEach(({key}) => {
     // Does this declared dep satisfy a real need?
-    if (satisfyingDependencies.has(key)) {
+    if (satisfyingDependencies.has(key) && !exemptDependencies.has(key)) {
       if (suggestedDependencies.indexOf(key) === -1) {
         // Good one.
         suggestedDependencies.push(key);
@@ -1445,7 +1538,8 @@ function collectRecommendations({
       if (
         isEffect &&
         !key.endsWith('.current') &&
-        !externalDependencies.has(key)
+        !externalDependencies.has(key) &&
+        !exemptDependencies.has(key)
       ) {
         // Effects are allowed extra "unnecessary" deps.
         // Such as resetting scroll when ID changes.
