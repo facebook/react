@@ -26,8 +26,10 @@ function injectScriptSync(src) {
 function injectScriptAsync(src) {
   const script = document.createElement('script');
   script.src = src;
+  script.onload = function () {
+    script.remove();
+  };
   nullthrows(document.documentElement).appendChild(script);
-  nullthrows(script.parentNode).removeChild(script);
 }
 
 let lastDetectionResult;
