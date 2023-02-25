@@ -4430,8 +4430,14 @@ function popHostContext(fiber) {
 var Dispatcher$1 = Internals.Dispatcher,
   lastCurrentDocument = null,
   previousDispatcher = null,
-  ReactDOMClientDispatcher = { preload: preload$1, preinit: preinit$1 },
-  preloadPropsMap = new Map();
+  ReactDOMClientDispatcher = {
+    prefetchDNS: prefetchDNS$1,
+    preconnect: preconnect$1,
+    preload: preload$1,
+    preinit: preinit$1
+  },
+  preloadPropsMap = new Map(),
+  preconnectsSet = new Set();
 function getHoistableRoot(container) {
   return "function" === typeof container.getRootNode
     ? container.getRootNode()
@@ -4449,6 +4455,44 @@ function getDocumentForPreloads() {
   } catch (error) {
     return null;
   }
+}
+function preconnectAs(rel, crossOrigin, href) {
+  var ownerDocument = getDocumentForPreloads();
+  if ("string" === typeof href && href && ownerDocument) {
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    limitedEscapedHref =
+      'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
+    "string" === typeof crossOrigin &&
+      (limitedEscapedHref += '[crossorigin="' + crossOrigin + '"]');
+    preconnectsSet.has(limitedEscapedHref) ||
+      (preconnectsSet.add(limitedEscapedHref),
+      (rel = { rel: rel, crossOrigin: crossOrigin, href: href }),
+      null === ownerDocument.querySelector(limitedEscapedHref) &&
+        ((crossOrigin = createElement(
+          "link",
+          rel,
+          ownerDocument,
+          "http://www.w3.org/1999/xhtml"
+        )),
+        setInitialProperties(crossOrigin, "link", rel),
+        (crossOrigin[internalResourceMarker] = !0),
+        ownerDocument.head.appendChild(crossOrigin)));
+  }
+}
+function prefetchDNS$1(href) {
+  preconnectAs("dns-prefetch", null, href);
+}
+function preconnect$1(href, options) {
+  preconnectAs(
+    "preconnect",
+    null == options || "string" !== typeof options.crossOrigin
+      ? null
+      : "use-credentials" === options.crossOrigin
+      ? "use-credentials"
+      : "",
+    href
+  );
 }
 function preload$1(href, options) {
   var ownerDocument = getDocumentForPreloads();
@@ -15738,7 +15782,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1780 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-e7d7d4cb4-20230225",
+  version: "18.3.0-www-modern-1173a17e6-20230225",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -15783,7 +15827,7 @@ var devToolsConfig$jscomp$inline_1780 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-e7d7d4cb4-20230225"
+  reconcilerVersion: "18.3.0-next-1173a17e6-20230225"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -15892,6 +15936,14 @@ exports.hydrateRoot = function (container, initialChildren, options) {
             );
   return new ReactDOMHydrationRoot(initialChildren);
 };
+exports.preconnect = function () {
+  var dispatcher = Internals.Dispatcher.current;
+  dispatcher && dispatcher.preconnect.apply(this, arguments);
+};
+exports.prefetchDNS = function () {
+  var dispatcher = Internals.Dispatcher.current;
+  dispatcher && dispatcher.prefetchDNS.apply(this, arguments);
+};
 exports.preinit = function () {
   var dispatcher = Internals.Dispatcher.current;
   dispatcher && dispatcher.preinit.apply(this, arguments);
@@ -15947,7 +15999,7 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-e7d7d4cb4-20230225";
+exports.version = "18.3.0-next-1173a17e6-20230225";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

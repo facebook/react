@@ -14054,11 +14054,14 @@ function cleanupAfterRenderResources() {
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
 
 var ReactDOMClientDispatcher = {
+  prefetchDNS: prefetchDNS$1,
+  preconnect: preconnect$1,
   preload: preload$1,
   preinit: preinit$1
-}; // global maps of Resources
+}; // global collections of Resources
 
-var preloadPropsMap = new Map(); // getRootNode is missing from IE and old jsdom versions
+var preloadPropsMap = new Map();
+var preconnectsSet = new Set(); // getRootNode is missing from IE and old jsdom versions
 
 function getHoistableRoot(container) {
   // $FlowFixMe[method-unbinding]
@@ -14095,8 +14098,104 @@ function getDocumentForPreloads() {
 
 function getDocumentFromRoot(root) {
   return root.ownerDocument || root;
+}
+
+function preconnectAs(rel, crossOrigin, href) {
+  var ownerDocument = getDocumentForPreloads();
+
+  if (typeof href === "string" && href && ownerDocument) {
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
+
+    if (typeof crossOrigin === "string") {
+      key += '[crossorigin="' + crossOrigin + '"]';
+    }
+
+    if (!preconnectsSet.has(key)) {
+      preconnectsSet.add(key);
+      var preconnectProps = {
+        rel: rel,
+        crossOrigin: crossOrigin,
+        href: href
+      };
+
+      if (null === ownerDocument.querySelector(key)) {
+        var preloadInstance = createElement(
+          "link",
+          preconnectProps,
+          ownerDocument,
+          HTML_NAMESPACE
+        );
+        setInitialProperties(preloadInstance, "link", preconnectProps);
+        markNodeAsResource(preloadInstance);
+        ownerDocument.head.appendChild(preloadInstance);
+      }
+    }
+  }
 } // --------------------------------------
-//      ReactDOM.Preload
+//      ReactDOM.prefetchDNS
+// --------------------------------------
+
+function prefetchDNS$1(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null) {
+      if (
+        typeof options === "object" &&
+        options.hasOwnProperty("crossOrigin")
+      ) {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      } else {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      }
+    }
+  }
+
+  preconnectAs("dns-prefetch", null, href);
+} // --------------------------------------
+//      ReactDOM.preconnect
+// --------------------------------------
+
+function preconnect$1(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null && typeof options !== "object") {
+      error(
+        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
+        getValueDescriptorExpectingEnumForWarning(options)
+      );
+    } else if (options != null && typeof options.crossOrigin !== "string") {
+      error(
+        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
+      );
+    }
+  }
+
+  var crossOrigin =
+    options == null || typeof options.crossOrigin !== "string"
+      ? null
+      : options.crossOrigin === "use-credentials"
+      ? "use-credentials"
+      : "";
+  preconnectAs("preconnect", crossOrigin, href);
+} // --------------------------------------
+//      ReactDOM.preload
 // --------------------------------------
 
 function preload$1(href, options) {
@@ -41606,7 +41705,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-e7d7d4cb4-20230225";
+var ReactVersion = "18.3.0-www-modern-1173a17e6-20230225";
 
 function createPortal$1(
   children,
@@ -42580,12 +42679,21 @@ function createEventHandle(type, options) {
   }
 }
 
-function preinit() {
+function prefetchDNS() {
   var dispatcher = Internals.Dispatcher.current;
 
   if (dispatcher) {
-    dispatcher.preinit.apply(this, arguments);
-  } // We don't error because preinit needs to be resilient to being called in a variety of scopes
+    dispatcher.prefetchDNS.apply(this, arguments);
+  } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
+function preconnect() {
+  var dispatcher = Internals.Dispatcher.current;
+
+  if (dispatcher) {
+    dispatcher.preconnect.apply(this, arguments);
+  } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
 }
@@ -42595,6 +42703,15 @@ function preload() {
   if (dispatcher) {
     dispatcher.preload.apply(this, arguments);
   } // We don't error because preload needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
+function preinit() {
+  var dispatcher = Internals.Dispatcher.current;
+
+  if (dispatcher) {
+    dispatcher.preinit.apply(this, arguments);
+  } // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
 }
@@ -42729,6 +42846,8 @@ exports.createPortal = createPortal;
 exports.createRoot = createRoot;
 exports.flushSync = flushSync;
 exports.hydrateRoot = hydrateRoot;
+exports.preconnect = preconnect;
+exports.prefetchDNS = prefetchDNS;
 exports.preinit = preinit;
 exports.preload = preload;
 exports.unstable_batchedUpdates = batchedUpdates;

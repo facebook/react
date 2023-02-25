@@ -320,7 +320,12 @@ function sanitizeURL(url) {
 var isArrayImpl = Array.isArray,
   ReactDOMCurrentDispatcher =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
-  ReactDOMServerDispatcher = { preload: preload, preinit: preinit },
+  ReactDOMServerDispatcher = {
+    prefetchDNS: prefetchDNS,
+    preconnect: preconnect,
+    preload: preload,
+    preinit: preinit
+  },
   currentResources = null,
   currentResourcesStack = [];
 function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
@@ -1426,6 +1431,8 @@ function writePreamble(
   var charsetChunks = responseState.charsetChunks;
   for (i = 0; i < charsetChunks.length; i++) destination.push(charsetChunks[i]);
   charsetChunks.length = 0;
+  resources.preconnects.forEach(flushResourceInPreamble, destination);
+  resources.preconnects.clear();
   charsetChunks = responseState.preconnectChunks;
   for (i = 0; i < charsetChunks.length; i++) destination.push(charsetChunks[i]);
   charsetChunks.length = 0;
@@ -1470,8 +1477,10 @@ function writePreamble(
     (destination.push("</"), destination.push("head"), destination.push(">"));
 }
 function writeHoistables(destination, resources, responseState) {
-  var i = 0,
-    preconnectChunks = responseState.preconnectChunks;
+  var i = 0;
+  resources.preconnects.forEach(flushResourceLate, destination);
+  resources.preconnects.clear();
+  var preconnectChunks = responseState.preconnectChunks;
   for (i = 0; i < preconnectChunks.length; i++)
     destination.push(preconnectChunks[i]);
   preconnectChunks.length = 0;
@@ -1697,6 +1706,45 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
       }
   });
   destination.push("]");
+}
+function prefetchDNS(href) {
+  if (currentResources) {
+    var resources = currentResources;
+    if ("string" === typeof href && href) {
+      var key = "[prefetchDNS]" + href,
+        resource = resources.preconnectsMap.get(key);
+      resource ||
+        ((resource = { type: "preconnect", chunks: [], state: 0, props: null }),
+        resources.preconnectsMap.set(key, resource),
+        pushLinkImpl(resource.chunks, { href: href, rel: "dns-prefetch" }));
+      resources.preconnects.add(resource);
+    }
+  }
+}
+function preconnect(href, options) {
+  if (currentResources) {
+    var resources = currentResources;
+    if ("string" === typeof href && href) {
+      options =
+        null == options || "string" !== typeof options.crossOrigin
+          ? null
+          : "use-credentials" === options.crossOrigin
+          ? "use-credentials"
+          : "";
+      var key =
+          "[preconnect][" + (null === options ? "null" : options) + "]" + href,
+        resource = resources.preconnectsMap.get(key);
+      resource ||
+        ((resource = { type: "preconnect", chunks: [], state: 0, props: null }),
+        resources.preconnectsMap.set(key, resource),
+        pushLinkImpl(resource.chunks, {
+          rel: "preconnect",
+          href: href,
+          crossOrigin: options
+        }));
+      resources.preconnects.add(resource);
+    }
+  }
 }
 function preload(href, options) {
   if (currentResources) {
@@ -2376,8 +2424,10 @@ function createRequest(
     abortSet = new Set(),
     resources = {
       preloadsMap: new Map(),
+      preconnectsMap: new Map(),
       stylesMap: new Map(),
       scriptsMap: new Map(),
+      preconnects: new Set(),
       fontPreloads: new Set(),
       precedences: new Map(),
       usedStylesheets: new Set(),
@@ -3670,4 +3720,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-e7d7d4cb4-20230225";
+exports.version = "18.3.0-www-classic-1173a17e6-20230225";
