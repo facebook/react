@@ -86,6 +86,8 @@ const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
 const ReactDOMServerDispatcher = enableFloat
   ? {
+      prefetchDNS,
+      preconnect,
       preload,
       preinit,
     }
@@ -3464,6 +3466,10 @@ export function writePreamble(
   }
   charsetChunks.length = 0;
 
+  // emit preconnect resources
+  resources.preconnects.forEach(flushResourceInPreamble, destination);
+  resources.preconnects.clear();
+
   const preconnectChunks = responseState.preconnectChunks;
   for (i = 0; i < preconnectChunks.length; i++) {
     writeChunk(destination, preconnectChunks[i]);
@@ -3558,6 +3564,9 @@ export function writeHoistables(
 
   // We omit charsetChunks because we have already sent the shell and if it wasn't
   // already sent it is too late now.
+
+  resources.preconnects.forEach(flushResourceLate, destination);
+  resources.preconnects.clear();
 
   const preconnectChunks = responseState.preconnectChunks;
   for (i = 0; i < preconnectChunks.length; i++) {
@@ -4068,7 +4077,10 @@ const Blocked /*            */ = 0b0100;
 // This generally only makes sense for Resources other than PreloadResource
 const PreloadFlushed /*     */ = 0b1000;
 
-type TResource<T: 'stylesheet' | 'style' | 'script' | 'preload', P> = {
+type TResource<
+  T: 'stylesheet' | 'style' | 'script' | 'preload' | 'preconnect',
+  P,
+> = {
   type: T,
   chunks: Array<Chunk | PrecomputedChunk>,
   state: ResourceStateTag,
@@ -4098,6 +4110,13 @@ type ResourceDEV =
   | RenderedResourceDEV
   | ImperativeResourceDEV
   | ImplicitResourceDEV;
+
+type PreconnectProps = {
+  rel: 'preconnect' | 'dns-prefetch',
+  href: string,
+  [string]: mixed,
+};
+type PreconnectResource = TResource<'preconnect', null>;
 
 type PreloadProps = {
   rel: 'preload',
@@ -4131,15 +4150,21 @@ type ScriptProps = {
 };
 type ScriptResource = TResource<'script', null>;
 
-type Resource = StyleResource | ScriptResource | PreloadResource;
+type Resource =
+  | StyleResource
+  | ScriptResource
+  | PreloadResource
+  | PreconnectResource;
 
 export type Resources = {
   // Request local cache
   preloadsMap: Map<string, PreloadResource>,
+  preconnectsMap: Map<string, PreconnectResource>,
   stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
 
   // Flushing queues for Resource dependencies
+  preconnects: Set<PreconnectResource>,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -4161,10 +4186,12 @@ export function createResources(): Resources {
   return {
     // persistent
     preloadsMap: new Map(),
+    preconnectsMap: new Map(),
     stylesMap: new Map(),
     scriptsMap: new Map(),
 
     // cleared on flush
+    preconnects: new Set(),
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
@@ -4196,6 +4223,120 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
 
 function getResourceKey(as: string, href: string): string {
   return `[${as}]${href}`;
+}
+
+export function prefetchDNS(href: string, options?: mixed) {
+  if (!currentResources) {
+    // While we expect that preconnect calls are primarily going to be observed
+    // during render because effects and events don't run on the server it is
+    // still possible that these get called in module scope. This is valid on
+    // the client since there is still a document to interact with but on the
+    // server we need a request to associate the call to. Because of this we
+    // simply return and do not warn.
+    return;
+  }
+  const resources = currentResources;
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options != null) {
+      if (
+        typeof options === 'object' &&
+        options.hasOwnProperty('crossOrigin')
+      ) {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      } else {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      }
+    }
+  }
+
+  if (typeof href === 'string' && href) {
+    const key = getResourceKey('prefetchDNS', href);
+    let resource = resources.preconnectsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preconnect',
+        chunks: [],
+        state: NoState,
+        props: null,
+      };
+      resources.preconnectsMap.set(key, resource);
+      pushLinkImpl(
+        resource.chunks,
+        ({href, rel: 'dns-prefetch'}: PreconnectProps),
+      );
+    }
+    resources.preconnects.add(resource);
+  }
+}
+
+export function preconnect(href: string, options?: {crossOrigin?: string}) {
+  if (!currentResources) {
+    // While we expect that preconnect calls are primarily going to be observed
+    // during render because effects and events don't run on the server it is
+    // still possible that these get called in module scope. This is valid on
+    // the client since there is still a document to interact with but on the
+    // server we need a request to associate the call to. Because of this we
+    // simply return and do not warn.
+    return;
+  }
+  const resources = currentResources;
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options != null && typeof options !== 'object') {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (options != null && typeof options.crossOrigin !== 'string') {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.',
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin),
+      );
+    }
+  }
+
+  if (typeof href === 'string' && href) {
+    const crossOrigin =
+      options == null || typeof options.crossOrigin !== 'string'
+        ? null
+        : options.crossOrigin === 'use-credentials'
+        ? 'use-credentials'
+        : '';
+
+    const key = `[preconnect][${
+      crossOrigin === null ? 'null' : crossOrigin
+    }]${href}`;
+    let resource = resources.preconnectsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preconnect',
+        chunks: [],
+        state: NoState,
+        props: null,
+      };
+      resources.preconnectsMap.set(key, resource);
+      pushLinkImpl(
+        resource.chunks,
+        ({rel: 'preconnect', href, crossOrigin}: PreconnectProps),
+      );
+    }
+    resources.preconnects.add(resource);
+  }
 }
 
 type PreloadAs = 'style' | 'font' | 'script';
