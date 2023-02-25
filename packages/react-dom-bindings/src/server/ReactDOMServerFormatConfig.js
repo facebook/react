@@ -4204,6 +4204,7 @@ type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   media?: string,
+  type?: string,
 };
 export function preload(href: string, options: PreloadOptions) {
   if (!currentResources) {
@@ -4568,6 +4569,7 @@ function preloadPropsFromPreloadOptions(
     href,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
+    type: options.type,
   };
 }
 

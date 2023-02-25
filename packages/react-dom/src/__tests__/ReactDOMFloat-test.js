@@ -2267,7 +2267,7 @@ body {
   // @gate enableFloat
   it('always enforces crossOrigin "anonymous" for font preloads', async () => {
     function App() {
-      ReactDOM.preload('foo', {as: 'font'});
+      ReactDOM.preload('foo', {as: 'font', type: 'font/woff2'});
       ReactDOM.preload('bar', {as: 'font', crossOrigin: 'foo'});
       ReactDOM.preload('baz', {as: 'font', crossOrigin: 'use-credentials'});
       ReactDOM.preload('qux', {as: 'font', crossOrigin: 'anonymous'});
@@ -2285,7 +2285,13 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" as="font" href="foo" crossorigin="" />
+          <link
+            rel="preload"
+            as="font"
+            href="foo"
+            crossorigin=""
+            type="font/woff2"
+          />
           <link rel="preload" as="font" href="bar" crossorigin="" />
           <link rel="preload" as="font" href="baz" crossorigin="" />
           <link rel="preload" as="font" href="qux" crossorigin="" />
