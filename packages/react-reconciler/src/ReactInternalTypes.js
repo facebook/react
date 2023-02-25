@@ -56,7 +56,8 @@ export type HookType =
   | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
-  | 'useCacheRefresh';
+  | 'useCacheRefresh'
+  | 'useMemoCache';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
