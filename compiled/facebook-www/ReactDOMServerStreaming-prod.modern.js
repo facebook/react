@@ -1825,7 +1825,8 @@ function preload(href, options) {
             as: as,
             href: href,
             crossOrigin: "font" === as ? "" : options.crossOrigin,
-            integrity: options.integrity
+            integrity: options.integrity,
+            type: options.type
           }
         }),
         resources.preloadsMap.set(key, resource),

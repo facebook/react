@@ -7099,7 +7099,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     as: as,
     href: href,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    type: options.type
   };
 }
 

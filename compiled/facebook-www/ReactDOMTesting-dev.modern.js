@@ -13324,7 +13324,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     rel: "preload",
     as: as,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    type: options.type
   };
 } // --------------------------------------
 //      ReactDOM.preinit
@@ -37729,7 +37730,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1173a17e6-20230225";
+var ReactVersion = "18.3.0-www-modern-6ff1733e6-20230225";
 
 function createPortal$1(
   children,
