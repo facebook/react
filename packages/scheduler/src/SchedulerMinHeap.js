@@ -7,7 +7,7 @@
  * @flow strict
  */
 
-type Heap<T: Node> = Array<T>;
+type Heap<T: Node = Node> = Array<T>;
 type Node = {
   id: number,
   sortIndex: number,
