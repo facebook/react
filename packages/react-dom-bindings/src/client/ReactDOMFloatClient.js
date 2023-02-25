@@ -253,7 +253,12 @@ function preconnect(href: string, options?: {crossOrigin?: string}) {
 //      ReactDOM.preload
 // --------------------------------------
 type PreloadAs = ResourceType;
-type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
+type PreloadOptions = {
+  as: PreloadAs,
+  crossOrigin?: string,
+  integrity?: string,
+  type?: string,
+};
 function preload(href: string, options: PreloadOptions) {
   if (__DEV__) {
     validatePreloadArguments(href, options);
@@ -309,6 +314,7 @@ function preloadPropsFromPreloadOptions(
     as,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
+    type: options.type,
   };
 }
 
