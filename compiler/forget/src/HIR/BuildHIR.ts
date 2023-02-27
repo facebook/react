@@ -202,7 +202,7 @@ function lowerStatement(
       //  Block for code following the if
       const continuationBlock = builder.reserve("block");
       //  Block for the consequent (if the test is truthy)
-      const consequentBlock = builder.enter("block", (blockId) => {
+      const consequentBlock = builder.enter("block", (_blockId) => {
         lowerStatement(builder, stmt.get("consequent"));
         return {
           kind: "goto",
@@ -215,7 +215,7 @@ function lowerStatement(
       let alternateBlock: BlockId;
       const alternate = stmt.get("alternate");
       if (alternate.node != null) {
-        alternateBlock = builder.enter("block", (blockId) => {
+        alternateBlock = builder.enter("block", (_blockId) => {
           lowerStatement(builder, alternate as NodePath<t.Statement>);
           return {
             kind: "goto",
@@ -280,7 +280,7 @@ function lowerStatement(
       //  Block for code following the loop
       const continuationBlock = builder.reserve("block");
 
-      const initBlock = builder.enter("loop", (blockId) => {
+      const initBlock = builder.enter("loop", (_blockId) => {
         const init = stmt.get("init");
         if (!init.isVariableDeclaration()) {
           builder.errors.push({
@@ -300,7 +300,7 @@ function lowerStatement(
         };
       });
 
-      const updateBlock = builder.enter("loop", (blockId) => {
+      const updateBlock = builder.enter("loop", (_blockId) => {
         const update = stmt.get("update");
         if (update.node == null) {
           builder.errors.push({
@@ -319,7 +319,7 @@ function lowerStatement(
         };
       });
 
-      const bodyBlock = builder.enter("block", (blockId) => {
+      const bodyBlock = builder.enter("block", (_blockId) => {
         return builder.loop(label, updateBlock, continuationBlock.id, () => {
           lowerStatement(builder, stmt.get("body"));
           return {
@@ -376,7 +376,7 @@ function lowerStatement(
       //  Block for code following the loop
       const continuationBlock = builder.reserve("block");
       //  Loop body
-      const loopBlock = builder.enter("block", (blockId) => {
+      const loopBlock = builder.enter("block", (_blockId) => {
         return builder.loop(
           label,
           conditionalBlock.id,
@@ -864,10 +864,7 @@ function lowerExpression(
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
       if (calleePath.isMemberExpression()) {
-        const { object, property, value } = lowerMemberExpression(
-          builder,
-          calleePath
-        );
+        const { object, property } = lowerMemberExpression(builder, calleePath);
         let args: Place[] = [];
         for (const argPath of expr.get("arguments")) {
           if (!argPath.isExpression()) {
@@ -973,7 +970,7 @@ function lowerExpression(
       const place = buildTemporaryPlace(builder, exprLoc);
 
       //  Block for the consequent (if the test is truthy)
-      const consequentBlock = builder.enter("value", (blockId) => {
+      const consequentBlock = builder.enter("value", (_blockId) => {
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
@@ -988,7 +985,7 @@ function lowerExpression(
         };
       });
       //  Block for the alternate (if the test is not truthy)
-      const alternateBlock = builder.enter("value", (blockId) => {
+      const alternateBlock = builder.enter("value", (_blockId) => {
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
