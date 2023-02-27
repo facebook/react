@@ -450,8 +450,8 @@ export async function load(
   context: LoadContext,
   defaultLoad: LoadFunction,
 ): Promise<{format: string, shortCircuit?: boolean, source: Source}> {
-  if (context.format === 'module') {
-    const result = await defaultLoad(url, context, defaultLoad);
+  const result = await defaultLoad(url, context, defaultLoad);
+  if (result.format === 'module') {
     if (typeof result.source !== 'string') {
       throw new Error('Expected source to have been loaded into a string.');
     }
@@ -462,5 +462,5 @@ export async function load(
     );
     return {format: 'module', source: newSrc};
   }
-  return defaultLoad(url, context, defaultLoad);
+  return result;
 }

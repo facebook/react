@@ -208,7 +208,13 @@ module.exports = function (webpackEnv) {
       : isEnvDevelopment && 'cheap-module-source-map',
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
-    entry: paths.appIndexJs,
+    entry: isEnvProduction
+      ? [paths.appIndexJs]
+      : [
+          paths.appIndexJs,
+          // HMR client
+          'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
+        ],
     output: {
       // The build folder.
       path: paths.appBuild,
@@ -571,6 +577,7 @@ module.exports = function (webpackEnv) {
       ].filter(Boolean),
     },
     plugins: [
+      new webpack.HotModuleReplacementPlugin(),
       // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(

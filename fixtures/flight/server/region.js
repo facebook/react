@@ -26,6 +26,11 @@ babelRegister({
   plugins: ['@babel/transform-modules-commonjs'],
 });
 
+if (typeof fetch === 'undefined') {
+  // Patch fetch for earlier Node versions.
+  global.fetch = require('undici').fetch;
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();

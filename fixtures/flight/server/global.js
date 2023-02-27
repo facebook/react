@@ -44,6 +44,7 @@ if (process.env.NODE_ENV === 'development') {
   // In development we host the Webpack server for live bundling.
   const webpack = require('webpack');
   const webpackMiddleware = require('webpack-dev-middleware');
+  const webpackHotMiddleware = require('webpack-hot-middleware');
   const paths = require('../config/paths');
   const configFactory = require('../config/webpack.config');
   const getClientEnvironment = require('../config/env');
@@ -59,13 +60,21 @@ if (process.env.NODE_ENV === 'development') {
 
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);
-  const devMiddleware = {
-    writeToDisk: filePath => {
-      return /(react-client-manifest|react-ssr-manifest)\.json$/.test(filePath);
-    },
-    publicPath: paths.publicUrlOrPath.slice(0, -1),
-  };
-  app.use(webpackMiddleware(compiler, devMiddleware));
+  app.use(
+    webpackMiddleware(compiler, {
+      writeToDisk: filePath => {
+        return /(react-client-manifest|react-ssr-manifest)\.json$/.test(
+          filePath
+        );
+      },
+      publicPath: paths.publicUrlOrPath.slice(0, -1),
+    })
+  );
+  app.use(
+    webpackHotMiddleware(compiler, {
+      /* Options */
+    })
+  );
   app.use(express.static('public'));
 } else {
   // In production we host the static build output.
