@@ -99,10 +99,13 @@ class Context {
     const objectDependency = this.#properties.get(resolvedObject.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { place: resolvedObject, path: [property] };
+      nextDependency = {
+        identifier: resolvedObject.identifier,
+        path: [property],
+      };
     } else {
       nextDependency = {
-        place: objectDependency.place,
+        identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
       };
     }
@@ -119,7 +122,7 @@ class Context {
 
   visitOperand(place: Place): void {
     const resolved = this.#temporaries.get(place.identifier) ?? place;
-    this.visitDependency({ place: resolved, path: null });
+    this.visitDependency({ identifier: resolved.identifier, path: null });
   }
 
   visitProperty(object: Place, property: string): void {
@@ -127,10 +130,13 @@ class Context {
     const objectDependency = this.#properties.get(resolvedObject.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { place: resolvedObject, path: [property] };
+      nextDependency = {
+        identifier: resolvedObject.identifier,
+        path: [property],
+      };
     } else {
       nextDependency = {
-        place: objectDependency.place,
+        identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
       };
     }
@@ -146,8 +152,8 @@ class Context {
     } else {
       // Otherwise if this operand is a temporary created for a property load, resolve it to
       // the expanded Place. Fall back to using the operand as-is.
-      let propDep = this.#properties.get(dependency.place.identifier);
-      if (dependency.place.identifier.name === null && propDep !== undefined) {
+      let propDep = this.#properties.get(dependency.identifier);
+      if (dependency.identifier.name === null && propDep !== undefined) {
         maybeDependency = propDep;
       } else {
         maybeDependency = dependency;
@@ -163,7 +169,7 @@ class Context {
     // if originalDeclaration is undefined here, then this is a free var
     //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
     const originalDeclaration = this.#declarations.get(
-      maybeDependency.place.identifier.id
+      maybeDependency.identifier.id
     );
     if (
       originalDeclaration !== undefined &&
@@ -171,16 +177,16 @@ class Context {
       !this.#isScopeActive(originalDeclaration.scope)
     ) {
       originalDeclaration.scope.declarations.set(
-        maybeDependency.place.identifier.id,
-        maybeDependency.place.identifier
+        maybeDependency.identifier.id,
+        maybeDependency.identifier
       );
     }
 
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.
     const currentDeclaration =
-      this.#reassignments.get(maybeDependency.place.identifier) ??
-      this.#declarations.get(maybeDependency.place.identifier.id);
+      this.#reassignments.get(maybeDependency.identifier) ??
+      this.#declarations.get(maybeDependency.identifier.id);
     const currentScope = this.currentScope;
     if (
       currentScope != null &&
@@ -195,7 +201,7 @@ class Context {
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
         // not the same identifier
-        if (dep.place.identifier.id !== maybeDependency.place.identifier.id) {
+        if (dep.identifier.id !== maybeDependency.identifier.id) {
           continue;
         }
         const depPath = dep.path ?? [];

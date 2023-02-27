@@ -26,7 +26,7 @@ class Visitor extends ReactiveFunctionVisitor<State> {
   override visitScope(scope: ReactiveScopeBlock, state: State): void {
     this.traverseScope(scope, state);
     for (const dep of scope.scope.dependencies) {
-      const isReactive = state.has(dep.place.identifier.id);
+      const isReactive = state.has(dep.identifier.id);
       if (!isReactive) {
         scope.scope.dependencies.delete(dep);
       }

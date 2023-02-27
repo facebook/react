@@ -620,7 +620,7 @@ export type ReactiveScope = {
 };
 
 export type ReactiveScopeDependency = {
-  place: Place;
+  identifier: Identifier;
   path: Array<string> | null;
 };
 

@@ -22,10 +22,10 @@ class State {
     const objectDependency = this.properties.get(object.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { place: object, path: [property] };
+      nextDependency = { identifier: object.identifier, path: [property] };
     } else {
       nextDependency = {
-        place: objectDependency.place,
+        identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
       };
     }
@@ -36,7 +36,7 @@ class State {
     const resolved: ReactiveScopeDependency = this.properties.get(
       value.identifier
     ) ?? {
-      place: value,
+      identifier: value.identifier,
       path: null,
     };
     this.properties.set(lvalue.identifier, resolved);
@@ -98,7 +98,7 @@ function infer(value: FunctionExpression, state: State, context: Place[]) {
 
     if (state.properties.has(dep.identifier)) {
       const receiver = state.properties.get(dep.identifier)!;
-      name = receiver.place.identifier.name;
+      name = receiver.identifier.name;
     } else {
       name = dep.identifier.name;
     }

@@ -23,7 +23,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   override visitScope(block: ReactiveScopeBlock, state: VisitorState): void {
     this.traverseScope(block, state);
     for (const dep of block.scope.dependencies) {
-      const { identifier } = dep.place;
+      const { identifier } = dep;
       if (identifier.name == null) {
         identifier.name = `t${state.nextId++}`;
       }

@@ -407,7 +407,7 @@ function codegenDependency(
   cx: Context,
   dependency: ReactiveScopeDependency
 ): t.Expression {
-  let object: t.Expression = convertIdentifier(dependency.place.identifier);
+  let object: t.Expression = convertIdentifier(dependency.identifier);
   if (dependency.path !== null) {
     for (const path of dependency.path) {
       object = t.memberExpression(object, t.identifier(path));
