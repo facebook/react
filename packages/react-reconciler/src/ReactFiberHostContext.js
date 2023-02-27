@@ -40,7 +40,7 @@ function getRootHostContainer(): Container {
   return rootInstance;
 }
 
-function pushHostContainer(fiber: Fiber, nextRootInstance: Container) {
+function pushHostContainer(fiber: Fiber, nextRootInstance: Container): void {
   // Push current root instance onto the stack;
   // This allows us to reset root when portals are popped.
   push(rootInstanceStackCursor, nextRootInstance, fiber);
@@ -71,9 +71,13 @@ function getHostContext(): HostContext {
   return context;
 }
 
-function pushHostContext(fiber: Fiber): void {
+function pushHostContext(fiber: Fiber) {
   const context: HostContext = requiredContext(contextStackCursor.current);
-  const nextContext = getChildHostContext(context, fiber.type);
+  const nextContext = getChildHostContext(
+    context,
+    fiber.type,
+    fiber.pendingProps,
+  );
 
   // Don't push this Fiber's context unless it's unique.
   if (context === nextContext) {

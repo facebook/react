@@ -149,6 +149,14 @@ export const getFirstHydratableChildWithinContainer =
   $$$hostConfig.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
+export const getNextHydratableAfterFailedAttempt =
+  $$$hostConfig.getNextHydratableAfterFailedAttempt;
+export const getNextMatchingHydratableInstance =
+  $$$hostConfig.getNextMatchingHydratableInstance;
+export const getNextMatchingHydratableTextInstance =
+  $$$hostConfig.getNextMatchingHydratableTextInstance;
+export const getNextMatchingHydratableSuspenseInstance =
+  $$$hostConfig.getNextMatchingHydratableSuspenseInstance;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;

@@ -369,7 +369,6 @@ describe('ReactDOMFloat', () => {
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
-          <link rel="foo" href="bar" />
           <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
           <base target="foo" href="bar" />
           <script async="" src="foo" />
@@ -2300,6 +2299,358 @@ body {
           <link rel="preload" as="font" href="qux" crossorigin="" />
         </head>
         <body />
+      </html>,
+    );
+  });
+
+  it('does not hoist anything with an itemprop prop that is inside an itemscope', async () => {
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(
+        <html>
+          <meta itemProp="outside" content="unscoped" />
+          <link itemProp="link" rel="foo" href="foo" />
+          <title itemProp="outside-title">title</title>
+          <link
+            itemProp="outside-stylesheet"
+            rel="stylesheet"
+            href="bar"
+            precedence="default"
+          />
+          <style itemProp="outside-style" href="baz" precedence="default">
+            outside style
+          </style>
+          <script itemProp="outside-script" async={true} src="qux" />
+          <body>
+            <div itemScope={true}>
+              <div>
+                <meta itemProp="inside-meta" content="scoped" />
+                <link itemProp="inside-link" rel="foo" href="foo" />
+                <title itemProp="inside-title">title</title>
+                <link
+                  itemProp="inside-stylesheet"
+                  rel="stylesheet"
+                  href="bar"
+                  precedence="default"
+                />
+                <style itemProp="inside-style" href="baz" precedence="default">
+                  inside style
+                </style>
+                <script itemProp="inside-script" async={true} src="qux" />
+              </div>
+            </div>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            itemprop="outside-stylesheet"
+            rel="stylesheet"
+            href="bar"
+            data-precedence="default"
+          />
+          <style
+            itemprop="outside-style"
+            data-href="baz"
+            data-precedence="default">
+            outside style
+          </style>
+          <script itemprop="outside-script" async="" src="qux" />
+          <meta itemprop="outside" content="unscoped" />
+          <link itemprop="link" rel="foo" href="foo" />
+          <title itemprop="outside-title">title</title>
+        </head>
+        <body>
+          <div itemscope="">
+            <div>
+              <meta itemprop="inside-meta" content="scoped" />
+              <link itemprop="inside-link" rel="foo" href="foo" />
+              <title itemprop="inside-title">title</title>
+              <link
+                itemprop="inside-stylesheet"
+                rel="stylesheet"
+                href="bar"
+                precedence="default"
+              />
+              <style itemprop="inside-style" href="baz" precedence="default">
+                inside style
+              </style>
+              <script itemprop="inside-script" async="" src="qux" />
+            </div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <meta itemProp="outside" content="unscoped" />
+        <link itemProp="link" rel="foo" href="foo" />
+        <title itemProp="outside-title">title</title>
+        <link
+          itemProp="outside-stylesheet"
+          rel="stylesheet"
+          href="bar"
+          precedence="default"
+        />
+        <style itemProp="outside-style" href="baz" precedence="default">
+          outside style
+        </style>
+        <script itemProp="outside-script" async={true} src="qux" />
+        <body>
+          <div itemScope={true}>
+            <div>
+              <meta itemProp="inside-meta" content="scoped" />
+              <link itemProp="inside-link" rel="foo" href="foo" />
+              <title itemProp="inside-title">title</title>
+              <link
+                itemProp="inside-stylesheet"
+                rel="stylesheet"
+                href="bar"
+                precedence="default"
+              />
+              <style itemProp="inside-style" href="baz" precedence="default">
+                inside style
+              </style>
+              <script itemProp="inside-script" async={true} src="qux" />
+            </div>
+          </div>
+        </body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            itemprop="outside-stylesheet"
+            rel="stylesheet"
+            href="bar"
+            data-precedence="default"
+          />
+          <style
+            itemprop="outside-style"
+            data-href="baz"
+            data-precedence="default">
+            outside style
+          </style>
+          <script itemprop="outside-script" async="" src="qux" />
+          <meta itemprop="outside" content="unscoped" />
+          <link itemprop="link" rel="foo" href="foo" />
+          <title itemprop="outside-title">title</title>
+        </head>
+        <body>
+          <div itemscope="">
+            <div>
+              <meta itemprop="inside-meta" content="scoped" />
+              <link itemprop="inside-link" rel="foo" href="foo" />
+              <title itemprop="inside-title">title</title>
+              <link
+                itemprop="inside-stylesheet"
+                rel="stylesheet"
+                href="bar"
+                precedence="default"
+              />
+              <style itemprop="inside-style" href="baz" precedence="default">
+                inside style
+              </style>
+              <script itemprop="inside-script" async="" src="qux" />
+            </div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
+  it('can hydrate resources and components in the head and body even if a browser or 3rd party script injects extra html nodes', async () => {
+    // This is a stress test case for hydrating a complex combination of hoistable elements, hoistable resources and host components
+    // in an environment that has been manipulated by 3rd party scripts/extensions to modify the <head> and <body>
+    function App() {
+      return (
+        <>
+          <link rel="foo" href="foo" />
+          <script async={true} src="rendered" />
+          <link rel="stylesheet" href="stylesheet" precedence="default" />
+          <html itemScope={true}>
+            <head>
+              {/* Component */}
+              <link rel="stylesheet" href="stylesheet" />
+              <script src="sync rendered" data-meaningful="" />
+              <style>{'body { background-color: red; }'}</style>
+              <script src="async rendered" async={true} onLoad={() => {}} />
+              <noscript>
+                <meta name="noscript" content="noscript" />
+              </noscript>
+              <link rel="foo" href="foo" onLoad={() => {}} />
+            </head>
+            <body>
+              {/* Hoistable even though itemProp in itemScope because itemScope on body, head, and html is ignored for hoisting purposes */}
+              <meta name="foo" content="foo" itemProp="a prop" />
+              {/* regular Hoistable */}
+              <meta name="foo" content="foo" />
+              {/* regular Hoistable */}
+              <title>title</title>
+              <div itemScope={true}>
+                <div>
+                  <div>deep hello</div>
+                  {/* Component b/c itemProp inside an itemScope deeper than body */}
+                  <meta name="foo" content="foo" itemProp="a prop" />
+                </div>
+              </div>
+            </body>
+          </html>
+          <link rel="foo" href="foo" />
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html itemscope="">
+        <head>
+          {/* Hoisted Resources and elements */}
+          <link rel="stylesheet" href="stylesheet" data-precedence="default" />
+          <script async="" src="rendered" />
+          <link rel="preload" as="script" href="sync rendered" />
+          <link rel="preload" as="script" href="async rendered" />
+          <link rel="foo" href="foo" />
+          <meta name="foo" content="foo" itemprop="a prop" />
+          <meta name="foo" content="foo" />
+          <title>title</title>
+          <link rel="foo" href="foo" />
+          {/* rendered host components */}
+          <link rel="stylesheet" href="stylesheet" />
+          <script src="sync rendered" data-meaningful="" />
+          <style>{'body { background-color: red; }'}</style>
+          <noscript>&lt;meta name="noscript" content="noscript"/&gt;</noscript>
+          <link rel="foo" href="foo" />
+        </head>
+        <body>
+          <div itemscope="">
+            <div>
+              <div>deep hello</div>
+              <meta name="foo" content="foo" itemprop="a prop" />
+            </div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    // We inject some styles, divs, scripts into the begginning, middle, and end
+    // of the head / body.
+    const injectedStyle = document.createElement('style');
+    injectedStyle.textContent = 'body { background-color: blue; }';
+    document.head.insertBefore(
+      injectedStyle,
+      document.head.querySelector('style'),
+    );
+    document.head.prepend(injectedStyle.cloneNode(true));
+    document.head.appendChild(injectedStyle.cloneNode(true));
+    document.body.prepend(injectedStyle.cloneNode(true));
+    document.body.appendChild(injectedStyle.cloneNode(true));
+
+    const injectedDiv = document.createElement('div');
+    document.head.prepend(injectedDiv);
+    document.head.appendChild(injectedDiv.cloneNode(true));
+    // We do not prepend a <div> in body because this will conflict with hyration
+    // We still mostly hydrate by matchign tag and <div> does not have any attributes to
+    // differentiate between likely-inject and likely-rendered cases. If a <div> is prepended
+    // in the <body> and you render a <div> as the first child of <body> there will be a conflict.
+    // We consider this a rare edge case and even if it does happen the fallback to client rendering
+    // should patch up the DOM correctly
+    document.body.appendChild(injectedDiv.cloneNode(true));
+
+    const injectedScript = document.createElement('script');
+    injectedScript.setAttribute('async', '');
+    injectedScript.setAttribute('src', 'injected');
+    document.head.prepend(injectedScript);
+    document.head.appendChild(injectedScript.cloneNode(true));
+    document.body.prepend(injectedScript.cloneNode(true));
+    document.body.appendChild(injectedScript.cloneNode(true));
+
+    // We hydrate the same App and confirm the output is identical except for the async
+    // script insertion that happens because we do not SSR async scripts with load handlers.
+    // All the extra inject nodes are preset
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html itemscope="">
+        <head>
+          <script async="" src="injected" />
+          <div />
+          <style>{'body { background-color: blue; }'}</style>
+          <link rel="stylesheet" href="stylesheet" data-precedence="default" />
+          <script async="" src="rendered" />
+          <link rel="preload" as="script" href="sync rendered" />
+          <link rel="preload" as="script" href="async rendered" />
+          <link rel="foo" href="foo" />
+          <meta name="foo" content="foo" itemprop="a prop" />
+          <meta name="foo" content="foo" />
+          <title>title</title>
+          <link rel="foo" href="foo" />
+          <link rel="stylesheet" href="stylesheet" />
+          <script src="sync rendered" data-meaningful="" />
+          <style>{'body { background-color: blue; }'}</style>
+          <style>{'body { background-color: red; }'}</style>
+          <script src="async rendered" async="" />
+          <noscript>&lt;meta name="noscript" content="noscript"/&gt;</noscript>
+          <link rel="foo" href="foo" />
+          <style>{'body { background-color: blue; }'}</style>
+          <div />
+          <script async="" src="injected" />
+        </head>
+        <body>
+          <script async="" src="injected" />
+          <style>{'body { background-color: blue; }'}</style>
+          <div itemscope="">
+            <div>
+              <div>deep hello</div>
+              <meta name="foo" content="foo" itemprop="a prop" />
+            </div>
+          </div>
+          <style>{'body { background-color: blue; }'}</style>
+          <div />
+          <script async="" src="injected" />
+        </body>
+      </html>,
+    );
+
+    // We unmount. The nodes that remain are
+    // 1. Hoisted resources (we don't clean these up on unmount to address races with streaming suspense and navigation)
+    // 2. preloads that are injected to hint the browser to load a resource but are not associated to Fibers directly
+    // 3. Nodes that React skipped over during hydration
+    root.unmount();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <script async="" src="injected" />
+          <div />
+          <style>{'body { background-color: blue; }'}</style>
+          <link rel="stylesheet" href="stylesheet" data-precedence="default" />
+          <script async="" src="rendered" />
+          <link rel="preload" as="script" href="sync rendered" />
+          <link rel="preload" as="script" href="async rendered" />
+          <style>{'body { background-color: blue; }'}</style>
+          <style>{'body { background-color: blue; }'}</style>
+          <div />
+          <script async="" src="injected" />
+        </head>
+        <body>
+          <script async="" src="injected" />
+          <style>{'body { background-color: blue; }'}</style>
+          <style>{'body { background-color: blue; }'}</style>
+          <div />
+          <script async="" src="injected" />
+        </body>
       </html>,
     );
   });
