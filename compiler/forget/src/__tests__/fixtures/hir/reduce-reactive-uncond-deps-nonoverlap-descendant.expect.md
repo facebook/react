@@ -1,0 +1,44 @@
+
+## Input
+
+```javascript
+// Test that we can track non-overlapping dependencies separately.
+// (not needed for correctness but for dependency granularity)
+function TestNonOverlappingDescendantTracked(props) {
+  let x = {};
+  x.a = props.a.x.y;
+  x.b = props.b;
+  x.c = props.a.c.x.y.z;
+  return x;
+}
+
+```
+
+## Code
+
+```javascript
+// Test that we can track non-overlapping dependencies separately.
+// (not needed for correctness but for dependency granularity)
+function TestNonOverlappingDescendantTracked(props) {
+  const $ = React.unstable_useMemoCache(4);
+  const c_0 = $[0] !== props.a.x.y;
+  const c_1 = $[1] !== props.b;
+  const c_2 = $[2] !== props.a.c.x.y.z;
+  let x;
+  if (c_0 || c_1 || c_2) {
+    x = {};
+    x.a = props.a.x.y;
+    x.b = props.b;
+    x.c = props.a.c.x.y.z;
+    $[0] = props.a.x.y;
+    $[1] = props.b;
+    $[2] = props.a.c.x.y.z;
+    $[3] = x;
+  } else {
+    x = $[3];
+  }
+  return x;
+}
+
+```
+      

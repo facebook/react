@@ -189,24 +189,17 @@ class Context {
       (currentDeclaration.scope == null ||
         !this.#isScopeActive(currentDeclaration.scope))
     ) {
+      // Below logic ensures that `operand` is either added to `this.#dependencies`
+      // directly, or is covered by an existing dependency.
+
       // Check if there is an existing dependency that describes this operand
       for (const dep of this.#dependencies) {
         // not the same identifier
         if (dep.place.identifier.id !== maybeDependency.place.identifier.id) {
           continue;
         }
-        const depPath = dep.path;
-        // existing dep covers all paths
-        if (depPath === null) {
-          return;
-        }
-        const operandPath = maybeDependency.path;
-        // existing dep is for a path, this operand covers all paths so swap them
-        if (operandPath === null) {
-          this.#dependencies.delete(dep);
-          this.#dependencies.add(maybeDependency);
-          return;
-        }
+        const depPath = dep.path ?? [];
+        const operandPath = maybeDependency.path ?? [];
         // both the operand and dep have paths, determine if the existing path
         // is a subset of the new path
         let commonPathIndex = 0;
@@ -218,7 +211,13 @@ class Context {
           commonPathIndex++;
         }
         if (commonPathIndex === depPath.length) {
+          // existing dep is a subpath of the operand, so we don't need to
+          // add the operand
           return;
+        } else if (commonPathIndex === operandPath.length) {
+          // operand is a subpath of the existing path, delete the existing
+          // path
+          this.#dependencies.delete(dep);
         }
       }
       this.#dependencies.add(maybeDependency);
