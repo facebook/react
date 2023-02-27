@@ -22,8 +22,8 @@ function TestNonOverlappingDescendantTracked(props) {
 function TestNonOverlappingDescendantTracked(props) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.a.x.y;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.a.c.x.y.z;
+  const c_1 = $[1] !== props.a.c.x.y.z;
+  const c_2 = $[2] !== props.b;
   let x;
   if (c_0 || c_1 || c_2) {
     x = {};
@@ -31,8 +31,8 @@ function TestNonOverlappingDescendantTracked(props) {
     x.b = props.b;
     x.c = props.a.c.x.y.z;
     $[0] = props.a.x.y;
-    $[1] = props.b;
-    $[2] = props.a.c.x.y.z;
+    $[1] = props.a.c.x.y.z;
+    $[2] = props.b;
     $[3] = x;
   } else {
     x = $[3];

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
   Identifier,
   IdentifierId,
@@ -21,6 +22,7 @@ import {
   ReactiveValue,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
+import { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import { eachReactiveValueOperand } from "./visitors";
 
@@ -55,13 +57,206 @@ type Decl = {
 
 type Scopes = Array<ReactiveScope>;
 
+// TODO(@mofeiZ): remove once we replace Context.#dependencies, #properties with tree
+// representation
+function areDependenciesEqual(
+  dep1: ReactiveScopeDependency,
+  dep2: ReactiveScopeDependency
+): boolean {
+  if (dep1.identifier.id !== dep2.identifier.id) {
+    return false;
+  }
+  const dep1Path = dep1.path;
+  const dep2Path = dep2.path;
+
+  if (dep1Path === dep2Path) {
+    // dep1Path and dep2Path might both be null (representing the empty path)
+    return true;
+  } else if (
+    dep1Path === null ||
+    dep2Path === null ||
+    dep2Path.length != dep1Path.length
+  ) {
+    return false;
+  }
+
+  return dep1Path.every((dep1Property, idx) => {
+    return dep1Property === dep2Path[idx];
+  });
+}
+
+/**
+ * Enum representing the access type of single property on a parent object.
+ * We distinguish on two independent axes:
+ * Conditional / Unconditional:
+ *   - whether this property is accessed unconditionally (within the ReactiveBlock)
+ * Access / Dependency:
+ *   - Access: this property is read on the path of a dependency. We do not
+ *     need to track change variables for accessed properties. Tracking accesses
+ *     helps Forget do more granular dependency tracking.
+ *   - Dependency: this property is read as a dependency and we must track changes
+ *     to it for correctness.
+ *
+ */
+enum PropertyAccessType {
+  UnconditionalAccess = "UnconditionalAccess",
+  UnconditionalDependency = "UnconditionalDependency",
+}
+
+function merge(
+  access1: PropertyAccessType,
+  access2: PropertyAccessType
+): PropertyAccessType {
+  if (
+    access1 === PropertyAccessType.UnconditionalDependency ||
+    access2 === PropertyAccessType.UnconditionalDependency
+  ) {
+    return PropertyAccessType.UnconditionalDependency;
+  } else {
+    return PropertyAccessType.UnconditionalAccess;
+  }
+}
+
+type DependencyNode = {
+  properties: Map<string, DependencyNode>;
+  accessType: PropertyAccessType;
+};
+
+type ReduceResultNode = {
+  relativePath: Array<string>;
+  accessType: PropertyAccessType;
+};
+
+const promoteUncondResult = [
+  {
+    relativePath: [],
+    accessType: PropertyAccessType.UnconditionalDependency,
+  },
+];
+
+function deriveMinimalDependenciesInSubtree(
+  dep: DependencyNode
+): Array<ReduceResultNode> {
+  const results: Array<ReduceResultNode> = [];
+  for (const [childName, childNode] of dep.properties) {
+    const reduceResult = deriveMinimalDependenciesInSubtree(childNode).map(
+      ({ relativePath, accessType }) => {
+        return {
+          relativePath: [childName, ...relativePath],
+          accessType,
+        };
+      }
+    );
+    results.push(...reduceResult);
+  }
+
+  switch (dep.accessType) {
+    case PropertyAccessType.UnconditionalDependency: {
+      return promoteUncondResult;
+    }
+    case PropertyAccessType.UnconditionalAccess: {
+      // all children are unconditional dependencies, return them to preserve granularity
+      return results;
+    }
+    default: {
+      todoInvariant(
+        false,
+        "[PropgateScopeDependencies] Handle conditional dependencies."
+      );
+    }
+  }
+}
+
+/**
+ * Finalizes a set of ReactiveScopeDependencies to produce a set of minimal unconditional
+ * dependencies, preserving granular accesses when possible.
+ *
+ * Correctness properties:
+ *  - All dependencies to a ReactiveBlock must be tracked.
+ *    We can always truncate a dependency's path to a subpath, due to Forget assuming
+ *    deep immutability. If the value produced by a subpath has not changed, then
+ *    dependency must have not changed.
+ *    i.e. props.a === $[..] implies props.a.b === $[..]
+ *
+ *    Note the inverse is not true, but this only means a false positive (we run the
+ *    reactive block more than needed).
+ *    i.e. props.a !== $[..] does not imply props.a.b !== $[..]
+ *
+ *  - The dependencies of a finalized ReactiveBlock must be all safe to access
+ *    unconditionally (i.e. preserve program semantics with respect to nullthrows).
+ *    If a dependency is only accessed within a conditional, we must track the nearest
+ *    unconditionally accessed subpath instead.
+ * @param initialDeps
+ * @returns
+ */
+
+// TODO(@mofeiZ): change once we replace Context.#dependencies, #properties with tree
+// representation
+function deriveMinimalDependencies(
+  initialDeps: Set<ReactiveScopeDependency>
+): Set<ReactiveScopeDependency> {
+  const depRoots = new Map<IdentifierId, [Identifier, DependencyNode]>();
+
+  for (const dep of initialDeps) {
+    let root = depRoots.get(dep.identifier.id)?.[1];
+    const path = dep.path ?? [];
+    if (root == null) {
+      // roots can always be accessed unconditionally in JS
+      root = {
+        properties: new Map(),
+        accessType: PropertyAccessType.UnconditionalAccess,
+      };
+      depRoots.set(dep.identifier.id, [dep.identifier, root]);
+    }
+    let currNode: DependencyNode = root;
+    // TODO(@mofeiZ) add conditional access/dependencies here
+    const accessType = PropertyAccessType.UnconditionalAccess;
+    const depType = PropertyAccessType.UnconditionalDependency;
+
+    for (const property of path) {
+      // all properties read 'on the way' to a dependency are marked as 'access'
+      let currChild = currNode.properties.get(property);
+      if (currChild == null) {
+        currChild = {
+          properties: new Map(),
+          accessType,
+        };
+        currNode.properties.set(property, currChild);
+      } else {
+        currChild.accessType = merge(currChild.accessType, accessType);
+      }
+      currNode = currChild;
+    }
+
+    // final property read should be marked as `dependency`
+    currNode.accessType = merge(currNode.accessType, depType);
+  }
+
+  const results = new Set<ReactiveScopeDependency>();
+  for (const [_, [rootId, rootNode]] of depRoots) {
+    const deps = deriveMinimalDependenciesInSubtree(rootNode);
+    invariant(
+      deps.every(
+        (dep) => dep.accessType === PropertyAccessType.UnconditionalDependency
+      ),
+      "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies."
+    );
+
+    for (const dep of deps) {
+      results.add({
+        identifier: rootId,
+        path: dep.relativePath,
+      });
+    }
+  }
+
+  return results;
+}
+
 class Context {
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
   #dependencies: Set<ReactiveScopeDependency> = new Set();
-  // Produces a de-duplicated mapping of Id -> ReactiveScopeDependency
-  // This helps with.. temporaries that are created only for property loads
-  //  but can be generalized to all non-allocating temporaries
   #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #scopes: Scopes = [];
@@ -74,7 +269,7 @@ class Context {
     fn();
     this.#scopes.pop();
     this.#dependencies = previousDependencies;
-    return scopedDependencies;
+    return deriveMinimalDependencies(scopedDependencies);
   }
 
   /**
@@ -195,35 +390,11 @@ class Context {
       (currentDeclaration.scope == null ||
         !this.#isScopeActive(currentDeclaration.scope))
     ) {
-      // Below logic ensures that `operand` is either added to `this.#dependencies`
-      // directly, or is covered by an existing dependency.
-
       // Check if there is an existing dependency that describes this operand
+      // We do not try to join/reduce dependencies here due to missing info
       for (const dep of this.#dependencies) {
-        // not the same identifier
-        if (dep.identifier.id !== maybeDependency.identifier.id) {
-          continue;
-        }
-        const depPath = dep.path ?? [];
-        const operandPath = maybeDependency.path ?? [];
-        // both the operand and dep have paths, determine if the existing path
-        // is a subset of the new path
-        let commonPathIndex = 0;
-        while (
-          commonPathIndex < operandPath.length &&
-          commonPathIndex < depPath.length &&
-          operandPath[commonPathIndex] === depPath[commonPathIndex]
-        ) {
-          commonPathIndex++;
-        }
-        if (commonPathIndex === depPath.length) {
-          // existing dep is a subpath of the operand, so we don't need to
-          // add the operand
+        if (areDependenciesEqual(dep, maybeDependency)) {
           return;
-        } else if (commonPathIndex === operandPath.length) {
-          // operand is a subpath of the existing path, delete the existing
-          // path
-          this.#dependencies.delete(dep);
         }
       }
       this.#dependencies.add(maybeDependency);
