@@ -29,10 +29,17 @@ module.exports = {
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/explicit-function-return-type": "error",
 
-    // Unused variables are frequently a bug. Ideally this rule would ignore identifiers
-    // prefixed with "_", though, so that we don't need suppressions in legit cases.
-    // TODO: build a custom version of this rule that understands "_" as a prefix.
-    "@typescript-eslint/no-unused-vars": "error",
+    // Unused variables are frequently a bug. Prefix unused variables with an _ to fix, but note
+    // that eslint won't warn you that an underscore prefixed variable is used and that the prefix
+    // should be dropped.
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+      },
+    ],
 
     // Consider enabling for consistency. Ideally violations could be auto-fixed.
     "@typescript-eslint/consistent-generic-constructors": [
