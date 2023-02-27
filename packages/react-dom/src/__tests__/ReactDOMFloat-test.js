@@ -2267,7 +2267,7 @@ body {
   // @gate enableFloat
   it('always enforces crossOrigin "anonymous" for font preloads', async () => {
     function App() {
-      ReactDOM.preload('foo', {as: 'font'});
+      ReactDOM.preload('foo', {as: 'font', type: 'font/woff2'});
       ReactDOM.preload('bar', {as: 'font', crossOrigin: 'foo'});
       ReactDOM.preload('baz', {as: 'font', crossOrigin: 'use-credentials'});
       ReactDOM.preload('qux', {as: 'font', crossOrigin: 'anonymous'});
@@ -2285,7 +2285,13 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" as="font" href="foo" crossorigin="" />
+          <link
+            rel="preload"
+            as="font"
+            href="foo"
+            crossorigin=""
+            type="font/woff2"
+          />
           <link rel="preload" as="font" href="bar" crossorigin="" />
           <link rel="preload" as="font" href="baz" crossorigin="" />
           <link rel="preload" as="font" href="qux" crossorigin="" />
@@ -2293,6 +2299,147 @@ body {
         <body />
       </html>,
     );
+  });
+
+  describe('ReactDOM.prefetchDNS(href)', () => {
+    it('creates a dns-prefetch resource when called', async () => {
+      function App({url}) {
+        ReactDOM.prefetchDNS(url);
+        ReactDOM.prefetchDNS(url);
+        ReactDOM.prefetchDNS(url, {});
+        ReactDOM.prefetchDNS(url, {crossOrigin: 'use-credentials'});
+        return (
+          <html>
+            <body>hello world</body>
+          </html>
+        );
+      }
+
+      await expect(async () => {
+        await actIntoEmptyDocument(() => {
+          renderToPipeableStream(<App url="foo" />).pipe(writable);
+        });
+      }).toErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      ]);
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      ]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      root.render(<App url="bar" />);
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      ]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="dns-prefetch" href="foo" />
+            <link rel="dns-prefetch" href="bar" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+    });
+  });
+
+  describe('ReactDOM.preconnect(href, { crossOrigin })', () => {
+    it('creates a preconnect resource when called', async () => {
+      function App({url}) {
+        ReactDOM.preconnect(url);
+        ReactDOM.preconnect(url);
+        ReactDOM.preconnect(url, {crossOrigin: true});
+        ReactDOM.preconnect(url, {crossOrigin: ''});
+        ReactDOM.preconnect(url, {crossOrigin: 'anonymous'});
+        ReactDOM.preconnect(url, {crossOrigin: 'use-credentials'});
+        return (
+          <html>
+            <body>hello world</body>
+          </html>
+        );
+      }
+
+      await expect(async () => {
+        await actIntoEmptyDocument(() => {
+          renderToPipeableStream(<App url="foo" />).pipe(writable);
+        });
+      }).toErrorDev(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
+      );
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+            <link rel="preconnect" href="foo" crossorigin="" />
+            <link rel="preconnect" href="foo" crossorigin="use-credentials" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
+      );
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+            <link rel="preconnect" href="foo" crossorigin="" />
+            <link rel="preconnect" href="foo" crossorigin="use-credentials" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+
+      root.render(<App url="bar" />);
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
+      );
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="foo" />
+            <link rel="preconnect" href="foo" crossorigin="" />
+            <link rel="preconnect" href="foo" crossorigin="use-credentials" />
+            <link rel="preconnect" href="bar" />
+            <link rel="preconnect" href="bar" crossorigin="" />
+            <link rel="preconnect" href="bar" crossorigin="use-credentials" />
+          </head>
+          <body>hello world</body>
+        </html>,
+      );
+    });
   });
 
   describe('ReactDOM.preload(href, { as: ... })', () => {
@@ -2347,6 +2494,7 @@ body {
 
       function ClientApp() {
         ReactDOM.preload('foo', {as: 'style'});
+        ReactDOM.preload('font', {as: 'font', type: 'font/woff2'});
         React.useInsertionEffect(() => ReactDOM.preload('bar', {as: 'script'}));
         React.useLayoutEffect(() => ReactDOM.preload('baz', {as: 'font'}));
         React.useEffect(() => ReactDOM.preload('qux', {as: 'style'}));
@@ -2366,6 +2514,13 @@ body {
         <html>
           <head>
             <link rel="preload" as="style" href="foo" />
+            <link
+              rel="preload"
+              as="font"
+              href="font"
+              crossorigin=""
+              type="font/woff2"
+            />
             <link rel="preload" as="font" href="baz" crossorigin="" />
             <link rel="preload" as="style" href="qux" />
           </head>

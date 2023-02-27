@@ -17,7 +17,9 @@ export {
   unstable_createEventHandle,
   unstable_flushControlled,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
-  preinit,
+  prefetchDNS,
+  preconnect,
   preload,
+  preinit,
   version,
 } from './src/client/ReactDOM';
