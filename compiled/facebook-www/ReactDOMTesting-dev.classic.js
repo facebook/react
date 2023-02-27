@@ -30821,8 +30821,6 @@ function createHostRootFiber(
     }
 
     if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
       // Only for internal experiments.
       concurrentUpdatesByDefaultOverride
     ) {
@@ -31239,7 +31237,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-6ff1733e6-20230225";
+var ReactVersion = "18.3.0-www-classic-b2ae9ddb3-20230227";
 
 function createPortal$1(
   children,

@@ -36,7 +36,6 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
@@ -15060,14 +15059,11 @@ function createFiberRoot(
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
-  if (1 === tag) {
-    if (
-      ((tag = 1),
+  1 === tag
+    ? ((tag = 1),
       !0 === isStrictMode && (tag |= 24),
-      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
-    )
-      tag |= 32;
-  } else tag = 0;
+      concurrentUpdatesByDefaultOverride && (tag |= 32))
+    : (tag = 0);
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
@@ -15494,7 +15490,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1741 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-6ff1733e6-20230225",
+  version: "18.3.0-www-classic-b2ae9ddb3-20230227",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2108 = {
@@ -15524,7 +15520,7 @@ var internals$jscomp$inline_2108 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-6ff1733e6-20230225"
+  reconcilerVersion: "18.3.0-next-b2ae9ddb3-20230227"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2109 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15780,4 +15776,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-6ff1733e6-20230225";
+exports.version = "18.3.0-next-b2ae9ddb3-20230227";

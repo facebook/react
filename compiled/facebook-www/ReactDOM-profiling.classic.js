@@ -47,7 +47,6 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
     dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
@@ -15824,14 +15823,11 @@ function createFiberRoot(
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
-  if (1 === tag) {
-    if (
-      ((tag = 1),
+  1 === tag
+    ? ((tag = 1),
       !0 === isStrictMode && (tag |= 24),
-      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
-    )
-      tag |= 32;
-  } else tag = 0;
+      concurrentUpdatesByDefaultOverride && (tag |= 32))
+    : (tag = 0);
   isDevToolsPresent && (tag |= 2);
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
@@ -16264,7 +16260,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1821 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-6ff1733e6-20230225",
+  version: "18.3.0-www-classic-b2ae9ddb3-20230227",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16308,7 +16304,7 @@ var devToolsConfig$jscomp$inline_1821 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-6ff1733e6-20230225"
+  reconcilerVersion: "18.3.0-next-b2ae9ddb3-20230227"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16551,7 +16547,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-6ff1733e6-20230225";
+exports.version = "18.3.0-next-b2ae9ddb3-20230227";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
