@@ -38,7 +38,62 @@ const chalk = require('chalk');
 const express = require('express');
 const app = express();
 
+const http = require('http');
+
 app.use(compress());
+
+function request(options, body) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, res => {
+      resolve(res);
+    });
+    req.on('error', e => {
+      reject(e);
+    });
+    body.pipe(req);
+  });
+}
+
+app.all('/', async function (req, res, next) {
+  if (req.accepts('text/html')) {
+    // Pass-through to the html file
+    next();
+    return;
+  }
+
+  // Proxy the request to the regional server.
+  const proxiedHeaders = {
+    'X-Forwarded-Host': req.hostname,
+    'X-Forwarded-For': req.ips,
+    'X-Forwarded-Port': 3000,
+    'X-Forwarded-Proto': req.protocol,
+  };
+  // Proxy other headers as desired.
+  if (req.get('rsc-action')) {
+    proxiedHeaders['Content-type'] = req.get('Content-type');
+    proxiedHeaders['rsc-action'] = req.get('rsc-action');
+  }
+
+  const promiseForData = request(
+    {
+      host: '127.0.0.1',
+      port: 3001,
+      method: req.method,
+      path: '/',
+      headers: proxiedHeaders,
+    },
+    req
+  );
+
+  try {
+    const rscResponse = await promiseForData;
+    rscResponse.pipe(res);
+  } catch (e) {
+    console.error(`Failed to proxy request: ${e.stack}`);
+    res.statusCode = 500;
+    res.end();
+  }
+});
 
 if (process.env.NODE_ENV === 'development') {
   // In development we host the Webpack server for live bundling.
