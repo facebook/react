@@ -28,7 +28,6 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
-  enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,

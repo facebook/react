@@ -102,13 +102,9 @@ describe('ReactSchedulerIntegration', () => {
     scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('C'));
 
     // Schedule a React render. React will request a paint after committing it.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.render('Update');
-      });
-    } else {
+    React.startTransition(() => {
       root.render('Update');
-    }
+    });
 
     // Advance time just to be sure the next tasks have lower priority
     Scheduler.unstable_advanceTime(2000);

@@ -87,23 +87,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('oops!');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            <Indirection>
-              <Indirection>
-                <Indirection>
-                  <BadRender />
-                  <Indirection />
-                  <Indirection />
-                </Indirection>
-              </Indirection>
-            </Indirection>
-          </ErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <Indirection>
@@ -117,7 +101,7 @@ describe('ReactIncrementalErrorHandling', () => {
           </Indirection>
         </ErrorBoundary>,
       );
-    }
+    });
 
     // Start rendering asynchronously
     expect(Scheduler).toFlushAndYieldThrough([
@@ -201,23 +185,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('oops!');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            <Indirection>
-              <Indirection>
-                <Indirection>
-                  <BadRender />
-                  <Indirection />
-                  <Indirection />
-                </Indirection>
-              </Indirection>
-            </Indirection>
-          </ErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <Indirection>
@@ -231,7 +199,7 @@ describe('ReactIncrementalErrorHandling', () => {
           </Indirection>
         </ErrorBoundary>,
       );
-    }
+    });
 
     // Start rendering asynchronously
     expect(Scheduler).toFlushAndYieldThrough([
@@ -399,17 +367,11 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent />, () =>
-          Scheduler.unstable_yieldValue('commit'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent />, () =>
         Scheduler.unstable_yieldValue('commit'),
       );
-    }
+    });
 
     // Render the bad component asynchronously
     expect(Scheduler).toFlushAndYieldThrough(['Parent', 'BadRender']);
@@ -451,13 +413,9 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<App />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<App />);
-    }
+    });
 
     // Render part of the tree
     expect(Scheduler).toFlushAndYieldThrough(['A', 'B']);
@@ -592,21 +550,13 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            <BrokenRender />
-          </ErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <BrokenRender />
         </ErrorBoundary>,
       );
-    }
+    });
 
     expect(Scheduler).toFlushAndYieldThrough(['ErrorBoundary render success']);
     expect(ReactNoop).toMatchRenderedOutput(null);
@@ -781,21 +731,13 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <RethrowErrorBoundary>
           <BrokenRender />
         </RethrowErrorBoundary>,
       );
-    }
+    });
 
     expect(Scheduler).toFlushAndYieldThrough(['RethrowErrorBoundary render']);
 
@@ -1875,13 +1817,9 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<Oops />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<Oops />);
-      }
+      });
 
       // Render past the component that throws, then yield.
       expect(Scheduler).toFlushAndYieldThrough(['Oops']);

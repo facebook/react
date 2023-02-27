@@ -456,13 +456,9 @@ describe('ReactIncrementalSideEffects', () => {
       </div>,
     );
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="World" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="World" />);
-    }
+    });
 
     // Flush some of the work without committing
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
@@ -697,13 +693,9 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={1} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -712,26 +704,18 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushNextYield();
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={2} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={2} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={3} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={3} />);
-    }
+    });
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.

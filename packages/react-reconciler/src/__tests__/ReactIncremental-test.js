@@ -65,17 +65,11 @@ describe('ReactIncremental', () => {
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo />, () =>
-          Scheduler.unstable_yieldValue('callback'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo />, () =>
         Scheduler.unstable_yieldValue('callback'),
       );
-    }
+    });
     // Do one step of work.
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
@@ -162,26 +156,18 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="foo" />);
     expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Bar']);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="bar" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="bar" />);
-    }
+    });
     // Flush part of the work
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(null));
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="baz" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="baz" />);
-    }
+    });
 
     // Flush part of the new work
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
@@ -215,17 +201,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushWithoutYielding();
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.unstable_yieldValue('setState1');
-            return {text: 'bar'};
-          },
-          () => Scheduler.unstable_yieldValue('callback1'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState1');
@@ -233,24 +209,14 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.unstable_yieldValue('callback1'),
       );
-    }
+    });
 
     // Flush part of the work
     expect(Scheduler).toFlushAndYieldThrough(['setState1']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.unstable_yieldValue('setState2');
-            return {text2: 'baz'};
-          },
-          () => Scheduler.unstable_yieldValue('callback2'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.unstable_yieldValue('setState2');
@@ -258,7 +224,7 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.unstable_yieldValue('callback2'),
       );
-    }
+    });
 
     // Flush the rest of the work which now includes the low priority
     expect(Scheduler).toFlushAndYield([
@@ -1878,18 +1844,7 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"de"}',
       'ShowBoth {"locale":"de"}',
     ]);
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <Intl locale="sv">
-            <ShowLocale />
-            <div>
-              <ShowBoth />
-            </div>
-          </Intl>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <Intl locale="sv">
           <ShowLocale />
@@ -1898,7 +1853,7 @@ describe('ReactIncremental', () => {
           </div>
         </Intl>,
       );
-    }
+    });
     expect(Scheduler).toFlushAndYieldThrough(['Intl {}']);
 
     ReactNoop.render(
@@ -2028,22 +1983,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <Intl locale="fr">
-            <ShowLocale />
-            <LegacyHiddenDiv mode="hidden">
-              <ShowLocale />
-              <Intl locale="ru">
-                <ShowLocale />
-              </Intl>
-            </LegacyHiddenDiv>
-            <ShowLocale />
-          </Intl>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <Intl locale="fr">
           <ShowLocale />
@@ -2056,7 +1996,7 @@ describe('ReactIncremental', () => {
           <ShowLocale />
         </Intl>,
       );
-    }
+    });
     expect(Scheduler).toFlushAndYieldThrough([
       'Intl {}',
       'ShowLocale {"locale":"fr"}',
@@ -2746,13 +2686,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     expect(Scheduler).toFlushAndYieldThrough(['Parent: 1']);
 
     // Interrupt at same priority
@@ -2772,13 +2708,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     expect(Scheduler).toFlushAndYieldThrough(['Parent: 1']);
 
     // Interrupt at lower priority
@@ -2799,13 +2731,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     expect(Scheduler).toFlushAndYieldThrough(['Parent: 1']);
 
     // Interrupt at higher priority

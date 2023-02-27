@@ -89,17 +89,11 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        renderer = ReactTestRenderer.create(<Parent step={1} />, {
-          unstable_isConcurrent: true,
-        });
-      });
-    } else {
+    React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Parent step={1} />, {
         unstable_isConcurrent: true,
       });
-    }
+    });
 
     // Flush the first two siblings
     expect(Scheduler).toFlushAndYieldThrough(['A:1', 'B:1']);
@@ -135,17 +129,11 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        renderer = ReactTestRenderer.create(<Example step={1} />, {
-          unstable_isConcurrent: true,
-        });
-      });
-    } else {
+    React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Example step={1} />, {
         unstable_isConcurrent: true,
       });
-    }
+    });
 
     // Flush the some of the changes, but don't commit
     expect(Scheduler).toFlushAndYieldThrough(['A:1']);

@@ -881,13 +881,9 @@ describe('ReactNewContext', () => {
         );
       }
 
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactNoop.render(<App value={1} />);
-        });
-      } else {
+      React.startTransition(() => {
         ReactNoop.render(<App value={1} />);
-      }
+      });
       // Render past the Provider, but don't commit yet
       expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 
@@ -927,13 +923,9 @@ describe('ReactNewContext', () => {
         );
       }
 
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactNoop.render(<App value={1} />);
-        });
-      } else {
+      React.startTransition(() => {
         ReactNoop.render(<App value={1} />);
-      }
+      });
       expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
 
       // Get a new copy of ReactNoop

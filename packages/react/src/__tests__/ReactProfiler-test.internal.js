@@ -196,19 +196,7 @@ describe(`onRender`, () => {
       return null;
     };
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
-            <Yield value="first" />
-            <Yield value="last" />
-          </React.Profiler>,
-          {
-            unstable_isConcurrent: true,
-          },
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactTestRenderer.create(
         <React.Profiler id="test" onRender={callback}>
           <Yield value="first" />
@@ -218,7 +206,7 @@ describe(`onRender`, () => {
           unstable_isConcurrent: true,
         },
       );
-    }
+    });
 
     // Times are logged until a render is committed.
     expect(Scheduler).toFlushAndYieldThrough(['first']);
@@ -744,17 +732,7 @@ describe(`onRender`, () => {
       Scheduler.unstable_advanceTime(5); // 0 -> 5
 
       // Render partially, but run out of time before completing.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={2} />
-              <Yield renderTime={3} />
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
-        });
-      } else {
+      React.startTransition(() => {
         ReactTestRenderer.create(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={2} />
@@ -762,7 +740,7 @@ describe(`onRender`, () => {
           </React.Profiler>,
           {unstable_isConcurrent: true},
         );
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Yield:2']);
       expect(callback).toHaveBeenCalledTimes(0);
 
@@ -791,20 +769,7 @@ describe(`onRender`, () => {
 
       // Render partially, but don't finish.
       // This partial render should take 5ms of simulated time.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactTestRenderer.create(
-            <React.Profiler id="outer" onRender={callback}>
-              <Yield renderTime={5} />
-              <Yield renderTime={10} />
-              <React.Profiler id="inner" onRender={callback}>
-                <Yield renderTime={17} />
-              </React.Profiler>
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
-        });
-      } else {
+      React.startTransition(() => {
         ReactTestRenderer.create(
           <React.Profiler id="outer" onRender={callback}>
             <Yield renderTime={5} />
@@ -815,7 +780,7 @@ describe(`onRender`, () => {
           </React.Profiler>,
           {unstable_isConcurrent: true},
         );
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Yield:5']);
       expect(callback).toHaveBeenCalledTimes(0);
 
@@ -857,17 +822,7 @@ describe(`onRender`, () => {
       // Render a partially update, but don't finish.
       // This partial render should take 10ms of simulated time.
       let renderer;
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer = ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={10} />
-              <Yield renderTime={20} />
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
-        });
-      } else {
+      React.startTransition(() => {
         renderer = ReactTestRenderer.create(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={10} />
@@ -875,7 +830,7 @@ describe(`onRender`, () => {
           </React.Profiler>,
           {unstable_isConcurrent: true},
         );
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Yield:10']);
       expect(callback).toHaveBeenCalledTimes(0);
 
@@ -944,17 +899,7 @@ describe(`onRender`, () => {
 
       // Render a partially update, but don't finish.
       // This partial render should take 3ms of simulated time.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={3} />
-              <Yield renderTime={5} />
-              <Yield renderTime={9} />
-            </React.Profiler>,
-          );
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={3} />
@@ -962,7 +907,7 @@ describe(`onRender`, () => {
             <Yield renderTime={9} />
           </React.Profiler>,
         );
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['Yield:3']);
       expect(callback).toHaveBeenCalledTimes(0);
 
@@ -1068,13 +1013,9 @@ describe(`onRender`, () => {
 
       // Render a partially update, but don't finish.
       // This partial render will take 10ms of actual render time.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          first.setState({renderTime: 10});
-        });
-      } else {
+      React.startTransition(() => {
         first.setState({renderTime: 10});
-      }
+      });
       expect(Scheduler).toFlushAndYieldThrough(['FirstComponent:10']);
       expect(callback).toHaveBeenCalledTimes(0);
 
