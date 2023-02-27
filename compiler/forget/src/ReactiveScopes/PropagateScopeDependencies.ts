@@ -34,14 +34,12 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   const context = new Context();
   if (fn.id !== null) {
     context.declare(fn.id, {
-      kind: DeclKind.Const,
       id: makeInstructionId(0),
       scope: null,
     });
   }
   for (const param of fn.params) {
     context.declare(param.identifier, {
-      kind: DeclKind.Dynamic,
       id: makeInstructionId(0),
       scope: null,
     });
@@ -49,14 +47,8 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   visit(context, fn.body);
 }
 
-enum DeclKind {
-  Const = "Const",
-  Dynamic = "Dynamic",
-}
-
 type DeclMap = Map<IdentifierId, Decl>;
 type Decl = {
-  kind: DeclKind;
   id: InstructionId;
   scope: ReactiveScope | null;
 };
@@ -193,7 +185,6 @@ class Context {
     if (
       currentScope != null &&
       currentDeclaration !== undefined &&
-      currentDeclaration.kind !== DeclKind.Const &&
       currentDeclaration.id < currentScope.range.start &&
       (currentDeclaration.scope == null ||
         !this.#isScopeActive(currentDeclaration.scope))
@@ -402,7 +393,6 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
     context.visitReassignment(lvalue);
   }
   context.declare(lvalue.place.identifier, {
-    kind: DeclKind.Dynamic,
     id: instr.id,
     scope: context.currentScope,
   });
