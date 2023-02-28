@@ -43,10 +43,10 @@
     "postcss-normalize": "^10.0.1",
     "postcss-preset-env": "^7.0.1",
     "prompts": "^2.4.2",
-    "react": "^18.2.0",
+    "react": "experimental",
     "react-app-polyfill": "^3.0.0",
     "react-dev-utils": "^12.0.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "experimental",
     "react-refresh": "^0.11.0",
     "resolve": "^1.20.0",
     "resolve-url-loader": "^4.0.0",
@@ -59,7 +59,8 @@
     "undici": "^5.20.0",
     "webpack": "^5.64.4",
     "webpack-dev-middleware": "^5.3.1",
-    "webpack-hot-middleware": "^2.25.3"
+    "webpack-hot-middleware": "^2.25.3",
+    "webpack-manifest-plugin": "^4.0.2"
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",

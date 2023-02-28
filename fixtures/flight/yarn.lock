@@ -7364,13 +7364,13 @@ react-dev-utils@^12.0.1:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-react-dom@^18.2.0:
-  version "18.2.0"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
-  integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
+react-dom@experimental:
+  version "0.0.0-experimental-6ff1733e6-20230225"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-6ff1733e6-20230225.tgz#47c1e80f21230e6c650ba9e43d15fccd616441be"
+  integrity sha512-1vGCQDhmSOwBIb8QbTaSjBUysebPhl7WCcGuT6dW+HdlxFDvClL0M47K1e8kZWiuCkMUDjJaTlC4J32PgznbFw==
   dependencies:
     loose-envify "^1.1.0"
-    scheduler "^0.23.0"
+    scheduler "0.0.0-experimental-6ff1733e6-20230225"
 
 react-error-overlay@^6.0.11:
   version "6.0.11"
@@ -7397,10 +7397,10 @@ react-refresh@^0.11.0:
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.11.0.tgz#77198b944733f0f1f1a90e791de4541f9f074046"
   integrity sha512-F27qZr8uUqwhWZboondsPx8tnC3Ct3SxZA3V5WyEvujRyyNv0VYPhoBg1gZ8/MV5tubQp76Trw8lTv9hzRBa+A==
 
-react@^18.2.0:
-  version "18.2.0"
-  resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
-  integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
+react@experimental:
+  version "0.0.0-experimental-6ff1733e6-20230225"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-6ff1733e6-20230225.tgz#24bca9d60c6b3597f389e8bcd07e7b853dddc917"
+  integrity sha512-5syUtEwwbWzDHN84xNu9C9cciLW9sY4c19fG27EU5ApS1s+i7fFtS+KtyPMHU9S4eK0u65uQU3hWMqFvqzLHhw==
   dependencies:
     loose-envify "^1.1.0"
 
@@ -7681,10 +7681,10 @@ saxes@^5.0.1:
   dependencies:
     xmlchars "^2.2.0"
 
-scheduler@^0.23.0:
-  version "0.23.0"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.23.0.tgz#ba8041afc3d30eb206a487b6b384002e4e61fdfe"
-  integrity sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==
+scheduler@0.0.0-experimental-6ff1733e6-20230225:
+  version "0.0.0-experimental-6ff1733e6-20230225"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-6ff1733e6-20230225.tgz#9de04947f82afa784de799aa09aaad92ee67cb19"
+  integrity sha512-YDyRM4ohU6NmzsbiJ/UUdRB4ulz27n+3Su8LZ8cENrQDuu2us3sPN+y8CMGeqaNYJlS0GQTHNcLa2LZIK9BP5Q==
   dependencies:
     loose-envify "^1.1.0"
 
@@ -7837,6 +7837,11 @@ slash@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-4.0.0.tgz#2422372176c4c6c5addb5e2ada885af984b396a7"
   integrity sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==
+
+source-list-map@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/source-list-map/-/source-list-map-2.0.1.tgz#3993bd873bfc48479cca9ea3a547835c7c154b34"
+  integrity sha512-qnQ7gVMxGNxsiL4lEuJwe/To8UnK7fAnmbGEEH8RpLouuKbeEm0lhbQVFIrNSuB+G7tVrAlVsZgETT5nljf+Iw==
 
 source-map-js@^1.0.1, source-map-js@^1.0.2:
   version "1.0.2"
@@ -8575,6 +8580,22 @@ webpack-hot-middleware@^2.25.3:
     ansi-html-community "0.0.8"
     html-entities "^2.1.0"
     strip-ansi "^6.0.0"
+
+webpack-manifest-plugin@^4.0.2:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/webpack-manifest-plugin/-/webpack-manifest-plugin-4.1.1.tgz#10f8dbf4714ff93a215d5a45bcc416d80506f94f"
+  integrity sha512-YXUAwxtfKIJIKkhg03MKuiFAD72PlrqCiwdwO4VEXdRO5V0ORCNwaOwAZawPZalCbmH9kBDmXnNeQOw+BIEiow==
+  dependencies:
+    tapable "^2.0.0"
+    webpack-sources "^2.2.0"
+
+webpack-sources@^2.2.0:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/webpack-sources/-/webpack-sources-2.3.1.tgz#570de0af163949fe272233c2cefe1b56f74511fd"
+  integrity sha512-y9EI9AO42JjEcrTJFOYmVywVZdKVUfOvDUPsJea5GIr1JOEGFVqwlY2K098fFoIjOkDzHn2AjRvM8dsBZu+gCA==
+  dependencies:
+    source-list-map "^2.0.1"
+    source-map "^0.6.1"
 
 webpack-sources@^3.2.3:
   version "3.2.3"
