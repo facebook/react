@@ -128,6 +128,7 @@ module.exports = {
     [
       (process.env.REACT_VERSION != null).toString(),
       (process.env.NODE_ENV === 'development').toString(),
+      process.env.JEST_ENABLE_SOURCE_MAPS || '',
     ]
   ),
 };
