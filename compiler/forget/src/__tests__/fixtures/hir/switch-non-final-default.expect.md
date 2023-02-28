@@ -32,12 +32,11 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(10);
-  const c_0 = $[0] !== props.p0;
-  const c_1 = $[1] !== props.p2;
+  const $ = React.unstable_useMemoCache(9);
+  const c_0 = $[0] !== props;
   let x;
   let y;
-  if (c_0 || c_1) {
+  if (c_0) {
     x = [];
     y = undefined;
     bb1: switch (props.p0) {
@@ -47,11 +46,11 @@ function Component(props) {
       case true: {
         x.push(props.p2);
         let t0;
-        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
           t0 = [];
-          $[4] = t0;
+          $[3] = t0;
         } else {
-          t0 = $[4];
+          t0 = $[3];
         }
         y = t0;
         break bb1;
@@ -63,34 +62,33 @@ function Component(props) {
         y = x;
       }
     }
-    $[0] = props.p0;
-    $[1] = props.p2;
-    $[2] = x;
-    $[3] = y;
+    $[0] = props;
+    $[1] = x;
+    $[2] = y;
   } else {
-    x = $[2];
-    y = $[3];
+    x = $[1];
+    y = $[2];
   }
-  const c_5 = $[5] !== x;
+  const c_4 = $[4] !== x;
   let child;
-  if (c_5) {
+  if (c_4) {
     child = <Component data={x}></Component>;
-    $[5] = x;
-    $[6] = child;
+    $[4] = x;
+    $[5] = child;
   } else {
-    child = $[6];
+    child = $[5];
   }
   y.push(props.p4);
-  const c_7 = $[7] !== y;
-  const c_8 = $[8] !== child;
+  const c_6 = $[6] !== y;
+  const c_7 = $[7] !== child;
   let t1;
-  if (c_7 || c_8) {
+  if (c_6 || c_7) {
     t1 = <Component data={y}>{child}</Component>;
-    $[7] = y;
-    $[8] = child;
-    $[9] = t1;
+    $[6] = y;
+    $[7] = child;
+    $[8] = t1;
   } else {
-    t1 = $[9];
+    t1 = $[8];
   }
   return t1;
 }

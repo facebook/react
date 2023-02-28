@@ -35,13 +35,11 @@ function mayMutate() {}
 
 ```javascript
 function ComponentA(props) {
-  const $ = React.unstable_useMemoCache(8);
-  const c_0 = $[0] !== props.p0;
-  const c_1 = $[1] !== props.p1;
-  const c_2 = $[2] !== props.p2;
+  const $ = React.unstable_useMemoCache(6);
+  const c_0 = $[0] !== props;
   let a;
   let b;
-  if (c_0 || c_1 || c_2) {
+  if (c_0) {
     a = [];
     b = [];
     if (b) {
@@ -50,37 +48,33 @@ function ComponentA(props) {
     if (props.p1) {
       b.push(props.p2);
     }
-    $[0] = props.p0;
-    $[1] = props.p1;
-    $[2] = props.p2;
+    $[0] = props;
+    $[1] = a;
+    $[2] = b;
+  } else {
+    a = $[1];
+    b = $[2];
+  }
+  const c_3 = $[3] !== a;
+  const c_4 = $[4] !== b;
+  let t0;
+  if (c_3 || c_4) {
+    t0 = <Foo a={a} b={b}></Foo>;
     $[3] = a;
     $[4] = b;
+    $[5] = t0;
   } else {
-    a = $[3];
-    b = $[4];
-  }
-  const c_5 = $[5] !== a;
-  const c_6 = $[6] !== b;
-  let t0;
-  if (c_5 || c_6) {
-    t0 = <Foo a={a} b={b}></Foo>;
-    $[5] = a;
-    $[6] = b;
-    $[7] = t0;
-  } else {
-    t0 = $[7];
+    t0 = $[5];
   }
   return t0;
 }
 
 function ComponentB(props) {
-  const $ = React.unstable_useMemoCache(8);
-  const c_0 = $[0] !== props.p0;
-  const c_1 = $[1] !== props.p1;
-  const c_2 = $[2] !== props.p2;
+  const $ = React.unstable_useMemoCache(6);
+  const c_0 = $[0] !== props;
   let a;
   let b;
-  if (c_0 || c_1 || c_2) {
+  if (c_0) {
     a = [];
     b = [];
     if (mayMutate(b)) {
@@ -89,25 +83,23 @@ function ComponentB(props) {
     if (props.p1) {
       b.push(props.p2);
     }
-    $[0] = props.p0;
-    $[1] = props.p1;
-    $[2] = props.p2;
+    $[0] = props;
+    $[1] = a;
+    $[2] = b;
+  } else {
+    a = $[1];
+    b = $[2];
+  }
+  const c_3 = $[3] !== a;
+  const c_4 = $[4] !== b;
+  let t0;
+  if (c_3 || c_4) {
+    t0 = <Foo a={a} b={b}></Foo>;
     $[3] = a;
     $[4] = b;
+    $[5] = t0;
   } else {
-    a = $[3];
-    b = $[4];
-  }
-  const c_5 = $[5] !== a;
-  const c_6 = $[6] !== b;
-  let t0;
-  if (c_5 || c_6) {
-    t0 = <Foo a={a} b={b}></Foo>;
-    $[5] = a;
-    $[6] = b;
-    $[7] = t0;
-  } else {
-    t0 = $[7];
+    t0 = $[5];
   }
   return t0;
 }

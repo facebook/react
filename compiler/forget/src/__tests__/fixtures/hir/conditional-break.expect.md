@@ -92,13 +92,10 @@ function ComponentA(props) {
  * props.b *does* influence `a`
  */
 function ComponentB(props) {
-  const $ = React.unstable_useMemoCache(5);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.c;
-  const c_3 = $[3] !== props.d;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
   let a;
-  if (c_0 || c_1 || c_2 || c_3) {
+  if (c_0) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -106,13 +103,10 @@ function ComponentB(props) {
     }
 
     a.push(props.d);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = props.c;
-    $[3] = props.d;
-    $[4] = a;
+    $[0] = props;
+    $[1] = a;
   } else {
-    a = $[4];
+    a = $[1];
   }
   return a;
 }
@@ -121,13 +115,10 @@ function ComponentB(props) {
  * props.b *does* influence `a`, but only in a way that is never observable
  */
 function ComponentC(props) {
-  const $ = React.unstable_useMemoCache(5);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.c;
-  const c_3 = $[3] !== props.d;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
   let a;
-  if (c_0 || c_1 || c_2 || c_3) {
+  if (c_0) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -136,13 +127,10 @@ function ComponentC(props) {
     }
 
     a.push(props.d);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = props.c;
-    $[3] = props.d;
-    $[4] = a;
+    $[0] = props;
+    $[1] = a;
   } else {
-    a = $[4];
+    a = $[1];
   }
   return a;
 }
@@ -151,13 +139,10 @@ function ComponentC(props) {
  * props.b *does* influence `a`
  */
 function ComponentD(props) {
-  const $ = React.unstable_useMemoCache(5);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.c;
-  const c_3 = $[3] !== props.d;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
   let a;
-  if (c_0 || c_1 || c_2 || c_3) {
+  if (c_0) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -166,13 +151,10 @@ function ComponentD(props) {
     }
 
     a.push(props.d);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = props.c;
-    $[3] = props.d;
-    $[4] = a;
+    $[0] = props;
+    $[1] = a;
   } else {
-    a = $[4];
+    a = $[1];
   }
   return a;
 }

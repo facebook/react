@@ -57,12 +57,12 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  const c_2 = $[2] !== props;
+  const c_2 = $[2] !== props.showHeader;
   const c_3 = $[3] !== x;
   let t0;
   if (c_2 || c_3) {
     t0 = props.showHeader ? <div>{x}</div> : null;
-    $[2] = props;
+    $[2] = props.showHeader;
     $[3] = x;
     $[4] = t0;
   } else {

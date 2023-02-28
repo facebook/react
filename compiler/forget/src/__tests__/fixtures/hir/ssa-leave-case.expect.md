@@ -23,41 +23,39 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(7);
-  const c_0 = $[0] !== props.p0;
-  const c_1 = $[1] !== props.p1;
+  const $ = React.unstable_useMemoCache(6);
+  const c_0 = $[0] !== props;
   let x;
   let y;
-  if (c_0 || c_1) {
+  if (c_0) {
     x = [];
     y = undefined;
     if (props.p0) {
       x.push(props.p1);
       y = x;
     }
-    $[0] = props.p0;
-    $[1] = props.p1;
-    $[2] = x;
-    $[3] = y;
+    $[0] = props;
+    $[1] = x;
+    $[2] = y;
   } else {
-    x = $[2];
-    y = $[3];
+    x = $[1];
+    y = $[2];
   }
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== y;
+  const c_3 = $[3] !== x;
+  const c_4 = $[4] !== y;
   let t0;
-  if (c_4 || c_5) {
+  if (c_3 || c_4) {
     t0 = (
       <Component>
         {x}
         {y}
       </Component>
     );
-    $[4] = x;
-    $[5] = y;
-    $[6] = t0;
+    $[3] = x;
+    $[4] = y;
+    $[5] = t0;
   } else {
-    t0 = $[6];
+    t0 = $[5];
   }
   return t0;
 }

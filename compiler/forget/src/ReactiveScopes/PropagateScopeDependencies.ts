@@ -22,9 +22,7 @@ import {
   ReactiveValue,
 } from "../HIR/HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { todoInvariant } from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
-import { eachReactiveValueOperand } from "./visitors";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -60,10 +58,10 @@ type Scopes = Array<ReactiveScope>;
 // TODO(@mofeiZ): remove once we replace Context.#dependencies, #properties with tree
 // representation
 function areDependenciesEqual(
-  dep1: ReactiveScopeDependency,
-  dep2: ReactiveScopeDependency
+  dep1: ReactiveScopeDependencyInfo,
+  dep2: ReactiveScopeDependencyInfo
 ): boolean {
-  if (dep1.identifier.id !== dep2.identifier.id) {
+  if (dep1.identifier.id !== dep2.identifier.id || dep1.cond !== dep2.cond) {
     return false;
   }
   const dep1Path = dep1.path;
@@ -75,7 +73,7 @@ function areDependenciesEqual(
   } else if (
     dep1Path === null ||
     dep2Path === null ||
-    dep2Path.length != dep1Path.length
+    dep2Path.length !== dep1Path.length
   ) {
     return false;
   }
@@ -84,6 +82,8 @@ function areDependenciesEqual(
     return dep1Property === dep2Path[idx];
   });
 }
+
+type ReactiveScopeDependencyInfo = ReactiveScopeDependency & { cond: boolean };
 
 /**
  * Enum representing the access type of single property on a parent object.
@@ -97,23 +97,59 @@ function areDependenciesEqual(
  *   - Dependency: this property is read as a dependency and we must track changes
  *     to it for correctness.
  *
+ *   ```javascript
+ *   // props.a is a dependency here and must be tracked
+ *   deps: {props.a, props.a.b} ---> minimalDeps: {props.a}
+ *   // props.a is just an access here and does not need to be tracked
+ *   deps: {props.a.b} ---> minimalDeps: {props.a.b}
+ *   ```
  */
 enum PropertyAccessType {
+  ConditionalAccess = "ConditionalAccess",
   UnconditionalAccess = "UnconditionalAccess",
+  ConditionalDependency = "ConditionalDependency",
   UnconditionalDependency = "UnconditionalDependency",
+}
+
+function isUnconditional(access: PropertyAccessType) {
+  return (
+    access === PropertyAccessType.UnconditionalAccess ||
+    access === PropertyAccessType.UnconditionalDependency
+  );
+}
+function isDependency(access: PropertyAccessType) {
+  return (
+    access === PropertyAccessType.ConditionalDependency ||
+    access === PropertyAccessType.UnconditionalDependency
+  );
 }
 
 function merge(
   access1: PropertyAccessType,
   access2: PropertyAccessType
 ): PropertyAccessType {
-  if (
-    access1 === PropertyAccessType.UnconditionalDependency ||
-    access2 === PropertyAccessType.UnconditionalDependency
-  ) {
-    return PropertyAccessType.UnconditionalDependency;
+  const resultIsUnconditional =
+    isUnconditional(access1) || isUnconditional(access2);
+  const resultIsDependency = isDependency(access1) || isDependency(access2);
+
+  // Straightforward merge.
+  // This can be represented as bitwise OR, but is written out for readability
+  //
+  // Observe that `UnconditionalAccess | ConditionalDependency` produces an
+  // unconditionally accessed conditional dependency. We currently use these
+  // as we use unconditional dependencies. (i.e. to codegen change variables)
+  if (resultIsUnconditional) {
+    if (resultIsDependency) {
+      return PropertyAccessType.UnconditionalDependency;
+    } else {
+      return PropertyAccessType.UnconditionalAccess;
+    }
   } else {
-    return PropertyAccessType.UnconditionalAccess;
+    if (resultIsDependency) {
+      return PropertyAccessType.ConditionalDependency;
+    } else {
+      return PropertyAccessType.ConditionalAccess;
+    }
   }
 }
 
@@ -134,12 +170,24 @@ const promoteUncondResult = [
   },
 ];
 
+const promoteCondResult = [
+  {
+    relativePath: [],
+    accessType: PropertyAccessType.ConditionalDependency,
+  },
+];
+
+/**
+ * Recursively calculates minimal dependencies in a subtree.
+ * @param dep DependencyNode representing a dependency subtree.
+ * @returns a minimal list of dependencies in this subtree.
+ */
 function deriveMinimalDependenciesInSubtree(
   dep: DependencyNode
 ): Array<ReduceResultNode> {
   const results: Array<ReduceResultNode> = [];
   for (const [childName, childNode] of dep.properties) {
-    const reduceResult = deriveMinimalDependenciesInSubtree(childNode).map(
+    const childResult = deriveMinimalDependenciesInSubtree(childNode).map(
       ({ relativePath, accessType }) => {
         return {
           relativePath: [childName, ...relativePath],
@@ -147,7 +195,7 @@ function deriveMinimalDependenciesInSubtree(
         };
       }
     );
-    results.push(...reduceResult);
+    results.push(...childResult);
   }
 
   switch (dep.accessType) {
@@ -155,13 +203,42 @@ function deriveMinimalDependenciesInSubtree(
       return promoteUncondResult;
     }
     case PropertyAccessType.UnconditionalAccess: {
-      // all children are unconditional dependencies, return them to preserve granularity
-      return results;
+      if (
+        results.every(
+          ({ accessType }) =>
+            accessType === PropertyAccessType.UnconditionalDependency
+        )
+      ) {
+        // all children are unconditional dependencies, return them to preserve granularity
+        return results;
+      } else {
+        // at least one child is accessed conditionally, so this node needs to be promoted to
+        // unconditional dependency
+        return promoteUncondResult;
+      }
+    }
+    case PropertyAccessType.ConditionalAccess:
+    case PropertyAccessType.ConditionalDependency: {
+      if (
+        results.every(
+          ({ accessType }) =>
+            accessType === PropertyAccessType.ConditionalDependency
+        )
+      ) {
+        // No children are accessed unconditionally, so we cannot promote this node to
+        // unconditional access.
+        // Truncate results of child nodes here, since we shouldn't access them anyways
+        return promoteCondResult;
+      } else {
+        // at least one child is accessed unconditionally, so this node can be promoted to
+        // unconditional dependency
+        return promoteUncondResult;
+      }
     }
     default: {
-      todoInvariant(
-        false,
-        "[PropgateScopeDependencies] Handle conditional dependencies."
+      assertExhaustive(
+        dep.accessType,
+        "[PropgateScopeDependencies] Unhandled access type!"
       );
     }
   }
@@ -193,7 +270,7 @@ function deriveMinimalDependenciesInSubtree(
 // TODO(@mofeiZ): change once we replace Context.#dependencies, #properties with tree
 // representation
 function deriveMinimalDependencies(
-  initialDeps: Set<ReactiveScopeDependency>
+  initialDeps: Set<ReactiveScopeDependencyInfo>
 ): Set<ReactiveScopeDependency> {
   const depRoots = new Map<IdentifierId, [Identifier, DependencyNode]>();
 
@@ -209,9 +286,13 @@ function deriveMinimalDependencies(
       depRoots.set(dep.identifier.id, [dep.identifier, root]);
     }
     let currNode: DependencyNode = root;
-    // TODO(@mofeiZ) add conditional access/dependencies here
-    const accessType = PropertyAccessType.UnconditionalAccess;
-    const depType = PropertyAccessType.UnconditionalDependency;
+
+    const accessType = dep.cond
+      ? PropertyAccessType.ConditionalAccess
+      : PropertyAccessType.UnconditionalAccess;
+    const depType = dep.cond
+      ? PropertyAccessType.ConditionalDependency
+      : PropertyAccessType.UnconditionalDependency;
 
     for (const property of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
@@ -256,20 +337,49 @@ function deriveMinimalDependencies(
 class Context {
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
-  #dependencies: Set<ReactiveScopeDependency> = new Set();
-  #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
+  #dependencies: Set<ReactiveScopeDependencyInfo> = new Set();
+  #properties: Map<Identifier, ReactiveScopeDependencyInfo> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
+  #inConditionalWithinScope: boolean = false;
   #scopes: Scopes = [];
 
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
+    // Save context of previous scope
+    const prevInConditional = this.#inConditionalWithinScope;
     const previousDependencies = this.#dependencies;
-    const scopedDependencies = new Set<ReactiveScopeDependency>();
+
+    // Set context for new scope
+    // A nested scope should add all deps it directly uses as its own
+    // unconditional deps, regardless of whether the nested scope is itself
+    // within a conditional
+    const scopedDependencies = new Set<ReactiveScopeDependencyInfo>();
+    this.#inConditionalWithinScope = false;
     this.#dependencies = scopedDependencies;
     this.#scopes.push(scope);
+
     fn();
+
+    // Restore context of previous scope
     this.#scopes.pop();
     this.#dependencies = previousDependencies;
-    return deriveMinimalDependencies(scopedDependencies);
+    this.#inConditionalWithinScope = prevInConditional;
+
+    const minScopeDependencies = deriveMinimalDependencies(scopedDependencies);
+    // propagate dependencies upward using the same rules as normal dependency
+    // collection. child scopes may have dependencies on values created within
+    // the outer scope, which necessarily cannot be dependencies of the outer
+    // scope
+    for (const dep of minScopeDependencies) {
+      this.visitDependency({ ...dep, cond: this.#inConditionalWithinScope });
+    }
+    return minScopeDependencies;
+  }
+
+  enterConditional(fn: () => void): void {
+    const prevInConditional = this.#inConditionalWithinScope;
+    this.#inConditionalWithinScope = true;
+    fn();
+    this.#inConditionalWithinScope = prevInConditional;
   }
 
   /**
@@ -292,16 +402,18 @@ class Context {
   declareProperty(lvalue: Place, object: Place, property: string): void {
     const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
     const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependency;
+    let nextDependency: ReactiveScopeDependencyInfo;
     if (objectDependency === undefined) {
       nextDependency = {
         identifier: resolvedObject.identifier,
         path: [property],
+        cond: this.#inConditionalWithinScope,
       };
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
+        cond: this.#inConditionalWithinScope,
       };
     }
     this.#properties.set(lvalue.identifier, nextDependency);
@@ -317,29 +429,35 @@ class Context {
 
   visitOperand(place: Place): void {
     const resolved = this.#temporaries.get(place.identifier) ?? place;
-    this.visitDependency({ identifier: resolved.identifier, path: null });
+    this.visitDependency({
+      identifier: resolved.identifier,
+      path: null,
+      cond: this.#inConditionalWithinScope,
+    });
   }
 
   visitProperty(object: Place, property: string): void {
     const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
     const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependency;
+    let nextDependency: ReactiveScopeDependencyInfo;
     if (objectDependency === undefined) {
       nextDependency = {
         identifier: resolvedObject.identifier,
         path: [property],
+        cond: this.#inConditionalWithinScope,
       };
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
+        cond: this.#inConditionalWithinScope,
       };
     }
     this.visitDependency(nextDependency);
   }
 
-  visitDependency(dependency: ReactiveScopeDependency): void {
-    let maybeDependency: ReactiveScopeDependency;
+  visitDependency(dependency: ReactiveScopeDependencyInfo): void {
+    let maybeDependency: ReactiveScopeDependencyInfo;
     if (dependency.path !== null) {
       // Operands may have memberPaths when propagating depenencies of an inner scope upward
       // In this case we use the dependency as-is
@@ -349,12 +467,11 @@ class Context {
       // the expanded Place. Fall back to using the operand as-is.
       let propDep = this.#properties.get(dependency.identifier);
       if (dependency.identifier.name === null && propDep !== undefined) {
-        maybeDependency = propDep;
+        maybeDependency = { ...propDep, cond: dependency.cond };
       } else {
         maybeDependency = dependency;
       }
     }
-
     // Any value used after its originally defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
     // some later code needs access to the value. If the current
@@ -429,13 +546,6 @@ function visit(context: Context, block: ReactiveBlock): void {
           visit(context, item.instructions);
         });
         item.scope.dependencies = scopeDependencies;
-        for (const dep of scopeDependencies) {
-          // propagate dependencies upward using the same rules as
-          // normal dependency collection. child scopes may have dependencies
-          // on values created within the outer scope, which necessarily cannot
-          // be dependencies of the outer scope
-          context.visitDependency(dep);
-        }
         break;
       }
       case "instruction": {
@@ -462,30 +572,53 @@ function visit(context: Context, block: ReactiveBlock): void {
           case "for": {
             visitReactiveValue(context, terminal.init);
             visitReactiveValue(context, terminal.test);
-            visitReactiveValue(context, terminal.update);
-            visit(context, terminal.loop);
+            context.enterConditional(() => {
+              visitReactiveValue(context, terminal.update);
+              visit(context, terminal.loop);
+            });
             break;
           }
           case "while": {
             visitReactiveValue(context, terminal.test);
-            visit(context, terminal.loop);
+            context.enterConditional(() => {
+              visit(context, terminal.loop);
+            });
             break;
           }
           case "if": {
             context.visitOperand(terminal.test);
-            visit(context, terminal.consequent);
-            if (terminal.alternate !== null) {
-              visit(context, terminal.alternate);
-            }
+            /**
+             * TODO: Track dependencies always accessed within consequent and ones
+             * always accessed within alternate. If a dependency is always accessed in
+             * both, we can promote it to an unconditional dependency.
+             *
+             * e.g. props.a.b is unconditionally accessed here.
+             *  if (foo(...)) {
+             *    access(props.a.b);
+             *  } else {
+             *    access(props.a.b);
+             *  }
+             *
+             * To deal with nested if-branches, enterConditional should return a list
+             * of dependencies unconditionally accessed within the callback.
+             */
+            context.enterConditional(() => {
+              visit(context, terminal.consequent);
+              if (terminal.alternate !== null) {
+                visit(context, terminal.alternate);
+              }
+            });
             break;
           }
           case "switch": {
             context.visitOperand(terminal.test);
-            for (const case_ of terminal.cases) {
-              if (case_.block !== undefined) {
-                visit(context, case_.block);
+            context.enterConditional(() => {
+              for (const case_ of terminal.cases) {
+                if (case_.block !== undefined) {
+                  visit(context, case_.block);
+                }
               }
-            }
+            });
             break;
           }
           default: {
@@ -508,13 +641,19 @@ function visitReactiveValue(context: Context, value: ReactiveValue): void {
   switch (value.kind) {
     case "LogicalExpression": {
       visitReactiveValue(context, value.left);
-      visitReactiveValue(context, value.right);
+
+      context.enterConditional(() => {
+        visitReactiveValue(context, value.right);
+      });
       break;
     }
     case "ConditionalExpression": {
       visitReactiveValue(context, value.test);
-      visitReactiveValue(context, value.consequent);
-      visitReactiveValue(context, value.alternate);
+
+      context.enterConditional(() => {
+        visitReactiveValue(context, value.consequent);
+        visitReactiveValue(context, value.alternate);
+      });
       break;
     }
     case "SequenceExpression": {
@@ -553,9 +692,7 @@ function visitInstructionValue(
       context.visitProperty(value.object, value.property);
     }
   } else {
-    for (const operand of eachReactiveValueOperand(value)) {
-      context.visitOperand(operand);
-    }
+    visitReactiveValue(context, value);
   }
 }
 

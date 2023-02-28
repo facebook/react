@@ -27,13 +27,11 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(10);
-  const c_0 = $[0] !== props.p0;
-  const c_1 = $[1] !== props.p2;
-  const c_2 = $[2] !== props.p3;
+  const $ = React.unstable_useMemoCache(8);
+  const c_0 = $[0] !== props;
   let x;
   let y;
-  if (c_0 || c_1 || c_2) {
+  if (c_0) {
     x = [];
     y = undefined;
     switch (props.p0) {
@@ -45,35 +43,33 @@ function Component(props) {
         y = x;
       }
     }
-    $[0] = props.p0;
-    $[1] = props.p2;
-    $[2] = props.p3;
-    $[3] = x;
-    $[4] = y;
+    $[0] = props;
+    $[1] = x;
+    $[2] = y;
   } else {
-    x = $[3];
-    y = $[4];
+    x = $[1];
+    y = $[2];
   }
-  const c_5 = $[5] !== x;
+  const c_3 = $[3] !== x;
   let child;
-  if (c_5) {
+  if (c_3) {
     child = <Component data={x}></Component>;
-    $[5] = x;
-    $[6] = child;
+    $[3] = x;
+    $[4] = child;
   } else {
-    child = $[6];
+    child = $[4];
   }
   y.push(props.p4);
-  const c_7 = $[7] !== y;
-  const c_8 = $[8] !== child;
+  const c_5 = $[5] !== y;
+  const c_6 = $[6] !== child;
   let t0;
-  if (c_7 || c_8) {
+  if (c_5 || c_6) {
     t0 = <Component data={y}>{child}</Component>;
-    $[7] = y;
-    $[8] = child;
-    $[9] = t0;
+    $[5] = y;
+    $[6] = child;
+    $[7] = t0;
   } else {
-    t0 = $[9];
+    t0 = $[7];
   }
   return t0;
 }

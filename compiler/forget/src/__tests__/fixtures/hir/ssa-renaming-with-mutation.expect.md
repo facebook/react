@@ -20,12 +20,10 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.unstable_useMemoCache(4);
-  const c_0 = $[0] !== props.bar;
-  const c_1 = $[1] !== props.cond;
-  const c_2 = $[2] !== props.foo;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
   let x;
-  if (c_0 || c_1 || c_2) {
+  if (c_0) {
     x = [];
     x.push(props.bar);
     if (props.cond) {
@@ -34,12 +32,10 @@ function foo(props) {
     }
 
     mut(x);
-    $[0] = props.bar;
-    $[1] = props.cond;
-    $[2] = props.foo;
-    $[3] = x;
+    $[0] = props;
+    $[1] = x;
   } else {
-    x = $[3];
+    x = $[1];
   }
   return x;
 }
