@@ -308,7 +308,8 @@ class InferenceState {
       case Effect.Capture: {
         if (
           valueKind === ValueKind.Frozen ||
-          valueKind === ValueKind.MaybeFrozen
+          valueKind === ValueKind.MaybeFrozen ||
+          valueKind === ValueKind.Immutable
         ) {
           effect = Effect.Read;
         } else {

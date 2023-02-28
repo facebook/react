@@ -15,18 +15,15 @@ function component(a) {
 ```javascript
 let someGlobal = {};
 function component(a) {
-  const $ = React.unstable_useMemoCache(3);
-  const t0 = someGlobal;
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;
-  const c_1 = $[1] !== t0;
   let x;
-  if (c_0 || c_1) {
-    x = { a: a, someGlobal: t0 };
+  if (c_0) {
+    x = { a: a, someGlobal: someGlobal };
     $[0] = a;
-    $[1] = t0;
-    $[2] = x;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   return x;
 }
