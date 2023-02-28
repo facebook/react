@@ -46,19 +46,22 @@ function PrimitiveAsDep(props) {
 }
 
 function PrimitiveAsDepNested(props) {
-  const $ = React.unstable_useMemoCache(6);
+  const $ = React.unstable_useMemoCache(8);
   const c_0 = $[0] !== props.b;
   const c_1 = $[1] !== props.a;
   let x;
   if (c_0 || c_1) {
     x = {};
     mutate(x);
+    const t0 = props.b + 1;
+    const c_3 = $[3] !== t0;
     let y;
-    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-      y = foo(props.b + 1);
-      $[3] = y;
+    if (c_3) {
+      y = foo(t0);
+      $[3] = t0;
+      $[4] = y;
     } else {
-      y = $[3];
+      y = $[4];
     }
     mutate(x, props.a);
     $[0] = props.b;
@@ -67,16 +70,18 @@ function PrimitiveAsDepNested(props) {
   } else {
     x = $[2];
   }
-  const c_4 = $[4] !== x;
-  let t0;
-  if (c_4) {
-    t0 = [x, y];
-    $[4] = x;
-    $[5] = t0;
+  const c_5 = $[5] !== x;
+  const c_6 = $[6] !== y;
+  let t1;
+  if (c_5 || c_6) {
+    t1 = [x, y];
+    $[5] = x;
+    $[6] = y;
+    $[7] = t1;
   } else {
-    t0 = $[5];
+    t1 = $[7];
   }
-  return t0;
+  return t1;
 }
 
 ```

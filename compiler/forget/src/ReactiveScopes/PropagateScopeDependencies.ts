@@ -505,7 +505,7 @@ class Context {
       currentDeclaration !== undefined &&
       currentDeclaration.id < currentScope.range.start &&
       (currentDeclaration.scope == null ||
-        !this.#isScopeActive(currentDeclaration.scope))
+        currentDeclaration.scope !== currentScope)
     ) {
       // Check if there is an existing dependency that describes this operand
       // We do not try to join/reduce dependencies here due to missing info
