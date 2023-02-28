@@ -53,6 +53,18 @@ describe('react-dom-server-rendering-stub', () => {
     );
   });
 
+  it('provides preconnect and prefetchDNS exports', async () => {
+    function App() {
+      ReactDOM.preconnect('foo', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('bar');
+      return <div>foo</div>;
+    }
+    const html = ReactDOMFizzServer.renderToString(<App />);
+    expect(html).toEqual(
+      '<link rel="preconnect" href="foo" crossorigin="use-credentials"/><link href="bar" rel="dns-prefetch"/><div>foo</div>',
+    );
+  });
+
   it('provides a stub for createPortal', async () => {
     expect(() => {
       ReactDOM.createPortal();
