@@ -54,7 +54,7 @@ function setup(hook: any) {
   const setupNativeStyleEditor =
     require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor').default;
 
-  const bridge = new Bridge({
+  const bridge = new Bridge<$FlowFixMe, $FlowFixMe>({
     listen(fn) {
       const listener = (event: $FlowFixMe) => {
         if (
