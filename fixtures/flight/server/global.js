@@ -87,6 +87,7 @@ app.all('/', async function (req, res, next) {
 
   try {
     const rscResponse = await promiseForData;
+    res.set('Content-type', 'text/x-component');
     rscResponse.pipe(res);
   } catch (e) {
     console.error(`Failed to proxy request: ${e.stack}`);
