@@ -244,10 +244,17 @@ module.exports = function register() {
       return originalCompile.apply(this, arguments);
     }
 
-    const {body} = acorn.parse(content, {
-      ecmaVersion: '2019',
-      sourceType: 'source',
-    });
+    let body;
+    try {
+      body = acorn.parse(content, {
+        ecmaVersion: '2024',
+        sourceType: 'source',
+      }).body;
+    } catch (x) {
+      // eslint-disable-next-line react-internal/no-production-logging
+      console.error('Error parsing %s %s', url, x.message);
+      return originalCompile.apply(this, arguments);
+    }
 
     let useClient = false;
     let useServer = false;

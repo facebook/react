@@ -266,10 +266,17 @@ async function parseExportNamesInto(
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          const {body: childBody} = acorn.parse(source, {
-            ecmaVersion: '2019',
-            sourceType: 'module',
-          });
+          let childBody;
+          try {
+            childBody = acorn.parse(source, {
+              ecmaVersion: '2024',
+              sourceType: 'module',
+            }).body;
+          } catch (x) {
+            // eslint-disable-next-line react-internal/no-production-logging
+            console.error('Error parsing %s %s', url, x.message);
+            continue;
+          }
           await parseExportNamesInto(childBody, names, url, loader);
           continue;
         }
@@ -381,10 +388,17 @@ async function transformModuleIfNeeded(
     return source;
   }
 
-  const {body} = acorn.parse(source, {
-    ecmaVersion: '2019',
-    sourceType: 'module',
-  });
+  let body;
+  try {
+    body = acorn.parse(source, {
+      ecmaVersion: '2024',
+      sourceType: 'module',
+    }).body;
+  } catch (x) {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console.error('Error parsing %s %s', url, x.message);
+    return source;
+  }
 
   let useClient = false;
   let useServer = false;
