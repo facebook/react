@@ -50,14 +50,47 @@ app.get('/', async function (req, res) {
   );
   // const m = require('../src/App.js');
   const m = await import('../src/App.js');
-  const dist = process.env.NODE_ENV === 'development' ? 'dist' : 'build';
-  const data = await readFile(
-    path.resolve(__dirname, `../${dist}/react-client-manifest.json`),
-    'utf8'
-  );
+
+  let moduleMap;
+  let mainCSSChunks;
+  if (process.env.NODE_ENV === 'development') {
+    // Read the module map from the HMR server in development.
+    moduleMap = await (
+      await fetch('http://localhost:3000/react-client-manifest.json')
+    ).json();
+    mainCSSChunks = (
+      await (
+        await fetch('http://localhost:3000/entrypoint-manifest.json')
+      ).json()
+    ).main.css;
+  } else {
+    // Read the module map from the static build in production.
+    moduleMap = JSON.parse(
+      await readFile(
+        path.resolve(__dirname, `../build/react-client-manifest.json`),
+        'utf8'
+      )
+    );
+    mainCSSChunks = JSON.parse(
+      await readFile(
+        path.resolve(__dirname, `../build/entrypoint-manifest.json`),
+        'utf8'
+      )
+    ).main.css;
+  }
   const App = m.default.default || m.default;
-  const moduleMap = JSON.parse(data);
-  const {pipe} = renderToPipeableStream(React.createElement(App), moduleMap);
+  const root = [
+    // Prepend the App's tree with stylesheets required for this entrypoint.
+    mainCSSChunks.map(filename =>
+      React.createElement('link', {
+        rel: 'stylesheet',
+        href: filename,
+        precedence: 'default',
+      })
+    ),
+    React.createElement(App),
+  ];
+  const {pipe} = renderToPipeableStream(root, moduleMap);
   pipe(res);
 });
 

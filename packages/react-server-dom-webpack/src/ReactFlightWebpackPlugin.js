@@ -256,30 +256,29 @@ export default class ReactFlightWebpackPlugin {
                 [string]: {specifier: string, name: string},
               } = {};
 
-              ssrManifest[id] = ssrExports;
-
-              ['', '*']
-                .concat(
-                  Array.isArray(moduleProvidedExports)
-                    ? moduleProvidedExports
-                    : [],
-                )
-                .forEach(function (name) {
-                  clientExports[name] = {
-                    id,
-                    chunks: chunkIds,
-                    name: name,
-                  };
-                  ssrExports[name] = {
-                    specifier: module.resource,
-                    name: name,
-                  };
-                });
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
+                ['', '*']
+                  .concat(
+                    Array.isArray(moduleProvidedExports)
+                      ? moduleProvidedExports
+                      : [],
+                  )
+                  .forEach(function (name) {
+                    clientExports[name] = {
+                      id,
+                      chunks: chunkIds,
+                      name: name,
+                    };
+                    ssrExports[name] = {
+                      specifier: href,
+                      name: name,
+                    };
+                  });
+
                 clientManifest[href] = clientExports;
-                ssrManifest[href] = ssrExports;
+                ssrManifest[id] = ssrExports;
               }
             }
 
