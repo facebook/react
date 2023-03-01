@@ -4,13 +4,17 @@ import ReactDOM from 'react-dom/client';
 import ReactServerDOMReader from 'react-server-dom-webpack/client';
 
 let data = ReactServerDOMReader.createFromFetch(
-  fetch('http://localhost:3001'),
+  fetch('/', {
+    headers: {
+      Accept: 'text/x-component',
+    },
+  }),
   {
     callServer(id, args) {
-      const response = fetch('http://localhost:3001', {
+      const response = fetch('/', {
         method: 'POST',
-        cors: 'cors',
         headers: {
+          Accept: 'text/x-component',
           'rsc-action': JSON.stringify({filepath: id.id, name: id.name}),
         },
         body: JSON.stringify(args),

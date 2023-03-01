@@ -26,6 +26,11 @@ babelRegister({
   plugins: ['@babel/transform-modules-commonjs'],
 });
 
+if (typeof fetch === 'undefined') {
+  // Patch fetch for earlier Node versions.
+  global.fetch = require('undici').fetch;
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
@@ -51,17 +56,9 @@ app.get('/', async function (req, res) {
     'utf8'
   );
   const App = m.default.default || m.default;
-  res.setHeader('Access-Control-Allow-Origin', '*');
   const moduleMap = JSON.parse(data);
   const {pipe} = renderToPipeableStream(React.createElement(App), moduleMap);
   pipe(res);
-});
-
-app.options('/', function (req, res) {
-  res.setHeader('Allow', 'Allow: GET,HEAD,POST');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'rsc-action');
-  res.end();
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
@@ -81,13 +78,11 @@ app.post('/', bodyParser.text(), async function (req, res) {
   const args = JSON.parse(req.body);
   const result = action.apply(null, args);
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
   const {pipe} = renderToPipeableStream(result, {});
   pipe(res);
 });
 
 app.get('/todos', function (req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json([
     {
       id: 1,
