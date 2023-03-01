@@ -30,9 +30,9 @@ export function visitReactiveFunction<TState>(
 }
 
 export class ReactiveFunctionVisitor<TState = void> {
-  visitID(id: InstructionId, state: TState): void {}
-  visitLValue(id: InstructionId, lvalue: LValue, state: TState): void {}
-  visitPlace(id: InstructionId, place: Place, state: TState): void {}
+  visitID(_id: InstructionId, _state: TState): void {}
+  visitLValue(_id: InstructionId, _lvalue: LValue, _state: TState): void {}
+  visitPlace(_id: InstructionId, _place: Place, _state: TState): void {}
 
   visitValue(id: InstructionId, value: ReactiveValue, state: TState): void {
     this.traverseValue(id, value, state);

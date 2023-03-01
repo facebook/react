@@ -416,7 +416,7 @@ function codegenDependency(
   return object;
 }
 
-function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
+function withLoc<T extends (...args: any[]) => t.Node>(
   fn: T
 ): (
   loc: SourceLocation | null | undefined,
@@ -430,8 +430,7 @@ function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
     if (loc != null && loc != GeneratedSource) {
       node.loc = loc;
     }
-    // @ts-ignore
-    return node;
+    return node as ReturnType<T>;
   };
 }
 
@@ -439,9 +438,9 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createCallExpression = withLoc(t.callExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const createFunctionDeclaration = withLoc(t.functionDeclaration);
-const createLabelledStatement = withLoc(t.labeledStatement);
+const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
-const createWhileStatement = withLoc(t.whileStatement);
+const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
 const createSequenceExpression = withLoc(t.sequenceExpression);

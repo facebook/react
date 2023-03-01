@@ -42,7 +42,7 @@ export function printFunction(fn: HIRFunction): string {
 export function printHIR(ir: HIR, options: Options | null = null): string {
   let output = [];
   let indent = " ".repeat(options?.indent ?? 0);
-  const push = (text: string, indent: string = "  ") => {
+  const push = (text: string, indent: string = "  "): void => {
     output.push(`${indent}${text}`);
   };
   for (const [blockId, block] of ir.blocks) {

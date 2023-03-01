@@ -21,6 +21,7 @@ import {
   GotoVariant,
   HIR,
   Identifier,
+  IdentifierId,
   Instruction,
   makeBlockId,
   makeInstructionId,
@@ -86,7 +87,7 @@ export default class HIRBuilder {
   parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
 
-  get nextIdentifierId() {
+  get nextIdentifierId(): IdentifierId {
     return this.#env.nextIdentifierId;
   }
 
@@ -127,7 +128,7 @@ export default class HIRBuilder {
   /**
    * Push a statement or expression onto the current block
    */
-  push(instruction: Instruction) {
+  push(instruction: Instruction): void {
     this.#current.instructions.push(instruction);
   }
 
@@ -272,7 +273,7 @@ export default class HIRBuilder {
   /**
    * Terminate the current block w the given terminal, and start a new block
    */
-  terminate(terminal: Terminal, nextBlockKind: BlockKind) {
+  terminate(terminal: Terminal, nextBlockKind: BlockKind): void {
     const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind,
@@ -290,7 +291,7 @@ export default class HIRBuilder {
    * Terminate the current block w the given terminal, and set the previously
    * reserved block as the new current block
    */
-  terminateWithContinuation(terminal: Terminal, continuation: WipBlock) {
+  terminateWithContinuation(terminal: Terminal, continuation: WipBlock): void {
     const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind: kind,
@@ -315,7 +316,7 @@ export default class HIRBuilder {
   /**
    * Save a previously reserved block as completed
    */
-  complete(block: WipBlock, terminal: Terminal) {
+  complete(block: WipBlock, terminal: Terminal): void {
     const { id: blockId, kind, instructions } = block;
     this.#completed.set(blockId, {
       kind,
@@ -536,7 +537,7 @@ export function removeUnreachableFallthroughs(func: HIR): void {
 export function reversePostorderBlocks(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   const postorder: Array<BlockId> = [];
-  function visit(blockId: BlockId) {
+  function visit(blockId: BlockId): void {
     if (visited.has(blockId)) {
       return;
     }
@@ -634,7 +635,7 @@ export function reversePostorderBlocks(func: HIR): void {
   func.blocks = blocks;
 }
 
-export function markInstructionIds(func: HIR) {
+export function markInstructionIds(func: HIR): void {
   let id = 0;
   const visited = new Set<Instruction>();
   for (const [_, block] of func.blocks) {
@@ -650,12 +651,12 @@ export function markInstructionIds(func: HIR) {
   }
 }
 
-export function markPredecessors(func: HIR) {
+export function markPredecessors(func: HIR): void {
   for (const [, block] of func.blocks) {
     block.preds.clear();
   }
   const visited: Set<BlockId> = new Set();
-  function visit(blockId: BlockId, prevBlock: BasicBlock | null) {
+  function visit(blockId: BlockId, prevBlock: BasicBlock | null): void {
     const block = func.blocks.get(blockId)!;
     if (prevBlock) {
       block.preds.add(prevBlock.id);

@@ -157,14 +157,14 @@ class SSABuilder {
     return newId;
   }
 
-  fixIncompletePhis(block: BasicBlock) {
+  fixIncompletePhis(block: BasicBlock): void {
     const state = this.#states.get(block)!;
     for (const phi of state.incompletePhis) {
       this.addPhi(block, phi.oldId, phi.newId);
     }
   }
 
-  startBlock(block: BasicBlock) {
+  startBlock(block: BasicBlock): void {
     this.#current = block;
     this.#states.set(block, {
       defs: new Map(),
@@ -172,7 +172,7 @@ class SSABuilder {
     });
   }
 
-  print() {
+  print(): void {
     const text: string[] = [];
     for (const [block, state] of this.#states) {
       text.push(`bb${block.id}:`);
@@ -194,7 +194,7 @@ class SSABuilder {
   }
 }
 
-export default function enterSSA(func: HIRFunction) {
+export default function enterSSA(func: HIRFunction): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   const builder = new SSABuilder(func.env, func.body.blocks);
   for (const [blockId, block] of func.body.blocks) {
