@@ -195,7 +195,7 @@ function Output({ store, compilerOutput }: Props) {
           </div>
           <pre
             className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
-            style={{ width: "calc(100vw - 650px)", maxHeight: "20vh" }}
+            style={{ width: "calc(100vw - 650px)", height: "150px" }}
           >
             <code>{compilerOutput.error.toString()}</code>
           </pre>
