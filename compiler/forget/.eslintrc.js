@@ -15,6 +15,15 @@ module.exports = {
 
     // Not valuable enough to enable
     "no-useless-escape": "off",
+
+    // There are valid use cases for loops with constant conditions where the body contains the
+    // break
+    "no-constant-condition": "off",
+
+    // eslint only knows about builtin control flow (eg throw, return, break) and not custom ones
+    // like invariant.
+    "no-fallthrough": "off",
+
     "@typescript-eslint/no-empty-function": "off",
 
     // Explicitly casting to/through any is sometimes required, often for error messages to
