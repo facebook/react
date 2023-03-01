@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   BundlerConfig,
   Destination,
@@ -20,7 +20,7 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 function render(
-  model: ReactModel,
+  model: ReactClientValue,
   destination: Destination,
   config: BundlerConfig,
 ): void {

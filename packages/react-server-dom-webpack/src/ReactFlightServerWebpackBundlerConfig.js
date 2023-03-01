@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
 type WebpackMap = {
   [id: string]: ClientReferenceMetadata,
@@ -18,7 +18,7 @@ export type BundlerConfig = WebpackMap;
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
-  $$bound: Array<ReactModel>,
+  $$bound: Array<ReactClientValue>,
 };
 
 export type ServerReferenceId = string;
@@ -83,6 +83,6 @@ export function getServerReferenceId<T>(
 export function getServerReferenceBoundArguments<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): Array<any> {
+): Array<ReactClientValue> {
   return serverReference.$$bound;
 }

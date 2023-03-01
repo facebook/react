@@ -9,7 +9,10 @@
 
 import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
 
-import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
+import type {
+  Request,
+  ReactClientValue,
+} from 'react-server/src/ReactFlightServer';
 
 import type {JSResourceReference} from 'JSResourceReference';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
@@ -76,7 +79,7 @@ export function getServerReferenceId<T>(
 export function getServerReferenceBoundArguments<T>(
   config: BundlerConfig,
   resource: ServerReference<T>,
-): Array<any> {
+): Array<ReactClientValue> {
   throw new Error('Not implemented.');
 }
 
@@ -132,9 +135,9 @@ export function processErrorChunkDev(
 
 function convertModelToJSON(
   request: Request,
-  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent: {+[key: string]: ReactClientValue} | $ReadOnlyArray<ReactClientValue>,
   key: string,
-  model: ReactModel,
+  model: ReactClientValue,
 ): JSONValue {
   const json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
@@ -167,7 +170,7 @@ function convertModelToJSON(
 export function processModelChunk(
   request: Request,
   id: number,
-  model: ReactModel,
+  model: ReactClientValue,
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);

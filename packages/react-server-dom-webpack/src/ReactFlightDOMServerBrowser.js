@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
@@ -26,7 +26,7 @@ type Options = {
 };
 
 function renderToReadableStream(
-  model: ReactModel,
+  model: ReactClientValue,
   webpackMap: BundlerConfig,
   options?: Options,
 ): ReadableStream {
