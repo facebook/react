@@ -32,6 +32,39 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          effectDisallowedDependencies: {
+            type: 'array',
+            minItems: 1,
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['module', 'imports'],
+              properties: {
+                module: {
+                  type: 'string',
+                },
+                imports: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    additionalProperties: false,
+                    required: ['name', 'fields'],
+                    properties: {
+                      name: {
+                        type: 'string',
+                      },
+                      fields: {
+                        type: 'array',
+                        items: {
+                          type: 'string',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     ],
@@ -50,6 +83,10 @@ export default {
         context.options[0] &&
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
+
+    const effectDisallowedDependencies = (context.options &&
+      context.options[0] &&
+      context.options[0].effectDisallowedDependencies) || [];
 
     const options = {
       additionalHooks,
