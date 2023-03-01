@@ -112,19 +112,21 @@ export function destroy(agent: Agent): void {
 }
 
 function initialize(): void {
-  canvas = window.document.createElement('canvas');
-  canvas.style.cssText = `
-    xx-background-color: red;
-    xx-opacity: 0.5;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    position: fixed;
-    right: 0;
-    top: 0;
-    z-index: 1000000000;
-  `;
+  if (typeof window !== 'undefined') {
+    canvas = window.document.createElement('canvas');
+    canvas.style.cssText = `
+      xx-background-color: red;
+      xx-opacity: 0.5;
+      bottom: 0;
+      left: 0;
+      pointer-events: none;
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 1000000000;
+    `;
 
-  const root = window.document.documentElement;
-  root.insertBefore(canvas, root.firstChild);
+    const root = window.document.documentElement;
+    root.insertBefore(canvas, root.firstChild);
+  }
 }
