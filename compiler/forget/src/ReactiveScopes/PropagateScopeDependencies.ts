@@ -272,10 +272,10 @@ function deriveMinimalDependenciesInSubtree(
 function deriveMinimalDependencies(
   initialDeps: Set<ReactiveScopeDependencyInfo>
 ): Set<ReactiveScopeDependency> {
-  const depRoots = new Map<IdentifierId, [Identifier, DependencyNode]>();
+  const depRoots = new Map<Identifier, DependencyNode>();
 
   for (const dep of initialDeps) {
-    let root = depRoots.get(dep.identifier.id)?.[1];
+    let root = depRoots.get(dep.identifier);
     const path = dep.path ?? [];
     if (root == null) {
       // roots can always be accessed unconditionally in JS
@@ -283,7 +283,7 @@ function deriveMinimalDependencies(
         properties: new Map(),
         accessType: PropertyAccessType.UnconditionalAccess,
       };
-      depRoots.set(dep.identifier.id, [dep.identifier, root]);
+      depRoots.set(dep.identifier, root);
     }
     let currNode: DependencyNode = root;
 
@@ -314,7 +314,7 @@ function deriveMinimalDependencies(
   }
 
   const results = new Set<ReactiveScopeDependency>();
-  for (const [_, [rootId, rootNode]] of depRoots) {
+  for (const [root, rootNode] of depRoots.entries()) {
     const deps = deriveMinimalDependenciesInSubtree(rootNode);
     invariant(
       deps.every(
@@ -325,7 +325,7 @@ function deriveMinimalDependencies(
 
     for (const dep of deps) {
       results.add({
-        identifier: rootId,
+        identifier: root,
         path: dep.relativePath,
       });
     }
