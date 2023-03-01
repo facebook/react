@@ -124,6 +124,7 @@
 "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
 "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version."
 "Ended a touch event which was not counted in `trackedTouchCount`."
+"Error parsing %s %s"
 "EventPluginUtils.setComponentTree(...): Injected module is missing getNodeFromInstance or getInstanceFromNode."
 "EventPluginUtils: Invalid `event`."
 "EventRegistry: More than one plugin attempted to publish the same registration name, `%s`."
