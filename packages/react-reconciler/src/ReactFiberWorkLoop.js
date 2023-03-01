@@ -1846,19 +1846,34 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
 
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
-    if (workInProgressSuspendedReason !== SuspendedOnError) {
-      const wakeable: Wakeable = (thrownValue: any);
-      markComponentSuspended(
-        erroredWork,
-        wakeable,
-        workInProgressRootRenderLanes,
-      );
-    } else {
-      markComponentErrored(
-        erroredWork,
-        thrownValue,
-        workInProgressRootRenderLanes,
-      );
+    switch (workInProgressSuspendedReason) {
+      case SuspendedOnError: {
+        markComponentErrored(
+          erroredWork,
+          thrownValue,
+          workInProgressRootRenderLanes,
+        );
+        break;
+      }
+      case SuspendedOnData:
+      case SuspendedOnImmediate:
+      case SuspendedOnDeprecatedThrowPromise:
+      case SuspendedAndReadyToUnwind: {
+        const wakeable: Wakeable = (thrownValue: any);
+        markComponentSuspended(
+          erroredWork,
+          wakeable,
+          workInProgressRootRenderLanes,
+        );
+        break;
+      }
+      case SuspendedOnHydration: {
+        // This is conceptually like a suspend, but it's not associated with
+        // a particular wakeable. DevTools doesn't seem to care about this case,
+        // currently. It's similar to if the component were interrupted, which
+        // we don't mark with a special function.
+        break;
+      }
     }
   }
 }
