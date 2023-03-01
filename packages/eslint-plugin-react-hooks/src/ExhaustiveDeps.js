@@ -84,13 +84,23 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
-    const effectDisallowedDependencies = (context.options &&
-      context.options[0] &&
-      context.options[0].effectDisallowedDependencies) || [];
+    const effectDisallowedDependencies =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].effectDisallowedDependencies) ||
+      [];
+
+    const effectDisallowedDependenciesMap = new Map(
+      effectDisallowedDependencies.map(({module, imports}) => [
+        module,
+        imports,
+      ]),
+    );
 
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      effectDisallowedDependenciesMap,
     };
 
     function reportProblem(problem) {
@@ -191,7 +201,7 @@ export default {
       // const router = useRouter()
       //       ^^^ true for this reference to 'next/router'
       // False for everything else, including router from 'next/navigation'
-      function isPagesNextRouter(resolved) {
+      function isDisallowedDependency(resolved) {
         if (!isArray(resolved.defs)) {
           return false;
         }
@@ -204,63 +214,23 @@ export default {
           return false;
         }
 
-        let init = def.node.init;
-        if (init == null) {
-          return false;
-        }
-
-        while (init.type === 'TSAsExpression') {
-          init = init.expression;
-        }
-        // Detect primitive constants
-        // const foo = 42
-        let declaration = def.node.parent;
-        if (declaration == null) {
-          // This might happen if variable is declared after the callback.
-          // In that case ESLint won't set up .parent refs.
-          // So we'll set them up manually.
-          fastFindReferenceWithParent(componentScope.block, def.node.id);
-          declaration = def.node.parent;
-          if (declaration == null) {
-            return false;
+        const resolvedImportModule = resolveImportModuleForDef(
+          componentScope,
+          def.node,
+        );
+        if (resolvedImportModule) {
+          const {importModuleName, importName} = resolvedImportModule;
+          let foundDependency = undefined;
+          const moduleImports =
+            options.effectDisallowedDependenciesMap.get(importModuleName);
+          if (moduleImports) {
+            // Find the import name and disallowed fields for this module
+            foundDependency = moduleImports.find(
+              moduleImport => moduleImport.name === importName,
+            );
           }
+          return foundDependency;
         }
-
-        // Detect useRouter() CallExpression
-        if (init.type !== 'CallExpression') {
-          return false;
-        }
-        const callee = init.callee;
-        if (callee.type !== 'Identifier') {
-          return false;
-        }
-        const id = def.node.id;
-        const {name} = callee;
-        if (name === 'useRouter' && id.type === 'Identifier') {
-          // Found the useRouter hook
-          const useRouterImport = componentScope.references.find(ref => {
-            if (!isSameIdentifier(ref.identifier, callee)) {
-              return false;
-            }
-            if (!ref.resolved || !ref.resolved.defs || !ref.resolved.defs[0]) {
-              return false;
-            }
-            return ref.resolved.defs[0].type === 'ImportBinding';
-          });
-
-          if (!useRouterImport) {
-            return false;
-          }
-          const useRouterImportSource = useRouterImport.resolved.defs[0];
-          if (
-            useRouterImportSource.parent.type === 'ImportDeclaration' &&
-            useRouterImportSource.parent.source.value === 'next/router'
-          ) {
-            // Check that the reference is an import declartion with source 'next/router'
-            return true;
-          }
-        }
-        return false;
       }
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
@@ -573,18 +543,25 @@ export default {
               memoizedIsStableKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
 
-            // { ignoreImportFields: { module: 'next/router', imports: [ { name: 'useRouter' } ] } }
-            const isNextRouter = isPagesNextRouter(resolved);
+            const foundDisallowedDependency = isDisallowedDependency(resolved);
 
             let exemptedProperty = true;
-            if (isNextRouter && dependencyNode.type === 'MemberExpression') {
+            if (
+              foundDisallowedDependency &&
+              dependencyNode.type === 'MemberExpression'
+            ) {
               // fields: ['push', 'replace']
-              if (!['push', 'replace'].includes(dependencyNode.property.name)) {
+              if (
+                !foundDisallowedDependency.fields.includes(
+                  dependencyNode.property.name,
+                )
+              ) {
                 exemptedProperty = false;
               }
             }
             dependencies.set(dependency, {
-              isConfigExemptDependency: exemptedProperty && isNextRouter,
+              isConfigExemptDependency:
+                exemptedProperty && foundDisallowedDependency,
               isStable,
               references: [reference],
             });
@@ -1603,6 +1580,65 @@ function collectRecommendations({
     duplicateDependencies,
     missingDependencies,
   };
+}
+
+function resolveImportModuleForDef(scope, node) {
+  let init = node.init;
+  if (init == null) {
+    return null;
+  }
+
+  while (init.type === 'TSAsExpression') {
+    init = init.expression;
+  }
+  // Detect primitive constants
+  // const foo = 42
+  let declaration = node.parent;
+  if (declaration == null) {
+    // This might happen if variable is declared after the callback.
+    // In that case ESLint won't set up .parent refs.
+    // So we'll set them up manually.
+    fastFindReferenceWithParent(scope.block, node.id);
+    declaration = node.parent;
+    if (declaration == null) {
+      return null;
+    }
+  }
+
+  // Detect useRouter() CallExpression
+  if (init.type !== 'CallExpression') {
+    return null;
+  }
+  const callee = init.callee;
+  if (callee.type !== 'Identifier') {
+    return null;
+  }
+  const id = node.id;
+  const {name} = callee;
+  if (id.type === 'Identifier') {
+    const useRouterImport = scope.references.find(ref => {
+      if (!isSameIdentifier(ref.identifier, callee)) {
+        return false;
+      }
+      if (!ref.resolved || !ref.resolved.defs || !ref.resolved.defs[0]) {
+        return false;
+      }
+      return ref.resolved.defs[0].type === 'ImportBinding';
+    });
+
+    if (!useRouterImport) {
+      return false;
+    }
+    const useRouterImportSource = useRouterImport.resolved.defs[0];
+    if (useRouterImportSource.parent.type === 'ImportDeclaration') {
+      // Check that the reference is an import declartion with source 'next/router'
+      return {
+        importModuleName: useRouterImportSource.parent.source.value,
+        importName: name,
+      };
+    }
+  }
+  return null;
 }
 
 // If the node will result in constructing a referentially unique value, return

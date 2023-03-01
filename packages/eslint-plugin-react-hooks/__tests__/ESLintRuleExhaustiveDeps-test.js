@@ -46,13 +46,14 @@ const tests = {
           }, [local]);
         }
       `,
-      only: true,
       options: [
         {
-          effectDisallowedDependencies: [{
-            module: 'next/router',
-            imports: [{name: 'useRouter', fields: ['push', 'replace']}],
-          }],
+          effectDisallowedDependencies: [
+            {
+              module: 'next/router',
+              imports: [{name: 'useRouter', fields: ['push', 'replace']}],
+            },
+          ],
         },
       ],
     },
@@ -72,6 +73,17 @@ const tests = {
           }, [local]);
         }
       `,
+      only: true,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'next/router',
+              imports: [{name: 'useRouter', fields: ['push', 'replace']}],
+            },
+          ],
+        },
+      ],
     },
     {
       code: normalizeIndent`
