@@ -38752,19 +38752,28 @@ function handleThrow(root, thrownValue) {
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
 
-    if (workInProgressSuspendedReason !== SuspendedOnError) {
-      var wakeable = thrownValue;
-      markComponentSuspended(
-        erroredWork,
-        wakeable,
-        workInProgressRootRenderLanes
-      );
-    } else {
-      markComponentErrored(
-        erroredWork,
-        thrownValue,
-        workInProgressRootRenderLanes
-      );
+    switch (workInProgressSuspendedReason) {
+      case SuspendedOnError: {
+        markComponentErrored(
+          erroredWork,
+          thrownValue,
+          workInProgressRootRenderLanes
+        );
+        break;
+      }
+
+      case SuspendedOnData:
+      case SuspendedOnImmediate:
+      case SuspendedOnDeprecatedThrowPromise:
+      case SuspendedAndReadyToUnwind: {
+        var wakeable = thrownValue;
+        markComponentSuspended(
+          erroredWork,
+          wakeable,
+          workInProgressRootRenderLanes
+        );
+        break;
+      }
     }
   }
 }
@@ -42099,7 +42108,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-67a61d5bd-20230228";
+var ReactVersion = "18.3.0-www-classic-41110021f-20230301";
 
 function createPortal$1(
   children,

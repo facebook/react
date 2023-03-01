@@ -13996,30 +13996,37 @@ function handleThrow(root, thrownValue) {
         : 1;
   workInProgressThrownValue = thrownValue;
   root = workInProgress;
-  null === root
-    ? ((workInProgressRootExitStatus = 1),
-      (workInProgressRootFatalError = thrownValue))
-    : (root.mode & 2 && stopProfilerTimerIfRunningAndRecordDelta(root, !0),
-      enableSchedulingProfiler &&
-        (markComponentRenderStopped(),
-        1 !== workInProgressSuspendedReason
-          ? enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
-            "function" ===
-              typeof injectedProfilingHooks.markComponentSuspended &&
-            injectedProfilingHooks.markComponentSuspended(
-              root,
-              thrownValue,
-              workInProgressRootRenderLanes
-            )
-          : enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
-            "function" === typeof injectedProfilingHooks.markComponentErrored &&
-            injectedProfilingHooks.markComponentErrored(
-              root,
-              thrownValue,
-              workInProgressRootRenderLanes
-            )));
+  if (null === root)
+    (workInProgressRootExitStatus = 1),
+      (workInProgressRootFatalError = thrownValue);
+  else if (
+    (root.mode & 2 && stopProfilerTimerIfRunningAndRecordDelta(root, !0),
+    enableSchedulingProfiler)
+  )
+    switch ((markComponentRenderStopped(), workInProgressSuspendedReason)) {
+      case 1:
+        enableSchedulingProfiler &&
+          null !== injectedProfilingHooks &&
+          "function" === typeof injectedProfilingHooks.markComponentErrored &&
+          injectedProfilingHooks.markComponentErrored(
+            root,
+            thrownValue,
+            workInProgressRootRenderLanes
+          );
+        break;
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        enableSchedulingProfiler &&
+          null !== injectedProfilingHooks &&
+          "function" === typeof injectedProfilingHooks.markComponentSuspended &&
+          injectedProfilingHooks.markComponentSuspended(
+            root,
+            thrownValue,
+            workInProgressRootRenderLanes
+          );
+    }
 }
 function shouldAttemptToSuspendUntilDataResolves() {
   if (
@@ -16260,7 +16267,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1821 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-67a61d5bd-20230228",
+  version: "18.3.0-www-classic-41110021f-20230301",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16304,7 +16311,7 @@ var devToolsConfig$jscomp$inline_1821 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-67a61d5bd-20230228"
+  reconcilerVersion: "18.3.0-next-41110021f-20230301"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16547,7 +16554,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-67a61d5bd-20230228";
+exports.version = "18.3.0-next-41110021f-20230301";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
