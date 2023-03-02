@@ -113,7 +113,7 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = false;
+export const enableFizzExternalRuntime = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

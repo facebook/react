@@ -663,7 +663,7 @@ function styleTagPropsFromRawProps(
 function getStyleKey(href: string) {
   const limitedEscapedHref =
     escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return `href="${limitedEscapedHref}"`;
+  return `href~="${limitedEscapedHref}"`;
 }
 
 function getStyleTagSelectorFromKey(key: string) {
