@@ -676,14 +676,14 @@ function visitInstructionValue(
   value: ReactiveValue,
   lvalue: LValue | null
 ): void {
-  if (value.kind === "Identifier" && lvalue !== null) {
+  if (value.kind === "LoadLocal" && lvalue !== null) {
     if (
-      value.identifier.name !== null &&
+      value.place.identifier.name !== null &&
       lvalue.place.identifier.name === null
     ) {
-      context.declareTemporary(lvalue.place, value);
+      context.declareTemporary(lvalue.place, value.place);
     } else {
-      context.visitOperand(value);
+      context.visitOperand(value.place);
     }
   } else if (value.kind === "PropertyLoad") {
     if (lvalue !== null) {

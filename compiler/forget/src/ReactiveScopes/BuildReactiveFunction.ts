@@ -484,7 +484,11 @@ class Driver {
         return {
           block: defaultBlock.id,
           place: defaultBlock.terminal.test,
-          value: defaultBlock.terminal.test,
+          value: {
+            kind: "LoadLocal",
+            place: defaultBlock.terminal.test,
+            loc: defaultBlock.terminal.test.loc,
+          },
           id: defaultBlock.terminal.id,
         };
       } else if (defaultBlock.instructions.length === 1) {

@@ -30,17 +30,16 @@ function component(a) {
     z = $[1];
   }
   const c_2 = $[2] !== z;
-  let t0;
+  let x;
   if (c_2) {
-    t0 = function () {
+    x = function () {
       z;
     };
     $[2] = z;
-    $[3] = t0;
+    $[3] = x;
   } else {
-    t0 = $[3];
+    x = $[3];
   }
-  const x = t0;
   return x;
 }
 

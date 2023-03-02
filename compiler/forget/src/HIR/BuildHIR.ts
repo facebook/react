@@ -110,7 +110,7 @@ export function lower(
         param.node.loc ?? GeneratedSource,
         InstructionKind.Let,
         param,
-        place
+        { kind: "LoadLocal", place, loc: place.loc }
       );
     } else {
       builder.errors.push({
@@ -628,7 +628,7 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.ExpressionStatement>;
       const expression = stmt.get("expression");
       const value = lowerExpression(builder, expression);
-      if (expression.isAssignmentExpression() && value.kind === "Identifier") {
+      if (expression.isAssignmentExpression() && value.kind === "LoadLocal") {
         // already lowered to a place
         return;
       }
@@ -721,7 +721,12 @@ function lowerExpression(
   switch (exprNode.type) {
     case "Identifier": {
       const expr = exprPath as NodePath<t.Identifier>;
-      return lowerIdentifier(builder, expr);
+      const place = lowerIdentifier(builder, expr);
+      return {
+        kind: "LoadLocal",
+        place,
+        loc: exprLoc,
+      };
     }
     case "NullLiteral": {
       return {
@@ -958,7 +963,11 @@ function lowerExpression(
         });
         return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
       }
-      return last;
+      return {
+        kind: "LoadLocal", // TODO: LoadTemp
+        place: last,
+        loc: last.loc,
+      };
     }
     case "ConditionalExpression": {
       const expr = exprPath as NodePath<t.ConditionalExpression>;
@@ -974,7 +983,7 @@ function lowerExpression(
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
-          value: lowerExpressionToTemporary(builder, expr.get("consequent")),
+          value: lowerExpression(builder, expr.get("consequent")),
           loc: exprLoc,
         });
         return {
@@ -989,7 +998,7 @@ function lowerExpression(
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
-          value: lowerExpressionToTemporary(builder, expr.get("alternate")),
+          value: lowerExpression(builder, expr.get("alternate")),
           loc: exprLoc,
         });
         return {
@@ -1021,7 +1030,7 @@ function lowerExpression(
         },
         continuationBlock
       );
-      return place;
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "LogicalExpression": {
       const expr = exprPath as NodePath<t.LogicalExpression>;
@@ -1037,7 +1046,11 @@ function lowerExpression(
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
-          value: { ...leftPlace },
+          value: {
+            kind: "LoadLocal",
+            place: { ...leftPlace },
+            loc: leftPlace.loc,
+          },
           loc: exprLoc,
         });
         return {
@@ -1051,7 +1064,7 @@ function lowerExpression(
         builder.push({
           id: makeInstructionId(0),
           lvalue: { kind: InstructionKind.Reassign, place: { ...place } },
-          value: lowerExpressionToTemporary(builder, expr.get("right")),
+          value: lowerExpression(builder, expr.get("right")),
           loc: exprLoc,
         });
         return {
@@ -1075,7 +1088,7 @@ function lowerExpression(
       builder.push({
         id: makeInstructionId(0),
         lvalue: { kind: InstructionKind.Reassign, place: { ...leftPlace } },
-        value: lowerExpressionToTemporary(builder, expr.get("left")),
+        value: lowerExpression(builder, expr.get("left")),
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -1088,7 +1101,7 @@ function lowerExpression(
         },
         continuationBlock
       );
-      return place;
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "AssignmentExpression": {
       const expr = exprPath as NodePath<t.AssignmentExpression>;
@@ -1096,7 +1109,7 @@ function lowerExpression(
 
       if (builder.currentBlockKind() === "value") {
         // try lowering the RHS in case it also contains errors
-        lowerExpressionToTemporary(builder, expr.get("right"));
+        lowerExpression(builder, expr.get("right"));
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
           severity: ErrorSeverity.Todo,
@@ -1112,8 +1125,7 @@ function lowerExpression(
           left.node.loc ?? GeneratedSource,
           InstructionKind.Reassign,
           left,
-          // NOTE: it's okay not to lower to a temporary here because this is the entire RHS value, not a single operand
-          lowerExpressionToPlace(builder, expr.get("right"))
+          lowerExpression(builder, expr.get("right"))
         );
       }
 
@@ -1159,7 +1171,7 @@ function lowerExpression(
             },
             loc: exprLoc,
           });
-          return place;
+          return { kind: "LoadLocal", place, loc: exprLoc };
         }
         case "MemberExpression": {
           // a.b.c += <right>
@@ -1243,7 +1255,7 @@ function lowerExpression(
         value,
         loc: exprLoc,
       });
-      return place;
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "JSXElement": {
       const expr = exprPath as NodePath<t.JSXElement>;
@@ -1496,21 +1508,27 @@ function lowerExpression(
         },
         loc: expr.node.loc ?? GeneratedSource,
       });
-      const identifier = argument as NodePath<t.Identifier>;
-      const place = lowerIdentifier(builder, identifier);
+      const identifier = lowerIdentifier(
+        builder,
+        argument as NodePath<t.Identifier>
+      );
       builder.push({
         id: makeInstructionId(0),
-        lvalue: { place: { ...place }, kind: InstructionKind.Reassign },
+        lvalue: { place: { ...identifier }, kind: InstructionKind.Reassign },
         value: {
           kind: "BinaryExpression",
           operator: expr.node.operator === "++" ? "+" : "-",
-          left: { ...place },
+          left: { ...identifier },
           right: { ...temp },
           loc: exprLoc,
         },
         loc: exprLoc,
       });
-      return place;
+      return {
+        kind: "LoadLocal",
+        place: { ...identifier },
+        loc: exprLoc,
+      };
     }
     default: {
       builder.errors.push({
@@ -1703,8 +1721,8 @@ function lowerExpressionToTemporary(
   exprPath: NodePath<t.Expression>
 ): Place {
   const value = lowerExpression(builder, exprPath);
-  if (value.kind === "Identifier" && value.identifier.name === null) {
-    return value;
+  if (value.kind === "LoadLocal" && value.place.identifier.name === null) {
+    return value.place;
   }
   const exprLoc = exprPath.node.loc ?? GeneratedSource;
   const place: Place = buildTemporaryPlace(builder, exprLoc);
@@ -1722,8 +1740,8 @@ function lowerExpressionToPlace(
   exprPath: NodePath<t.Expression>
 ): Place {
   const value = lowerExpression(builder, exprPath);
-  if (value.kind === "Identifier") {
-    return value;
+  if (value.kind === "LoadLocal") {
+    return value.place;
   }
   const exprLoc = exprPath.node.loc ?? GeneratedSource;
   const place: Place = buildTemporaryPlace(builder, exprLoc);
@@ -1855,15 +1873,15 @@ function lowerAssignment(
         value,
         loc,
       });
-      return place;
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "MemberExpression": {
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get("property");
       const object = lowerExpressionToTemporary(builder, lvalue.get("object"));
       let valuePlace: Place;
-      if (value.kind === "Identifier") {
-        valuePlace = value;
+      if (value.kind === "LoadLocal") {
+        valuePlace = value.place;
       } else {
         valuePlace = buildTemporaryPlace(builder, loc);
         builder.push({
@@ -1958,7 +1976,7 @@ function lowerAssignment(
       }
       return hasError
         ? { kind: "UnsupportedNode", node: lvalueNode, loc }
-        : arrayPlace;
+        : { kind: "LoadLocal", place: arrayPlace, loc: arrayPlace.loc };
     }
     case "ObjectPattern": {
       const lvalue = lvaluePath as NodePath<t.ObjectPattern>;
@@ -2013,7 +2031,7 @@ function lowerAssignment(
       }
       return hasError
         ? { kind: "UnsupportedNode", node: lvalueNode, loc }
-        : objectPlace;
+        : { kind: "LoadLocal", place: objectPlace, loc: objectPlace.loc };
     }
     default: {
       builder.errors.push({

@@ -240,9 +240,13 @@ export function leaveSSA(fn: HIRFunction): void {
           value:
             initOperand !== null
               ? {
-                  kind: "Identifier",
-                  identifier: initOperand,
-                  effect: Effect.Read,
+                  kind: "LoadLocal",
+                  place: {
+                    kind: "Identifier",
+                    identifier: initOperand,
+                    effect: Effect.Read,
+                    loc: GeneratedSource,
+                  },
                   loc: GeneratedSource,
                 }
               : {

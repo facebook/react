@@ -107,8 +107,8 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "Identifier": {
-      yield equation(left, value.identifier.type);
+    case "LoadLocal": {
+      yield equation(left, value.place.identifier.type);
       break;
     }
 

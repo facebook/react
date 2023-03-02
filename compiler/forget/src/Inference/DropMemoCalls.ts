@@ -40,9 +40,13 @@ export default function (func: HIRFunction) {
               // after:
               //   foo = $19
               instr.value = {
-                kind: "Identifier",
-                identifier: fn.identifier,
-                effect: Effect.Unknown,
+                kind: "LoadLocal",
+                place: {
+                  kind: "Identifier",
+                  identifier: fn.identifier,
+                  effect: Effect.Unknown,
+                  loc: instr.value.loc,
+                },
                 loc: instr.value.loc,
               };
             }

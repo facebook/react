@@ -33,14 +33,12 @@ function Component(props) {
   if (cond) {
     a = x;
   } else {
-    let t0;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = [];
-      $[0] = t0;
+      a = [];
+      $[0] = a;
     } else {
-      t0 = $[0];
+      a = $[0];
     }
-    a = t0;
   }
 
   useFreeze(a);

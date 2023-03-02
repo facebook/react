@@ -62,9 +62,9 @@ export default function analyseFunctions(func: HIRFunction) {
           );
           break;
         }
-        case "Identifier": {
+        case "LoadLocal": {
           if (instr.lvalue.place.identifier.name === null) {
-            state.declareTemporary(instr.lvalue.place, instr.value);
+            state.declareTemporary(instr.lvalue.place, instr.value.place);
           }
           break;
         }

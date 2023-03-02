@@ -308,8 +308,8 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "Identifier": {
-      return read(constants, value);
+    case "LoadLocal": {
+      return read(constants, value.place);
     }
     default: {
       // TODO: handle more cases

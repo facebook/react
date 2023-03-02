@@ -171,7 +171,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "LoadGlobal":
     case "TypeCastExpression":
     case "BinaryExpression":
-    case "Identifier":
+    case "LoadLocal":
     case "PropertyLoad":
     case "ComputedLoad":
     case "JSXText":

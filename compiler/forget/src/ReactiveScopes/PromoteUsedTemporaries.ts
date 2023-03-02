@@ -57,7 +57,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     if (
       instruction.lvalue !== null &&
       instruction.lvalue.place.identifier.name === null &&
-      instruction.value.kind !== "Identifier"
+      instruction.value.kind !== "LoadLocal"
     ) {
       state.temporaries.set(instruction.lvalue.place.identifier, 0);
     }

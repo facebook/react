@@ -33,11 +33,11 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
   switch (instrValue.kind) {
-    case "Identifier": {
-      if (isPrimitiveType(instrValue.identifier)) {
+    case "LoadLocal": {
+      if (isPrimitiveType(instrValue.place.identifier)) {
         return;
       }
-      alias = instrValue;
+      alias = instrValue.place;
       break;
     }
     case "ComputedLoad":

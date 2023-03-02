@@ -188,7 +188,7 @@ class InferenceState {
    */
   initialize(value: InstructionValue, kind: ValueKind) {
     invariant(
-      value.kind !== "Identifier",
+      value.kind !== "LoadLocal",
       "Expected all top-level identifiers to be defined as variables, not values"
     );
     this.#values.set(value, kind);
@@ -782,12 +782,12 @@ function inferBlock(
         state.alias(lvalue.place, instrValue.value);
         continue;
       }
-      case "Identifier": {
-        state.reference(instrValue, Effect.Capture);
+      case "LoadLocal": {
+        state.reference(instrValue.place, Effect.Capture);
         const lvalue = instr.lvalue;
         lvalue.place.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
-        state.alias(lvalue.place, instrValue);
+        state.alias(lvalue.place, instrValue.place);
         continue;
       }
       default: {

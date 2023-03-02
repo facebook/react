@@ -696,8 +696,8 @@ function codegenInstructionValue(
       );
       break;
     }
-    case "Identifier": {
-      value = codegenPlace(cx, instrValue);
+    case "LoadLocal": {
+      value = codegenPlace(cx, instrValue.place);
       break;
     }
     case "FunctionExpression": {
@@ -714,7 +714,7 @@ function codegenInstructionValue(
     }
     case "TypeCastExpression": {
       value = t.typeCastExpression(
-        codegenInstructionValue(cx, instrValue.value),
+        codegenPlace(cx, instrValue.value),
         instrValue.type
       );
       break;

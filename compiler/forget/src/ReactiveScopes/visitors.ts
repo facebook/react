@@ -91,12 +91,12 @@ export class ReactiveFunctionVisitor<TState = void> {
       }
       case "return": {
         if (terminal.value !== null) {
-          this.visitValue(terminal.id, terminal.value, state);
+          this.visitPlace(terminal.id, terminal.value, state);
         }
         break;
       }
       case "throw": {
-        this.visitValue(terminal.id, terminal.value, state);
+        this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
       case "for": {
@@ -112,7 +112,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         break;
       }
       case "if": {
-        this.visitValue(terminal.id, terminal.test, state);
+        this.visitPlace(terminal.id, terminal.test, state);
         this.visitBlock(terminal.consequent, state);
         if (terminal.alternate !== null) {
           this.visitBlock(terminal.alternate, state);
@@ -120,7 +120,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         break;
       }
       case "switch": {
-        this.visitValue(terminal.id, terminal.test, state);
+        this.visitPlace(terminal.id, terminal.test, state);
         for (const case_ of terminal.cases) {
           if (case_.test !== null) {
             this.visitPlace(terminal.id, case_.test, state);

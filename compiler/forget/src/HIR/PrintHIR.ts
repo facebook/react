@@ -304,8 +304,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `UnsupportedNode(${generate(instrValue.node).code})`;
       break;
     }
-    case "Identifier": {
-      value = printPlace(instrValue);
+    case "LoadLocal": {
+      value = `LoadLocal ${printPlace(instrValue.place)}`;
       break;
     }
     case "PropertyLoad": {

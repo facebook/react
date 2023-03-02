@@ -23,26 +23,22 @@ function foo(a, b, c, d) {
   let x = undefined;
   if (someVal) {
     const c_0 = $[0] !== b;
-    let t0;
     if (c_0) {
-      t0 = { b: b };
+      x = { b: b };
       $[0] = b;
-      $[1] = t0;
+      $[1] = x;
     } else {
-      t0 = $[1];
+      x = $[1];
     }
-    x = t0;
   } else {
     const c_2 = $[2] !== c;
-    let t1;
     if (c_2) {
-      t1 = { c: c };
+      x = { c: c };
       $[2] = c;
-      $[3] = t1;
+      $[3] = x;
     } else {
-      t1 = $[3];
+      x = $[3];
     }
-    x = t1;
   }
   return x;
 }

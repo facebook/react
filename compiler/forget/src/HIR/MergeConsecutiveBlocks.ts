@@ -69,9 +69,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
           kind: InstructionKind.Const,
         },
         value: {
-          kind: "Identifier",
-          identifier: operand,
-          effect: Effect.Read,
+          kind: "LoadLocal",
+          place: {
+            kind: "Identifier",
+            identifier: operand,
+            effect: Effect.Read,
+            loc: GeneratedSource,
+          },
           loc: GeneratedSource,
         },
         loc: GeneratedSource,

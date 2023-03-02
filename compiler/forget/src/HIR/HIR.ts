@@ -396,7 +396,11 @@ export type Phi = {
  * Operands are therefore always a Place.
  */
 export type InstructionValue =
-  | Place
+  | {
+      kind: "LoadLocal";
+      place: Place;
+      loc: SourceLocation;
+    }
   | {
       kind: "Primitive";
       value: number | boolean | string | null | undefined;

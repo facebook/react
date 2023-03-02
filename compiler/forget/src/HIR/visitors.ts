@@ -48,8 +48,8 @@ export function* eachInstructionValueOperand(
       yield* instrValue.args;
       break;
     }
-    case "Identifier": {
-      yield instrValue;
+    case "LoadLocal": {
+      yield instrValue.place;
       break;
     }
     case "PropertyLoad": {
@@ -177,8 +177,8 @@ export function mapInstructionOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "Identifier": {
-      instr.value = fn(instrValue);
+    case "LoadLocal": {
+      instrValue.place = fn(instrValue.place);
       break;
     }
     case "NewExpression":

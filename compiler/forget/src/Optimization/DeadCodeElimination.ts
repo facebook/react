@@ -100,7 +100,7 @@ function pruneableValue(value: InstructionValue): boolean {
     case "ComputedLoad":
     case "ComputedStore":
     case "FunctionExpression":
-    case "Identifier":
+    case "LoadLocal":
     case "JsxExpression":
     case "JsxFragment":
     case "JSXText":

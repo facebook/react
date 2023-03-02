@@ -24,14 +24,12 @@ function useBar(props) {
   let z = undefined;
   if (props.a) {
     if (props.b) {
-      let t0;
       if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = baz();
-        $[0] = t0;
+        z = baz();
+        $[0] = z;
       } else {
-        t0 = $[0];
+        z = $[0];
       }
-      z = t0;
     }
   }
   return z;

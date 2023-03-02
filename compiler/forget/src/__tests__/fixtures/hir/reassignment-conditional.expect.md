@@ -36,29 +36,27 @@ function Component(props) {
   }
   const y = x;
   if (props.p1) {
-    let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = [];
-      $[2] = t0;
+      x = [];
+      $[2] = x;
     } else {
-      t0 = $[2];
+      x = $[2];
     }
-    x = t0;
   }
 
   y.push(props.p2);
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== y;
-  let t1;
+  let t0;
   if (c_3 || c_4) {
-    t1 = <Component x={x} y={y}></Component>;
+    t0 = <Component x={x} y={y}></Component>;
     $[3] = x;
     $[4] = y;
-    $[5] = t1;
+    $[5] = t0;
   } else {
-    t1 = $[5];
+    t0 = $[5];
   }
-  return t1;
+  return t0;
 }
 
 ```
