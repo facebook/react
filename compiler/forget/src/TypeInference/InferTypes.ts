@@ -54,7 +54,7 @@ function apply(func: HIRFunction, unifier: Unifier) {
         place.identifier.type = unifier.get(place.identifier.type);
       }
       const { lvalue } = instr;
-      lvalue.place.identifier.type = unifier.get(lvalue.place.identifier.type);
+      lvalue.identifier.type = unifier.get(lvalue.identifier.type);
     }
   }
 }
@@ -93,7 +93,7 @@ function* generateInstructionTypes(
   instr: Instruction
 ): Generator<TypeEquation, void, undefined> {
   const { lvalue, value } = instr;
-  const left = lvalue.place.identifier.type;
+  const left = lvalue.identifier.type;
 
   switch (value.kind) {
     case "JSXText":

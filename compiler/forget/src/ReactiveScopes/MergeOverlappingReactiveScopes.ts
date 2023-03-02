@@ -7,7 +7,6 @@
 
 import {
   InstructionId,
-  LValue,
   makeInstructionId,
   Place,
   ReactiveBlock,
@@ -113,12 +112,8 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
   override visitPlace(id: InstructionId, place: Place, state: Context): void {
     state.visitPlace(id, place);
   }
-  override visitLValue(
-    id: InstructionId,
-    lvalue: LValue,
-    state: Context
-  ): void {
-    state.visitPlace(id, lvalue.place);
+  override visitLValue(id: InstructionId, lvalue: Place, state: Context): void {
+    state.visitPlace(id, lvalue);
   }
   override visitBlock(block: ReactiveBlock, state: Context): void {
     state.enter(() => {

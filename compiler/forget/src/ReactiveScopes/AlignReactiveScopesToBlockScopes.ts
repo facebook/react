@@ -7,7 +7,6 @@
 
 import {
   InstructionId,
-  LValue,
   Place,
   ReactiveBlock,
   ReactiveFunction,
@@ -74,12 +73,8 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
       state.visitScope(scope);
     }
   }
-  override visitLValue(
-    id: InstructionId,
-    lvalue: LValue,
-    state: Context
-  ): void {
-    const scope = getPlaceScope(id, lvalue.place);
+  override visitLValue(id: InstructionId, lvalue: Place, state: Context): void {
+    const scope = getPlaceScope(id, lvalue);
     if (scope !== null) {
       state.visitScope(scope);
     }

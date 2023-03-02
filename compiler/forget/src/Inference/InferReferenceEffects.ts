@@ -655,8 +655,8 @@ function inferBlock(
           );
         }
         state.initialize(instrValue, ValueKind.Mutable);
-        state.define(instr.lvalue.place, instrValue);
-        instr.lvalue.place.effect = Effect.Store;
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
         continue;
       }
       case "PropertyCall": {
@@ -676,8 +676,8 @@ function inferBlock(
           state.reference(arg, Effect.Mutate);
         }
         state.initialize(instrValue, ValueKind.Mutable);
-        state.define(instr.lvalue.place, instrValue);
-        instr.lvalue.place.effect = Effect.Mutate;
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Mutate;
         continue;
       }
       case "ComputedCall": {
@@ -698,8 +698,8 @@ function inferBlock(
           state.reference(arg, Effect.Mutate);
         }
         state.initialize(instrValue, ValueKind.Mutable);
-        state.define(instr.lvalue.place, instrValue);
-        instr.lvalue.place.effect = Effect.Mutate;
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Mutate;
         continue;
       }
       case "PropertyStore": {
@@ -711,8 +711,8 @@ function inferBlock(
         state.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
-        state.alias(lvalue.place, instrValue.value);
-        lvalue.place.effect = Effect.Store;
+        state.alias(lvalue, instrValue.value);
+        lvalue.effect = Effect.Store;
         continue;
       }
       case "PropertyLoad": {
@@ -729,9 +729,9 @@ function inferBlock(
 
         state.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.place.effect = Effect.Mutate;
+        lvalue.effect = Effect.Mutate;
         state.initialize(instrValue, state.kind(instrValue.object));
-        state.define(lvalue.place, instrValue);
+        state.define(lvalue, instrValue);
         continue;
       }
       case "ComputedStore": {
@@ -744,8 +744,8 @@ function inferBlock(
         state.reference(instrValue.object, Effect.Store);
 
         const lvalue = instr.lvalue;
-        state.alias(lvalue.place, instrValue.value);
-        lvalue.place.effect = Effect.Store;
+        state.alias(lvalue, instrValue.value);
+        lvalue.effect = Effect.Store;
         continue;
       }
       case "ComputedLoad": {
@@ -763,9 +763,9 @@ function inferBlock(
         state.reference(instrValue.object, Effect.Read);
         state.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.place.effect = Effect.Mutate;
+        lvalue.effect = Effect.Mutate;
         state.initialize(instrValue, state.kind(instrValue.object));
-        state.define(lvalue.place, instrValue);
+        state.define(lvalue, instrValue);
         continue;
       }
       case "TypeCastExpression": {
@@ -778,16 +778,16 @@ function inferBlock(
         state.initialize(instrValue, state.kind(instrValue.value));
         state.reference(instrValue.value, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.place.effect = Effect.Mutate;
-        state.alias(lvalue.place, instrValue.value);
+        lvalue.effect = Effect.Mutate;
+        state.alias(lvalue, instrValue.value);
         continue;
       }
       case "LoadLocal": {
         state.reference(instrValue.place, Effect.Capture);
         const lvalue = instr.lvalue;
-        lvalue.place.effect = Effect.Mutate;
+        lvalue.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
-        state.alias(lvalue.place, instrValue.place);
+        state.alias(lvalue, instrValue.place);
         continue;
       }
       case "StoreLocal": {
@@ -799,8 +799,8 @@ function inferBlock(
         state.reference(instrValue.value, effect);
 
         const lvalue = instr.lvalue;
-        state.alias(lvalue.place, instrValue.value);
-        lvalue.place.effect = Effect.Store;
+        state.alias(lvalue, instrValue.value);
+        lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
         instrValue.lvalue.place.effect = Effect.Store;
         continue;
@@ -820,8 +820,8 @@ function inferBlock(
     }
 
     state.initialize(instrValue, valueKind);
-    state.define(instr.lvalue.place, instrValue);
-    instr.lvalue.place.effect = lvalueEffect;
+    state.define(instr.lvalue, instrValue);
+    instr.lvalue.effect = lvalueEffect;
   }
 
   const effect =

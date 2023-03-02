@@ -21,7 +21,7 @@ export function inferAliasForStores(
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       const { value, lvalue } = instr;
-      if (lvalue.place.effect !== Effect.Store) {
+      if (lvalue.effect !== Effect.Store) {
         continue;
       }
       if (value.kind === "StoreLocal") {
@@ -32,7 +32,7 @@ export function inferAliasForStores(
           operand.effect === Effect.Capture ||
           operand.effect === Effect.Store
         ) {
-          maybeAlias(aliases, lvalue.place, operand, instr.id);
+          maybeAlias(aliases, lvalue, operand, instr.id);
         }
       }
     }

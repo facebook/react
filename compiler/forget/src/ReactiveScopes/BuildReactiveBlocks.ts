@@ -188,7 +188,7 @@ export function getInstructionScope({
     "Expected lvalues to not be null when assigning scopes. " +
       "Pruning lvalues too early can result in missing scope information."
   );
-  const lvalueScope = getPlaceScope(id, lvalue.place);
+  const lvalueScope = getPlaceScope(id, lvalue);
   if (lvalueScope !== null) {
     return lvalueScope;
   }

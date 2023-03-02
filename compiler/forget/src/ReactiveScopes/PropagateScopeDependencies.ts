@@ -11,7 +11,6 @@ import {
   IdentifierId,
   InstructionId,
   InstructionKind,
-  LValue,
   makeInstructionId,
   Place,
   ReactiveBlock,
@@ -680,20 +679,20 @@ function visitInstructionValue(
   context: Context,
   id: InstructionId,
   value: ReactiveValue,
-  lvalue: LValue | null
+  lvalue: Place | null
 ): void {
   if (value.kind === "LoadLocal" && lvalue !== null) {
     if (
       value.place.identifier.name !== null &&
-      lvalue.place.identifier.name === null
+      lvalue.identifier.name === null
     ) {
-      context.declareTemporary(lvalue.place, value.place);
+      context.declareTemporary(lvalue, value.place);
     } else {
       context.visitOperand(value.place);
     }
   } else if (value.kind === "PropertyLoad") {
     if (lvalue !== null) {
-      context.declareProperty(lvalue.place, value.object, value.property);
+      context.declareProperty(lvalue, value.object, value.property);
     } else {
       context.visitProperty(value.object, value.property);
     }
@@ -717,7 +716,7 @@ function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   if (lvalue == null) {
     return;
   }
-  context.declare(lvalue.place.identifier, {
+  context.declare(lvalue.identifier, {
     id: instr.id,
     scope: context.currentScope,
   });

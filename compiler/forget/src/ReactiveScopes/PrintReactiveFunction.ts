@@ -17,7 +17,6 @@ import {
 import {
   printIdentifier,
   printInstructionValue,
-  printLValue,
   printPlace,
 } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
@@ -85,7 +84,9 @@ function printReactiveInstruction(
       const id = `[${instruction.id}]`;
 
       if (instruction.lvalue !== null) {
-        writer.write(`${id} ${printLValue(instruction.lvalue)} = `);
+        writer.write(
+          `${id} ${printIdentifier(instruction.lvalue.identifier)} = `
+        );
         printReactiveValue(writer, instruction.value);
         writer.newline();
       } else {

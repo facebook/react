@@ -60,7 +60,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
       state.visit(operand.identifier);
     }
     if (instruction.lvalue !== null) {
-      state.visit(instruction.lvalue.place.identifier);
+      state.visit(instruction.lvalue.identifier);
     }
   }
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {

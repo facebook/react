@@ -82,7 +82,7 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
         for (const place of eachInstructionOperand(instr)) {
           rewritePlace(place, rewrites);
         }
-        rewritePlace(instr.lvalue.place, rewrites);
+        rewritePlace(instr.lvalue, rewrites);
       }
 
       // Rewrite all terminal operands

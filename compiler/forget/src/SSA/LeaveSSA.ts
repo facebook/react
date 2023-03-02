@@ -112,17 +112,6 @@ export function leaveSSA(fn: HIRFunction): void {
       // `let` or `reassign` where possible.
       const { lvalue, value } = instr;
       if (
-        lvalue.kind === InstructionKind.Const &&
-        rewrites.has(lvalue.place.identifier)
-      ) {
-        // For rewrites, the declaration of the canonical identifier has to be `let`,
-        // all other assignments are reassignments (which we annotate for codegen
-        // purposes).
-        lvalue.kind =
-          rewrites.get(lvalue.place.identifier) === lvalue.place.identifier
-            ? InstructionKind.Let
-            : InstructionKind.Reassign;
-      } else if (
         value.kind === "StoreLocal" &&
         value.lvalue.place.identifier.name != null
       ) {
@@ -147,7 +136,7 @@ export function leaveSSA(fn: HIRFunction): void {
             ? InstructionKind.Let
             : InstructionKind.Reassign;
       }
-      rewritePlace(lvalue.place, rewrites, declarations);
+      rewritePlace(lvalue, rewrites, declarations);
       for (const operand of eachInstructionValueOperand(instr.value)) {
         rewritePlace(operand, rewrites, declarations);
       }
@@ -260,10 +249,7 @@ export function leaveSSA(fn: HIRFunction): void {
           };
           block.instructions.push({
             id: block.terminal.id,
-            lvalue: {
-              place: { ...initValue, effect: Effect.Mutate },
-              kind: InstructionKind.Const,
-            },
+            lvalue: { ...initValue, effect: Effect.Mutate },
             value: {
               kind: "Primitive",
               // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
@@ -295,22 +281,19 @@ export function leaveSSA(fn: HIRFunction): void {
           // the if) to the phi, so it's safe to reuse the terminal's id.
           id: block.terminal.id,
           lvalue: {
-            place: {
-              kind: "Identifier",
-              identifier: {
-                id: fn.env.nextIdentifierId,
-                mutableRange: {
-                  start: block.terminal.id,
-                  end: makeInstructionId(block.terminal.id + 1),
-                },
-                name: null,
-                scope: null,
-                type: phi.id.type,
+            kind: "Identifier",
+            identifier: {
+              id: fn.env.nextIdentifierId,
+              mutableRange: {
+                start: block.terminal.id,
+                end: makeInstructionId(block.terminal.id + 1),
               },
-              effect: Effect.Mutate,
-              loc: GeneratedSource,
+              name: null,
+              scope: null,
+              type: phi.id.type,
             },
-            kind: InstructionKind.Const,
+            effect: Effect.Mutate,
+            loc: GeneratedSource,
           },
           value: {
             kind: "StoreLocal",

@@ -63,7 +63,7 @@ class Visitor extends ReactiveFunctionVisitor<State> {
       // allow treating safe hooks as non-reactive.
       hasReactiveInput = true;
     }
-    state.reactivityMap.set(lval.place.identifier.id, hasReactiveInput);
+    state.reactivityMap.set(lval.identifier.id, hasReactiveInput);
 
     if (hasReactiveInput) {
       // all mutating effects must also be marked as reactive
@@ -98,7 +98,7 @@ class Visitor extends ReactiveFunctionVisitor<State> {
     if (instr.lvalue !== null) {
       if (instr.value.kind === "LoadLocal") {
         state.temporaries.set(
-          instr.lvalue.place.identifier.id,
+          instr.lvalue.identifier.id,
           instr.value.place.identifier.id
         );
       }

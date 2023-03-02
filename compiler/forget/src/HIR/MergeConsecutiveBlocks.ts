@@ -12,7 +12,6 @@ import {
   GeneratedSource,
   HIRFunction,
   Instruction,
-  InstructionKind,
 } from "./HIR";
 
 /**
@@ -60,13 +59,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       const instr: Instruction = {
         id: predecessor.terminal.id,
         lvalue: {
-          place: {
-            kind: "Identifier",
-            identifier: phi.id,
-            effect: Effect.Mutate,
-            loc: GeneratedSource,
-          },
-          kind: InstructionKind.Const,
+          kind: "Identifier",
+          identifier: phi.id,
+          effect: Effect.Mutate,
+          loc: GeneratedSource,
         },
         value: {
           kind: "LoadLocal",

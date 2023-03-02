@@ -56,10 +56,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     this.traverseInstruction(instruction, state);
     if (
       instruction.lvalue !== null &&
-      instruction.lvalue.place.identifier.name === null &&
+      instruction.lvalue.identifier.name === null &&
       instruction.value.kind !== "LoadLocal"
     ) {
-      state.temporaries.set(instruction.lvalue.place.identifier, 0);
+      state.temporaries.set(instruction.lvalue.identifier, 0);
     }
   }
 }

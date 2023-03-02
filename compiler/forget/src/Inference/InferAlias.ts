@@ -49,5 +49,5 @@ function inferInstr(instr: Instruction, aliases: DisjointSet<Identifier>) {
       return;
   }
 
-  aliases.union([lvalue.place.identifier, alias.identifier]);
+  aliases.union([lvalue.identifier, alias.identifier]);
 }

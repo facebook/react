@@ -488,38 +488,27 @@ function codegenInstruction(
   if (instr.lvalue === null) {
     return t.expressionStatement(value);
   }
-  if (instr.lvalue.place.identifier.name === null) {
+  if (instr.lvalue.identifier.name === null) {
     // temporary
-    cx.temp.set(instr.lvalue.place.identifier.id, value);
+    cx.temp.set(instr.lvalue.identifier.id, value);
     return t.emptyStatement();
   } else {
-    if (instr.lvalue.kind !== InstructionKind.Const) {
-      CompilerError.invariant(
-        `Expected all instruction lvalues to be const declarations`,
-        instr.lvalue.place.loc
-      );
-    }
-    const kind = cx.hasDeclared(instr.lvalue.place.identifier)
+    const kind = cx.hasDeclared(instr.lvalue.identifier)
       ? InstructionKind.Reassign
-      : instr.lvalue.kind;
-    switch (kind) {
-      case InstructionKind.Const: {
-        return createVariableDeclaration(instr.loc, "const", [
-          t.variableDeclarator(codegenLVal(instr.lvalue), value),
-        ]);
-      }
-      case InstructionKind.Reassign: {
-        return createExpressionStatement(
-          instr.loc,
-          t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
-        );
-      }
-      default: {
-        assertExhaustive(
-          kind,
-          `Unexpected instruction kind '${instr.lvalue.kind}'`
-        );
-      }
+      : InstructionKind.Const;
+    if (cx.hasDeclared(instr.lvalue.identifier)) {
+      return createExpressionStatement(
+        instr.loc,
+        t.assignmentExpression(
+          "=",
+          convertIdentifier(instr.lvalue.identifier),
+          value
+        )
+      );
+    } else {
+      return createVariableDeclaration(instr.loc, "const", [
+        t.variableDeclarator(convertIdentifier(instr.lvalue.identifier), value),
+      ]);
     }
   }
 }

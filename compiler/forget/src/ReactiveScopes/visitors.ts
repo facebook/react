@@ -7,7 +7,6 @@
 
 import {
   InstructionId,
-  LValue,
   Place,
   ReactiveBlock,
   ReactiveFunction,
@@ -31,7 +30,7 @@ export function visitReactiveFunction<TState>(
 
 export class ReactiveFunctionVisitor<TState = void> {
   visitID(_id: InstructionId, _state: TState): void {}
-  visitLValue(_id: InstructionId, _lvalue: LValue, _state: TState): void {}
+  visitLValue(_id: InstructionId, _lvalue: Place, _state: TState): void {}
   visitPlace(_id: InstructionId, _place: Place, _state: TState): void {}
 
   visitValue(id: InstructionId, value: ReactiveValue, state: TState): void {

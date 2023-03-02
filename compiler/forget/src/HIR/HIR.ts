@@ -81,7 +81,7 @@ export type ReactiveTerminalStatement<
 
 export type ReactiveInstruction = {
   id: InstructionId;
-  lvalue: LValue | null;
+  lvalue: Place | null;
   value: ReactiveValue;
   loc: SourceLocation;
 };
@@ -365,7 +365,7 @@ export type TernaryTerminal = {
  */
 export type Instruction = {
   id: InstructionId;
-  lvalue: LValue;
+  lvalue: Place;
   value: InstructionValue;
   loc: SourceLocation;
 };

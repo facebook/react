@@ -8,7 +8,6 @@
 import {
   Identifier,
   InstructionId,
-  InstructionKind,
   Place,
   ReactiveFunction,
   ReactiveInstruction,
@@ -40,10 +39,9 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
     this.traverseInstruction(instruction, state);
     if (
       instruction.lvalue !== null &&
-      instruction.lvalue.kind === InstructionKind.Const &&
-      instruction.lvalue.place.identifier.name === null
+      instruction.lvalue.identifier.name === null
     ) {
-      state.set(instruction.lvalue.place.identifier, instruction);
+      state.set(instruction.lvalue.identifier, instruction);
     }
   }
 }

@@ -105,7 +105,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
       const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         instr.value = value;
-        constants.set(instr.lvalue.place.identifier.id, value);
+        constants.set(instr.lvalue.identifier.id, value);
       }
     }
 

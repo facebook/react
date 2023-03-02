@@ -29,17 +29,13 @@ export function validateConsistentIdentifiers(fn: HIRFunction): void {
       }
     }
     for (const instr of block.instructions) {
-      if (instr.lvalue.place.identifier.name !== null) {
+      if (instr.lvalue.identifier.name !== null) {
         CompilerError.invariant(
-          `Expected all lvalues to be temporaries, found '${instr.lvalue.place.identifier.name}'`,
-          instr.lvalue.place.loc
+          `Expected all lvalues to be temporaries, found '${instr.lvalue.identifier.name}'`,
+          instr.lvalue.loc
         );
       }
-      validate(
-        identifiers,
-        instr.lvalue.place.identifier,
-        instr.lvalue.place.loc
-      );
+      validate(identifiers, instr.lvalue.identifier, instr.lvalue.loc);
       for (const operand of eachInstructionValueOperand(instr.value)) {
         validate(identifiers, operand.identifier, operand.loc);
       }

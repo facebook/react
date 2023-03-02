@@ -594,7 +594,7 @@ export function* eachBlockOperand(block: BasicBlock): Iterable<Place> {
   for (const instr of block.instructions) {
     yield* eachInstructionOperand(instr);
     if (instr.lvalue != null) {
-      yield instr.lvalue.place;
+      yield instr.lvalue;
     }
   }
   yield* eachTerminalOperand(block.terminal);

@@ -56,15 +56,15 @@ export default function analyseFunctions(func: HIRFunction) {
         }
         case "PropertyLoad": {
           state.declareProperty(
-            instr.lvalue.place,
+            instr.lvalue,
             instr.value.object,
             instr.value.property
           );
           break;
         }
         case "LoadLocal": {
-          if (instr.lvalue.place.identifier.name === null) {
-            state.declareTemporary(instr.lvalue.place, instr.value.place);
+          if (instr.lvalue.identifier.name === null) {
+            state.declareTemporary(instr.lvalue, instr.value.place);
           }
           break;
         }

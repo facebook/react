@@ -39,14 +39,14 @@ export function deadCodeElimination(fn: HIRFunction): void {
       for (let i = block.instructions.length - 1; i >= 0; i--) {
         const instr = block.instructions[i]!;
         if (
-          !used.has(instr.lvalue.place.identifier) &&
+          !used.has(instr.lvalue.identifier) &&
           pruneableValue(instr.value, used) &&
           // Can't prune the last value of a value block, that's its value!
           !(block.kind !== "block" && i === block.instructions.length - 1)
         ) {
           continue;
         }
-        used.add(instr.lvalue.place.identifier);
+        used.add(instr.lvalue.identifier);
         for (const operand of eachInstructionValueOperand(instr.value)) {
           used.add(operand.identifier);
         }
@@ -67,7 +67,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
       }
     }
     retainWhere(block.instructions, (instr) =>
-      used.has(instr.lvalue.place.identifier)
+      used.has(instr.lvalue.identifier)
     );
   }
 }

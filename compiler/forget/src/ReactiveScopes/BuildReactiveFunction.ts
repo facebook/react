@@ -18,7 +18,6 @@ import {
 } from "../HIR";
 import {
   HIRFunction,
-  InstructionKind,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
@@ -471,7 +470,7 @@ class Driver {
           kind: "instruction",
           instruction: {
             id: terminal.id,
-            lvalue: { kind: InstructionKind.Const, place },
+            lvalue: place,
             value,
             loc: terminal.loc,
           },
@@ -544,7 +543,7 @@ class Driver {
         const instr = defaultBlock.instructions[0]!;
         return {
           block: defaultBlock.id,
-          place: instr.lvalue!.place,
+          place: instr.lvalue!,
           value: instr.value,
           id: instr.id,
         };
@@ -559,7 +558,7 @@ class Driver {
         };
         return {
           block: defaultBlock.id,
-          place: instr.lvalue!.place,
+          place: instr.lvalue!,
           value: sequence,
           id: instr.id,
         };
@@ -578,7 +577,7 @@ class Driver {
           {
             id: init.id,
             loc,
-            lvalue: { kind: InstructionKind.Const, place: init.place },
+            lvalue: init.place,
             value: init.value,
           },
         ],
@@ -621,7 +620,7 @@ class Driver {
             {
               id: test.id,
               loc: terminal.loc,
-              lvalue: { kind: InstructionKind.Const, place: test.place },
+              lvalue: test.place,
               value: test.value,
             },
           ],

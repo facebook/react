@@ -129,7 +129,7 @@ export function inferMutableLifetimes(
         }
       }
 
-      const lvalueId = instr.lvalue.place.identifier;
+      const lvalueId = instr.lvalue.identifier;
 
       // lvalue start being mutable when they're initially assigned a
       // value.

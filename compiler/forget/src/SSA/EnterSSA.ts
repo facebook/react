@@ -7,7 +7,6 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
-  InstructionKind,
   makeInstructionId,
   makeType,
   Phi,
@@ -215,7 +214,6 @@ export default function enterSSA(func: HIRFunction): void {
       if (instr.value.kind === "StoreLocal") {
         const oldPlace = instr.value.lvalue.place;
         const newPlace = builder.definePlace(oldPlace);
-        instr.lvalue.kind = InstructionKind.Const;
         instr.value.lvalue.place = newPlace;
 
         instr.value.value = builder.getPlace(instr.value.value);
@@ -223,10 +221,9 @@ export default function enterSSA(func: HIRFunction): void {
         mapInstructionOperands(instr, (place) => builder.getPlace(place));
       }
 
-      const oldPlace = instr.lvalue.place;
+      const oldPlace = instr.lvalue;
       const newPlace = builder.definePlace(oldPlace);
-      instr.lvalue.kind = InstructionKind.Const;
-      instr.lvalue.place = newPlace;
+      instr.lvalue = newPlace;
     }
 
     mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));

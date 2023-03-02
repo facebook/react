@@ -106,7 +106,7 @@ export function printInstruction(instr: ReactiveInstruction): string {
   const value = printInstructionValue(instr.value);
 
   if (instr.lvalue !== null) {
-    return `${id} ${printLValue(instr.lvalue)} = ${value}`;
+    return `${id} ${printPlace(instr.lvalue)} = ${value}`;
   } else {
     return `${id} ${value}`;
   }
