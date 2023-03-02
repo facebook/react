@@ -195,16 +195,16 @@ export default {
 
       const isArray = Array.isArray;
 
-      // next/router is unstable but should not be included in deps
-      // import { useRouter } from 'next/router'
+      // Disallowed dependencies are specified in the eslint rule config
+      // import { moduleImport } from 'some/module'
       // ...
-      // const router = useRouter()
-      //       ^^^ true for this reference to 'next/router'
-      // False for everything else, including router from 'next/navigation'
+      // const instance = moduleImport()
+      //       ^^^ true for this reference to 'some/module'
       function isDisallowedDependency(resolved) {
         if (!isArray(resolved.defs)) {
           return false;
         }
+
         const def = resolved.defs[0];
         if (def == null) {
           return false;
@@ -550,7 +550,6 @@ export default {
               foundDisallowedDependency &&
               dependencyNode.type === 'MemberExpression'
             ) {
-              // fields: ['push', 'replace']
               if (
                 !foundDisallowedDependency.fields.includes(
                   dependencyNode.property.name,

@@ -36,13 +36,24 @@ const tests = {
   valid: [
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/router';
+        import { someImport } from 'some/module';
+
+        function MyComponent() {
+          useEffect(() => {
+            console.log(someImport);
+          }, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import { someImport } from 'some/module';
         function MyComponent() {
           const local = someFunc();
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
             console.log(local);
-            router.push('/foo');
+            instance.method('/foo');
           }, [local]);
         }
       `,
@@ -50,8 +61,13 @@ const tests = {
         {
           effectDisallowedDependencies: [
             {
-              module: 'next/router',
-              imports: [{name: 'useRouter', fields: ['push', 'replace']}],
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
             },
           ],
         },
@@ -59,27 +75,31 @@ const tests = {
     },
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/router';
+        import { someImport } from 'some/module';
         function MyComponent() {
           const local = someFunc();
-          const router2 = useRouter();
-          const router = useRouter();
+          const instance2 = someImport();
+          const instance = someImport();
           useEffect(() => {
             console.log(local);
             if (true) {
-              router.push('/foo');
-              router2.push('/foo');
+              instance.method('/foo');
+              instance2.method('/foo');
             }
           }, [local]);
         }
       `,
-      only: true,
       options: [
         {
           effectDisallowedDependencies: [
             {
-              module: 'next/router',
-              imports: [{name: 'useRouter', fields: ['push', 'replace']}],
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
             },
           ],
         },
@@ -87,33 +107,63 @@ const tests = {
     },
     {
       code: normalizeIndent`
-        import { useRouter  } from 'next/router';
+        import { someImport  } from 'some/module';
         function MyComponent() {
           const local = someFunc();
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
             console.log(local);
-            if (router.isReady) {
-              router.push('/foo');
+            if (instance.property) {
+              instance.method('/foo');
             }
-          }, [local, router.isReady]);
+          }, [local, instance.property]);
         }
       `,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/navigation';
+        import { someImport } from 'some/non-matching-module';
         function MyComponent() {
           const local = someFunc();
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
             console.log(local);
-            if (router.isReady) {
-              router.push('/foo');
+            if (instance.property) {
+              instance.method('/foo');
             }
-          }, [local, router]);
+          }, [local, instance]);
         }
       `,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       code: normalizeIndent`
@@ -1537,33 +1587,48 @@ const tests = {
   invalid: [
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/router';
+        import { someImport } from 'some/module';
         function MyComponent() {
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
-            const routerReady = router.isReady;
-            if (routerReady) {
+            const instanceReady = instance.property;
+            if (instanceReady) {
             }
           }, []);
         }
       `,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'router.isReady'. " +
+            "React Hook useEffect has a missing dependency: 'instance.property'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [router.isReady]',
+              desc: 'Update the dependencies array to be: [instance.property]',
               output: normalizeIndent`
-                import { useRouter } from 'next/router';
+                import { someImport } from 'some/module';
                 function MyComponent() {
-                  const router = useRouter();
+                  const instance = someImport();
                   useEffect(() => {
-                    const routerReady = router.isReady;
-                    if (routerReady) {
+                    const instanceReady = instance.property;
+                    if (instanceReady) {
                     }
-                  }, [router.isReady]);
+                  }, [instance.property]);
                 }
               `,
             },
@@ -1573,31 +1638,46 @@ const tests = {
     },
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/router';
+        import { someImport } from 'some/module';
         function MyComponent() {
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
-            if (router.isReady) {
+            if (instance.property) {
             }
           }, []);
         }
       `,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'router.isReady'. " +
+            "React Hook useEffect has a missing dependency: 'instance.property'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [router.isReady]',
+              desc: 'Update the dependencies array to be: [instance.property]',
               output: normalizeIndent`
-                import { useRouter } from 'next/router';
+                import { someImport } from 'some/module';
                 function MyComponent() {
-                  const router = useRouter();
+                  const instance = someImport();
                   useEffect(() => {
-                    if (router.isReady) {
+                    if (instance.property) {
                     }
-                  }, [router.isReady]);
+                  }, [instance.property]);
                 }
               `,
             },
@@ -1607,32 +1687,47 @@ const tests = {
     },
     {
       code: normalizeIndent`
-        import { useRouter } from 'next/router';
+        import { someImport } from 'some/module';
         function MyComponent() {
           const local = someFunc();
-          const router = useRouter();
+          const instance = someImport();
           useEffect(() => {
             console.log(local);
-            router.push('/foo');
-          }, [local, router]);
+            instance.method('/foo');
+          }, [local, instance]);
         }
       `,
+      options: [
+        {
+          effectDisallowedDependencies: [
+            {
+              module: 'some/module',
+              imports: [
+                {
+                  name: 'someImport',
+                  fields: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
       errors: [
         {
           message:
-            "React Hook useEffect has an unnecessary dependency: 'router'. " +
+            "React Hook useEffect has an unnecessary dependency: 'instance'. " +
             'Either exclude it or remove the dependency array.',
           suggestions: [
             {
               desc: 'Update the dependencies array to be: [local]',
               output: normalizeIndent`
-                import { useRouter } from 'next/router';
+                import { someImport } from 'some/module';
                 function MyComponent() {
                   const local = someFunc();
-                  const router = useRouter();
+                  const instance = someImport();
                   useEffect(() => {
                     console.log(local);
-                    router.push('/foo');
+                    instance.method('/foo');
                   }, [local]);
                 }
               `,
