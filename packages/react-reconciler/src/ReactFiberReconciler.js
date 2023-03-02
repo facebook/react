@@ -175,7 +175,7 @@ function findHostInstance(component: Object): PublicInstance | null {
   if (hostFiber === null) {
     return null;
   }
-  return hostFiber.stateNode;
+  return getPublicInstance(hostFiber.stateNode);
 }
 
 function findHostInstanceWithWarning(
@@ -240,7 +240,7 @@ function findHostInstanceWithWarning(
         }
       }
     }
-    return hostFiber.stateNode;
+    return getPublicInstance(hostFiber.stateNode);
   }
   return findHostInstance(component);
 }
@@ -524,7 +524,7 @@ export function findHostInstanceWithNoPortals(
   if (hostFiber === null) {
     return null;
   }
-  return hostFiber.stateNode;
+  return getPublicInstance(hostFiber.stateNode);
 }
 
 let shouldErrorImpl: Fiber => ?boolean = fiber => null;
