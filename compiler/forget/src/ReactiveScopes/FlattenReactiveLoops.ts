@@ -46,6 +46,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
   ): void {
     switch (stmt.terminal.kind) {
       // Loop terminals flatten nested scopes
+      case "do-while":
       case "while":
       case "for": {
         this.traverseTerminal(stmt, true);

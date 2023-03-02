@@ -107,6 +107,10 @@ function printTerminalLabel(terminal: Terminal): string {
       buffer.push("Ternary");
       break;
     }
+    case "do-while": {
+      buffer.push("DoWhile");
+      break;
+    }
     case "while":
       buffer.push("While");
       break;
@@ -172,6 +176,12 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
           printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
+      break;
+    }
+    case "do-while": {
+      buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
+      buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;
     }
     case "while": {

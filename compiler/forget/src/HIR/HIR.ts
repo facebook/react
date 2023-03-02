@@ -122,6 +122,7 @@ export type ReactiveTerminal =
   | ReactiveReturnTerminal
   | ReactiveThrowTerminal
   | ReactiveSwitchTerminal
+  | ReactiveDoWhileTerminal
   | ReactiveWhileTerminal
   | ReactiveForTerminal
   | ReactiveIfTerminal;
@@ -155,6 +156,12 @@ export type ReactiveSwitchTerminal = {
     test: Place | null;
     block: ReactiveBlock | void;
   }>;
+  id: InstructionId;
+};
+export type ReactiveDoWhileTerminal = {
+  kind: "do-while";
+  loop: ReactiveBlock;
+  test: ReactiveValue;
   id: InstructionId;
 };
 export type ReactiveWhileTerminal = {
@@ -241,6 +248,7 @@ export type Terminal =
   | BranchTerminal
   | SwitchTerminal
   | ForTerminal
+  | DoWhileTerminal
   | WhileTerminal
   | LogicalTerminal
   | TernaryTerminal;
@@ -296,6 +304,15 @@ export type SwitchTerminal = {
   cases: Case[];
   fallthrough: BlockId | null;
   id: InstructionId;
+};
+
+export type DoWhileTerminal = {
+  kind: "do-while";
+  loop: BlockId;
+  test: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
 };
 
 export type WhileTerminal = {

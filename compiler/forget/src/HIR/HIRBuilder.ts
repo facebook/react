@@ -264,6 +264,7 @@ export default class HIRBuilder {
     // then convert to reverse postorder
     reversePostorderBlocks(ir);
     removeUnreachableFallthroughs(ir);
+    removeDeadDoWhileStatements(ir);
     markInstructionIds(ir);
     markPredecessors(ir);
 
@@ -530,6 +531,30 @@ export function removeUnreachableFallthroughs(func: HIR): void {
     }
   }
 }
+
+export function removeDeadDoWhileStatements(func: HIR): void {
+  const visited: Set<BlockId> = new Set();
+  for (const [_, block] of func.blocks) {
+    visited.add(block.id);
+  }
+
+  // If the test condition of a DoWhile is unreachable, the terminal is effectively deadcode and we
+  // can just inline the loop body. We replace the terminal with a goto to the loop block and
+  // MergeConsecutiveBlocks figures out how to merge as appropriate.
+  for (const [_, block] of func.blocks) {
+    if (block.terminal.kind === "do-while") {
+      if (!visited.has(block.terminal.test)) {
+        block.terminal = {
+          kind: "goto",
+          block: block.terminal.loop,
+          variant: GotoVariant.Break,
+          id: block.terminal.id,
+        };
+      }
+    }
+  }
+}
+
 /**
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
  * before successors except in the case of back links (ie loops).
@@ -602,6 +627,10 @@ export function reversePostorderBlocks(func: HIR): void {
       case "ternary":
       case "logical": {
         visit(terminal.test);
+        break;
+      }
+      case "do-while": {
+        visit(terminal.loop);
         break;
       }
       case "while": {

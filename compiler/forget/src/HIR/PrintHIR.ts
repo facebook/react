@@ -87,7 +87,8 @@ export function printMixedHIR(
     case "while":
     case "for":
     case "unsupported":
-    case "goto": {
+    case "goto":
+    case "do-while": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -182,6 +183,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
         output.push(`  Fallthrough: bb${terminal.fallthrough}`);
       }
       value = output;
+      break;
+    }
+    case "do-while": {
+      value = `[${terminal.id}] DoWhile loop=${`bb${terminal.loop}`} test=bb${
+        terminal.test
+      } fallthrough=${`bb${terminal.fallthrough}`}`;
       break;
     }
     case "while": {

@@ -366,6 +366,19 @@ export function mapTerminalSuccessors(
     case "throw": {
       return terminal;
     }
+    case "do-while": {
+      const loop = fn(terminal.loop);
+      const test = fn(terminal.test);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "do-while",
+        loc: terminal.loc,
+        test,
+        loop,
+        fallthrough,
+        id: makeInstructionId(0),
+      };
+    }
     case "while": {
       const test = fn(terminal.test);
       const loop = fn(terminal.loop);
@@ -446,6 +459,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     case "throw": {
       break;
     }
+    case "do-while": {
+      yield terminal.loop;
+      break;
+    }
     case "while": {
       yield terminal.test;
       break;
@@ -497,6 +514,7 @@ export function mapTerminalOperands(
     }
     case "ternary":
     case "logical":
+    case "do-while":
     case "while":
     case "for":
     case "goto":
@@ -542,6 +560,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     }
     case "ternary":
     case "logical":
+    case "do-while":
     case "while":
     case "for":
     case "goto":

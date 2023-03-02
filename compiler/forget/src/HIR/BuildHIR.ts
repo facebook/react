@@ -644,9 +644,61 @@ function lowerStatement(
       });
       return;
     }
+    case "DoWhileStatement": {
+      const stmt = stmtPath as NodePath<t.DoWhileStatement>;
+      //  Block used to evaluate whether to (re)enter or exit the loop
+      const conditionalBlock = builder.reserve("loop");
+      //  Block for code following the loop
+      const continuationBlock = builder.reserve("block");
+      //  Loop body, executed at least once uncondtionally prior to exit
+      const loopBlock = builder.enter("block", (_loopBlockId) => {
+        return builder.loop(
+          label,
+          conditionalBlock.id,
+          continuationBlock.id,
+          () => {
+            lowerStatement(builder, stmt.get("body"));
+            return {
+              kind: "goto",
+              block: conditionalBlock.id,
+              variant: GotoVariant.Continue,
+              id: makeInstructionId(0),
+            };
+          }
+        );
+      });
+      // Jump to the conditional block to evaluate whether to (re)enter the loop or exit to the
+      // continuation block.
+      const loc = stmt.node.loc ?? GeneratedSource;
+      builder.terminateWithContinuation(
+        {
+          kind: "do-while",
+          loc,
+          test: conditionalBlock.id,
+          loop: loopBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+        },
+        conditionalBlock
+      );
+      /**
+       * The conditional block is empty and exists solely as conditional for
+       * (re)entering or exiting the loop
+       */
+      const test = lowerExpressionToTemporary(builder, stmt.get("test"));
+      const terminal: BranchTerminal = {
+        kind: "branch",
+        test,
+        consequent: loopBlock,
+        alternate: continuationBlock.id,
+        id: makeInstructionId(0),
+      };
+      //  Complete the conditional and continue with code after the loop
+      builder.terminateWithContinuation(terminal, continuationBlock);
+      return;
+    }
     case "ForOfStatement":
     case "ForInStatement":
-    case "DoWhileStatement":
     case "ClassDeclaration":
     case "DebuggerStatement":
     case "DeclareClass":

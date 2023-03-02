@@ -231,6 +231,55 @@ class Driver {
         }
         break;
       }
+      case "do-while": {
+        const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
+        const loopId =
+          !this.cx.isScheduled(terminal.loop) &&
+          terminal.loop !== terminal.fallthrough
+            ? terminal.loop
+            : null;
+        const scheduleId = this.cx.scheduleLoop(
+          terminal.fallthrough,
+          terminal.test,
+          terminal.loop
+        );
+        scheduleIds.push(scheduleId);
+
+        let loopBody: ReactiveBlock;
+        if (loopId) {
+          loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
+        } else {
+          const break_ = this.visitBreak(terminal.loop, null);
+          invariant(
+            break_ !== null,
+            "If loop body is already scheduled it must be a break"
+          );
+          loopBody = [break_];
+        }
+
+        const testValue = this.visitValueBlock(
+          terminal.test,
+          terminal.loc
+        ).value;
+
+        this.cx.unscheduleAll(scheduleIds);
+        blockValue.push({
+          kind: "terminal",
+          terminal: {
+            kind: "do-while",
+            test: testValue,
+            loop: loopBody,
+            id: terminal.id,
+          },
+          label: fallthroughId,
+        });
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
+        break;
+      }
       case "while": {
         const fallthroughId =
           terminal.fallthrough !== null &&

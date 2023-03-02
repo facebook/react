@@ -340,6 +340,10 @@ function codegenTerminal(
     case "throw": {
       return t.throwStatement(codegenPlace(cx, terminal.value));
     }
+    case "do-while": {
+      const test = codegenInstructionValue(cx, terminal.test);
+      return t.doWhileStatement(test, codegenBlock(cx, terminal.loop));
+    }
     case "while": {
       const test = codegenInstructionValue(cx, terminal.test);
       return t.whileStatement(test, codegenBlock(cx, terminal.loop));

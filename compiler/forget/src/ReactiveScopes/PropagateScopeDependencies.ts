@@ -578,6 +578,11 @@ function visit(context: Context, block: ReactiveBlock): void {
             });
             break;
           }
+          case "do-while": {
+            visit(context, terminal.loop);
+            visitReactiveValue(context, terminal.test);
+            break;
+          }
           case "while": {
             visitReactiveValue(context, terminal.test);
             context.enterConditional(() => {

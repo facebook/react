@@ -46,8 +46,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   for (let x in { a: 1 }) {
   }
 
-  do {} while (i < 3);
-
   let updateIdentifier = 0;
   --updateIdentifier;
   ++updateIdentifier;

@@ -50,8 +50,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   for (let x in { a: 1 }) {
   }
 
-  do {} while (i < 3);
-
   let updateIdentifier = 0;
   --updateIdentifier;
   ++updateIdentifier;
@@ -333,97 +331,88 @@ let moduleLocal = false;
      |   ^
   47 |   }
   48 |
-  49 |   do {} while (i < 3);
+  49 |   let updateIdentifier = 0;
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle DoWhileStatement statements
-  47 |   }
+[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
   48 |
-> 49 |   do {} while (i < 3);
-     |   ^^^^^^^^^^^^^^^^^^^^
-  50 |
-  51 |   let updateIdentifier = 0;
-  52 |   --updateIdentifier;
+  49 |   let updateIdentifier = 0;
+> 50 |   --updateIdentifier;
+     |   ^^^^^^^^^^^^^^^^^^
+  51 |   ++updateIdentifier;
+  52 |   updateIdentifier.y++;
+  53 |   updateIdentifier.y--;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  50 |
-  51 |   let updateIdentifier = 0;
-> 52 |   --updateIdentifier;
+  49 |   let updateIdentifier = 0;
+  50 |   --updateIdentifier;
+> 51 |   ++updateIdentifier;
      |   ^^^^^^^^^^^^^^^^^^
-  53 |   ++updateIdentifier;
-  54 |   updateIdentifier.y++;
-  55 |   updateIdentifier.y--;
-
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  51 |   let updateIdentifier = 0;
-  52 |   --updateIdentifier;
-> 53 |   ++updateIdentifier;
-     |   ^^^^^^^^^^^^^^^^^^
-  54 |   updateIdentifier.y++;
-  55 |   updateIdentifier.y--;
-  56 |
+  52 |   updateIdentifier.y++;
+  53 |   updateIdentifier.y--;
+  54 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  52 |   --updateIdentifier;
-  53 |   ++updateIdentifier;
-> 54 |   updateIdentifier.y++;
+  50 |   --updateIdentifier;
+  51 |   ++updateIdentifier;
+> 52 |   updateIdentifier.y++;
      |   ^^^^^^^^^^^^^^^^^^^^
-  55 |   updateIdentifier.y--;
-  56 |
-  57 |   switch (i) {
+  53 |   updateIdentifier.y--;
+  54 |
+  55 |   switch (i) {
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  53 |   ++updateIdentifier;
-  54 |   updateIdentifier.y++;
-> 55 |   updateIdentifier.y--;
+  51 |   ++updateIdentifier;
+  52 |   updateIdentifier.y++;
+> 53 |   updateIdentifier.y--;
      |   ^^^^^^^^^^^^^^^^^^^^
-  56 |
-  57 |   switch (i) {
-  58 |     case 1 + 1: {
+  54 |
+  55 |   switch (i) {
+  56 |     case 1 + 1: {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  60 |     case foo(): {
-  61 |     }
-> 62 |     case x.y: {
+  58 |     case foo(): {
+  59 |     }
+> 60 |     case x.y: {
      |          ^^^
-  63 |     }
-  64 |     default: {
-  65 |     }
-
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  58 |     case 1 + 1: {
-  59 |     }
-> 60 |     case foo(): {
-     |          ^^^^^
   61 |     }
-  62 |     case x.y: {
+  62 |     default: {
   63 |     }
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  56 |
-  57 |   switch (i) {
-> 58 |     case 1 + 1: {
+  56 |     case 1 + 1: {
+  57 |     }
+> 58 |     case foo(): {
      |          ^^^^^
   59 |     }
-  60 |     case foo(): {
+  60 |     case x.y: {
   61 |     }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+  54 |
+  55 |   switch (i) {
+> 56 |     case 1 + 1: {
+     |          ^^^^^
+  57 |     }
+  58 |     case foo(): {
+  59 |     }
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  67 |
-  68 |   // Cannot assign to globals
-> 69 |   someUnknownGlobal = true;
+  65 |
+  66 |   // Cannot assign to globals
+> 67 |   someUnknownGlobal = true;
      |   ^^^^^^^^^^^^^^^^^
-  70 |   moduleLocal = true;
-  71 | }
-  72 |
+  68 |   moduleLocal = true;
+  69 | }
+  70 |
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  68 |   // Cannot assign to globals
-  69 |   someUnknownGlobal = true;
-> 70 |   moduleLocal = true;
+  66 |   // Cannot assign to globals
+  67 |   someUnknownGlobal = true;
+> 68 |   moduleLocal = true;
      |   ^^^^^^^^^^^
-  71 | }
-  72 |
-  73 | let moduleLocal = false;
+  69 | }
+  70 |
+  71 | let moduleLocal = false;
 ```
           
       
