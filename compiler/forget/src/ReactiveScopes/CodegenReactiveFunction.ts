@@ -493,17 +493,18 @@ function codegenInstruction(
     cx.temp.set(instr.lvalue.place.identifier.id, value);
     return t.emptyStatement();
   } else {
+    if (instr.lvalue.kind !== InstructionKind.Const) {
+      CompilerError.invariant(
+        `Expected all instruction lvalues to be const declarations`,
+        instr.lvalue.place.loc
+      );
+    }
     const kind = cx.hasDeclared(instr.lvalue.place.identifier)
       ? InstructionKind.Reassign
       : instr.lvalue.kind;
     switch (kind) {
       case InstructionKind.Const: {
         return createVariableDeclaration(instr.loc, "const", [
-          t.variableDeclarator(codegenLVal(instr.lvalue), value),
-        ]);
-      }
-      case InstructionKind.Let: {
-        return createVariableDeclaration(instr.loc, "let", [
           t.variableDeclarator(codegenLVal(instr.lvalue), value),
         ]);
       }
