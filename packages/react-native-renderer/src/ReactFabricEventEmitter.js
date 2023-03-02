@@ -25,12 +25,12 @@ import {
 import {batchedUpdates} from './legacy-events/ReactGenericBatching';
 import accumulateInto from './legacy-events/accumulateInto';
 
-import getListeners from './ReactNativeGetListeners';
+import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
 import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-export {getListeners, registrationNameModules as registrationNames};
+export {getListener, registrationNameModules as registrationNames};
 
 /**
  * Allows registered plugins an opportunity to extract events from top-level

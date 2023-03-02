@@ -143,18 +143,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export class CustomEvent {
-    isTrusted: boolean;
-
-    constructor(
-      name: string,
-      {
-        detail: any,
-      },
-    ): void;
-
-    setSyntheticEvent(event: any): void;
-  }
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
