@@ -45,14 +45,15 @@ function Component(props) {
     renderedItems = [];
     const seen = new Set();
     const c_3 = $[3] !== maxItems;
-    let max;
+    let t0;
     if (c_3) {
-      max = Math.max(0, maxItems);
+      t0 = Math.max(0, maxItems);
       $[3] = maxItems;
-      $[4] = max;
+      $[4] = t0;
     } else {
-      max = $[4];
+      t0 = $[4];
     }
+    const max = t0;
     for (let i = 0; i < items.length; i = i + 1, i) {
       const item = items.at(i);
       if (item == null || seen.has(item)) {
@@ -74,31 +75,31 @@ function Component(props) {
 
   const count = renderedItems.length;
   const c_5 = $[5] !== count;
-  let t0;
-  if (c_5) {
-    t0 = <h1>{count} Items</h1>;
-    $[5] = count;
-    $[6] = t0;
-  } else {
-    t0 = $[6];
-  }
-  const c_7 = $[7] !== t0;
-  const c_8 = $[8] !== renderedItems;
   let t1;
+  if (c_5) {
+    t1 = <h1>{count} Items</h1>;
+    $[5] = count;
+    $[6] = t1;
+  } else {
+    t1 = $[6];
+  }
+  const c_7 = $[7] !== t1;
+  const c_8 = $[8] !== renderedItems;
+  let t2;
   if (c_7 || c_8) {
-    t1 = (
+    t2 = (
       <div>
-        {t0}
+        {t1}
         {renderedItems}
       </div>
     );
-    $[7] = t0;
+    $[7] = t1;
     $[8] = renderedItems;
-    $[9] = t1;
+    $[9] = t2;
   } else {
-    t1 = $[9];
+    t2 = $[9];
   }
-  return t1;
+  return t2;
 }
 
 ```

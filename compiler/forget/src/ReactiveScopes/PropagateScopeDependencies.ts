@@ -522,18 +522,15 @@ class Context {
    * Record a variable that is declared in some other scope and that is being reassigned in the
    * current one as a {@link ReactiveScope.reassignments}
    */
-  visitReassignment(lvalue: LValue): void {
-    if (lvalue.kind !== InstructionKind.Reassign) {
-      return;
-    }
-    const declaration = this.#declarations.get(lvalue.place.identifier.id);
+  visitReassignment(place: Place): void {
+    const declaration = this.#declarations.get(place.identifier.id);
     if (
       this.currentScope != null &&
-      lvalue.place.identifier.scope != null &&
+      place.identifier.scope != null &&
       declaration !== undefined &&
-      declaration.scope !== lvalue.place.identifier.scope
+      declaration.scope !== place.identifier.scope
     ) {
-      this.currentScope.reassignments.add(lvalue.place.identifier);
+      this.currentScope.reassignments.add(place.identifier);
     }
   }
 }
@@ -570,21 +567,21 @@ function visit(context: Context, block: ReactiveBlock): void {
             break;
           }
           case "for": {
-            visitReactiveValue(context, terminal.init);
-            visitReactiveValue(context, terminal.test);
+            visitReactiveValue(context, terminal.id, terminal.init);
+            visitReactiveValue(context, terminal.id, terminal.test);
             context.enterConditional(() => {
-              visitReactiveValue(context, terminal.update);
+              visitReactiveValue(context, terminal.id, terminal.update);
               visit(context, terminal.loop);
             });
             break;
           }
           case "do-while": {
             visit(context, terminal.loop);
-            visitReactiveValue(context, terminal.test);
+            visitReactiveValue(context, terminal.id, terminal.test);
             break;
           }
           case "while": {
-            visitReactiveValue(context, terminal.test);
+            visitReactiveValue(context, terminal.id, terminal.test);
             context.enterConditional(() => {
               visit(context, terminal.loop);
             });
@@ -642,22 +639,25 @@ function visit(context: Context, block: ReactiveBlock): void {
   }
 }
 
-function visitReactiveValue(context: Context, value: ReactiveValue): void {
+function visitReactiveValue(
+  context: Context,
+  id: InstructionId,
+  value: ReactiveValue
+): void {
   switch (value.kind) {
     case "LogicalExpression": {
-      visitReactiveValue(context, value.left);
-
+      visitReactiveValue(context, id, value.left);
       context.enterConditional(() => {
-        visitReactiveValue(context, value.right);
+        visitReactiveValue(context, id, value.right);
       });
       break;
     }
     case "ConditionalExpression": {
-      visitReactiveValue(context, value.test);
+      visitReactiveValue(context, id, value.test);
 
       context.enterConditional(() => {
-        visitReactiveValue(context, value.consequent);
-        visitReactiveValue(context, value.alternate);
+        visitReactiveValue(context, id, value.consequent);
+        visitReactiveValue(context, id, value.alternate);
       });
       break;
     }
@@ -665,7 +665,7 @@ function visitReactiveValue(context: Context, value: ReactiveValue): void {
       for (const instr of value.instructions) {
         visitInstruction(context, instr);
       }
-      visitInstructionValue(context, value.value, null);
+      visitInstructionValue(context, id, value.value, null);
       break;
     }
     default: {
@@ -678,6 +678,7 @@ function visitReactiveValue(context: Context, value: ReactiveValue): void {
 
 function visitInstructionValue(
   context: Context,
+  id: InstructionId,
   value: ReactiveValue,
   lvalue: LValue | null
 ): void {
@@ -696,19 +697,25 @@ function visitInstructionValue(
     } else {
       context.visitProperty(value.object, value.property);
     }
+  } else if (value.kind === "StoreLocal") {
+    context.visitOperand(value.value);
+    if (value.lvalue.kind === InstructionKind.Reassign) {
+      context.visitReassignment(value.lvalue.place);
+    }
+    context.declare(value.lvalue.place.identifier, {
+      id,
+      scope: context.currentScope,
+    });
   } else {
-    visitReactiveValue(context, value);
+    visitReactiveValue(context, id, value);
   }
 }
 
 function visitInstruction(context: Context, instr: ReactiveInstruction): void {
   const { lvalue } = instr;
-  visitInstructionValue(context, instr.value, lvalue);
+  visitInstructionValue(context, instr.id, instr.value, lvalue);
   if (lvalue == null) {
     return;
-  }
-  if (lvalue.kind === InstructionKind.Reassign) {
-    context.visitReassignment(lvalue);
   }
   context.declare(lvalue.place.identifier, {
     id: instr.id,

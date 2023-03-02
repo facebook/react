@@ -13,6 +13,7 @@ import {
   ReactiveFunction,
 } from "./HIR";
 import { EnvironmentOptions, mergeOptions } from "./HIR/Environment";
+import { validateConsistentIdentifiers } from "./HIR/ValidateConsistentIdentifiers";
 import {
   analyseFunctions,
   dropMemoCalls,
@@ -59,6 +60,8 @@ export function* run(
 
   enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
+
+  validateConsistentIdentifiers(hir);
 
   eliminateRedundantPhi(hir);
   yield log({ kind: "hir", name: "EliminateRedundantPhi", value: hir });

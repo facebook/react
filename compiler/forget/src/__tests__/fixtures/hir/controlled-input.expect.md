@@ -15,30 +15,31 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(5);
-  const t1 = useState(0);
-  const x = t1[0];
-  const setX = t1[1];
+  const t2 = useState(0);
+  const x = t2[0];
+  const setX = t2[1];
   const c_0 = $[0] !== setX;
-  let handler;
+  let t0;
   if (c_0) {
-    handler = (event) => setX(event.target.value);
+    t0 = (event) => setX(event.target.value);
     $[0] = setX;
-    $[1] = handler;
+    $[1] = t0;
   } else {
-    handler = $[1];
+    t0 = $[1];
   }
+  const handler = t0;
   const c_2 = $[2] !== handler;
   const c_3 = $[3] !== x;
-  let t0;
+  let t1;
   if (c_2 || c_3) {
-    t0 = <input onChange={handler} value={x}></input>;
+    t1 = <input onChange={handler} value={x}></input>;
     $[2] = handler;
     $[3] = x;
-    $[4] = t0;
+    $[4] = t1;
   } else {
-    t0 = $[4];
+    t1 = $[4];
   }
-  return t0;
+  return t1;
 }
 
 ```

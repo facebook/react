@@ -60,14 +60,15 @@ function TestReactiveDepsInCondScope(props) {
     x = {};
     if (foo) {
       const c_2 = $[2] !== props.a.b;
-      let tmp;
+      let t0;
       if (c_2) {
-        tmp = bar(props.a.b);
+        t0 = bar(props.a.b);
         $[2] = props.a.b;
-        $[3] = tmp;
+        $[3] = t0;
       } else {
-        tmp = $[3];
+        t0 = $[3];
       }
+      const tmp = t0;
       x.a = tmp;
     }
     $[0] = props;

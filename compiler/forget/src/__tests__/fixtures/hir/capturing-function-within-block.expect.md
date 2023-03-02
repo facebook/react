@@ -21,25 +21,27 @@ function component(a) {
 function component(a) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== a;
-  let z;
+  let t0;
   if (c_0) {
-    z = { a: a };
+    t0 = { a: a };
     $[0] = a;
-    $[1] = z;
+    $[1] = t0;
   } else {
-    z = $[1];
+    t0 = $[1];
   }
+  const z = t0;
   const c_2 = $[2] !== z;
-  let x;
+  let t1;
   if (c_2) {
-    x = function () {
+    t1 = function () {
       z;
     };
     $[2] = z;
-    $[3] = x;
+    $[3] = t1;
   } else {
-    x = $[3];
+    t1 = $[3];
   }
+  const x = t1;
   return x;
 }
 

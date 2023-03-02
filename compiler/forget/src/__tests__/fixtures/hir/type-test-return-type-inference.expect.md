@@ -20,29 +20,32 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(3);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = foo();
-    $[0] = x;
+    t0 = foo();
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  let y;
+  const x = t0;
+  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    y = foo();
-    $[1] = y;
+    t1 = foo();
+    $[1] = t1;
   } else {
-    y = $[1];
+    t1 = $[1];
   }
+  const y = t1;
   if (x > y) {
   }
-  let z_0;
+  let t2;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    z_0 = foo();
-    $[2] = z_0;
+    t2 = foo();
+    $[2] = t2;
   } else {
-    z_0 = $[2];
+    t2 = $[2];
   }
+  const z_0 = t2;
   return z_0;
 }
 

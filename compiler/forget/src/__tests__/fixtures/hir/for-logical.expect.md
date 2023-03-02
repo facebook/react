@@ -32,9 +32,9 @@ function foo(props) {
   for (
     let x = 0;
     x > props.min && x < props.max;
-    x = x$0 + (props.cond ? props.increment : 2), x
+    x = x + (props.cond ? props.increment : 2), x
   ) {
-    const x$0 = x * 2;
+    x = x * 2;
   }
   return y;
 }

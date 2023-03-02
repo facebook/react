@@ -20,13 +20,14 @@ function foo(x) {}
 ```javascript
 function Component() {
   const $ = React.unstable_useMemoCache(1);
-  let a;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = [];
-    $[0] = a;
+    t0 = [];
+    $[0] = t0;
   } else {
-    a = $[0];
+    t0 = $[0];
   }
+  const a = t0;
   const b = a;
   useFreeze(a);
   foo(b);

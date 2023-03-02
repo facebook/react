@@ -16,15 +16,16 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = function (a) {
+    t0 = function (a) {
       a.foo();
     };
-    $[0] = x;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
+  const x = t0;
   return x;
 }
 

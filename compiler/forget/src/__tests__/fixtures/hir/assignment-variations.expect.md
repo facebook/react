@@ -16,8 +16,7 @@ function f() {
 
 ```javascript
 function f() {
-  let x = 3;
-  x = x >>> 1;
+  const x = 3 >>> 1;
   return x;
 }
 

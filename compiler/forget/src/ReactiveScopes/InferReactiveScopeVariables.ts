@@ -102,14 +102,29 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       if (range.end > range.start + 1 || mayAllocate(instr.value)) {
         operands.push(instr.lvalue!.place.identifier);
       }
-      for (const operand of eachInstructionOperand(instr)) {
+      if (instr.value.kind === "StoreLocal") {
         if (
-          isMutable(instr, operand) &&
-          // exclude global variables from being added to scopes, we can't recreate them!
-          // TODO: improve handling of module-scoped variables and globals
-          operand.identifier.mutableRange.start > 0
+          instr.value.lvalue.place.identifier.mutableRange.end >
+          instr.value.lvalue.place.identifier.mutableRange.start + 1
         ) {
-          operands.push(operand.identifier);
+          operands.push(instr.value.lvalue.place.identifier);
+        }
+        if (
+          isMutable(instr, instr.value.value) &&
+          instr.value.value.identifier.mutableRange.start > 0
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
+      } else {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            isMutable(instr, operand) &&
+            // exclude global variables from being added to scopes, we can't recreate them!
+            // TODO: improve handling of module-scoped variables and globals
+            operand.identifier.mutableRange.start > 0
+          ) {
+            operands.push(operand.identifier);
+          }
         }
       }
       if (operands.length !== 0) {
@@ -168,6 +183,7 @@ function isMutable({ id }: Instruction, place: Place): boolean {
 
 function mayAllocate(value: InstructionValue): boolean {
   switch (value.kind) {
+    case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":
     case "BinaryExpression":

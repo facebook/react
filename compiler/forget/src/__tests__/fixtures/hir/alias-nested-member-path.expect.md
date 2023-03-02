@@ -18,13 +18,14 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(3);
-  let z;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    z = [];
-    $[0] = z;
+    t0 = [];
+    $[0] = t0;
   } else {
-    z = $[0];
+    t0 = $[0];
   }
+  const z = t0;
   let y;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = {};

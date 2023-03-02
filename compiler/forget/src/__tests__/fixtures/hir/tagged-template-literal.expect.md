@@ -26,9 +26,9 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(1);
-  let t;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t = graphql`
+    t0 = graphql`
     fragment List_viewer on Viewer
     @argumentDefinitions(
       count: {
@@ -40,10 +40,11 @@ function component() {
     )
 
   `;
-    $[0] = t;
+    $[0] = t0;
   } else {
-    t = $[0];
+    t0 = $[0];
   }
+  const t = t0;
   return t;
 }
 

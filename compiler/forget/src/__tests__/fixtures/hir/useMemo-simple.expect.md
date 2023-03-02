@@ -15,24 +15,25 @@ function component(a) {
 function component(a) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== a;
-  let x;
-  if (c_0) {
-    x = (() => [a])();
-    $[0] = a;
-    $[1] = x;
-  } else {
-    x = $[1];
-  }
-  const c_2 = $[2] !== x;
   let t0;
-  if (c_2) {
-    t0 = <Foo x={x}></Foo>;
-    $[2] = x;
-    $[3] = t0;
+  if (c_0) {
+    t0 = (() => [a])();
+    $[0] = a;
+    $[1] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[1];
   }
-  return t0;
+  const x = t0;
+  const c_2 = $[2] !== x;
+  let t1;
+  if (c_2) {
+    t1 = <Foo x={x}></Foo>;
+    $[2] = x;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  return t1;
 }
 
 ```

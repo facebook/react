@@ -419,6 +419,12 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
+      kind: "StoreLocal";
+      lvalue: LValue;
+      value: Place;
+      loc: SourceLocation;
+    }
+  | {
       kind: "Primitive";
       value: number | boolean | string | null | undefined;
       loc: SourceLocation;

@@ -35,13 +35,14 @@ function component() {
   } else {
     t1 = $[1];
   }
-  let x;
+  let t2;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    x = { u: t0, v: t1 };
-    $[2] = x;
+    t2 = { u: t0, v: t1 };
+    $[2] = t2;
   } else {
-    x = $[2];
+    t2 = $[2];
   }
+  const x = t2;
   const u = x.u;
   const v = x.v;
   if (u > v) {

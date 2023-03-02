@@ -89,9 +89,9 @@ function foo(props) {
   }
   const c_10 = $[10] !== x;
   const c_11 = $[11] !== y;
-  let content;
+  let t1;
   if (c_10 || c_11) {
-    content = (
+    t1 = (
       <div>
         {x}
         {y}
@@ -99,15 +99,16 @@ function foo(props) {
     );
     $[10] = x;
     $[11] = y;
-    $[12] = content;
+    $[12] = t1;
   } else {
-    content = $[12];
+    t1 = $[12];
   }
+  const content = t1;
   const c_13 = $[13] !== header;
   const c_14 = $[14] !== content;
-  let t1;
+  let t2;
   if (c_13 || c_14) {
-    t1 = (
+    t2 = (
       <>
         {header}
         {content}
@@ -115,11 +116,11 @@ function foo(props) {
     );
     $[13] = header;
     $[14] = content;
-    $[15] = t1;
+    $[15] = t2;
   } else {
-    t1 = $[15];
+    t2 = $[15];
   }
-  return t1;
+  return t2;
 }
 
 ```

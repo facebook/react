@@ -20,14 +20,15 @@ function component(a) {
 function component(a) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;
-  let x;
+  let t0;
   if (c_0) {
-    x = { a: a };
+    t0 = { a: a };
     $[0] = a;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
+  const x = t0;
 
   (function () {
     y = x;

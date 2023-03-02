@@ -40,7 +40,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
         const instr = block.instructions[i]!;
         if (
           !used.has(instr.lvalue.place.identifier) &&
-          pruneableValue(instr.value) &&
+          pruneableValue(instr.value, used) &&
           // Can't prune the last value of a value block, that's its value!
           !(block.kind !== "block" && i === block.instructions.length - 1)
         ) {
@@ -76,8 +76,15 @@ export function deadCodeElimination(fn: HIRFunction): void {
  * Returns true if it is safe to prune an instruction with the given value.
  * Functions which may have side-
  */
-function pruneableValue(value: InstructionValue): boolean {
+function pruneableValue(
+  value: InstructionValue,
+  used: Set<Identifier>
+): boolean {
   switch (value.kind) {
+    case "StoreLocal": {
+      // Stores are pruneable only if the identifier being stored to is never read later
+      return !used.has(value.lvalue.place.identifier);
+    }
     case "CallExpression":
     case "ComputedCall":
     case "ComputedStore":

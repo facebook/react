@@ -118,8 +118,15 @@ export function inferMutableLifetimes(
     }
 
     for (const instr of block.instructions) {
-      for (const input of eachInstructionOperand(instr)) {
-        inferPlace(input, instr, inferMutableRangeForStores);
+      if (instr.value.kind === "StoreLocal") {
+        inferPlace(instr.value.value, instr, inferMutableRangeForStores);
+        instr.value.lvalue.place.identifier.mutableRange.start = instr.id;
+        instr.value.lvalue.place.identifier.mutableRange.end =
+          makeInstructionId(instr.id + 1);
+      } else {
+        for (const input of eachInstructionOperand(instr)) {
+          inferPlace(input, instr, inferMutableRangeForStores);
+        }
       }
 
       const lvalueId = instr.lvalue.place.identifier;

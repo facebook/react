@@ -24,20 +24,22 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(3);
-  let p;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    p = makePrimitive();
-    $[0] = p;
+    t0 = makePrimitive();
+    $[0] = t0;
   } else {
-    p = $[0];
+    t0 = $[0];
   }
-  let o;
+  const p = t0;
+  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    o = {};
-    $[1] = o;
+    t1 = {};
+    $[1] = t1;
   } else {
-    o = $[1];
+    t1 = $[1];
   }
+  const o = t1;
   let x;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};

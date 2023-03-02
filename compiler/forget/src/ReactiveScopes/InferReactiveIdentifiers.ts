@@ -21,27 +21,34 @@ import {
 } from "./visitors";
 
 type IdentifierReactivity = Map<IdentifierId, boolean>;
-class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
-  override visitInstruction(
-    instr: ReactiveInstruction,
-    reactivityMap: IdentifierReactivity
-  ) {
-    this.traverseInstruction(instr, reactivityMap);
+
+class State {
+  reactivityMap: IdentifierReactivity = new Map();
+  temporaries: Map<IdentifierId, IdentifierId> = new Map();
+}
+
+class Visitor extends ReactiveFunctionVisitor<State> {
+  override visitInstruction(instr: ReactiveInstruction, state: State) {
+    this.traverseInstruction(instr, state);
     const lval = instr.lvalue;
     if (lval == null) {
       return;
     }
     const { value } = instr;
-    let hasReactiveInput = reactivityMap.get(lval.place.identifier.id) === true;
-    if (!hasReactiveInput && value.kind !== "LoadGlobal") {
-      for (const operand of eachReactiveValueOperand(value)) {
-        // We currently treat free variables (from module or global scope) as
-        // non-reactive. We may later want type information about specific
-        // free variables, or a toggle `treatFreeVarsAsReactive`.
-        if (reactivityMap.get(operand.identifier.id)) {
-          hasReactiveInput = true;
-          break;
-        }
+    let hasReactiveInput = false;
+    // Globals are currently treated as non-reactive this happens implicitly because LoadGlobal
+    // has no operands which can be registered as reactive.
+    // Consider adding an option to declare whether a given global can be reactive or not, or
+    // a more general "treat all globals as reactive" flag.
+    for (const operand of eachReactiveValueOperand(value)) {
+      if (operand.effect === Effect.Store) {
+        continue;
+      }
+      const resolvedId: IdentifierId =
+        state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
+      if (state.reactivityMap.get(resolvedId)) {
+        hasReactiveInput = true;
+        break;
       }
     }
     if (
@@ -56,7 +63,7 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
       // allow treating safe hooks as non-reactive.
       hasReactiveInput = true;
     }
-    reactivityMap.set(lval.place.identifier.id, hasReactiveInput);
+    state.reactivityMap.set(lval.place.identifier.id, hasReactiveInput);
 
     if (hasReactiveInput) {
       // all mutating effects must also be marked as reactive
@@ -65,12 +72,10 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
           case Effect.Capture:
           case Effect.Store:
           case Effect.Mutate: {
-            // Explicitly compare to `false` here, since absence from the
-            // map indicates a free variable
-            // todo [@mofeiZ] add knowledge about free variables
-            if (reactivityMap.get(operand.identifier.id) === false) {
-              reactivityMap.set(operand.identifier.id, true);
-            }
+            const resolvedId: IdentifierId =
+              state.temporaries.get(operand.identifier.id) ??
+              operand.identifier.id;
+            state.reactivityMap.set(resolvedId, true);
             break;
           }
           case Effect.Freeze:
@@ -88,6 +93,14 @@ class Visitor extends ReactiveFunctionVisitor<IdentifierReactivity> {
             );
           }
         }
+      }
+    }
+    if (instr.lvalue !== null) {
+      if (instr.value.kind === "LoadLocal") {
+        state.temporaries.set(
+          instr.lvalue.place.identifier.id,
+          instr.value.place.identifier.id
+        );
       }
     }
   }
@@ -134,18 +147,14 @@ export function inferReactiveIdentifiers(
   fn: ReactiveFunction
 ): Set<IdentifierId> {
   const visitor = new Visitor();
-  const reactivityMap: IdentifierReactivity = new Map();
+  const state = new State();
   for (const param of fn.params) {
-    reactivityMap.set(param.identifier.id, true);
+    state.reactivityMap.set(param.identifier.id, true);
   }
-  let size: number;
-  do {
-    size = reactivityMap.size;
-    visitReactiveFunction(fn, visitor, reactivityMap);
-  } while (reactivityMap.size > size);
+  visitReactiveFunction(fn, visitor, state);
 
   const result = new Set<IdentifierId>();
-  reactivityMap.forEach((isReactive, id) => {
+  state.reactivityMap.forEach((isReactive, id) => {
     if (isReactive) result.add(id);
   });
   return result;

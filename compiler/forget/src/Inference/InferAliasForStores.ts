@@ -24,6 +24,9 @@ export function inferAliasForStores(
       if (lvalue.place.effect !== Effect.Store) {
         continue;
       }
+      if (value.kind === "StoreLocal") {
+        maybeAlias(aliases, value.lvalue.place, value.value, instr.id);
+      }
       for (const operand of eachInstructionValueOperand(value)) {
         if (
           operand.effect === Effect.Capture ||

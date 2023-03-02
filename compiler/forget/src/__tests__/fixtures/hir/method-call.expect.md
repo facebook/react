@@ -20,25 +20,27 @@ function foo(a, b, c) {
 function foo(a, b, c) {
   const $ = React.unstable_useMemoCache(5);
   const c_0 = $[0] !== a;
-  let x;
+  let t0;
   if (c_0) {
-    x = makeObject(a);
+    t0 = makeObject(a);
     $[0] = a;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
+  const x = t0;
   const c_2 = $[2] !== x;
   const c_3 = $[3] !== b;
-  let y;
+  let t1;
   if (c_2 || c_3) {
-    y = x.foo(b);
+    t1 = x.foo(b);
     $[2] = x;
     $[3] = b;
-    $[4] = y;
+    $[4] = t1;
   } else {
-    y = $[4];
+    t1 = $[4];
   }
+  const y = t1;
   return y;
 }
 

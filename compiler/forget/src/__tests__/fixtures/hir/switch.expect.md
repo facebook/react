@@ -51,27 +51,28 @@ function Component(props) {
     y = $[2];
   }
   const c_3 = $[3] !== x;
-  let child;
+  let t0;
   if (c_3) {
-    child = <Component data={x}></Component>;
+    t0 = <Component data={x}></Component>;
     $[3] = x;
-    $[4] = child;
+    $[4] = t0;
   } else {
-    child = $[4];
+    t0 = $[4];
   }
+  const child = t0;
   y.push(props.p4);
   const c_5 = $[5] !== y;
   const c_6 = $[6] !== child;
-  let t0;
+  let t1;
   if (c_5 || c_6) {
-    t0 = <Component data={y}>{child}</Component>;
+    t1 = <Component data={y}>{child}</Component>;
     $[5] = y;
     $[6] = child;
-    $[7] = t0;
+    $[7] = t1;
   } else {
-    t0 = $[7];
+    t1 = $[7];
   }
-  return t0;
+  return t1;
 }
 
 ```

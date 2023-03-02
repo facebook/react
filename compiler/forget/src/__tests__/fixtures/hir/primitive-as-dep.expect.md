@@ -34,54 +34,59 @@ function PrimitiveAsDep(props) {
   const $ = React.unstable_useMemoCache(2);
   const t0 = props.b + 1;
   const c_0 = $[0] !== t0;
-  let y;
+  let t1;
   if (c_0) {
-    y = foo(t0);
+    t1 = foo(t0);
     $[0] = t0;
-    $[1] = y;
+    $[1] = t1;
   } else {
-    y = $[1];
+    t1 = $[1];
   }
+  const y = t1;
   return y;
 }
 
 function PrimitiveAsDepNested(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = React.unstable_useMemoCache(9);
   const c_0 = $[0] !== props.b;
   const c_1 = $[1] !== props.a;
   let x;
+  let y;
   if (c_0 || c_1) {
     x = {};
     mutate(x);
     const t0 = props.b + 1;
-    const c_3 = $[3] !== t0;
-    let y;
-    if (c_3) {
-      y = foo(t0);
-      $[3] = t0;
-      $[4] = y;
+    const c_4 = $[4] !== t0;
+    let t1;
+    if (c_4) {
+      t1 = foo(t0);
+      $[4] = t0;
+      $[5] = t1;
     } else {
-      y = $[4];
+      t1 = $[5];
     }
+    y = t1;
     mutate(x, props.a);
     $[0] = props.b;
     $[1] = props.a;
     $[2] = x;
+    $[3] = y;
   } else {
     x = $[2];
+    y = $[3];
   }
-  const c_5 = $[5] !== x;
-  const c_6 = $[6] !== y;
-  let t1;
-  if (c_5 || c_6) {
-    t1 = [x, y];
-    $[5] = x;
-    $[6] = y;
-    $[7] = t1;
+  const c_6 = $[6] !== x;
+  const c_7 = $[7] !== y;
+  let t2;
+  if (c_6 || c_7) {
+    t2 = [x, y];
+    $[6] = x;
+    $[7] = y;
+    $[8] = t2;
   } else {
-    t1 = $[7];
+    t2 = $[8];
   }
-  return t1;
+  return t2;
 }
 
 ```

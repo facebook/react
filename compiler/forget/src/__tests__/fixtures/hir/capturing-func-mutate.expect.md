@@ -26,14 +26,15 @@ function component(a, b) {
   if (c_0 || c_1) {
     const z = { a: a };
     const c_3 = $[3] !== b;
-    let y;
+    let t0;
     if (c_3) {
-      y = { b: b };
+      t0 = { b: b };
       $[3] = b;
-      $[4] = y;
+      $[4] = t0;
     } else {
-      y = $[4];
+      t0 = $[4];
     }
+    const y = t0;
     x = function () {
       z.a = 2;
       y.b;

@@ -20,15 +20,16 @@ function Foo() {}
 
 function Component(props) {
   const $ = React.unstable_useMemoCache(1);
-  let c;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = [];
     const b = {};
-    c = new Foo(a, b);
-    $[0] = c;
+    t0 = new Foo(a, b);
+    $[0] = t0;
   } else {
-    c = $[0];
+    t0 = $[0];
   }
+  const c = t0;
   return c;
 }
 

@@ -17,20 +17,22 @@ function component() {
 ```javascript
 function component() {
   const $ = React.unstable_useMemoCache(2);
-  let a;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = some();
-    $[0] = a;
+    t0 = some();
+    $[0] = t0;
   } else {
-    a = $[0];
+    t0 = $[0];
   }
-  let b;
+  const a = t0;
+  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    b = someOther();
-    $[1] = b;
+    t1 = someOther();
+    $[1] = t1;
   } else {
-    b = $[1];
+    t1 = $[1];
   }
+  const b = t1;
   if (a > b) {
   }
 }

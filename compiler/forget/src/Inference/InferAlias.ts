@@ -3,33 +3,24 @@ import {
   Identifier,
   Instruction,
   isPrimitiveType,
-  LValue,
   Place,
 } from "../HIR/HIR";
 import DisjointSet from "../Utils/DisjointSet";
 
 export type AliasSet = Set<Identifier>;
 
-class AliasAnalyser {
-  aliases = new DisjointSet<Identifier>();
-
-  alias(lvalue: LValue, alias: Place) {
-    this.aliases.union([lvalue.place.identifier, alias.identifier]);
-  }
-}
-
 export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
-  const analyser = new AliasAnalyser();
+  const aliases = new DisjointSet<Identifier>();
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
-      inferInstr(instr, analyser);
+      inferInstr(instr, aliases);
     }
   }
 
-  return analyser.aliases;
+  return aliases;
 }
 
-function inferInstr(instr: Instruction, state: AliasAnalyser) {
+function inferInstr(instr: Instruction, aliases: DisjointSet<Identifier>) {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
   switch (instrValue.kind) {
@@ -38,6 +29,11 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
         return;
       }
       alias = instrValue.place;
+      break;
+    }
+    case "StoreLocal": {
+      // aliases.union([instrValue.place.identifier, instrValue.value.identifier]);
+      alias = instrValue.value;
       break;
     }
     case "ComputedLoad":
@@ -53,5 +49,5 @@ function inferInstr(instr: Instruction, state: AliasAnalyser) {
       return;
   }
 
-  state.alias(lvalue, alias);
+  aliases.union([lvalue.place.identifier, alias.identifier]);
 }

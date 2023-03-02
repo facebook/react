@@ -19,13 +19,14 @@ function foo(a, b) {
 ```javascript
 function foo(a, b) {
   const $ = React.unstable_useMemoCache(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = [];
-    $[0] = x;
+    t0 = [];
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
+  let x = t0;
   if (a) {
     x = 1;
   }

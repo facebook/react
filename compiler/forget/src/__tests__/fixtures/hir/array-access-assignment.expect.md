@@ -26,14 +26,15 @@ function foo(a, b, c) {
   if (c_0 || c_1 || c_2) {
     x = [a];
     const c_5 = $[5] !== b;
-    let y;
+    let t0;
     if (c_5) {
-      y = [null, b];
+      t0 = [null, b];
       $[5] = b;
-      $[6] = y;
+      $[6] = t0;
     } else {
-      y = $[6];
+      t0 = $[6];
     }
+    const y = t0;
     z = [[], [], [c]];
     x[0] = y[1];
     z[0][0] = x[0];
@@ -48,16 +49,16 @@ function foo(a, b, c) {
   }
   const c_7 = $[7] !== x;
   const c_8 = $[8] !== z;
-  let t0;
+  let t1;
   if (c_7 || c_8) {
-    t0 = [x, z];
+    t1 = [x, z];
     $[7] = x;
     $[8] = z;
-    $[9] = t0;
+    $[9] = t1;
   } else {
-    t0 = $[9];
+    t1 = $[9];
   }
-  return t0;
+  return t1;
 }
 
 ```

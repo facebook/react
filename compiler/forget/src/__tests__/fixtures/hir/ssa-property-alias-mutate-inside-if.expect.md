@@ -32,13 +32,14 @@ function foo(a) {
 
       mutate(y);
     } else {
-      let z;
+      let t0;
       if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        z = {};
-        $[2] = z;
+        t0 = {};
+        $[2] = t0;
       } else {
-        z = $[2];
+        t0 = $[2];
       }
+      const z = t0;
       x.z = z;
     }
     $[0] = a;

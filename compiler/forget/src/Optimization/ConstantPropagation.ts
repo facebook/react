@@ -313,6 +313,14 @@ function evaluateInstruction(
     case "LoadLocal": {
       return read(constants, value.place);
     }
+    case "StoreLocal": {
+      const placeValue = read(constants, value.value);
+      if (placeValue !== null) {
+        constants.set(value.lvalue.place.identifier.id, placeValue);
+      }
+      // NOTE: always return null to avoid replacing the StoreLocal with its value
+      return null;
+    }
     default: {
       // TODO: handle more cases
       return null;

@@ -16,13 +16,14 @@ function Component(props) {
 ```javascript
 function Component(props) {
   const $ = React.unstable_useMemoCache(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = { a: 1, b: 2 };
-    $[0] = x;
+    t0 = { a: 1, b: 2 };
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
+  const x = t0;
   return x;
 }
 

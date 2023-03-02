@@ -17,24 +17,25 @@ function component() {
   const $ = React.unstable_useMemoCache(4);
   const setX = useState(0)[1];
   const c_0 = $[0] !== setX;
-  let handler;
-  if (c_0) {
-    handler = (v) => setX(v);
-    $[0] = setX;
-    $[1] = handler;
-  } else {
-    handler = $[1];
-  }
-  const c_2 = $[2] !== handler;
   let t0;
-  if (c_2) {
-    t0 = <Foo handler={handler}></Foo>;
-    $[2] = handler;
-    $[3] = t0;
+  if (c_0) {
+    t0 = (v) => setX(v);
+    $[0] = setX;
+    $[1] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[1];
   }
-  return t0;
+  const handler = t0;
+  const c_2 = $[2] !== handler;
+  let t1;
+  if (c_2) {
+    t1 = <Foo handler={handler}></Foo>;
+    $[2] = handler;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  return t1;
 }
 
 ```

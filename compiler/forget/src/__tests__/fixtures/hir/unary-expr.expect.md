@@ -22,14 +22,15 @@ function component(a) {
 function component(a) {
   const $ = React.unstable_useMemoCache(10);
   const c_0 = $[0] !== a;
-  let t;
+  let t0;
   if (c_0) {
-    t = { t: a };
+    t0 = { t: a };
     $[0] = a;
-    $[1] = t;
+    $[1] = t0;
   } else {
-    t = $[1];
+    t0 = $[1];
   }
+  const t = t0;
   const z = +t.t;
   const q = -t.t;
   const p = void t.t;
@@ -44,9 +45,9 @@ function component(a) {
   const c_6 = $[6] !== m;
   const c_7 = $[7] !== e;
   const c_8 = $[8] !== f;
-  let t0;
+  let t1;
   if (c_2 || c_3 || c_4 || c_5 || c_6 || c_7 || c_8) {
-    t0 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
+    t1 = { z: z, p: p, q: q, n: n, m: m, e: e, f: f };
     $[2] = z;
     $[3] = p;
     $[4] = q;
@@ -54,11 +55,11 @@ function component(a) {
     $[6] = m;
     $[7] = e;
     $[8] = f;
-    $[9] = t0;
+    $[9] = t1;
   } else {
-    t0 = $[9];
+    t1 = $[9];
   }
-  return t0;
+  return t1;
 }
 
 ```

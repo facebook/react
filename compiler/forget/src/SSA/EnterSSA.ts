@@ -212,7 +212,16 @@ export default function enterSSA(func: HIRFunction): void {
     }
 
     for (const instr of block.instructions) {
-      mapInstructionOperands(instr, (place) => builder.getPlace(place));
+      if (instr.value.kind === "StoreLocal") {
+        const oldPlace = instr.value.lvalue.place;
+        const newPlace = builder.definePlace(oldPlace);
+        instr.lvalue.kind = InstructionKind.Const;
+        instr.value.lvalue.place = newPlace;
+
+        instr.value.value = builder.getPlace(instr.value.value);
+      } else {
+        mapInstructionOperands(instr, (place) => builder.getPlace(place));
+      }
 
       const oldPlace = instr.lvalue.place;
       const newPlace = builder.definePlace(oldPlace);

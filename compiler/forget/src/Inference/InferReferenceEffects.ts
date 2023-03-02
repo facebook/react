@@ -307,9 +307,9 @@ class InferenceState {
       }
       case Effect.Capture: {
         if (
+          valueKind === ValueKind.Immutable ||
           valueKind === ValueKind.Frozen ||
-          valueKind === ValueKind.MaybeFrozen ||
-          valueKind === ValueKind.Immutable
+          valueKind === ValueKind.MaybeFrozen
         ) {
           effect = Effect.Read;
         } else {
@@ -788,6 +788,21 @@ function inferBlock(
         lvalue.place.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
         state.alias(lvalue.place, instrValue.place);
+        continue;
+      }
+      case "StoreLocal": {
+        const effect =
+          state.isDefined(instrValue.lvalue.place) &&
+          state.kind(instrValue.lvalue.place) === ValueKind.Context
+            ? Effect.Mutate
+            : Effect.Capture;
+        state.reference(instrValue.value, effect);
+
+        const lvalue = instr.lvalue;
+        state.alias(lvalue.place, instrValue.value);
+        lvalue.place.effect = Effect.Store;
+        state.alias(instrValue.lvalue.place, instrValue.value);
+        instrValue.lvalue.place.effect = Effect.Store;
         continue;
       }
       default: {

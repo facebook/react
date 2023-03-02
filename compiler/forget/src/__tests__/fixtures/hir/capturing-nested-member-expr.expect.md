@@ -27,25 +27,27 @@ function component(a) {
     t0 = $[1];
   }
   const c_2 = $[2] !== t0;
-  let z;
+  let t1;
   if (c_2) {
-    z = { a: t0 };
+    t1 = { a: t0 };
     $[2] = t0;
-    $[3] = z;
+    $[3] = t1;
   } else {
-    z = $[3];
+    t1 = $[3];
   }
+  const z = t1;
   const c_4 = $[4] !== z.a.a;
-  let x;
+  let t2;
   if (c_4) {
-    x = function () {
+    t2 = function () {
       z.a.a;
     };
     $[4] = z.a.a;
-    $[5] = x;
+    $[5] = t2;
   } else {
-    x = $[5];
+    t2 = $[5];
   }
+  const x = t2;
   return x;
 }
 

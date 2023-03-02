@@ -13,40 +13,42 @@ function component({ a, b }) {
 ## Code
 
 ```javascript
-function component(t12) {
+function component(t19) {
   const $ = React.unstable_useMemoCache(7);
-  const a = t12.a;
-  const b = t12.b;
+  const a = t19.a;
+  const b = t19.b;
   const c_0 = $[0] !== a;
-  let y;
+  let t0;
   if (c_0) {
-    y = { a: a };
+    t0 = { a: a };
     $[0] = a;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
+  const y = t0;
   const c_2 = $[2] !== b;
-  let z;
+  let t1;
   if (c_2) {
-    z = { b: b };
+    t1 = { b: b };
     $[2] = b;
-    $[3] = z;
+    $[3] = t1;
   } else {
-    z = $[3];
+    t1 = $[3];
   }
+  const z = t1;
   const c_4 = $[4] !== y;
   const c_5 = $[5] !== z;
-  let t0;
+  let t2;
   if (c_4 || c_5) {
-    t0 = { y: y, z: z };
+    t2 = { y: y, z: z };
     $[4] = y;
     $[5] = z;
-    $[6] = t0;
+    $[6] = t2;
   } else {
-    t0 = $[6];
+    t2 = $[6];
   }
-  return t0;
+  return t2;
 }
 
 ```

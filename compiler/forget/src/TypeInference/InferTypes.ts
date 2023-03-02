@@ -112,6 +112,15 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "StoreLocal": {
+      yield equation(left, value.value.identifier.type);
+      yield equation(
+        value.lvalue.place.identifier.type,
+        value.value.identifier.type
+      );
+      break;
+    }
+
     case "BinaryExpression": {
       if (isPrimitiveBinaryOp(value.operator)) {
         yield equation(value.left.identifier.type, { kind: "Primitive" });

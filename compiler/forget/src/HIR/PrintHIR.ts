@@ -315,6 +315,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `LoadLocal ${printPlace(instrValue.place)}`;
       break;
     }
+    case "StoreLocal": {
+      value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
+        instrValue.lvalue.place
+      )} = ${printPlace(instrValue.value)}`;
+      break;
+    }
     case "PropertyLoad": {
       value = `PropertyLoad ${printPlace(instrValue.object)}.${
         instrValue.property
@@ -412,6 +418,20 @@ function isMutable(range: MutableRange): boolean {
 }
 
 function printMutableRange(identifier: Identifier): string {
+  invariant(
+    (identifier.mutableRange.start === 0 &&
+      identifier.mutableRange.end === 0) ||
+      identifier.mutableRange.end > identifier.mutableRange.start,
+    "Identifier mutableRange was invalid: [%s:%s]",
+    identifier.mutableRange.start,
+    identifier.mutableRange.end
+  );
+  if (identifier.scope !== null) {
+    invariant(
+      identifier.scope.range.end > identifier.scope.range.start,
+      "Identifier scope mutableRange was invalid"
+    );
+  }
   const range =
     identifier.scope !== null
       ? identifier.scope.range

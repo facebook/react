@@ -48,14 +48,15 @@ function foo(a, b, c) {
     x = $[1];
   }
   const c_2 = $[2] !== x;
-  let y;
+  let t0;
   if (c_2) {
-    y = <div>{x}</div>;
+    t0 = <div>{x}</div>;
     $[2] = x;
-    $[3] = y;
+    $[3] = t0;
   } else {
-    y = $[3];
+    t0 = $[3];
   }
+  const y = t0;
   bb3: switch (b) {
     case 0: {
       const c_4 = $[4] !== b;
@@ -83,9 +84,9 @@ function foo(a, b, c) {
   }
   const c_8 = $[8] !== y;
   const c_9 = $[9] !== x;
-  let t0;
+  let t1;
   if (c_8 || c_9) {
-    t0 = (
+    t1 = (
       <div>
         {y}
         {x}
@@ -93,11 +94,11 @@ function foo(a, b, c) {
     );
     $[8] = y;
     $[9] = x;
-    $[10] = t0;
+    $[10] = t1;
   } else {
-    t0 = $[10];
+    t1 = $[10];
   }
-  return t0;
+  return t1;
 }
 
 ```

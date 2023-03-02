@@ -29,11 +29,12 @@ function foo(a, b, c, d) {
 ```javascript
 function foo(a, b, c, d) {
   const $ = React.unstable_useMemoCache(3);
+  someObj();
   const c_0 = $[0] !== a;
   const c_1 = $[1] !== b;
   let x;
   if (c_0 || c_1) {
-    x = someObj();
+    x = undefined;
     if (a) {
       let z = undefined;
       if (b) {

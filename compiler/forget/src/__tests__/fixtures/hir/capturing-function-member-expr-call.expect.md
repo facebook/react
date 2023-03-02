@@ -19,44 +19,45 @@ function component({ mutator }) {
 ## Code
 
 ```javascript
-function component(t23) {
+function component(t28) {
   const $ = React.unstable_useMemoCache(7);
-  const t0 = t23;
-  const mutator = t0.mutator;
+  const mutator = t28.mutator;
   const c_0 = $[0] !== mutator;
-  let poke;
+  let t0;
   if (c_0) {
-    poke = () => {
+    t0 = () => {
       mutator.poke();
     };
     $[0] = mutator;
-    $[1] = poke;
+    $[1] = t0;
   } else {
-    poke = $[1];
+    t0 = $[1];
   }
-  const c_2 = $[2] !== t0.mutator.user;
-  let hide;
+  const poke = t0;
+  const c_2 = $[2] !== mutator.user;
+  let t1;
   if (c_2) {
-    hide = () => {
+    t1 = () => {
       mutator.user.hide();
     };
-    $[2] = t0.mutator.user;
-    $[3] = hide;
+    $[2] = mutator.user;
+    $[3] = t1;
   } else {
-    hide = $[3];
+    t1 = $[3];
   }
+  const hide = t1;
   const c_4 = $[4] !== poke;
   const c_5 = $[5] !== hide;
-  let t1;
+  let t2;
   if (c_4 || c_5) {
-    t1 = <Foo poke={poke} hide={hide}></Foo>;
+    t2 = <Foo poke={poke} hide={hide}></Foo>;
     $[4] = poke;
     $[5] = hide;
-    $[6] = t1;
+    $[6] = t2;
   } else {
-    t1 = $[6];
+    t2 = $[6];
   }
-  return t1;
+  return t2;
 }
 
 ```

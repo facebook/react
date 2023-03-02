@@ -44,13 +44,14 @@ function Component(props) {
   const $ = React.unstable_useMemoCache(1);
   const a = {};
   const b = {};
-  let c;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    c = {};
-    $[0] = c;
+    t0 = {};
+    $[0] = t0;
   } else {
-    c = $[0];
+    t0 = $[0];
   }
+  const c = t0;
   const d = {};
   while (true) {
     mutate(a, b);

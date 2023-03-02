@@ -40,35 +40,37 @@ function Foo() {}
 function Component(props) {
   const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== props.a;
-  let a;
+  let t0;
   if (c_0) {
-    a = compute(props.a);
+    t0 = compute(props.a);
     $[0] = props.a;
-    $[1] = a;
+    $[1] = t0;
   } else {
-    a = $[1];
+    t0 = $[1];
   }
+  const a = t0;
   const c_2 = $[2] !== props.b;
-  let b;
+  let t1;
   if (c_2) {
-    b = compute(props.b);
+    t1 = compute(props.b);
     $[2] = props.b;
-    $[3] = b;
+    $[3] = t1;
   } else {
-    b = $[3];
+    t1 = $[3];
   }
+  const b = t1;
   const c_4 = $[4] !== a;
   const c_5 = $[5] !== b;
-  let t0;
+  let t2;
   if (c_4 || c_5) {
-    t0 = <Foo a={a} b={b}></Foo>;
+    t2 = <Foo a={a} b={b}></Foo>;
     $[4] = a;
     $[5] = b;
-    $[6] = t0;
+    $[6] = t2;
   } else {
-    t0 = $[6];
+    t2 = $[6];
   }
-  return t0;
+  return t2;
 }
 
 function compute() {}

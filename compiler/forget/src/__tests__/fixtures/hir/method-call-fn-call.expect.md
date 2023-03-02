@@ -21,29 +21,31 @@ function foo(a, b, c) {
 function foo(a, b, c) {
   const $ = React.unstable_useMemoCache(6);
   const c_0 = $[0] !== a;
-  let x;
+  let t0;
   if (c_0) {
-    x = makeObject(a);
+    t0 = makeObject(a);
     $[0] = a;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
+  const x = t0;
 
   const method = x.method;
   const c_2 = $[2] !== method;
   const c_3 = $[3] !== x;
   const c_4 = $[4] !== b;
-  let y;
+  let t1;
   if (c_2 || c_3 || c_4) {
-    y = method.call(x, b);
+    t1 = method.call(x, b);
     $[2] = method;
     $[3] = x;
     $[4] = b;
-    $[5] = y;
+    $[5] = t1;
   } else {
-    y = $[5];
+    t1 = $[5];
   }
+  const y = t1;
   return y;
 }
 

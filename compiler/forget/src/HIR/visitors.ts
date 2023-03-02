@@ -52,6 +52,11 @@ export function* eachInstructionValueOperand(
       yield instrValue.place;
       break;
     }
+    case "StoreLocal": {
+      yield instrValue.lvalue.place;
+      yield instrValue.value;
+      break;
+    }
     case "PropertyLoad": {
       yield instrValue.object;
       break;
@@ -179,6 +184,11 @@ export function mapInstructionOperands(
     }
     case "LoadLocal": {
       instrValue.place = fn(instrValue.place);
+      break;
+    }
+    case "StoreLocal": {
+      instrValue.lvalue.place = fn(instrValue.lvalue.place);
+      instrValue.value = fn(instrValue.value);
       break;
     }
     case "NewExpression":

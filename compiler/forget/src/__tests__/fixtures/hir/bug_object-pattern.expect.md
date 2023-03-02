@@ -17,14 +17,15 @@ function component(t) {
   const $ = React.unstable_useMemoCache(2);
   const a = t.a;
   const c_0 = $[0] !== a;
-  let y;
+  let t0;
   if (c_0) {
-    y = { a: a };
+    t0 = { a: a };
     $[0] = a;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
+  const y = t0;
   return y;
 }
 

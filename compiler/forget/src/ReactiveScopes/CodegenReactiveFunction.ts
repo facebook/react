@@ -99,11 +99,7 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
   for (const item of block) {
     switch (item.kind) {
       case "instruction": {
-        const statement = codegenInstructionNullable(
-          cx,
-          item.instruction,
-          codegenInstructionValue(cx, item.instruction.value)
-        );
+        const statement = codegenInstructionNullable(cx, item.instruction);
         if (statement !== null) {
           statements.push(statement);
         }
@@ -359,23 +355,47 @@ function codegenTerminal(
 
 function codegenInstructionNullable(
   cx: Context,
-  instr: ReactiveInstruction,
-  value: t.Expression
+  instr: ReactiveInstruction
 ): t.Statement | null {
   let statement;
-  if (instr.lvalue !== null && cx.hasDeclared(instr.lvalue.place.identifier)) {
-    statement = codegenInstruction(
-      cx,
-      {
-        ...instr,
-        lvalue: {
-          ...instr.lvalue,
-          kind: InstructionKind.Reassign,
-        },
-      },
-      value
-    );
+  if (instr.value.kind === "StoreLocal") {
+    const kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
+      ? InstructionKind.Reassign
+      : instr.value.lvalue.kind;
+    const value = codegenPlace(cx, instr.value.value);
+    switch (kind) {
+      case InstructionKind.Const: {
+        return createVariableDeclaration(instr.loc, "const", [
+          t.variableDeclarator(
+            convertIdentifier(instr.value.lvalue.place.identifier),
+            value
+          ),
+        ]);
+      }
+      case InstructionKind.Let: {
+        return createVariableDeclaration(instr.loc, "let", [
+          t.variableDeclarator(
+            convertIdentifier(instr.value.lvalue.place.identifier),
+            value
+          ),
+        ]);
+      }
+      case InstructionKind.Reassign: {
+        return createExpressionStatement(
+          instr.loc,
+          t.assignmentExpression(
+            "=",
+            convertIdentifier(instr.value.lvalue.place.identifier),
+            value
+          )
+        );
+      }
+      default: {
+        assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);
+      }
+    }
   } else {
+    const value = codegenInstructionValue(cx, instr.value);
     statement = codegenInstruction(cx, instr, value);
   }
   if (statement.type === "EmptyStatement") {
@@ -473,7 +493,10 @@ function codegenInstruction(
     cx.temp.set(instr.lvalue.place.identifier.id, value);
     return t.emptyStatement();
   } else {
-    switch (instr.lvalue.kind) {
+    const kind = cx.hasDeclared(instr.lvalue.place.identifier)
+      ? InstructionKind.Reassign
+      : instr.lvalue.kind;
+    switch (kind) {
       case InstructionKind.Const: {
         return createVariableDeclaration(instr.loc, "const", [
           t.variableDeclarator(codegenLVal(instr.lvalue), value),
@@ -492,7 +515,7 @@ function codegenInstruction(
       }
       default: {
         assertExhaustive(
-          instr.lvalue.kind,
+          kind,
           `Unexpected instruction kind '${instr.lvalue.kind}'`
         );
       }
@@ -703,6 +726,12 @@ function codegenInstructionValue(
     case "LoadLocal": {
       value = codegenPlace(cx, instrValue.place);
       break;
+    }
+    case "StoreLocal": {
+      CompilerError.invariant(
+        `Unexpected StoreLocal in codegenInstructionValue`,
+        instrValue.loc
+      );
     }
     case "FunctionExpression": {
       value = instrValue.expr;

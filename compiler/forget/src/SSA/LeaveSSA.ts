@@ -110,7 +110,7 @@ export function leaveSSA(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       // Iterate the instructions and perform any rewrites as well as promoting SSA variables to
       // `let` or `reassign` where possible.
-      const { lvalue } = instr;
+      const { lvalue, value } = instr;
       if (
         lvalue.kind === InstructionKind.Const &&
         rewrites.has(lvalue.place.identifier)
@@ -122,16 +122,30 @@ export function leaveSSA(fn: HIRFunction): void {
           rewrites.get(lvalue.place.identifier) === lvalue.place.identifier
             ? InstructionKind.Let
             : InstructionKind.Reassign;
-      } else if (lvalue.place.identifier.name != null) {
-        const originalLVal = declarations.get(lvalue.place.identifier.name);
+      } else if (
+        value.kind === "StoreLocal" &&
+        value.lvalue.place.identifier.name != null
+      ) {
+        const originalLVal = declarations.get(
+          value.lvalue.place.identifier.name
+        );
         if (originalLVal === undefined) {
-          declarations.set(lvalue.place.identifier.name, lvalue);
+          declarations.set(value.lvalue.place.identifier.name, value.lvalue);
+          value.lvalue.kind = InstructionKind.Const;
         } else {
           // This is an instance of the original id, so we need to promote the original declaration
           // to a `let` and the current lval to a `reassign`
           originalLVal.kind = InstructionKind.Let;
-          lvalue.kind = InstructionKind.Reassign;
         }
+      } else if (
+        value.kind === "StoreLocal" &&
+        rewrites.has(value.lvalue.place.identifier)
+      ) {
+        value.lvalue.kind =
+          rewrites.get(value.lvalue.place.identifier) ===
+          value.lvalue.place.identifier
+            ? InstructionKind.Let
+            : InstructionKind.Reassign;
       }
       rewritePlace(lvalue.place, rewrites, declarations);
       for (const operand of eachInstructionValueOperand(instr.value)) {
@@ -223,6 +237,58 @@ export function leaveSSA(fn: HIRFunction): void {
       );
       const declaration = declarations.get(phi.id.name);
       if (declaration === undefined) {
+        let initValue: Place;
+        if (initOperand === null) {
+          initValue = {
+            effect: Effect.Read,
+            kind: "Identifier",
+            loc: GeneratedSource,
+            identifier: {
+              id: fn.env.nextIdentifierId,
+              name: null,
+              mutableRange: {
+                // TODO: this is technically the wrong start range; we do this because the instruction to create the
+                // undefined and the instruction to store it to the identifier share an InstructionId, which makes
+                // this value otherwise appear mutable when stored. All that matters is that the range end prior
+                // to the StoreLocal's instruction id, so we decrement by one.
+                start: makeInstructionId(block.terminal.id - 1),
+                end: makeInstructionId(block.terminal.id),
+              },
+              scope: null,
+              type: { kind: "Primitive" },
+            },
+          };
+          block.instructions.push({
+            id: block.terminal.id,
+            lvalue: {
+              place: { ...initValue, effect: Effect.Mutate },
+              kind: InstructionKind.Const,
+            },
+            value: {
+              kind: "Primitive",
+              // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
+              value: undefined,
+              loc: GeneratedSource,
+            },
+            loc: GeneratedSource,
+          });
+        } else {
+          initValue = {
+            kind: "Identifier",
+            identifier: initOperand,
+            effect: Effect.Capture,
+            loc: GeneratedSource,
+          };
+        }
+        const lvalue: LValue = {
+          place: {
+            kind: "Identifier",
+            identifier: phi.id,
+            effect: Effect.Mutate,
+            loc: GeneratedSource,
+          },
+          kind: InstructionKind.Let,
+        };
         const instr: Instruction = {
           // NOTE: reuse the terminal id since these lets must be scoped with the terminal anyway.
           // the mutable range of this canonical id must by definition span from the binding (before
@@ -231,34 +297,31 @@ export function leaveSSA(fn: HIRFunction): void {
           lvalue: {
             place: {
               kind: "Identifier",
-              identifier: phi.id,
+              identifier: {
+                id: fn.env.nextIdentifierId,
+                mutableRange: {
+                  start: block.terminal.id,
+                  end: makeInstructionId(block.terminal.id + 1),
+                },
+                name: null,
+                scope: null,
+                type: phi.id.type,
+              },
               effect: Effect.Mutate,
               loc: GeneratedSource,
             },
-            kind: InstructionKind.Let,
+            kind: InstructionKind.Const,
           },
-          value:
-            initOperand !== null
-              ? {
-                  kind: "LoadLocal",
-                  place: {
-                    kind: "Identifier",
-                    identifier: initOperand,
-                    effect: Effect.Read,
-                    loc: GeneratedSource,
-                  },
-                  loc: GeneratedSource,
-                }
-              : {
-                  kind: "Primitive",
-                  // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
-                  value: undefined,
-                  loc: GeneratedSource,
-                },
+          value: {
+            kind: "StoreLocal",
+            lvalue,
+            value: initValue,
+            loc: GeneratedSource,
+          },
           loc: GeneratedSource,
         };
         block.instructions.push(instr);
-        declarations.set(phi.id.name, instr.lvalue);
+        declarations.set(phi.id.name, lvalue);
         phi.id.mutableRange.start = terminal.id;
         if (!isPhiMutatedAfterCreation) {
           phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);

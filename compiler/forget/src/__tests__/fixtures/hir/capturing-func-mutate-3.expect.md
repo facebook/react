@@ -20,37 +20,40 @@ function component(a, b) {
 function component(a, b) {
   const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== b;
-  let y;
+  let t0;
   if (c_0) {
-    y = { b: b };
+    t0 = { b: b };
     $[0] = b;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
+  const y = t0;
   const c_2 = $[2] !== a;
-  let z;
+  let t1;
   if (c_2) {
-    z = { a: a };
+    t1 = { a: a };
     $[2] = a;
-    $[3] = z;
+    $[3] = t1;
   } else {
-    z = $[3];
+    t1 = $[3];
   }
+  const z = t1;
   const c_4 = $[4] !== z.a;
   const c_5 = $[5] !== y.b;
-  let x;
+  let t2;
   if (c_4 || c_5) {
-    x = function () {
+    t2 = function () {
       z.a = 2;
       y.b;
     };
     $[4] = z.a;
     $[5] = y.b;
-    $[6] = x;
+    $[6] = t2;
   } else {
-    x = $[6];
+    t2 = $[6];
   }
+  const x = t2;
   return x;
 }
 
