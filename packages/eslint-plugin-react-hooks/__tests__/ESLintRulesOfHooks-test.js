@@ -61,6 +61,15 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        // Valid because subcomponents can use hooks
+        const Component = {};
+        Component.SubComponentWithHook = function() {
+          useHook();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         // Valid because hooks can use hooks.
         function useHookWithHook() {
           useHook();

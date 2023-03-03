@@ -49,7 +49,16 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  const pattern = /^[A-Z]/;
+  if (node.type === 'Identifier') {
+    return pattern.test(node.name);
+  }
+
+  if (node.type === 'MemberExpression') {
+    return pattern.test(node.property.name);
+  }
+
+  return false;
 }
 
 function isReactFunction(node, functionName) {
