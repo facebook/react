@@ -576,7 +576,9 @@ function visit(context: Context, block: ReactiveBlock): void {
           }
           case "do-while": {
             visit(context, terminal.loop);
-            visitReactiveValue(context, terminal.id, terminal.test);
+            context.enterConditional(() => {
+              visitReactiveValue(context, terminal.id, terminal.test);
+            });
             break;
           }
           case "while": {
