@@ -143,6 +143,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </>,
       );
     });
+    // Inner contents finish in separate commit from outer
     assertLog(['Inner']);
     expect(root).toMatchRenderedOutput(
       <>
@@ -178,6 +179,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       root.render(<App />);
     });
+    // Inner contents finish in separate commit from outer
     assertLog(['Outer', 'Loading...', 'Inner [0]']);
     expect(root).toMatchRenderedOutput(
       <>
@@ -190,6 +192,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       setCount(1);
     });
+    // Entire update finishes in a single commit
     assertLog(['Outer', 'Inner [1]']);
     expect(root).toMatchRenderedOutput(
       <>
@@ -227,6 +230,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </>,
       );
     });
+    // Inner contents suspended, so we continue showing a fallback.
     assertLog(['Suspend! [Inner]']);
     expect(root).toMatchRenderedOutput(
       <>
@@ -276,6 +280,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       root.render(<App />);
     });
+    // Each level commits separately
     assertLog(['A', 'Loading B...', 'B', 'Loading C...', 'C']);
     expect(root).toMatchRenderedOutput(
       <>
