@@ -7,6 +7,8 @@
  * @flow strict-local
  */
 
+export opaque type PublicInstance = mixed;
+
 module.exports = {
   get BatchedBridge() {
     return require('./BatchedBridge.js');
@@ -43,5 +45,14 @@ module.exports = {
   },
   get RawEventEmitter() {
     return require('./RawEventEmitter').default;
+  },
+  get getNativeTagFromPublicInstance() {
+    return require('./getNativeTagFromPublicInstance').default;
+  },
+  get getNodeFromPublicInstance() {
+    return require('./getNodeFromPublicInstance').default;
+  },
+  get createPublicInstance() {
+    return require('./createPublicInstance').default;
   },
 };
