@@ -348,7 +348,7 @@ export default function Tree(props: Props): React.Node {
         If this seems stuck, please follow the{' '}
         <a
           className={styles.Link}
-          href="https://github.com/facebook/react/tree/main/packages/react-devtools#the-issue-with-chrome-v101-and-earlier-versions"
+          href="https://github.com/facebook/react/blob/main/packages/react-devtools/README.md#the-react-tab-shows-no-components"
           target="_blank">
           troubleshooting instructions
         </a>
