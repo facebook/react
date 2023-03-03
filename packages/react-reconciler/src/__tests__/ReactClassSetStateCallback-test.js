@@ -2,6 +2,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let act;
+let assertLog;
 
 describe('ReactClassSetStateCallback', () => {
   beforeEach(() => {
@@ -11,6 +12,9 @@ describe('ReactClassSetStateCallback', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function Text({text}) {
@@ -32,7 +36,7 @@ describe('ReactClassSetStateCallback', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([0]);
+    assertLog([0]);
 
     await act(async () => {
       if (gate(flags => flags.enableUnifiedSyncLane)) {
@@ -52,6 +56,6 @@ describe('ReactClassSetStateCallback', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded([2, 'Callback 2', 2, 'Callback 1']);
+    assertLog([2, 'Callback 2', 2, 'Callback 1']);
   });
 });
