@@ -31237,7 +31237,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-25a8b9735-20230302";
+var ReactVersion = "18.3.0-www-classic-b72ed698f-20230303";
 
 function createPortal$1(
   children,
@@ -31356,7 +31356,7 @@ function findHostInstanceWithWarning(component, methodName) {
       }
     }
 
-    return hostFiber.stateNode;
+    return getPublicInstance(hostFiber.stateNode);
   }
 }
 
@@ -31599,7 +31599,7 @@ function findHostInstanceWithNoPortals(fiber) {
     return null;
   }
 
-  return hostFiber.stateNode;
+  return getPublicInstance(hostFiber.stateNode);
 }
 
 var shouldErrorImpl = function (fiber) {
