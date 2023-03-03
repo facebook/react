@@ -15,6 +15,7 @@ let ReactDOMClient;
 let ReactTestUtils;
 let act;
 let Scheduler;
+let ReactFeatureFlags;
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
@@ -25,6 +26,10 @@ describe('ReactUpdates', () => {
     ReactTestUtils = require('react-dom/test-utils');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableSyncDefaultUpdates = true;
+    ReactFeatureFlags.enableUnifiedSyncLane = true;
+    ReactFeatureFlags.enableUseRefAccessWarning = false;
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -1734,4 +1739,57 @@ describe('ReactUpdates', () => {
       });
     }).toThrow('Maximum update depth exceeded');
   });
+
+  fit('prevents infinite update loop between a component with synchronous updates in useEffect and a component with synchronous updates in render', async () => {
+    // Ignore flushSync warning
+    spyOnDev(console, 'error');
+
+    function A({stateRef}) {
+      const [a, updateA] = React.useState(false);
+      stateRef.current.updateA = updateA;
+      stateRef.current.a = a;
+      React.useEffect(() => {
+        const {updateB} = stateRef.current;
+        ReactDOM.flushSync(() => {
+          updateB(true);
+        })
+      });
+      return <div onClick={() => console.log('A')}>A</div>;
+    }
+    
+    function B({stateRef}) {
+      const {updateA, a} = stateRef.current;
+      const [b, updateB] = React.useState(false);
+      stateRef.current.updateB = updateB;
+      React.useEffect(() => {
+        updateB(false);
+      });
+      if (updateA) {
+        updateA(!a);
+      }
+      return <div onClick={() => console.log('B')}>B</div>;
+    }
+    
+    function NonTerminating() {
+      const stateRef = React.useRef({});
+      return (
+        <div>
+            <A stateRef={stateRef} />
+            <B stateRef={stateRef} />
+        </div>
+      );
+    }
+    const onRecoverableError = jest.fn();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container, {onRecoverableError});
+    // TODO: This currently doesn't throw
+    //expect(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<NonTerminating />);
+        });
+    //}).toThrow('Maximum update depth exceeded');
+
+    // TODO: This currently reports a recoverable error of `Maximum update depth exceeded`
+    expect(onRecoverableError).not.toHaveBeenCalled();
+  })
 });
