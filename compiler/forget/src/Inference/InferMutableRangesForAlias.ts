@@ -31,17 +31,4 @@ export function inferMutableRangesForAlias(
       }
     }
   }
-
-  for (const [_, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
-        (block.instructions.at(0)?.id ?? block.terminal.id);
-      if (isPhiMutatedAfterCreation) {
-        for (const [, operand] of phi.operands) {
-          aliases.union([phi.id, operand]);
-        }
-      }
-    }
-  }
 }

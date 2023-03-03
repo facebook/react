@@ -7,6 +7,7 @@
 
 import { HIRFunction, Identifier } from "../HIR/HIR";
 import { inferAliases } from "./InferAlias";
+import { inferAliasForPhis } from "./InferAliasForPhis";
 import { inferAliasForStores } from "./InferAliasForStores";
 import { inferMutableLifetimes } from "./InferMutableLifetimes";
 import { inferMutableRangesForAlias } from "./InferMutableRangesForAlias";
@@ -26,6 +27,9 @@ export function inferMutableRanges(ir: HIRFunction) {
 
     // Update aliasing information of fields
     inferAliasForStores(ir, aliases);
+
+    // Update aliasing information of phis
+    inferAliasForPhis(ir, aliases);
 
     const nextAliases = aliases.canonicalize();
     if (areEqualMaps(prevAliases, nextAliases)) {
