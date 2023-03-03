@@ -4,7 +4,7 @@
 ```javascript
 function component(a) {
   let x = { a };
-  let y;
+  let y = {};
   (function () {
     y = x;
   })();
@@ -18,7 +18,7 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -29,12 +29,20 @@ function component(a) {
     t0 = $[1];
   }
   const x = t0;
-
-  (function () {
-    y = x;
-  })();
-  mutate(undefined);
-  return undefined;
+  const c_2 = $[2] !== x;
+  let y;
+  if (c_2) {
+    y = {};
+    (function () {
+      y = x;
+    })();
+    mutate(y);
+    $[2] = x;
+    $[3] = y;
+  } else {
+    y = $[3];
+  }
+  return y;
 }
 
 ```

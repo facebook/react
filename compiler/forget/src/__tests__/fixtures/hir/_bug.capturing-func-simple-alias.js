@@ -1,6 +1,6 @@
 function component(a) {
   let x = { a };
-  let y;
+  let y = {};
   (function () {
     y = x;
   })();
