@@ -783,8 +783,12 @@ function inferBlock(
         continue;
       }
       case "LoadLocal": {
-        state.reference(instrValue.place, Effect.Capture);
         const lvalue = instr.lvalue;
+        const effect =
+          state.isDefined(lvalue) && state.kind(lvalue) === ValueKind.Context
+            ? Effect.Mutate
+            : Effect.Capture;
+        state.reference(instrValue.place, effect);
         lvalue.effect = Effect.Mutate;
         // direct aliasing: `a = b`;
         state.alias(lvalue, instrValue.place);
