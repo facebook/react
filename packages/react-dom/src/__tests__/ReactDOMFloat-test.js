@@ -3492,6 +3492,7 @@ body {
         <div>1</div>,
       ]);
     });
+
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
       function App() {
@@ -4422,6 +4423,24 @@ background-color: green;
             <div>second</div>
           </body>
         </html>,
+      );
+    });
+
+    it('warns if you render a <style> with an href with a space on the server', async () => {
+      await expect(async () => {
+        await actIntoEmptyDocument(() => {
+          renderToPipeableStream(
+            <html>
+              <body>
+                <style href="foo bar" precedence="default">
+                  style
+                </style>
+              </body>
+            </html>,
+          ).pipe(writable);
+        });
+      }).toErrorDev(
+        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "foo bar".',
       );
     });
   });
