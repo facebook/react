@@ -20,6 +20,10 @@ describe('Timeline profiler', () => {
   let store;
   let unmountFns;
   let utils;
+  let waitFor;
+  let waitForAll;
+  let waitForPaint;
+  let assertLog;
 
   beforeEach(() => {
     utils = require('./utils');
@@ -43,6 +47,12 @@ describe('Timeline profiler', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitFor = InternalTestUtils.waitFor;
+    waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
 
     store = global.store;
   });
@@ -151,7 +161,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark concurrent render without suspends or state updates', () => {
+    it('should mark concurrent render without suspends or state updates', async () => {
       renderRootHelper(<div />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
@@ -162,7 +172,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -196,8 +206,7 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Foo />);
       });
 
-      // Do one step of work.
-      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+      await waitFor(['Foo']);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -291,7 +300,11 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark concurrent render with suspense that resolves', async () => {
-      const fakeSuspensePromise = Promise.resolve(true);
+      let resolveFakePromise;
+      const fakeSuspensePromise = new Promise(
+        resolve => (resolveFakePromise = resolve),
+      );
+
       function Example() {
         throw fakeSuspensePromise;
       }
@@ -310,7 +323,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -333,7 +346,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      await fakeSuspensePromise;
+      await resolveFakePromise();
       expect(clearedMarks).toMatchInlineSnapshot(`
             [
               "--suspense-resolved-0-Example",
@@ -342,7 +355,11 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark concurrent render with suspense that rejects', async () => {
-      const fakeSuspensePromise = Promise.reject(new Error('error'));
+      let rejectFakePromise;
+      const fakeSuspensePromise = new Promise(
+        (_, reject) => (rejectFakePromise = reject),
+      );
+
       function Example() {
         throw fakeSuspensePromise;
       }
@@ -361,7 +378,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -384,7 +401,10 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      await expect(fakeSuspensePromise).rejects.toThrow();
+      await expect(() => {
+        rejectFakePromise(new Error('error'));
+        return fakeSuspensePromise;
+      }).rejects.toThrow();
       expect(clearedMarks).toMatchInlineSnapshot(`
                 [
                   "--suspense-rejected-0-Example",
@@ -392,7 +412,7 @@ describe('Timeline profiler', () => {
           `);
     });
 
-    it('should mark cascading class component state updates', () => {
+    it('should mark cascading class component state updates', async () => {
       class Example extends React.Component {
         state = {didMount: false};
         componentDidMount() {
@@ -413,7 +433,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -446,7 +466,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading class component force updates', () => {
+    it('should mark cascading class component force updates', async () => {
       class Example extends React.Component {
         componentDidMount() {
           this.forceUpdate();
@@ -466,7 +486,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -499,7 +519,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase state updates for class component', () => {
+    it('should mark render phase state updates for class component', async () => {
       class Example extends React.Component {
         state = {didRender: false};
         render() {
@@ -525,7 +545,7 @@ describe('Timeline profiler', () => {
         errorMessage = message;
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(errorMessage).toContain(
@@ -552,7 +572,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase force updates for class component', () => {
+    it('should mark render phase force updates for class component', async () => {
       let forced = false;
       class Example extends React.Component {
         render() {
@@ -579,7 +599,7 @@ describe('Timeline profiler', () => {
         errorMessage = message;
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(errorMessage).toContain(
@@ -606,7 +626,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading layout updates', () => {
+    it('should mark cascading layout updates', async () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
         React.useLayoutEffect(() => {
@@ -625,7 +645,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -660,7 +680,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading passive updates', () => {
+    it('should mark cascading passive updates', async () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
         React.useEffect(() => {
@@ -671,7 +691,7 @@ describe('Timeline profiler', () => {
 
       renderRootHelper(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -709,7 +729,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase updates', () => {
+    it('should mark render phase updates', async () => {
       function Example() {
         const [didRender, setDidRender] = React.useState(false);
         if (!didRender) {
@@ -720,7 +740,7 @@ describe('Timeline profiler', () => {
 
       renderRootHelper(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -840,7 +860,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -927,10 +947,7 @@ describe('Timeline profiler', () => {
 
       const unmount = renderRootHelper(<ComponentWithEffects />);
 
-      expect(Scheduler).toFlushUntilNextPaint([
-        'layout 1 mount',
-        'layout 2 mount',
-      ]);
+      await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
         [
@@ -957,7 +974,7 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'passive 1 mount',
         'passive 2 mount',
         'passive 3 mount',
@@ -978,11 +995,11 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       unmount();
 
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'layout 1 unmount',
         'layout 2 unmount',
         'passive 1 unmount',
@@ -1063,7 +1080,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         clearedMarks.splice(0);
 
@@ -1102,7 +1119,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         clearedMarks.splice(0);
 
@@ -1110,7 +1127,7 @@ describe('Timeline profiler', () => {
         event.initEvent('mouseover', true, true);
         dispatchAndSetCurrentEvent(targetRef.current, event);
 
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
           [
@@ -1324,11 +1341,11 @@ describe('Timeline profiler', () => {
         });
 
         // Do one step of work.
-        expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+        await waitFor(['Foo']);
 
         // Finish flushing so React commits;
         // Unless we do this, the ProfilerStore won't collect Profiling data.
-        expect(Scheduler).toFlushAndYield(['Bar']);
+        await waitForAll(['Bar']);
 
         // Since we yielded, the batch should report two separate "render" chunks.
         const batch = getBatchOfWork(0);
@@ -1359,13 +1376,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toHaveYielded(['suspended']);
+        assertLog(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         resolveFn();
         await suspensePromise;
 
-        expect(Scheduler).toFlushAndYield(['resolved']);
+        await waitForAll(['resolved']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1417,13 +1434,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toHaveYielded(['suspended']);
+        assertLog(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         rejectFn();
         await expect(suspensePromise).rejects.toThrow();
 
-        expect(Scheduler).toHaveYielded(['rejected']);
+        assertLog(['rejected']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1475,13 +1492,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toFlushAndYield(['suspended']);
+        await waitForAll(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         resolveFn();
         await suspensePromise;
 
-        expect(Scheduler).toFlushAndYield(['resolved']);
+        await waitForAll(['resolved']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1533,13 +1550,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toFlushAndYield(['suspended']);
+        await waitForAll(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         rejectFn();
         await expect(suspensePromise).rejects.toThrow();
 
-        expect(Scheduler).toFlushAndYield(['rejected']);
+        await waitForAll(['rejected']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1566,7 +1583,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      it('should mark cascading class component state updates', () => {
+      it('should mark cascading class component state updates', async () => {
         class Example extends React.Component {
           state = {didMount: false};
           componentDidMount() {
@@ -1583,7 +1600,7 @@ describe('Timeline profiler', () => {
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'update']);
+        await waitForPaint(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
@@ -1626,7 +1643,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading class component force updates', () => {
+      it('should mark cascading class component force updates', async () => {
         let forced = false;
         class Example extends React.Component {
           componentDidMount() {
@@ -1642,7 +1659,7 @@ describe('Timeline profiler', () => {
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'force update']);
+        await waitForPaint(['mount', 'force update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
@@ -1683,7 +1700,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase state updates for class component', () => {
+      it('should mark render phase state updates for class component', async () => {
         class Example extends React.Component {
           state = {didRender: false};
           render() {
@@ -1705,7 +1722,7 @@ describe('Timeline profiler', () => {
           errorMessage = message;
         });
 
-        expect(Scheduler).toFlushAndYield(['first render', 'second render']);
+        await waitForAll(['first render', 'second render']);
 
         expect(console.error).toHaveBeenCalledTimes(1);
         expect(errorMessage).toContain(
@@ -1753,7 +1770,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase force updates for class component', () => {
+      it('should mark render phase force updates for class component', async () => {
         let forced = false;
         class Example extends React.Component {
           render() {
@@ -1774,7 +1791,7 @@ describe('Timeline profiler', () => {
           errorMessage = message;
         });
 
-        expect(Scheduler).toFlushAndYield(['render', 'force update']);
+        await waitForAll(['render', 'force update']);
 
         expect(console.error).toHaveBeenCalledTimes(1);
         expect(errorMessage).toContain(
@@ -1820,7 +1837,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading layout updates', () => {
+      it('should mark cascading layout updates', async () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
           React.useLayoutEffect(() => {
@@ -1834,7 +1851,7 @@ describe('Timeline profiler', () => {
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
@@ -1884,7 +1901,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading passive updates', () => {
+      it('should mark cascading passive updates', async () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
           React.useEffect(() => {
@@ -1897,7 +1914,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
@@ -1947,7 +1964,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase updates', () => {
+      it('should mark render phase updates', async () => {
         function Example() {
           const [didRender, setDidRender] = React.useState(false);
           Scheduler.unstable_advanceTime(10);
@@ -1959,7 +1976,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         // Render phase updates should be retried as part of the same batch.
@@ -2026,7 +2043,7 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render',
           'ExampleThatThrows',
           'ExampleThatThrows',
@@ -2122,7 +2139,7 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'ErrorBoundary render',
           'ExampleThatThrows',
           'ExampleThatThrows',
@@ -2253,22 +2270,19 @@ describe('Timeline profiler', () => {
 
         const unmount = renderRootHelper(<ComponentWithEffects />);
 
-        expect(Scheduler).toFlushUntilNextPaint([
-          'layout 1 mount',
-          'layout 2 mount',
-        ]);
+        await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'passive 1 mount',
           'passive 2 mount',
           'passive 3 mount',
         ]);
 
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         unmount();
 
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'layout 1 unmount',
           'layout 2 unmount',
           'passive 1 unmount',
@@ -2465,7 +2479,7 @@ describe('Timeline profiler', () => {
 
         renderRootHelper(<CommponentWithChildren initialRender={false} />);
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'Render ComponentWithChildren',
           'Render Child',
           'Render Child',

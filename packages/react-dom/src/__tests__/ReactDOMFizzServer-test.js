@@ -38,6 +38,10 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
+let waitFor;
+let waitForAll;
+let assertLog;
+let waitForPaint;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -64,6 +68,12 @@ describe('ReactDOMFizzServer', () => {
     }
 
     PropTypes = require('prop-types');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
 
     if (gate(flags => flags.source)) {
       // The `with-selector` module composes the main `use-sync-external-store`
@@ -562,7 +572,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expectErrors(
       errors,
       [
@@ -684,7 +694,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expectErrors(
       errors,
@@ -843,7 +853,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expectErrors(
       errors,
@@ -1161,7 +1171,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expectErrors(
       errors,
       [
@@ -1883,7 +1893,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // That will let us client render it instead.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expectErrors(
       errors,
       [
@@ -2139,7 +2149,7 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['server']);
+    assertLog(['server']);
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
@@ -2149,9 +2159,9 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(() => {
+    await expect(async () => {
       // The first paint switches to client rendering due to mismatch
-      expect(Scheduler).toFlushUntilNextPaint([
+      await waitForPaint([
         'client',
         'Log recoverable error: Hydration failed because the initial ' +
           'UI does not match what was rendered on the server.',
@@ -2224,7 +2234,7 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['server']);
+    assertLog(['server']);
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
@@ -2235,9 +2245,9 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // The first paint uses the client due to mismatch forcing client render
-    expect(() => {
+    await expect(async () => {
       // The first paint switches to client rendering due to mismatch
-      expect(Scheduler).toFlushUntilNextPaint([
+      await waitForPaint([
         'client',
         'Log recoverable error: Hydration failed because the initial ' +
           'UI does not match what was rendered on the server.',
@@ -2304,7 +2314,7 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['Yay!']);
+      assertLog(['Yay!']);
 
       const span = container.getElementsByTagName('span')[0];
 
@@ -2319,8 +2329,8 @@ describe('ReactDOMFizzServer', () => {
 
       // An error logged but instead of surfacing it to the UI, we switched
       // to client rendering.
-      expect(() => {
-        expect(Scheduler).toFlushAndYield([
+      await expect(async () => {
+        await waitForAll([
           'Yay!',
           'Hydration error',
           'There was an error while hydrating. Because the error happened ' +
@@ -2394,7 +2404,7 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['Yay!']);
+      assertLog(['Yay!']);
 
       const [span1, span2, span3] = container.getElementsByTagName('span');
 
@@ -2409,7 +2419,7 @@ describe('ReactDOMFizzServer', () => {
 
       // An error logged but instead of surfacing it to the UI, we switched
       // to client rendering.
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Yay!',
         'Hydration error',
         'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
@@ -2484,7 +2494,7 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['Yay!']);
+      assertLog(['Yay!']);
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
@@ -2497,7 +2507,7 @@ describe('ReactDOMFizzServer', () => {
 
       // Because we failed to recover from the error, onRecoverableError
       // shouldn't be called.
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
 
       expectErrors(errors, [], []);
@@ -2541,7 +2551,7 @@ describe('ReactDOMFizzServer', () => {
       });
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['[s!] Oops.']);
+    assertLog(['[s!] Oops.']);
 
     // The server could not complete this boundary, so we'll retry on the client.
     const serverFallback = container.getElementsByTagName('p')[0];
@@ -2555,7 +2565,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
     // This should not report any errors yet.
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>Loading...</p>
@@ -2573,7 +2583,7 @@ describe('ReactDOMFizzServer', () => {
     await act(async () => {
       resolveText('Yay!');
     });
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Yay!',
       '[c!] The server could not finish this Suspense boundary, ' +
         'likely due to an error during server rendering. ' +
@@ -2626,7 +2636,7 @@ describe('ReactDOMFizzServer', () => {
         });
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['[s!] Oops.']);
+      assertLog(['[s!] Oops.']);
 
       // The server could not complete this boundary, so we'll retry on the client.
       const serverFallback = container.getElementsByTagName('p')[0];
@@ -2640,7 +2650,7 @@ describe('ReactDOMFizzServer', () => {
         },
       });
       // This should not report any errors yet.
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <p>Loading...</p>
@@ -2667,7 +2677,7 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         resolveText('Yay!');
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Yay! (red)',
         '[c!] The server could not finish this Suspense boundary, ' +
           'likely due to an error during server rendering. ' +
@@ -2727,7 +2737,7 @@ describe('ReactDOMFizzServer', () => {
         );
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['[s!] Oops.']);
+      assertLog(['[s!] Oops.']);
 
       const serverFallback = container.getElementsByTagName('p')[0];
       expect(serverFallback.innerHTML).toBe('Loading...');
@@ -2744,7 +2754,7 @@ describe('ReactDOMFizzServer', () => {
         },
       );
       // This should not report any errors yet.
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <p>Loading...</p>
@@ -2763,7 +2773,7 @@ describe('ReactDOMFizzServer', () => {
       root.render(<App fallbackText="More loading..." />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         '[c!] The server could not finish this Suspense boundary, ' +
           'likely due to an error during server rendering. ' +
           'Switched to client rendering.',
@@ -2781,7 +2791,7 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         resolveText('Yay!');
       });
-      expect(Scheduler).toFlushAndYield(['Yay!']);
+      await waitForAll(['Yay!']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span>Yay!</span>
@@ -2849,7 +2859,7 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['Yay!']);
+      assertLog(['Yay!']);
 
       const [span1, span2, span3] = container.getElementsByTagName('span');
 
@@ -2864,7 +2874,7 @@ describe('ReactDOMFizzServer', () => {
 
       // An error logged but instead of surfacing it to the UI, we switched
       // to client rendering.
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Hydration error',
         'There was an error while hydrating this Suspense boundary. Switched ' +
           'to client rendering.',
@@ -2880,7 +2890,7 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         resolveText('Yay!');
       });
-      expect(Scheduler).toFlushAndYield(['Yay!']);
+      await waitForAll(['Yay!']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
@@ -2937,13 +2947,13 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // Partially render A, but yield before the render has finished
-    expect(Scheduler).toFlushAndYieldThrough(['Oops!', 'Oops!']);
+    await waitFor(['Oops!', 'Oops!']);
 
     // React will try rendering again synchronously. During the retry, A will
     // not throw. This simulates a concurrent data race that is fixed by
     // blocking the main thread.
     shouldThrow = false;
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       // Finish initial render attempt
       'B',
 
@@ -3001,7 +3011,7 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['A', 'B']);
+    assertLog(['A', 'B']);
 
     // Hydrate the tree. Child will throw during hydration, but not when it
     // falls back to client rendering.
@@ -3014,7 +3024,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'A',
       'B',
 
@@ -3151,7 +3161,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expectErrors(
       errors,
@@ -3232,7 +3242,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expectErrors(
       errors,
@@ -3299,7 +3309,7 @@ describe('ReactDOMFizzServer', () => {
         },
       },
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
   });
 
   describe('error escaping', () => {
@@ -3442,7 +3452,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push({error, errorInfo});
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       // If escaping were not done we would get a message that says "bad hash"
       expectErrors(
@@ -3729,7 +3739,7 @@ describe('ReactDOMFizzServer', () => {
     // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
     // client-side rendering.
     await clientResolve();
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>A</p>
@@ -3808,8 +3818,8 @@ describe('ReactDOMFizzServer', () => {
     // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
     // client-side rendering.
     await clientResolve();
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Logged recoverable error: Text content does not match server-rendered HTML.',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
@@ -3823,7 +3833,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
   });
 
   // @gate enableClientRenderFallbackOnTextMismatch
@@ -3867,7 +3877,7 @@ describe('ReactDOMFizzServer', () => {
           );
         },
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Logged recoverable error: Text content does not match server-rendered HTML.',
         'Logged recoverable error: Text content does not match server-rendered HTML.',
         'Logged recoverable error: Text content does not match server-rendered HTML.',
@@ -3882,7 +3892,7 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       if (__DEV__) {
         expect(mockError.mock.calls.length).toBe(1);
         expect(mockError.mock.calls[0]).toEqual([
@@ -3958,7 +3968,7 @@ describe('ReactDOMFizzServer', () => {
         );
       },
     });
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Logged recoverable error: uh oh',
       'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
@@ -3973,7 +3983,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
   });
 
   // @gate __DEV__
@@ -4050,7 +4060,7 @@ describe('ReactDOMFizzServer', () => {
           );
         },
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'throwing: first error',
         // this repeated first error is the invokeGuardedCallback throw
         'throwing: first error',
@@ -4081,7 +4091,7 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(mockError.mock.calls).toEqual([]);
     } finally {
       console.error = originalConsoleError;
@@ -4181,7 +4191,7 @@ describe('ReactDOMFizzServer', () => {
           );
         },
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'suspending',
         'throwing: first error',
         // There is no repeated first error because we already suspended and no
@@ -4202,7 +4212,7 @@ describe('ReactDOMFizzServer', () => {
       await unsuspend();
       // Since our client components only throw on the very first render there are no
       // new throws in this pass
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       expect(mockError.mock.calls).toEqual([]);
     } finally {
@@ -4304,7 +4314,7 @@ describe('ReactDOMFizzServer', () => {
           );
         },
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'throwing: first error',
         // duplicate because first error is re-done in invokeGuardedCallback
         'throwing: first error',
@@ -4331,7 +4341,7 @@ describe('ReactDOMFizzServer', () => {
       await unsuspend();
       // Since our client components only throw on the very first render there are no
       // new throws in this pass
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(mockError.mock.calls).toEqual([]);
     } finally {
       console.error = originalConsoleError;
@@ -4365,7 +4375,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors).toEqual([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -4374,7 +4384,7 @@ describe('ReactDOMFizzServer', () => {
     );
 
     resolveText('A');
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors).toEqual([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -4411,7 +4421,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors).toEqual([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -4421,7 +4431,7 @@ describe('ReactDOMFizzServer', () => {
     );
 
     resolve({default: () => <p>lazy</p>});
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors).toEqual([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -4566,7 +4576,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4629,7 +4639,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div id="app-div">
@@ -4679,7 +4689,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
@@ -4724,7 +4734,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
@@ -4762,7 +4772,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4800,7 +4810,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4857,7 +4867,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div id="app-div">
@@ -4883,7 +4893,7 @@ describe('ReactDOMFizzServer', () => {
         '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$-->secondstart<b>second suspended</b><!--/$-->end</div>',
       );
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div id="app-div">
@@ -4939,7 +4949,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4985,7 +4995,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
     });
@@ -5009,7 +5019,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
     });
@@ -5044,7 +5054,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       if (gate(flags => flags.enableFloat)) {
         expect(errors).toEqual([]);
         // with float, the title doesn't render on the client or on the server
@@ -5117,7 +5127,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(errors).toEqual([]);
       if (gate(flags => flags.enableFloat)) {
         // object titles are toStringed when float is on
@@ -5171,7 +5181,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual('ABC');
 
       ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual('ABC');
     });
 
@@ -5219,7 +5229,7 @@ describe('ReactDOMFizzServer', () => {
       ContextA._currentRenderer = null;
       ServerContext._currentRenderer = null;
       ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
     });
 
@@ -5273,7 +5283,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual('ABCD');
 
       ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual('ABCD');
     });
 
@@ -5350,7 +5360,7 @@ describe('ReactDOMFizzServer', () => {
           reportedClientErrors.push(error);
         },
       });
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
       expect(reportedClientErrors.length).toBe(1);
       if (__DEV__) {
@@ -5383,7 +5393,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual('Hi');
 
       ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual('Hi');
     });
 
@@ -5437,7 +5447,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual(<button>0</button>);
 
       ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
       expect(getVisibleChildren(container)).toEqual(<button>0</button>);
 
       ref.current.dispatchEvent(
@@ -5502,8 +5512,8 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error);
         },
       });
-      expect(() => {
-        expect(Scheduler).toFlushAndYield([]);
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev(
         [
           'Expected server HTML to contain a matching <span> in <div>',

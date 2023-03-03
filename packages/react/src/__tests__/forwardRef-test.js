@@ -13,17 +13,19 @@ describe('forwardRef', () => {
   let PropTypes;
   let React;
   let ReactNoop;
-  let Scheduler;
+  let waitForAll;
 
   beforeEach(() => {
     jest.resetModules();
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
-  it('should update refs when switching between children', () => {
+  it('should update refs when switching between children', async () => {
     function FunctionComponent({forwardedRef, setRefOnDiv}) {
       return (
         <section>
@@ -40,25 +42,25 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={true} />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={false} />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current.type).toBe('span');
   });
 
-  it('should support rendering null', () => {
+  it('should support rendering null', async () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
 
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current).toBe(null);
   });
 
-  it('should support rendering null for multiple children', () => {
+  it('should support rendering null for multiple children', async () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
 
     const ref = React.createRef();
@@ -70,11 +72,11 @@ describe('forwardRef', () => {
         <div />
       </div>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current).toBe(null);
   });
 
-  it('should support propTypes and defaultProps', () => {
+  it('should support propTypes and defaultProps', async () => {
     function FunctionComponent({forwardedRef, optional, required}) {
       return (
         <div ref={forwardedRef}>
@@ -103,14 +105,14 @@ describe('forwardRef', () => {
     ReactNoop.render(
       <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current.children).toEqual([
       {text: 'foo', hidden: false},
       {text: 'bar', hidden: false},
     ]);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ref.current.children).toEqual([
       {text: 'default', hidden: false},
       {text: 'foo', hidden: false},
@@ -344,7 +346,7 @@ describe('forwardRef', () => {
     );
   });
 
-  it('should not bailout if forwardRef is not wrapped in memo', () => {
+  it('should not bailout if forwardRef is not wrapped in memo', async () => {
     const Component = props => <div {...props} />;
 
     let renderCount = 0;
@@ -357,15 +359,15 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(1);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(2);
   });
 
-  it('should bailout if forwardRef is wrapped in memo', () => {
+  it('should bailout if forwardRef is wrapped in memo', async () => {
     const Component = props => <div ref={props.forwardedRef} />;
 
     let renderCount = 0;
@@ -380,13 +382,13 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(1);
 
     const differentRef = React.createRef();
@@ -394,18 +396,18 @@ describe('forwardRef', () => {
     ReactNoop.render(
       <RefForwardingComponent ref={differentRef} optional="foo" />,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(2);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="bar" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(3);
   });
 
-  it('should custom memo comparisons to compose', () => {
+  it('should custom memo comparisons to compose', async () => {
     const Component = props => <div ref={props.forwardedRef} />;
 
     let renderCount = 0;
@@ -421,19 +423,19 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="0" c="1" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     // Changing either a or b rerenders
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="1" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(2);
 
     // Changing c doesn't rerender
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="2" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(2);
 
     const ComposedMemo = React.memo(
@@ -442,29 +444,29 @@ describe('forwardRef', () => {
     );
 
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="0" c="0" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(3);
 
     // Changing just b no longer updates
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="1" c="0" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(3);
 
     // Changing just a and c updates
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="2" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(4);
 
     // Changing just c does not update
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="3" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(4);
 
     // Changing ref still rerenders
     const differentRef = React.createRef();
 
     ReactNoop.render(<ComposedMemo ref={differentRef} a="2" b="2" c="3" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderCount).toBe(5);
 
     expect(ref.current).toBe(null);

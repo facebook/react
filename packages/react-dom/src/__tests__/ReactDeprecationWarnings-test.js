@@ -13,6 +13,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let JSXDEVRuntime;
+let waitForAll;
 
 describe('ReactDeprecationWarnings', () => {
   beforeEach(() => {
@@ -20,6 +21,8 @@ describe('ReactDeprecationWarnings', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
     if (__DEV__) {
       JSXDEVRuntime = require('react/jsx-dev-runtime');
     }
@@ -86,7 +89,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
-  it('should warn when owner and self are the same for string refs', () => {
+  it('should warn when owner and self are the same for string refs', async () => {
     class RefComponent extends React.Component {
       render() {
         return null;
@@ -102,7 +105,7 @@ describe('ReactDeprecationWarnings', () => {
     }).toErrorDev([
       'Component "Component" contains the string ref "refComponent". Support for string refs will be removed in a future major release.',
     ]);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
   });
 
   it('should warn when owner and self are different for string refs', () => {

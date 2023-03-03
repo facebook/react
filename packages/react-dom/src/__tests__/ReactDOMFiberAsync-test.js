@@ -15,6 +15,7 @@ let ReactDOM;
 let ReactDOMClient;
 let Scheduler;
 let act;
+let waitForAll;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -32,6 +33,9 @@ describe('ReactDOMFiberAsync', () => {
     ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
 
     document.body.appendChild(container);
   });
@@ -592,7 +596,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(containerC.textContent).toEqual('Finished');
   });
 
-  it('updates flush without yielding in the next event', () => {
+  it('updates flush without yielding in the next event', async () => {
     const root = ReactDOMClient.createRoot(container);
 
     function Text(props) {
@@ -612,7 +616,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(container.textContent).toEqual('');
 
     // Everything should render immediately in the next event
-    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+    await waitForAll(['A', 'B', 'C']);
     expect(container.textContent).toEqual('ABC');
   });
 

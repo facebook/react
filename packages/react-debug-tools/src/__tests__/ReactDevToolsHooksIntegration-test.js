@@ -19,6 +19,7 @@ describe('React hooks DevTools integration', () => {
   let overrideHookState;
   let scheduleUpdate;
   let setSuspenseHandler;
+  let waitForAll;
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -40,6 +41,9 @@ describe('React hooks DevTools integration', () => {
     ReactDebugTools = require('react-debug-tools');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
 
     act = ReactTestRenderer.act;
   });
@@ -256,7 +260,7 @@ describe('React hooks DevTools integration', () => {
       ),
     );
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     // Ensure we timeout any suspense time.
     jest.advanceTimersByTime(1000);
     const fiber = renderer.root._currentFiber().child;

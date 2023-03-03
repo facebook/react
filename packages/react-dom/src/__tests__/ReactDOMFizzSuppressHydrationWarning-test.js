@@ -22,6 +22,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+let waitForAll;
 
 describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
@@ -32,6 +33,9 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -155,7 +159,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     // The text mismatch should be *silently* fixed. Even in production.
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -195,7 +199,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>
@@ -236,8 +240,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
@@ -283,7 +287,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>{'Client'}</span>
@@ -319,8 +323,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
@@ -367,8 +371,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
@@ -418,8 +422,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
@@ -467,8 +471,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
@@ -521,7 +525,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span class="server" style="opacity:0" data-serveronly="server-only" />
@@ -558,7 +562,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>Server HTML</p>
@@ -591,8 +595,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
@@ -637,8 +641,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
+    await expect(async () => {
+      await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
