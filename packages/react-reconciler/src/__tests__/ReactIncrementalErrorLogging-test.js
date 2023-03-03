@@ -13,6 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let waitForAll;
 
 describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {
@@ -20,6 +21,9 @@ describe('ReactIncrementalErrorLogging', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   // Note: in this test file we won't be using toErrorDev() matchers
@@ -151,7 +155,7 @@ describe('ReactIncrementalErrorLogging', () => {
     }).toThrow('logCapturedError error');
   });
 
-  it('resets instance variables before unmounting failed node', () => {
+  it('resets instance variables before unmounting failed node', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -185,7 +189,7 @@ describe('ReactIncrementalErrorLogging', () => {
         <Foo />
       </ErrorBoundary>,
     );
-    expect(Scheduler).toFlushAndYield(
+    await waitForAll(
       [
         'render: 0',
 

@@ -1874,7 +1874,7 @@ describe(`onPostCommit`, () => {
     loadModules();
   });
 
-  it('should report time spent in passive effects', () => {
+  it('should report time spent in passive effects', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = () => {
@@ -1910,7 +1910,7 @@ describe(`onPostCommit`, () => {
         </React.Profiler>,
       );
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -1931,7 +1931,7 @@ describe(`onPostCommit`, () => {
         </React.Profiler>,
       );
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1950,7 +1950,7 @@ describe(`onPostCommit`, () => {
         <React.Profiler id="unmount-test" onPostCommit={callback} />,
       );
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(callback).toHaveBeenCalledTimes(3);
 

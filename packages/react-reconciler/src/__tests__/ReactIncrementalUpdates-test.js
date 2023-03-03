@@ -15,6 +15,9 @@ let ReactNoop;
 let Scheduler;
 let ContinuousEventPriority;
 let act;
+let waitForAll;
+let waitFor;
+let assertLog;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -26,6 +29,11 @@ describe('ReactIncrementalUpdates', () => {
     act = require('jest-react').act;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function flushNextRenderIfExpired() {
@@ -37,7 +45,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushSync();
   }
 
-  it('applies updates in order of priority', () => {
+  it('applies updates in order of priority', async () => {
     let state;
     class Foo extends React.Component {
       state = {};
@@ -58,14 +66,14 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYieldThrough(['commit']);
+    await waitFor(['commit']);
 
     expect(state).toEqual({a: 'a'});
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
-  it('applies updates with equal priority in insertion order', () => {
+  it('applies updates with equal priority in insertion order', async () => {
     let state;
     class Foo extends React.Component {
       state = {};
@@ -82,11 +90,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
-  it('only drops updates with equal or lesser priority when replaceState is called', () => {
+  it('only drops updates with equal or lesser priority when replaceState is called', async () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -104,7 +112,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield(['render', 'componentDidMount']);
+    await waitForAll(['render', 'componentDidMount']);
 
     ReactNoop.flushSync(() => {
       React.startTransition(() => {
@@ -122,14 +130,14 @@ describe('ReactIncrementalUpdates', () => {
     // Even though a replaceState has been already scheduled, it hasn't been
     // flushed yet because it has async priority.
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(Scheduler).toHaveYielded(['render', 'componentDidUpdate']);
+    assertLog(['render', 'componentDidUpdate']);
 
-    expect(Scheduler).toFlushAndYield(['render', 'componentDidUpdate']);
+    await waitForAll(['render', 'componentDidUpdate']);
     // Now the rest of the updates are flushed, including the replaceState.
     expect(instance.state).toEqual({c: 'c', d: 'd'});
   });
 
-  it('can abort an update, schedule additional updates, and resume', () => {
+  it('can abort an update, schedule additional updates, and resume', async () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -140,7 +148,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     function createUpdate(letter) {
       return () => {
@@ -159,7 +167,7 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // Begin the updates but don't flush them yet
-    expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
+    await waitFor(['a', 'b', 'c']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="" />);
 
     // Schedule some more updates at different priorities
@@ -174,11 +182,11 @@ describe('ReactIncrementalUpdates', () => {
 
     // The sync updates should have flushed, but not the async ones.
     if (gate(flags => flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
+      assertLog(['d', 'e', 'f']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
     } else {
       // Update d was dropped and replaced by e.
-      expect(Scheduler).toHaveYielded(['e', 'f']);
+      assertLog(['e', 'f']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="ef" />);
     }
 
@@ -186,7 +194,7 @@ describe('ReactIncrementalUpdates', () => {
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
     if (gate(flags => !flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
         'd',
@@ -202,7 +210,7 @@ describe('ReactIncrementalUpdates', () => {
         'g',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         // Then we'll re-process everything for 'g'.
         'a',
         'b',
@@ -216,7 +224,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="abcdefg" />);
   });
 
-  it('can abort an update, schedule a replaceState, and resume', () => {
+  it('can abort an update, schedule a replaceState, and resume', async () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -227,7 +235,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     function createUpdate(letter) {
       return () => {
@@ -246,7 +254,7 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // Begin the updates but don't flush them yet
-    expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
+    await waitFor(['a', 'b', 'c']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="" />);
 
     // Schedule some more updates at different priorities
@@ -264,10 +272,10 @@ describe('ReactIncrementalUpdates', () => {
 
     // The sync updates should have flushed, but not the async ones.
     if (gate(flags => flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
+      assertLog(['d', 'e', 'f']);
     } else {
       // Update d was dropped and replaced by e.
-      expect(Scheduler).toHaveYielded(['e', 'f']);
+      assertLog(['e', 'f']);
     }
     expect(ReactNoop).toMatchRenderedOutput(<span prop="f" />);
 
@@ -275,7 +283,7 @@ describe('ReactIncrementalUpdates', () => {
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
     if (gate(flags => !flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
         'd',
@@ -291,7 +299,7 @@ describe('ReactIncrementalUpdates', () => {
         'g',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         // Then we'll re-process everything for 'g'.
         'a',
         'b',
@@ -305,7 +313,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="fg" />);
   });
 
-  it('passes accumulation of previous updates to replaceState updater function', () => {
+  it('passes accumulation of previous updates to replaceState updater function', async () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -315,7 +323,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     instance.setState({a: 'a'});
     instance.setState({b: 'b'});
@@ -324,11 +332,11 @@ describe('ReactIncrementalUpdates', () => {
     instance.updater.enqueueReplaceState(instance, previousState => ({
       previousState,
     }));
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(instance.state).toEqual({previousState: {a: 'a', b: 'b'}});
   });
 
-  it('does not call callbacks that are scheduled by another callback until a later commit', () => {
+  it('does not call callbacks that are scheduled by another callback until a later commit', async () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
@@ -347,7 +355,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'render',
       'did mount',
       'render',
@@ -357,7 +365,7 @@ describe('ReactIncrementalUpdates', () => {
     ]);
   });
 
-  it('gives setState during reconciliation the same priority as whatever level is currently reconciling', () => {
+  it('gives setState during reconciliation the same priority as whatever level is currently reconciling', async () => {
     let instance;
 
     class Foo extends React.Component {
@@ -373,7 +381,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield(['render']);
+    await waitForAll(['render']);
 
     ReactNoop.flushSync(() => {
       instance.setState({a: 'a'});
@@ -384,17 +392,13 @@ describe('ReactIncrementalUpdates', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
     if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
-      expect(Scheduler).toHaveYielded([
-        'componentWillReceiveProps',
-        'render',
-        'render',
-      ]);
+      assertLog(['componentWillReceiveProps', 'render', 'render']);
     } else {
-      expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+      assertLog(['componentWillReceiveProps', 'render']);
     }
   });
 
-  it('updates triggered from inside a class setState updater', () => {
+  it('updates triggered from inside a class setState updater', async () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -406,7 +410,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       // Initial render
       'render',
     ]);
@@ -451,7 +455,7 @@ describe('ReactIncrementalUpdates', () => {
       this.setState({a: 'a'});
       return {b: 'b'};
     });
-    expect(Scheduler).toFlushAndYield(
+    await waitForAll(
       gate(flags =>
         flags.deferRenderPhaseUpdateToNextBatch
           ? // In the new reconciler, updates inside the render phase are
@@ -529,24 +533,20 @@ describe('ReactIncrementalUpdates', () => {
       return null;
     }
 
-    act(() => {
+    act(async () => {
       React.startTransition(() => {
         ReactNoop.render(<App />);
       });
       flushNextRenderIfExpired();
-      expect(Scheduler).toHaveYielded([]);
-      expect(Scheduler).toFlushAndYield([
-        'Render: 0',
-        'Commit: 0',
-        'Render: 1',
-      ]);
+      assertLog([]);
+      await waitForAll(['Render: 0', 'Commit: 0', 'Render: 1']);
 
       Scheduler.unstable_advanceTime(10000);
       React.startTransition(() => {
         setCount(2);
       });
       flushNextRenderIfExpired();
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
     });
   });
 
@@ -559,7 +559,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Text text="A" />);
     });
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
 
     Scheduler.unstable_advanceTime(10000);
 
@@ -567,7 +567,7 @@ describe('ReactIncrementalUpdates', () => {
       ReactNoop.render(<Text text="B" />);
     });
     flushNextRenderIfExpired();
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
   it('regression: does not expire soon due to previous expired work', () => {
@@ -581,7 +581,7 @@ describe('ReactIncrementalUpdates', () => {
     });
     Scheduler.unstable_advanceTime(10000);
     flushNextRenderIfExpired();
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
 
     Scheduler.unstable_advanceTime(10000);
 
@@ -589,7 +589,7 @@ describe('ReactIncrementalUpdates', () => {
       ReactNoop.render(<Text text="B" />);
     });
     flushNextRenderIfExpired();
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
@@ -620,7 +620,7 @@ describe('ReactIncrementalUpdates', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Committed: ']);
+    assertLog(['Committed: ']);
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
@@ -633,13 +633,9 @@ describe('ReactIncrementalUpdates', () => {
       );
     });
     if (gate(flags => flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toHaveYielded([
-        'Committed: B',
-        'Committed: BCD',
-        'Committed: ABCD',
-      ]);
+      assertLog(['Committed: B', 'Committed: BCD', 'Committed: ABCD']);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         // A and B are pending. B is higher priority, so we'll render that first.
         'Committed: B',
         // Because A comes first in the queue, we're now in rebase mode. B must
@@ -685,7 +681,7 @@ describe('ReactIncrementalUpdates', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
@@ -697,13 +693,9 @@ describe('ReactIncrementalUpdates', () => {
       );
     });
     if (gate(flags => flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toHaveYielded([
-        'Committed: B',
-        'Committed: BCD',
-        'Committed: ABCD',
-      ]);
+      assertLog(['Committed: B', 'Committed: BCD', 'Committed: ABCD']);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         // A and B are pending. B is higher priority, so we'll render that first.
         'Committed: B',
         // Because A comes first in the queue, we're now in rebase mode. B must
