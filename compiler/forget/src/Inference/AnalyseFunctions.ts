@@ -88,7 +88,7 @@ function lower(func: HIRFunction) {
 function infer(value: FunctionExpression, state: State, context: Place[]) {
   const mutations = new Set(
     value.loweredFunc.context
-      .filter((dep) => isMutated(dep.identifier))
+      .filter((dep) => isMutatedOrReassigned(dep.identifier))
       .map((m) => m.identifier.name)
       .filter((m) => m !== null) as string[]
   );
@@ -127,6 +127,12 @@ function infer(value: FunctionExpression, state: State, context: Place[]) {
   }
 }
 
-function isMutated(id: Identifier) {
-  return id.mutableRange.end - id.mutableRange.start > 1;
+function isMutatedOrReassigned(id: Identifier) {
+  // This check checks for mutation and reassingnment, so the usual check for
+  // mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
+  // enough.
+  //
+  // We need to track re-assignments in context refs as we need to reflect the
+  // re-assignment back to the captured refs.
+  return id.mutableRange.end > id.mutableRange.start;
 }
