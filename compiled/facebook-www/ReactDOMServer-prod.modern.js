@@ -558,16 +558,20 @@ function pushLink(
           (href = href.props),
           null == props.crossOrigin && (props.crossOrigin = href.crossOrigin),
           null == props.integrity && (props.integrity = href.integrity);
-      href = {
-        type: "stylesheet",
-        chunks: [],
-        state: resources.boundaryResources ? 4 : 0,
-        props: props
-      };
+      href = { type: "stylesheet", chunks: [], state: 0, props: props };
       resources.stylesMap.set(responseState, href);
       props = resources.precedences.get(precedence);
       props ||
-        ((props = new Set()), resources.precedences.set(precedence, props));
+        ((props = new Set()),
+        resources.precedences.set(precedence, props),
+        (responseState = {
+          type: "style",
+          chunks: [],
+          state: 0,
+          props: { precedence: precedence, hrefs: [] }
+        }),
+        props.add(responseState),
+        resources.stylePrecedences.set(precedence, responseState));
       props.add(href);
     }
     resources.boundaryResources && resources.boundaryResources.add(href);
@@ -601,41 +605,6 @@ function pushLinkImpl(target, props) {
         }
     }
   target.push("/>");
-  return null;
-}
-function pushStyleImpl(target, props) {
-  target.push(startChunkForTag("style"));
-  var children = null,
-    innerHTML = null,
-    propKey;
-  for (propKey in props)
-    if (hasOwnProperty.call(props, propKey)) {
-      var propValue = props[propKey];
-      if (null != propValue)
-        switch (propKey) {
-          case "children":
-            children = propValue;
-            break;
-          case "dangerouslySetInnerHTML":
-            innerHTML = propValue;
-            break;
-          default:
-            pushAttribute(target, propKey, propValue);
-        }
-    }
-  target.push(">");
-  props = Array.isArray(children)
-    ? 2 > children.length
-      ? children[0]
-      : null
-    : children;
-  "function" !== typeof props &&
-    "symbol" !== typeof props &&
-    null !== props &&
-    void 0 !== props &&
-    target.push(escapeTextForBrowser("" + props));
-  pushInnerHTML(target, innerHTML, children);
-  target.push("</", "style", ">");
   return null;
 }
 function pushSelfClosing(target, props, tag) {
@@ -791,25 +760,26 @@ function pushStartInstance(
       textEmbedded = formatContext.selectedValue;
       target.push(startChunkForTag("option"));
       var value = (resources = null),
-        innerHTML = (propKey = null);
-      for (propValue in props)
-        if (hasOwnProperty.call(props, propValue)) {
-          var propValue$jscomp$0 = props[propValue];
+        selected = null;
+      propValue = null;
+      for (var propKey$jscomp$0 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$0)) {
+          var propValue$jscomp$0 = props[propKey$jscomp$0];
           if (null != propValue$jscomp$0)
-            switch (propValue) {
+            switch (propKey$jscomp$0) {
               case "children":
                 resources = propValue$jscomp$0;
                 break;
               case "selected":
-                propKey = propValue$jscomp$0;
+                selected = propValue$jscomp$0;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML = propValue$jscomp$0;
+                propValue = propValue$jscomp$0;
                 break;
               case "value":
                 value = propValue$jscomp$0;
               default:
-                pushAttribute(target, propValue, propValue$jscomp$0);
+                pushAttribute(target, propKey$jscomp$0, propValue$jscomp$0);
             }
         }
       if (null != textEmbedded)
@@ -818,39 +788,44 @@ function pushStartInstance(
             null !== value ? "" + value : flattenOptionChildren(resources)),
           isArrayImpl(textEmbedded))
         )
-          for (propValue = 0; propValue < textEmbedded.length; propValue++) {
-            if ("" + textEmbedded[propValue] === props) {
+          for (
+            propKey$jscomp$0 = 0;
+            propKey$jscomp$0 < textEmbedded.length;
+            propKey$jscomp$0++
+          ) {
+            if ("" + textEmbedded[propKey$jscomp$0] === props) {
               target.push(' selected=""');
               break;
             }
           }
         else "" + textEmbedded === props && target.push(' selected=""');
-      else propKey && target.push(' selected=""');
+      else selected && target.push(' selected=""');
       target.push(">");
-      pushInnerHTML(target, innerHTML, resources);
+      pushInnerHTML(target, propValue, resources);
       return resources;
     case "textarea":
       target.push(startChunkForTag("textarea"));
       propValue = resources = textEmbedded = null;
-      for (value in props)
+      for (propValue$jscomp$0 in props)
         if (
-          hasOwnProperty.call(props, value) &&
-          ((innerHTML = props[value]), null != innerHTML)
+          hasOwnProperty.call(props, propValue$jscomp$0) &&
+          ((propKey$jscomp$0 = props[propValue$jscomp$0]),
+          null != propKey$jscomp$0)
         )
-          switch (value) {
+          switch (propValue$jscomp$0) {
             case "children":
-              propValue = innerHTML;
+              propValue = propKey$jscomp$0;
               break;
             case "value":
-              textEmbedded = innerHTML;
+              textEmbedded = propKey$jscomp$0;
               break;
             case "defaultValue":
-              resources = innerHTML;
+              resources = propKey$jscomp$0;
               break;
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(91));
             default:
-              pushAttribute(target, value, innerHTML);
+              pushAttribute(target, propValue$jscomp$0, propKey$jscomp$0);
           }
       null === textEmbedded && null !== resources && (textEmbedded = resources);
       target.push(">");
@@ -868,34 +843,35 @@ function pushStartInstance(
       return null;
     case "input":
       target.push(startChunkForTag("input"));
-      value = propValue = resources = textEmbedded = null;
-      for (innerHTML in props)
+      propKey$jscomp$0 = propValue = resources = textEmbedded = null;
+      for (value in props)
         if (
-          hasOwnProperty.call(props, innerHTML) &&
-          ((propKey = props[innerHTML]), null != propKey)
+          hasOwnProperty.call(props, value) &&
+          ((selected = props[value]), null != selected)
         )
-          switch (innerHTML) {
+          switch (value) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(399, "input"));
             case "defaultChecked":
-              value = propKey;
+              propKey$jscomp$0 = selected;
               break;
             case "defaultValue":
-              resources = propKey;
+              resources = selected;
               break;
             case "checked":
-              propValue = propKey;
+              propValue = selected;
               break;
             case "value":
-              textEmbedded = propKey;
+              textEmbedded = selected;
               break;
             default:
-              pushAttribute(target, innerHTML, propKey);
+              pushAttribute(target, value, selected);
           }
       null !== propValue
         ? pushAttribute(target, "checked", propValue)
-        : null !== value && pushAttribute(target, "checked", value);
+        : null !== propKey$jscomp$0 &&
+          pushAttribute(target, "checked", propKey$jscomp$0);
       null !== textEmbedded
         ? pushAttribute(target, "value", textEmbedded)
         : null !== resources && pushAttribute(target, "value", resources);
@@ -903,17 +879,17 @@ function pushStartInstance(
       return null;
     case "menuitem":
       target.push(startChunkForTag("menuitem"));
-      for (var propKey$jscomp$0 in props)
+      for (var propKey$jscomp$1 in props)
         if (
-          hasOwnProperty.call(props, propKey$jscomp$0) &&
-          ((textEmbedded = props[propKey$jscomp$0]), null != textEmbedded)
+          hasOwnProperty.call(props, propKey$jscomp$1) &&
+          ((textEmbedded = props[propKey$jscomp$1]), null != textEmbedded)
         )
-          switch (propKey$jscomp$0) {
+          switch (propKey$jscomp$1) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(400));
             default:
-              pushAttribute(target, propKey$jscomp$0, textEmbedded);
+              pushAttribute(target, propKey$jscomp$1, textEmbedded);
           }
       target.push(">");
       return null;
@@ -977,58 +953,115 @@ function pushStartInstance(
           propValue = { type: "script", chunks: [], state: 0, props: null };
           resources.scriptsMap.set(value, propValue);
           resources.scripts.add(propValue);
-          innerHTML = props;
+          propKey$jscomp$0 = props;
           if ((resources = resources.preloadsMap.get(value)))
             (resources.state |= 4),
-              (props = innerHTML = assign({}, props)),
+              (props = propKey$jscomp$0 = assign({}, props)),
               (resources = resources.props),
               null == props.crossOrigin &&
                 (props.crossOrigin = resources.crossOrigin),
               null == props.integrity &&
                 (props.integrity = resources.integrity);
-          pushScriptImpl(propValue.chunks, innerHTML);
+          pushScriptImpl(propValue.chunks, propKey$jscomp$0);
         }
         textEmbedded && target.push("\x3c!-- --\x3e");
         target = null;
       }
       return target;
     case "style":
-      return (
-        (propValue = props.precedence),
-        (innerHTML = props.href),
+      propKey$jscomp$0 = props.precedence;
+      value = props.href;
+      if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
-        "string" !== typeof propValue ||
-        "string" !== typeof innerHTML ||
-        "" === innerHTML
-          ? (target = pushStyleImpl(target, props))
-          : ((value = "[style]" + innerHTML),
-            (innerHTML = resources.stylesMap.get(value)),
-            innerHTML ||
-              ((innerHTML = {
+        "string" !== typeof propKey$jscomp$0 ||
+        "string" !== typeof value ||
+        "" === value
+      ) {
+        target.push(startChunkForTag("style"));
+        resources = textEmbedded = null;
+        for (selected in props)
+          if (
+            hasOwnProperty.call(props, selected) &&
+            ((propValue = props[selected]), null != propValue)
+          )
+            switch (selected) {
+              case "children":
+                textEmbedded = propValue;
+                break;
+              case "dangerouslySetInnerHTML":
+                resources = propValue;
+                break;
+              default:
+                pushAttribute(target, selected, propValue);
+            }
+        target.push(">");
+        props = Array.isArray(textEmbedded)
+          ? 2 > textEmbedded.length
+            ? textEmbedded[0]
+            : null
+          : textEmbedded;
+        "function" !== typeof props &&
+          "symbol" !== typeof props &&
+          null !== props &&
+          void 0 !== props &&
+          target.push(escapeTextForBrowser("" + props));
+        pushInnerHTML(target, resources, textEmbedded);
+        target.push("</", "style", ">");
+        target = null;
+      } else {
+        selected = "[style]" + value;
+        propValue$jscomp$0 = resources.stylesMap.get(selected);
+        if (!propValue$jscomp$0) {
+          (propValue$jscomp$0 =
+            resources.stylePrecedences.get(propKey$jscomp$0))
+            ? propValue$jscomp$0.props.hrefs.push(value)
+            : ((propValue$jscomp$0 = {
                 type: "style",
                 chunks: [],
-                state: resources.boundaryResources ? 4 : 0,
-                props: assign({}, props, {
-                  "data-precedence": props.precedence,
-                  precedence: null,
-                  "data-href": props.href,
-                  href: null
-                })
+                state: 0,
+                props: { precedence: propKey$jscomp$0, hrefs: [value] }
               }),
-              resources.stylesMap.set(value, innerHTML),
-              pushStyleImpl(innerHTML.chunks, innerHTML.props),
-              (props = resources.precedences.get(propValue)),
-              props ||
-                ((props = new Set()),
-                resources.precedences.set(propValue, props)),
-              props.add(innerHTML),
-              resources.boundaryResources &&
-                resources.boundaryResources.add(innerHTML)),
-            textEmbedded && target.push("\x3c!-- --\x3e"),
-            (target = void 0)),
-        target
-      );
+              resources.stylePrecedences.set(
+                propKey$jscomp$0,
+                propValue$jscomp$0
+              ),
+              (value = new Set()),
+              value.add(propValue$jscomp$0),
+              resources.precedences.set(propKey$jscomp$0, value));
+          resources.stylesMap.set(selected, propValue$jscomp$0);
+          resources.boundaryResources &&
+            resources.boundaryResources.add(propValue$jscomp$0);
+          resources = propValue$jscomp$0.chunks;
+          value = propKey$jscomp$0 = null;
+          for (propValue in props)
+            if (
+              hasOwnProperty.call(props, propValue) &&
+              ((selected = props[propValue]), null != selected)
+            )
+              switch (propValue) {
+                case "children":
+                  propKey$jscomp$0 = selected;
+                  break;
+                case "dangerouslySetInnerHTML":
+                  value = selected;
+              }
+          props = Array.isArray(propKey$jscomp$0)
+            ? 2 > propKey$jscomp$0.length
+              ? propKey$jscomp$0[0]
+              : null
+            : propKey$jscomp$0;
+          "function" !== typeof props &&
+            "symbol" !== typeof props &&
+            null !== props &&
+            void 0 !== props &&
+            resources.push(escapeTextForBrowser("" + props));
+          pushInnerHTML(resources, value, propKey$jscomp$0);
+        }
+        textEmbedded && target.push("\x3c!-- --\x3e");
+        target = void 0;
+      }
+      return target;
     case "meta":
       return (
         3 === formatContext.insertionMode || formatContext.noscriptTagInScope
@@ -1048,12 +1081,12 @@ function pushStartInstance(
     case "pre":
       target.push(startChunkForTag(type));
       resources = textEmbedded = null;
-      for (propValue$jscomp$0 in props)
+      for (var propKey$jscomp$2 in props)
         if (
-          hasOwnProperty.call(props, propValue$jscomp$0) &&
-          ((propValue = props[propValue$jscomp$0]), null != propValue)
+          hasOwnProperty.call(props, propKey$jscomp$2) &&
+          ((propValue = props[propKey$jscomp$2]), null != propValue)
         )
-          switch (propValue$jscomp$0) {
+          switch (propKey$jscomp$2) {
             case "children":
               textEmbedded = propValue;
               break;
@@ -1061,7 +1094,7 @@ function pushStartInstance(
               resources = propValue;
               break;
             default:
-              pushAttribute(target, propValue$jscomp$0, propValue);
+              pushAttribute(target, propKey$jscomp$2, propValue);
           }
       target.push(">");
       if (null != resources) {
@@ -1130,10 +1163,10 @@ function pushStartInstance(
         return pushStartGenericElement(target, props, type);
       target.push(startChunkForTag(type));
       resources = textEmbedded = null;
-      for (var propKey$jscomp$1 in props)
+      for (var propKey$jscomp$3 in props)
         if (
-          hasOwnProperty.call(props, propKey$jscomp$1) &&
-          ((propValue = props[propKey$jscomp$1]),
+          hasOwnProperty.call(props, propKey$jscomp$3) &&
+          ((propValue = props[propKey$jscomp$3]),
           !(
             null == propValue ||
             (enableCustomElementPropertySupport &&
@@ -1147,9 +1180,9 @@ function pushStartInstance(
               !0 === propValue &&
               (propValue = ""),
             enableCustomElementPropertySupport &&
-              "className" === propKey$jscomp$1 &&
-              (propKey$jscomp$1 = "class"),
-            propKey$jscomp$1)
+              "className" === propKey$jscomp$3 &&
+              (propKey$jscomp$3 = "class"),
+            propKey$jscomp$3)
           ) {
             case "children":
               textEmbedded = propValue;
@@ -1164,12 +1197,12 @@ function pushStartInstance(
             case "suppressHydrationWarning":
               break;
             default:
-              isAttributeNameSafe(propKey$jscomp$1) &&
+              isAttributeNameSafe(propKey$jscomp$3) &&
                 "function" !== typeof propValue &&
                 "symbol" !== typeof propValue &&
                 target.push(
                   " ",
-                  propKey$jscomp$1,
+                  propKey$jscomp$3,
                   '="',
                   escapeTextForBrowser(propValue),
                   '"'
@@ -1316,20 +1349,47 @@ function escapeJSObjectForInstructionScripts(input) {
     }
   );
 }
-var didWrite = !1;
+var currentlyRenderingBoundaryHasStylesToHoist = !1,
+  destinationHasCapacity = !0;
 function flushStyleTagsLateForBoundary(resource) {
-  if ("style" === resource.type && 0 === (resource.state & 3)) {
-    !1 === didWrite &&
-      ((didWrite = !0), this.push('<template data-precedence="">'));
-    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
-      this.push(chunks[i]);
-    resource.state |= 2;
+  if ("stylesheet" === resource.type && 0 === (resource.state & 1))
+    currentlyRenderingBoundaryHasStylesToHoist = !0;
+  else if ("style" === resource.type) {
+    var chunks = resource.chunks,
+      hrefs = resource.props.hrefs,
+      i = 0;
+    if (chunks.length) {
+      this.push('<style media="not all" data-precedence="');
+      resource = escapeTextForBrowser(resource.props.precedence);
+      this.push(resource);
+      if (hrefs.length) {
+        for (this.push('" data-href="'); i < hrefs.length - 1; i++)
+          (resource = escapeTextForBrowser(hrefs[i])),
+            this.push(resource),
+            this.push(" ");
+        i = escapeTextForBrowser(hrefs[i]);
+        this.push(i);
+      }
+      this.push('">');
+      for (i = 0; i < chunks.length; i++) this.push(chunks[i]);
+      destinationHasCapacity = this.push("</style>");
+      currentlyRenderingBoundaryHasStylesToHoist = !0;
+      chunks.length = 0;
+      hrefs.length = 0;
+    }
   }
 }
-function writeResourcesForBoundary(destination, boundaryResources) {
-  didWrite = !1;
+function writeResourcesForBoundary(
+  destination,
+  boundaryResources,
+  responseState
+) {
+  currentlyRenderingBoundaryHasStylesToHoist = !1;
+  destinationHasCapacity = !0;
   boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
-  return didWrite ? destination.push("</template>") : !0;
+  currentlyRenderingBoundaryHasStylesToHoist &&
+    (responseState.stylesToHoist = !0);
+  return destinationHasCapacity;
 }
 function flushResourceInPreamble(resource) {
   if (0 === (resource.state & 7)) {
@@ -1339,50 +1399,56 @@ function flushResourceInPreamble(resource) {
   }
 }
 function flushResourceLate(resource) {
-  if (0 === (resource.state & 3)) {
+  if (0 === (resource.state & 7)) {
     for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
       this.push(chunks[i]);
     resource.state |= 2;
   }
 }
-var didFlush = !1;
-function flushUnblockedStyle(resource, key, set) {
+var precedenceStyleTagResource = null,
+  didFlushPrecedence = !1;
+function flushStyleInPreamble(resource, key, set) {
   key = resource.chunks;
   if (resource.state & 3) set.delete(resource);
-  else if (!(resource.state & 4)) {
-    didFlush = !0;
-    "stylesheet" === resource.type && pushLinkImpl(key, resource.props);
-    for (var i = 0; i < key.length; i++) this.push(key[i]);
+  else if ("style" === resource.type) precedenceStyleTagResource = resource;
+  else {
+    pushLinkImpl(key, resource.props);
+    for (set = 0; set < key.length; set++) this.push(key[set]);
     resource.state |= 1;
-    set.delete(resource);
+    didFlushPrecedence = !0;
   }
 }
-function flushUnblockedStyles(set, precedence) {
-  didFlush = !1;
-  set.forEach(flushUnblockedStyle, this);
-  didFlush ||
-    (this.push('<style data-precedence="'),
-    (set = escapeTextForBrowser(precedence)),
-    this.push(set),
-    this.push('"></style>'));
-}
-function preloadBlockedStyle(resource) {
-  if ("style" !== resource.type) {
-    var chunks = resource.chunks,
-      preloadProps = preloadAsStylePropsFromProps(
-        resource.props.href,
-        resource.props
-      );
-    pushLinkImpl(chunks, preloadProps);
-    for (preloadProps = 0; preloadProps < chunks.length; preloadProps++)
-      this.push(chunks[preloadProps]);
-    resource.state |= 8;
-    chunks.length = 0;
-  }
-}
-function preloadBlockedStyles(set) {
-  set.forEach(preloadBlockedStyle, this);
+function flushAllStylesInPreamble(set, precedence) {
+  didFlushPrecedence = !1;
+  set.forEach(flushStyleInPreamble, this);
   set.clear();
+  set = precedenceStyleTagResource.chunks;
+  var hrefs = precedenceStyleTagResource.props.hrefs;
+  if (!1 === didFlushPrecedence || set.length) {
+    this.push('<style data-precedence="');
+    precedence = escapeTextForBrowser(precedence);
+    this.push(precedence);
+    precedence = 0;
+    if (hrefs.length) {
+      for (
+        this.push('" data-href="');
+        precedence < hrefs.length - 1;
+        precedence++
+      ) {
+        var chunk = escapeTextForBrowser(hrefs[precedence]);
+        this.push(chunk);
+        this.push(" ");
+      }
+      precedence = escapeTextForBrowser(hrefs[precedence]);
+      this.push(precedence);
+    }
+    this.push('">');
+    for (precedence = 0; precedence < set.length; precedence++)
+      this.push(set[precedence]);
+    this.push("</style>");
+    set.length = 0;
+    hrefs.length = 0;
+  }
 }
 function preloadLateStyle(resource) {
   if ("style" !== resource.type) {
@@ -1437,8 +1503,7 @@ function writePreamble(
   charsetChunks.length = 0;
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear();
-  resources.precedences.forEach(flushUnblockedStyles, destination);
-  resources.precedences.forEach(preloadBlockedStyles, destination);
+  resources.precedences.forEach(flushAllStylesInPreamble, destination);
   resources.usedStylesheets.forEach(function (resource) {
     if (
       !resources.stylesMap.has(
@@ -1518,14 +1583,11 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   destination.push("[");
   var nextArrayOpenBrackChunk = "[";
   boundaryResources.forEach(function (resource) {
-    if (!(resource.state & 1))
+    if ("style" !== resource.type && !(resource.state & 1))
       if (resource.state & 3)
         destination.push(nextArrayOpenBrackChunk),
           (resource = escapeJSObjectForInstructionScripts(
-            "" +
-              ("style" === resource.type
-                ? resource.props["data-href"]
-                : resource.props.href)
+            "" + resource.props.href
           )),
           destination.push(resource),
           destination.push("]"),
@@ -1612,16 +1674,11 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.push("[");
   var nextArrayOpenBrackChunk = "[";
   boundaryResources.forEach(function (resource) {
-    if (!(resource.state & 1))
+    if ("style" !== resource.type && !(resource.state & 1))
       if (resource.state & 3)
         destination.push(nextArrayOpenBrackChunk),
           (resource = escapeTextForBrowser(
-            JSON.stringify(
-              "" +
-                ("style" === resource.type
-                  ? resource.props["data-href"]
-                  : resource.props.href)
-            )
+            JSON.stringify("" + resource.props.href)
           )),
           destination.push(resource),
           destination.push("]"),
@@ -1822,7 +1879,16 @@ function preinitImpl(resources, href, options) {
           resources.stylesMap.set(key, as),
           (href = resources.precedences.get(precedence)),
           href ||
-            ((href = new Set()), resources.precedences.set(precedence, href)),
+            ((href = new Set()),
+            resources.precedences.set(precedence, href),
+            (options = {
+              type: "style",
+              chunks: [],
+              state: 0,
+              props: { precedence: precedence, hrefs: [] }
+            }),
+            href.add(options),
+            resources.stylePrecedences.set(precedence, options)),
           href.add(as));
         break;
       case "script":
@@ -1854,11 +1920,8 @@ function preloadAsStylePropsFromProps(href, props) {
     referrerPolicy: props.referrerPolicy
   };
 }
-function hoistStylesheetResource(resource) {
+function hoistStyleResource(resource) {
   this.add(resource);
-}
-function unblockStylesheet(resource) {
-  resource.state &= -5;
 }
 function createResponseState(
   generateStaticMarkup,
@@ -1892,6 +1955,7 @@ function createResponseState(
     preconnectChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
+    stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
 }
@@ -2365,6 +2429,7 @@ function createRequest(
       preconnects: new Set(),
       fontPreloads: new Set(),
       precedences: new Map(),
+      stylePrecedences: new Map(),
       usedStylesheets: new Set(),
       scripts: new Set(),
       usedScripts: new Set(),
@@ -2491,12 +2556,6 @@ function fatalError(request, error) {
   null !== request.destination
     ? ((request.status = 2), request.destination.destroy(error))
     : ((request.status = 1), (request.fatalError = error));
-}
-function hoistCompletedBoundaryResources(request, completedBoundary) {
-  if (null !== request.completedRootSegment || 0 < request.pendingRootTasks)
-    (request = completedBoundary.resources),
-      request.forEach(unblockStylesheet),
-      request.clear();
 }
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
@@ -2724,8 +2783,6 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
                   contentRootSegment.textEmbedded &&
                   contentRootSegment.chunks.push("\x3c!-- --\x3e")),
               (contentRootSegment.status = 1),
-              0 === contextType.pendingTasks &&
-                hoistCompletedBoundaryResources(request, contextType),
               queueCompletedSegment(contextType, contentRootSegment),
               0 === contextType.pendingTasks)
             )
@@ -3021,7 +3078,6 @@ function finishedTask(request, boundary, segment) {
           ? (segment.parentFlushed &&
               1 === segment.status &&
               queueCompletedSegment(boundary, segment),
-            hoistCompletedBoundaryResources(request, boundary),
             boundary.parentFlushed &&
               request.completedBoundaries.push(boundary),
             boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
@@ -3223,10 +3279,8 @@ function flushSegment(request, destination, segment) {
       flushSubtree(request, destination, segment),
       destination.push("\x3c!--/$--\x3e")
     );
-  segment = boundary.resources;
-  if ((JSCompiler_inline_result = request.resources.boundaryResources))
-    segment.forEach(hoistStylesheetResource, JSCompiler_inline_result),
-      segment.clear();
+  (segment = request.resources.boundaryResources) &&
+    boundary.resources.forEach(hoistStyleResource, segment);
   request.responseState.generateStaticMarkup ||
     destination.push("\x3c!--$--\x3e");
   segment = boundary.completedSegments;
@@ -3261,35 +3315,30 @@ function flushCompletedBoundary(request, destination, boundary) {
       completedSegments[i]
     );
   completedSegments.length = 0;
-  writeResourcesForBoundary(destination, boundary.resources);
+  writeResourcesForBoundary(
+    destination,
+    boundary.resources,
+    request.responseState
+  );
   request = request.responseState;
   completedSegments = boundary.id;
   i = boundary.rootSegmentID;
   boundary = boundary.resources;
-  var hasStyleDependencies;
-  b: {
-    for (hasStyleDependencies = boundary.values(); ; ) {
-      var resource = hasStyleDependencies.next().value;
-      if (!resource) break;
-      if (0 === (resource.state & 1)) {
-        hasStyleDependencies = !0;
-        break b;
-      }
-    }
-    hasStyleDependencies = !1;
-  }
-  (resource = 0 === request.streamingFormat)
+  var requiresStyleInsertion = request.stylesToHoist;
+  request.stylesToHoist = !1;
+  var scriptFormat = 0 === request.streamingFormat;
+  scriptFormat
     ? (destination.push(request.startInlineScript),
-      hasStyleDependencies
+      requiresStyleInsertion
         ? 0 === (request.instructions & 2)
           ? ((request.instructions |= 10),
             destination.push(
-              '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};$RM=new Map;\n$RR=function(p,q,w){function r(l){this.s=l}for(var t=$RC,m=$RM,u=new Map,n=new Map,g=document,h,e,f=g.querySelectorAll("template[data-precedence]"),c=0;e=f[c++];){for(var b=e.content.firstChild;b;b=b.nextSibling)u.set(b.getAttribute("data-href"),b);e.parentNode.removeChild(e)}f=g.querySelectorAll("link[data-precedence],style[data-precedence]");for(c=0;e=f[c++];)m.set(e.getAttribute("STYLE"===e.nodeName?"data-href":"href"),e),n.set(e.dataset.precedence,h=e);e=0;f=[];for(var d,\nv,a;d=w[e++];){var k=0;b=d[k++];if(!(a=m.get(b))){if(a=u.get(b))c=a.getAttribute("data-precedence");else{a=g.createElement("link");a.href=b;a.rel="stylesheet";for(a.dataset.precedence=c=d[k++];v=d[k++];)a.setAttribute(v,d[k++]);d=a._p=new Promise(function(l,x){a.onload=l;a.onerror=x});d.then(r.bind(d,"l"),r.bind(d,"e"))}m.set(b,a);b=n.get(c)||h;b===h&&(h=a);n.set(c,a);b?b.parentNode.insertBefore(a,b.nextSibling):(c=g.head,c.insertBefore(a,c.firstChild))}d=a._p;c=a.getAttribute("media");!d||"l"===\nd.s||c&&!matchMedia(c).matches||f.push(d)}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};$RR("'
+              '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};$RM=new Map;\n$RR=function(t,u,y){function v(n){this.s=n}for(var w=$RC,p=$RM,q=new Map,r=document,g,b,h=r.querySelectorAll("link[data-precedence],style[data-precedence]"),x=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?x.push(b):("LINK"===b.tagName&&p.set(b.getAttribute("href"),b),q.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var f=y[b++];if(!f){k=!1;b=0;continue}var c=!1,m=0;var e=f[m++];if(a=p.get(e)){var d=a._p;c=!0}else{a=r.createElement("link");a.href=e;a.rel=\n"stylesheet";for(a.dataset.precedence=l=f[m++];d=f[m++];)a.setAttribute(d,f[m++]);d=a._p=new Promise(function(n,z){a.onload=n;a.onerror=z});d.then(v.bind(d,"l"),v.bind(d,"e"));p.set(e,a)}e=a.getAttribute("media");!d||"l"===d.s||e&&!matchMedia(e).matches||h.push(d);if(c)continue}else{a=x[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=q.get(l)||g;c===g&&(g=a);q.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=r.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then(w.bind(null,\nt,u,""),w.bind(null,t,u,"Resource failed to load"))};$RR("'
             ))
           : 0 === (request.instructions & 8)
           ? ((request.instructions |= 8),
             destination.push(
-              '$RM=new Map;\n$RR=function(p,q,w){function r(l){this.s=l}for(var t=$RC,m=$RM,u=new Map,n=new Map,g=document,h,e,f=g.querySelectorAll("template[data-precedence]"),c=0;e=f[c++];){for(var b=e.content.firstChild;b;b=b.nextSibling)u.set(b.getAttribute("data-href"),b);e.parentNode.removeChild(e)}f=g.querySelectorAll("link[data-precedence],style[data-precedence]");for(c=0;e=f[c++];)m.set(e.getAttribute("STYLE"===e.nodeName?"data-href":"href"),e),n.set(e.dataset.precedence,h=e);e=0;f=[];for(var d,\nv,a;d=w[e++];){var k=0;b=d[k++];if(!(a=m.get(b))){if(a=u.get(b))c=a.getAttribute("data-precedence");else{a=g.createElement("link");a.href=b;a.rel="stylesheet";for(a.dataset.precedence=c=d[k++];v=d[k++];)a.setAttribute(v,d[k++]);d=a._p=new Promise(function(l,x){a.onload=l;a.onerror=x});d.then(r.bind(d,"l"),r.bind(d,"e"))}m.set(b,a);b=n.get(c)||h;b===h&&(h=a);n.set(c,a);b?b.parentNode.insertBefore(a,b.nextSibling):(c=g.head,c.insertBefore(a,c.firstChild))}d=a._p;c=a.getAttribute("media");!d||"l"===\nd.s||c&&!matchMedia(c).matches||f.push(d)}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};$RR("'
+              '$RM=new Map;\n$RR=function(t,u,y){function v(n){this.s=n}for(var w=$RC,p=$RM,q=new Map,r=document,g,b,h=r.querySelectorAll("link[data-precedence],style[data-precedence]"),x=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?x.push(b):("LINK"===b.tagName&&p.set(b.getAttribute("href"),b),q.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var f=y[b++];if(!f){k=!1;b=0;continue}var c=!1,m=0;var e=f[m++];if(a=p.get(e)){var d=a._p;c=!0}else{a=r.createElement("link");a.href=e;a.rel=\n"stylesheet";for(a.dataset.precedence=l=f[m++];d=f[m++];)a.setAttribute(d,f[m++]);d=a._p=new Promise(function(n,z){a.onload=n;a.onerror=z});d.then(v.bind(d,"l"),v.bind(d,"e"));p.set(e,a)}e=a.getAttribute("media");!d||"l"===d.s||e&&!matchMedia(e).matches||h.push(d);if(c)continue}else{a=x[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=q.get(l)||g;c===g&&(g=a);q.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=r.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then(w.bind(null,\nt,u,""),w.bind(null,t,u,"Resource failed to load"))};$RR("'
             ))
           : destination.push('$RR("')
         : 0 === (request.instructions & 2)
@@ -3298,23 +3347,23 @@ function flushCompletedBoundary(request, destination, boundary) {
             '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};$RC("'
           ))
         : destination.push('$RC("'))
-    : hasStyleDependencies
+    : requiresStyleInsertion
     ? destination.push('<template data-rri="" data-bid="')
     : destination.push('<template data-rci="" data-bid="');
   if (null === completedSegments) throw Error(formatProdErrorMessage(395));
   i = i.toString(16);
   destination.push(completedSegments);
-  resource ? destination.push('","') : destination.push('" data-sid="');
+  scriptFormat ? destination.push('","') : destination.push('" data-sid="');
   destination.push(request.segmentPrefix);
   destination.push(i);
-  hasStyleDependencies
-    ? resource
+  requiresStyleInsertion
+    ? scriptFormat
       ? (destination.push('",'),
         writeStyleResourceDependenciesInJS(destination, boundary))
       : (destination.push('" data-sty="'),
         writeStyleResourceDependenciesInAttr(destination, boundary))
-    : resource && destination.push('"');
-  destination = resource
+    : scriptFormat && destination.push('"');
+  destination = scriptFormat
     ? destination.push(")\x3c/script>")
     : destination.push('"></template>');
   return destination;
@@ -3487,7 +3536,8 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$15.resources
+          boundary$15.resources,
+          clientRenderedBoundaries.responseState
         );
       }
       if (!JSCompiler_inline_result) {
@@ -3619,4 +3669,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-5c633a48f-20230303";
+exports.version = "18.3.0-www-modern-1f1f8eb55-20230303";

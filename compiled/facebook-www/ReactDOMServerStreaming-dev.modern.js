@@ -2127,7 +2127,7 @@ var clientRenderBoundary =
 var completeBoundary =
   '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};';
 var completeBoundaryWithStyles =
-  '$RM=new Map;\n$RR=function(p,q,w){function r(l){this.s=l}for(var t=$RC,m=$RM,u=new Map,n=new Map,g=document,h,e,f=g.querySelectorAll("template[data-precedence]"),c=0;e=f[c++];){for(var b=e.content.firstChild;b;b=b.nextSibling)u.set(b.getAttribute("data-href"),b);e.parentNode.removeChild(e)}f=g.querySelectorAll("link[data-precedence],style[data-precedence]");for(c=0;e=f[c++];)m.set(e.getAttribute("STYLE"===e.nodeName?"data-href":"href"),e),n.set(e.dataset.precedence,h=e);e=0;f=[];for(var d,\nv,a;d=w[e++];){var k=0;b=d[k++];if(!(a=m.get(b))){if(a=u.get(b))c=a.getAttribute("data-precedence");else{a=g.createElement("link");a.href=b;a.rel="stylesheet";for(a.dataset.precedence=c=d[k++];v=d[k++];)a.setAttribute(v,d[k++]);d=a._p=new Promise(function(l,x){a.onload=l;a.onerror=x});d.then(r.bind(d,"l"),r.bind(d,"e"))}m.set(b,a);b=n.get(c)||h;b===h&&(h=a);n.set(c,a);b?b.parentNode.insertBefore(a,b.nextSibling):(c=g.head,c.insertBefore(a,c.firstChild))}d=a._p;c=a.getAttribute("media");!d||"l"===\nd.s||c&&!matchMedia(c).matches||f.push(d)}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};';
+  '$RM=new Map;\n$RR=function(t,u,y){function v(n){this.s=n}for(var w=$RC,p=$RM,q=new Map,r=document,g,b,h=r.querySelectorAll("link[data-precedence],style[data-precedence]"),x=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?x.push(b):("LINK"===b.tagName&&p.set(b.getAttribute("href"),b),q.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var f=y[b++];if(!f){k=!1;b=0;continue}var c=!1,m=0;var e=f[m++];if(a=p.get(e)){var d=a._p;c=!0}else{a=r.createElement("link");a.href=e;a.rel=\n"stylesheet";for(a.dataset.precedence=l=f[m++];d=f[m++];)a.setAttribute(d,f[m++]);d=a._p=new Promise(function(n,z){a.onload=n;a.onerror=z});d.then(v.bind(d,"l"),v.bind(d,"e"));p.set(e,a)}e=a.getAttribute("media");!d||"l"===d.s||e&&!matchMedia(e).matches||h.push(d);if(c)continue}else{a=x[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=q.get(l)||g;c===g&&(g=a);q.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=r.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then(w.bind(null,\nt,u,""),w.bind(null,t,u,"Resource failed to load"))};';
 var completeSegment =
   "$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};";
 
@@ -2790,7 +2790,8 @@ function createResponseState(
     charsetChunks: [],
     preconnectChunks: [],
     preloadChunks: [],
-    hoistableChunks: []
+    hoistableChunks: [],
+    stylesToHoist: false
   };
 } // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
@@ -3962,7 +3963,7 @@ function pushLink(
           _resource = {
             type: "stylesheet",
             chunks: [],
-            state: resources.boundaryResources ? Blocked : NoState,
+            state: NoState,
             props: resourceProps
           };
           resources.stylesMap.set(key, _resource);
@@ -3976,6 +3977,27 @@ function pushLink(
           if (!precedenceSet) {
             precedenceSet = new Set();
             resources.precedences.set(precedence, precedenceSet);
+            var emptyStyleResource = {
+              type: "style",
+              chunks: [],
+              state: NoState,
+              props: {
+                precedence: precedence,
+                hrefs: []
+              }
+            };
+            precedenceSet.add(emptyStyleResource);
+
+            {
+              if (resources.stylePrecedences.has(precedence)) {
+                error(
+                  'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
+                  precedence
+                );
+              }
+            }
+
+            resources.stylePrecedences.set(precedence, emptyStyleResource);
           }
 
           precedenceSet.add(_resource);
@@ -4106,35 +4128,56 @@ function pushStyle(
       return pushStyleImpl(target, props);
     }
 
+    {
+      if (href.includes(" ")) {
+        error(
+          'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "%s".',
+          href
+        );
+      }
+    }
+
     var key = getResourceKey("style", href);
     var resource = resources.stylesMap.get(key);
 
     if (!resource) {
-      resource = {
-        type: "style",
-        chunks: [],
-        state: resources.boundaryResources ? Blocked : NoState,
-        props: styleTagPropsFromRawProps(props)
-      };
-      resources.stylesMap.set(key, resource);
+      resource = resources.stylePrecedences.get(precedence);
 
-      {
-        markAsRenderedResourceDEV(resource, props);
-      }
+      if (!resource) {
+        resource = {
+          type: "style",
+          chunks: [],
+          state: NoState,
+          props: {
+            precedence: precedence,
+            hrefs: [href]
+          }
+        };
+        resources.stylePrecedences.set(precedence, resource);
+        var precedenceSet = new Set();
+        precedenceSet.add(resource);
 
-      pushStyleImpl(resource.chunks, resource.props);
-      var precedenceSet = resources.precedences.get(precedence);
+        {
+          if (resources.precedences.has(precedence)) {
+            error(
+              'React constructed a new style precedence set when one already exists for this precedence: "%s". This is a bug in React.',
+              precedence
+            );
+          }
+        }
 
-      if (!precedenceSet) {
-        precedenceSet = new Set();
         resources.precedences.set(precedence, precedenceSet);
+      } else {
+        resource.props.hrefs.push(href);
       }
 
-      precedenceSet.add(resource);
+      resources.stylesMap.set(key, resource);
 
       if (resources.boundaryResources) {
         resources.boundaryResources.add(resource);
       }
+
+      pushStyleContents(resource.chunks, props);
     }
 
     if (textEmbedded) {
@@ -4194,6 +4237,50 @@ function pushStyleImpl(target, props) {
   pushInnerHTML(target, innerHTML, children);
   target.push(endTag1, stringToChunk("style"), endTag2);
   return null;
+}
+
+function pushStyleContents(target, props) {
+  var children = null;
+  var innerHTML = null;
+
+  for (var propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      var propValue = props[propKey];
+
+      if (propValue == null) {
+        continue;
+      }
+
+      switch (propKey) {
+        case "children":
+          children = propValue;
+          break;
+
+        case "dangerouslySetInnerHTML":
+          innerHTML = propValue;
+          break;
+      }
+    }
+  }
+
+  var child = Array.isArray(children)
+    ? children.length < 2
+      ? children[0]
+      : null
+    : children;
+
+  if (
+    typeof child !== "function" &&
+    typeof child !== "symbol" &&
+    child !== null &&
+    child !== undefined
+  ) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    target.push(stringToChunk(escapeTextForBrowser("" + child)));
+  }
+
+  pushInnerHTML(target, innerHTML, children);
+  return;
 }
 
 function pushSelfClosing(target, props, tag) {
@@ -5412,10 +5499,15 @@ function writeCompletedBoundaryInstruction(
   contentSegmentID,
   boundaryResources
 ) {
-  var hasStyleDependencies;
+  var requiresStyleInsertion;
 
   {
-    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+    requiresStyleInsertion = responseState.stylesToHoist; // If necessary stylesheets will be flushed with this instruction.
+    // Any style tags not yet hoisted in the Document will also be hoisted.
+    // We reset this state since after this instruction executes all styles
+    // up to this point will have been hoisted
+
+    responseState.stylesToHoist = false;
   }
 
   var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
@@ -5423,7 +5515,7 @@ function writeCompletedBoundaryInstruction(
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
 
-    if (hasStyleDependencies) {
+    if (requiresStyleInsertion) {
       if (
         (responseState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
@@ -5455,7 +5547,7 @@ function writeCompletedBoundaryInstruction(
       }
     }
   } else {
-    if (hasStyleDependencies) {
+    if (requiresStyleInsertion) {
       writeChunk(destination, completeBoundaryWithStylesData1);
     } else {
       writeChunk(destination, completeBoundaryData1);
@@ -5480,7 +5572,7 @@ function writeCompletedBoundaryInstruction(
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
 
-  if (hasStyleDependencies) {
+  if (requiresStyleInsertion) {
     // Script and data writers must format this differently:
     //  - script writer emits an array literal, whose string elements are
     //    escaped for javascript  e.g. ["A", "B"]
@@ -5686,46 +5778,86 @@ function escapeJSObjectForInstructionScripts(input) {
   });
 }
 
-var styleTagTemplateOpen = stringToPrecomputedChunk(
-  '<template data-precedence="">'
+var lateStyleTagResourceOpen1 = stringToPrecomputedChunk(
+  '<style media="not all" data-precedence="'
 );
-var styleTagTemplateClose = stringToPrecomputedChunk("</template>"); // Tracks whether we wrote any late style tags. We use this to determine
-// whether we need to emit a closing template tag after flushing late style tags
+var lateStyleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
+var lateStyleTagResourceOpen3 = stringToPrecomputedChunk('">');
+var lateStyleTagTemplateClose = stringToPrecomputedChunk("</style>"); // Tracks whether the boundary currently flushing is flushign style tags or has any
+// stylesheet dependencies not flushed in the Preamble.
 
-var didWrite = false;
+var currentlyRenderingBoundaryHasStylesToHoist = false; // Acts as a return value for the forEach execution of style tag flushing.
+
+var destinationHasCapacity = true;
 
 function flushStyleTagsLateForBoundary(resource) {
-  if (resource.type === "style" && (resource.state & Flushed) === NoState) {
-    if (didWrite === false) {
-      // we are going to write so we need to emit the open tag
-      didWrite = true;
-      writeChunk(this, styleTagTemplateOpen);
-    } // This <style> tag can be flushed now
-
+  if (
+    resource.type === "stylesheet" &&
+    (resource.state & FlushedInPreamble) === NoState
+  ) {
+    currentlyRenderingBoundaryHasStylesToHoist = true;
+  } else if (resource.type === "style") {
     var chunks = resource.chunks;
+    var hrefs = resource.props.hrefs;
+    var i = 0;
 
-    for (var i = 0; i < chunks.length; i++) {
-      writeChunk(this, chunks[i]);
+    if (chunks.length) {
+      writeChunk(this, lateStyleTagResourceOpen1);
+      writeChunk(
+        this,
+        stringToChunk(escapeTextForBrowser(resource.props.precedence))
+      );
+
+      if (hrefs.length) {
+        writeChunk(this, lateStyleTagResourceOpen2);
+
+        for (; i < hrefs.length - 1; i++) {
+          writeChunk(this, stringToChunk(escapeTextForBrowser(hrefs[i])));
+          writeChunk(this, spaceSeparator);
+        }
+
+        writeChunk(this, stringToChunk(escapeTextForBrowser(hrefs[i])));
+      }
+
+      writeChunk(this, lateStyleTagResourceOpen3);
+
+      for (i = 0; i < chunks.length; i++) {
+        writeChunk(this, chunks[i]);
+      }
+
+      destinationHasCapacity = writeChunkAndReturn(
+        this,
+        lateStyleTagTemplateClose
+      ); // We wrote style tags for this boundary and we may need to emit a script
+      // to hoist them.
+
+      currentlyRenderingBoundaryHasStylesToHoist = true; // style resources can flush continuously since more rules may be written into
+      // them with new hrefs. Instead of marking it flushed, we simply reset the chunks
+      // and hrefs
+
+      chunks.length = 0;
+      hrefs.length = 0;
     }
-
-    resource.state |= FlushedLate;
   }
 }
 
-function writeResourcesForBoundary(destination, boundaryResources) {
-  didWrite = false;
+function writeResourcesForBoundary(
+  destination,
+  boundaryResources,
+  responseState
+) {
+  // Reset these on each invocation, they are only safe to read in this function
+  currentlyRenderingBoundaryHasStylesToHoist = false;
+  destinationHasCapacity = true; // Flush each Boundary resource
+
   boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
 
-  if (didWrite) {
-    return writeChunkAndReturn(destination, styleTagTemplateClose);
-  } else {
-    return true;
+  if (currentlyRenderingBoundaryHasStylesToHoist) {
+    responseState.stylesToHoist = true;
   }
+
+  return destinationHasCapacity;
 }
-var precedencePlaceholderStart = stringToPrecomputedChunk(
-  '<style data-precedence="'
-);
-var precedencePlaceholderEnd = stringToPrecomputedChunk('"></style>');
 
 function flushResourceInPreamble(resource) {
   if ((resource.state & (Flushed | Blocked)) === NoState) {
@@ -5740,7 +5872,7 @@ function flushResourceInPreamble(resource) {
 }
 
 function flushResourceLate(resource) {
-  if ((resource.state & Flushed) === NoState) {
+  if ((resource.state & (Flushed | Blocked)) === NoState) {
     var chunks = resource.chunks;
 
     for (var i = 0; i < chunks.length; i++) {
@@ -5749,11 +5881,16 @@ function flushResourceLate(resource) {
 
     resource.state |= FlushedLate;
   }
-}
+} // This must always be read after flushing stylesheet styles. we know we will encounter a style resource
+// per precedence and it will be set before ready so we cast this to avoid an extra check at runtime
 
-var didFlush = false;
+var precedenceStyleTagResource = null; // This flags let's us opt out of flushing a placeholder style tag to emit the precedence in the right order.
+// If a stylesheet was flushed then we have the precedence order preserved and only need to emit <style> tags
+// if there are actual chunks to flush
 
-function flushUnblockedStyle(resource, key, set) {
+var didFlushPrecedence = false;
+
+function flushStyleInPreamble(resource, key, set) {
   var chunks = resource.chunks;
 
   if (resource.state & Flushed) {
@@ -5761,78 +5898,71 @@ function flushUnblockedStyle(resource, key, set) {
     // Set on flush but to ensure correct semantics we don't emit
     // anything if we are in this state.
     set.delete(resource);
-  } else if (resource.state & Blocked);
-  else {
-    didFlush = true; // We can emit this style or stylesheet as is.
+  } else {
+    // We can emit this style or stylesheet as is.
+    if (resource.type === "style") {
+      precedenceStyleTagResource = resource;
+      return;
+    } // We still need to encode stylesheet chunks
+    // because unlike most Hoistables and Resources we do not eagerly encode
+    // them during render. This is because if we flush late we have to send a
+    // different encoding and we don't want to encode multiple times
 
-    if (resource.type === "stylesheet") {
-      // We still need to encode stylesheet chunks
-      // because unlike most Hoistables and Resources we do not eagerly encode
-      // them during render. This is because if we flush late we have to send a
-      // different encoding and we don't want to encode multiple times
-      pushLinkImpl(chunks, resource.props);
-    }
+    pushLinkImpl(chunks, resource.props);
 
     for (var i = 0; i < chunks.length; i++) {
       writeChunk(this, chunks[i]);
     }
 
     resource.state |= FlushedInPreamble;
-    set.delete(resource);
+    didFlushPrecedence = true;
   }
 }
 
-function flushUnblockedStyles(set, precedence) {
-  didFlush = false;
-  set.forEach(flushUnblockedStyle, this);
+var styleTagResourceOpen1 = stringToPrecomputedChunk(
+  '<style data-precedence="'
+);
+var styleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
+var spaceSeparator = stringToPrecomputedChunk(" ");
+var styleTagResourceOpen3 = stringToPrecomputedChunk('">');
+var styleTagResourceClose = stringToPrecomputedChunk("</style>");
 
-  if (!didFlush) {
-    // if we did not flush anything for this precedence slot we emit
-    // an empty <style data-precedence="..." /> tag to ensure the
-    // precedence remains in the correct order
-    writeChunk(this, precedencePlaceholderStart);
-    writeChunk(this, stringToChunk(escapeTextForBrowser(precedence)));
-    writeChunk(this, precedencePlaceholderEnd);
-  }
-}
-
-function preloadBlockedStyle(resource) {
-  // The only Resources that should remain are Blocked resources
-  {
-    if ((resource.state & Blocked) === NoState) {
-      error(
-        "React encountered a Stylesheet Resource that was not Blocked when it was expected to be. This is a bug in React."
-      );
-    } else if (resource.state & PreloadFlushed) {
-      error(
-        "React encountered a Stylesheet Resource that already flushed a Preload when it was not expected to. This is a bug in React."
-      );
-    }
-  }
-
-  if (resource.type === "style") {
-    // <style> tags do not need to be preloaded
-    return;
-  }
-
-  var chunks = resource.chunks;
-  var preloadProps = preloadAsStylePropsFromProps(
-    resource.props.href,
-    resource.props
-  );
-  pushLinkImpl(chunks, preloadProps);
-
-  for (var i = 0; i < chunks.length; i++) {
-    writeChunk(this, chunks[i]);
-  }
-
-  resource.state |= PreloadFlushed;
-  chunks.length = 0;
-}
-
-function preloadBlockedStyles(set, precedence) {
-  set.forEach(preloadBlockedStyle, this);
+function flushAllStylesInPreamble(set, precedence) {
+  didFlushPrecedence = false;
+  set.forEach(flushStyleInPreamble, this);
   set.clear();
+  var chunks = precedenceStyleTagResource.chunks;
+  var hrefs = precedenceStyleTagResource.props.hrefs;
+
+  if (didFlushPrecedence === false || chunks.length) {
+    writeChunk(this, styleTagResourceOpen1);
+    writeChunk(this, stringToChunk(escapeTextForBrowser(precedence)));
+    var i = 0;
+
+    if (hrefs.length) {
+      writeChunk(this, styleTagResourceOpen2);
+
+      for (; i < hrefs.length - 1; i++) {
+        writeChunk(this, stringToChunk(escapeTextForBrowser(hrefs[i])));
+        writeChunk(this, spaceSeparator);
+      }
+
+      writeChunk(this, stringToChunk(escapeTextForBrowser(hrefs[i])));
+    }
+
+    writeChunk(this, styleTagResourceOpen3);
+
+    for (i = 0; i < chunks.length; i++) {
+      writeChunk(this, chunks[i]);
+    }
+
+    writeChunk(this, styleTagResourceClose); // style resources can flush continuously since more rules may be written into
+    // them with new hrefs. Instead of marking it flushed, we simply reset the chunks
+    // and hrefs
+
+    chunks.length = 0;
+    hrefs.length = 0;
+  }
 }
 
 function preloadLateStyle(resource) {
@@ -5940,9 +6070,7 @@ function writePreamble(
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear(); // Flush unblocked stylesheets by precedence
 
-  resources.precedences.forEach(flushUnblockedStyles, destination); // Flush preloads for Blocked stylesheets
-
-  resources.precedences.forEach(preloadBlockedStyles, destination);
+  resources.precedences.forEach(flushAllStylesInPreamble, destination);
   resources.usedStylesheets.forEach(function (resource) {
     var key = getResourceKey(resource.props.as, resource.props.href);
 
@@ -6076,26 +6204,6 @@ function writePostamble(destination, responseState) {
     writeChunk(destination, endTag2);
   }
 }
-
-function hasStyleResourceDependencies(boundaryResources) {
-  var iter = boundaryResources.values(); // At the moment boundaries only accumulate style resources
-  // so we assume the type is correct and don't check it
-
-  while (true) {
-    var _iter$next = iter.next(),
-      resource = _iter$next.value;
-
-    if (!resource) break; // If every style Resource flushed in the shell we do not need to send
-    // any dependencies
-
-    if ((resource.state & FlushedInPreamble) === NoState) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 var arrayFirstOpenBracket = stringToPrecomputedChunk("[");
 var arraySubsequentOpenBracket = stringToPrecomputedChunk(",[");
 var arrayInterstitial = stringToPrecomputedChunk(",");
@@ -6107,7 +6215,8 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   writeChunk(destination, arrayFirstOpenBracket);
   var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
   boundaryResources.forEach(function (resource) {
-    if (resource.state & FlushedInPreamble);
+    if (resource.type === "style");
+    else if (resource.state & FlushedInPreamble);
     else if (resource.state & Flushed) {
       // We only need to emit the href because this resource flushed in an earlier
       // boundary already which encoded the attributes necessary to construct
@@ -6115,9 +6224,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyHrefOnlyInJS(
         destination,
-        resource.type === "style"
-          ? resource.props["data-href"]
-          : resource.props.href
+        resource.props.href
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
@@ -6304,7 +6411,8 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   writeChunk(destination, arrayFirstOpenBracket);
   var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
   boundaryResources.forEach(function (resource) {
-    if (resource.state & FlushedInPreamble);
+    if (resource.type === "style");
+    else if (resource.state & FlushedInPreamble);
     else if (resource.state & Flushed) {
       // We only need to emit the href because this resource flushed in an earlier
       // boundary already which encoded the attributes necessary to construct
@@ -6312,9 +6420,7 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
       writeChunk(destination, nextArrayOpenBrackChunk);
       writeStyleResourceDependencyHrefOnlyInAttr(
         destination,
-        resource.type === "style"
-          ? resource.props["data-href"]
-          : resource.props.href
+        resource.props.href
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
@@ -6538,6 +6644,7 @@ function createResources() {
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
+    stylePrecedences: new Map(),
     usedStylesheets: new Set(),
     scripts: new Set(),
     usedScripts: new Set(),
@@ -6992,6 +7099,27 @@ function preinitImpl(resources, href, options) {
           if (!precedenceSet) {
             precedenceSet = new Set();
             resources.precedences.set(precedence, precedenceSet);
+            var emptyStyleResource = {
+              type: "style",
+              chunks: [],
+              state: NoState,
+              props: {
+                precedence: precedence,
+                hrefs: []
+              }
+            };
+            precedenceSet.add(emptyStyleResource);
+
+            {
+              if (resources.stylePrecedences.has(precedence)) {
+                error(
+                  'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
+                  precedence
+                );
+              }
+            }
+
+            resources.stylePrecedences.set(precedence, emptyStyleResource);
           }
 
           precedenceSet.add(resource);
@@ -7152,15 +7280,6 @@ function adoptPreloadPropsForStylesheetProps(resourceProps, preloadProps) {
     resourceProps.integrity = preloadProps.integrity;
 }
 
-function styleTagPropsFromRawProps(rawProps) {
-  return assign({}, rawProps, {
-    "data-precedence": rawProps.precedence,
-    precedence: null,
-    "data-href": rawProps.href,
-    href: null
-  });
-}
-
 function scriptPropsFromPreinitOptions(src, options) {
   return {
     src: src,
@@ -7177,7 +7296,7 @@ function adoptPreloadPropsForScriptProps(resourceProps, preloadProps) {
     resourceProps.integrity = preloadProps.integrity;
 }
 
-function hoistStylesheetResource(resource) {
+function hoistStyleResource(resource) {
   this.add(resource);
 }
 
@@ -7185,18 +7304,8 @@ function hoistResources(resources, source) {
   var currentBoundaryResources = resources.boundaryResources;
 
   if (currentBoundaryResources) {
-    source.forEach(hoistStylesheetResource, currentBoundaryResources);
-    source.clear();
+    source.forEach(hoistStyleResource, currentBoundaryResources);
   }
-}
-
-function unblockStylesheet(resource) {
-  resource.state &= ~Blocked;
-}
-
-function hoistResourcesToRoot(resources, boundaryResources) {
-  boundaryResources.forEach(unblockStylesheet);
-  boundaryResources.clear();
 }
 
 function markAsRenderedResourceDEV(resource, originalProps) {
@@ -9905,13 +10014,6 @@ function renderSuspenseBoundary(request, task, props) {
       contentRootSegment.textEmbedded
     );
     contentRootSegment.status = COMPLETED;
-
-    if (enableFloat) {
-      if (newBoundary.pendingTasks === 0) {
-        hoistCompletedBoundaryResources(request, newBoundary);
-      }
-    }
-
     queueCompletedSegment(newBoundary, contentRootSegment);
 
     if (newBoundary.pendingTasks === 0) {
@@ -9963,15 +10065,6 @@ function renderSuspenseBoundary(request, task, props) {
 
   request.pingedTasks.push(suspendedFallbackTask);
   popComponentStackInDEV(task);
-}
-
-function hoistCompletedBoundaryResources(request, completedBoundary) {
-  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
-    // The Shell has not flushed yet. we can hoist Resources for this boundary
-    // all the way to the Root.
-    hoistResourcesToRoot(request.resources, completedBoundary.resources);
-  } // We don't hoist if the root already flushed because late resources will be hoisted
-  // as boundaries flush
 }
 
 function renderHostElement(request, task, type, props) {
@@ -11002,10 +11095,6 @@ function finishedTask(request, boundary, segment) {
         }
       }
 
-      {
-        hoistCompletedBoundaryResources(request, boundary);
-      }
-
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
@@ -11362,7 +11451,11 @@ function flushCompletedBoundary(request, destination, boundary) {
   completedSegments.length = 0;
 
   {
-    writeResourcesForBoundary(destination, boundary.resources);
+    writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState
+    );
   }
 
   return writeCompletedBoundaryInstruction(
@@ -11406,7 +11499,11 @@ function flushPartialBoundary(request, destination, boundary) {
     // if there is no backpressure. Later before we complete the boundary we
     // will write resources regardless of backpressure before we emit the
     // completion instruction
-    return writeResourcesForBoundary(destination, boundary.resources);
+    return writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState
+    );
   }
 }
 

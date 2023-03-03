@@ -13669,7 +13669,7 @@ function styleTagPropsFromRawProps(rawProps) {
 
 function getStyleKey(href) {
   var limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return 'href="' + limitedEscapedHref + '"';
+  return 'href~="' + limitedEscapedHref + '"';
 }
 
 function getStyleTagSelectorFromKey(key) {
@@ -37728,7 +37728,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-5c633a48f-20230303";
+var ReactVersion = "18.3.0-www-modern-1f1f8eb55-20230303";
 
 function createPortal$1(
   children,
