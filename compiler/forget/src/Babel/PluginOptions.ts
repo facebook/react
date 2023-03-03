@@ -14,11 +14,18 @@ export type PluginOptions = {
   enableOnlyOnUseForgetDirective: boolean;
 
   environment: Partial<EnvironmentOptions> | null;
+
+  logger: Logger | null;
+};
+
+export type Logger = {
+  logEvent(name: string, data: any): void;
 };
 
 export const defaultOptions: PluginOptions = {
   enableOnlyOnUseForgetDirective: false,
   environment: null,
+  logger: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

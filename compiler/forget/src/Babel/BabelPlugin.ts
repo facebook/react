@@ -73,11 +73,18 @@ export default function ReactForgetBabelPlugin(
       // prior to B, if A does not have a Program visitor and B does, B will run first. We always
       // want Forget to run true to source as possible.
       Program(path, pass) {
-        const flags = parsePluginOptions(pass.opts);
-        path.traverse(visitor, {
-          ...pass,
-          opts: { ...pass.opts, ...flags },
-        });
+        const options = parsePluginOptions(pass.opts);
+        try {
+          path.traverse(visitor, {
+            ...pass,
+            opts: { ...pass.opts, ...options },
+          });
+        } catch (err) {
+          if (options.logger && err) {
+            options.logger.logEvent("err", err);
+          }
+          throw err;
+        }
       },
     },
   };
