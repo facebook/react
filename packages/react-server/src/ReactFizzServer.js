@@ -70,7 +70,6 @@ import {
   writeHoistables,
   writePostamble,
   hoistResources,
-  hoistResourcesToRoot,
   prepareToRender,
   cleanupAfterRender,
   setCurrentlyRenderingBoundaryResourcesTarget,
@@ -594,11 +593,6 @@ function renderSuspenseBoundary(
       contentRootSegment.textEmbedded,
     );
     contentRootSegment.status = COMPLETED;
-    if (enableFloat) {
-      if (newBoundary.pendingTasks === 0) {
-        hoistCompletedBoundaryResources(request, newBoundary);
-      }
-    }
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
       // This must have been the last segment we were waiting on. This boundary is now complete.
@@ -650,19 +644,6 @@ function renderSuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
-}
-
-function hoistCompletedBoundaryResources(
-  request: Request,
-  completedBoundary: SuspenseBoundary,
-): void {
-  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
-    // The Shell has not flushed yet. we can hoist Resources for this boundary
-    // all the way to the Root.
-    hoistResourcesToRoot(request.resources, completedBoundary.resources);
-  }
-  // We don't hoist if the root already flushed because late resources will be hoisted
-  // as boundaries flush
 }
 
 function renderBackupSuspenseBoundary(
@@ -1802,9 +1783,6 @@ function finishedTask(
           queueCompletedSegment(boundary, segment);
         }
       }
-      if (enableFloat) {
-        hoistCompletedBoundaryResources(request, boundary);
-      }
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
@@ -2177,7 +2155,11 @@ function flushCompletedBoundary(
   completedSegments.length = 0;
 
   if (enableFloat) {
-    writeResourcesForBoundary(destination, boundary.resources);
+    writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState,
+    );
   }
 
   return writeCompletedBoundaryInstruction(
@@ -2221,7 +2203,11 @@ function flushPartialBoundary(
     // if there is no backpressure. Later before we complete the boundary we
     // will write resources regardless of backpressure before we emit the
     // completion instruction
-    return writeResourcesForBoundary(destination, boundary.resources);
+    return writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState,
+    );
   } else {
     return true;
   }

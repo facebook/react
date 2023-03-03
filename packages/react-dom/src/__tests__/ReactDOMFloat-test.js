@@ -1281,8 +1281,8 @@ body {
       <html>
         <head>
           <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
           <link rel="stylesheet" href="preset" data-precedence="preset" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1304,7 +1304,6 @@ body {
           <link rel="stylesheet" href="foo" data-precedence="one" />
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1329,7 +1328,6 @@ body {
           <link rel="stylesheet" href="foo" data-precedence="one" />
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1354,7 +1352,6 @@ body {
           <link rel="stylesheet" href="foo" data-precedence="one" />
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>
@@ -1379,7 +1376,6 @@ body {
           <link rel="stylesheet" href="foo" data-precedence="one" />
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>
@@ -1407,7 +1403,6 @@ body {
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
           <link rel="stylesheet" href="baz" data-precedence="two" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>
@@ -1449,7 +1444,6 @@ body {
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
           <link rel="stylesheet" href="baz" data-precedence="two" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>
@@ -1482,7 +1476,6 @@ body {
           <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="stylesheet" href="bar" data-precedence="default" />
           <link rel="stylesheet" href="baz" data-precedence="two" />
-          <link rel="preload" href="foo" as="style" />
         </head>
         <body>
           <div>
@@ -3499,6 +3492,7 @@ body {
         <div>1</div>,
       ]);
     });
+
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
       function App() {
@@ -4157,19 +4151,14 @@ background-color: green;
         resolveText('first');
       });
 
-      const styleTemplates = document.querySelectorAll(
-        'template[data-precedence]',
-      );
-      expect(styleTemplates.length).toBe(1);
-      expect(getMeaningfulChildren(styleTemplates[0].content)).toEqual(
-        <style data-href="foo" data-precedence="default">
-          {css}
-        </style>,
-      );
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
-          <body />
+          <body>
+            <style data-href="foo" data-precedence="default" media="not all">
+              {css}
+            </style>
+          </body>
         </html>,
       );
 
@@ -4192,6 +4181,266 @@ background-color: green;
             <div>second</div>
           </body>
         </html>,
+      );
+    });
+
+    it('can hoist styles flushed early even when no other style dependencies are flushed on completion', async () => {
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Suspense fallback="loading...">
+                <BlockedOn value="first">
+                  <style href="foo" precedence="default">
+                    some css
+                  </style>
+                  <div>first</div>
+                  <BlockedOn value="second">
+                    <div>second</div>
+                  </BlockedOn>
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>loading...</body>
+        </html>,
+      );
+
+      // When we resolve first we flush the style tag because it is ready but we aren't yet ready to
+      // flush the entire boundary and reveal it.
+      await act(() => {
+        resolveText('first');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            loading...
+            <style data-href="foo" data-precedence="default" media="not all">
+              some css
+            </style>
+          </body>
+        </html>,
+      );
+
+      // When we resolve second we flush the rest of the boundary segments and reveal the boundary. The style tag
+      // is hoisted during this reveal process even though no other styles flushed during this tick
+      await act(() => {
+        resolveText('second');
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="foo" data-precedence="default">
+              some css
+            </style>
+          </head>
+          <body>
+            <div>first</div>
+            <div>second</div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('can emit multiple style rules into a single style tag for a given precedence', async () => {
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <style href="1" precedence="default">
+                1
+              </style>
+              <style href="2" precedence="foo">
+                foo2
+              </style>
+              <style href="3" precedence="default">
+                3
+              </style>
+              <style href="4" precedence="default">
+                4
+              </style>
+              <style href="5" precedence="foo">
+                foo5
+              </style>
+              <div>initial</div>
+              <Suspense fallback="loading...">
+                <BlockedOn value="first">
+                  <style href="6" precedence="default">
+                    6
+                  </style>
+                  <style href="7" precedence="foo">
+                    foo7
+                  </style>
+                  <style href="8" precedence="default">
+                    8
+                  </style>
+                  <style href="9" precedence="default">
+                    9
+                  </style>
+                  <style href="10" precedence="foo">
+                    foo10
+                  </style>
+                  <div>first</div>
+                  <BlockedOn value="second">
+                    <style href="11" precedence="default">
+                      11
+                    </style>
+                    <style href="12" precedence="foo">
+                      foo12
+                    </style>
+                    <style href="13" precedence="default">
+                      13
+                    </style>
+                    <style href="14" precedence="default">
+                      14
+                    </style>
+                    <style href="15" precedence="foo">
+                      foo15
+                    </style>
+                    <div>second</div>
+                  </BlockedOn>
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="1 3 4" data-precedence="default">
+              134
+            </style>
+            <style data-href="2 5" data-precedence="foo">
+              foo2foo5
+            </style>
+          </head>
+          <body>
+            <div>initial</div>loading...
+          </body>
+        </html>,
+      );
+
+      // When we resolve first we flush the style tag because it is ready but we aren't yet ready to
+      // flush the entire boundary and reveal it.
+      await act(() => {
+        resolveText('first');
+      });
+      await act(() => {
+        resolveText('second');
+      });
+
+      // Some sets of styles were ready before the entire boundary and they got emitted as early as they were
+      // ready. The remaining styles were ready when the boundary finished and they got grouped as well
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="1 3 4" data-precedence="default">
+              134
+            </style>
+            <style data-href="6 8 9" data-precedence="default">
+              689
+            </style>
+            <style data-href="11 13 14" data-precedence="default">
+              111314
+            </style>
+            <style data-href="2 5" data-precedence="foo">
+              foo2foo5
+            </style>
+            <style data-href="7 10" data-precedence="foo">
+              foo7foo10
+            </style>
+            <style data-href="12 15" data-precedence="foo">
+              foo12foo15
+            </style>
+          </head>
+          <body>
+            <div>initial</div>
+            <div>first</div>
+            <div>second</div>
+          </body>
+        </html>,
+      );
+
+      // Client inserted style tags are not grouped together but can hydrate against a grouped set
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <style href="1" precedence="default">
+              1
+            </style>
+            <style href="2" precedence="foo">
+              foo2
+            </style>
+            <style href="16" precedence="default">
+              16
+            </style>
+            <style href="17" precedence="default">
+              17
+            </style>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <style data-href="1 3 4" data-precedence="default">
+              134
+            </style>
+            <style data-href="6 8 9" data-precedence="default">
+              689
+            </style>
+            <style data-href="11 13 14" data-precedence="default">
+              111314
+            </style>
+            <style data-href="16" data-precedence="default">
+              16
+            </style>
+            <style data-href="17" data-precedence="default">
+              17
+            </style>
+            <style data-href="2 5" data-precedence="foo">
+              foo2foo5
+            </style>
+            <style data-href="7 10" data-precedence="foo">
+              foo7foo10
+            </style>
+            <style data-href="12 15" data-precedence="foo">
+              foo12foo15
+            </style>
+          </head>
+          <body>
+            <div>initial</div>
+            <div>first</div>
+            <div>second</div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('warns if you render a <style> with an href with a space on the server', async () => {
+      await expect(async () => {
+        await actIntoEmptyDocument(() => {
+          renderToPipeableStream(
+            <html>
+              <body>
+                <style href="foo bar" precedence="default">
+                  style
+                </style>
+              </body>
+            </html>,
+          ).pipe(writable);
+        });
+      }).toErrorDev(
+        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "foo bar".',
       );
     });
   });

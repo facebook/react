@@ -339,11 +339,6 @@ export function hoistResources(
   boundaryResources: BoundaryResources,
 ) {}
 
-export function hoistResourcesToRoot(
-  resources: Resources,
-  boundaryResources: BoundaryResources,
-) {}
-
 export function prepareToRender(resources: Resources) {}
 export function cleanupAfterRender(previousDispatcher: mixed) {}
 export function createResources() {}
@@ -356,6 +351,7 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
 export function writeResourcesForBoundary(
   destination: Destination,
   boundaryResources: BoundaryResources,
+  responseState: ResponseState,
 ): boolean {
   return true;
 }

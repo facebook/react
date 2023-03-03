@@ -20,77 +20,72 @@ export {clientRenderBoundary, completeBoundary, completeSegment};
 export function completeBoundaryWithStyles(
   suspenseBoundaryID,
   contentID,
-  styles,
+  stylesheetDescriptors,
 ) {
   const completeBoundaryImpl = window['$RC'];
   const resourceMap = window['$RM'];
 
-  const stylesToHoist = new Map();
   const precedences = new Map();
   const thisDocument = document;
   let lastResource, node;
 
-  let nodes = thisDocument.querySelectorAll('template[data-precedence]');
-  for (let i = 0; (node = nodes[i++]); ) {
-    let child = node.content.firstChild;
-    for (; child; child = child.nextSibling) {
-      stylesToHoist.set(child.getAttribute('data-href'), child);
-    }
-    node.parentNode.removeChild(node);
-  }
-
-  // Seed the precedence list with existing resources
-  nodes = thisDocument.querySelectorAll(
+  // Seed the precedence list with existing resources and collect hoistable style tags
+  const nodes = thisDocument.querySelectorAll(
     'link[data-precedence],style[data-precedence]',
   );
+  const styleTagsToHoist = [];
   for (let i = 0; (node = nodes[i++]); ) {
-    // We populate the resourceMap from found nodes so we can incorporate any
-    // resources the client runtime adds when the two runtimes are running concurrently
-    resourceMap.set(
-      node.getAttribute(node.nodeName === 'STYLE' ? 'data-href' : 'href'),
-      node,
-    );
-    precedences.set(node.dataset['precedence'], (lastResource = node));
+    if (node.getAttribute('media') === 'not all') {
+      styleTagsToHoist.push(node);
+    } else {
+      if (node.tagName === 'LINK') {
+        resourceMap.set(node.getAttribute('href'), node);
+      }
+      precedences.set(node.dataset['precedence'], (lastResource = node));
+    }
   }
 
   let i = 0;
   const dependencies = [];
-  let style, href, precedence, attr, loadingState, resourceEl, media;
+  let href, precedence, attr, loadingState, resourceEl, media;
 
   function setStatus(s) {
     this['s'] = s;
   }
 
-  while ((style = styles[i++])) {
-    let j = 0;
-    href = style[j++];
+  // Sheets Mode
+  let sheetMode = true;
+  while (true) {
+    if (sheetMode) {
+      // Sheet Mode iterates over the stylesheet arguments and constructs them if new or checks them for
+      // dependency if they already existed
+      const stylesheetDescriptor = stylesheetDescriptors[i++];
+      if (!stylesheetDescriptor) {
+        // enter <style> Mode
+        sheetMode = false;
+        i = 0;
+        continue;
+      }
 
-    if ((resourceEl = resourceMap.get(href))) {
-      // We have an already known resource. It could be a <style>, a <link> created
-      // by this runtime (which will have a loadingState) or a <link> created by
-      // the client runtime (which will also have a loadingState). We look for a
-      // loadingState and test whether it is not loaded yet and whether the media matches
-      // before using it as a dependency. If it is a <style> there will be no loadingState
-      // and we can avoid tracking it as a dependency because these tags don't load
-    } else {
-      // We haven't already processed this href so we need to hoist an element. It will
-      // either be a <style> that was sent in a <template> and prepped in `stylesToHoist`
-      // or we will need to create a <link>
-      if ((resourceEl = stylesToHoist.get(href))) {
-        // We have a <style> which needs to be hoisted to the correct precedence
-        // We set it in the resourceMap so we can bail out on future passes
-        // if this is depended on more than once
-        precedence = resourceEl.getAttribute('data-precedence');
+      let avoidInsert = false;
+      let j = 0;
+      href = stylesheetDescriptor[j++];
+
+      if ((resourceEl = resourceMap.get(href))) {
+        // We have an already inserted stylesheet.
+        loadingState = resourceEl['_p'];
+        avoidInsert = true;
       } else {
-        // If we got this far we are depending on a <link> which is not yet in the document.
+        // We haven't already processed this href so we need to construct a stylesheet and hoist it
         // We construct it here and attach a loadingState. We also check whether it matches
         // media before we include it in the dependency array.
         resourceEl = thisDocument.createElement('link');
         resourceEl.href = href;
         resourceEl.rel = 'stylesheet';
-        resourceEl.dataset['precedence'] = precedence = style[j++];
-        while ((attr = style[j++])) {
-          resourceEl.setAttribute(attr, style[j++]);
+        resourceEl.dataset['precedence'] = precedence =
+          stylesheetDescriptor[j++];
+        while ((attr = stylesheetDescriptor[j++])) {
+          resourceEl.setAttribute(attr, stylesheetDescriptor[j++]);
         }
         loadingState = resourceEl['_p'] = new Promise((re, rj) => {
           resourceEl.onload = re;
@@ -100,42 +95,47 @@ export function completeBoundaryWithStyles(
           setStatus.bind(loadingState, LOADED),
           setStatus.bind(loadingState, ERRORED),
         );
+        // Save this resource element so we can bailout if it is used again
+        resourceMap.set(href, resourceEl);
       }
-      // Save this resource element so we can bailout if it is used again
-      resourceMap.set(href, resourceEl);
+      media = resourceEl.getAttribute('media');
+      if (
+        loadingState &&
+        loadingState['s'] !== 'l' &&
+        (!media || window['matchMedia'](media).matches)
+      ) {
+        dependencies.push(loadingState);
+      }
+      if (avoidInsert) {
+        // We have a link that is already in the document. We don't want to fall through to the insert path
+        continue;
+      }
+    } else {
+      // <style> mode iterates over not-yet-hoisted <style> tags with data-precedence and hoists them.
+      resourceEl = styleTagsToHoist[i++];
+      if (!resourceEl) {
+        // we are done with all style tags
+        break;
+      }
 
-      // The prior style resource is the last one placed at a given
-      // precedence or the last resource itself which may be null.
-      // We grab this value and then update the last resource for this
-      // precedence to be the inserted element, updating the lastResource
-      // pointer if needed.
-      const prior = precedences.get(precedence) || lastResource;
-      if (prior === lastResource) {
-        lastResource = resourceEl;
-      }
-      precedences.set(precedence, resourceEl);
-
-      // Finally, we insert the newly constructed instance at an appropriate location
-      // in the Document.
-      if (prior) {
-        prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
-      } else {
-        const head = thisDocument.head;
-        head.insertBefore(resourceEl, head.firstChild);
-      }
+      precedence = resourceEl.getAttribute('data-precedence');
+      resourceEl.removeAttribute('media');
     }
 
-    // If we are a <link> we will have a loadingState and we can use this
-    // combined with matchMedia to decide if we need to await this dependency
-    // loading. <style> tags won't have a loadingState so they are never awaited
-    loadingState = resourceEl['_p'];
-    media = resourceEl.getAttribute('media');
-    if (
-      loadingState &&
-      loadingState['s'] !== 'l' &&
-      (!media || window['matchMedia'](media).matches)
-    ) {
-      dependencies.push(loadingState);
+    // resourceEl is either a newly constructed <link rel="stylesheet" ...> or a <style> tag requiring hoisting
+    const prior = precedences.get(precedence) || lastResource;
+    if (prior === lastResource) {
+      lastResource = resourceEl;
+    }
+    precedences.set(precedence, resourceEl);
+
+    // Finally, we insert the newly constructed instance at an appropriate location
+    // in the Document.
+    if (prior) {
+      prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
+    } else {
+      const head = thisDocument.head;
+      head.insertBefore(resourceEl, head.firstChild);
     }
   }
 
