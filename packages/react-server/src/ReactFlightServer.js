@@ -15,7 +15,7 @@ import type {
   ClientReference,
   ClientReferenceKey,
   ServerReference,
-  ServerReferenceMetadata,
+  ServerReferenceId,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -591,7 +591,7 @@ function serializeServerReference(
     return serializeServerReferenceID(existingId);
   }
   const serverReferenceMetadata: {
-    id: ServerReferenceMetadata,
+    id: ServerReferenceId,
     bound: Promise<Array<any>>,
   } = resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
   request.pendingChunks++;

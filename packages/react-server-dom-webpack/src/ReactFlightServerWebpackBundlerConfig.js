@@ -21,7 +21,7 @@ export type ServerReference<T: Function> = T & {
   $$bound: Array<ReactModel>,
 };
 
-export type ServerReferenceMetadata = string;
+export type ServerReferenceId = string;
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
@@ -76,7 +76,7 @@ export function resolveClientReferenceMetadata<T>(
 export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): {id: ServerReferenceMetadata, bound: Promise<Array<any>>} {
+): {id: ServerReferenceId, bound: Promise<Array<any>>} {
   return {
     id: serverReference.$$id,
     bound: Promise.resolve(serverReference.$$bound),
