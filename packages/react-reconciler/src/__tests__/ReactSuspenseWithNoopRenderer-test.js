@@ -3,6 +3,10 @@ let Fragment;
 let ReactNoop;
 let Scheduler;
 let act;
+let waitFor;
+let waitForAll;
+let assertLog;
+let waitForPaint;
 let Suspense;
 let getCacheForType;
 
@@ -19,6 +23,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     Suspense = React.Suspense;
+    const InternalTestUtils = require('internal-test-utils');
+    waitFor = InternalTestUtils.waitFor;
+    waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
 
     getCacheForType = React.unstable_getCacheForType;
 
@@ -208,7 +217,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<Foo />);
     });
-    expect(Scheduler).toFlushAndYieldThrough([
+    await waitFor([
       'Foo',
       'Bar',
       // A suspends
@@ -226,7 +235,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Even though the promise has resolved, we should now flush
     // and commit the in progress render instead of restarting.
-    expect(Scheduler).toFlushAndYield(['D']);
+    await waitForPaint(['D']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span prop="Loading..." />
@@ -235,11 +244,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
 
-    // Await one micro task to attach the retry listeners.
-    await null;
-
     // Next, we'll flush the complete content.
-    expect(Scheduler).toFlushAndYield(['Bar', 'A', 'B']);
+    await waitForAll(['Bar', 'A', 'B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -544,7 +550,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<App highPri="B" lowPri="1" />);
     });
-    expect(Scheduler).toHaveYielded(['B', '1']);
+    assertLog(['B', '1']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span prop="B" />
