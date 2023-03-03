@@ -45,26 +45,6 @@ export function mountSafeCallback_NOT_REALLY_SAFE(
   };
 }
 
-export function throwOnStylesProp(component: any, props: any) {
-  if (props.styles !== undefined) {
-    const owner = component._owner || null;
-    const name = component.constructor.displayName;
-    let msg =
-      '`styles` is not a supported property of `' +
-      name +
-      '`, did ' +
-      'you mean `style` (singular)?';
-    if (owner && owner.constructor && owner.constructor.displayName) {
-      msg +=
-        '\n\nCheck the `' +
-        owner.constructor.displayName +
-        '` parent ' +
-        ' component.';
-    }
-    throw new Error(msg);
-  }
-}
-
 export function warnForStyleProps(props: any, validAttributes: any) {
   if (__DEV__) {
     for (const key in validAttributes.style) {

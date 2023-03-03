@@ -214,11 +214,12 @@ if (__DEV__) {
           }
 
           closestInstance =
-            internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
+            internalInstanceHandle.stateNode.fabricInternals
+              .internalInstanceHandle;
 
           // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
           const nativeViewTag =
-            internalInstanceHandle.stateNode.canonical._nativeTag;
+            internalInstanceHandle.stateNode.fabricInternals.nativeTag;
 
           nativeFabricUIManager.measure(
             internalInstanceHandle.stateNode.node,

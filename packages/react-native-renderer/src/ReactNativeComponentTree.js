@@ -24,9 +24,10 @@ function getInstanceFromTag(tag) {
 function getTagFromInstance(inst) {
   let nativeInstance = inst.stateNode;
   let tag = nativeInstance._nativeTag;
-  if (tag === undefined) {
-    nativeInstance = nativeInstance.canonical;
-    tag = nativeInstance._nativeTag;
+  if (tag === undefined && nativeInstance.internals) {
+    // For compatibility with Fabric
+    tag = nativeInstance.internals.nativeTag;
+    nativeInstance = nativeInstance.publicInstance;
   }
 
   if (!tag) {

@@ -25,6 +25,7 @@ import {
 import {batchedUpdates} from './legacy-events/ReactGenericBatching';
 import accumulateInto from './legacy-events/accumulateInto';
 
+import {getPublicInstance} from './ReactFabricHostConfig';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
@@ -92,7 +93,8 @@ export function dispatchEvent(
     const stateNode = targetFiber.stateNode;
     // Guard against Fiber being unmounted
     if (stateNode != null) {
-      eventTarget = stateNode.canonical;
+      // $FlowExpectedError[incompatible-cast] public instances in Fabric do not implement `EventTarget` yet.
+      eventTarget = (getPublicInstance(stateNode): EventTarget);
     }
   }
 

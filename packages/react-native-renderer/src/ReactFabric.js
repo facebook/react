@@ -28,6 +28,7 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
+import {getNativeTagFromPublicInstance} from './ReactFabricPublicInstanceUtils';
 
 // Modules provided by RN:
 import {
@@ -44,6 +45,7 @@ import {
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
+import type {PublicInstance} from './ReactFabricHostConfig';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -67,19 +69,23 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
-  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-  if (componentOrHandle._nativeTag) {
-    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-    return componentOrHandle;
+
+  // For compatibility with Paper
+  if (componentOrHandle._nativeTag != null) {
+    // $FlowExpectedError[incompatible-cast] For compatibility with Paper (when using Fabric)
+    return (componentOrHandle: PublicInstance);
   }
-  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-    return componentOrHandle.canonical;
+
+  // Fabric-specific
+  if (componentOrHandle.publicInstance != null) {
+    // $FlowExpectedError[incompatible-cast] For compatibility with Fabric (when using Paper)
+    return (componentOrHandle.publicInstance: PublicInstance);
   }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -111,19 +117,28 @@ function findNodeHandle(componentOrHandle: any): ?number {
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
+
   if (typeof componentOrHandle === 'number') {
     // Already a node handle
     return componentOrHandle;
   }
+
+  // For compatibility with Paper
   if (componentOrHandle._nativeTag) {
     return componentOrHandle._nativeTag;
   }
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    return componentOrHandle.canonical._nativeTag;
+
+  if (componentOrHandle.internals != null) {
+    const nativeTag = componentOrHandle.internals.nativeTag;
+    if (nativeTag != null) {
+      return nativeTag;
+    }
   }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -138,7 +153,14 @@ function findNodeHandle(componentOrHandle: any): ?number {
     return hostInstance;
   }
 
-  return hostInstance._nativeTag;
+  // $FlowExpectedError[prop-missing] For compatibility with Paper (when using Fabric)
+  if (hostInstance._nativeTag != null) {
+    // $FlowExpectedError[incompatible-return]
+    return hostInstance._nativeTag;
+  }
+
+  // $FlowExpectedError[incompatible-call] For compatibility with Fabric (when using Paper)
+  return getNativeTagFromPublicInstance(hostInstance);
 }
 
 function dispatchCommand(handle: any, command: string, args: Array<any>) {
@@ -265,6 +287,7 @@ export {
 };
 
 injectIntoDevTools({
+  // $FlowExpectedError[incompatible-call] The type of `Instance` in `getClosestInstanceFromNode` does not match in Fabric and Paper, so it fails to typecheck here.
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,

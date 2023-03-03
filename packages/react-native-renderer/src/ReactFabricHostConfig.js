@@ -7,25 +7,13 @@
  * @flow
  */
 
-import type {ElementRef} from 'react';
-import type {
-  HostComponent,
-  MeasureInWindowOnSuccessCallback,
-  MeasureLayoutOnSuccessCallback,
-  MeasureOnSuccessCallback,
-  NativeMethods,
-  ViewConfig,
-  TouchedViewDataAtPoint,
-} from './ReactNativeTypes';
-
+import type {TouchedViewDataAtPoint, ViewConfig} from './ReactNativeTypes';
 import {
-  mountSafeCallback_NOT_REALLY_SAFE,
-  warnForStyleProps,
-} from './NativeMethodsMixinUtils';
+  createPublicInstance,
+  type ReactFabricHostComponent,
+} from './ReactFabricPublicInstance';
 import {create, diff} from './ReactNativeAttributePayload';
-
 import {dispatchEvent} from './ReactFabricEventEmitter';
-
 import {
   DefaultEventPriority,
   DiscreteEventPriority,
@@ -34,7 +22,6 @@ import {
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
-  TextInputState,
   deepFreezeAndThrowOnMutationInDev,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
@@ -49,14 +36,9 @@ const {
   appendChildToSet: appendChildNodeToSet,
   completeRoot,
   registerEventHandler,
-  measure: fabricMeasure,
-  measureInWindow: fabricMeasureInWindow,
-  measureLayout: fabricMeasureLayout,
   unstable_DefaultEventPriority: FabricDefaultPriority,
   unstable_DiscreteEventPriority: FabricDiscretePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
-  setNativeProps,
-  getBoundingClientRect: fabricGetBoundingClientRect,
 } = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
@@ -71,9 +53,18 @@ type Node = Object;
 export type Type = string;
 export type Props = Object;
 export type Instance = {
+  // Reference to the shadow node.
   node: Node,
-  canonical: ReactFabricHostComponent,
-  ...
+  // Exposed through refs.
+  publicInstance: ReactFabricHostComponent,
+  // We define this as an object instead of as separate fields to simplify
+  // making copies of instance where `internals` don't change.
+  internals: {
+    nativeTag: number,
+    viewConfig: ViewConfig,
+    currentProps: Props,
+    internalInstanceHandle: Object,
+  },
 };
 export type TextInstance = {node: Node, ...};
 export type HydratableInstance = Instance | TextInstance;
@@ -105,114 +96,6 @@ if (registerEventHandler) {
    * Register the event emitter with the native bridge
    */
   registerEventHandler(dispatchEvent);
-}
-
-/**
- * This is used for refs on host components.
- */
-class ReactFabricHostComponent implements NativeMethods {
-  _nativeTag: number;
-  viewConfig: ViewConfig;
-  currentProps: Props;
-  _internalInstanceHandle: Object;
-
-  constructor(
-    tag: number,
-    viewConfig: ViewConfig,
-    props: Props,
-    internalInstanceHandle: Object,
-  ) {
-    this._nativeTag = tag;
-    this.viewConfig = viewConfig;
-    this.currentProps = props;
-    this._internalInstanceHandle = internalInstanceHandle;
-  }
-
-  blur() {
-    TextInputState.blurTextInput(this);
-  }
-
-  focus() {
-    TextInputState.focusTextInput(this);
-  }
-
-  measure(callback: MeasureOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      fabricMeasure(
-        stateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
-    }
-  }
-
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      fabricMeasureInWindow(
-        stateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
-    }
-  }
-
-  measureLayout(
-    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail?: () => void /* currently unused */,
-  ) {
-    if (
-      typeof relativeToNativeNode === 'number' ||
-      !(relativeToNativeNode instanceof ReactFabricHostComponent)
-    ) {
-      if (__DEV__) {
-        console.error(
-          'Warning: ref.measureLayout must be called with a ref to a native component.',
-        );
-      }
-
-      return;
-    }
-
-    const toStateNode = this._internalInstanceHandle.stateNode;
-    const fromStateNode =
-      relativeToNativeNode._internalInstanceHandle.stateNode;
-
-    if (toStateNode != null && fromStateNode != null) {
-      fabricMeasureLayout(
-        toStateNode.node,
-        fromStateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
-        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
-      );
-    }
-  }
-
-  unstable_getBoundingClientRect(): DOMRect {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      const rect = fabricGetBoundingClientRect(stateNode.node);
-
-      if (rect) {
-        return new DOMRect(rect[0], rect[1], rect[2], rect[3]);
-      }
-    }
-
-    // Empty rect if any of the above failed
-    return new DOMRect(0, 0, 0, 0);
-  }
-
-  setNativeProps(nativeProps: Object) {
-    if (__DEV__) {
-      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
-    }
-    const updatePayload = create(nativeProps, this.viewConfig.validAttributes);
-
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null && updatePayload != null) {
-      setNativeProps(stateNode.node, updatePayload);
-    }
-  }
 }
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
@@ -260,16 +143,21 @@ export function createInstance(
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  const component = new ReactFabricHostComponent(
+  const component = createPublicInstance(
     tag,
     viewConfig,
-    props,
     internalInstanceHandle,
   );
 
   return {
     node: node,
-    canonical: component,
+    publicInstance: component,
+    internals: {
+      nativeTag: tag,
+      viewConfig,
+      currentProps: props,
+      internalInstanceHandle,
+    },
   };
 }
 
@@ -339,12 +227,15 @@ export function getChildHostContext(
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
-  if (instance.canonical) {
-    return instance.canonical;
+  if (instance.publicInstance != null) {
+    return instance.publicInstance;
   }
 
-  // For compatibility with Paper
+  // For compatibility with Paper, in case Fabric and Paper are used together
+  // in the same app.
+  // $FlowExpectedError[prop-missing]
   if (instance._nativeTag != null) {
+    // $FlowExpectedError[incompatible-return]
     return instance;
   }
 
@@ -363,12 +254,12 @@ export function prepareUpdate(
   newProps: Props,
   hostContext: HostContext,
 ): null | Object {
-  const viewConfig = instance.canonical.viewConfig;
+  const viewConfig = instance.internals.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
   // TODO: If the event handlers have changed, we need to update the current props
   // in the commit phase but there is no host config hook to do it yet.
   // So instead we hack it by updating it in the render phase.
-  instance.canonical.currentProps = newProps;
+  instance.internals.currentProps = newProps;
   return updatePayload;
 }
 
@@ -447,7 +338,8 @@ export function cloneInstance(
   }
   return {
     node: clone,
-    canonical: instance.canonical,
+    publicInstance: instance.publicInstance,
+    internals: instance.internals,
   };
 }
 
@@ -457,7 +349,7 @@ export function cloneHiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  const viewConfig = instance.canonical.viewConfig;
+  const viewConfig = instance.internals.viewConfig;
   const node = instance.node;
   const updatePayload = create(
     {style: {display: 'none'}},
@@ -465,7 +357,8 @@ export function cloneHiddenInstance(
   );
   return {
     node: cloneNodeWithNewProps(node, updatePayload),
-    canonical: instance.canonical,
+    publicInstance: instance.publicInstance,
+    internals: instance.internals,
   };
 }
 

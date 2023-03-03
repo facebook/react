@@ -47,12 +47,14 @@ import {
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
+import {getNativeTagFromPublicInstance} from './ReactFabricPublicInstanceUtils';
+import type {PublicInstance} from './ReactNativeHostConfig';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-function findHostInstance_DEPRECATED(
-  componentOrHandle: any,
-): ?React$ElementRef<HostComponent<mixed>> {
+function findHostInstance_DEPRECATED<TElementType: ElementType>(
+  componentOrHandle: ?(ElementRef<TElementType> | number),
+): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
@@ -70,15 +72,23 @@ function findHostInstance_DEPRECATED(
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
-  if (componentOrHandle._nativeTag) {
-    return componentOrHandle;
+
+  // For compatibility with Paper
+  if (componentOrHandle._nativeTag != null) {
+    // $FlowExpectedError[incompatible-cast] For compatibility with Paper (when using Fabric)
+    return (componentOrHandle: PublicInstance);
   }
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    return componentOrHandle.canonical;
+
+  // Fabric-specific
+  if (componentOrHandle.publicInstance != null) {
+    // $FlowExpectedError[incompatible-cast] For compatibility with Fabric (when using Paper)
+    return (componentOrHandle.publicInstance: PublicInstance);
   }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -110,19 +120,28 @@ function findNodeHandle(componentOrHandle: any): ?number {
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
+
   if (typeof componentOrHandle === 'number') {
     // Already a node handle
     return componentOrHandle;
   }
+
+  // For compatibility with Paper
   if (componentOrHandle._nativeTag) {
     return componentOrHandle._nativeTag;
   }
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    return componentOrHandle.canonical._nativeTag;
+
+  if (componentOrHandle.internals != null) {
+    const nativeTag = componentOrHandle.internals.nativeTag;
+    if (nativeTag != null) {
+      return nativeTag;
+    }
   }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -137,7 +156,14 @@ function findNodeHandle(componentOrHandle: any): ?number {
     return hostInstance;
   }
 
-  return hostInstance._nativeTag;
+  // $FlowExpectedError[prop-missing] For compatibility with Paper (when using Fabric)
+  if (hostInstance._nativeTag != null) {
+    // $FlowExpectedError[incompatible-return]
+    return hostInstance._nativeTag;
+  }
+
+  // $FlowExpectedError[incompatible-call] For compatibility with Fabric (when using Paper)
+  return getNativeTagFromPublicInstance(hostInstance);
 }
 
 function dispatchCommand(handle: any, command: string, args: Array<any>) {
