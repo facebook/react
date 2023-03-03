@@ -89,15 +89,6 @@ function findHostInstance_DEPRECATED(
     hostInstance = findHostInstance(componentOrHandle);
   }
 
-  if (hostInstance == null) {
-    return hostInstance;
-  }
-  if ((hostInstance: any).canonical) {
-    // Fabric
-    return (hostInstance: any).canonical;
-  }
-  // $FlowFixMe[incompatible-return]
-  // $FlowFixMe[incompatible-exact]
   return hostInstance;
 }
 
@@ -145,10 +136,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if ((hostInstance: any).canonical) {
-    // Fabric
-    return (hostInstance: any).canonical._nativeTag;
-  }
+
   return hostInstance._nativeTag;
 }
 

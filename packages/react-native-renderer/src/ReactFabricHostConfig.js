@@ -110,7 +110,7 @@ if (registerEventHandler) {
 /**
  * This is used for refs on host components.
  */
-class ReactFabricHostComponent {
+class ReactFabricHostComponent implements NativeMethods {
   _nativeTag: number;
   viewConfig: ViewConfig;
   currentProps: Props;
@@ -214,10 +214,6 @@ class ReactFabricHostComponent {
     }
   }
 }
-
-// $FlowFixMe[class-object-subtyping] found when upgrading Flow
-// $FlowFixMe[method-unbinding] found when upgrading Flow
-(ReactFabricHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
@@ -342,8 +338,17 @@ export function getChildHostContext(
   }
 }
 
-export function getPublicInstance(instance: Instance): * {
-  return instance.canonical;
+export function getPublicInstance(instance: Instance): null | PublicInstance {
+  if (instance.canonical) {
+    return instance.canonical;
+  }
+
+  // For compatibility with Paper
+  if (instance._nativeTag != null) {
+    return instance;
+  }
+
+  return null;
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
