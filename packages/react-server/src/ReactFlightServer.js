@@ -293,6 +293,8 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
       } else {
         emitErrorChunkProd(request, newTask.id, digest);
       }
+      newTask.status = ERRORED;
+      pingTask(request, newTask);
     },
   );
 

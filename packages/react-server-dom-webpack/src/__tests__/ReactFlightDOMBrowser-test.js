@@ -850,4 +850,49 @@ describe('ReactFlightDOMBrowser', () => {
     const result = await actionProxy('!');
     expect(result).toBe('Hello World!');
   });
+
+  it('propagates server reference errors to the client', async () => {
+    let actionProxy;
+
+    function Client({action}) {
+      actionProxy = action;
+      return 'Click Me';
+    }
+
+    async function send(text) {
+      return Promise.reject(new Error(`Error for ${text}`));
+    }
+
+    const ServerModule = serverExports({send});
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <ClientRef action={ServerModule.send} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const fn = requireServerRef(ref);
+        return ReactServerDOMReader.createFromReadableStream(
+          ReactServerDOMWriter.renderToReadableStream(fn.apply(null, args)),
+        );
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    const expectedError = new Error('Error for test');
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
+    await expect(actionProxy('test')).rejects.toThrow(expectedError);
+    expect(console.error.mock.calls).toEqual([[expectedError]]);
+  });
 });
