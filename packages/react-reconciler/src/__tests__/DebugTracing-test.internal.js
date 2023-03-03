@@ -12,7 +12,7 @@
 describe('DebugTracing', () => {
   let React;
   let ReactTestRenderer;
-  let Scheduler;
+  let waitForPaint;
 
   let logs;
 
@@ -27,7 +27,8 @@ describe('DebugTracing', () => {
 
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
 
     logs = [];
 
@@ -100,7 +101,7 @@ describe('DebugTracing', () => {
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
-  it('should log sync render with CPU suspense', () => {
+  it('should log sync render with CPU suspense', async () => {
     function Example() {
       console.log('<Example/>');
       return null;
@@ -129,7 +130,7 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+    await waitForPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ render (${RETRY_LANE_STRING})`,

@@ -2,6 +2,8 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
+let waitForAll;
+let assertLog;
 let ReactCache;
 let Suspense;
 let TextResource;
@@ -17,6 +19,10 @@ describe('ReactBlockingMode', () => {
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     TextResource = ReactCache.unstable_createResource(
       ([text, ms = 0]) => {
@@ -52,7 +58,7 @@ describe('ReactBlockingMode', () => {
     }
   }
 
-  it('updates flush without yielding in the next event', () => {
+  it('updates flush without yielding in the next event', async () => {
     const root = ReactNoop.createRoot();
 
     root.render(
@@ -66,12 +72,11 @@ describe('ReactBlockingMode', () => {
     // Nothing should have rendered yet
     expect(root).toMatchRenderedOutput(null);
 
-    // Everything should render immediately in the next event
-    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+    await waitForAll(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  it('layout updates flush synchronously in same event', () => {
+  it('layout updates flush synchronously in same event', async () => {
     const {useLayoutEffect} = React;
 
     function App() {
@@ -84,9 +89,9 @@ describe('ReactBlockingMode', () => {
     const root = ReactNoop.createRoot();
     root.render(<App />);
     expect(root).toMatchRenderedOutput(null);
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
-    expect(Scheduler).toFlushAndYield(['Hi', 'Layout effect']);
+    await waitForAll(['Hi', 'Layout effect']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
@@ -106,15 +111,15 @@ describe('ReactBlockingMode', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+    await waitForAll(['A', 'Suspend! [B]', 'C', 'Loading...']);
     // In Legacy Mode, A and B would mount in a hidden primary tree. In
     // Concurrent Mode, nothing in the primary tree should mount. But the
     // fallback should mount immediately.
     expect(root).toMatchRenderedOutput('Loading...');
 
     await jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+    assertLog(['Promise resolved [B]']);
+    await waitForAll(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>A</span>
@@ -124,7 +129,7 @@ describe('ReactBlockingMode', () => {
     );
   });
 
-  it('flushSync does not flush batched work', () => {
+  it('flushSync does not flush batched work', async () => {
     const {useState, forwardRef, useImperativeHandle} = React;
     const root = ReactNoop.createRoot();
 
@@ -143,8 +148,7 @@ describe('ReactBlockingMode', () => {
       </>,
     );
 
-    // Mount
-    expect(Scheduler).toFlushAndYield(['A0', 'B0']);
+    await waitForAll(['A0', 'B0']);
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Schedule a batched update to the first sibling
@@ -159,15 +163,13 @@ describe('ReactBlockingMode', () => {
 
     // Now flush the first update
     if (gate(flags => flags.enableUnifiedSyncLane)) {
-      expect(Scheduler).toHaveYielded(['A1', 'B1']);
+      assertLog(['A1', 'B1']);
       expect(root).toMatchRenderedOutput('A1B1');
     } else {
-      // Only the second update should have flushed synchronously
-      expect(Scheduler).toHaveYielded(['B1']);
+      assertLog(['B1']);
       expect(root).toMatchRenderedOutput('A0B1');
 
-      // Now flush the first update
-      expect(Scheduler).toFlushAndYield(['A1']);
+      await waitForAll(['A1']);
       expect(root).toMatchRenderedOutput('A1B1');
     }
   });

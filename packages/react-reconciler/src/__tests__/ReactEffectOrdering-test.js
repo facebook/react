@@ -18,8 +18,9 @@ let Scheduler;
 let act;
 let useEffect;
 let useLayoutEffect;
+let assertLog;
 
-describe('ReactHooksWithNoopRenderer', () => {
+describe('ReactEffectOrdering', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
@@ -30,6 +31,9 @@ describe('ReactHooksWithNoopRenderer', () => {
     act = require('jest-react').act;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   test('layout unmounts on deletion are fired in parent -> child order', async () => {
@@ -56,7 +60,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     await act(async () => {
       root.render(null);
     });
-    expect(Scheduler).toHaveYielded(['Unmount parent', 'Unmount child']);
+    assertLog(['Unmount parent', 'Unmount child']);
   });
 
   test('passive unmounts on deletion are fired in parent -> child order', async () => {
@@ -83,6 +87,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     await act(async () => {
       root.render(null);
     });
-    expect(Scheduler).toHaveYielded(['Unmount parent', 'Unmount child']);
+    assertLog(['Unmount parent', 'Unmount child']);
   });
 });
