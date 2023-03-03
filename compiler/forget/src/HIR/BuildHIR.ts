@@ -2174,13 +2174,16 @@ function gatherCapturedDeps(
         return;
       }
 
-      // For CallExpression, we need to depend on the receiver, not the
-      // function itself.
-      if (path.parent.type === "CallExpression" && path.isMemberExpression()) {
-        path = path.get("object");
+      if (path.isMemberExpression()) {
+        // For CallExpression, we need to depend on the receiver, not the
+        // function itself.
+        if (path.parent.type === "CallExpression") {
+          path = path.get("object");
+        }
+
+        path.skip();
       }
 
-      path.skip();
       capturedIds.add(binding.identifier);
       capturedRefs.add(lowerExpressionToTemporary(builder, path));
     },
