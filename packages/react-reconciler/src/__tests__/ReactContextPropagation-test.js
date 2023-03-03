@@ -339,6 +339,11 @@ describe('ReactLazyContextPropagation', () => {
       setOtherValue(1);
       setOtherValue(0);
     });
+    // NOTE: If this didn't yield anything, that indicates that we never visited
+    // the consumer during the render phase, which probably means the eager
+    // bailout mechanism kicked in. Because we're testing the _lazy_ bailout
+    // mechanism, update this test to foil the _eager_ bailout, somehow. Perhaps
+    // by switching to useReducer.
     assertLog(['Consumer']);
     expect(root).toMatchRenderedOutput('0');
   });

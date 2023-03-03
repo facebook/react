@@ -171,14 +171,17 @@ describe('ReactExpiration', () => {
     });
     // Advance the timer.
     Scheduler.unstable_advanceTime(2000);
+    // Partially flush the first update, then interrupt it.
     await waitFor(['A [render]']);
     interrupt();
 
+    // Don't advance time by enough to expire the first update.
     assertLog([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Schedule another update.
     ReactNoop.render(<TextClass text="B" />);
+    // Both updates are batched
     await waitForAll(['B [render]', 'B [commit]']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
 
@@ -190,6 +193,8 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
     // Schedule another update.
     ReactNoop.render(<TextClass text="B" />);
+    // The updates should flush in the same batch, since as far as the scheduler
+    // knows, they may have occurred inside the same event.
     await waitForAll(['B [render]', 'B [commit]']);
   });
 
@@ -223,14 +228,17 @@ describe('ReactExpiration', () => {
       });
       // Advance the timer.
       Scheduler.unstable_advanceTime(2000);
+      // Partially flush the first update, then interrupt it.
       await waitFor(['A [render]']);
       interrupt();
 
+      // Don't advance time by enough to expire the first update.
       assertLog([]);
       expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Schedule another update.
       ReactNoop.render(<TextClass text="B" />);
+      // Both updates are batched
       await waitForAll(['B [render]', 'B [commit]']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="B" />);
 
@@ -247,6 +255,8 @@ describe('ReactExpiration', () => {
 
       // Schedule another update.
       ReactNoop.render(<TextClass text="B" />);
+      // The updates should flush in the same batch, since as far as the scheduler
+      // knows, they may have occurred inside the same event.
       await waitForAll(['B [render]', 'B [commit]']);
     },
   );
@@ -471,7 +481,9 @@ describe('ReactExpiration', () => {
       // In other words, we can flush just the first child without flushing
       // the rest.
       Scheduler.unstable_flushNumberOfYields(1);
+      // Yield right after first child.
       assertLog(['Sync pri: 1']);
+      // Now do the rest.
       await waitForAll(['Normal pri: 1']);
     });
     expect(root).toMatchRenderedOutput('Sync pri: 1, Normal pri: 1');
@@ -533,6 +545,7 @@ describe('ReactExpiration', () => {
       await waitFor(['Sync pri: 0']);
       updateSyncPri();
     });
+    // Same thing should happen as last time
     assertLog([
       // Interrupt idle update to render sync update
       'Sync pri: 1',
@@ -733,6 +746,7 @@ describe('ReactExpiration', () => {
       Scheduler.unstable_flushNumberOfYields(1);
       assertLog(['A1', 'B1', 'C1']);
     });
+    // The effect flushes after paint.
     assertLog(['Effect: 1']);
   });
 });

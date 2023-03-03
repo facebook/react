@@ -52,6 +52,7 @@ describe('ReactFlushSync', () => {
       React.startTransition(() => {
         root.render(<App />);
       });
+      // This will yield right before the passive effect fires
       await waitForPaint(['0, 0']);
 
       // The passive effect will schedule a sync update and a normal update.
@@ -67,6 +68,7 @@ describe('ReactFlushSync', () => {
       if (gate(flags => flags.enableUnifiedSyncLane)) {
         await waitForPaint([]);
       } else {
+        // Now flush it.
         await waitForPaint(['1, 1']);
       }
     });
@@ -112,9 +114,11 @@ describe('ReactFlushSync', () => {
           });
         });
       });
+      // Only the sync update should have flushed
       assertLog(['1, 0']);
       expect(root).toMatchRenderedOutput('1, 0');
     });
+    // Now the async update has flushed, too.
     assertLog(['1, 1']);
     expect(root).toMatchRenderedOutput('1, 1');
   });
@@ -162,6 +166,7 @@ describe('ReactFlushSync', () => {
       ]);
       expect(root).toMatchRenderedOutput('Child');
     });
+    // Effect flushes after paint.
     assertLog(['Effect']);
   });
 
@@ -217,6 +222,7 @@ describe('ReactFlushSync', () => {
       ]);
       expect(root).toMatchRenderedOutput('Child');
     });
+    // Effect flushes after paint.
     assertLog(['Effect']);
   });
 
@@ -236,8 +242,10 @@ describe('ReactFlushSync', () => {
 
       // Passive effects are pending. Calling flushSync should not affect them.
       ReactNoop.flushSync();
+      // Effects still haven't fired.
       assertLog([]);
     });
+    // Now the effects have fired.
     assertLog(['Effect']);
   });
 });

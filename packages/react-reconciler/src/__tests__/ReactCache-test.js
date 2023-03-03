@@ -219,6 +219,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -245,6 +246,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -273,6 +275,8 @@ describe('ReactCache', () => {
       root.render(<App showMore={false} />);
     });
 
+    // Even though there are two new <Cache /> trees, they should share the same
+    // data cache. So there should be only a single cache miss for A.
     assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
@@ -285,6 +289,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -320,6 +325,8 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render(<App showMore={true} />);
     });
+    // Even though there are two new <Cache /> trees, they should share the same
+    // data cache. So there should be only a single cache miss for A.
     assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
@@ -332,6 +339,9 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // cleanup occurs for the cache shared by the inner cache boundaries (which
+    // are not shared w the root because they were added in an update)
+    // note that no cache is created for the root since the cache is never accessed
     assertLog(['Cache cleanup: A [v1]']);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -356,6 +366,8 @@ describe('ReactCache', () => {
       await act(async () => {
         root.render(<App />);
       });
+      // Even though there is a nested <Cache /> boundary, it should share the same
+      // data cache as the root. So there should be only a single cache miss for A.
       assertLog(['Cache miss! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -368,6 +380,7 @@ describe('ReactCache', () => {
       await act(async () => {
         root.render('Bye');
       });
+      // no cleanup: cache is still retained at the root
       assertLog([]);
       expect(root).toMatchRenderedOutput('Bye');
     },
@@ -412,6 +425,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -468,6 +482,8 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye!');
     });
+    // Cleanup occurs for the *second* cache instance: the first is still
+    // referenced by the root
     assertLog(['Cache cleanup: A [v2]']);
     expect(root).toMatchRenderedOutput('Bye!');
   });
@@ -549,6 +565,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -728,12 +745,14 @@ describe('ReactCache', () => {
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
+    // Note that the version has updated, and the previous cache is cleared
     assertLog(['A [v2]', 'Cache cleanup: A [v1]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
     await act(async () => {
       root.render('Bye');
     });
+    // the original root cache already cleaned up when the refresh completed
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -781,12 +800,14 @@ describe('ReactCache', () => {
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
+    // Note that the version has updated, and the previous cache is cleared
     assertLog(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
     await act(async () => {
       root.render('Bye');
     });
+    // the original root cache already cleaned up when the refresh completed
     assertLog([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -841,12 +862,15 @@ describe('ReactCache', () => {
         }),
       );
     });
+    // The root should re-render without a cache miss.
+    // The cache is not cleared up yet, since it's still reference by the root
     assertLog(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
     await act(async () => {
       root.render('Bye');
     });
+    // the refreshed cache boundary is unmounted and cleans up
     assertLog(['Cache cleanup: A [v2]']);
     expect(root).toMatchRenderedOutput('Bye');
   });
@@ -920,6 +944,8 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye!');
     });
+    // Unmounting children releases the refreshed cache instance only; the root
+    // still retains the original cache instance used for the first render
     assertLog(['Cache cleanup: A [v3]']);
     expect(root).toMatchRenderedOutput('Bye!');
   });
@@ -967,6 +993,8 @@ describe('ReactCache', () => {
         root.render(<App showMore={true} />);
       });
 
+      // Even though there are two new <Cache /> trees, they should share the same
+      // data cache. So there should be only a single cache miss for A.
       assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...Loading...');
 
@@ -1064,6 +1092,9 @@ describe('ReactCache', () => {
       await act(async () => {
         root.render('Bye!');
       });
+      // Unmounting children releases both cache boundaries, but the original
+      // cache instance (used by second boundary) is still referenced by the root.
+      // only the second cache instance is freed.
       assertLog(['Cache cleanup: A [v2]']);
       expect(root).toMatchRenderedOutput('Bye!');
     },
