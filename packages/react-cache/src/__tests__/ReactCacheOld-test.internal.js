@@ -18,6 +18,8 @@ let Scheduler;
 let Suspense;
 let TextResource;
 let textResourceShouldFail;
+let waitForAll;
+let assertLog;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -32,6 +34,10 @@ describe('ReactCache', () => {
     createResource = ReactCache.unstable_createResource;
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     TextResource = createResource(
       ([text, ms = 0]) => {
@@ -105,7 +111,7 @@ describe('ReactCache', () => {
     }
   }
 
-  it('throws a promise if the requested value is not in the cache', () => {
+  it('throws a promise if the requested value is not in the cache', async () => {
     function App() {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
@@ -118,11 +124,11 @@ describe('ReactCache', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
     jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-    expect(Scheduler).toFlushAndYield(['Hi']);
+    assertLog(['Promise resolved [Hi]']);
+    await waitForAll(['Hi']);
   });
 
   it('throws an error on the subsequent read if the promise is rejected', async () => {
@@ -138,22 +144,22 @@ describe('ReactCache', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
     textResourceShouldFail = true;
     jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded(['Promise rejected [Hi]']);
+    assertLog(['Promise rejected [Hi]']);
 
     expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
-    expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
+    assertLog(['Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
     root.update(<App />);
     expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
-    expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
+    assertLog(['Error! [Hi]', 'Error! [Hi]']);
   });
 
-  it('warns if non-primitive key is passed to a resource without a hash function', () => {
+  it('warns if non-primitive key is passed to a resource without a hash function', async () => {
     const BadTextResource = createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
@@ -177,8 +183,8 @@ describe('ReactCache', () => {
     );
 
     if (__DEV__) {
-      expect(() => {
-        expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
+      expect(async () => {
+        await waitForAll(['App', 'Loading...']);
       }).toErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +
           'boolean, but instead received: Hi,100\n\n' +
@@ -186,7 +192,7 @@ describe('ReactCache', () => {
           'function as the second argument to createResource().',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
+      await waitForAll(['App', 'Loading...']);
     }
   });
 
@@ -204,19 +210,19 @@ describe('ReactCache', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [1]',
       'Suspend! [2]',
       'Suspend! [3]',
       'Loading...',
     ]);
     jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Promise resolved [1]',
       'Promise resolved [2]',
       'Promise resolved [3]',
     ]);
-    expect(Scheduler).toFlushAndYield([1, 2, 3]);
+    await waitForAll([1, 2, 3]);
     expect(root).toMatchRenderedOutput('123');
 
     // Render 1, 4, 5
@@ -228,18 +234,10 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
-      1,
-      'Suspend! [4]',
-      'Suspend! [5]',
-      'Loading...',
-    ]);
+    await waitForAll([1, 'Suspend! [4]', 'Suspend! [5]', 'Loading...']);
     jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [4]',
-      'Promise resolved [5]',
-    ]);
-    expect(Scheduler).toFlushAndYield([1, 4, 5]);
+    assertLog(['Promise resolved [4]', 'Promise resolved [5]']);
+    await waitForAll([1, 4, 5]);
     expect(root).toMatchRenderedOutput('145');
 
     // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
@@ -253,7 +251,7 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       // 1 is still cached
       1,
       // 2 and 3 suspend because they were evicted from the cache
@@ -262,11 +260,8 @@ describe('ReactCache', () => {
       'Loading...',
     ]);
     jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [2]',
-      'Promise resolved [3]',
-    ]);
-    expect(Scheduler).toFlushAndYield([1, 2, 3]);
+    assertLog(['Promise resolved [2]', 'Promise resolved [3]']);
+    await waitForAll([1, 2, 3]);
     expect(root).toMatchRenderedOutput('123');
   });
 
@@ -287,18 +282,15 @@ describe('ReactCache', () => {
       },
     );
 
-    expect(Scheduler).toFlushAndYield(['Loading...']);
+    await waitForAll(['Loading...']);
 
     jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [B]',
-      'Promise resolved [A]',
-    ]);
-    expect(Scheduler).toFlushAndYield(['Result']);
+    assertLog(['Promise resolved [B]', 'Promise resolved [A]']);
+    await waitForAll(['Result']);
     expect(root).toMatchRenderedOutput('Result');
   });
 
-  it('if a thenable resolves multiple times, does not update the first cached value', () => {
+  it('if a thenable resolves multiple times, does not update the first cached value', async () => {
     let resolveThenable;
     const BadTextResource = createResource(
       ([text, ms = 0]) => {
@@ -349,7 +341,7 @@ describe('ReactCache', () => {
       },
     );
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
     resolveThenable('Hi');
     // This thenable improperly resolves twice. We should not update the
@@ -365,8 +357,8 @@ describe('ReactCache', () => {
       },
     );
 
-    expect(Scheduler).toHaveYielded([]);
-    expect(Scheduler).toFlushAndYield(['Hi']);
+    assertLog([]);
+    await waitForAll(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 

@@ -33,6 +33,8 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
+let waitForAll;
+let assertLog;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -62,6 +64,10 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     textCache = new Map();
 
@@ -259,10 +265,14 @@ describe('ReactDOMFloat', () => {
     root.render(children);
     return expect(() => {
       try {
-        expect(Scheduler).toFlushWithoutYielding();
+        // TODO: Migrate this to waitForAll()
+        Scheduler.unstable_flushAll();
+        assertLog([]);
       } catch (e) {
         try {
-          expect(Scheduler).toFlushWithoutYielding();
+          // TODO: Migrate this to waitForAll()
+          Scheduler.unstable_flushAll();
+          assertLog([]);
         } catch (f) {}
       }
     });
@@ -283,11 +293,11 @@ describe('ReactDOMFloat', () => {
       </>,
     );
     try {
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
     } catch (e) {
       // for DOMExceptions that happen when expecting this test to fail we need
       // to clear the scheduler first otherwise the expected failure will fail
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       throw e;
     }
     expect(getMeaningfulChildren(document)).toEqual(
@@ -351,7 +361,7 @@ describe('ReactDOMFloat', () => {
         <body>foo</body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -476,7 +486,7 @@ describe('ReactDOMFloat', () => {
         <script async={true} src="foo" />
       </>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -494,7 +504,7 @@ describe('ReactDOMFloat', () => {
         <script data-new="new" async={true} src="foo" />
       </>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     // we don't see the attribute because the resource is the same and was not reconstructed
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -671,7 +681,7 @@ describe('ReactDOMFloat', () => {
         </body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -968,7 +978,7 @@ body {
         </body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1107,7 +1117,7 @@ body {
         errors.push(err.digest);
       },
     });
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1157,7 +1167,7 @@ body {
         <body>Hello</body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1634,7 +1644,7 @@ body {
         </body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1656,7 +1666,7 @@ body {
         </body>
       </html>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1701,7 +1711,7 @@ body {
         <Throw />
       </ErrorBoundary>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2334,8 +2344,8 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev([
         'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
         'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
@@ -2350,8 +2360,8 @@ body {
       );
 
       root.render(<App url="bar" />);
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev([
         'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
         'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
@@ -2404,8 +2414,8 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev(
         'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
       );
@@ -2421,8 +2431,8 @@ body {
       );
 
       root.render(<App url="bar" />);
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev(
         'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
       );
@@ -2509,7 +2519,7 @@ body {
         );
       }
       ReactDOMClient.hydrateRoot(document, <ClientApp />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -2731,7 +2741,7 @@ body {
       }
 
       ReactDOMClient.hydrateRoot(document, <ClientApp />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -2761,7 +2771,7 @@ body {
 
       const root = ReactDOMClient.createRoot(document);
       root.render(<App />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -2836,7 +2846,7 @@ body {
       }
 
       ReactDOMClient.hydrateRoot(document, <ClientApp />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -2865,7 +2875,7 @@ body {
 
       const root = ReactDOMClient.createRoot(document);
       root.render(<App />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3057,7 +3067,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -3095,7 +3105,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -3178,7 +3188,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3213,7 +3223,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       root.render(
         <html>
@@ -3221,7 +3231,7 @@ body {
           <body>hello world</body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3263,8 +3273,8 @@ body {
           },
         },
       );
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
@@ -3315,8 +3325,8 @@ body {
           },
         },
       );
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
@@ -3349,7 +3359,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3371,7 +3381,7 @@ body {
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       // The reason we do not see preloads in the head is they are inserted synchronously
       // during render and then when the new singleton mounts it resets it's content, retaining only styles
       expect(getMeaningfulChildren(document)).toEqual(
@@ -3408,7 +3418,7 @@ body {
           container
         </>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3468,7 +3478,7 @@ body {
           container
         </>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3539,7 +3549,7 @@ body {
         );
       }
       root.render(<ClientApp />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3602,7 +3612,7 @@ body {
       container = document.getElementById('container');
       const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -3678,7 +3688,7 @@ body {
           </svg>
         </div>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div>
           <svg>
@@ -3724,7 +3734,7 @@ body {
           </noscript>
         </div>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div>
           {/* On the client, <noscript> never renders children */}
@@ -3799,8 +3809,8 @@ body {
           </body>
         </html>,
       );
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
+      await expect(async () => {
+        await waitForAll([]);
       }).toErrorDev([
         'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` prop that also included the `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
       ]);
@@ -4070,7 +4080,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -4101,7 +4111,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4244,7 +4254,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       // The async script with onLoad is inserted in the right place but does not cause the hydration
       // to fail.
       expect(getMeaningfulChildren(document)).toEqual(
@@ -4311,7 +4321,7 @@ background-color: green;
           </svg>
         </div>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div>
           <svg>
@@ -4357,7 +4367,7 @@ background-color: green;
           </noscript>
         </div>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div>
           {/* On the client, <noscript> never renders children */}
@@ -4459,7 +4469,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4474,7 +4484,7 @@ background-color: green;
           <body />
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
@@ -4493,7 +4503,7 @@ background-color: green;
           </div>,
         );
       });
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document.head)).toEqual(
         <meta name="foo" data-foo="data" content="bar" />,
@@ -4501,7 +4511,7 @@ background-color: green;
       expect(getMeaningfulChildren(container)).toEqual(<div />);
 
       root.render(<div />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
@@ -4535,7 +4545,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4550,7 +4560,7 @@ background-color: green;
           <body />
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
@@ -4569,7 +4579,7 @@ background-color: green;
           </div>,
         );
       });
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document.head)).toEqual(
         <link rel="foo" data-foo="data" href="foo" />,
@@ -4577,7 +4587,7 @@ background-color: green;
       expect(getMeaningfulChildren(container)).toEqual(<div />);
 
       root.render(<div />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
@@ -4611,7 +4621,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4626,7 +4636,7 @@ background-color: green;
           <body />
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
@@ -4645,7 +4655,7 @@ background-color: green;
           </div>,
         );
       });
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
 
       expect(getMeaningfulChildren(document.head)).toEqual(
         <title data-foo="foo">a title</title>,
@@ -4653,7 +4663,7 @@ background-color: green;
       expect(getMeaningfulChildren(container)).toEqual(<div />);
 
       root.render(<div />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
@@ -4782,7 +4792,7 @@ background-color: green;
           <meta name="after" />
         </>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4802,7 +4812,7 @@ background-color: green;
           {null}
         </>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
@@ -4908,8 +4918,8 @@ background-color: green;
         },
       );
       try {
-        expect(() => {
-          expect(Scheduler).toFlushWithoutYielding();
+        await expect(async () => {
+          await waitForAll([]);
         }).toErrorDev(
           [
             'Warning: Text content did not match. Server: "server" Client: "client"',
@@ -4920,7 +4930,7 @@ background-color: green;
       } catch (e) {
         // When gates are false this test fails on a DOMException if you don't clear the scheduler after catching.
         // When gates are true this branch should not be hit
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         throw e;
       }
       expect(getMeaningfulChildren(document)).toEqual(

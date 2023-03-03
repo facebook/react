@@ -20,6 +20,7 @@ let ReactNoopFlightClient;
 let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
+let assertLog;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -33,6 +34,8 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -808,13 +811,13 @@ describe('ReactFlight', () => {
       const ClientDoublerModuleRef = clientReference(ClientDoubler);
 
       const transport = ReactNoopFlightServer.render(<App />);
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
 
       await act(async () => {
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
-      expect(Scheduler).toHaveYielded(['ClientDoubler']);
+      assertLog(['ClientDoubler']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <div prop=":S1:">:S1:</div>
@@ -997,7 +1000,7 @@ describe('ReactFlight', () => {
 
       const transport = ReactNoopFlightServer.render(<Foo />);
 
-      expect(Scheduler).toHaveYielded(['suspended']);
+      assertLog(['suspended']);
 
       await act(async () => {
         resolve();
@@ -1005,7 +1008,7 @@ describe('ReactFlight', () => {
         jest.runAllImmediates();
       });
 
-      expect(Scheduler).toHaveYielded(['rendered']);
+      assertLog(['rendered']);
 
       await act(async () => {
         ServerContext._currentRenderer = null;
@@ -1045,7 +1048,7 @@ describe('ReactFlight', () => {
 
       const transport = ReactNoopFlightServer.render(model);
 
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
 
       await act(async () => {
         ServerContext._currentRenderer = null;
@@ -1054,7 +1057,7 @@ describe('ReactFlight', () => {
         ReactNoop.render(flightModel.foo);
       });
 
-      expect(Scheduler).toHaveYielded(['ClientBar']);
+      assertLog(['ClientBar']);
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
 
       expect(() => {
