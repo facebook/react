@@ -26,7 +26,7 @@
 // the zeroth id at a level would be indistinguishable from its parent.
 //
 // If a node has only one child, and does not materialize an id (i.e. does not
-// contain a useId hook), then we don't need to allocate any space in the
+// contain an useId hook), then we don't need to allocate any space in the
 // sequence. It's treated as a transparent indirection. For example, these two
 // trees produce the same ids:
 //
