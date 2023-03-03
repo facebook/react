@@ -21,13 +21,6 @@ if (!IS_FIREFOX) {
         runAt: 'document_start',
         world: chrome.scripting.ExecutionWorld.MAIN,
       },
-      {
-        id: 'renderer',
-        matches: ['<all_urls>'],
-        js: ['build/renderer.js'],
-        runAt: 'document_start',
-        world: chrome.scripting.ExecutionWorld.MAIN,
-      },
     ],
     function () {
       // When the content scripts are already registered, an error will be thrown.

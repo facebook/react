@@ -1,8 +1,6 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
-import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {IS_FIREFOX} from '../utils';
 
 function injectScriptSync(src) {
@@ -118,11 +116,6 @@ window.addEventListener('pageshow', function ({target}) {
 // Users will see a notice in components tab when that happens (see <Tree>).
 // For Firefox, V3 is not ready, so sync injection is still the best approach.
 const injectScript = IS_FIREFOX ? injectScriptSync : injectScriptAsync;
-
-// If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
-  injectScript(chrome.runtime.getURL('build/renderer.js'));
-}
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
