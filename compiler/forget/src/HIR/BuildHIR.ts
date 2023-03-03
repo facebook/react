@@ -2160,6 +2160,17 @@ function gatherCapturedDeps(
   });
 
   function visit(path: NodePath<Expression>): void {
+    // Babel has a bug where it doesn't visit the LHS of an
+    // AssignmentExpression if it's an Identifier. Work around it by explicitly
+    // visiting it.
+    if (path.isAssignmentExpression()) {
+      const left = path.get("left");
+      if (left.isIdentifier()) {
+        visit(left);
+      }
+      return;
+    }
+
     let obj = path;
     while (obj.isMemberExpression()) {
       obj = obj.get("object");
