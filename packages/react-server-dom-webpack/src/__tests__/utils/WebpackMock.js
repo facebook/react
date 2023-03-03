@@ -48,16 +48,14 @@ exports.clientModuleError = function clientModuleError(moduleError) {
   webpackErroredModules[idx] = moduleError;
   const path = url.pathToFileURL(idx).href;
   webpackClientMap[path] = {
-    '': {
-      id: idx,
-      chunks: [],
-      name: '',
-    },
-    '*': {
-      id: idx,
-      chunks: [],
-      name: '*',
-    },
+    id: idx,
+    chunks: [],
+    name: '*',
+  };
+  webpackClientMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
   };
   const mod = {exports: {}};
   nodeCompile.call(mod, '"use client"', idx);
@@ -69,22 +67,20 @@ exports.clientExports = function clientExports(moduleExports) {
   webpackClientModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
   webpackClientMap[path] = {
-    '': {
-      id: idx,
-      chunks: [],
-      name: '',
-    },
-    '*': {
-      id: idx,
-      chunks: [],
-      name: '*',
-    },
+    id: idx,
+    chunks: [],
+    name: '*',
+  };
+  webpackClientMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
   };
   if (typeof moduleExports.then === 'function') {
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
-          webpackClientMap[path][name] = {
+          webpackClientMap[path + '#' + name] = {
             id: idx,
             chunks: [],
             name: name,
@@ -95,7 +91,7 @@ exports.clientExports = function clientExports(moduleExports) {
     );
   }
   for (const name in moduleExports) {
-    webpackClientMap[path][name] = {
+    webpackClientMap[path + '#' + name] = {
       id: idx,
       chunks: [],
       name: name,
@@ -112,19 +108,17 @@ exports.serverExports = function serverExports(moduleExports) {
   webpackServerModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
   webpackServerMap[path] = {
-    '': {
-      id: idx,
-      chunks: [],
-      name: '',
-    },
-    '*': {
-      id: idx,
-      chunks: [],
-      name: '*',
-    },
+    id: idx,
+    chunks: [],
+    name: '*',
+  };
+  webpackServerMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
   };
   for (const name in moduleExports) {
-    webpackServerMap[path][name] = {
+    webpackServerMap[path + '#' + name] = {
       id: idx,
       chunks: [],
       name: name,

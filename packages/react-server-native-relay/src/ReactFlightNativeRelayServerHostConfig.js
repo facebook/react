@@ -66,7 +66,7 @@ export function resolveClientReferenceMetadata<T>(
 export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   resource: ServerReference<T>,
-): ServerReferenceMetadata {
+): {id: ServerReferenceMetadata, bound: Promise<Array<any>>} {
   throw new Error('Not implemented.');
 }
 

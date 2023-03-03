@@ -18,7 +18,7 @@ let data = ReactServerDOMReader.createFromFetch(
         method: 'POST',
         headers: {
           Accept: 'text/x-component',
-          'rsc-action': JSON.stringify({filepath: id.id, name: id.name}),
+          'rsc-action': id,
         },
         body: JSON.stringify(args),
       });

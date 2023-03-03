@@ -187,8 +187,7 @@ function transformServerModule(
     }
     newSrc += 'Object.defineProperties(' + local + ',{';
     newSrc += '$$typeof: {value: Symbol.for("react.server.reference")},';
-    newSrc += '$$filepath: {value: ' + JSON.stringify(url) + '},';
-    newSrc += '$$name: { value: ' + JSON.stringify(exported) + '},';
+    newSrc += '$$id: {value: ' + JSON.stringify(url + '#' + exported) + '},';
     newSrc += '$$bound: { value: [] }';
     newSrc += '});\n';
   });
@@ -343,9 +342,8 @@ async function transformClientModule(
         ');';
     }
     newSrc += '},{';
-    newSrc += 'name: { value: ' + JSON.stringify(name) + '},';
     newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
-    newSrc += 'filepath: {value: ' + JSON.stringify(url) + '}';
+    newSrc += '$$id: {value: ' + JSON.stringify(url + '#' + name) + '}';
     newSrc += '});\n';
   }
   return newSrc;

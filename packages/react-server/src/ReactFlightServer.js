@@ -590,8 +590,10 @@ function serializeServerReference(
   if (existingId !== undefined) {
     return serializeServerReferenceID(existingId);
   }
-  const serverReferenceMetadata: ServerReferenceMetadata =
-    resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
+  const serverReferenceMetadata: {
+    id: ServerReferenceMetadata,
+    bound: Promise<Array<any>>,
+  } = resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
   request.pendingChunks++;
   const metadataId = request.nextChunkId++;
   // We assume that this object doesn't suspend.
