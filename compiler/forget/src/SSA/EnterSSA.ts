@@ -36,6 +36,7 @@ class SSABuilder {
   #blocks: Map<BlockId, BasicBlock>;
   #env: Environment;
   #unknown: Set<Identifier> = new Set();
+  #context: Set<Identifier> = new Set();
 
   constructor(env: Environment, blocks: Map<BlockId, BasicBlock>) {
     this.#blocks = blocks;
@@ -67,6 +68,12 @@ class SSABuilder {
     };
   }
 
+  defineContext(oldPlace: Place): Place {
+    const newPlace = this.definePlace(oldPlace);
+    this.#context.add(oldPlace.identifier);
+    return newPlace;
+  }
+
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
     if (this.#unknown.has(oldId)) {
@@ -76,6 +83,11 @@ class SSABuilder {
         )} should have been defined before use`,
         oldPlace.loc
       );
+    }
+
+    // Do not redefine context references.
+    if (this.#context.has(oldId)) {
+      return this.getPlace(oldPlace);
     }
 
     const newId = this.makeId(oldId);
@@ -206,7 +218,7 @@ export default function enterSSA(func: HIRFunction): void {
     builder.startBlock(block);
 
     if (func.body.entry === blockId) {
-      func.context = func.context.map((p) => builder.definePlace(p));
+      func.context = func.context.map((p) => builder.defineContext(p));
       func.params = func.params.map((p) => builder.definePlace(p));
     }
 
