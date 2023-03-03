@@ -16,6 +16,7 @@ let ReactNative;
 let UIManager;
 let createReactNativeComponentClass;
 let ReactNativePrivateInterface;
+let getNativeTagFromPublicInstance;
 
 describe('created with ReactFabric called with ReactNative', () => {
   beforeEach(() => {
@@ -35,6 +36,8 @@ describe('created with ReactFabric called with ReactNative', () => {
     createReactNativeComponentClass =
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
+    getNativeTagFromPublicInstance =
+      require('../ReactFabricPublicInstanceUtils').getNativeTagFromPublicInstance;
   });
 
   it('find Fabric instances with the RN renderer', () => {
@@ -54,7 +57,7 @@ describe('created with ReactFabric called with ReactNative', () => {
     ReactFabric.render(<Component ref={ref} />, 11);
 
     const instance = ReactNative.findHostInstance_DEPRECATED(ref.current);
-    expect(instance._nativeTag).toBe(2);
+    expect(getNativeTagFromPublicInstance(instance)).toBe(2);
   });
 
   it('find Fabric nodes with the RN renderer', () => {

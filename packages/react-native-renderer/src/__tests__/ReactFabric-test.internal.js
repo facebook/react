@@ -15,6 +15,8 @@ let ReactFabric;
 let createReactNativeComponentClass;
 let StrictMode;
 let act;
+let getNativeTagFromPublicInstance;
+let getInternalInstanceHandleFromPublicInstance;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -40,6 +42,10 @@ describe('ReactFabric', () => {
     createReactNativeComponentClass =
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
+    getNativeTagFromPublicInstance =
+      require('../ReactFabricPublicInstanceUtils').getNativeTagFromPublicInstance;
+    getInternalInstanceHandleFromPublicInstance =
+      require('../ReactFabricPublicInstanceUtils').getInternalInstanceHandleFromPublicInstance;
 
     act = require('internal-test-utils').act;
   });
@@ -931,7 +937,7 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
-    expect(match).toBe(child._nativeTag);
+    expect(match).toBe(getNativeTagFromPublicInstance(child));
   });
 
   it('findNodeHandle should warn if passed a component that is inside StrictMode', async () => {
@@ -968,7 +974,7 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
-    expect(match).toBe(child._nativeTag);
+    expect(match).toBe(getNativeTagFromPublicInstance(child));
   });
 
   it('should no-op if calling sendAccessibilityEvent on unmounted refs', async () => {
@@ -1001,5 +1007,35 @@ describe('ReactFabric', () => {
     );
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
+  });
+
+  it('getNodeFromInternalInstanceHandle should return the correct shadow node', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef;
+    await act(() => {
+      ReactFabric.render(
+        <View
+          foo="test"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        1,
+      );
+    });
+
+    const expectedShadowNode =
+      nativeFabricUIManager.createNode.mock.results[0].value;
+    expect(expectedShadowNode).toEqual(expect.any(Object));
+
+    const internalInstanceHandle =
+      getInternalInstanceHandleFromPublicInstance(viewRef);
+    expect(
+      ReactFabric.getNodeFromInternalInstanceHandle(internalInstanceHandle),
+    ).toBe(expectedShadowNode);
   });
 });
