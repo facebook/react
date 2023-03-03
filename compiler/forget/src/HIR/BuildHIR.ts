@@ -7,6 +7,7 @@
 
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
+import { Expression } from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
@@ -2158,34 +2159,38 @@ function gatherCapturedDeps(
     to: componentScope,
   });
 
+  function visit(path: NodePath<Expression>): void {
+    let obj = path;
+    while (obj.isMemberExpression()) {
+      obj = obj.get("object");
+    }
+
+    if (!obj.isIdentifier()) {
+      return;
+    }
+
+    const binding = obj.scope.getBinding(obj.node.name);
+    if (binding === undefined || !pureScopes.has(binding.scope)) {
+      return;
+    }
+
+    if (path.isMemberExpression()) {
+      // For CallExpression, we need to depend on the receiver, not the
+      // function itself.
+      if (path.parent.type === "CallExpression") {
+        path = path.get("object");
+      }
+
+      path.skip();
+    }
+
+    capturedIds.add(binding.identifier);
+    capturedRefs.add(lowerExpressionToTemporary(builder, path));
+  }
+
   fn.get("body").traverse({
     Expression(path) {
-      let obj = path;
-      while (obj.isMemberExpression()) {
-        obj = obj.get("object");
-      }
-
-      if (!obj.isIdentifier()) {
-        return;
-      }
-
-      const binding = obj.scope.getBinding(obj.node.name);
-      if (binding === undefined || !pureScopes.has(binding.scope)) {
-        return;
-      }
-
-      if (path.isMemberExpression()) {
-        // For CallExpression, we need to depend on the receiver, not the
-        // function itself.
-        if (path.parent.type === "CallExpression") {
-          path = path.get("object");
-        }
-
-        path.skip();
-      }
-
-      capturedIds.add(binding.identifier);
-      capturedRefs.add(lowerExpressionToTemporary(builder, path));
+      visit(path);
     },
   });
 
