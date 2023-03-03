@@ -16,12 +16,16 @@ let SuspenseList;
 let getCacheForType;
 let caches;
 let seededCache;
+let assertLog;
 
 beforeEach(() => {
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
   act = require('jest-react').act;
+
+  const InternalTestUtils = require('internal-test-utils');
+  assertLog = InternalTestUtils.assertLog;
 
   Suspense = React.Suspense;
   if (gate(flags => flags.enableSuspenseList)) {
@@ -188,19 +192,15 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   await act(async () => {
     root.render(<App />);
   });
-  expect(Scheduler).toHaveYielded([
-    'Suspend! [0]',
-    'Loading Async...',
-    'Loading Tail...',
-  ]);
+  assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
   await act(async () => {
     resolveText(0);
   });
-  expect(Scheduler).toHaveYielded([0, 'Tail']);
+  assertLog([0, 'Tail']);
   await act(async () => {
     setAsyncText(x => x + 1);
   });
-  expect(Scheduler).toHaveYielded([
+  assertLog([
     'Suspend! [1]',
     'Loading Async...',
     'Suspend! [1]',

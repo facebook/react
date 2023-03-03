@@ -21,6 +21,10 @@ let SuspenseList;
 let Offscreen;
 let act;
 let IdleEventPriority;
+let waitForAll;
+let waitFor;
+let waitForPaint;
+let assertLog;
 
 function normalizeCodeLocInfo(strOrErr) {
   if (strOrErr && strOrErr.replace) {
@@ -112,6 +116,12 @@ describe('ReactDOMServerPartialHydration', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    waitFor = InternalTestUtils.waitFor;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
@@ -290,13 +300,7 @@ describe('ReactDOMServerPartialHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       const container = document.createElement('section');
       container.innerHTML = finalHTML;
-      expect(Scheduler).toHaveYielded([
-        'Hello',
-        'Component',
-        'Component',
-        'Component',
-        'Component',
-      ]);
+      assertLog(['Hello', 'Component', 'Component', 'Component', 'Component']);
 
       expect(container.innerHTML).toBe(
         '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
@@ -310,7 +314,7 @@ describe('ReactDOMServerPartialHydration', () => {
           Scheduler.unstable_yieldValue(error.message);
         },
       });
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Suspend',
         'Component',
         'Component',
@@ -327,7 +331,7 @@ describe('ReactDOMServerPartialHydration', () => {
       suspend = false;
       resolve();
       await promise;
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         // first pass, mismatches at end
         'Hello',
         'Component',
@@ -434,7 +438,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expect(hydrated.length).toBe(0);
     expect(deleted.length).toBe(0);
@@ -520,7 +524,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'There was an error while hydrating this Suspense boundary. ' +
         'Switched to client rendering.',
     ]);
@@ -640,7 +644,7 @@ describe('ReactDOMServerPartialHydration', () => {
         });
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Hydration failed because the initial UI does not match what was rendered on the server.',
       'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
     ]);
@@ -1389,7 +1393,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     suspend = false;
     const finalHTML = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+    assertLog(['Child', 'Sibling']);
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
@@ -1401,7 +1405,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     await act(async () => {
       suspend = true;
-      expect(Scheduler).toFlushAndYieldThrough(['Child']);
+      await waitFor(['Child']);
 
       // While we're part way through the hydration, we update the state.
       // This will schedule an update on the children of the suspense boundary.
@@ -1410,7 +1414,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       // This will throw it away and rerender.
-      expect(Scheduler).toFlushAndYield(['Child', 'Sibling']);
+      await waitForAll(['Child', 'Sibling']);
 
       expect(container.textContent).toBe('Hello');
 
@@ -1418,7 +1422,7 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+    assertLog(['Child', 'Sibling']);
 
     expect(container.textContent).toBe('Hello');
   });
@@ -1635,7 +1639,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     if (__DEV__) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
           ' for this Suspense boundary to render the fallback content on the' +
@@ -1644,7 +1648,7 @@ describe('ReactDOMServerPartialHydration', () => {
           ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering. Switched to client rendering.',
       ]);
@@ -1708,7 +1712,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     if (__DEV__) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
           ' for this Suspense boundary to render the fallback content on the' +
@@ -1717,7 +1721,7 @@ describe('ReactDOMServerPartialHydration', () => {
           ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering. Switched to client rendering.',
       ]);
@@ -1786,7 +1790,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     if (__DEV__) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
           ' for this Suspense boundary to render the fallback content on the' +
@@ -1795,7 +1799,7 @@ describe('ReactDOMServerPartialHydration', () => {
           ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering. Switched to client rendering.',
       ]);
@@ -2028,7 +2032,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     suspend = false;
     const html = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded(['Before', 'After']);
+    assertLog(['Before', 'After']);
 
     const container = document.createElement('div');
     container.innerHTML = html;
@@ -2044,7 +2048,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     await act(async () => {
-      expect(Scheduler).toFlushAndYieldThrough(['Before', 'After']);
+      await waitFor(['Before', 'After']);
 
       // This will cause us to skip the second row completely.
     });
@@ -2108,7 +2112,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     suspend = true;
     if (__DEV__) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
           ' for this Suspense boundary to render the fallback content on the' +
@@ -2117,7 +2121,7 @@ describe('ReactDOMServerPartialHydration', () => {
           ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering. Switched to client rendering.',
       ]);
@@ -2182,7 +2186,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     if (__DEV__) {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
           ' for this Suspense boundary to render the fallback content on the' +
@@ -2191,7 +2195,7 @@ describe('ReactDOMServerPartialHydration', () => {
           ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering. Switched to client rendering.',
       ]);
@@ -3009,7 +3013,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     suspend = false;
     const finalHTML = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded(['Child']);
+    assertLog(['Child']);
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
@@ -3019,7 +3023,7 @@ describe('ReactDOMServerPartialHydration', () => {
       container,
       <App showSibling={false} />,
     );
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
 
     expect(ref.current).toBe(null);
     expect(container.textContent).toBe('Hello');
@@ -3036,14 +3040,14 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // When we flush we expect the Normal pri render to take priority
     // over hydration.
-    expect(Scheduler).toFlushAndYieldThrough(['Sibling', 'Commit Sibling']);
+    await waitFor(['Sibling', 'Commit Sibling']);
 
     // We shouldn't have hydrated the child yet.
     expect(ref.current).toBe(null);
     // But we did have a chance to update the content.
     expect(container.textContent).toBe('HelloWorld');
 
-    expect(Scheduler).toFlushAndYield(['Child']);
+    await waitForAll(['Child']);
 
     // Now we're hydrated.
     expect(ref.current).not.toBe(null);
@@ -3248,7 +3252,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     const finalHTML = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
@@ -3267,7 +3271,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // The tree successfully hydrates
     ReactDOMClient.hydrateRoot(container, <App />);
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(ref.current).toBe(span);
   });
 
@@ -3295,7 +3299,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // During server rendering, the Child component should not be evaluated,
     // because it's inside a hidden tree.
     const finalHTML = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded(['App']);
+    assertLog(['App']);
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
@@ -3313,11 +3317,11 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // The visible span successfully hydrates
     ReactDOMClient.hydrateRoot(container, <App />);
-    expect(Scheduler).toFlushUntilNextPaint(['App']);
+    await waitForPaint(['App']);
     expect(visibleRef.current).toBe(visibleSpan);
 
     // Subsequently, the hidden child is prerendered on the client
-    expect(Scheduler).toFlushUntilNextPaint(['HiddenChild']);
+    await waitForPaint(['HiddenChild']);
     expect(container).toMatchInlineSnapshot(`
       <div>
         <span>
@@ -3434,7 +3438,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ],
       {withoutStack: 1},
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       // TODO: There were multiple mismatches in a single container. Should
       // we attempt to de-dupe them?
@@ -3482,7 +3486,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ],
       {withoutStack: 1},
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Text content does not match server-rendered HTML.',
       'There was an error while hydrating. Because the error happened outside ' +
         'of a Suspense boundary, the entire root will switch to client rendering.',
@@ -3527,7 +3531,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ],
       {withoutStack: 1},
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Text content does not match server-rendered HTML.',
       'There was an error while hydrating. Because the error happened outside ' +
         'of a Suspense boundary, the entire root will switch to client rendering.',

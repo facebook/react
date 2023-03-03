@@ -18,6 +18,8 @@ let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let act;
+let waitForAll;
+let waitFor;
 
 function dispatchEvent(element, type) {
   const event = document.createEvent('Event');
@@ -79,6 +81,11 @@ describe('DOMPluginEventSystem', () => {
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
           act = require('jest-react').act;
+
+          const InternalTestUtils = require('internal-test-utils');
+          waitForAll = InternalTestUtils.waitForAll;
+          waitFor = InternalTestUtils.waitFor;
+
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -1273,6 +1280,10 @@ describe('DOMPluginEventSystem', () => {
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
             act = require('jest-react').act;
+
+            const InternalTestUtils = require('internal-test-utils');
+            waitForAll = InternalTestUtils.waitForAll;
+            waitFor = InternalTestUtils.waitFor;
           });
 
           // @gate www
@@ -1955,7 +1966,7 @@ describe('DOMPluginEventSystem', () => {
             const root = ReactDOMClient.createRoot(container);
             root.render(<Test counter={0} />);
 
-            expect(Scheduler).toFlushAndYield(['Test']);
+            await waitForAll(['Test']);
 
             // Click the button
             dispatchClickEvent(ref.current);
@@ -1969,7 +1980,7 @@ describe('DOMPluginEventSystem', () => {
               root.render(<Test counter={1} />);
             });
             // Yield before committing
-            expect(Scheduler).toFlushAndYieldThrough(['Test']);
+            await waitFor(['Test']);
 
             // Click the button again
             dispatchClickEvent(ref.current);
@@ -1979,7 +1990,7 @@ describe('DOMPluginEventSystem', () => {
             log.length = 0;
 
             // Commit
-            expect(Scheduler).toFlushAndYield([]);
+            await waitForAll([]);
             dispatchClickEvent(ref.current);
             expect(log).toEqual([{counter: 1}]);
           });

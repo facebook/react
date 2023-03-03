@@ -15,6 +15,7 @@ describe('ReactDOMNestedEvents', () => {
   let Scheduler;
   let act;
   let useState;
+  let assertLog;
 
   beforeEach(() => {
     jest.resetModules();
@@ -23,6 +24,9 @@ describe('ReactDOMNestedEvents', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     useState = React.useState;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   test('nested event dispatches should not cause updates to flush', async () => {
@@ -67,9 +71,7 @@ describe('ReactDOMNestedEvents', () => {
     await act(async () => {
       buttonRef.current.click();
     });
-    expect(Scheduler).toHaveYielded([
-      'Value right after focus call: Clicked: false, Focused: false',
-    ]);
+    assertLog(['Value right after focus call: Clicked: false, Focused: false']);
     expect(buttonRef.current.innerHTML).toEqual('Clicked: true, Focused: true');
   });
 });

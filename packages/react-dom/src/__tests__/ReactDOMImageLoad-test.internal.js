@@ -24,6 +24,10 @@ let images = [];
 let onLoadSpy = null;
 let actualLoadSpy = null;
 
+let waitForAll;
+let waitFor;
+let assertLog;
+
 function PhaseMarkers({children}) {
   Scheduler.unstable_yieldValue('render start');
   React.useLayoutEffect(() => {
@@ -93,6 +97,11 @@ describe('ReactDOMImageLoad', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     // Suspense = React.Suspense;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    assertLog = InternalTestUtils.assertLog;
 
     onLoadSpy = jest.fn(reactEvent => {
       const src = reactEvent.target.getAttribute('src');
@@ -206,26 +215,17 @@ describe('ReactDOMImageLoad', () => {
       ),
     );
 
-    expect(Scheduler).toFlushAndYieldThrough([
-      'render start',
-      'Img default',
-      'Yield',
-    ]);
+    await waitFor(['render start', 'Img default', 'Yield']);
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'actualLoadSpy [default]',
       // no onLoadSpy since we have not completed render
     ]);
-    expect(Scheduler).toFlushAndYield([
-      'a',
-      'load triggered',
-      'last layout',
-      'last passive',
-    ]);
+    await waitForAll(['a', 'load triggered', 'last layout', 'last passive']);
     expect(img.__needsDispatch).toBe(true);
     loadImage(img);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'actualLoadSpy [default]', // the browser reloading of the image causes this to yield again
       'onLoadSpy [default]',
     ]);
@@ -244,7 +244,7 @@ describe('ReactDOMImageLoad', () => {
       ),
     );
 
-    expect(Scheduler).toFlushAndYieldThrough([
+    await waitFor([
       'render start',
       'Img default',
       'load triggered',
@@ -253,11 +253,8 @@ describe('ReactDOMImageLoad', () => {
     Scheduler.unstable_requestPaint();
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded([
-      'actualLoadSpy [default]',
-      'onLoadSpy [default]',
-    ]);
-    expect(Scheduler).toFlushAndYield(['last passive']);
+    assertLog(['actualLoadSpy [default]', 'onLoadSpy [default]']);
+    await waitForAll(['last passive']);
     expect(img.__needsDispatch).toBe(false);
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
@@ -286,16 +283,12 @@ describe('ReactDOMImageLoad', () => {
 
     React.startTransition(() => root.render(<Base />));
 
-    expect(Scheduler).toFlushAndYieldThrough([
-      'render start',
-      'Img a',
-      'Yield',
-    ]);
+    await waitFor(['render start', 'Img a', 'Yield']);
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [a]']);
+    assertLog(['actualLoadSpy [a]']);
 
-    expect(Scheduler).toFlushAndYieldThrough([
+    await waitFor([
       'load triggered',
       'last layout',
       // the update in layout causes a passive effects flush before a sync render
@@ -309,7 +302,7 @@ describe('ReactDOMImageLoad', () => {
     ]);
     expect(images.length).toBe(1);
     loadImage(img);
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [b]', 'onLoadSpy [b]']);
+    assertLog(['actualLoadSpy [b]', 'onLoadSpy [b]']);
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -323,7 +316,7 @@ describe('ReactDOMImageLoad', () => {
       </PhaseMarkers>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'render start',
       'Img default',
       'load triggered',
@@ -332,10 +325,7 @@ describe('ReactDOMImageLoad', () => {
     ]);
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded([
-      'actualLoadSpy [default]',
-      'onLoadSpy [default]',
-    ]);
+    assertLog(['actualLoadSpy [default]', 'onLoadSpy [default]']);
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -365,26 +355,17 @@ describe('ReactDOMImageLoad', () => {
       ),
     );
 
-    expect(Scheduler).toFlushAndYieldThrough([
-      'render start',
-      'Img default',
-      'Yield',
-    ]);
+    await waitFor(['render start', 'Img default', 'Yield']);
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [default]']);
-    expect(Scheduler).toFlushAndYield([
-      'a',
-      'load triggered',
-      'last layout',
-      'last passive',
-    ]);
+    assertLog(['actualLoadSpy [default]']);
+    await waitForAll(['a', 'load triggered', 'last layout', 'last passive']);
     expect(img.__needsDispatch).toBe(true);
     loadImage(img);
     // we expect the browser to load the image again but since we are no longer rendering
     // the img there will be no onLoad called
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [default]']);
-    expect(Scheduler).toFlushWithoutYielding();
+    assertLog(['actualLoadSpy [default]']);
+    await waitForAll([]);
     expect(onLoadSpy).not.toHaveBeenCalled();
   });
 
@@ -426,7 +407,7 @@ describe('ReactDOMImageLoad', () => {
       ),
     );
 
-    expect(Scheduler).toFlushAndYieldThrough([
+    await waitFor([
       // initial render
       'render start',
       'Img default',
@@ -434,8 +415,8 @@ describe('ReactDOMImageLoad', () => {
     ]);
     const img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [default]']);
-    expect(Scheduler).toFlushAndYield([
+    assertLog(['actualLoadSpy [default]']);
+    await waitForAll([
       'a',
       'load triggered',
       // img is present at first
@@ -450,8 +431,8 @@ describe('ReactDOMImageLoad', () => {
     loadImage(img);
     // we expect the browser to load the image again but since we are no longer rendering
     // the img there will be no onLoad called
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [default]']);
-    expect(Scheduler).toFlushWithoutYielding();
+    assertLog(['actualLoadSpy [default]']);
+    await waitForAll([]);
     expect(onLoadSpy).not.toHaveBeenCalled();
   });
 
@@ -548,22 +529,18 @@ describe('ReactDOMImageLoad', () => {
 
     root.render(<Base />);
 
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     React.startTransition(() => externalSetSrc('a'));
 
-    expect(Scheduler).toFlushAndYieldThrough([
-      'YieldingWithImage',
-      'Img a',
-      'Yield',
-    ]);
+    await waitFor(['YieldingWithImage', 'Img a', 'Yield']);
     let img = last(images);
     loadImage(img);
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [a]']);
+    assertLog(['actualLoadSpy [a]']);
 
     ReactDOM.flushSync(() => externalSetSrcAlt('b'));
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'YieldingWithImage',
       'Img b',
       'Yield',
@@ -576,18 +553,12 @@ describe('ReactDOMImageLoad', () => {
     expect(img.__needsDispatch).toBe(true);
     loadImage(img);
 
-    expect(Scheduler).toHaveYielded(['actualLoadSpy [b]', 'onLoadSpy [b]']);
+    assertLog(['actualLoadSpy [b]', 'onLoadSpy [b]']);
     // why is there another update here?
-    expect(Scheduler).toFlushAndYield([
-      'YieldingWithImage',
-      'Img b',
-      'Yield',
-      'b',
-      'Committed',
-    ]);
+    await waitForAll(['YieldingWithImage', 'Img b', 'Yield', 'b', 'Committed']);
   });
 
-  it('preserves the src property / attribute when triggering a potential new load event', () => {
+  it('preserves the src property / attribute when triggering a potential new load event', async () => {
     // this test covers a regression identified in https://github.com/mui/material-ui/pull/31263
     // where the resetting of the src property caused the property to change from relative to fully qualified
 
@@ -612,17 +583,13 @@ describe('ReactDOMImageLoad', () => {
     );
 
     // render to yield to capture state of img src attribute and property before commit
-    expect(Scheduler).toFlushAndYieldThrough([
-      'render start',
-      'Img default',
-      'Yield',
-    ]);
+    await waitFor(['render start', 'Img default', 'Yield']);
     const img = last(images);
     const renderSrcProperty = img.src;
     const renderSrcAttr = img.getAttribute('src');
 
     // finish render and commit causing the src property to be rewritten
-    expect(Scheduler).toFlushAndYield(['a', 'last layout', 'last passive']);
+    await waitForAll(['a', 'last layout', 'last passive']);
     const commitSrcProperty = img.src;
     const commitSrcAttr = img.getAttribute('src');
 

@@ -16,6 +16,8 @@ let ReactDOMServer = require('react-dom/server');
 let Scheduler = require('scheduler');
 let act;
 let useEffect;
+let assertLog;
+let waitFor;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -30,6 +32,10 @@ describe('ReactDOMRoot', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     useEffect = React.useEffect;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitFor = InternalTestUtils.waitFor;
   });
 
   it('renders children', () => {
@@ -255,7 +261,7 @@ describe('ReactDOMRoot', () => {
       Scheduler.unstable_yieldValue('callback');
     });
     expect(container.textContent).toEqual('Hi');
-    expect(Scheduler).toHaveYielded(['callback']);
+    assertLog(['callback']);
   });
 
   it('warns when unmounting with legacy API (no previous content)', () => {
@@ -401,10 +407,10 @@ describe('ReactDOMRoot', () => {
     await act(async () => {
       root.render(<Foo value="b" />);
 
-      expect(Scheduler).toHaveYielded(['a']);
+      assertLog(['a']);
       expect(container.textContent).toEqual('a');
 
-      expect(Scheduler).toFlushAndYieldThrough(['b']);
+      await waitFor(['b']);
       if (gate(flags => flags.allowConcurrentByDefault)) {
         expect(container.textContent).toEqual('a');
       } else {
