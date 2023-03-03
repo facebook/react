@@ -875,7 +875,11 @@ describe('ReactFlightDOMBrowser', () => {
       async callServer(ref, args) {
         const fn = requireServerRef(ref);
         return ReactServerDOMReader.createFromReadableStream(
-          ReactServerDOMWriter.renderToReadableStream(fn.apply(null, args)),
+          ReactServerDOMWriter.renderToReadableStream(
+            fn.apply(null, args),
+            null,
+            {onError: error => 'test-error-digest'},
+          ),
         );
       },
     });
@@ -890,9 +894,24 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
 
-    const expectedError = new Error('Error for test');
-    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
-    await expect(actionProxy('test')).rejects.toThrow(expectedError);
-    expect(console.error.mock.calls).toEqual([[expectedError]]);
+    if (__DEV__) {
+      await expect(actionProxy('test')).rejects.toThrow('Error for test');
+    } else {
+      let thrownError;
+
+      try {
+        await actionProxy('test');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toEqual(
+        new Error(
+          'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
+        ),
+      );
+
+      expect(thrownError.digest).toBe('test-error-digest');
+    }
   });
 });
