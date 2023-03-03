@@ -15,6 +15,8 @@ let ReactDOMClient;
 let ReactFeatureFlags;
 let Scheduler;
 let act;
+let waitForAll;
+let assertLog;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -60,6 +62,11 @@ describe('ChangeEventPlugin', () => {
     ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
+
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -497,7 +504,7 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('concurrent mode', () => {
-    it('text input', () => {
+    it('text input', async () => {
       const root = ReactDOMClient.createRoot(container);
       let input;
 
@@ -522,10 +529,10 @@ describe('ChangeEventPlugin', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledInput />);
       // Should not have flushed yet.
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      expect(Scheduler).toFlushAndYield(['render: initial']);
+      await waitForAll(['render: initial']);
       expect(input.value).toBe('initial');
 
       // Trigger a change event.
@@ -534,12 +541,12 @@ describe('ChangeEventPlugin', () => {
         new Event('input', {bubbles: true, cancelable: true}),
       );
       // Change should synchronously flush
-      expect(Scheduler).toHaveYielded(['render: changed']);
+      assertLog(['render: changed']);
       // Value should be the controlled value, not the original one
       expect(input.value).toBe('changed [!]');
     });
 
-    it('checkbox input', () => {
+    it('checkbox input', async () => {
       const root = ReactDOMClient.createRoot(container);
       let input;
 
@@ -567,10 +574,10 @@ describe('ChangeEventPlugin', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledInput reverse={false} />);
       // Should not have flushed yet.
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      expect(Scheduler).toFlushAndYield(['render: false']);
+      await waitForAll(['render: false']);
       expect(input.checked).toBe(false);
 
       // Trigger a change event.
@@ -578,23 +585,23 @@ describe('ChangeEventPlugin', () => {
         new MouseEvent('click', {bubbles: true, cancelable: true}),
       );
       // Change should synchronously flush
-      expect(Scheduler).toHaveYielded(['render: true']);
+      assertLog(['render: true']);
       expect(input.checked).toBe(true);
 
       // Now let's make sure we're using the controlled value.
       root.render(<ControlledInput reverse={true} />);
-      expect(Scheduler).toFlushAndYield(['render: true']);
+      await waitForAll(['render: true']);
 
       // Trigger another change event.
       input.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
       );
       // Change should synchronously flush
-      expect(Scheduler).toHaveYielded(['render: true']);
+      assertLog(['render: true']);
       expect(input.checked).toBe(false);
     });
 
-    it('textarea', () => {
+    it('textarea', async () => {
       const root = ReactDOMClient.createRoot(container);
       let textarea;
 
@@ -619,10 +626,10 @@ describe('ChangeEventPlugin', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledTextarea />);
       // Should not have flushed yet.
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(textarea).toBe(undefined);
       // Flush callbacks.
-      expect(Scheduler).toFlushAndYield(['render: initial']);
+      await waitForAll(['render: initial']);
       expect(textarea.value).toBe('initial');
 
       // Trigger a change event.
@@ -631,12 +638,12 @@ describe('ChangeEventPlugin', () => {
         new Event('input', {bubbles: true, cancelable: true}),
       );
       // Change should synchronously flush
-      expect(Scheduler).toHaveYielded(['render: changed']);
+      assertLog(['render: changed']);
       // Value should be the controlled value, not the original one
       expect(textarea.value).toBe('changed [!]');
     });
 
-    it('parent of input', () => {
+    it('parent of input', async () => {
       const root = ReactDOMClient.createRoot(container);
       let input;
 
@@ -665,10 +672,10 @@ describe('ChangeEventPlugin', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledInput />);
       // Should not have flushed yet.
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      expect(Scheduler).toFlushAndYield(['render: initial']);
+      await waitForAll(['render: initial']);
       expect(input.value).toBe('initial');
 
       // Trigger a change event.
@@ -677,7 +684,7 @@ describe('ChangeEventPlugin', () => {
         new Event('input', {bubbles: true, cancelable: true}),
       );
       // Change should synchronously flush
-      expect(Scheduler).toHaveYielded(['render: changed']);
+      assertLog(['render: changed']);
       // Value should be the controlled value, not the original one
       expect(input.value).toBe('changed [!]');
     });
@@ -711,10 +718,10 @@ describe('ChangeEventPlugin', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledInput />);
       // Should not have flushed yet.
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      expect(Scheduler).toFlushAndYield(['render: initial']);
+      await waitForAll(['render: initial']);
       expect(input.value).toBe('initial');
 
       // Trigger a click event
@@ -724,7 +731,7 @@ describe('ChangeEventPlugin', () => {
 
       // Flush microtask queue.
       await null;
-      expect(Scheduler).toHaveYielded(['render: ']);
+      assertLog(['render: ']);
       expect(input.value).toBe('');
     });
 

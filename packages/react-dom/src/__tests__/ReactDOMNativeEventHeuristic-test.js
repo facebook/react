@@ -15,6 +15,8 @@ let ReactDOM;
 let ReactDOMClient;
 let Scheduler;
 let act;
+let assertLog;
+let waitFor;
 
 describe('ReactDOMNativeEventHeuristic-test', () => {
   let container;
@@ -27,6 +29,10 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitFor = InternalTestUtils.waitFor;
 
     document.body.appendChild(container);
   });
@@ -301,10 +307,10 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       dispatchAndSetCurrentEvent(target.current, mouseEnterEvent);
 
       // Since mouse end is not discrete, should not have updated yet
-      expect(Scheduler).toHaveYielded(['not hovered']);
+      assertLog(['not hovered']);
       expect(container.textContent).toEqual('not hovered');
 
-      expect(Scheduler).toFlushAndYieldThrough(['hovered']);
+      await waitFor(['hovered']);
       expect(container.textContent).toEqual('hovered');
     });
     expect(container.textContent).toEqual('hovered');
@@ -381,7 +387,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     pressEvent.initEvent('click', true, true);
     dispatchAndSetCurrentEvent(target, pressEvent);
 
-    expect(Scheduler).toHaveYielded(['Count: 0 [after batchedUpdates]']);
+    assertLog(['Count: 0 [after batchedUpdates]']);
     expect(container.textContent).toEqual('Count: 0');
 
     // Intentionally not using `act` so we can observe in between the click

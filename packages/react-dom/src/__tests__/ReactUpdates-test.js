@@ -15,6 +15,9 @@ let ReactDOMClient;
 let ReactTestUtils;
 let act;
 let Scheduler;
+let waitForAll;
+let waitFor;
+let assertLog;
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
@@ -25,6 +28,11 @@ describe('ReactUpdates', () => {
     ReactTestUtils = require('react-dom/test-utils');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    assertLog = InternalTestUtils.assertLog;
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -1319,7 +1327,7 @@ describe('ReactUpdates', () => {
   });
 
   // @gate www
-  it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
+  it('delays sync updates inside hidden subtrees in Concurrent Mode', async () => {
     const container = document.createElement('div');
 
     function Baz() {
@@ -1352,14 +1360,14 @@ describe('ReactUpdates', () => {
 
     const root = ReactDOMClient.createRoot(container);
     let hiddenDiv;
-    act(() => {
+    await act(async () => {
       root.render(<Foo />);
-      expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
+      await waitFor(['Foo', 'Baz', 'Foo#effect']);
       hiddenDiv = container.firstChild.firstChild;
       expect(hiddenDiv.hidden).toBe(true);
       expect(hiddenDiv.innerHTML).toBe('');
       // Run offscreen update
-      expect(Scheduler).toFlushAndYield(['Bar']);
+      await waitForAll(['Bar']);
       expect(hiddenDiv.hidden).toBe(true);
       expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
     });
@@ -1371,7 +1379,7 @@ describe('ReactUpdates', () => {
     expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
 
     // Run offscreen update
-    expect(Scheduler).toFlushAndYield(['Bar']);
+    await waitForAll(['Bar']);
     expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
   });
 
@@ -1699,7 +1707,7 @@ describe('ReactUpdates', () => {
         ReactDOM.render(<Terminating />, container);
       });
 
-      expect(Scheduler).toHaveYielded(['Done']);
+      assertLog(['Done']);
       expect(container.textContent).toBe('1000');
     });
   }

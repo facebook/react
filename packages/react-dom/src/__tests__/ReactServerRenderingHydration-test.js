@@ -16,6 +16,7 @@ let ReactDOMClient;
 let ReactDOMServer;
 let ReactDOMServerBrowser;
 let Scheduler;
+let waitForAll;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -28,6 +29,9 @@ describe('ReactDOMServerHydration', () => {
     ReactDOMServer = require('react-dom/server');
     ReactDOMServerBrowser = require('react-dom/server.browser');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   it('should have the correct mounting behavior (new hydrate API)', () => {
@@ -604,7 +608,7 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.obj).toBe(undefined);
   });
 
-  it('refers users to apis that support Suspense when something suspends', () => {
+  it('refers users to apis that support Suspense when something suspends', async () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
       throw theInfinitePromise;
@@ -631,7 +635,7 @@ describe('ReactDOMServerHydration', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(
@@ -649,7 +653,7 @@ describe('ReactDOMServerHydration', () => {
     }
   });
 
-  it('refers users to apis that support Suspense when something suspends (browser)', () => {
+  it('refers users to apis that support Suspense when something suspends (browser)', async () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
       throw theInfinitePromise;
@@ -676,7 +680,7 @@ describe('ReactDOMServerHydration', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(
