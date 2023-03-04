@@ -16,6 +16,8 @@ let getCacheForType;
 let caches;
 let seededCache;
 let ErrorBoundary;
+let waitForAll;
+let assertLog;
 
 // TODO: These tests don't pass in persistent mode yet. Need to implement.
 
@@ -30,6 +32,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
     Suspense = React.Suspense;
 
     getCacheForType = React.unstable_getCacheForType;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     caches = [];
     seededCache = null;
@@ -256,7 +262,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Suspend:Async',
@@ -281,7 +287,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside:Before render',
         'AsyncText:Async render',
         'ClassText:Inside:After render',
@@ -305,7 +311,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
@@ -377,7 +383,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Suspend:Async',
@@ -407,7 +413,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async render',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
@@ -426,7 +432,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
@@ -474,7 +480,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       act(() => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Text:Inside:After render',
@@ -504,7 +510,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Suspend:Async',
@@ -526,7 +532,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Noop since sync root has already committed
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Inside:Before" hidden={true} />
@@ -540,7 +546,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async render',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
@@ -559,7 +565,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
@@ -604,7 +610,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Text:Inside:After render',
@@ -634,7 +640,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Inside:Before render',
         'Suspend:Async',
@@ -653,12 +659,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside:Before destroy layout',
         'Text:Inside:After destroy layout',
         'Text:Fallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
+      await waitForAll(['Text:Fallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Inside:Before" hidden={true} />
@@ -672,7 +678,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside:Before render',
         'AsyncText:Async render',
         'Text:Inside:After render',
@@ -695,7 +701,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
@@ -763,7 +769,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'ClassText:Inside:Before render',
         'ClassText:Inside:After render',
@@ -790,7 +796,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'ClassText:Inside:Before render',
         'Suspend:Async',
@@ -809,7 +815,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'ClassText:Inside:Before componentWillUnmount',
         'ClassText:Inside:After componentWillUnmount',
         'ClassText:Fallback componentDidMount',
@@ -828,7 +834,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'ClassText:Inside:Before render',
         'AsyncText:Async render',
         'ClassText:Inside:After render',
@@ -849,7 +855,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'ClassText:Inside:Before componentWillUnmount',
         'AsyncText:Async destroy layout',
@@ -890,7 +896,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Outer render',
         'Text:Inner render',
@@ -915,7 +921,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'Text:Outer render',
@@ -931,12 +937,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer destroy layout',
         'Text:Inner destroy layout',
         'Text:Fallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
+      await waitForAll(['Text:Fallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span hidden={true} prop="Outer">
@@ -950,7 +956,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async render',
         'Text:Outer render',
         'Text:Inner render',
@@ -973,7 +979,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'AsyncText:Async destroy layout',
         'Text:Outer destroy layout',
@@ -1017,7 +1023,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Text:Outer render',
         'Text:MemoizedInner render',
@@ -1042,7 +1048,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'Text:Outer render',
@@ -1059,12 +1065,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Timing out should commit the fallback and destroy inner layout effects.
       // Even though the innermost layout effects are beneath a hidden HostComponent.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer destroy layout',
         'Text:MemoizedInner destroy layout',
         'Text:Fallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
+      await waitForAll(['Text:Fallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span hidden={true} prop="Outer">
@@ -1078,7 +1084,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async render',
         'Text:Outer render',
         'Text:Fallback destroy layout',
@@ -1100,7 +1106,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout',
         'AsyncText:Async destroy layout',
         'Text:Outer destroy layout',
@@ -1131,7 +1137,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Text:Inner render',
         'Text:Outer create layout',
@@ -1153,7 +1159,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Text:Inner render',
         'Suspend:InnerAsync_1',
@@ -1161,7 +1167,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner destroy layout',
         'Text:InnerFallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:InnerFallback create passive']);
+      await waitForAll(['Text:InnerFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" />
@@ -1181,7 +1187,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_1',
         'Text:Inner render',
@@ -1192,7 +1198,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:InnerFallback destroy layout',
         'Text:OuterFallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:OuterFallback create passive']);
+      await waitForAll(['Text:OuterFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1206,7 +1212,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('InnerAsync_1');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_1',
         'Text:Inner render',
@@ -1231,7 +1237,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_1',
         'Text:Inner render',
@@ -1252,7 +1258,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('OuterAsync_1');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'AsyncText:OuterAsync_1 render',
         'Text:Inner render',
@@ -1278,7 +1284,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('InnerAsync_2');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inner render',
         'AsyncText:InnerAsync_2 render',
         'Text:InnerFallback destroy layout',
@@ -1306,7 +1312,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_2',
         'Text:Inner render',
@@ -1332,7 +1338,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('OuterAsync_2');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:OuterFallback create passive',
         'Text:Outer render',
         'AsyncText:OuterAsync_2 render',
@@ -1374,7 +1380,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Text:Inner render',
         'Text:Outer create layout',
@@ -1396,7 +1402,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Text:Inner render',
         'Suspend:InnerAsync_1',
@@ -1404,7 +1410,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner destroy layout',
         'Text:InnerFallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:InnerFallback create passive']);
+      await waitForAll(['Text:InnerFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" />
@@ -1424,7 +1430,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_1',
         'Text:Inner render',
@@ -1435,7 +1441,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:InnerFallback destroy layout',
         'Text:OuterFallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield(['Text:OuterFallback create passive']);
+      await waitForAll(['Text:OuterFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1450,7 +1456,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('OuterAsync_1');
         await resolveText('InnerAsync_1');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Outer render',
         'AsyncText:OuterAsync_1 render',
         'Text:Inner render',
@@ -1502,7 +1508,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Text:Outside render',
         'Text:Inside create layout',
@@ -1523,7 +1529,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           <App outerChildren={<AsyncText text="OutsideAsync" ms={1000} />} />,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Suspend:OutsideAsync',
         'Text:Fallback:Inside render',
@@ -1539,12 +1545,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Timing out should commit the fallback and destroy inner layout effects.
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside destroy layout',
         'Text:Fallback:Inside create layout',
         'Text:Fallback:Outside create layout',
       ]);
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Text:Fallback:Inside create passive',
         'Text:Fallback:Outside create passive',
       ]);
@@ -1566,7 +1572,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           />,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Suspend:OutsideAsync',
         'Text:Fallback:Inside render',
@@ -1586,13 +1592,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Timing out should commit the inner fallback and destroy outer fallback layout effects.
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback:Inside destroy layout',
         'Text:Fallback:Fallback create layout',
       ]);
-      expect(Scheduler).toFlushAndYield([
-        'Text:Fallback:Fallback create passive',
-      ]);
+      await waitForAll(['Text:Fallback:Fallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Inside" hidden={true} />
@@ -1608,7 +1612,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('FallbackAsync');
         await resolveText('OutsideAsync');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'AsyncText:OutsideAsync render',
         'Text:Fallback:Fallback destroy layout',
@@ -1656,7 +1660,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Text:Outside render',
         'Text:Inside create layout',
@@ -1681,7 +1685,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Suspend:OutsideAsync',
         'Text:Fallback:Inside render',
@@ -1693,7 +1697,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Fallback:Fallback create layout',
         'Text:Fallback:Outside create layout',
       ]);
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Text:Fallback:Fallback create passive',
         'Text:Fallback:Outside create passive',
       ]);
@@ -1710,7 +1714,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('FallbackAsync');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback:Inside render',
         'AsyncText:FallbackAsync render',
         'Text:Fallback:Fallback destroy layout',
@@ -1734,7 +1738,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('OutsideAsync');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'AsyncText:OutsideAsync render',
         'Text:Fallback:Inside destroy layout',
@@ -1780,7 +1784,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App shouldSuspend={false} />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Text:Outside render',
         'Text:Inside create layout',
@@ -1800,7 +1804,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       act(() => {
         ReactNoop.render(<App shouldSuspend={true} />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Suspend:Suspend',
         'Text:Fallback render',
         'Text:Outside render',
@@ -1814,11 +1818,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Timing out should commit the inner fallback and destroy outer fallback layout effects.
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
-        'Text:Inside destroy layout',
-        'Text:Fallback create layout',
-      ]);
-      expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
+      assertLog(['Text:Inside destroy layout', 'Text:Fallback create layout']);
+      await waitForAll(['Text:Fallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Inside" hidden={true} />
@@ -1831,7 +1832,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Suspend');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Inside render',
         'Text:Fallback destroy layout',
         'Text:Inside create layout',
@@ -1895,7 +1896,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'ThrowsInDidMount render',
@@ -1926,7 +1927,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'Suspend:Async',
@@ -1953,7 +1954,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await act(async () => {
           await resolveText('Async');
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'AsyncText:Async render',
           'ThrowsInDidMount render',
           'Text:Inside render',
@@ -2035,7 +2036,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'ThrowsInWillUnmount render',
@@ -2066,7 +2067,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'Suspend:Async',
@@ -2151,7 +2152,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'ThrowsInLayoutEffect render',
@@ -2182,7 +2183,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'Suspend:Async',
@@ -2209,7 +2210,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await act(async () => {
           await resolveText('Async');
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'AsyncText:Async render',
           'ThrowsInLayoutEffect render',
           'Text:Inside render',
@@ -2290,7 +2291,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'ThrowsInLayoutEffectDestroy render',
@@ -2321,7 +2322,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'Suspend:Async',
@@ -2394,7 +2395,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'ClassText:Class render',
         'Text:Function create layout',
@@ -2417,7 +2418,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           </App>,
         );
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'Suspend:Async_1',
         'Suspend:Async_2',
@@ -2434,7 +2435,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function destroy layout',
         'ClassText:Class componentWillUnmount',
         'ClassText:Fallback componentDidMount',
@@ -2451,7 +2452,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async_1');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'AsyncText:Async_1 render',
         'Suspend:Async_2',
@@ -2469,7 +2470,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async_2');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'AsyncText:Async_1 render',
         'AsyncText:Async_2 render',
@@ -2494,7 +2495,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function destroy layout',
         'AsyncText:Async_1 destroy layout',
         'AsyncText:Async_2 destroy layout',
@@ -2552,7 +2553,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'Suspender "null" render',
         'ClassText:Class render',
@@ -2573,7 +2574,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       act(() => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'Suspender "A" render',
         'Suspend:A',
@@ -2591,7 +2592,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function destroy layout',
         'ClassText:Class componentWillUnmount',
         'ClassText:Fallback componentDidMount',
@@ -2610,7 +2611,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('A');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'Suspender "B" render',
         'Suspend:B',
@@ -2629,7 +2630,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('B');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function render',
         'Suspender "B" render',
         'ClassText:Class render',
@@ -2648,7 +2649,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Function destroy layout',
         'ClassText:Class componentWillUnmount',
         'Text:Function destroy passive',
@@ -2740,7 +2741,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       act(() => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'RefCheckerOuter render',
         'ClassComponent:refObject render',
@@ -2761,7 +2762,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'RefCheckerOuter render',
@@ -2779,7 +2780,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async render',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
@@ -2791,7 +2792,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async destroy layout',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
         'RefCheckerInner:refObject destroy layout ref? false',
@@ -2818,7 +2819,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'RefCheckerOuter render',
         'RefCheckerInner:refObject render',
@@ -2842,7 +2843,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'RefCheckerOuter render',
@@ -2867,7 +2868,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
@@ -2893,7 +2894,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async destroy layout',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
         'RefCheckerInner:refObject destroy layout ref? false',
@@ -2929,7 +2930,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'RefCheckerOuter render',
         'ClassComponent:refObject render',
@@ -2950,7 +2951,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'RefCheckerOuter render',
@@ -2971,7 +2972,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
@@ -2993,7 +2994,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async destroy layout',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
         'RefCheckerInner:refObject destroy layout ref? false',
@@ -3033,7 +3034,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'RefCheckerOuter render',
         'FunctionComponent render',
@@ -3054,7 +3055,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'RefCheckerOuter render',
@@ -3075,7 +3076,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
@@ -3097,7 +3098,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'AsyncText:Async destroy layout',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
         'RefCheckerInner:refObject destroy layout ref? false',
@@ -3152,7 +3153,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'RefChecker render',
         'RefChecker create layout ref? true',
@@ -3167,7 +3168,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       });
       await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App render',
         'Suspend:Async',
         'RefChecker render',
@@ -3181,7 +3182,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('Async');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefChecker render',
@@ -3196,7 +3197,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(null);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App destroy layout ref? true',
         'AsyncText:Async destroy layout',
         'RefChecker destroy layout ref? true',
@@ -3251,7 +3252,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'ThrowsInRefCallback render',
@@ -3282,7 +3283,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
             </ErrorBoundary>,
           );
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render: try',
           'App render',
           'Suspend:Async',
@@ -3309,7 +3310,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await act(async () => {
           await resolveText('Async');
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'AsyncText:Async render',
           'ThrowsInRefCallback render',
           'Text:Inside render',

@@ -17,6 +17,8 @@ describe('Timeline profiler', () => {
   let ReactDOMClient;
   let Scheduler;
   let utils;
+  let assertLog;
+  let waitFor;
 
   describe('User Timing API', () => {
     let clearedMarks;
@@ -81,6 +83,10 @@ describe('Timeline profiler', () => {
       ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
+
+      const InternalTestUtils = require('internal-test-utils');
+      assertLog = InternalTestUtils.assertLog;
+      waitFor = InternalTestUtils.waitFor;
 
       setPerformanceMock =
         require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
@@ -1372,28 +1378,29 @@ describe('Timeline profiler', () => {
                   <Yield id="B" value={1} />
                 </>,
               );
-              expect(Scheduler).toFlushAndYieldThrough(['A:1']);
-
-              testMarks.push(...createUserTimingData(clearedMarks));
-              clearPendingMarks();
-
-              // Advance the clock some more to make the pending React update seem long.
-              startTime += 20000;
-
-              // Fake a long "click" event in the middle
-              // and schedule a sync update that will also flush the previous work.
-              testMarks.push(createNativeEventEntry('click', 25000));
-              ReactDOM.flushSync(() => {
-                root.render(
-                  <>
-                    <Yield id="A" value={2} />
-                    <Yield id="B" value={2} />
-                  </>,
-                );
-              });
             });
 
-            expect(Scheduler).toHaveYielded(['A:2', 'B:2']);
+            await waitFor(['A:1']);
+
+            testMarks.push(...createUserTimingData(clearedMarks));
+            clearPendingMarks();
+
+            // Advance the clock some more to make the pending React update seem long.
+            startTime += 20000;
+
+            // Fake a long "click" event in the middle
+            // and schedule a sync update that will also flush the previous work.
+            testMarks.push(createNativeEventEntry('click', 25000));
+            ReactDOM.flushSync(() => {
+              root.render(
+                <>
+                  <Yield id="A" value={2} />
+                  <Yield id="B" value={2} />
+                </>,
+              );
+            });
+
+            assertLog(['A:2', 'B:2']);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1424,10 +1431,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1463,10 +1467,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1504,10 +1505,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1567,10 +1565,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1639,7 +1634,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0',
               'Component rendered with value 0',
               'Component rendered with value 1',
@@ -1708,7 +1703,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 1',

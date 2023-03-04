@@ -18,6 +18,8 @@ let ReactFreshRuntime;
 let Scheduler;
 let act;
 let createReactClass;
+let waitFor;
+let assertLog;
 
 describe('ReactFresh', () => {
   let container;
@@ -32,6 +34,11 @@ describe('ReactFresh', () => {
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
       act = require('jest-react').act;
+
+      const InternalTestUtils = require('internal-test-utils');
+      waitFor = InternalTestUtils.waitFor;
+      assertLog = InternalTestUtils.assertLog;
+
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -2441,7 +2448,7 @@ describe('ReactFresh', () => {
 
     const root = ReactDOMClient.createRoot(container);
     root.render(<AppV1 offscreen={true} />);
-    expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
+    await waitFor(['App#layout']);
     const el = container.firstChild;
     expect(el.hidden).toBe(true);
     expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
@@ -2468,7 +2475,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild).toBe(null);
 
     // Process the offscreen updates.
-    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    await waitFor(['Hello#layout']);
     expect(container.firstChild).toBe(el);
     expect(el.firstChild.textContent).toBe('0');
     expect(el.firstChild.style.color).toBe('red');
@@ -2481,7 +2488,7 @@ describe('ReactFresh', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['Hello#layout']);
+    assertLog(['Hello#layout']);
     expect(el.firstChild.textContent).toBe('1');
     expect(el.firstChild.style.color).toBe('red');
 
@@ -2507,7 +2514,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild.style.color).toBe('red');
 
     // Process the offscreen updates.
-    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    await waitFor(['Hello#layout']);
     expect(container.firstChild).toBe(el);
     expect(el.firstChild.textContent).toBe('1');
     expect(el.firstChild.style.color).toBe('orange');
