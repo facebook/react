@@ -13,6 +13,7 @@ const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const Scheduler = require('scheduler');
 const act = require('jest-react').act;
+const {assertLog, waitForAll} = require('internal-test-utils');
 
 // TODO: These tests are no longer specific to the noop renderer
 // implementation. They test the internal implementation we use in the React
@@ -34,7 +35,7 @@ describe('internal act()', () => {
         />,
       );
     });
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(calledLog).toEqual([0]);
   });
 
@@ -56,8 +57,8 @@ describe('internal act()', () => {
     await act(async () => {
       ReactNoop.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['stage 1', 'stage 2']);
-    expect(Scheduler).toFlushWithoutYielding();
+    assertLog(['stage 1', 'stage 2']);
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('1');
   });
 });

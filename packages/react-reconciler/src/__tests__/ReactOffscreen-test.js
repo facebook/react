@@ -10,6 +10,9 @@ let useEffect;
 let useMemo;
 let useRef;
 let startTransition;
+let waitForPaint;
+let waitFor;
+let assertLog;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -27,6 +30,11 @@ describe('ReactOffscreen', () => {
     useMemo = React.useMemo;
     useRef = React.useRef;
     startTransition = React.startTransition;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
+    waitFor = InternalTestUtils.waitFor;
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function Text(props) {
@@ -68,10 +76,10 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(<App mode="unstable-defer-without-hiding" />);
-      expect(Scheduler).toFlushUntilNextPaint(['Normal']);
+      await waitForPaint(['Normal']);
       expect(root).toMatchRenderedOutput(<span prop="Normal" />);
     });
-    expect(Scheduler).toHaveYielded(['Deferred']);
+    assertLog(['Deferred']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Normal" />
@@ -83,7 +91,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App mode="visible" />);
     });
-    expect(Scheduler).toHaveYielded(['Normal', 'Deferred']);
+    assertLog(['Normal', 'Deferred']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Normal" />
@@ -93,7 +101,7 @@ describe('ReactOffscreen', () => {
 
     await act(async () => {
       root.render(<App mode="unstable-defer-without-hiding" />);
-      expect(Scheduler).toFlushUntilNextPaint(['Normal']);
+      await waitForPaint(['Normal']);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="Normal" />
@@ -101,7 +109,7 @@ describe('ReactOffscreen', () => {
         </>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Deferred']);
+    assertLog(['Deferred']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Normal" />
@@ -133,7 +141,7 @@ describe('ReactOffscreen', () => {
       ReactNoop.flushSync();
 
       // Should not defer the hidden tree
-      expect(Scheduler).toHaveYielded(['A', 'Outside']);
+      assertLog(['A', 'Outside']);
     });
     expect(root).toMatchRenderedOutput(
       <>
@@ -146,7 +154,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       setState('B');
     });
-    expect(Scheduler).toHaveYielded(['B']);
+    assertLog(['B']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="B" />
@@ -175,11 +183,11 @@ describe('ReactOffscreen', () => {
         </>,
       );
       // Should defer the hidden tree.
-      expect(Scheduler).toFlushUntilNextPaint(['Outside']);
+      await waitForPaint(['Outside']);
     });
 
     // The hidden tree was rendered at lower priority.
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
 
     expect(root).toMatchRenderedOutput(
       <>
@@ -192,7 +200,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       setState('B');
     });
-    expect(Scheduler).toHaveYielded(['B']);
+    assertLog(['B']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="B" />
@@ -224,7 +232,7 @@ describe('ReactOffscreen', () => {
       );
     });
     // No layout effect.
-    expect(Scheduler).toHaveYielded(['Child']);
+    assertLog(['Child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is mounted.
@@ -235,7 +243,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
@@ -259,7 +267,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree. The layout effect is unmounted.
@@ -270,7 +278,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+    assertLog(['Unmount layout', 'Child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is re-mounted.
@@ -281,7 +289,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
@@ -316,7 +324,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['child']);
+    assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
     await act(async () => {
@@ -330,7 +338,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['child']);
+    assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
     await act(async () => {
@@ -344,7 +352,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['child']);
+    assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
     await act(async () => {
@@ -372,7 +380,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['child']);
+    assertLog(['child']);
 
     await act(async () => {
       // Outer offscreen is hidden.
@@ -386,7 +394,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded(['child']);
+    assertLog(['child']);
   });
 
   // @gate enableOffscreen
@@ -410,7 +418,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child']);
+    assertLog(['Child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Show the tree. The layout effect is mounted.
@@ -421,7 +429,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree again. The layout effect is un-mounted.
@@ -432,7 +440,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+    assertLog(['Unmount layout', 'Child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
@@ -458,7 +466,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree. The layout effect is unmounted.
@@ -469,7 +477,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+    assertLog(['Unmount layout', 'Child']);
 
     // After the layout effect is unmounted, the child is hidden.
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
@@ -497,7 +505,7 @@ describe('ReactOffscreen', () => {
         </LegacyHidden>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    assertLog(['Child', 'Mount layout']);
 
     await act(async () => {
       root.render(
@@ -506,7 +514,7 @@ describe('ReactOffscreen', () => {
         </LegacyHidden>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child']);
+    assertLog(['Child']);
 
     await act(async () => {
       root.render(
@@ -515,12 +523,12 @@ describe('ReactOffscreen', () => {
         </LegacyHidden>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Child']);
+    assertLog(['Child']);
 
     await act(async () => {
       root.render(null);
     });
-    expect(Scheduler).toHaveYielded(['Unmount layout']);
+    assertLog(['Unmount layout']);
   });
 
   // @gate enableOffscreen
@@ -665,7 +673,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Outer: 0', 'Inner: 0']);
+    assertLog(['Outer: 0', 'Inner: 0']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 0" />
@@ -681,7 +689,7 @@ describe('ReactOffscreen', () => {
       setInner(1);
       // Only the outer updates finishes because the inner update is inside a
       // hidden tree. The outer update is deferred to a later render.
-      expect(Scheduler).toFlushUntilNextPaint(['Outer: 1']);
+      await waitForPaint(['Outer: 1']);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="Outer: 1" />
@@ -706,7 +714,7 @@ describe('ReactOffscreen', () => {
         root.render(<App show={true} />);
       });
 
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Outer: 1',
 
         // There are two pending updates on Inner, but only the first one
@@ -723,7 +731,7 @@ describe('ReactOffscreen', () => {
       );
       expect(areOuterAndInnerConsistent()).toBe(true);
     });
-    expect(Scheduler).toHaveYielded(['Outer: 2', 'Inner: 2']);
+    assertLog(['Outer: 2', 'Inner: 2']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 2" />
@@ -746,7 +754,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<Offscreen hidden={false} />);
     });
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
     expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
@@ -759,7 +767,7 @@ describe('ReactOffscreen', () => {
           </Offscreen>,
         );
       });
-      expect(Scheduler).toFlushAndYieldThrough(['Initial']);
+      await waitFor(['Initial']);
 
       // Before it finishes rendering, the whole tree gets deleted
       ReactNoop.flushSync(() => {
@@ -802,7 +810,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="A" />);
 
     // Schedule an update to a hidden class component. The update will finish
@@ -813,7 +821,7 @@ describe('ReactOffscreen', () => {
         Scheduler.unstable_yieldValue('B update finished');
       });
     });
-    expect(Scheduler).toHaveYielded(['B']);
+    assertLog(['B']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="B" />);
 
     // Now reveal the hidden component. Simultaneously, schedule another
@@ -829,11 +837,7 @@ describe('ReactOffscreen', () => {
         Scheduler.unstable_yieldValue('C update finished');
       });
     });
-    expect(Scheduler).toHaveYielded([
-      'C',
-      'B update finished',
-      'C update finished',
-    ]);
+    assertLog(['C', 'B update finished', 'C update finished']);
     expect(root).toMatchRenderedOutput(<span prop="C" />);
   });
 
@@ -863,7 +867,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['componentDidMount']);
+    assertLog(['componentDidMount']);
 
     // Hide the class component
     await act(async () => {
@@ -873,7 +877,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['componentWillUnmount']);
+    assertLog(['componentWillUnmount']);
 
     // Reappear the class component. componentDidMount should fire, not
     // componentDidUpdate.
@@ -884,7 +888,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
     });
-    expect(Scheduler).toHaveYielded(['componentDidMount']);
+    assertLog(['componentDidMount']);
   });
 
   // @gate enableOffscreen
@@ -911,7 +915,7 @@ describe('ReactOffscreen', () => {
           </Offscreen>,
         );
       });
-      expect(Scheduler).toHaveYielded(['Mount B']);
+      assertLog(['Mount B']);
 
       // Hide the component
       await act(async () => {
@@ -921,7 +925,7 @@ describe('ReactOffscreen', () => {
           </Offscreen>,
         );
       });
-      expect(Scheduler).toHaveYielded(['Unmount B']);
+      assertLog(['Unmount B']);
 
       // Reappear the component and also add some new siblings.
       await act(async () => {
@@ -936,7 +940,7 @@ describe('ReactOffscreen', () => {
       // B's effect should fire in between A and C even though it's been reused
       // from a previous render. In other words, it's the same order as if all
       // three siblings were brand new.
-      expect(Scheduler).toHaveYielded(['Mount A', 'Mount B', 'Mount C']);
+      assertLog(['Mount A', 'Mount B', 'Mount C']);
     },
   );
 
@@ -967,7 +971,7 @@ describe('ReactOffscreen', () => {
           </Offscreen>,
         );
       });
-      expect(Scheduler).toHaveYielded(['Mount B']);
+      assertLog(['Mount B']);
 
       // We're going to schedule an update on a hidden component, so stash a
       // reference to its setState before the ref gets detached
@@ -981,7 +985,7 @@ describe('ReactOffscreen', () => {
           </Offscreen>,
         );
       });
-      expect(Scheduler).toHaveYielded(['Unmount B']);
+      assertLog(['Unmount B']);
 
       // Reappear the component and also add some new siblings.
       await act(async () => {
@@ -999,12 +1003,7 @@ describe('ReactOffscreen', () => {
       // B's effect should fire in between A and C even though it's been reused
       // from a previous render. In other words, it's the same order as if all
       // three siblings were brand new.
-      expect(Scheduler).toHaveYielded([
-        'Mount A',
-        'Mount B',
-        'setState callback B',
-        'Mount C',
-      ]);
+      assertLog(['Mount A', 'Mount B', 'setState callback B', 'Mount C']);
     },
   );
 
@@ -1037,7 +1036,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={false} />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // First mount the outer visible shell
       'Shell',
       'Mount Shell',
@@ -1060,7 +1059,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={true} />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Shell',
       'More',
 
@@ -1100,7 +1099,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={false} />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // First mount the outer visible shell
       'Shell',
       'Mount Shell',
@@ -1123,7 +1122,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Shell', 'More']);
+    assertLog(['Shell', 'More']);
   });
 
   // @gate enableOffscreen
@@ -1155,14 +1154,14 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={true} step={1} />);
     });
-    expect(Scheduler).toHaveYielded([1, 'Commit mount [1]']);
+    assertLog([1, 'Commit mount [1]']);
     expect(root).toMatchRenderedOutput(<span prop={1} />);
 
     // Hide the tree. This will unmount the effect.
     await act(async () => {
       root.render(<App show={false} step={1} />);
     });
-    expect(Scheduler).toHaveYielded(['Commit unmount [1]']);
+    assertLog(['Commit unmount [1]']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
 
     // Update.
@@ -1170,7 +1169,7 @@ describe('ReactOffscreen', () => {
       root.render(<App show={false} step={2} />);
     });
     // The update is prerendered but no effects are fired
-    expect(Scheduler).toHaveYielded([2]);
+    assertLog([2]);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
 
     // Reveal the tree.
@@ -1179,7 +1178,7 @@ describe('ReactOffscreen', () => {
     });
     // The update doesn't render because it was already prerendered, but we do
     // fire the effect.
-    expect(Scheduler).toHaveYielded(['Commit mount [2]']);
+    assertLog(['Commit mount [2]']);
     expect(root).toMatchRenderedOutput(<span prop={2} />);
   });
 
@@ -1216,24 +1215,24 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+    assertLog(['Mount Child', 'Mount Parent']);
 
     // First demonstrate what happens during a normal deletion
     await act(async () => {
       root.render(null);
     });
-    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+    assertLog(['Unmount Parent', 'Unmount Child']);
 
     // Now redo the same thing but hide instead of deleting
     await act(async () => {
       root.render(<App show={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+    assertLog(['Mount Child', 'Mount Parent']);
     await act(async () => {
       root.render(<App show={false} />);
     });
     // The order is the same as during a deletion: parent before child
-    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+    assertLog(['Unmount Parent', 'Unmount Child']);
   });
 
   // TODO: As of now, there's no way to hide a tree without also unmounting its
@@ -1270,12 +1269,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={true} step={1} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Shell 1',
-      'More 1',
-      'Mount Shell 1',
-      'Mount More 1',
-    ]);
+    assertLog(['Shell 1', 'More 1', 'Mount Shell 1', 'Mount More 1']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Shell 1" />
@@ -1287,7 +1281,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showMore={false} step={2} />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // First update the outer visible shell
       'Shell 2',
       'Unmount Shell 1',
@@ -1342,7 +1336,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showOuter={false} showInner={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Outer']);
+    assertLog(['Outer']);
     expect(root).toMatchRenderedOutput(
       <div hidden={true}>
         <span prop="Outer" />
@@ -1353,7 +1347,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showOuter={false} showInner={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    assertLog(['Outer', 'Inner']);
     expect(root).toMatchRenderedOutput(
       <div hidden={true}>
         <span prop="Outer" />
@@ -1369,7 +1363,7 @@ describe('ReactOffscreen', () => {
     });
     // The effects fire, but the tree is not re-rendered because it already
     // prerendered.
-    expect(Scheduler).toHaveYielded(['Mount Outer', 'Mount Inner']);
+    assertLog(['Mount Outer', 'Mount Inner']);
     expect(root).toMatchRenderedOutput(
       <div>
         <span prop="Outer" />
@@ -1418,7 +1412,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showOuter={false} showInner={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    assertLog(['Outer', 'Inner']);
     // Both the inner and the outer tree should be hidden. Hiding the inner tree
     // is arguably redundant, but the advantage of hiding both is that later you
     // can reveal the outer tree without having to examine the inner one.
@@ -1435,7 +1429,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App showOuter={true} showInner={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Mount Outer']);
+    assertLog(['Mount Outer']);
     expect(root).toMatchRenderedOutput(
       <div>
         <span prop="Outer" />
@@ -1535,7 +1529,7 @@ describe('ReactOffscreen', () => {
         root.render(<App />);
       });
 
-      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+      assertLog(['HighPriorityComponent 0', 'Child 0']);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="HighPriorityComponent 0" />
@@ -1549,10 +1543,7 @@ describe('ReactOffscreen', () => {
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
-        expect(Scheduler).toFlushUntilNextPaint([
-          'HighPriorityComponent 1',
-          'Child 1',
-        ]);
+        await waitForPaint(['HighPriorityComponent 1', 'Child 1']);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 1" />
@@ -1569,7 +1560,7 @@ describe('ReactOffscreen', () => {
       await act(async () => {
         updateChildState(2);
         updateHighPriorityComponentState(2);
-        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 2']);
+        await waitForPaint(['HighPriorityComponent 2']);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 2" />
@@ -1578,7 +1569,7 @@ describe('ReactOffscreen', () => {
         );
       });
 
-      expect(Scheduler).toHaveYielded(['Child 2']);
+      assertLog(['Child 2']);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="HighPriorityComponent 2" />
@@ -1594,10 +1585,7 @@ describe('ReactOffscreen', () => {
       await act(async () => {
         updateChildState(3);
         updateHighPriorityComponentState(3);
-        expect(Scheduler).toFlushUntilNextPaint([
-          'HighPriorityComponent 3',
-          'Child 3',
-        ]);
+        await waitForPaint(['HighPriorityComponent 3', 'Child 3']);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 3" />
@@ -1666,7 +1654,7 @@ describe('ReactOffscreen', () => {
         root.render(<App />);
       });
 
-      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+      assertLog(['HighPriorityComponent 0', 'Child 0']);
 
       nextRenderTriggerDetach = true;
 
@@ -1675,7 +1663,7 @@ describe('ReactOffscreen', () => {
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
-        expect(Scheduler).toFlushUntilNextPaint([
+        await waitForPaint([
           'HighPriorityComponent 1',
           'Child 1',
           'HighPriorityComponent 2',
@@ -1688,7 +1676,7 @@ describe('ReactOffscreen', () => {
         );
       });
 
-      expect(Scheduler).toHaveYielded(['Child 2']);
+      assertLog(['Child 2']);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="HighPriorityComponent 2" />
@@ -1703,10 +1691,7 @@ describe('ReactOffscreen', () => {
       await act(async () => {
         updateChildState(3);
         updateHighPriorityComponentState(3);
-        expect(Scheduler).toFlushUntilNextPaint([
-          'HighPriorityComponent 3',
-          'Child 3',
-        ]);
+        await waitForPaint(['HighPriorityComponent 3', 'Child 3']);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 3" />
@@ -1865,33 +1850,33 @@ describe('ReactOffscreen', () => {
 
     expect(offscreenRef).not.toBeNull();
     expect(spanRef.current).not.toBeNull();
-    expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+    assertLog(['Mount Layout Child', 'Mount Child']);
 
     await act(async () => {
       offscreenRef.detach();
     });
 
     expect(spanRef.current).toBeNull();
-    expect(Scheduler).toHaveYielded(['Unmount Layout Child', 'Unmount Child']);
+    assertLog(['Unmount Layout Child', 'Unmount Child']);
 
     // Calling attach on already attached Offscreen.
     await act(async () => {
       offscreenRef.detach();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     await act(async () => {
       offscreenRef.attach();
     });
 
     expect(spanRef.current).not.toBeNull();
-    expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+    assertLog(['Mount Layout Child', 'Mount Child']);
 
     // Calling attach on already attached Offscreen
     offscreenRef.attach();
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
   // @gate enableOffscreen
@@ -1919,7 +1904,7 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'outer',
       'middle',
       'inner',
@@ -1940,7 +1925,7 @@ describe('ReactOffscreen', () => {
 
     expect(innerOffscreen).toBeNull();
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'unmount layout middle',
       'unmount layout inner',
       'unmount middle',
@@ -1951,7 +1936,7 @@ describe('ReactOffscreen', () => {
       outerOffscreen.attach();
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'mount layout inner',
       'mount layout middle',
       'mount inner',
@@ -1962,27 +1947,27 @@ describe('ReactOffscreen', () => {
       innerOffscreen.detach();
     });
 
-    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
+    assertLog(['unmount layout inner', 'unmount inner']);
 
     // Calling detach on already detached Offscreen.
     await act(async () => {
       innerOffscreen.detach();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     await act(async () => {
       innerOffscreen.attach();
     });
 
-    expect(Scheduler).toHaveYielded(['mount layout inner', 'mount inner']);
+    assertLog(['mount layout inner', 'mount inner']);
 
     await act(async () => {
       innerOffscreen.detach();
       outerOffscreen.attach();
     });
 
-    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
+    assertLog(['unmount layout inner', 'unmount inner']);
   });
 
   // @gate enableOffscreen
@@ -2011,7 +1996,7 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
 
-    expect(Scheduler).toHaveYielded(['attach child']);
+    assertLog(['attach child']);
 
     await act(async () => {
       const instance = offscreen.current;
@@ -2020,14 +2005,14 @@ describe('ReactOffscreen', () => {
       instance.attach();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     await act(async () => {
       const instance = offscreen.current;
       instance.detach();
     });
 
-    expect(Scheduler).toHaveYielded(['detach child']);
+    assertLog(['detach child']);
 
     await act(async () => {
       const instance = offscreen.current;
@@ -2036,7 +2021,7 @@ describe('ReactOffscreen', () => {
       instance.detach();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
   // @gate enableOffscreen
@@ -2070,6 +2055,6 @@ describe('ReactOffscreen', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['attach child']);
+    assertLog(['attach child']);
   });
 });

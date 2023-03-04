@@ -12,7 +12,7 @@
 
 let React;
 let ReactNoopPersistent;
-let Scheduler;
+let waitForAll;
 
 describe('ReactPersistent', () => {
   beforeEach(() => {
@@ -20,7 +20,8 @@ describe('ReactPersistent', () => {
 
     React = require('react');
     ReactNoopPersistent = require('react-noop-renderer/persistent');
-    Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   // Inlined from shared folder so we can run this test on a bundle.
@@ -57,7 +58,7 @@ describe('ReactPersistent', () => {
     return ReactNoopPersistent.dangerouslyGetChildren();
   }
 
-  it('can update child nodes of a host instance', () => {
+  it('can update child nodes of a host instance', async () => {
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -72,19 +73,19 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div(span())]);
 
     render(<Foo text="World" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div(span(), span())]);
 
     expect(originalChildren).toEqual([div(span())]);
   });
 
-  it('can reuse child nodes between updates', () => {
+  it('can reuse child nodes between updates', async () => {
     function Baz(props) {
       return <span prop={props.text} />;
     }
@@ -106,12 +107,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div(span('Hello'))]);
 
     render(<Foo text="World" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
 
@@ -121,7 +122,7 @@ describe('ReactPersistent', () => {
     expect(newChildren[0].children[0]).toBe(originalChildren[0].children[0]);
   });
 
-  it('can update child text nodes', () => {
+  it('can update child text nodes', async () => {
     function Foo(props) {
       return (
         <div>
@@ -132,19 +133,19 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const originalChildren = dangerouslyGetChildren();
     expect(originalChildren).toEqual([div('Hello', span())]);
 
     render(<Foo text="World" />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div('World', span())]);
 
     expect(originalChildren).toEqual([div('Hello', span())]);
   });
 
-  it('supports portals', () => {
+  it('supports portals', async () => {
     function Parent(props) {
       return <div>{props.children}</div>;
     }
@@ -173,7 +174,7 @@ describe('ReactPersistent', () => {
     const portalContainer = {rootID: 'persistent-portal-test', children: []};
     const emptyPortalChildSet = portalContainer.children;
     render(<Parent>{createPortal(<Child />, portalContainer, null)}</Parent>);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     expect(emptyPortalChildSet).toEqual([]);
 
@@ -187,7 +188,7 @@ describe('ReactPersistent', () => {
         {createPortal(<Child>Hello {'World'}</Child>, portalContainer, null)}
       </Parent>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     const newChildren = dangerouslyGetChildren();
     expect(newChildren).toEqual([div()]);
@@ -204,7 +205,7 @@ describe('ReactPersistent', () => {
 
     // Deleting the Portal, should clear its children
     render(<Parent />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     const clearedPortalChildren = portalContainer.children;
     expect(clearedPortalChildren).toEqual([]);

@@ -8,6 +8,7 @@ let getCacheForType;
 
 let caches;
 let seededCache;
+let assertLog;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
@@ -21,6 +22,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     useEffect = React.useEffect;
 
     getCacheForType = React.unstable_getCacheForType;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     caches = [];
     seededCache = null;
@@ -160,7 +164,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+    assertLog(['Suspend! [Async]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     // When the promise resolves, a passive static effect flag is added. In the
@@ -169,7 +173,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       resolveText('Async');
     });
-    expect(Scheduler).toHaveYielded(['Async', 'Effect']);
+    assertLog(['Async', 'Effect']);
     expect(root).toMatchRenderedOutput('Async');
   });
 });

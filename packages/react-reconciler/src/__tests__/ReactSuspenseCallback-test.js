@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let waitForAll;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
@@ -20,6 +21,9 @@ describe('ReactSuspense', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   function createThenable() {
@@ -83,13 +87,13 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting');
     expect(ops).toEqual([new Set([promise])]);
     ops = [];
 
     await resolve();
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Done');
     expect(ops).toEqual([]);
   });
@@ -122,27 +126,27 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
     expect(ops).toEqual([new Set([promise1, promise2])]);
     ops = [];
 
     await resolve1();
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
     expect(ops).toEqual([new Set([promise2])]);
     ops = [];
 
     await resolve2();
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('DoneDone');
     expect(ops).toEqual([]);
   });
 
   // @gate www
-  it('nested suspense promises are reported only for their tier', () => {
+  it('nested suspense promises are reported only for their tier', async () => {
     const {promise, PromiseComp} = createThenable();
 
     const ops1 = [];
@@ -167,7 +171,7 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 2');
     expect(ops1).toEqual([]);
     expect(ops2).toEqual([new Set([promise])]);
@@ -209,7 +213,7 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
     expect(ops1).toEqual([new Set([promise1])]);
     expect(ops2).toEqual([]);
@@ -218,7 +222,7 @@ describe('ReactSuspense', () => {
 
     await resolve1();
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     // Force fallback to commit.
     // TODO: Should be able to use `act` here.
@@ -232,7 +236,7 @@ describe('ReactSuspense', () => {
 
     await resolve2();
     ReactNoop.render(element);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('DoneDone');
     expect(ops1).toEqual([]);
     expect(ops2).toEqual([]);

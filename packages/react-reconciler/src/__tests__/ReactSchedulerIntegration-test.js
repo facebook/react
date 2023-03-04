@@ -18,6 +18,10 @@ let NormalPriority;
 let IdlePriority;
 let runWithPriority;
 let startTransition;
+let waitForAll;
+let waitForPaint;
+let assertLog;
+let waitFor;
 
 describe('ReactSchedulerIntegration', () => {
   beforeEach(() => {
@@ -31,6 +35,12 @@ describe('ReactSchedulerIntegration', () => {
     IdlePriority = Scheduler.unstable_IdlePriority;
     runWithPriority = Scheduler.unstable_runWithPriority;
     startTransition = React.startTransition;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
+    waitFor = InternalTestUtils.waitFor;
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -76,11 +86,11 @@ describe('ReactSchedulerIntegration', () => {
     await act(async () => {
       ReactNoop.render(<CleanupEffect />);
     });
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
     await act(async () => {
       ReactNoop.render(<Effects />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Cleanup Layout Effect',
       'Layout Effect',
       'Passive Effect',
@@ -90,12 +100,12 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
-  it('requests a paint after committing', () => {
+  it('requests a paint after committing', async () => {
     const scheduleCallback = Scheduler.unstable_scheduleCallback;
 
     const root = ReactNoop.createRoot();
     root.render('Initial');
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
     scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('B'));
@@ -115,7 +125,7 @@ describe('ReactSchedulerIntegration', () => {
     // Flush everything up to the next paint. Should yield after the
     // React commit.
     Scheduler.unstable_flushUntilNextPaint();
-    expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
+    assertLog(['A', 'B', 'C']);
   });
 
   // @gate www
@@ -141,7 +151,7 @@ describe('ReactSchedulerIntegration', () => {
       root.render(<App label="A" />);
 
       // Commit the visible content
-      expect(Scheduler).toFlushUntilNextPaint(['Visible: A']);
+      await waitForPaint(['Visible: A']);
       expect(root).toMatchRenderedOutput(
         <>
           Visible: A
@@ -156,7 +166,7 @@ describe('ReactSchedulerIntegration', () => {
       });
 
       // The next commit should only include the visible content
-      expect(Scheduler).toFlushUntilNextPaint(['Visible: B']);
+      await waitForPaint(['Visible: B']);
       expect(root).toMatchRenderedOutput(
         <>
           Visible: B
@@ -166,7 +176,7 @@ describe('ReactSchedulerIntegration', () => {
     });
 
     // The hidden content commits later
-    expect(Scheduler).toHaveYielded(['Hidden: B']);
+    assertLog(['Hidden: B']);
     expect(root).toMatchRenderedOutput(
       <>
         Visible: B<div hidden={true}>Hidden: B</div>
@@ -201,6 +211,12 @@ describe(
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
       startTransition = React.startTransition;
+
+      const InternalTestUtils = require('internal-test-utils');
+      waitForAll = InternalTestUtils.waitForAll;
+      waitForPaint = InternalTestUtils.waitForPaint;
+      assertLog = InternalTestUtils.assertLog;
+      waitFor = InternalTestUtils.waitFor;
     });
 
     afterEach(() => {
@@ -244,8 +260,8 @@ describe(
 
       await act(async () => {
         ReactNoop.render(<App />);
-        expect(Scheduler).toFlushUntilNextPaint([]);
-        expect(Scheduler).toFlushUntilNextPaint([]);
+        await waitForPaint([]);
+        await waitForPaint([]);
       });
     });
 
@@ -276,13 +292,13 @@ describe(
         startTransition(() => {
           ReactNoop.render(<App />);
         });
-        expect(Scheduler).toFlushAndYieldThrough(['A']);
+        await waitFor(['A']);
 
         // Start logging whenever shouldYield is called
         logDuringShouldYield = true;
         // Let's call it once to confirm the mock actually works
         Scheduler.unstable_shouldYield();
-        expect(Scheduler).toHaveYielded(['shouldYield']);
+        assertLog(['shouldYield']);
 
         // Expire the task
         Scheduler.unstable_advanceTime(10000);
@@ -299,7 +315,7 @@ describe(
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
         Scheduler.unstable_flushNumberOfYields(1);
-        expect(Scheduler).toHaveYielded(['B', 'C']);
+        assertLog(['B', 'C']);
       });
     });
   },

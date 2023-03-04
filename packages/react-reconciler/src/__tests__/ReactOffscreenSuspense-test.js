@@ -9,6 +9,8 @@ let useState;
 let useEffect;
 let startTransition;
 let textCache;
+let waitForPaint;
+let assertLog;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -24,6 +26,10 @@ describe('ReactOffscreen', () => {
     useState = React.useState;
     useEffect = React.useEffect;
     startTransition = React.startTransition;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
 
     textCache = new Map();
   });
@@ -115,7 +121,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Visible', 'Suspend! [Hidden]']);
+    assertLog(['Visible', 'Suspend! [Hidden]']);
     expect(root).toMatchRenderedOutput(<span>Visible</span>);
 
     // When the data resolves, we should be able to finish prerendering
@@ -123,7 +129,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Hidden');
     });
-    expect(Scheduler).toHaveYielded(['Hidden']);
+    assertLog(['Hidden']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Visible</span>
@@ -155,11 +161,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Visible',
-      'Suspend! [Hidden]',
-      'Loading...',
-    ]);
+    assertLog(['Visible', 'Suspend! [Hidden]', 'Loading...']);
     // Nearest Suspense boundary switches to a fallback even though the
     // suspended content is hidden.
     expect(root).toMatchRenderedOutput(
@@ -197,7 +199,7 @@ describe('ReactOffscreen', () => {
         </Details>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    assertLog(['Closed', 'Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
 
     // But when we switch the boundary from hidden to visible, it should
@@ -211,7 +213,7 @@ describe('ReactOffscreen', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -220,7 +222,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Async']);
+    assertLog(['Open', 'Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -254,7 +256,7 @@ describe('ReactOffscreen', () => {
         </Details>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Open', '(empty)']);
+    assertLog(['Open', '(empty)']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -272,7 +274,7 @@ describe('ReactOffscreen', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
@@ -294,7 +296,7 @@ describe('ReactOffscreen', () => {
     });
     // Now the visible part of the tree can commit without being blocked
     // by the suspended content, which is hidden.
-    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    assertLog(['Closed', 'Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Closed</span>
@@ -306,7 +308,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    expect(Scheduler).toHaveYielded(['Async']);
+    assertLog(['Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Closed</span>
@@ -339,7 +341,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
 
     await act(async () => {
       startTransition(() => {
@@ -377,7 +379,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded(['A0']);
+    assertLog(['A0']);
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
     await act(async () => {
@@ -388,7 +390,7 @@ describe('ReactOffscreen', () => {
         setText('B');
       });
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // The high priority render suspends again
       'Suspend! [B0]',
       // There's still pending work in another lane, so we should attempt
@@ -401,7 +403,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       resolveText('B1');
     });
-    expect(Scheduler).toHaveYielded(['B1']);
+    assertLog(['B1']);
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
@@ -465,7 +467,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={true} />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Outer: 0',
       'Inner: 0',
       'Async: 0',
@@ -487,7 +489,7 @@ describe('ReactOffscreen', () => {
       // In the same render, also hide the offscreen tree.
       root.render(<App show={false} />);
 
-      expect(Scheduler).toFlushUntilNextPaint([
+      await waitForPaint([
         // The outer update will commit, but the inner update is deferred until
         // a later render.
         'Outer: 1',
@@ -535,7 +537,7 @@ describe('ReactOffscreen', () => {
       ReactNoop.flushSync(() => {
         root.render(<App show={true} />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Outer: 1',
 
         // There are two pending updates on Inner, but only the first one
@@ -549,7 +551,7 @@ describe('ReactOffscreen', () => {
         'Inner and outer are consistent',
       ]);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Outer: 2',
       'Inner: 2',
       'Suspend! [Async: 2]',
