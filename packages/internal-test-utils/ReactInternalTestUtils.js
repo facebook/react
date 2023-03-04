@@ -10,6 +10,7 @@
 import * as SchedulerMock from 'scheduler/unstable_mock';
 import {diff} from 'jest-diff';
 import {equals} from '@jest/expect-utils';
+import enqueueTask from './enqueueTask';
 
 function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearYields();
@@ -20,6 +21,12 @@ function assertYieldsWereCleared(Scheduler) {
     Error.captureStackTrace(error, assertYieldsWereCleared);
     throw error;
   }
+}
+
+async function waitForMicrotasks() {
+  return new Promise(resolve => {
+    enqueueTask(() => resolve());
+  });
 }
 
 export async function waitFor(expectedLog) {
@@ -33,7 +40,7 @@ export async function waitFor(expectedLog) {
   const actualLog = [];
   do {
     // Wait until end of current task/microtask.
-    await null;
+    await waitForMicrotasks();
     if (SchedulerMock.unstable_hasPendingWork()) {
       SchedulerMock.unstable_flushNumberOfYields(
         expectedLog.length - actualLog.length,
@@ -44,7 +51,7 @@ export async function waitFor(expectedLog) {
       } else {
         // Once we've reached the expected sequence, wait one more microtask to
         // flush any remaining synchronous work.
-        await null;
+        await waitForMicrotasks();
         actualLog.push(...SchedulerMock.unstable_clearYields());
         break;
       }
@@ -72,11 +79,11 @@ export async function waitForAll(expectedLog) {
   // Create the error object before doing any async work, to get a better
   // stack trace.
   const error = new Error();
-  Error.captureStackTrace(error, waitFor);
+  Error.captureStackTrace(error, waitForAll);
 
   do {
     // Wait until end of current task/microtask.
-    await null;
+    await waitForMicrotasks();
     if (!SchedulerMock.unstable_hasPendingWork()) {
       // There's no pending work, even after a microtask. Stop flushing.
       break;
@@ -103,11 +110,11 @@ export async function waitForThrow(expectedError: mixed) {
   // Create the error object before doing any async work, to get a better
   // stack trace.
   const error = new Error();
-  Error.captureStackTrace(error, waitFor);
+  Error.captureStackTrace(error, waitForThrow);
 
   do {
     // Wait until end of current task/microtask.
-    await null;
+    await waitForMicrotasks();
     if (!SchedulerMock.unstable_hasPendingWork()) {
       // There's no pending work, even after a microtask. Stop flushing.
       error.message = 'Expected something to throw, but nothing did.';
@@ -119,7 +126,13 @@ export async function waitForThrow(expectedError: mixed) {
       if (equals(x, expectedError)) {
         return;
       }
-      if (typeof x === 'object' && x !== null && x.message === expectedError) {
+      if (
+        typeof expectedError === 'string' &&
+        typeof x === 'object' &&
+        x !== null &&
+        typeof x.message === 'string' &&
+        x.message.includes(expectedError)
+      ) {
         return;
       }
       error.message = `
@@ -142,15 +155,15 @@ export async function waitForPaint(expectedLog) {
   // Create the error object before doing any async work, to get a better
   // stack trace.
   const error = new Error();
-  Error.captureStackTrace(error, waitFor);
+  Error.captureStackTrace(error, waitForPaint);
 
   // Wait until end of current task/microtask.
-  await null;
+  await waitForMicrotasks();
   if (SchedulerMock.unstable_hasPendingWork()) {
     // Flush until React yields.
     SchedulerMock.unstable_flushUntilNextPaint();
     // Wait one more microtask to flush any remaining synchronous work.
-    await null;
+    await waitForMicrotasks();
   }
 
   const actualLog = SchedulerMock.unstable_clearYields();
