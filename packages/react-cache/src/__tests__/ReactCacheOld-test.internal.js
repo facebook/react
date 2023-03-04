@@ -183,7 +183,7 @@ describe('ReactCache', () => {
     );
 
     if (__DEV__) {
-      expect(async () => {
+      await expect(async () => {
         await waitForAll(['App', 'Loading...']);
       }).toErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +

@@ -93,7 +93,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
   });
 
-  it('works on deferred roots in the order they were scheduled', () => {
+  it('works on deferred roots in the order they were scheduled', async () => {
     const {useEffect} = React;
     function Text({text}) {
       useEffect(() => {
@@ -114,7 +114,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    act(async () => {
+    await act(async () => {
       React.startTransition(() => {
         ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
         ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');

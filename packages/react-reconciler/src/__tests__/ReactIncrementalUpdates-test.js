@@ -518,7 +518,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="derived state" />);
   });
 
-  it('regression: does not expire soon due to layout effects in the last batch', () => {
+  it('regression: does not expire soon due to layout effects in the last batch', async () => {
     const {useState, useLayoutEffect} = React;
 
     let setCount;
@@ -533,7 +533,7 @@ describe('ReactIncrementalUpdates', () => {
       return null;
     }
 
-    act(async () => {
+    await act(async () => {
       React.startTransition(() => {
         ReactNoop.render(<App />);
       });
