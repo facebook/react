@@ -14,13 +14,9 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
-import {
-  checkAttributeStringCoercion,
-  checkPropStringCoercion,
-} from 'shared/CheckStringCoercion';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
-import {isAttributeNameSafe} from '../shared/DOMProperty';
 import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {
   validatePreloadArguments,
@@ -108,8 +104,7 @@ export function cleanupAfterRenderResources() {
 }
 
 export function prepareToCommitHoistables() {
-  linkRefreshed.clear();
-  metaRefreshed.clear();
+  refreshedCaches.clear();
 }
 
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
@@ -210,7 +205,7 @@ function prefetchDNS(href: string, options?: mixed) {
     } else if (options != null) {
       if (
         typeof options === 'object' &&
-        options.hasOwnProperty('crossOrigin')
+        hasOwnProperty.call(options, 'crossOrigin')
       ) {
         console.error(
           'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
@@ -927,11 +922,10 @@ function adoptPreloadPropsForScript(
 //      Hoistable Element Reconciliation
 // --------------------------------------
 
-const metaCaches: Map<Document, Map<string, Array<Element>>> = new Map();
-const linkCaches: Map<Document, Map<string, Array<Element>>> = new Map();
-
-const metaRefreshed: Set<Document> = new Set();
-const linkRefreshed: Set<Document> = new Set();
+type KeyedTagCache = Map<string, Array<Element>>;
+type DocumentTagCaches = Map<Document, KeyedTagCache>;
+const metaCaches: DocumentTagCaches = new Map();
+const linkCaches: DocumentTagCaches = new Map();
 
 export function hydrateHoistable(
   hoistableRoot: HoistableRoot,
@@ -941,43 +935,109 @@ export function hydrateHoistable(
 ): Instance {
   const ownerDocument = getDocumentFromRoot(hoistableRoot);
 
-  let candidates: void | null | Array<Element> = null;
-
-  let key = '';
-  let keyAttribute = '';
-  let caches = null;
-  let cache = null;
-  let nodes = null;
-  switch (type) {
+  let instance: ?Instance = null;
+  getInstance: switch (type) {
     case 'title': {
-      const titles = ownerDocument.getElementsByTagName('title');
-      candidates = [];
-      for (let i = 0; i < titles.length; i++) {
-        const node = titles[i];
-        if (!isOwnedInstance(node) && node.namespaceURI !== SVG_NAMESPACE) {
-          candidates.push(node);
-        }
+      instance = ownerDocument.getElementsByTagName('title')[0];
+      if (
+        !instance ||
+        isOwnedInstance(instance) ||
+        instance.namespaceURI === SVG_NAMESPACE ||
+        instance.hasAttribute('itemprop')
+      ) {
+        instance = createHTMLElement(type, props, ownerDocument);
+        (ownerDocument.head: any).insertBefore(
+          instance,
+          ownerDocument.querySelector('head > title'),
+        );
       }
-      break;
+      setInitialProperties(instance, type, props);
+      precacheFiberNode(internalInstanceHandle, instance);
+      markNodeAsHoistable(instance);
+      return instance;
     }
     case 'link': {
-      if (!linkRefreshed.has(ownerDocument)) {
-        nodes = ownerDocument.getElementsByTagName('link');
-        linkRefreshed.add(ownerDocument);
+      const cache = getHydratableHoistableCache(
+        'href',
+        'link',
+        ownerDocument,
+        linkCaches,
+      );
+      const key = props.href || '';
+      const maybeNodes = cache.get(key);
+      if (maybeNodes) {
+        const nodes = maybeNodes;
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          if (
+            node.getAttribute('href') !==
+              (props.href == null ? null : props.href) ||
+            node.getAttribute('rel') !==
+              (props.rel == null ? null : props.rel) ||
+            node.getAttribute('title') !==
+              (props.title == null ? null : props.title) ||
+            node.getAttribute('crossorigin') !==
+              (props.crossOrigin == null ? null : props.crossOrigin)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+          instance = node;
+          if (nodes.length === 1) {
+            cache.delete(key);
+          } else {
+            nodes.splice(i, 1);
+          }
+          break getInstance;
+        }
       }
-      key = props.href || '';
-      keyAttribute = 'href';
-      caches = linkCaches;
+      instance = createHTMLElement(type, props, ownerDocument);
+      setInitialProperties(instance, type, props);
+      (ownerDocument.head: any).appendChild(instance);
       break;
     }
     case 'meta': {
-      if (!metaRefreshed.has(ownerDocument)) {
-        nodes = ownerDocument.getElementsByTagName('meta');
-        metaRefreshed.add(ownerDocument);
+      const cache = getHydratableHoistableCache(
+        'content',
+        'meta',
+        ownerDocument,
+        metaCaches,
+      );
+      const key = props.content || '';
+      const maybeNodes = cache.get(key);
+      if (maybeNodes) {
+        const nodes = maybeNodes;
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+
+          if (__DEV__) {
+            checkAttributeStringCoercion(props.content, 'content');
+          }
+          if (
+            node.getAttribute('content') !==
+              (props.content == null ? null : '' + props.content) ||
+            node.getAttribute('name') !==
+              (props.name == null ? null : props.name) ||
+            node.getAttribute('property') !==
+              (props.property == null ? null : props.property) ||
+            node.getAttribute('charset') !==
+              (props.charSet == null ? null : props.charSet)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+          instance = node;
+          if (nodes.length === 1) {
+            cache.delete(key);
+          } else {
+            nodes.splice(i, 1);
+          }
+          break getInstance;
+        }
       }
-      key = props.content || '';
-      keyAttribute = 'content';
-      caches = metaCaches;
+      instance = createHTMLElement(type, props, ownerDocument);
+      setInitialProperties(instance, type, props);
+      (ownerDocument.head: any).appendChild(instance);
       break;
     }
     default:
@@ -986,223 +1046,52 @@ export function hydrateHoistable(
       );
   }
 
-  // If we are using a persistent (per commit) cache we will get it now and if necessary refresh it with
-  // potential candidate nodes. If we aren't using a cache (title tags for instance) we skip this and
-  // use the candidate nodes derived above.
-  if (caches) {
-    cache = caches.get(ownerDocument);
-    if (!cache) {
-      cache = new Map();
-      caches.set(ownerDocument, cache);
-    }
-    if (nodes) {
-      // We need to refresh the cache for this type (once per commit) and nodes is all
-      // the potential candidates to include
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        if (
-          !isOwnedInstance(node) &&
-          !isMarkedCached(node) &&
-          (type !== 'link' ||
-            (node.getAttribute('rel') !== 'stylesheet' &&
-              !node.hasAttribute('data-precedence'))) &&
-          node.namespaceURI !== SVG_NAMESPACE
-        ) {
-          markNodeAsCached(node);
-          const nodeKey = node.getAttribute(keyAttribute) || '';
-          const existing = cache.get(nodeKey);
-          if (existing) {
-            existing.push(node);
-          } else {
-            cache.set(nodeKey, [node]);
-          }
-        }
-      }
-    }
-    candidates = cache.get(key);
-  }
-
-  if (candidates && candidates.length) {
-    // There is at least one potential hydratable node in the Document. We need to figure out
-    // our textContent and attributes list from props to decide if any of the candidates are a
-    // match
-    const nodesToMatch: Array<Element> = candidates;
-    const children = props.children;
-    let child, childString;
-
-    // We only check textContent for title hoistables. The other types are void elements
-    if (type === 'title') {
-      if (Array.isArray(children)) {
-        child = children.length === 1 ? children[0] : null;
-      } else {
-        child = children;
-      }
-      if (
-        typeof child !== 'function' &&
-        typeof child !== 'symbol' &&
-        child !== null &&
-        child !== undefined
-      ) {
-        if (__DEV__) {
-          checkPropStringCoercion(child, 'children');
-        }
-        childString = '' + (child: any);
-      } else {
-        childString = '';
-      }
-    }
-
-    // To match we need to exhaustively check each attribute so we produce the attribute list
-    // upfront and then only check if the candidate has a matching number of attributes
-    const attributes: Array<string> = [];
-
-    for (const propName in props) {
-      const propValue = props[propName];
-      if (!hasOwnProperty.call(props, propName)) {
-        continue;
-      }
-      if (
-        // shouldIgnoreAttribute
-        // We have already filtered out null/undefined and reserved words.
-        propName.length > 2 &&
-        (propName[0] === 'o' || propName[0] === 'O') &&
-        (propName[1] === 'n' || propName[1] === 'N')
-      ) {
-        continue;
-      }
-      switch (propName) {
-        // Reserved props will never have an attribute partner
-        case 'children':
-        case 'defaultValue':
-        case 'dangerouslySetInnerHTML':
-        case 'defaultChecked':
-        case 'innerHTML':
-        case 'suppressContentEditableWarning':
-        case 'suppressHydrationWarning':
-        case 'style':
-          // we advance to the next prop
-          continue;
-
-        // Name remapped props used by hoistable tag types
-        case 'className': {
-          if (__DEV__) {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-          attributes.push('class', '' + propValue);
-          break;
-        }
-        case 'httpEquiv': {
-          if (__DEV__) {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-          attributes.push('http-equiv', '' + propValue);
-          break;
-        }
-
-        // Boolean props used by hoistable tag types
-        case 'async':
-        case 'defer':
-        case 'disabled':
-        case 'hidden':
-        case 'noModule':
-        case 'scoped':
-        case 'itemScope':
-          if (propValue === true) {
-            attributes.push(propName, '');
-          }
-          break;
-
-        // The following properties are left out because they do not apply to
-        // the current set of hoistable types. They may have special handling
-        // requirements if they end up applying to a hoistable type in the future
-        // case 'acceptCharset':
-        // case 'value':
-        // case 'allowFullScreen':
-        // case 'autoFocus':
-        // case 'autoPlay':
-        // case 'controls':
-        // case 'default':
-        // case 'disablePictureInPicture':
-        // case 'disableRemotePlayback':
-        // case 'formNoValidate':
-        // case 'loop':
-        // case 'noValidate':
-        // case 'open':
-        // case 'playsInline':
-        // case 'readOnly':
-        // case 'required':
-        // case 'reversed':
-        // case 'seamless':
-        // case 'multiple':
-        // case 'selected':
-        // case 'capture':
-        // case 'download':
-        // case 'cols':
-        // case 'rows':
-        // case 'size':
-        // case 'span':
-        // case 'rowSpan':
-        // case 'start':
-
-        default:
-          if (isAttributeNameSafe(propName)) {
-            if (__DEV__) {
-              checkAttributeStringCoercion(propValue, propName);
-            }
-            attributes.push(propName, '' + propValue);
-          }
-      }
-    }
-
-    // We check each node in sequence. If we find some reason to disqualify
-    // the candidate we continue to the next node. If we cannot disqualify the node
-    // we remove it the cache (if there is a cache) and bind it to this hoistable fiber
-    // and return
-    nodeLoop: for (let i = 0; i < nodesToMatch.length; i++) {
-      const node = nodesToMatch[i];
-      if (type === 'title' && node.textContent !== childString) {
-        continue;
-      }
-
-      // attributes uses two slots per attribute. We normalize
-      // on double length to test whether we have the right number of attributes
-      if (node.attributes.length * 2 !== attributes.length) {
-        // This node has a different number of attributes than our instance expects
-        continue;
-      }
-
-      for (let j = 0; j < attributes.length; ) {
-        const name = attributes[j++];
-        const value = attributes[j++];
-        if (node.getAttribute(name) !== value) {
-          continue nodeLoop;
-        }
-      }
-
-      precacheFiberNode(internalInstanceHandle, node);
-      markNodeAsHoistable(node);
-      if (cache) {
-        if (nodesToMatch.length === 1) {
-          cache.delete(key);
-        } else {
-          nodesToMatch.splice(i, 1);
-        }
-      }
-      return node;
-    }
-  }
-
-  // There is no matching instance to hydrate, we create it now
-  const instance = createHTMLElement(type, props, ownerDocument);
-  setInitialProperties(instance, type, props);
+  // This node is a match
   precacheFiberNode(internalInstanceHandle, instance);
   markNodeAsHoistable(instance);
-
-  (ownerDocument.head: any).insertBefore(
-    instance,
-    type === 'title' ? ownerDocument.querySelector('head > title') : null,
-  );
   return instance;
+}
+
+const refreshedCaches: Set<KeyedTagCache> = new Set();
+
+function getHydratableHoistableCache(
+  keyAttribute: string,
+  type: HoistableTagType,
+  ownerDocument: Document,
+  documentCaches: DocumentTagCaches,
+): KeyedTagCache {
+  let cache = documentCaches.get(ownerDocument);
+  if (!cache) {
+    cache = new Map();
+    documentCaches.set(ownerDocument, cache);
+  } else if (refreshedCaches.has(cache)) {
+    return cache;
+  }
+
+  refreshedCaches.add(cache);
+
+  const nodes = ownerDocument.getElementsByTagName(type);
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    if (
+      !isOwnedInstance(node) &&
+      !isMarkedCached(node) &&
+      (type !== 'link' || node.getAttribute('rel') !== 'stylesheet') &&
+      node.namespaceURI !== SVG_NAMESPACE
+    ) {
+      markNodeAsCached(node);
+      const nodeKey = node.getAttribute(keyAttribute) || '';
+      const existing = cache.get(nodeKey);
+      if (existing) {
+        existing.push(node);
+      } else {
+        cache.set(nodeKey, [node]);
+      }
+    }
+  }
+
+  return cache;
 }
 
 export function mountHoistable(
