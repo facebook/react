@@ -4,14 +4,16 @@ function foo(a, b, c) {
     [
       {
         e: { f },
+        ...g
       },
     ],
+    ...h
   ] = a;
   const {
     l: {
-      m: [[n]],
+      m: [[n], ...o],
     },
-    o,
+    p,
   } = b;
-  return [d, f, n, o];
+  return [d, f, g, h, n, o, p];
 }

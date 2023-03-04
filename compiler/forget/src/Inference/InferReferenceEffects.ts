@@ -28,6 +28,7 @@ import {
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
+  eachPatternOperand,
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from "../HIR/visitors";
@@ -806,7 +807,29 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
-        instrValue.lvalue.place.effect = Effect.Store;
+        state.reference(instrValue.lvalue.place, Effect.Store);
+        continue;
+      }
+      case "Destructure": {
+        let effect: Effect = Effect.Capture;
+        for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
+          if (
+            state.isDefined(place) &&
+            state.kind(place) === ValueKind.Context
+          ) {
+            effect = Effect.Mutate;
+            break;
+          }
+        }
+        state.reference(instrValue.value, effect);
+
+        const lvalue = instr.lvalue;
+        state.alias(lvalue, instrValue.value);
+        lvalue.effect = Effect.Store;
+        for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
+          state.alias(place, instrValue.value);
+          state.reference(place, Effect.Store);
+        }
         continue;
       }
       default: {

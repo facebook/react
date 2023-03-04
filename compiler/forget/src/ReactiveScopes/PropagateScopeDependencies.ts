@@ -20,7 +20,10 @@ import {
   ReactiveScopeDependency,
   ReactiveValue,
 } from "../HIR/HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
+import {
+  eachInstructionValueOperand,
+  eachPatternOperand,
+} from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -707,6 +710,17 @@ function visitInstructionValue(
       id,
       scope: context.currentScope,
     });
+  } else if (value.kind === "Destructure") {
+    context.visitOperand(value.value);
+    for (const place of eachPatternOperand(value.lvalue.pattern)) {
+      if (value.lvalue.kind === InstructionKind.Reassign) {
+        context.visitReassignment(place);
+      }
+      context.declare(place.identifier, {
+        id,
+        scope: context.currentScope,
+      });
+    }
   } else {
     visitReactiveValue(context, id, value);
   }

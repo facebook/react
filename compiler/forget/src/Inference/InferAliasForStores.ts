@@ -11,7 +11,10 @@ import {
   InstructionId,
   Place,
 } from "../HIR/HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
+import {
+  eachInstructionValueOperand,
+  eachPatternOperand,
+} from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 
 export function inferAliasForStores(
@@ -26,6 +29,10 @@ export function inferAliasForStores(
       }
       if (value.kind === "StoreLocal") {
         maybeAlias(aliases, value.lvalue.place, value.value, instr.id);
+      } else if (value.kind === "Destructure") {
+        for (const place of eachPatternOperand(value.lvalue.pattern)) {
+          maybeAlias(aliases, place, value.value, instr.id);
+        }
       }
       for (const operand of eachInstructionValueOperand(value)) {
         if (

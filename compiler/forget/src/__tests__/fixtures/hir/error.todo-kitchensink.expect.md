@@ -13,14 +13,11 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  const g = { ...a, b() {}, c: () => {} };
-  const h = [...b];
+  const g = { b() {}, c: () => {} };
   new c(...args);
   c(...args);
-  const [y, ...yy] = useState(0);
-  const { z, aa = "aa", ...zz } = useCustom();
+  const { z, aa = "aa" } = useCustom();
 
-  <Button {...args}></Button>;
   <Button xlink:href="localhost:3000"></Button>;
   <Button haha={1}></Button>;
   <Button>{/** empty */}</Button>;
@@ -126,293 +123,257 @@ let moduleLocal = false;
   7 |     constructor() {
   8 |       console.log(this.#secretSauce);
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement properties in ObjectExpression
-  10 |   }
-  11 |
-> 12 |   const g = { ...a, b() {}, c: () => {} };
-     |               ^^^^
-  13 |   const h = [...b];
-  14 |   new c(...args);
-  15 |   c(...args);
-
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression
   10 |   }
   11 |
-> 12 |   const g = { ...a, b() {}, c: () => {} };
-     |                     ^^^^^^
-  13 |   const h = [...b];
-  14 |   new c(...args);
-  15 |   c(...args);
-
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement elements in ArrayExpression
-  11 |
-  12 |   const g = { ...a, b() {}, c: () => {} };
-> 13 |   const h = [...b];
-     |              ^^^^
-  14 |   new c(...args);
-  15 |   c(...args);
-  16 |   const [y, ...yy] = useState(0);
+> 12 |   const g = { b() {}, c: () => {} };
+     |               ^^^^^^
+  13 |   new c(...args);
+  14 |   c(...args);
+  15 |   const { z, aa = "aa" } = useCustom();
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement arguments in NewExpression
-  12 |   const g = { ...a, b() {}, c: () => {} };
-  13 |   const h = [...b];
-> 14 |   new c(...args);
+  11 |
+  12 |   const g = { b() {}, c: () => {} };
+> 13 |   new c(...args);
      |         ^^^^^^^
-  15 |   c(...args);
-  16 |   const [y, ...yy] = useState(0);
-  17 |   const { z, aa = "aa", ...zz } = useCustom();
+  14 |   c(...args);
+  15 |   const { z, aa = "aa" } = useCustom();
+  16 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle SpreadElement arguments in CallExpression
-  13 |   const h = [...b];
-  14 |   new c(...args);
-> 15 |   c(...args);
+  12 |   const g = { b() {}, c: () => {} };
+  13 |   new c(...args);
+> 14 |   c(...args);
      |     ^^^^^^^
-  16 |   const [y, ...yy] = useState(0);
-  17 |   const { z, aa = "aa", ...zz } = useCustom();
-  18 |
-
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle RestElement in ArrayPattern
-  14 |   new c(...args);
-  15 |   c(...args);
-> 16 |   const [y, ...yy] = useState(0);
-     |             ^^^^^
-  17 |   const { z, aa = "aa", ...zz } = useCustom();
-  18 |
-  19 |   <Button {...args}></Button>;
+  15 |   const { z, aa = "aa" } = useCustom();
+  16 |
+  17 |   <Button xlink:href="localhost:3000"></Button>;
 
 [ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
-  15 |   c(...args);
-  16 |   const [y, ...yy] = useState(0);
-> 17 |   const { z, aa = "aa", ...zz } = useCustom();
+  13 |   new c(...args);
+  14 |   c(...args);
+> 15 |   const { z, aa = "aa" } = useCustom();
      |              ^^^^^^^^^
-  18 |
-  19 |   <Button {...args}></Button>;
-  20 |   <Button xlink:href="localhost:3000"></Button>;
-
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle RestElement properties in ObjectPattern
-  15 |   c(...args);
-  16 |   const [y, ...yy] = useState(0);
-> 17 |   const { z, aa = "aa", ...zz } = useCustom();
-     |                         ^^^^^
-  18 |
-  19 |   <Button {...args}></Button>;
-  20 |   <Button xlink:href="localhost:3000"></Button>;
+  16 |
+  17 |   <Button xlink:href="localhost:3000"></Button>;
+  18 |   <Button haha={1}></Button>;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle JSXNamespacedName attribute names in JSXElement
-  18 |
-  19 |   <Button {...args}></Button>;
-> 20 |   <Button xlink:href="localhost:3000"></Button>;
+  15 |   const { z, aa = "aa" } = useCustom();
+  16 |
+> 17 |   <Button xlink:href="localhost:3000"></Button>;
      |           ^^^^^^^^^^
-  21 |   <Button haha={1}></Button>;
-  22 |   <Button>{/** empty */}</Button>;
-  23 |   <DesignSystem.Button />;
+  18 |   <Button haha={1}></Button>;
+  19 |   <Button>{/** empty */}</Button>;
+  20 |   <DesignSystem.Button />;
 
 [ReactForget] TodoError: (BuildHIR::lowerJsxElement) Handle JSXEmptyExpression expressions
-  20 |   <Button xlink:href="localhost:3000"></Button>;
-  21 |   <Button haha={1}></Button>;
-> 22 |   <Button>{/** empty */}</Button>;
+  17 |   <Button xlink:href="localhost:3000"></Button>;
+  18 |   <Button haha={1}></Button>;
+> 19 |   <Button>{/** empty */}</Button>;
      |            ^^^^^^^^^^^^
-  23 |   <DesignSystem.Button />;
-  24 |
-  25 |   const j = function bar([quz, qux], ...args) {};
+  20 |   <DesignSystem.Button />;
+  21 |
+  22 |   const j = function bar([quz, qux], ...args) {};
 
 [ReactForget] TodoError: (BuildHIR::lowerJsxElementName) Handle JSXMemberExpression tags
-  21 |   <Button haha={1}></Button>;
-  22 |   <Button>{/** empty */}</Button>;
-> 23 |   <DesignSystem.Button />;
+  18 |   <Button haha={1}></Button>;
+  19 |   <Button>{/** empty */}</Button>;
+> 20 |   <DesignSystem.Button />;
      |    ^^^^^^^^^^^^^^^^^^^
-  24 |
-  25 |   const j = function bar([quz, qux], ...args) {};
-  26 |
+  21 |
+  22 |   const j = function bar([quz, qux], ...args) {};
+  23 |
 
 [ReactForget] TodoError: (BuildHIR::lower) Handle ArrayPattern params
-  23 |   <DesignSystem.Button />;
-  24 |
-> 25 |   const j = function bar([quz, qux], ...args) {};
+  20 |   <DesignSystem.Button />;
+  21 |
+> 22 |   const j = function bar([quz, qux], ...args) {};
      |                          ^^^^^^^^^^
-  26 |
-  27 |   for (; i < 3; i += 1) {
-  28 |     x.push(i);
+  23 |
+  24 |   for (; i < 3; i += 1) {
+  25 |     x.push(i);
 
 [ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
-  23 |   <DesignSystem.Button />;
-  24 |
-> 25 |   const j = function bar([quz, qux], ...args) {};
+  20 |   <DesignSystem.Button />;
+  21 |
+> 22 |   const j = function bar([quz, qux], ...args) {};
      |                                      ^^^^^^^
-  26 |
-  27 |   for (; i < 3; i += 1) {
-  28 |     x.push(i);
+  23 |
+  24 |   for (; i < 3; i += 1) {
+  25 |     x.push(i);
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  25 |   const j = function bar([quz, qux], ...args) {};
-  26 |
-> 27 |   for (; i < 3; i += 1) {
+  22 |   const j = function bar([quz, qux], ...args) {};
+  23 |
+> 24 |   for (; i < 3; i += 1) {
      |   ^
-  28 |     x.push(i);
-  29 |   }
-  30 |   for (; i < 3; ) {
+  25 |     x.push(i);
+  26 |   }
+  27 |   for (; i < 3; ) {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  28 |     x.push(i);
-  29 |   }
-> 30 |   for (; i < 3; ) {
+  25 |     x.push(i);
+  26 |   }
+> 27 |   for (; i < 3; ) {
      |   ^
-  31 |     break;
-  32 |   }
-  33 |   for (;;) {
+  28 |     break;
+  29 |   }
+  30 |   for (;;) {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
-  28 |     x.push(i);
-  29 |   }
-> 30 |   for (; i < 3; ) {
+  25 |     x.push(i);
+  26 |   }
+> 27 |   for (; i < 3; ) {
      |   ^
-  31 |     break;
-  32 |   }
-  33 |   for (;;) {
+  28 |     break;
+  29 |   }
+  30 |   for (;;) {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
+  28 |     break;
+  29 |   }
+> 30 |   for (;;) {
+     |   ^
   31 |     break;
   32 |   }
-> 33 |   for (;;) {
-     |   ^
-  34 |     break;
-  35 |   }
-  36 |
+  33 |
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
+  28 |     break;
+  29 |   }
+> 30 |   for (;;) {
+     |   ^
   31 |     break;
   32 |   }
-> 33 |   for (;;) {
-     |   ^
-  34 |     break;
-  35 |   }
-  36 |
+  33 |
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty test in ForStatement
+  28 |     break;
+  29 |   }
+> 30 |   for (;;) {
+     |   ^
   31 |     break;
   32 |   }
-> 33 |   for (;;) {
-     |   ^
-  34 |     break;
-  35 |   }
-  36 |
+  33 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template with interpolations
-  35 |   }
-  36 |
-> 37 |   graphql`
+  32 |   }
+  33 |
+> 34 |   graphql`
      |   ^
-  38 |     ${g}
-  39 |   `;
-  40 |
+  35 |     ${g}
+  36 |   `;
+  37 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value
-  39 |   `;
-  40 |
-> 41 |   graphql`\\t\n`;
+  36 |   `;
+  37 |
+> 38 |   graphql`\\t\n`;
      |   ^^^^^^^^^^^^^^
-  42 |
-  43 |   for (const c of [1, 2]) {
-  44 |   }
+  39 |
+  40 |   for (const c of [1, 2]) {
+  41 |   }
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForOfStatement statements
-  41 |   graphql`\\t\n`;
-  42 |
-> 43 |   for (const c of [1, 2]) {
+  38 |   graphql`\\t\n`;
+  39 |
+> 40 |   for (const c of [1, 2]) {
      |   ^
-  44 |   }
-  45 |
-  46 |   for (let x in { a: 1 }) {
+  41 |   }
+  42 |
+  43 |   for (let x in { a: 1 }) {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForInStatement statements
+  41 |   }
+  42 |
+> 43 |   for (let x in { a: 1 }) {
+     |   ^
   44 |   }
   45 |
-> 46 |   for (let x in { a: 1 }) {
-     |   ^
-  47 |   }
-  48 |
-  49 |   let updateIdentifier = 0;
+  46 |   let updateIdentifier = 0;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  48 |
-  49 |   let updateIdentifier = 0;
-> 50 |   --updateIdentifier;
+  45 |
+  46 |   let updateIdentifier = 0;
+> 47 |   --updateIdentifier;
      |   ^^^^^^^^^^^^^^^^^^
-  51 |   ++updateIdentifier;
-  52 |   updateIdentifier.y++;
-  53 |   updateIdentifier.y--;
+  48 |   ++updateIdentifier;
+  49 |   updateIdentifier.y++;
+  50 |   updateIdentifier.y--;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  49 |   let updateIdentifier = 0;
-  50 |   --updateIdentifier;
-> 51 |   ++updateIdentifier;
+  46 |   let updateIdentifier = 0;
+  47 |   --updateIdentifier;
+> 48 |   ++updateIdentifier;
      |   ^^^^^^^^^^^^^^^^^^
-  52 |   updateIdentifier.y++;
-  53 |   updateIdentifier.y--;
-  54 |
+  49 |   updateIdentifier.y++;
+  50 |   updateIdentifier.y--;
+  51 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  50 |   --updateIdentifier;
-  51 |   ++updateIdentifier;
-> 52 |   updateIdentifier.y++;
+  47 |   --updateIdentifier;
+  48 |   ++updateIdentifier;
+> 49 |   updateIdentifier.y++;
      |   ^^^^^^^^^^^^^^^^^^^^
-  53 |   updateIdentifier.y--;
-  54 |
-  55 |   switch (i) {
+  50 |   updateIdentifier.y--;
+  51 |
+  52 |   switch (i) {
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  51 |   ++updateIdentifier;
-  52 |   updateIdentifier.y++;
-> 53 |   updateIdentifier.y--;
+  48 |   ++updateIdentifier;
+  49 |   updateIdentifier.y++;
+> 50 |   updateIdentifier.y--;
      |   ^^^^^^^^^^^^^^^^^^^^
-  54 |
-  55 |   switch (i) {
-  56 |     case 1 + 1: {
+  51 |
+  52 |   switch (i) {
+  53 |     case 1 + 1: {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  58 |     case foo(): {
-  59 |     }
-> 60 |     case x.y: {
+  55 |     case foo(): {
+  56 |     }
+> 57 |     case x.y: {
      |          ^^^
-  61 |     }
-  62 |     default: {
-  63 |     }
+  58 |     }
+  59 |     default: {
+  60 |     }
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  56 |     case 1 + 1: {
-  57 |     }
-> 58 |     case foo(): {
+  53 |     case 1 + 1: {
+  54 |     }
+> 55 |     case foo(): {
      |          ^^^^^
-  59 |     }
-  60 |     case x.y: {
-  61 |     }
+  56 |     }
+  57 |     case x.y: {
+  58 |     }
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
-  54 |
-  55 |   switch (i) {
-> 56 |     case 1 + 1: {
+  51 |
+  52 |   switch (i) {
+> 53 |     case 1 + 1: {
      |          ^^^^^
-  57 |     }
-  58 |     case foo(): {
-  59 |     }
+  54 |     }
+  55 |     case foo(): {
+  56 |     }
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  65 |
-  66 |   // Cannot assign to globals
-> 67 |   someUnknownGlobal = true;
+  62 |
+  63 |   // Cannot assign to globals
+> 64 |   someUnknownGlobal = true;
      |   ^^^^^^^^^^^^^^^^^
-  68 |   moduleLocal = true;
-  69 | }
-  70 |
+  65 |   moduleLocal = true;
+  66 | }
+  67 |
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  66 |   // Cannot assign to globals
-  67 |   someUnknownGlobal = true;
-> 68 |   moduleLocal = true;
+  63 |   // Cannot assign to globals
+  64 |   someUnknownGlobal = true;
+> 65 |   moduleLocal = true;
      |   ^^^^^^^^^^^
-  69 | }
-  70 |
-  71 | let moduleLocal = false;
+  66 | }
+  67 |
+  68 | let moduleLocal = false;
 ```
           
       

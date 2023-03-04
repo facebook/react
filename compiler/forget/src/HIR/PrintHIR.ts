@@ -19,12 +19,14 @@ import {
   InstructionValue,
   LValue,
   MutableRange,
+  Pattern,
   Phi,
   Place,
   ReactiveInstruction,
   ReactiveScope,
   ReactiveValue,
   SourceLocation,
+  SpreadPattern,
   Terminal,
   Type,
 } from "./HIR";
@@ -321,6 +323,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
+    case "Destructure": {
+      value = `Destructure ${instrValue.lvalue.kind} ${printPattern(
+        instrValue.lvalue.pattern
+      )} = ${printPlace(instrValue.value)}`;
+      break;
+    }
     case "PropertyLoad": {
       value = `PropertyLoad ${printPlace(instrValue.object)}.${
         instrValue.property
@@ -454,6 +462,49 @@ export function printLValue(lval: LValue): string {
     }
     default: {
       assertExhaustive(lval.kind, `Unexpected lvalue kind '${lval.kind}'`);
+    }
+  }
+}
+
+export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      return (
+        "[ " + pattern.items.map((item) => printPattern(item)).join(", ") + " ]"
+      );
+    }
+    case "ObjectPattern": {
+      return (
+        "{ " +
+        pattern.properties
+          .map((item) => {
+            switch (item.kind) {
+              case "ObjectProperty": {
+                return `${item.name}: ${printPattern(item.place)}`;
+              }
+              case "Spread": {
+                return printPattern(item);
+              }
+              default: {
+                assertExhaustive(item, "Unexpected object property kind");
+              }
+            }
+          })
+          .join(", ") +
+        " }"
+      );
+    }
+    case "Spread": {
+      return `...${printPlace(pattern.place)}`;
+    }
+    case "Identifier": {
+      return printPlace(pattern);
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
     }
   }
 }

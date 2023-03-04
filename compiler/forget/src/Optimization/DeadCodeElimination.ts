@@ -8,6 +8,7 @@
 import { BlockId, HIRFunction, Identifier, InstructionValue } from "../HIR";
 import {
   eachInstructionValueOperand,
+  eachPatternOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
 import { assertExhaustive, retainWhere } from "../Utils/utils";
@@ -84,6 +85,16 @@ function pruneableValue(
     case "StoreLocal": {
       // Stores are pruneable only if the identifier being stored to is never read later
       return !used.has(value.lvalue.place.identifier);
+    }
+    case "Destructure": {
+      // Destructure is pruneable only if none of the identifiers are read from later
+      // TODO: as an optimization, prune unused properties where safe
+      for (const place of eachPatternOperand(value.lvalue.pattern)) {
+        if (used.has(place.identifier)) {
+          return false;
+        }
+      }
+      return true;
     }
     case "CallExpression":
     case "ComputedCall":

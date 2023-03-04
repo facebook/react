@@ -32,7 +32,10 @@ function inferInstr(instr: Instruction, aliases: DisjointSet<Identifier>) {
       break;
     }
     case "StoreLocal": {
-      // aliases.union([instrValue.place.identifier, instrValue.value.identifier]);
+      alias = instrValue.value;
+      break;
+    }
+    case "Destructure": {
       alias = instrValue.value;
       break;
     }

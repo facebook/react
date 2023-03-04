@@ -16,6 +16,7 @@ import { printIdentifier } from "../HIR/PrintHIR";
 import {
   eachTerminalSuccessor,
   mapInstructionOperands,
+  mapPatternOperands,
   mapTerminalOperands,
 } from "../HIR/visitors";
 
@@ -228,6 +229,11 @@ export default function enterSSA(func: HIRFunction): void {
         const newPlace = builder.definePlace(oldPlace);
         instr.value.lvalue.place = newPlace;
 
+        instr.value.value = builder.getPlace(instr.value.value);
+      } else if (instr.value.kind === "Destructure") {
+        mapPatternOperands(instr.value.lvalue.pattern, (place) =>
+          builder.definePlace(place)
+        );
         instr.value.value = builder.getPlace(instr.value.value);
       } else {
         mapInstructionOperands(instr, (place) => builder.getPlace(place));

@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   Effect,
@@ -16,12 +17,15 @@ import {
   InstructionId,
   InstructionKind,
   LValue,
+  LValuePattern,
   makeInstructionId,
   Phi,
   Place,
 } from "../HIR/HIR";
+import { printPlace } from "../HIR/PrintHIR";
 import {
   eachInstructionValueOperand,
+  eachPatternOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
 
@@ -89,7 +93,10 @@ import {
  */
 export function leaveSSA(fn: HIRFunction): void {
   // Maps identifier names to their original declaration.
-  const declarations: Map<string, LValue> = new Map();
+  const declarations: Map<
+    string,
+    { lvalue: LValue | LValuePattern; place: Place }
+  > = new Map();
 
   // For non-memoizable phis, this maps original identifiers to the identifier they should be
   // *rewritten* to. The keys are the original identifiers, and the value will be _either_ the
@@ -111,30 +118,74 @@ export function leaveSSA(fn: HIRFunction): void {
       // Iterate the instructions and perform any rewrites as well as promoting SSA variables to
       // `let` or `reassign` where possible.
       const { lvalue, value } = instr;
-      if (
-        value.kind === "StoreLocal" &&
-        value.lvalue.place.identifier.name != null
-      ) {
-        const originalLVal = declarations.get(
-          value.lvalue.place.identifier.name
-        );
-        if (originalLVal === undefined) {
-          declarations.set(value.lvalue.place.identifier.name, value.lvalue);
-          value.lvalue.kind = InstructionKind.Const;
-        } else {
-          // This is an instance of the original id, so we need to promote the original declaration
-          // to a `let` and the current lval to a `reassign`
-          originalLVal.kind = InstructionKind.Let;
+      if (value.kind === "StoreLocal") {
+        if (value.lvalue.place.identifier.name != null) {
+          const originalLVal = declarations.get(
+            value.lvalue.place.identifier.name
+          );
+          if (originalLVal === undefined) {
+            declarations.set(value.lvalue.place.identifier.name, {
+              lvalue: value.lvalue,
+              place: value.lvalue.place,
+            });
+            value.lvalue.kind = InstructionKind.Const;
+          } else {
+            // This is an instance of the original id, so we need to promote the original declaration
+            // to a `let` and the current lval to a `reassign`
+            originalLVal.lvalue.kind = InstructionKind.Let;
+          }
+        } else if (rewrites.has(value.lvalue.place.identifier)) {
+          value.lvalue.kind =
+            rewrites.get(value.lvalue.place.identifier) ===
+            value.lvalue.place.identifier
+              ? InstructionKind.Let
+              : InstructionKind.Reassign;
         }
-      } else if (
-        value.kind === "StoreLocal" &&
-        rewrites.has(value.lvalue.place.identifier)
-      ) {
-        value.lvalue.kind =
-          rewrites.get(value.lvalue.place.identifier) ===
-          value.lvalue.place.identifier
-            ? InstructionKind.Let
-            : InstructionKind.Reassign;
+      } else if (value.kind === "Destructure") {
+        let kind: InstructionKind | null = null;
+        for (const place of eachPatternOperand(value.lvalue.pattern)) {
+          if (place.identifier.name == null) {
+            if (kind !== null && kind !== InstructionKind.Const) {
+              CompilerError.invariant(
+                `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                  place
+                )}' is const`,
+                place.loc
+              );
+            }
+            kind = InstructionKind.Const;
+          } else {
+            const originalLVal = declarations.get(place.identifier.name);
+            if (originalLVal === undefined) {
+              declarations.set(place.identifier.name, {
+                lvalue: value.lvalue,
+                place,
+              });
+              if (kind !== null && kind !== InstructionKind.Const) {
+                CompilerError.invariant(
+                  `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                    place
+                  )}' is const`,
+                  place.loc
+                );
+              }
+              kind = InstructionKind.Const;
+            } else {
+              if (kind !== null && kind !== InstructionKind.Reassign) {
+                CompilerError.invariant(
+                  `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                    place
+                  )}' is reassigned`,
+                  place.loc
+                );
+              }
+              kind = InstructionKind.Reassign;
+              originalLVal.lvalue.kind = InstructionKind.Let;
+            }
+          }
+        }
+        invariant(kind !== null, "Expected at least one operand");
+        value.lvalue.kind = kind;
       }
       rewritePlace(lvalue, rewrites, declarations);
       for (const operand of eachInstructionValueOperand(instr.value)) {
@@ -304,7 +355,7 @@ export function leaveSSA(fn: HIRFunction): void {
           loc: GeneratedSource,
         };
         block.instructions.push(instr);
-        declarations.set(phi.id.name, lvalue);
+        declarations.set(phi.id.name, { lvalue, place: lvalue.place });
         phi.id.mutableRange.start = terminal.id;
         if (!isPhiMutatedAfterCreation) {
           phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
@@ -343,7 +394,7 @@ export function leaveSSA(fn: HIRFunction): void {
         if (canonicalId.name !== null) {
           const declaration = declarations.get(canonicalId.name);
           if (declaration !== undefined) {
-            declaration.kind = InstructionKind.Let;
+            declaration.lvalue.kind = InstructionKind.Let;
           }
         }
       }
@@ -370,7 +421,7 @@ export function leaveSSA(fn: HIRFunction): void {
 function rewritePlace(
   place: Place,
   rewrites: Map<Identifier, Identifier>,
-  declarations: Map<string, LValue>
+  declarations: Map<string, { lvalue: LValue | LValuePattern; place: Place }>
 ): void {
   const prevIdentifier = place.identifier;
   const nextIdentifier = rewrites.get(prevIdentifier);

@@ -22,7 +22,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const setValue = useState(null)[1];
+  const [value, setValue] = useState(null);
 
   const onChange = (e) => setValue((value) => value + e.target.value);
 

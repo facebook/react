@@ -14,7 +14,7 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
-  LValue,
+  Pattern,
   Place,
   ReactiveBlock,
   ReactiveFunction,
@@ -24,7 +24,9 @@ import {
   ReactiveTerminal,
   ReactiveValue,
   SourceLocation,
+  SpreadPattern,
 } from "../HIR/HIR";
+import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -358,36 +360,39 @@ function codegenInstructionNullable(
   instr: ReactiveInstruction
 ): t.Statement | null {
   let statement;
-  if (instr.value.kind === "StoreLocal") {
-    const kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
-      ? InstructionKind.Reassign
-      : instr.value.lvalue.kind;
+  if (instr.value.kind === "StoreLocal" || instr.value.kind === "Destructure") {
+    let kind: InstructionKind = instr.value.lvalue.kind;
+    let lvalue;
+    if (instr.value.kind === "StoreLocal") {
+      kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
+        ? InstructionKind.Reassign
+        : kind;
+      lvalue = instr.value.lvalue.place;
+    } else {
+      lvalue = instr.value.lvalue.pattern;
+      for (const place of eachPatternOperand(lvalue)) {
+        if (cx.hasDeclared(place.identifier)) {
+          kind = InstructionKind.Reassign;
+          break;
+        }
+      }
+    }
     const value = codegenPlace(cx, instr.value.value);
     switch (kind) {
       case InstructionKind.Const: {
         return createVariableDeclaration(instr.loc, "const", [
-          t.variableDeclarator(
-            convertIdentifier(instr.value.lvalue.place.identifier),
-            value
-          ),
+          t.variableDeclarator(codegenLValue(lvalue), value),
         ]);
       }
       case InstructionKind.Let: {
         return createVariableDeclaration(instr.loc, "let", [
-          t.variableDeclarator(
-            convertIdentifier(instr.value.lvalue.place.identifier),
-            value
-          ),
+          t.variableDeclarator(codegenLValue(lvalue), value),
         ]);
       }
       case InstructionKind.Reassign: {
         return createExpressionStatement(
           instr.loc,
-          t.assignmentExpression(
-            "=",
-            convertIdentifier(instr.value.lvalue.place.identifier),
-            value
-          )
+          t.assignmentExpression("=", codegenLValue(lvalue), value)
         );
       }
       default: {
@@ -717,12 +722,6 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.place);
       break;
     }
-    case "StoreLocal": {
-      CompilerError.invariant(
-        `Unexpected StoreLocal in codegenInstructionValue`,
-        instrValue.loc
-      );
-    }
     case "FunctionExpression": {
       value = instrValue.expr;
       break;
@@ -814,6 +813,13 @@ function codegenInstructionValue(
       value = t.identifier(instrValue.name);
       break;
     }
+    case "Destructure":
+    case "StoreLocal": {
+      CompilerError.invariant(
+        `Unexpected StoreLocal in codegenInstructionValue`,
+        instrValue.loc
+      );
+    }
     default: {
       assertExhaustive(
         instrValue,
@@ -844,8 +850,44 @@ function codegenJsxElement(
   }
 }
 
-function codegenLVal(lval: LValue): t.LVal {
-  return convertIdentifier(lval.place.identifier);
+function codegenLValue(
+  pattern: Pattern | Place | SpreadPattern
+): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      return t.arrayPattern(pattern.items.map((item) => codegenLValue(item)));
+    }
+    case "ObjectPattern": {
+      return t.objectPattern(
+        pattern.properties.map((property) => {
+          if (property.kind === "ObjectProperty") {
+            const key = t.identifier(property.name);
+            const value = codegenLValue(property.place);
+            return t.objectProperty(
+              key,
+              value,
+              false,
+              value.type === "Identifier" && value.name === key.name
+            );
+          } else {
+            return t.restElement(codegenLValue(property.place));
+          }
+        })
+      );
+    }
+    case "Spread": {
+      return t.restElement(codegenLValue(pattern.place));
+    }
+    case "Identifier": {
+      return convertIdentifier(pattern.identifier);
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
+    }
+  }
 }
 
 function codegenValue(

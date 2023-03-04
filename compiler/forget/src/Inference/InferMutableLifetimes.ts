@@ -14,7 +14,7 @@ import {
   Place,
 } from "../HIR/HIR";
 import { printInstruction, printPlace } from "../HIR/PrintHIR";
-import { eachInstructionOperand } from "../HIR/visitors";
+import { eachInstructionOperand, eachPatternOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -123,6 +123,12 @@ export function inferMutableLifetimes(
         instr.value.lvalue.place.identifier.mutableRange.start = instr.id;
         instr.value.lvalue.place.identifier.mutableRange.end =
           makeInstructionId(instr.id + 1);
+      } else if (instr.value.kind === "Destructure") {
+        inferPlace(instr.value.value, instr, inferMutableRangeForStores);
+        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          place.identifier.mutableRange.start = instr.id;
+          place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
+        }
       } else {
         for (const input of eachInstructionOperand(instr)) {
           inferPlace(input, instr, inferMutableRangeForStores);

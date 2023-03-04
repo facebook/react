@@ -15,7 +15,7 @@ import {
   Place,
   ReactiveScope,
 } from "../HIR/HIR";
-import { eachInstructionOperand } from "../HIR/visitors";
+import { eachInstructionOperand, eachPatternOperand } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -115,6 +115,21 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         ) {
           operands.push(instr.value.value.identifier);
         }
+      } else if (instr.value.kind === "Destructure") {
+        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          if (
+            place.identifier.mutableRange.end >
+            place.identifier.mutableRange.start + 1
+          ) {
+            operands.push(place.identifier);
+          }
+        }
+        if (
+          isMutable(instr, instr.value.value) &&
+          instr.value.value.identifier.mutableRange.start > 0
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
       } else {
         for (const operand of eachInstructionOperand(instr)) {
           if (
@@ -183,6 +198,7 @@ function isMutable({ id }: Instruction, place: Place): boolean {
 
 function mayAllocate(value: InstructionValue): boolean {
   switch (value.kind) {
+    case "Destructure":
     case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":

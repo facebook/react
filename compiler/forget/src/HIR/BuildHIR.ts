@@ -14,6 +14,7 @@ import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment, EnvironmentOptions } from "./Environment";
 import {
+  ArrayPattern,
   BlockId,
   BranchTerminal,
   Case,
@@ -27,6 +28,7 @@ import {
   InstructionValue,
   JsxAttribute,
   makeInstructionId,
+  ObjectPattern,
   Place,
   ReturnTerminal,
   SourceLocation,
@@ -1967,6 +1969,11 @@ function lowerAssignment(
       return { kind: "LoadLocal", place, loc: temporary.loc };
     }
     case "MemberExpression": {
+      // This can only occur because of a coding error, parsers enforce this condition
+      invariant(
+        kind === InstructionKind.Reassign,
+        "MemberExpression may only appear in an assignment expression"
+      );
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get("property");
       const object = lowerExpressionToTemporary(builder, lvalue.get("object"));
@@ -2009,115 +2016,156 @@ function lowerAssignment(
     case "ArrayPattern": {
       const lvalue = lvaluePath as NodePath<t.ArrayPattern>;
       const elements = lvalue.get("elements");
-      let hasError = false;
+      const items: ArrayPattern["items"] = [];
+      const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
         if (element.node == null) {
           continue;
         }
-        if (element.node.type === "RestElement") {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Handle ${element.type} in ArrayPattern`,
-            severity: ErrorSeverity.Todo,
-            nodePath: element,
+        if (element.isRestElement()) {
+          const argument = element.get("argument");
+          if (!argument.isIdentifier()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
+              severity: ErrorSeverity.Todo,
+              nodePath: element,
+            });
+            continue;
+          }
+          const identifier = lowerIdentifier(builder, argument);
+          items.push({
+            kind: "Spread",
+            place: identifier,
           });
-          hasError = true;
-          continue;
+        } else if (element.isIdentifier()) {
+          const identifier = lowerIdentifier(builder, element);
+          items.push(identifier);
+        } else {
+          const temp = buildTemporaryPlace(
+            builder,
+            element.node.loc ?? GeneratedSource
+          );
+          items.push({ ...temp });
+          followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
         }
-        const property = buildTemporaryPlace(
-          builder,
-          element.node.loc ?? GeneratedSource
-        );
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...property },
-          value: {
-            kind: "Primitive",
-            value: i,
-            loc: element.node.loc ?? GeneratedSource,
-          },
-          loc: element.node.loc ?? GeneratedSource,
-        });
-        const propertyPlace = buildTemporaryPlace(builder, property.loc);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...propertyPlace },
-          value: {
-            kind: "ComputedLoad",
-            loc,
-            object: { ...value },
-            property,
-          },
-          loc,
-        });
-        lowerAssignment(
-          builder,
-          loc,
-          kind,
-          element as NodePath<t.LVal>,
-          propertyPlace
-        );
       }
-      return hasError
-        ? { kind: "UnsupportedNode", node: lvalueNode, loc }
-        : { kind: "LoadLocal", place: value, loc: value.loc };
+      const temp = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { ...temp },
+        value: {
+          kind: "Destructure",
+          lvalue: {
+            kind,
+            pattern: {
+              kind: "ArrayPattern",
+              items,
+            },
+          },
+          value,
+          loc,
+        },
+        loc,
+      });
+      for (const { place, path } of followups) {
+        lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
+      }
+      return { kind: "LoadLocal", place: value, loc: value.loc };
     }
     case "ObjectPattern": {
       const lvalue = lvaluePath as NodePath<t.ObjectPattern>;
-      const properties = lvalue.get("properties");
-      let hasError = false;
-      for (let i = 0; i < properties.length; i++) {
-        const property = properties[i];
-        if (!property.isObjectProperty()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
-            severity: ErrorSeverity.Todo,
-            nodePath: property,
+      const propertiesPaths = lvalue.get("properties");
+      const properties: ObjectPattern["properties"] = [];
+      const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
+      for (let i = 0; i < propertiesPaths.length; i++) {
+        const property = propertiesPaths[i];
+        if (property.isRestElement()) {
+          const argument = property.get("argument");
+          if (!argument.isIdentifier()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
+              severity: ErrorSeverity.Todo,
+              nodePath: argument,
+            });
+            continue;
+          }
+          const identifier = lowerIdentifier(builder, argument);
+          properties.push({
+            kind: "Spread",
+            place: identifier,
           });
-          hasError = true;
-          continue;
+        } else {
+          // TODO: this should always be true given the if/else
+          if (!property.isObjectProperty()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
+              severity: ErrorSeverity.Todo,
+              nodePath: property,
+            });
+            continue;
+          }
+          const key = property.get("key");
+          if (!key.isIdentifier()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
+              severity: ErrorSeverity.Todo,
+              nodePath: key,
+            });
+            continue;
+          }
+          const element = property.get("value");
+          if (!element.isLVal()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
+              severity: ErrorSeverity.InvalidInput,
+              nodePath: element,
+            });
+            continue;
+          }
+          if (element.isIdentifier()) {
+            const identifier = lowerIdentifier(builder, element);
+            properties.push({
+              kind: "ObjectProperty",
+              name: key.node.name,
+              place: identifier,
+            });
+          } else {
+            const temp = buildTemporaryPlace(
+              builder,
+              element.node.loc ?? GeneratedSource
+            );
+            properties.push({
+              kind: "ObjectProperty",
+              name: key.node.name,
+              place: { ...temp },
+            });
+            followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
+          }
         }
-        const key = property.get("key");
-        if (!key.isIdentifier()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
-            severity: ErrorSeverity.Todo,
-            nodePath: key,
-          });
-          hasError = true;
-          continue;
-        }
-        const element = property.get("value");
-        if (!element.isLVal()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
-            severity: ErrorSeverity.InvalidInput,
-            nodePath: element,
-          });
-          hasError = true;
-          continue;
-        }
-        const propertyPlace = buildTemporaryPlace(
-          builder,
-          property.node.loc ?? GeneratedSource
-        );
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...propertyPlace },
-          value: {
-            kind: "PropertyLoad",
-            loc,
-            object: { ...value },
-            property: key.node.name,
-            optional: false, // Key of ObjectPattern (evaluation of LVal) cannot be optional.
-          },
-          loc,
-        });
-        lowerAssignment(builder, loc, kind, element, propertyPlace);
       }
-      return hasError
-        ? { kind: "UnsupportedNode", node: lvalueNode, loc }
-        : { kind: "LoadLocal", place: value, loc: value.loc };
+      const temp = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { ...temp },
+        value: {
+          kind: "Destructure",
+          lvalue: {
+            kind,
+            pattern: {
+              kind: "ObjectPattern",
+              properties,
+            },
+          },
+          value,
+          loc,
+        },
+        loc,
+      });
+      for (const { place, path } of followups) {
+        lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
+      }
+      return { kind: "LoadLocal", place: value, loc: value.loc };
     }
     default: {
       builder.errors.push({

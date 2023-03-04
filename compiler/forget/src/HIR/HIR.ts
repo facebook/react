@@ -375,6 +375,34 @@ export type LValue = {
   kind: InstructionKind;
 };
 
+export type LValuePattern = {
+  pattern: Pattern;
+  kind: InstructionKind;
+};
+
+export type Pattern = ArrayPattern | ObjectPattern;
+
+export type SpreadPattern = {
+  kind: "Spread";
+  place: Place;
+};
+
+export type ArrayPattern = {
+  kind: "ArrayPattern";
+  items: Array<Place | SpreadPattern>;
+};
+
+export type ObjectPattern = {
+  kind: "ObjectPattern";
+  properties: Array<ObjectProperty | SpreadPattern>;
+};
+
+export type ObjectProperty = {
+  kind: "ObjectProperty";
+  name: string; // TODO: make a Place
+  place: Place;
+};
+
 export enum InstructionKind {
   /**
    * const declaration
@@ -421,6 +449,12 @@ export type InstructionValue =
   | {
       kind: "StoreLocal";
       lvalue: LValue;
+      value: Place;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "Destructure";
+      lvalue: LValuePattern;
       value: Place;
       loc: SourceLocation;
     }

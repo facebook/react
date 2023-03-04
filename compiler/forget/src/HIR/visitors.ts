@@ -13,6 +13,7 @@ import {
   Instruction,
   InstructionValue,
   makeInstructionId,
+  Pattern,
   Place,
   ReactiveScope,
   ScopeId,
@@ -54,6 +55,11 @@ export function* eachInstructionValueOperand(
     }
     case "StoreLocal": {
       yield instrValue.lvalue.place;
+      yield instrValue.value;
+      break;
+    }
+    case "Destructure": {
+      yield* eachPatternOperand(instrValue.lvalue.pattern);
       yield instrValue.value;
       break;
     }
@@ -151,6 +157,49 @@ export function* eachInstructionValueOperand(
   }
 }
 
+export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      for (const item of pattern.items) {
+        if (item.kind === "Identifier") {
+          yield item;
+        } else if (item.kind === "Spread") {
+          yield item.place;
+        } else {
+          assertExhaustive(
+            item,
+            `Unexpected item kind '${(item as any).kind}'`
+          );
+        }
+      }
+      break;
+    }
+    case "ObjectPattern": {
+      for (const property of pattern.properties) {
+        if (property.kind === "ObjectProperty") {
+          if (property.place.kind === "Identifier") {
+            yield property.place;
+          }
+        } else if (property.kind === "Spread") {
+          yield property.place;
+        } else {
+          assertExhaustive(
+            property,
+            `Unexpected item kind '${(property as any).kind}'`
+          );
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
+    }
+  }
+}
+
 export function mapInstructionOperands(
   instr: Instruction,
   fn: (place: Place) => Place
@@ -188,6 +237,11 @@ export function mapInstructionOperands(
     }
     case "StoreLocal": {
       instrValue.lvalue.place = fn(instrValue.lvalue.place);
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "Destructure": {
+      mapPatternOperands(instrValue.lvalue.pattern, fn);
       instrValue.value = fn(instrValue.value);
       break;
     }
@@ -278,6 +332,37 @@ export function mapInstructionOperands(
     }
     default: {
       assertExhaustive(instrValue, "Unexpected instruction kind");
+    }
+  }
+}
+
+export function mapPatternOperands(
+  pattern: Pattern,
+  fn: (place: Place) => Place
+): void {
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      pattern.items = pattern.items.map((item) => {
+        if (item.kind === "Identifier") {
+          return fn(item);
+        } else {
+          item.place = fn(item.place);
+          return item;
+        }
+      });
+      break;
+    }
+    case "ObjectPattern": {
+      for (const property of pattern.properties) {
+        property.place = fn(property.place);
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
     }
   }
 }
