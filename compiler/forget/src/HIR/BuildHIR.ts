@@ -313,7 +313,7 @@ function lowerStatement(
           });
           return { kind: "unsupported", id: makeInstructionId(0) };
         }
-        lowerExpressionToVoid(builder, update as NodePath<t.Expression>);
+        lowerExpressionToTemporary(builder, update as NodePath<t.Expression>);
         return {
           kind: "goto",
           block: testBlock.id,
@@ -639,21 +639,7 @@ function lowerStatement(
     case "ExpressionStatement": {
       const stmt = stmtPath as NodePath<t.ExpressionStatement>;
       const expression = stmt.get("expression");
-      const value = lowerExpression(builder, expression);
-      if (expression.isAssignmentExpression() && value.kind === "LoadLocal") {
-        // already lowered to a place
-        return;
-      }
-      const place = buildTemporaryPlace(
-        builder,
-        stmt.node.loc ?? GeneratedSource
-      );
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: place,
-        value,
-        loc: stmt.node.loc ?? GeneratedSource,
-      });
+      lowerExpressionToTemporary(builder, expression);
       return;
     }
     case "DoWhileStatement": {
@@ -1171,10 +1157,15 @@ function lowerExpression(
         },
         testBlock
       );
+      const leftValue = lowerExpressionToTemporary(builder, expr.get("left"));
       builder.push({
         id: makeInstructionId(0),
         lvalue: { ...leftPlace },
-        value: lowerExpression(builder, expr.get("left")),
+        value: {
+          kind: "LoadLocal",
+          place: leftValue,
+          loc: exprLoc,
+        },
         loc: exprLoc,
       });
       builder.terminateWithContinuation(
@@ -1195,7 +1186,7 @@ function lowerExpression(
 
       if (builder.currentBlockKind() === "value") {
         // try lowering the RHS in case it also contains errors
-        lowerExpression(builder, expr.get("right"));
+        lowerExpressionToTemporary(builder, expr.get("right"));
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
           severity: ErrorSeverity.Todo,
@@ -1851,42 +1842,6 @@ function lowerExpressionToTemporary(
     lvalue: { ...place },
   });
   return place;
-}
-
-function lowerExpressionToPlace(
-  builder: HIRBuilder,
-  exprPath: NodePath<t.Expression>
-): Place {
-  const value = lowerExpression(builder, exprPath);
-  if (value.kind === "LoadLocal") {
-    return value.place;
-  }
-  const exprLoc = exprPath.node.loc ?? GeneratedSource;
-  const place: Place = buildTemporaryPlace(builder, exprLoc);
-  builder.push({
-    id: makeInstructionId(0),
-    value: value,
-    loc: exprLoc,
-    lvalue: { ...place },
-  });
-  return place;
-}
-
-/**
- * Lowers an expression to an instruction with no lvalue
- */
-function lowerExpressionToVoid(
-  builder: HIRBuilder,
-  exprPath: NodePath<t.Expression>
-): void {
-  const instr = lowerExpression(builder, exprPath);
-  const exprLoc = exprPath.node.loc ?? GeneratedSource;
-  builder.push({
-    id: makeInstructionId(0),
-    value: instr,
-    loc: exprLoc,
-    lvalue: buildTemporaryPlace(builder, exprLoc),
-  });
 }
 
 function lowerIdentifier(
