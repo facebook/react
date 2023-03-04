@@ -5,7 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BlockId, HIRFunction, Identifier, InstructionValue } from "../HIR";
+import {
+  ArrayPattern,
+  BlockId,
+  HIRFunction,
+  Identifier,
+  Instruction,
+  InstructionValue,
+  ObjectPattern,
+} from "../HIR";
 import {
   eachInstructionValueOperand,
   eachPatternOperand,
@@ -48,9 +56,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
           continue;
         }
         used.add(instr.lvalue.identifier);
-        for (const operand of eachInstructionValueOperand(instr.value)) {
-          used.add(operand.identifier);
-        }
+        visitInstruction(instr, used);
       }
       for (const phi of block.phis) {
         if (used.has(phi.id)) {
@@ -70,6 +76,78 @@ export function deadCodeElimination(fn: HIRFunction): void {
     retainWhere(block.instructions, (instr) =>
       used.has(instr.lvalue.identifier)
     );
+  }
+}
+
+function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
+  if (instr.value.kind === "Destructure") {
+    // Mark the value as used, not the lvalues
+    used.add(instr.value.value.identifier);
+    // Remove unused lvalues
+    switch (instr.value.lvalue.pattern.kind) {
+      case "ArrayPattern": {
+        // For arrays, we can only eliminate unused items from the end of the array,
+        // so we iterate from the end and break once we find a used item. Note that
+        // we already know at least one item is used, from the pruneableValue check.
+        let nextItems: ArrayPattern["items"] | null = null;
+        const originalItems = instr.value.lvalue.pattern.items;
+        for (let i = originalItems.length - 1; i >= 0; i--) {
+          const item = originalItems[i];
+          if (item.kind === "Identifier") {
+            if (used.has(item.identifier)) {
+              nextItems = originalItems.slice(0, i + 1);
+              break;
+            }
+          } else {
+            if (used.has(item.place.identifier)) {
+              nextItems = originalItems.slice(0, i + 1);
+              break;
+            }
+          }
+        }
+        if (nextItems !== null) {
+          instr.value.lvalue.pattern.items = nextItems;
+        }
+        break;
+      }
+      case "ObjectPattern": {
+        // For objects we can prune any unused properties so long as there is no used rest element
+        // (`const {x, ...y} = z`). If a rest element exists and is used, then nothing can be pruned
+        // because it would change the set of properties which are copied into the rest value.
+        // In the `const {x, ...y} = z` example, removing the `x` property would mean that `y` now
+        // has an `x` property, changing the semantics.
+        let nextProperties: ObjectPattern["properties"] | null = null;
+        for (const property of instr.value.lvalue.pattern.properties) {
+          if (property.kind === "ObjectProperty") {
+            if (used.has(property.place.identifier)) {
+              nextProperties ??= [];
+              nextProperties.push(property);
+            }
+          } else {
+            if (used.has(property.place.identifier)) {
+              nextProperties = null;
+              break;
+            }
+          }
+        }
+        if (nextProperties !== null) {
+          instr.value.lvalue.pattern.properties = nextProperties;
+        }
+        break;
+      }
+      default: {
+        assertExhaustive(
+          instr.value.lvalue.pattern,
+          `Unexpected pattern kind '${
+            (instr.value.lvalue.pattern as any).kind
+          }'`
+        );
+      }
+    }
+  } else {
+    for (const operand of eachInstructionValueOperand(instr.value)) {
+      used.add(operand.identifier);
+    }
   }
 }
 
