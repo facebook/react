@@ -11,7 +11,6 @@
 
 let React;
 let ReactNoop;
-let Scheduler;
 let JSXDEVRuntime;
 let waitForAll;
 
@@ -20,7 +19,6 @@ describe('ReactDeprecationWarnings', () => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     if (__DEV__) {
@@ -28,7 +26,7 @@ describe('ReactDeprecationWarnings', () => {
     }
   });
 
-  it('should warn when given defaultProps', () => {
+  it('should warn when given defaultProps', async () => {
     function FunctionalComponent(props) {
       return null;
     }
@@ -38,14 +36,14 @@ describe('ReactDeprecationWarnings', () => {
     };
 
     ReactNoop.render(<FunctionalComponent />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Warning: FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
   });
 
-  it('should warn when given defaultProps on a memoized function', () => {
+  it('should warn when given defaultProps on a memoized function', async () => {
     const MemoComponent = React.memo(function FunctionalComponent(props) {
       return null;
     });
@@ -59,14 +57,14 @@ describe('ReactDeprecationWarnings', () => {
         <MemoComponent />
       </div>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Warning: FunctionalComponent: Support for defaultProps ' +
         'will be removed from memo components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
   });
 
-  it('should warn when given string refs', () => {
+  it('should warn when given string refs', async () => {
     class RefComponent extends React.Component {
       render() {
         return null;
@@ -79,7 +77,7 @@ describe('ReactDeprecationWarnings', () => {
     }
 
     ReactNoop.render(<Component />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Warning: Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
@@ -108,7 +106,7 @@ describe('ReactDeprecationWarnings', () => {
     await waitForAll([]);
   });
 
-  it('should warn when owner and self are different for string refs', () => {
+  it('should warn when owner and self are different for string refs', async () => {
     class RefComponent extends React.Component {
       render() {
         return null;
@@ -121,7 +119,7 @@ describe('ReactDeprecationWarnings', () => {
     }
 
     ReactNoop.render(<Component />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'This case cannot be automatically converted to an arrow function. ' +
@@ -132,7 +130,7 @@ describe('ReactDeprecationWarnings', () => {
   });
 
   if (__DEV__) {
-    it('should warn when owner and self are different for string refs', () => {
+    it('should warn when owner and self are different for string refs', async () => {
       class RefComponent extends React.Component {
         render() {
           return null;
@@ -152,7 +150,7 @@ describe('ReactDeprecationWarnings', () => {
       }
 
       ReactNoop.render(<Component />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+      await expect(async () => await waitForAll([])).toErrorDev(
         'Warning: Component "Component" contains the string ref "refComponent". ' +
           'Support for string refs will be removed in a future major release. ' +
           'This case cannot be automatically converted to an arrow function. ' +

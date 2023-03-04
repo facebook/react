@@ -209,7 +209,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     }
     ReactNoop.render(<BadCounter />);
 
-    expect(Scheduler).toFlushAndThrow(
+    await waitForThrow(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
         ' one of the following reasons:\n' +
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
@@ -227,19 +227,20 @@ describe('ReactHooksWithNoopRenderer', () => {
     await waitForAll([10]);
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('throws inside module-style components', async () => {
-      function Counter() {
-        return {
-          render() {
-            const [count] = useState(0);
-            return <Text text={this.props.label + ': ' + count} />;
-          },
-        };
-      }
-      ReactNoop.render(<Counter />);
-      expect(() =>
-        expect(Scheduler).toFlushAndThrow(
+  // @gate !disableModulePatternComponents
+  it('throws inside module-style components', async () => {
+    function Counter() {
+      return {
+        render() {
+          const [count] = useState(0);
+          return <Text text={this.props.label + ': ' + count} />;
+        },
+      };
+    }
+    ReactNoop.render(<Counter />);
+    await expect(
+      async () =>
+        await waitForThrow(
           'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen ' +
             'for one of the following reasons:\n' +
             '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
@@ -247,23 +248,22 @@ describe('ReactHooksWithNoopRenderer', () => {
             '3. You might have more than one copy of React in the same app\n' +
             'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
         ),
-      ).toErrorDev(
-        'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
-          'Change Counter to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Counter.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
+    ).toErrorDev(
+      'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
+        'Change Counter to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Counter.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    );
 
-      // Confirm that a subsequent hook works properly.
-      function GoodCounter(props) {
-        const [count] = useState(props.initialCount);
-        return <Text text={count} />;
-      }
-      ReactNoop.render(<GoodCounter initialCount={10} />);
-      await waitForAll([10]);
-    });
-  }
+    // Confirm that a subsequent hook works properly.
+    function GoodCounter(props) {
+      const [count] = useState(props.initialCount);
+      return <Text text={count} />;
+    }
+    ReactNoop.render(<GoodCounter initialCount={10} />);
+    await waitForAll([10]);
+  });
 
   it('throws when called outside the render phase', async () => {
     expect(() => {
@@ -487,20 +487,18 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['Foo [0]', 'Bar']);
 
       // Bar will update Foo during its render phase. React should warn.
-      await act(async () => {
-        root.render(
-          <>
-            <Foo />
-            <Bar triggerUpdate={true} />
-          </>,
-        );
-        expect(() =>
-          expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
-        ).toErrorDev([
-          'Cannot update a component (`Foo`) while rendering a ' +
-            'different component (`Bar`). To locate the bad setState() call inside `Bar`',
-        ]);
-      });
+      root.render(
+        <>
+          <Foo />
+          <Bar triggerUpdate={true} />
+        </>,
+      );
+      await expect(
+        async () => await waitForAll(['Foo [0]', 'Bar', 'Foo [1]']),
+      ).toErrorDev([
+        'Cannot update a component (`Foo`) while rendering a ' +
+          'different component (`Bar`). To locate the bad setState() call inside `Bar`',
+      ]);
 
       // It should not warn again (deduplication).
       await act(async () => {
@@ -562,7 +560,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text={count} />;
       }
       ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndThrow(
+      await waitForThrow(
         'Too many re-renders. React limits the number of renders to prevent ' +
           'an infinite loop.',
       );
@@ -3805,7 +3803,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['A: 2, B: 3, C: 4']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="A: 2, B: 3, C: 4" />);
       ReactNoop.render(<App loadC={false} />);
-      expect(Scheduler).toFlushAndThrow(
+      await waitForThrow(
         'Rendered fewer hooks than expected. This may be caused by an ' +
           'accidental early return statement.',
       );

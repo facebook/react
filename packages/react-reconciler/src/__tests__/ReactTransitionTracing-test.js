@@ -1395,12 +1395,13 @@ describe('ReactInteractionTracing', () => {
       root.render(<App navigate={true} markerName="marker two" />);
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      expect(() =>
-        expect(Scheduler).toFlushAndYield([
-          'Suspend [Page Two]',
-          'Loading...',
-          'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, newName: marker two, type: marker}])',
-        ]),
+      await expect(
+        async () =>
+          await waitForAll([
+            'Suspend [Page Two]',
+            'Loading...',
+            'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, newName: marker two, type: marker}])',
+          ]),
       ).toErrorDev('');
 
       resolveText('Page Two');

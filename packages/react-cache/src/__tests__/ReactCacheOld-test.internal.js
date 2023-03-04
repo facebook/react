@@ -20,6 +20,7 @@ let TextResource;
 let textResourceShouldFail;
 let waitForAll;
 let assertLog;
+let waitForThrow;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -38,6 +39,7 @@ describe('ReactCache', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    waitForThrow = InternalTestUtils.waitForThrow;
 
     TextResource = createResource(
       ([text, ms = 0]) => {
@@ -150,12 +152,12 @@ describe('ReactCache', () => {
     jest.advanceTimersByTime(100);
     assertLog(['Promise rejected [Hi]']);
 
-    expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
+    await waitForThrow('Failed to load: Hi');
     assertLog(['Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
     root.update(<App />);
-    expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
+    await waitForThrow('Failed to load: Hi');
     assertLog(['Error! [Hi]', 'Error! [Hi]']);
   });
 

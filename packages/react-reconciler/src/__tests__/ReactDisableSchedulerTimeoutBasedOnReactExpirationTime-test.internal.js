@@ -6,6 +6,7 @@ let Suspense;
 let scheduleCallback;
 let NormalPriority;
 let waitForAll;
+let waitFor;
 
 describe('ReactSuspenseList', () => {
   beforeEach(() => {
@@ -24,6 +25,7 @@ describe('ReactSuspenseList', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
   });
 
   function Text(props) {
@@ -86,11 +88,11 @@ describe('ReactSuspenseList', () => {
     });
 
     // This resolves A and schedules a task for React to retry.
-    await expect(Scheduler).toFlushAndYieldThrough(['Resolve A']);
+    await waitFor(['Resolve A']);
 
     // The next task that flushes should be the one that resolves B. The render
     // task should not jump the queue ahead of B.
-    await expect(Scheduler).toFlushAndYieldThrough(['Resolve B']);
+    await waitFor(['Resolve B']);
 
     await waitForAll(['A', 'B']);
     expect(root).toMatchRenderedOutput('AB');

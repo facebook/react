@@ -16,6 +16,7 @@ let Scheduler;
 let gen;
 let waitForAll;
 let waitFor;
+let waitForThrow;
 
 describe('ReactNewContext', () => {
   beforeEach(() => {
@@ -30,6 +31,7 @@ describe('ReactNewContext', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   afterEach(() => {
@@ -850,14 +852,14 @@ describe('ReactNewContext', () => {
   }
 
   describe('Context.Provider', () => {
-    it('warns if no value prop provided', () => {
+    it('warns if no value prop provided', async () => {
       const Context = React.createContext();
 
       ReactNoop.render(
         <Context.Provider anyPropNameOtherThanValue="value could be anything" />,
       );
 
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+      await expect(async () => await waitForAll([])).toErrorDev(
         'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
         {
           withoutStack: true,
@@ -1050,11 +1052,11 @@ describe('ReactNewContext', () => {
   });
 
   describe('Context.Consumer', () => {
-    it('warns if child is not a function', () => {
+    it('warns if child is not a function', async () => {
       spyOnDev(console, 'error').mockImplementation(() => {});
       const Context = React.createContext(0);
       ReactNoop.render(<Context.Consumer />);
-      expect(Scheduler).toFlushAndThrow('is not a function');
+      await waitForThrow('is not a function');
       if (__DEV__) {
         expect(console.error.mock.calls[0][0]).toContain(
           'A context consumer was rendered with multiple children, or a child ' +
@@ -1298,7 +1300,7 @@ describe('ReactNewContext', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="goodbye" />);
     });
 
-    it('warns when reading context inside render phase class setState updater', () => {
+    it('warns when reading context inside render phase class setState updater', async () => {
       const ThemeContext = React.createContext('light');
 
       class Cls extends React.Component {
@@ -1312,7 +1314,7 @@ describe('ReactNewContext', () => {
       }
 
       ReactNoop.render(<Cls />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+      await expect(async () => await waitForAll([])).toErrorDev([
         'Context can only be read while React is rendering',
         'Cannot update during an existing state transition',
       ]);
@@ -1320,7 +1322,7 @@ describe('ReactNewContext', () => {
   });
 
   describe('useContext', () => {
-    it('throws when used in a class component', () => {
+    it('throws when used in a class component', async () => {
       const Context = React.createContext(0);
       class Foo extends React.Component {
         render() {
@@ -1328,7 +1330,7 @@ describe('ReactNewContext', () => {
         }
       }
       ReactNoop.render(<Foo />);
-      expect(Scheduler).toFlushAndThrow(
+      await waitForThrow(
         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen' +
           ' for one of the following reasons:\n' +
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
@@ -1338,27 +1340,27 @@ describe('ReactNewContext', () => {
       );
     });
 
-    it('warns when passed a consumer', () => {
+    it('warns when passed a consumer', async () => {
       const Context = React.createContext(0);
       function Foo() {
         return useContext(Context.Consumer);
       }
       ReactNoop.render(<Foo />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+      await expect(async () => await waitForAll([])).toErrorDev(
         'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
           'and will be removed in a future major release. ' +
           'Did you mean to call useContext(Context) instead?',
       );
     });
 
-    it('warns when passed a provider', () => {
+    it('warns when passed a provider', async () => {
       const Context = React.createContext(0);
       function Foo() {
         useContext(Context.Provider);
         return null;
       }
       ReactNoop.render(<Foo />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+      await expect(async () => await waitForAll([])).toErrorDev(
         'Calling useContext(Context.Provider) is not supported. ' +
           'Did you mean to call useContext(Context) instead?',
       );
@@ -1420,7 +1422,7 @@ describe('ReactNewContext', () => {
         <Context.Provider value={null} />
       </errorInCompletePhase>,
     );
-    expect(Scheduler).toFlushAndThrow('Error in host config.');
+    await waitForThrow('Error in host config.');
 
     ReactNoop.render(
       <Context.Provider value={10}>

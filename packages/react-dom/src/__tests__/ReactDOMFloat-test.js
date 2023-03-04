@@ -4398,7 +4398,7 @@ background-color: green;
           </body>
         </html>,
       );
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>

@@ -26,6 +26,7 @@ let cancelCallback;
 // let shouldYield;
 let waitForAll;
 let waitFor;
+let waitForThrow;
 
 function priorityLevelToString(priorityLevel) {
   switch (priorityLevel) {
@@ -75,6 +76,7 @@ describe('Scheduler', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   const TaskStartEvent = 1;
@@ -335,7 +337,7 @@ Task 1 [Normal]              │██████░░🡐 canceled
       throw Error('Oops');
     });
 
-    expect(Scheduler).toFlushAndThrow('Oops');
+    await waitForThrow('Oops');
     Scheduler.unstable_advanceTime(100);
 
     Scheduler.unstable_advanceTime(1000);

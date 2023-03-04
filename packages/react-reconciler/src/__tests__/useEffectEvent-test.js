@@ -28,6 +28,7 @@ describe('useEffectEvent', () => {
   let useMemo;
   let waitForAll;
   let assertLog;
+  let waitForThrow;
 
   beforeEach(() => {
     React = require('react');
@@ -46,6 +47,7 @@ describe('useEffectEvent', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   function Text(props) {
@@ -242,7 +244,7 @@ describe('useEffectEvent', () => {
   });
 
   // @gate enableUseEffectEventHook
-  it('throws when called in render', () => {
+  it('throws when called in render', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
         this.props.onClick();
@@ -269,7 +271,7 @@ describe('useEffectEvent', () => {
     }
 
     ReactNoop.render(<Counter incrementBy={1} />);
-    expect(Scheduler).toFlushAndThrow(
+    await waitForThrow(
       "A function wrapped in useEffectEvent can't be called during rendering.",
     );
 

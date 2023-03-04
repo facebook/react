@@ -314,7 +314,7 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(T);
 
-    expect(() => expect(Scheduler).toFlushAndYield(['Hi'])).toErrorDev(
+    await expect(async () => await waitForAll(['Hi'])).toErrorDev(
       'Warning: T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
@@ -369,8 +369,8 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(LazyImpl);
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['Lazy', 'Sibling', 'A']),
+    await expect(
+      async () => await waitForAll(['Lazy', 'Sibling', 'A']),
     ).toErrorDev(
       'Warning: LazyImpl: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
@@ -676,7 +676,7 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('Hi Bye');
 
     await resolveFakeImport(T);
-    expect(() => expect(Scheduler).toFlushAndYield(['Hi Bye'])).toErrorDev(
+    await expect(async () => await waitForAll(['Hi Bye'])).toErrorDev(
       'Warning: T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
@@ -721,7 +721,7 @@ describe('ReactLazy', () => {
         <BadLazy />
       </Suspense>,
     );
-    expect(Scheduler).toFlushAndThrow(
+    await waitForThrow(
       'Element type is invalid. Received a promise that resolves to: 42. ' +
         'Lazy element type must resolve to a class or function.',
     );
@@ -749,7 +749,7 @@ describe('ReactLazy', () => {
         <Lazy2 text="Hello" />
       </Suspense>,
     );
-    expect(Scheduler).toFlushAndThrow(
+    await waitForThrow(
       'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
         'Lazy element type must resolve to a class or function.' +
         (__DEV__
