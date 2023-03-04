@@ -13,6 +13,9 @@
 let React;
 let ReactTestRenderer;
 let Scheduler;
+let waitForAll;
+let waitFor;
+let assertLog;
 
 describe('ReactTestRendererAsync', () => {
   beforeEach(() => {
@@ -21,9 +24,14 @@ describe('ReactTestRendererAsync', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    assertLog = InternalTestUtils.assertLog;
   });
 
-  it('flushAll flushes all work', () => {
+  it('flushAll flushes all work', async () => {
     function Foo(props) {
       return props.children;
     }
@@ -35,7 +43,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush initial mount.
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderer.toJSON()).toEqual('Hi');
 
     // Update
@@ -43,11 +51,11 @@ describe('ReactTestRendererAsync', () => {
     // Not yet updated.
     expect(renderer.toJSON()).toEqual('Hi');
     // Flush update.
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(renderer.toJSON()).toEqual('Bye');
   });
 
-  it('flushAll returns array of yielded values', () => {
+  it('flushAll returns array of yielded values', async () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
       return props.children;
@@ -65,15 +73,15 @@ describe('ReactTestRendererAsync', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['A:1', 'B:1', 'C:1']);
+    await waitForAll(['A:1', 'B:1', 'C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
 
     renderer.update(<Parent step={2} />);
-    expect(Scheduler).toFlushAndYield(['A:2', 'B:2', 'C:2']);
+    await waitForAll(['A:2', 'B:2', 'C:2']);
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
-  it('flushThrough flushes until the expected values is yielded', () => {
+  it('flushThrough flushes until the expected values is yielded', async () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
       return props.children;
@@ -96,16 +104,16 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the first two siblings
-    expect(Scheduler).toFlushAndYieldThrough(['A:1', 'B:1']);
+    await waitFor(['A:1', 'B:1']);
     // Did not commit yet.
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush the remaining work
-    expect(Scheduler).toFlushAndYield(['C:1']);
+    await waitForAll(['C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
-  it('supports high priority interruptions', () => {
+  it('supports high priority interruptions', async () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
       return props.children;
@@ -136,7 +144,7 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the some of the changes, but don't commit
-    expect(Scheduler).toFlushAndYieldThrough(['A:1']);
+    await waitFor(['A:1']);
     expect(renderer.toJSON()).toEqual(null);
 
     // Interrupt with higher priority properties
@@ -232,12 +240,12 @@ describe('ReactTestRendererAsync', () => {
       });
 
       expect(Scheduler).toFlushAndThrow('Oh no!');
-      expect(Scheduler).toHaveYielded(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
+      assertLog(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
 
       renderer.update(<App />);
 
       expect(Scheduler).toFlushAndThrow('Oh no!');
-      expect(Scheduler).toHaveYielded(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
+      assertLog(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
 
       renderer.update(<App />);
       expect(Scheduler).toFlushAndThrow('Oh no!');

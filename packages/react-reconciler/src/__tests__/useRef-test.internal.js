@@ -22,6 +22,8 @@ describe('useRef', () => {
   let useLayoutEffect;
   let useRef;
   let useState;
+  let waitForAll;
+  let assertLog;
 
   beforeEach(() => {
     React = require('react');
@@ -37,6 +39,10 @@ describe('useRef', () => {
     useLayoutEffect = React.useLayoutEffect;
     useRef = React.useRef;
     useState = React.useState;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function Text(props) {
@@ -79,17 +85,17 @@ describe('useRef', () => {
     act(() => {
       ReactNoop.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     ping(1);
     ping(2);
     ping(3);
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     jest.advanceTimersByTime(100);
 
-    expect(Scheduler).toHaveYielded(['ping: 3']);
+    assertLog(['ping: 3']);
 
     ping(4);
     jest.advanceTimersByTime(20);
@@ -97,13 +103,13 @@ describe('useRef', () => {
     ping(6);
     jest.advanceTimersByTime(80);
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     jest.advanceTimersByTime(20);
-    expect(Scheduler).toHaveYielded(['ping: 6']);
+    assertLog(['ping: 6']);
   });
 
-  it('should return the same ref during re-renders', () => {
+  it('should return the same ref during re-renders', async () => {
     function Counter() {
       const ref = useRef('val');
       const [count, setCount] = useState(0);
@@ -121,10 +127,10 @@ describe('useRef', () => {
     }
 
     ReactNoop.render(<Counter />);
-    expect(Scheduler).toFlushAndYield([3]);
+    await waitForAll([3]);
 
     ReactNoop.render(<Counter />);
-    expect(Scheduler).toFlushAndYield([3]);
+    await waitForAll([3]);
   });
 
   if (__DEV__) {

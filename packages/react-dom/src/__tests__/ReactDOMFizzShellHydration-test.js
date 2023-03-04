@@ -23,6 +23,7 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let textCache;
+let assertLog;
 
 describe('ReactDOMFizzShellHydration', () => {
   beforeEach(() => {
@@ -34,6 +35,9 @@ describe('ReactDOMFizzShellHydration', () => {
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     startTransition = React.startTransition;
 
@@ -180,7 +184,7 @@ describe('ReactDOMFizzShellHydration', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['Shell']);
+    assertLog(['Shell']);
     const dehydratedDiv = container.getElementsByTagName('div')[0];
 
     // Clear the cache and start rendering on the client
@@ -190,7 +194,7 @@ describe('ReactDOMFizzShellHydration', () => {
     await clientAct(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
+    assertLog(['Suspend! [Shell]']);
     expect(div.current).toBe(null);
     expect(container.textContent).toBe('Shell');
 
@@ -198,7 +202,7 @@ describe('ReactDOMFizzShellHydration', () => {
     await clientAct(async () => {
       await resolveText('Shell');
     });
-    expect(Scheduler).toHaveYielded(['Shell']);
+    assertLog(['Shell']);
     expect(div.current).toBe(dehydratedDiv);
     expect(container.textContent).toBe('Shell');
   });
@@ -213,12 +217,12 @@ describe('ReactDOMFizzShellHydration', () => {
     await clientAct(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
+    assertLog(['Suspend! [Shell]']);
 
     await clientAct(async () => {
       await resolveText('Shell');
     });
-    expect(Scheduler).toHaveYielded(['Shell']);
+    assertLog(['Shell']);
     expect(container.textContent).toBe('Shell');
   });
 
@@ -236,7 +240,7 @@ describe('ReactDOMFizzShellHydration', () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(Scheduler).toHaveYielded(['Initial']);
+      assertLog(['Initial']);
 
       await clientAct(async () => {
         const root = ReactDOMClient.hydrateRoot(container, <App />);
@@ -246,7 +250,7 @@ describe('ReactDOMFizzShellHydration', () => {
           root.render(<Text text="Updated" />);
         });
       });
-      expect(Scheduler).toHaveYielded(['Initial', 'Updated']);
+      assertLog(['Initial', 'Updated']);
       expect(container.textContent).toBe('Updated');
     },
   );
@@ -262,7 +266,7 @@ describe('ReactDOMFizzShellHydration', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['Shell']);
+    assertLog(['Shell']);
 
     // Clear the cache and start rendering on the client
     resetTextCache();
@@ -275,13 +279,13 @@ describe('ReactDOMFizzShellHydration', () => {
         },
       });
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
+    assertLog(['Suspend! [Shell]']);
     expect(container.textContent).toBe('Shell');
 
     await clientAct(async () => {
       root.render(<Text text="New screen" />);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'New screen',
       'This root received an early update, before anything was able ' +
         'hydrate. Switched the entire root to client rendering.',

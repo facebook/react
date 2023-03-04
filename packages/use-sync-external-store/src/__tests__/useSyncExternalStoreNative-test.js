@@ -17,6 +17,7 @@ let Scheduler;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let act;
+let assertLog;
 
 // This tests the userspace shim of `useSyncExternalStore` in a server-rendering
 // (Node) environment
@@ -49,6 +50,9 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     if (gate(flags => flags.source)) {
       // The `shim/with-selector` module composes the main
@@ -116,7 +120,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['client']);
+    assertLog(['client']);
     expect(root).toMatchRenderedOutput('client');
   });
 
@@ -159,7 +163,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     const root = ReactNoop.createRoot();
     act(() => root.render(<App />));
 
-    expect(Scheduler).toHaveYielded(['A0', 'B0']);
+    assertLog(['A0', 'B0']);
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Update b but not a
@@ -167,7 +171,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
       store.set({a: 0, b: 1});
     });
     // Only b re-renders
-    expect(Scheduler).toHaveYielded(['B1']);
+    assertLog(['B1']);
     expect(root).toMatchRenderedOutput('A0B1');
 
     // Update a but not b
@@ -175,7 +179,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
       store.set({a: 1, b: 1});
     });
     // Only a re-renders
-    expect(Scheduler).toHaveYielded(['A1']);
+    assertLog(['A1']);
     expect(root).toMatchRenderedOutput('A1B1');
   });
 });

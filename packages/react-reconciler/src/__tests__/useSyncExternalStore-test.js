@@ -20,6 +20,9 @@ let useImperativeHandle;
 let useRef;
 let useState;
 let startTransition;
+let waitFor;
+let waitForAll;
+let assertLog;
 
 // This tests the native useSyncExternalStore implementation, not the shim.
 // Tests that apply to both the native implementation and the shim should go
@@ -40,6 +43,11 @@ describe('useSyncExternalStore', () => {
     useState = React.useState;
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitFor = InternalTestUtils.waitFor;
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     act = require('jest-react').act;
   });
@@ -122,13 +130,13 @@ describe('useSyncExternalStore', () => {
           root.render(<App store={store1} />);
         });
 
-        expect(Scheduler).toFlushAndYieldThrough(['A0', 'B0']);
+        await waitFor(['A0', 'B0']);
 
         // During an interleaved event, the store is mutated.
         store1.set(1);
 
         // Then we continue rendering.
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           // C reads a newer value from the store than A or B, which means they
           // are inconsistent.
           'C1',
@@ -152,13 +160,13 @@ describe('useSyncExternalStore', () => {
         });
 
         // Start a concurrent render that reads from the store, then yield.
-        expect(Scheduler).toFlushAndYieldThrough(['A0', 'B0']);
+        await waitFor(['A0', 'B0']);
 
         // During an interleaved event, the store is mutated.
         store2.set(1);
 
         // Then we continue rendering.
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           // C reads a newer value from the store than A or B, which means they
           // are inconsistent.
           'C1',
@@ -191,17 +199,17 @@ describe('useSyncExternalStore', () => {
       // Start a render that reads from the store and yields value
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['value:initial']);
+    assertLog(['value:initial']);
 
     await act(() => {
       store.set('value:changed');
     });
-    expect(Scheduler).toHaveYielded(['value:changed']);
+    assertLog(['value:changed']);
 
     // If cached value was updated, we expect a re-render
     await act(() => {
       store.set('value:initial');
     });
-    expect(Scheduler).toHaveYielded(['value:initial']);
+    assertLog(['value:initial']);
   });
 });

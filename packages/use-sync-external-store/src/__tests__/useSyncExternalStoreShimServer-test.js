@@ -16,6 +16,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
+let assertLog;
 
 // This tests the userspace shim of `useSyncExternalStore` in a server-rendering
 // (Node) environment
@@ -44,6 +45,9 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     useSyncExternalStore =
       require('use-sync-external-store/shim').useSyncExternalStore;
@@ -92,7 +96,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     const html = ReactDOMServer.renderToString(<App />);
 
     // We don't call getServerSnapshot in the shim
-    expect(Scheduler).toHaveYielded(['client']);
+    assertLog(['client']);
     expect(html).toEqual('client');
   });
 });
