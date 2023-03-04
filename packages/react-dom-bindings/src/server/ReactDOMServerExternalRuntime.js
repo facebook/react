@@ -51,7 +51,7 @@ if (document.body != null) {
 }
 
 function handleExistingNodes(target /*: HTMLElement */) {
-  const existingNodes = Array.from(target.children);
+  const existingNodes = target.querySelectorAll('template');
   for (let i = 0; i < existingNodes.length; i++) {
     handleNode(existingNodes[i]);
   }
@@ -62,8 +62,8 @@ function installFizzInstrObserver(target /*: Node */) {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
-        if (addedNodes.item(j).parentNode) {
-          handleNode(addedNodes.item(j));
+        if (addedNodes[j].parentNode) {
+          handleNode(addedNodes[j]);
         }
       }
     }
