@@ -12,6 +12,10 @@ let Suspense;
 let startTransition;
 let cache;
 let pendingTextRequests;
+let waitFor;
+let waitForPaint;
+let assertLog;
+let waitForAll;
 
 describe('ReactThenable', () => {
   beforeEach(() => {
@@ -28,6 +32,12 @@ describe('ReactThenable', () => {
     Suspense = React.Suspense;
     startTransition = React.startTransition;
     cache = React.cache;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    waitFor = InternalTestUtils.waitFor;
 
     pendingTextRequests = new Map();
   });
@@ -94,7 +104,7 @@ describe('ReactThenable', () => {
       });
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // React will yield when the async component suspends.
       'Suspend!',
       'Resolve in microtask',
@@ -128,11 +138,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded([
-      'Suspend!',
-      'Resolve in microtask',
-      'Async',
-    ]);
+    assertLog(['Suspend!', 'Resolve in microtask', 'Async']);
     expect(root).toMatchRenderedOutput('Async');
   });
 
@@ -172,7 +178,7 @@ describe('ReactThenable', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Suspend!', 'Loading...']);
+    assertLog(['Suspend!', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
@@ -201,7 +207,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['ABC']);
+    assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
@@ -229,7 +235,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['ABC']);
+    assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
@@ -275,7 +281,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['Oops!', 'Oops!']);
+    assertLog(['Oops!', 'Oops!']);
   });
 
   // @gate enableUseHook
@@ -308,7 +314,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['ABCD']);
+    assertLog(['ABCD']);
     expect(root).toMatchRenderedOutput('ABCD');
   });
 
@@ -344,7 +350,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['CD', 'Loading...']);
+    assertLog(['CD', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
@@ -397,7 +403,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // First attempt. The uncached promise suspends.
       'Suspend! [Async]',
       // Because the promise already fulfilled, we're able to unwrap the value
@@ -427,7 +433,7 @@ describe('ReactThenable', () => {
   });
 
   // @gate enableUseHook
-  test('basic use(context)', () => {
+  test('basic use(context)', async () => {
     const ContextA = React.createContext('');
     const ContextB = React.createContext('B');
 
@@ -446,7 +452,7 @@ describe('ReactThenable', () => {
 
     const root = ReactNoop.createRoot();
     root.render(<App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('AB');
   });
 
@@ -482,7 +488,7 @@ describe('ReactThenable', () => {
     startTransition(() => {
       root.render(<App text="world" />);
     });
-    expect(Scheduler).toFlushUntilNextPaint([]);
+    await waitForPaint([]);
     expect(root).toMatchRenderedOutput(null);
 
     await resolve({default: <Text key="hi" text="Hello " />});
@@ -492,7 +498,7 @@ describe('ReactThenable', () => {
       root.render(<App text="world!" />);
     });
 
-    expect(Scheduler).toHaveYielded(['Hello ', 'world!']);
+    assertLog(['Hello ', 'world!']);
 
     expect(root).toMatchRenderedOutput(<div>Hello world!</div>);
   });
@@ -547,7 +553,7 @@ describe('ReactThenable', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['(empty)']);
+    assertLog(['(empty)']);
     expect(root).toMatchRenderedOutput('(empty)');
 
     await act(async () => {
@@ -559,13 +565,13 @@ describe('ReactThenable', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    assertLog(['Async text requested [Async]']);
     expect(root).toMatchRenderedOutput('(empty)');
 
     await act(async () => {
       resolveTextRequests('Async');
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    assertLog(['Async text requested [Async]', 'Async']);
     expect(root).toMatchRenderedOutput('Async');
   });
 
@@ -586,10 +592,7 @@ describe('ReactThenable', () => {
       });
     });
     // Even though the initial render was a transition, it shows a fallback.
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [Async]',
-      'Loading...',
-    ]);
+    assertLog(['Async text requested [Async]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Resolve the original data
@@ -603,7 +606,7 @@ describe('ReactThenable', () => {
     // this test, how would the developer be able to imperatively flush it if it
     // wasn't initiated until the current `act` call? Can't think of a better
     // strategy at the moment.
-    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    assertLog(['Async text requested [Async]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Flush the second request.
@@ -611,7 +614,7 @@ describe('ReactThenable', () => {
       resolveTextRequests('Async');
     });
     // This time it finishes because it was during a retry.
-    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    assertLog(['Async text requested [Async]', 'Async']);
     expect(root).toMatchRenderedOutput('Async');
   });
 
@@ -635,9 +638,7 @@ describe('ReactThenable', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [Will never resolve]',
-    ]);
+    assertLog(['Async text requested [Will never resolve]']);
 
     await act(async () => {
       root.render(
@@ -646,7 +647,7 @@ describe('ReactThenable', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Something different']);
+    assertLog(['Something different']);
   });
 
   // @gate enableUseHook
@@ -669,9 +670,7 @@ describe('ReactThenable', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [Will never resolve]',
-    ]);
+    assertLog(['Async text requested [Will never resolve]']);
 
     // Calling a hook should error because we're oustide of a component.
     expect(useState).toThrow(
@@ -704,7 +703,7 @@ describe('ReactThenable', () => {
     ReactNoop.flushSync(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Hi']);
+    assertLog(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
@@ -745,26 +744,21 @@ describe('ReactThenable', () => {
     await act(() => {
       root.render(<Parent />);
     });
-    expect(Scheduler).toHaveYielded([
-      'childShouldSuspend: false, showChild: true',
-      'Child',
-    ]);
+    assertLog(['childShouldSuspend: false, showChild: true', 'Child']);
     expect(root).toMatchRenderedOutput('Child');
 
-    await act(() => {
+    await act(async () => {
       // Perform an update that causes the app to suspend
       startTransition(() => {
         setChildShouldSuspend(true);
       });
-      expect(Scheduler).toFlushAndYieldThrough([
-        'childShouldSuspend: true, showChild: true',
-      ]);
+      await waitFor(['childShouldSuspend: true, showChild: true']);
       // While the update is in progress, schedule another update.
       startTransition(() => {
         setShowChild(false);
       });
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // Because the interleaved update is not higher priority than what we were
       // already working on, it won't interrupt. The first update will continue,
       // and will suspend.
@@ -827,17 +821,14 @@ describe('ReactThenable', () => {
       });
     });
     // Suspends while we wait for the async service to respond.
-    expect(Scheduler).toHaveYielded([
-      'Compute uppercase: Hello',
-      'Async text requested [HELLO!]',
-    ]);
+    assertLog(['Compute uppercase: Hello', 'Async text requested [HELLO!]']);
     expect(root).toMatchRenderedOutput(null);
 
     // The data is received.
     await act(async () => {
       resolveTextRequests('HELLO!');
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // We shouldn't run the uppercase computation again, because we can reuse
       // the computation from the previous attempt.
       // 'Compute uppercase: Hello',
@@ -867,15 +858,12 @@ describe('ReactThenable', () => {
         root.render(<Kitchen />);
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [apple]']);
+    assertLog(['Async text requested [apple]']);
     expect(root).toMatchRenderedOutput(null);
     await act(async () => {
       resolveTextRequests('apple');
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [apple]',
-      'apple carrot',
-    ]);
+    assertLog(['Async text requested [apple]', 'apple carrot']);
     expect(root).toMatchRenderedOutput('apple carrot');
 
     // Update the state variable after the use().
@@ -884,15 +872,12 @@ describe('ReactThenable', () => {
         _setVegetable('dill');
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [apple]']);
+    assertLog(['Async text requested [apple]']);
     expect(root).toMatchRenderedOutput('apple carrot');
     await act(async () => {
       resolveTextRequests('apple');
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [apple]',
-      'apple dill',
-    ]);
+    assertLog(['Async text requested [apple]', 'apple dill']);
     expect(root).toMatchRenderedOutput('apple dill');
 
     // Update the state variable before the use(). The second state is maintained.
@@ -901,15 +886,12 @@ describe('ReactThenable', () => {
         _setFruit('banana');
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [banana]']);
+    assertLog(['Async text requested [banana]']);
     expect(root).toMatchRenderedOutput('apple dill');
     await act(async () => {
       resolveTextRequests('banana');
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [banana]',
-      'banana dill',
-    ]);
+    assertLog(['Async text requested [banana]', 'banana dill']);
     expect(root).toMatchRenderedOutput('banana dill');
   });
 
@@ -931,15 +913,12 @@ describe('ReactThenable', () => {
         root.render(<Lexicon />);
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [aguacate]']);
+    assertLog(['Async text requested [aguacate]']);
     expect(root).toMatchRenderedOutput(null);
     await act(async () => {
       resolveTextRequests('aguacate');
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [aguacate]',
-      'aguacate abogado',
-    ]);
+    assertLog(['Async text requested [aguacate]', 'aguacate abogado']);
     expect(root).toMatchRenderedOutput('aguacate abogado');
 
     // Now update the state.
@@ -948,15 +927,12 @@ describe('ReactThenable', () => {
         _setLawyer('avocat');
       });
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [aguacate]']);
+    assertLog(['Async text requested [aguacate]']);
     expect(root).toMatchRenderedOutput('aguacate abogado');
     await act(async () => {
       resolveTextRequests('aguacate');
     });
-    expect(Scheduler).toHaveYielded([
-      'Async text requested [aguacate]',
-      'aguacate avocat',
-    ]);
+    assertLog(['Async text requested [aguacate]', 'aguacate avocat']);
     expect(root).toMatchRenderedOutput('aguacate avocat');
   });
 
@@ -977,13 +953,13 @@ describe('ReactThenable', () => {
           root.render(<App text="Hello" />);
         });
       });
-      expect(Scheduler).toHaveYielded(['Async text requested [Hello]']);
+      assertLog(['Async text requested [Hello]']);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {
         resolveTextRequests('Hello');
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         // We shouldn't request async text again, because the async function
         // was memoized
         // 'Async text requested [Hello]'
@@ -1015,7 +991,7 @@ describe('ReactThenable', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Async text requested [A]',
       'Async text requested [B]',
       'Async text requested [C]',
@@ -1028,19 +1004,19 @@ describe('ReactThenable', () => {
     await act(async () => {
       resolveTextRequests('A');
     });
-    expect(Scheduler).toHaveYielded(['A', '(Loading C...)', '(Loading B...)']);
+    assertLog(['A', '(Loading C...)', '(Loading B...)']);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
     await act(async () => {
       resolveTextRequests('B');
     });
-    expect(Scheduler).toHaveYielded(['B', '(Loading C...)']);
+    assertLog(['B', '(Loading C...)']);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
     await act(async () => {
       resolveTextRequests('C');
     });
-    expect(Scheduler).toHaveYielded(['C']);
+    assertLog(['C']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
@@ -1068,7 +1044,7 @@ describe('ReactThenable', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Async text requested [A]',
       'Async text requested [B]',
       'Async text requested [C]',
@@ -1081,13 +1057,13 @@ describe('ReactThenable', () => {
     await act(async () => {
       resolveTextRequests('A');
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [A]']);
+    assertLog(['Async text requested [A]']);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
     await act(async () => {
       resolveTextRequests('A');
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // React suspends until A finishes loading.
       'Async text requested [A]',
       'A',
@@ -1106,13 +1082,13 @@ describe('ReactThenable', () => {
     await act(async () => {
       resolveTextRequests('B');
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [B]']);
+    assertLog(['Async text requested [B]']);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
     await act(async () => {
       resolveTextRequests('B');
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // React suspends until B finishes loading.
       'Async text requested [B]',
       'B',
@@ -1126,13 +1102,13 @@ describe('ReactThenable', () => {
     await act(async () => {
       resolveTextRequests('C');
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [C]']);
+    assertLog(['Async text requested [C]']);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
     await act(async () => {
       resolveTextRequests('C');
     });
-    expect(Scheduler).toHaveYielded(['Async text requested [C]', 'C']);
+    assertLog(['Async text requested [C]', 'C']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
@@ -1162,7 +1138,7 @@ describe('ReactThenable', () => {
         root.render(<App />);
       });
     });
-    expect(Scheduler).toHaveYielded(['A1']);
+    assertLog(['A1']);
     expect(root).toMatchRenderedOutput('A1');
   });
 });

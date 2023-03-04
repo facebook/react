@@ -13,6 +13,7 @@ let Suspense;
 let getCacheForType;
 let caches;
 let seededCache;
+let waitForAll;
 
 describe('ReactSuspenseFallback', () => {
   beforeEach(() => {
@@ -25,6 +26,9 @@ describe('ReactSuspenseFallback', () => {
     getCacheForType = React.unstable_getCacheForType;
     caches = [];
     seededCache = null;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   function createTextCache() {
@@ -128,26 +132,26 @@ describe('ReactSuspenseFallback', () => {
   }
 
   // @gate enableLegacyCache
-  it('suspends and shows fallback', () => {
+  it('suspends and shows fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText text="A" ms={100} />
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    await waitForAll(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
   // @gate enableLegacyCache
-  it('suspends and shows null fallback', () => {
+  it('suspends and shows null fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={null}>
         <AsyncText text="A" ms={100} />
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [A]',
       // null
     ]);
@@ -155,14 +159,14 @@ describe('ReactSuspenseFallback', () => {
   });
 
   // @gate enableLegacyCache
-  it('suspends and shows undefined fallback', () => {
+  it('suspends and shows undefined fallback', async () => {
     ReactNoop.render(
       <Suspense>
         <AsyncText text="A" ms={100} />
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [A]',
       // null
     ]);
@@ -170,7 +174,7 @@ describe('ReactSuspenseFallback', () => {
   });
 
   // @gate enableLegacyCache
-  it('suspends and shows inner fallback', () => {
+  it('suspends and shows inner fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense fallback={<Text text="Loading..." />}>
@@ -179,12 +183,12 @@ describe('ReactSuspenseFallback', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    await waitForAll(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
   // @gate enableLegacyCache
-  it('suspends and shows inner undefined fallback', () => {
+  it('suspends and shows inner undefined fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense>
@@ -193,7 +197,7 @@ describe('ReactSuspenseFallback', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [A]',
       // null
     ]);
@@ -201,7 +205,7 @@ describe('ReactSuspenseFallback', () => {
   });
 
   // @gate enableLegacyCache
-  it('suspends and shows inner null fallback', () => {
+  it('suspends and shows inner null fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense fallback={null}>
@@ -210,7 +214,7 @@ describe('ReactSuspenseFallback', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [A]',
       // null
     ]);

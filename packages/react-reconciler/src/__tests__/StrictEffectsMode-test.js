@@ -13,6 +13,7 @@ let React;
 let ReactTestRenderer;
 let Scheduler;
 let act;
+let assertLog;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
@@ -21,6 +22,9 @@ describe('StrictEffectsMode', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function supportsDoubleInvokeEffects() {
@@ -51,10 +55,7 @@ describe('StrictEffectsMode', () => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect mount',
-      'useEffect mount',
-    ]);
+    assertLog(['useLayoutEffect mount', 'useEffect mount']);
   });
 
   it('double invoking for effects works properly', () => {
@@ -80,7 +81,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
         'useLayoutEffect unmount',
@@ -89,17 +90,14 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount',
-        'useEffect mount',
-      ]);
+      assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
     act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect unmount',
       'useLayoutEffect mount',
       'useEffect unmount',
@@ -110,10 +108,7 @@ describe('StrictEffectsMode', () => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect unmount',
-      'useEffect unmount',
-    ]);
+    assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
   });
 
   it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
@@ -139,7 +134,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useEffect One mount',
         'useEffect Two mount',
         'useEffect One unmount',
@@ -148,17 +143,14 @@ describe('StrictEffectsMode', () => {
         'useEffect Two mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useEffect One mount',
-        'useEffect Two mount',
-      ]);
+      assertLog(['useEffect One mount', 'useEffect Two mount']);
     }
 
     act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useEffect One unmount',
       'useEffect Two unmount',
       'useEffect One mount',
@@ -169,10 +161,7 @@ describe('StrictEffectsMode', () => {
       renderer.unmount(null);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useEffect One unmount',
-      'useEffect Two unmount',
-    ]);
+    assertLog(['useEffect One unmount', 'useEffect Two unmount']);
   });
 
   it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
@@ -200,7 +189,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
         'useLayoutEffect One unmount',
@@ -209,17 +198,14 @@ describe('StrictEffectsMode', () => {
         'useLayoutEffect Two mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect One mount',
-        'useLayoutEffect Two mount',
-      ]);
+      assertLog(['useLayoutEffect One mount', 'useLayoutEffect Two mount']);
     }
 
     act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect One unmount',
       'useLayoutEffect Two unmount',
       'useLayoutEffect One mount',
@@ -230,10 +216,7 @@ describe('StrictEffectsMode', () => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect One unmount',
-      'useLayoutEffect Two unmount',
-    ]);
+    assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
   });
 
   it('useEffect and useLayoutEffect is called twice when there is no unmount', () => {
@@ -257,33 +240,27 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount',
-        'useEffect mount',
-      ]);
+      assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
     act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect mount',
-      'useEffect mount',
-    ]);
+    assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
     act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
   it('passes the right context to class component lifecycles', () => {
@@ -315,13 +292,13 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'componentWillUnmount',
         'componentDidMount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded(['componentDidMount']);
+      assertLog(['componentDidMount']);
     }
   });
 
@@ -352,26 +329,26 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'componentWillUnmount',
         'componentDidMount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded(['componentDidMount']);
+      assertLog(['componentDidMount']);
     }
 
     act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded(['componentDidUpdate']);
+    assertLog(['componentDidUpdate']);
 
     act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded(['componentWillUnmount']);
+    assertLog(['componentWillUnmount']);
   });
 
   it('should not double invoke class lifecycles in legacy mode', () => {
@@ -397,7 +374,7 @@ describe('StrictEffectsMode', () => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded(['componentDidMount']);
+    assertLog(['componentDidMount']);
   });
 
   it('double flushing passive effects only results in one double invoke', () => {
@@ -427,7 +404,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'mount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -442,7 +419,7 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'mount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -492,7 +469,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect mount',
         'App useEffect mount',
         'App useLayoutEffect unmount',
@@ -501,10 +478,7 @@ describe('StrictEffectsMode', () => {
         'App useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'App useLayoutEffect mount',
-        'App useEffect mount',
-      ]);
+      assertLog(['App useLayoutEffect mount', 'App useEffect mount']);
     }
 
     act(() => {
@@ -512,7 +486,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
         'App useLayoutEffect mount',
@@ -525,7 +499,7 @@ describe('StrictEffectsMode', () => {
         'Child useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
         'App useLayoutEffect mount',
@@ -580,7 +554,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -592,7 +566,7 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -603,7 +577,7 @@ describe('StrictEffectsMode', () => {
       renderer.update(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect unmount',
       'useLayoutEffect mount',
       'useEffect unmount',
@@ -614,7 +588,7 @@ describe('StrictEffectsMode', () => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'componentWillUnmount',
       'useLayoutEffect unmount',
       'useEffect unmount',
