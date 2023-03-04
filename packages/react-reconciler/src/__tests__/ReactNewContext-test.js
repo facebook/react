@@ -14,6 +14,8 @@ let useContext;
 let ReactNoop;
 let Scheduler;
 let gen;
+let waitForAll;
+let waitFor;
 
 describe('ReactNewContext', () => {
   beforeEach(() => {
@@ -24,6 +26,10 @@ describe('ReactNewContext', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     gen = require('random-seed');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
   });
 
   afterEach(() => {
@@ -110,7 +116,7 @@ describe('ReactNewContext', () => {
 
   function sharedContextTests(label, getConsumer) {
     describe(`reading context with ${label}`, () => {
-      it('simple mount and update', () => {
+      it('simple mount and update', async () => {
         const Context = React.createContext(1);
         const Consumer = getConsumer(Context);
 
@@ -131,16 +137,16 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 2" />);
 
         // Update
         ReactNoop.render(<App value={3} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 3" />);
       });
 
-      it('propagates through shouldComponentUpdate false', () => {
+      it('propagates through shouldComponentUpdate false', async () => {
         const Context = React.createContext(1);
         const ContextConsumer = getConsumer(Context);
 
@@ -189,7 +195,7 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'Provider',
           'Indirection',
@@ -201,15 +207,11 @@ describe('ReactNewContext', () => {
 
         // Update
         ReactNoop.render(<App value={3} />);
-        expect(Scheduler).toFlushAndYield([
-          'App',
-          'Provider',
-          'Consumer render prop',
-        ]);
+        await waitForAll(['App', 'Provider', 'Consumer render prop']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 3" />);
       });
 
-      it('consumers bail out if context value is the same', () => {
+      it('consumers bail out if context value is the same', async () => {
         const Context = React.createContext(1);
         const ContextConsumer = getConsumer(Context);
 
@@ -258,7 +260,7 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'Provider',
           'Indirection',
@@ -270,7 +272,7 @@ describe('ReactNewContext', () => {
 
         // Update with the same context value
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'Provider',
           // Don't call render prop again
@@ -278,7 +280,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 2" />);
       });
 
-      it('nested providers', () => {
+      it('nested providers', async () => {
         const Context = React.createContext(1);
         const Consumer = getConsumer(Context);
 
@@ -325,16 +327,16 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 8" />);
 
         // Update
         ReactNoop.render(<App value={3} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: 12" />);
       });
 
-      it('should provide the correct (default) values to consumers outside of a provider', () => {
+      it('should provide the correct (default) values to consumers outside of a provider', async () => {
         const FooContext = React.createContext({value: 'foo-initial'});
         const BarContext = React.createContext({value: 'bar-initial'});
         const FooConsumer = getConsumer(FooContext);
@@ -369,10 +371,10 @@ describe('ReactNewContext', () => {
             </BarConsumer>
           </>,
         );
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
       });
 
-      it('multiple consumers in different branches', () => {
+      it('multiple consumers in different branches', async () => {
         const Context = React.createContext(1);
         const Consumer = getConsumer(Context);
 
@@ -420,7 +422,7 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="Result: 4" />
@@ -430,7 +432,7 @@ describe('ReactNewContext', () => {
 
         // Update
         ReactNoop.render(<App value={3} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="Result: 6" />
@@ -440,7 +442,7 @@ describe('ReactNewContext', () => {
 
         // Another update
         ReactNoop.render(<App value={4} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="Result: 8" />
@@ -449,7 +451,7 @@ describe('ReactNewContext', () => {
         );
       });
 
-      it('compares context values with Object.is semantics', () => {
+      it('compares context values with Object.is semantics', async () => {
         const Context = React.createContext(1);
         const ContextConsumer = getConsumer(Context);
 
@@ -498,7 +500,7 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value={NaN} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'Provider',
           'Indirection',
@@ -510,7 +512,7 @@ describe('ReactNewContext', () => {
 
         // Update
         ReactNoop.render(<App value={NaN} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'Provider',
           // Consumer should not re-render again
@@ -519,7 +521,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Result: NaN" />);
       });
 
-      it('context unwinds when interrupted', () => {
+      it('context unwinds when interrupted', async () => {
         const Context = React.createContext('Default');
         const ContextConsumer = getConsumer(Context);
 
@@ -564,14 +566,14 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App value="A" />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(
           // The second provider should use the default value.
           <span prop="Result: Does not unwind" />,
         );
       });
 
-      it("does not re-render if there's an update in a child", () => {
+      it("does not re-render if there's an update in a child", async () => {
         const Context = React.createContext(0);
         const Consumer = getConsumer(Context);
 
@@ -603,19 +605,19 @@ describe('ReactNewContext', () => {
 
         // Initial mount
         ReactNoop.render(<App value={1} />);
-        expect(Scheduler).toFlushAndYield(['Consumer render prop', 'Child']);
+        await waitForAll(['Consumer render prop', 'Child']);
         expect(ReactNoop).toMatchRenderedOutput(
           <span prop="Context: 1, Step: 0" />,
         );
 
         child.setState({step: 1});
-        expect(Scheduler).toFlushAndYield(['Child']);
+        await waitForAll(['Child']);
         expect(ReactNoop).toMatchRenderedOutput(
           <span prop="Context: 1, Step: 1" />,
         );
       });
 
-      it('consumer bails out if value is unchanged and something above bailed out', () => {
+      it('consumer bails out if value is unchanged and something above bailed out', async () => {
         const Context = React.createContext(0);
         const Consumer = getConsumer(Context);
 
@@ -660,7 +662,7 @@ describe('ReactNewContext', () => {
 
         // Initial mount
         ReactNoop.render(<App value={1} />);
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'App',
           'PureIndirection',
           'ChildWithInlineRenderCallback',
@@ -677,7 +679,7 @@ describe('ReactNewContext', () => {
 
         // Update (bailout)
         ReactNoop.render(<App value={1} />);
-        expect(Scheduler).toFlushAndYield(['App']);
+        await waitForAll(['App']);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop={1} />
@@ -687,7 +689,7 @@ describe('ReactNewContext', () => {
 
         // Update (no bailout)
         ReactNoop.render(<App value={2} />);
-        expect(Scheduler).toFlushAndYield(['App', 'Consumer', 'Consumer']);
+        await waitForAll(['App', 'Consumer', 'Consumer']);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop={2} />
@@ -697,7 +699,7 @@ describe('ReactNewContext', () => {
       });
 
       // @gate www
-      it("context consumer doesn't bail out inside hidden subtree", () => {
+      it("context consumer doesn't bail out inside hidden subtree", async () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
 
@@ -712,7 +714,7 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App theme="dark" />);
-        expect(Scheduler).toFlushAndYield(['dark']);
+        await waitForAll(['dark']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <div hidden={true}>
             <span prop="dark" />
@@ -720,7 +722,7 @@ describe('ReactNewContext', () => {
         );
 
         ReactNoop.render(<App theme="light" />);
-        expect(Scheduler).toFlushAndYield(['light']);
+        await waitForAll(['light']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <div hidden={true}>
             <span prop="light" />
@@ -729,7 +731,7 @@ describe('ReactNewContext', () => {
       });
 
       // This is a regression case for https://github.com/facebook/react/issues/12389.
-      it('does not run into an infinite loop', () => {
+      it('does not run into an infinite loop', async () => {
         const Context = React.createContext(null);
         const Consumer = getConsumer(Context);
 
@@ -759,15 +761,15 @@ describe('ReactNewContext', () => {
         }
 
         ReactNoop.render(<App reverse={false} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         ReactNoop.render(<App reverse={true} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
         ReactNoop.render(<App reverse={false} />);
-        expect(Scheduler).toFlushWithoutYielding();
+        await waitForAll([]);
       });
 
       // This is a regression case for https://github.com/facebook/react/issues/12686
-      it('does not skip some siblings', () => {
+      it('does not skip some siblings', async () => {
         const Context = React.createContext(0);
         const ContextConsumer = getConsumer(Context);
 
@@ -816,7 +818,7 @@ describe('ReactNewContext', () => {
         // Initial mount
         let inst;
         ReactNoop.render(<App ref={ref => (inst = ref)} />);
-        expect(Scheduler).toFlushAndYield(['App']);
+        await waitForAll(['App']);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="static 1" />
@@ -825,7 +827,7 @@ describe('ReactNewContext', () => {
         );
         // Update the first time
         inst.setState({step: 1});
-        expect(Scheduler).toFlushAndYield(['App', 'Consumer']);
+        await waitForAll(['App', 'Consumer']);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="static 1" />
@@ -835,7 +837,7 @@ describe('ReactNewContext', () => {
         );
         // Update the second time
         inst.setState({step: 2});
-        expect(Scheduler).toFlushAndYield(['App', 'Consumer']);
+        await waitForAll(['App', 'Consumer']);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
             <span prop="static 1" />
@@ -863,7 +865,7 @@ describe('ReactNewContext', () => {
       );
     });
 
-    it('warns if multiple renderers concurrently render the same context', () => {
+    it('warns if multiple renderers concurrently render the same context', async () => {
       spyOnDev(console, 'error').mockImplementation(() => {});
       const Context = React.createContext(0);
 
@@ -885,17 +887,20 @@ describe('ReactNewContext', () => {
         ReactNoop.render(<App value={1} />);
       });
       // Render past the Provider, but don't commit yet
-      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+      await waitFor(['Foo']);
 
       // Get a new copy of ReactNoop
       jest.resetModules();
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
+      const InternalTestUtils = require('internal-test-utils');
+      waitForAll = InternalTestUtils.waitForAll;
+      waitFor = InternalTestUtils.waitFor;
 
       // Render the provider again using a different renderer
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+      await waitForAll(['Foo', 'Foo']);
 
       if (__DEV__) {
         expect(console.error.mock.calls[0][0]).toContain(
@@ -905,7 +910,7 @@ describe('ReactNewContext', () => {
       }
     });
 
-    it('does not warn if multiple renderers use the same context sequentially', () => {
+    it('does not warn if multiple renderers use the same context sequentially', async () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
 
@@ -926,24 +931,27 @@ describe('ReactNewContext', () => {
       React.startTransition(() => {
         ReactNoop.render(<App value={1} />);
       });
-      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+      await waitForAll(['Foo', 'Foo']);
 
       // Get a new copy of ReactNoop
       jest.resetModules();
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
+      const InternalTestUtils = require('internal-test-utils');
+      waitForAll = InternalTestUtils.waitForAll;
+      waitFor = InternalTestUtils.waitFor;
 
       // Render the provider again using a different renderer
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+      await waitForAll(['Foo', 'Foo']);
 
       if (__DEV__) {
         expect(console.error).not.toHaveBeenCalled();
       }
     });
 
-    it('provider bails out if children and value are unchanged (like sCU)', () => {
+    it('provider bails out if children and value are unchanged (like sCU)', async () => {
       const Context = React.createContext(0);
 
       function Child() {
@@ -962,19 +970,19 @@ describe('ReactNewContext', () => {
 
       // Initial mount
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(['App', 'Child']);
+      await waitForAll(['App', 'Child']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'App',
         // Child does not re-render
       ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
     });
 
-    it('provider does not bail out if legacy context changed above', () => {
+    it('provider does not bail out if legacy context changed above', async () => {
       const Context = React.createContext(0);
 
       function Child() {
@@ -1021,22 +1029,22 @@ describe('ReactNewContext', () => {
           </App>
         </LegacyProvider>,
       );
-      expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
+      await waitForAll(['LegacyProvider', 'App', 'Child']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update App with same value (should bail out)
       appRef.current.setState({value: 1});
-      expect(Scheduler).toFlushAndYield(['App']);
+      await waitForAll(['App']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update LegacyProvider (should not bail out)
       legacyProviderRef.current.setState({value: 1});
-      expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
+      await waitForAll(['LegacyProvider', 'App', 'Child']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update App with same value (should bail out)
       appRef.current.setState({value: 1});
-      expect(Scheduler).toFlushAndYield(['App']);
+      await waitForAll(['App']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
     });
   });
@@ -1055,7 +1063,7 @@ describe('ReactNewContext', () => {
       }
     });
 
-    it('can read other contexts inside consumer render prop', () => {
+    it('can read other contexts inside consumer render prop', async () => {
       const FooContext = React.createContext(0);
       const BarContext = React.createContext(0);
 
@@ -1092,17 +1100,17 @@ describe('ReactNewContext', () => {
       }
 
       ReactNoop.render(<App foo={1} bar={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 1, Bar: 1']);
+      await waitForAll(['Foo: 1, Bar: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Foo: 1, Bar: 1" />);
 
       // Update foo
       ReactNoop.render(<App foo={2} bar={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 1']);
+      await waitForAll(['Foo: 2, Bar: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Foo: 2, Bar: 1" />);
 
       // Update bar
       ReactNoop.render(<App foo={2} bar={2} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 2']);
+      await waitForAll(['Foo: 2, Bar: 2']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Foo: 2, Bar: 2" />);
     });
 
@@ -1111,7 +1119,7 @@ describe('ReactNewContext', () => {
     // If we bailed out on referential equality, it would be confusing that you
     // can call this.setState(), but an autobound render callback "blocked" the update.
     // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-    it('consumer does not bail out if there were no bailouts above it', () => {
+    it('consumer does not bail out if there were no bailouts above it', async () => {
       const Context = React.createContext(0);
       const Consumer = Context.Consumer;
 
@@ -1138,12 +1146,12 @@ describe('ReactNewContext', () => {
       // Initial mount
       let inst;
       ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="hello" />);
 
       // Update
       inst.setState({text: 'goodbye'});
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="goodbye" />);
     });
   });
@@ -1152,7 +1160,7 @@ describe('ReactNewContext', () => {
     // Unstable changedBits API was removed. Port this test to context selectors
     // once that exists.
     // @gate FIXME
-    it('can read the same context multiple times in the same function', () => {
+    it('can read the same context multiple times in the same function', async () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
         if (a.foo !== b.foo) {
@@ -1212,7 +1220,7 @@ describe('ReactNewContext', () => {
       }
 
       ReactNoop.render(<App foo={1} bar={1} baz={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 1, Bar: 1', 'Baz: 1']);
+      await waitForAll(['Foo: 1, Bar: 1', 'Baz: 1']);
       expect(ReactNoop).toMatchRenderedOutput([
         <span prop="Foo: 1, Bar: 1" />,
         <span prop="Baz: 1" />,
@@ -1220,7 +1228,7 @@ describe('ReactNewContext', () => {
 
       // Update only foo
       ReactNoop.render(<App foo={2} bar={1} baz={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 1']);
+      await waitForAll(['Foo: 2, Bar: 1']);
       expect(ReactNoop).toMatchRenderedOutput([
         <span prop="Foo: 2, Bar: 1" />,
         <span prop="Baz: 1" />,
@@ -1228,7 +1236,7 @@ describe('ReactNewContext', () => {
 
       // Update only bar
       ReactNoop.render(<App foo={2} bar={2} baz={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 2']);
+      await waitForAll(['Foo: 2, Bar: 2']);
       expect(ReactNoop).toMatchRenderedOutput([
         <span prop="Foo: 2, Bar: 2" />,
         <span prop="Baz: 1" />,
@@ -1236,7 +1244,7 @@ describe('ReactNewContext', () => {
 
       // Update only baz
       ReactNoop.render(<App foo={2} bar={2} baz={2} />);
-      expect(Scheduler).toFlushAndYield(['Baz: 2']);
+      await waitForAll(['Baz: 2']);
       expect(ReactNoop).toMatchRenderedOutput([
         <span prop="Foo: 2, Bar: 2" />,
         <span prop="Baz: 2" />,
@@ -1248,7 +1256,7 @@ describe('ReactNewContext', () => {
     // If we bailed out on referential equality, it would be confusing that you
     // can call this.setState(), but an autobound render callback "blocked" the update.
     // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-    it('does not bail out if there were no bailouts above it', () => {
+    it('does not bail out if there were no bailouts above it', async () => {
       const Context = React.createContext(0);
 
       class Consumer extends React.Component {
@@ -1281,12 +1289,12 @@ describe('ReactNewContext', () => {
       // Initial mount
       let inst;
       ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="hello" />);
 
       // Update
       inst.setState({text: 'goodbye'});
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="goodbye" />);
     });
 
@@ -1361,7 +1369,7 @@ describe('ReactNewContext', () => {
     // If we bailed out on referential equality, it would be confusing that you
     // can call this.setState(), but an autobound render callback "blocked" the update.
     // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-    it('does not bail out if there were no bailouts above it', () => {
+    it('does not bail out if there were no bailouts above it', async () => {
       const Context = React.createContext(0);
 
       function Consumer({children}) {
@@ -1392,17 +1400,17 @@ describe('ReactNewContext', () => {
       // Initial mount
       let inst;
       ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="hello" />);
 
       // Update
       inst.setState({text: 'goodbye'});
-      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      await waitForAll(['App', 'App#renderConsumer']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="goodbye" />);
     });
   });
 
-  it('unwinds after errors in complete phase', () => {
+  it('unwinds after errors in complete phase', async () => {
     const Context = React.createContext(0);
 
     // This is a regression test for stack misalignment
@@ -1419,7 +1427,7 @@ describe('ReactNewContext', () => {
         <Context.Consumer>{value => <span prop={value} />}</Context.Consumer>
       </Context.Provider>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={10} />);
   });
 
@@ -1631,7 +1639,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     });
   });
 
-  it('should warn with an error message when using context as a consumer in DEV', () => {
+  it('should warn with an error message when using context as a consumer in DEV', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
     const BarConsumer = BarContext;
 
@@ -1647,9 +1655,9 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       );
     }
 
-    expect(() => {
+    await expect(async () => {
       ReactNoop.render(<Component />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
     }).toErrorDev(
       'Rendering <Context> directly is not supported and will be removed in ' +
         'a future major release. Did you mean to render <Context.Consumer> instead?',
@@ -1657,7 +1665,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
   });
 
   // False positive regression test.
-  it('should not warn when using Consumer from React < 16.6 with newer renderer', () => {
+  it('should not warn when using Consumer from React < 16.6 with newer renderer', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
     // React 16.5 and earlier didn't have a separate object.
     BarContext.Consumer = BarContext;
@@ -1675,10 +1683,10 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     }
 
     ReactNoop.render(<Component />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
   });
 
-  it('should warn with an error message when using nested context consumers in DEV', () => {
+  it('should warn with an error message when using nested context consumers in DEV', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
     const BarConsumer = BarContext;
 
@@ -1694,16 +1702,16 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       );
     }
 
-    expect(() => {
+    await expect(async () => {
       ReactNoop.render(<Component />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
     }).toErrorDev(
       'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
         'a future major release. Did you mean to render <Context.Consumer> instead?',
     );
   });
 
-  it('should warn with an error message when using Context.Consumer.Provider DEV', () => {
+  it('should warn with an error message when using Context.Consumer.Provider DEV', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
 
     function Component() {
@@ -1718,9 +1726,9 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       );
     }
 
-    expect(() => {
+    await expect(async () => {
       ReactNoop.render(<Component />);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
     }).toErrorDev(
       'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
         'a future major release. Did you mean to render <Context.Provider> instead?',

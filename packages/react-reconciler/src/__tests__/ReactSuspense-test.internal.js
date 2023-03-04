@@ -9,6 +9,11 @@ let act;
 let TextResource;
 let textResourceShouldFail;
 
+let assertLog;
+let waitForPaint;
+let waitForAll;
+let waitFor;
+
 describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,6 +27,12 @@ describe('ReactSuspense', () => {
     ReactCache = require('react-cache');
 
     Suspense = React.Suspense;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
+    waitFor = InternalTestUtils.waitFor;
 
     TextResource = ReactCache.unstable_createResource(
       ([text, ms = 0]) => {
@@ -94,7 +105,7 @@ describe('ReactSuspense', () => {
     }
   }
 
-  it('suspends rendering and continues later', () => {
+  it('suspends rendering and continues later', async () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
       return props.children;
@@ -119,7 +130,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['Foo']);
+    await waitForAll(['Foo']);
     expect(root).toMatchRenderedOutput(null);
 
     // Navigate the shell to now render the child content.
@@ -128,7 +139,7 @@ describe('ReactSuspense', () => {
       root.update(<Foo renderBar={true} />);
     });
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Foo',
       'Bar',
       // A suspends
@@ -142,18 +153,18 @@ describe('ReactSuspense', () => {
     // Flush some of the time
     jest.advanceTimersByTime(50);
     // Still nothing...
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput(null);
 
     // Flush the promise completely
     jest.advanceTimersByTime(50);
     // Renders successfully
-    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-    expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'A', 'B']);
+    assertLog(['Promise resolved [A]']);
+    await waitForAll(['Foo', 'Bar', 'A', 'B']);
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  it('suspends siblings and later recovers each independently', () => {
+  it('suspends siblings and later recovers each independently', async () => {
     // Render two sibling Suspense components
     const root = ReactTestRenderer.create(
       <>
@@ -169,7 +180,7 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Suspend! [A]',
       'Loading A...',
       'Suspend! [B]',
@@ -182,19 +193,19 @@ describe('ReactSuspense', () => {
     // show the placeholder
     jest.advanceTimersByTime(5000);
     // TODO: Should we throw if you forget to call toHaveYielded?
-    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-    expect(Scheduler).toFlushAndYield(['A']);
+    assertLog(['Promise resolved [A]']);
+    await waitForAll(['A']);
     expect(root).toMatchRenderedOutput('ALoading B...');
 
     // Advance time by enough that the second Suspense's promise resolves
     // and switches back to the normal view
     jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-    expect(Scheduler).toFlushAndYield(['B']);
+    assertLog(['Promise resolved [B]']);
+    await waitForAll(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  it('interrupts current render if promise resolves before current render phase', () => {
+  it('interrupts current render if promise resolves before current render phase', async () => {
     let didResolve = false;
     const listeners = [];
 
@@ -231,7 +242,7 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(Scheduler).toFlushAndYield(['Initial']);
+    await waitForAll(['Initial']);
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
@@ -247,19 +258,15 @@ describe('ReactSuspense', () => {
       );
     });
     // Yield past the Suspense boundary but don't complete the last sibling.
-    expect(Scheduler).toFlushAndYieldThrough([
-      'Suspend!',
-      'Loading...',
-      'After Suspense',
-    ]);
+    await waitFor(['Suspend!', 'Loading...', 'After Suspense']);
 
     // The promise resolves before the current render phase has completed
     resolveThenable();
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
     expect(root).toMatchRenderedOutput('Initial');
 
     // Start over from the root, instead of continuing.
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       // Async renders again *before* Sibling
       'Async',
       'After Suspense',
@@ -268,7 +275,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
-  it('throttles fallback committing globally', () => {
+  it('throttles fallback committing globally', async () => {
     function Foo() {
       Scheduler.unstable_yieldValue('Foo');
       return (
@@ -290,7 +297,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Foo',
       'Suspend! [A]',
       'Suspend! [B]',
@@ -302,8 +309,8 @@ describe('ReactSuspense', () => {
     // Resolve A.
     jest.advanceTimersByTime(200);
     Scheduler.unstable_advanceTime(200);
-    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading more...']);
+    assertLog(['Promise resolved [A]']);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
 
     // By this point, we have enough info to show "A" and "Loading more..."
     // However, we've just shown the outer fallback. So we'll delay
@@ -313,17 +320,17 @@ describe('ReactSuspense', () => {
     // Resolve B.
     jest.advanceTimersByTime(100);
     Scheduler.unstable_advanceTime(100);
-    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    assertLog(['Promise resolved [B]']);
 
     // By this point, B has resolved.
     // We're still showing the outer fallback.
     expect(root).toMatchRenderedOutput('Loading...');
-    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    await waitForAll(['A', 'B']);
     // Then contents of both should pop in together.
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  it('does not throttle fallback committing for too long', () => {
+  it('does not throttle fallback committing for too long', async () => {
     function Foo() {
       Scheduler.unstable_yieldValue('Foo');
       return (
@@ -345,7 +352,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Foo',
       'Suspend! [A]',
       'Suspend! [B]',
@@ -357,8 +364,8 @@ describe('ReactSuspense', () => {
     // Resolve A.
     jest.advanceTimersByTime(200);
     Scheduler.unstable_advanceTime(200);
-    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading more...']);
+    assertLog(['Promise resolved [A]']);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
 
     // By this point, we have enough info to show "A" and "Loading more..."
     // However, we've just shown the outer fallback. So we'll delay
@@ -374,8 +381,8 @@ describe('ReactSuspense', () => {
     // Resolve B.
     jest.advanceTimersByTime(500);
     Scheduler.unstable_advanceTime(500);
-    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-    expect(Scheduler).toFlushAndYield(['B']);
+    assertLog(['Promise resolved [B]']);
+    await waitForAll(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
 
@@ -404,16 +411,16 @@ describe('ReactSuspense', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await LazyClass;
 
-    expect(Scheduler).toFlushUntilNextPaint(['Hi', 'Did mount: Hi']);
+    await waitForPaint(['Hi', 'Did mount: Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('updates memoized child of suspense component when context updates (simple memo)', () => {
+  it('updates memoized child of suspense component when context updates (simple memo)', async () => {
     const {useContext, createContext, useState, memo} = React;
 
     const ValueContext = createContext(null);
@@ -451,23 +458,23 @@ describe('ReactSuspense', () => {
     const root = ReactTestRenderer.create(<App />, {
       unstable_isConcurrent: true,
     });
-    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    await waitForAll(['Suspend! [default]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-    expect(Scheduler).toFlushAndYield(['default']);
+    assertLog(['Promise resolved [default]']);
+    await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
     act(() => setValue('new value'));
-    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    assertLog(['Suspend! [new value]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-    expect(Scheduler).toFlushAndYield(['new value']);
+    assertLog(['Promise resolved [new value]']);
+    await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
 
-  it('updates memoized child of suspense component when context updates (manual memo)', () => {
+  it('updates memoized child of suspense component when context updates (manual memo)', async () => {
     const {useContext, createContext, useState, memo} = React;
 
     const ValueContext = createContext(null);
@@ -510,23 +517,23 @@ describe('ReactSuspense', () => {
     const root = ReactTestRenderer.create(<App />, {
       unstable_isConcurrent: true,
     });
-    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    await waitForAll(['Suspend! [default]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-    expect(Scheduler).toFlushAndYield(['default']);
+    assertLog(['Promise resolved [default]']);
+    await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
     act(() => setValue('new value'));
-    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    assertLog(['Suspend! [new value]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-    expect(Scheduler).toFlushAndYield(['new value']);
+    assertLog(['Promise resolved [new value]']);
+    await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
 
-  it('updates memoized child of suspense component when context updates (function)', () => {
+  it('updates memoized child of suspense component when context updates (function)', async () => {
     const {useContext, createContext, useState} = React;
 
     const ValueContext = createContext(null);
@@ -567,23 +574,23 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    await waitForAll(['Suspend! [default]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-    expect(Scheduler).toFlushAndYield(['default']);
+    assertLog(['Promise resolved [default]']);
+    await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
     act(() => setValue('new value'));
-    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    assertLog(['Suspend! [new value]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-    expect(Scheduler).toFlushAndYield(['new value']);
+    assertLog(['Promise resolved [new value]']);
+    await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
 
-  it('updates memoized child of suspense component when context updates (forwardRef)', () => {
+  it('updates memoized child of suspense component when context updates (forwardRef)', async () => {
     const {forwardRef, useContext, createContext, useState} = React;
 
     const ValueContext = createContext(null);
@@ -624,23 +631,23 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    await waitForAll(['Suspend! [default]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-    expect(Scheduler).toFlushAndYield(['default']);
+    assertLog(['Promise resolved [default]']);
+    await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
     act(() => setValue('new value'));
-    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    assertLog(['Suspend! [new value]', 'Loading...']);
     jest.advanceTimersByTime(1000);
 
-    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-    expect(Scheduler).toFlushAndYield(['new value']);
+    assertLog(['Promise resolved [new value]']);
+    await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
 
-  it('re-fires layout effects when re-showing Suspense', () => {
+  it('re-fires layout effects when re-showing Suspense', async () => {
     function TextWithLayout(props) {
       Scheduler.unstable_yieldValue(props.text);
       React.useLayoutEffect(() => {
@@ -668,28 +675,21 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['Child 1', 'create layout']);
+    await waitForAll(['Child 1', 'create layout']);
     expect(root).toMatchRenderedOutput('Child 1');
 
     act(() => {
       _setShow(true);
     });
-    expect(Scheduler).toHaveYielded([
-      'Child 1',
-      'Suspend! [Child 2]',
-      'Loading...',
-    ]);
+    assertLog(['Child 1', 'Suspend! [Child 2]', 'Loading...']);
     jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded([
-      'destroy layout',
-      'Promise resolved [Child 2]',
-    ]);
-    expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2', 'create layout']);
+    assertLog(['destroy layout', 'Promise resolved [Child 2]']);
+    await waitForAll(['Child 1', 'Child 2', 'create layout']);
     expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
   });
 
   describe('outside concurrent mode', () => {
-    it('a mounted class component can suspend without losing state', () => {
+    it('a mounted class component can suspend without losing state', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
           Scheduler.unstable_yieldValue(`Mount [${this.props.text}]`);
@@ -754,7 +754,7 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App />);
 
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'A',
         'Suspend! [B:1]',
         'C',
@@ -770,8 +770,8 @@ describe('ReactSuspense', () => {
 
       jest.advanceTimersByTime(100);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [B:1]']);
-      expect(Scheduler).toFlushUntilNextPaint([
+      assertLog(['Promise resolved [B:1]']);
+      await waitForPaint([
         'B:1',
         'Unmount [Loading...]',
         // Should be a mount, not an update
@@ -780,25 +780,17 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('AB:1C');
 
       instance.setState({step: 2});
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [B:2]',
-        'Loading...',
-        'Mount [Loading...]',
-      ]);
+      assertLog(['Suspend! [B:2]', 'Loading...', 'Mount [Loading...]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(100);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [B:2]']);
-      expect(Scheduler).toFlushUntilNextPaint([
-        'B:2',
-        'Unmount [Loading...]',
-        'Update [B:2]',
-      ]);
+      assertLog(['Promise resolved [B:2]']);
+      await waitForPaint(['B:2', 'Unmount [Loading...]', 'Update [B:2]']);
       expect(root).toMatchRenderedOutput('AB:2C');
     });
 
-    it('bails out on timed-out primary children even if they receive an update', () => {
+    it('bails out on timed-out primary children even if they receive an update', async () => {
       let instance;
       class Stateful extends React.Component {
         state = {step: 1};
@@ -819,38 +811,30 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App text="A" />);
 
-      expect(Scheduler).toHaveYielded([
-        'Stateful: 1',
-        'Suspend! [A]',
-        'Loading...',
-      ]);
+      assertLog(['Stateful: 1', 'Suspend! [A]', 'Loading...']);
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushUntilNextPaint(['A']);
+      assertLog(['Promise resolved [A]']);
+      await waitForPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
-      expect(Scheduler).toHaveYielded([
-        'Stateful: 1',
-        'Suspend! [B]',
-        'Loading...',
-      ]);
+      assertLog(['Stateful: 1', 'Suspend! [B]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
-      expect(Scheduler).toHaveYielded(['Stateful: 2', 'Suspend! [B]']);
+      assertLog(['Stateful: 2', 'Suspend! [B]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushUntilNextPaint(['B']);
+      assertLog(['Promise resolved [B]']);
+      await waitForPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
-    it('when updating a timed-out tree, always retries the suspended component', () => {
+    it('when updating a timed-out tree, always retries the suspended component', async () => {
       let instance;
       class Stateful extends React.Component {
         state = {step: 1};
@@ -879,28 +863,20 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App text="A" />);
 
-      expect(Scheduler).toHaveYielded([
-        'Stateful: 1',
-        'Suspend! [A]',
-        'Loading...',
-      ]);
+      assertLog(['Stateful: 1', 'Suspend! [A]', 'Loading...']);
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushUntilNextPaint(['A']);
+      assertLog(['Promise resolved [A]']);
+      await waitForPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
-      expect(Scheduler).toHaveYielded([
-        'Stateful: 1',
-        'Suspend! [B]',
-        'Loading...',
-      ]);
+      assertLog(['Stateful: 1', 'Suspend! [B]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Stateful: 2',
 
         // The suspended component should suspend again. If it doesn't, the
@@ -912,8 +888,8 @@ describe('ReactSuspense', () => {
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushUntilNextPaint(['B']);
+      assertLog(['Promise resolved [B]']);
+      await waitForPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
@@ -949,14 +925,14 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App text="A" />);
-      expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Loading...']);
+      assertLog(['Suspend! [A]', 'Loading...']);
       root.update(<Text text="B" />);
       // Should not fire componentWillUnmount
-      expect(Scheduler).toHaveYielded(['B']);
+      assertLog(['B']);
       expect(root).toMatchRenderedOutput('B');
     });
 
-    it('suspends in a component that also contains useEffect', () => {
+    it('suspends in a component that also contains useEffect', async () => {
       const {useLayoutEffect} = React;
 
       function AsyncTextWithEffect(props) {
@@ -989,14 +965,14 @@ describe('ReactSuspense', () => {
       }
 
       ReactTestRenderer.create(<App text="A" />);
-      expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Loading...']);
+      assertLog(['Suspend! [A]', 'Loading...']);
       jest.advanceTimersByTime(500);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushUntilNextPaint(['A', 'Did commit: A']);
+      assertLog(['Promise resolved [A]']);
+      await waitForPaint(['A', 'Did commit: A']);
     });
 
-    it('retries when an update is scheduled on a timed out tree', () => {
+    it('retries when an update is scheduled on a timed out tree', async () => {
       let instance;
       class Stateful extends React.Component {
         state = {step: 1};
@@ -1019,33 +995,30 @@ describe('ReactSuspense', () => {
       });
 
       // Initial render
-      expect(Scheduler).toFlushAndYield(['Suspend! [Step: 1]', 'Loading...']);
+      await waitForAll(['Suspend! [Step: 1]', 'Loading...']);
       jest.advanceTimersByTime(1000);
-      expect(Scheduler).toHaveYielded(['Promise resolved [Step: 1]']);
-      expect(Scheduler).toFlushAndYield(['Step: 1']);
+      assertLog(['Promise resolved [Step: 1]']);
+      await waitForAll(['Step: 1']);
       expect(root).toMatchRenderedOutput('Step: 1');
 
       // Update that suspends
       instance.setState({step: 2});
-      expect(Scheduler).toFlushAndYield(['Suspend! [Step: 2]', 'Loading...']);
+      await waitForAll(['Suspend! [Step: 2]', 'Loading...']);
       jest.advanceTimersByTime(500);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Update while still suspended
       instance.setState({step: 3});
-      expect(Scheduler).toFlushAndYield(['Suspend! [Step: 3]']);
+      await waitForAll(['Suspend! [Step: 3]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
-      expect(Scheduler).toHaveYielded([
-        'Promise resolved [Step: 2]',
-        'Promise resolved [Step: 3]',
-      ]);
-      expect(Scheduler).toFlushAndYield(['Step: 3']);
+      assertLog(['Promise resolved [Step: 2]', 'Promise resolved [Step: 3]']);
+      await waitForAll(['Step: 3']);
       expect(root).toMatchRenderedOutput('Step: 3');
     });
 
-    it('does not remount the fallback while suspended children resolve in legacy mode', () => {
+    it('does not remount the fallback while suspended children resolve in legacy mode', async () => {
       let mounts = 0;
       class ShouldMountOnce extends React.Component {
         componentDidMount() {
@@ -1069,18 +1042,18 @@ describe('ReactSuspense', () => {
       const root = ReactTestRenderer.create(<App />);
 
       // Initial render
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'Suspend! [Child 1]',
         'Suspend! [Child 2]',
         'Suspend! [Child 3]',
         'Loading...',
       ]);
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Child 1]']);
-      expect(Scheduler).toFlushUntilNextPaint([
+      assertLog(['Promise resolved [Child 1]']);
+      await waitForPaint([
         'Child 1',
         'Suspend! [Child 2]',
         'Suspend! [Child 3]',
@@ -1088,23 +1061,20 @@ describe('ReactSuspense', () => {
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Child 2]']);
-      expect(Scheduler).toFlushUntilNextPaint([
-        'Child 2',
-        'Suspend! [Child 3]',
-      ]);
+      assertLog(['Promise resolved [Child 2]']);
+      await waitForPaint(['Child 2', 'Suspend! [Child 3]']);
 
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Child 3]']);
-      expect(Scheduler).toFlushUntilNextPaint(['Child 3']);
+      assertLog(['Promise resolved [Child 3]']);
+      await waitForPaint(['Child 3']);
       expect(root).toMatchRenderedOutput(
         ['Child 1', 'Child 2', 'Child 3'].join(''),
       );
       expect(mounts).toBe(1);
     });
 
-    it('does not get stuck with fallback in concurrent mode for a large delay', () => {
+    it('does not get stuck with fallback in concurrent mode for a large delay', async () => {
       function App(props) {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
@@ -1118,21 +1088,21 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       });
 
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'Suspend! [Child 1]',
         'Suspend! [Child 2]',
         'Loading...',
       ]);
       jest.advanceTimersByTime(1000);
-      expect(Scheduler).toHaveYielded(['Promise resolved [Child 1]']);
-      expect(Scheduler).toFlushAndYield(['Child 1', 'Suspend! [Child 2]']);
+      assertLog(['Promise resolved [Child 1]']);
+      await waitForAll(['Child 1', 'Suspend! [Child 2]']);
       jest.advanceTimersByTime(6000);
-      expect(Scheduler).toHaveYielded(['Promise resolved [Child 2]']);
-      expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2']);
+      assertLog(['Promise resolved [Child 2]']);
+      await waitForAll(['Child 1', 'Child 2']);
       expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
     });
 
-    it('reuses effects, including deletions, from the suspended tree', () => {
+    it('reuses effects, including deletions, from the suspended tree', async () => {
       const {useState} = React;
 
       let setTab;
@@ -1149,46 +1119,34 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Tab: 0]',
-        ' + sibling',
-        'Loading...',
-      ]);
+      assertLog(['Suspend! [Tab: 0]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 0]']);
-      expect(Scheduler).toFlushUntilNextPaint(['Tab: 0']);
+      assertLog(['Promise resolved [Tab: 0]']);
+      await waitForPaint(['Tab: 0']);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
       act(() => setTab(1));
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Tab: 1]',
-        ' + sibling',
-        'Loading...',
-      ]);
+      assertLog(['Suspend! [Tab: 1]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 1]']);
-      expect(Scheduler).toFlushUntilNextPaint(['Tab: 1']);
+      assertLog(['Promise resolved [Tab: 1]']);
+      await waitForPaint(['Tab: 1']);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
       act(() => setTab(2));
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Tab: 2]',
-        ' + sibling',
-        'Loading...',
-      ]);
+      assertLog(['Suspend! [Tab: 2]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 2]']);
-      expect(Scheduler).toFlushUntilNextPaint(['Tab: 2']);
+      assertLog(['Promise resolved [Tab: 2]']);
+      await waitForPaint(['Tab: 2']);
       expect(root).toMatchRenderedOutput('Tab: 2 + sibling');
     });
 
-    it('does not warn if an mounted component is pinged', () => {
+    it('does not warn if an mounted component is pinged', async () => {
       const {useState} = React;
 
       const root = ReactTestRenderer.create(null);
@@ -1218,23 +1176,23 @@ describe('ReactSuspense', () => {
         </Suspense>,
       );
 
-      expect(Scheduler).toHaveYielded(['Suspend! [A:0]', 'Loading...']);
+      assertLog(['Suspend! [A:0]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [A:0]']);
-      expect(Scheduler).toFlushUntilNextPaint(['A:0']);
+      assertLog(['Promise resolved [A:0]']);
+      await waitForPaint(['A:0']);
       expect(root).toMatchRenderedOutput('A:0');
 
       act(() => setStep(1));
-      expect(Scheduler).toHaveYielded(['Suspend! [A:1]', 'Loading...']);
+      assertLog(['Suspend! [A:1]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       root.update(null);
-      expect(Scheduler).toFlushWithoutYielding();
+      await waitForAll([]);
       jest.advanceTimersByTime(1000);
     });
 
-    it('memoizes promise listeners per thread ID to prevent redundant renders', () => {
+    it('memoizes promise listeners per thread ID to prevent redundant renders', async () => {
       function App() {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
@@ -1249,18 +1207,13 @@ describe('ReactSuspense', () => {
 
       root.update(<App />);
 
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [A]',
-        'Suspend! [B]',
-        'Suspend! [C]',
-        'Loading...',
-      ]);
+      assertLog(['Suspend! [A]', 'Suspend! [B]', 'Suspend! [C]', 'Loading...']);
 
       // Resolve A
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushUntilNextPaint([
+      assertLog(['Promise resolved [A]']);
+      await waitForPaint([
         'A',
         // The promises for B and C have now been thrown twice
         'Suspend! [B]',
@@ -1270,8 +1223,8 @@ describe('ReactSuspense', () => {
       // Resolve B
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushUntilNextPaint([
+      assertLog(['Promise resolved [B]']);
+      await waitForPaint([
         // Even though the promise for B was thrown twice, we should only
         // re-render once.
         'B',
@@ -1282,8 +1235,8 @@ describe('ReactSuspense', () => {
       // Resolve C
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-      expect(Scheduler).toFlushUntilNextPaint([
+      assertLog(['Promise resolved [C]']);
+      await waitForPaint([
         // Even though the promise for C was thrown three times, we should only
         // re-render once.
         'C',
@@ -1328,7 +1281,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
     });
 
-    it('updates memoized child of suspense component when context updates (simple memo)', () => {
+    it('updates memoized child of suspense component when context updates (simple memo)', async () => {
       const {useContext, createContext, useState, memo} = React;
 
       const ValueContext = createContext(null);
@@ -1364,23 +1317,23 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      assertLog(['Suspend! [default]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushUntilNextPaint(['default']);
+      assertLog(['Promise resolved [default]']);
+      await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      assertLog(['Suspend! [new value]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushUntilNextPaint(['new value']);
+      assertLog(['Promise resolved [new value]']);
+      await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
-    it('updates memoized child of suspense component when context updates (manual memo)', () => {
+    it('updates memoized child of suspense component when context updates (manual memo)', async () => {
       const {useContext, createContext, useState, memo} = React;
 
       const ValueContext = createContext(null);
@@ -1421,23 +1374,23 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      assertLog(['Suspend! [default]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushUntilNextPaint(['default']);
+      assertLog(['Promise resolved [default]']);
+      await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      assertLog(['Suspend! [new value]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushUntilNextPaint(['new value']);
+      assertLog(['Promise resolved [new value]']);
+      await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
-    it('updates memoized child of suspense component when context updates (function)', () => {
+    it('updates memoized child of suspense component when context updates (function)', async () => {
       const {useContext, createContext, useState} = React;
 
       const ValueContext = createContext(null);
@@ -1477,23 +1430,23 @@ describe('ReactSuspense', () => {
           </Suspense>
         </App>,
       );
-      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      assertLog(['Suspend! [default]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushUntilNextPaint(['default']);
+      assertLog(['Promise resolved [default]']);
+      await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      assertLog(['Suspend! [new value]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushUntilNextPaint(['new value']);
+      assertLog(['Promise resolved [new value]']);
+      await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
-    it('updates memoized child of suspense component when context updates (forwardRef)', () => {
+    it('updates memoized child of suspense component when context updates (forwardRef)', async () => {
       const {forwardRef, useContext, createContext, useState} = React;
 
       const ValueContext = createContext(null);
@@ -1529,19 +1482,19 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      assertLog(['Suspend! [default]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushUntilNextPaint(['default']);
+      assertLog(['Promise resolved [default]']);
+      await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      assertLog(['Suspend! [new value]', 'Loading...']);
       jest.advanceTimersByTime(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushUntilNextPaint(['new value']);
+      assertLog(['Promise resolved [new value]']);
+      await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
@@ -1587,24 +1540,15 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded([
-        'Received context value [default]',
-        'default',
-      ]);
+      assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded([
-        'Received context value [new value]',
-        'Loading...',
-      ]);
+      assertLog(['Received context value [new value]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       act(() => setValue('default'));
-      expect(Scheduler).toHaveYielded([
-        'Received context value [default]',
-        'default',
-      ]);
+      assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
     });
   });
