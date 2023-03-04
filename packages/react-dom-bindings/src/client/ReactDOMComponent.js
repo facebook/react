@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {ExoticNamespace} from '../shared/DOMNamespaces';
-
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -57,7 +55,12 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
+import {
+  HTML_NAMESPACE,
+  MATH_NAMESPACE,
+  SVG_NAMESPACE,
+  getIntrinsicNamespace,
+} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -381,14 +384,10 @@ function updateDOMProperties(
 export function createHTMLElement(
   type: string,
   props: Object,
-  rootContainerElement: Element | Document | DocumentFragment,
+  ownerDocument: Document,
 ): Element {
   let isCustomComponentTag;
 
-  // We create tags in the namespace of their parent container, except HTML
-  // tags get no namespace.
-  const ownerDocument: Document =
-    getOwnerDocumentFromRootContainer(rootContainerElement);
   let domElement: Element;
   if (__DEV__) {
     isCustomComponentTag = isCustomComponent(type, props);
@@ -473,17 +472,18 @@ export function createHTMLElement(
   return domElement;
 }
 
-// Creates elements in the HTML either SVG or Math namespace
-export function createElementNS(
-  namespaceURI: ExoticNamespace,
+export function createSVGElement(
   type: string,
-  rootContainerElement: Element | Document | DocumentFragment,
+  ownerDocument: Document,
 ): Element {
-  // This
-  const ownerDocument: Document =
-    getOwnerDocumentFromRootContainer(rootContainerElement);
+  return ownerDocument.createElementNS(SVG_NAMESPACE, type);
+}
 
-  return ownerDocument.createElementNS(namespaceURI, type);
+export function createMathElement(
+  type: string,
+  ownerDocument: Document,
+): Element {
+  return ownerDocument.createElementNS(MATH_NAMESPACE, type);
 }
 
 export function createTextNode(
@@ -871,7 +871,7 @@ export function diffHydratedProperties(
   rawProps: Object,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
-  namespaceDEV?: string,
+  parentNamespaceDev: string,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -1114,7 +1114,11 @@ export function diffHydratedProperties(
             propertyInfo,
           );
         } else {
-          if (namespaceDEV === HTML_NAMESPACE) {
+          let ownNamespaceDev = parentNamespaceDev;
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            ownNamespaceDev = getIntrinsicNamespace(tag);
+          }
+          if (ownNamespaceDev === HTML_NAMESPACE) {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {

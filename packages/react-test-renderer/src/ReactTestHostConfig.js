@@ -130,7 +130,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  props: Props,
 ): HostContext {
   return NO_CONTEXT;
 }

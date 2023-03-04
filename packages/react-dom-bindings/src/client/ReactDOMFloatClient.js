@@ -9,30 +9,32 @@
 
 import type {Instance, Container} from './ReactDOMHostConfig';
 
-import {isAttributeNameSafe} from '../shared/DOMProperty';
-import {precacheFiberNode} from './ReactDOMComponentTree';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
+import {
+  checkAttributeStringCoercion,
+  checkPropStringCoercion,
+} from 'shared/CheckStringCoercion';
+
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {isAttributeNameSafe} from '../shared/DOMProperty';
+import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {
   validatePreloadArguments,
   validatePreinitArguments,
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
+
+import {precacheFiberNode} from './ReactDOMComponentTree';
 import {createHTMLElement, setInitialProperties} from './ReactDOMComponent';
-import {
-  checkAttributeStringCoercion,
-  checkPropStringCoercion,
-} from 'shared/CheckStringCoercion';
 import {
   getResourcesFromRoot,
   isMarkedResource,
   markNodeAsResource,
 } from './ReactDOMComponentTree';
-import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
-import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -414,7 +416,8 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
           }
-          instance = createHTMLElement('link', stylesheetProps, resourceRoot);
+          const ownerDocument = getDocumentFromRoot(resourceRoot);
+          instance = createHTMLElement('link', stylesheetProps, ownerDocument);
           markNodeAsResource(instance);
           setInitialProperties(instance, 'link', stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
@@ -455,7 +458,8 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForScript(scriptProps, preloadProps);
           }
-          instance = createHTMLElement('script', scriptProps, resourceRoot);
+          const ownerDocument = getDocumentFromRoot(resourceRoot);
+          instance = createHTMLElement('script', scriptProps, ownerDocument);
           markNodeAsResource(instance);
           setInitialProperties(instance, 'link', scriptProps);
           (getDocumentFromRoot(resourceRoot).head: any).appendChild(instance);
@@ -753,7 +757,8 @@ export function acquireResource(
         }
 
         const styleProps = styleTagPropsFromRawProps(props);
-        instance = createHTMLElement('style', styleProps, hoistableRoot);
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('style', styleProps, ownerDocument);
 
         markNodeAsResource(instance);
         setInitialProperties(instance, 'style', styleProps);
@@ -786,7 +791,8 @@ export function acquireResource(
         }
 
         // Construct and insert a new instance
-        instance = createHTMLElement('link', stylesheetProps, hoistableRoot);
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('link', stylesheetProps, ownerDocument);
         markNodeAsResource(instance);
         const linkInstance: HTMLLinkElement = (instance: any);
         (linkInstance: any)._p = new Promise((resolve, reject) => {
@@ -827,7 +833,8 @@ export function acquireResource(
         }
 
         // Construct and insert a new instance
-        instance = createHTMLElement('script', scriptProps, hoistableRoot);
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('script', scriptProps, ownerDocument);
         markNodeAsResource(instance);
         setInitialProperties(instance, 'link', scriptProps);
         (getDocumentFromRoot(hoistableRoot).head: any).appendChild(instance);

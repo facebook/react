@@ -131,10 +131,6 @@ export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 //     (optional)
 // -------------------
 export const isHydratable = $$$hostConfig.isHydratable;
-export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
-export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
-export const canHydrateSuspenseInstance =
-  $$$hostConfig.canHydrateSuspenseInstance;
 export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
@@ -149,8 +145,8 @@ export const getFirstHydratableChildWithinContainer =
   $$$hostConfig.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
-export const getNextHydratableAfterFailedAttempt =
-  $$$hostConfig.getNextHydratableAfterFailedAttempt;
+export const getLastAttemptedHydratable =
+  $$$hostConfig.getLastAttemptedHydratable;
 export const getNextMatchingHydratableInstance =
   $$$hostConfig.getNextMatchingHydratableInstance;
 export const getNextMatchingHydratableTextInstance =

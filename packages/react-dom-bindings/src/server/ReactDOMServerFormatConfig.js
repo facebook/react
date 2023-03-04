@@ -333,20 +333,17 @@ export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 };
 
 function createFormatContext(
   insertionMode: InsertionMode,
-  selectedValue: null | string | Array<string>,
+  selectedValue: null | string,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): FormatContext {
   return {
     insertionMode,
     selectedValue,
     noscriptTagInScope,
-    itemInScope,
   };
 }
 
@@ -357,7 +354,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
       ? MATHML_MODE
       : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null, false, false);
+  return createFormatContext(insertionMode, null, false);
 }
 
 export function getChildFormatContext(
@@ -365,39 +362,32 @@ export function getChildFormatContext(
   type: string,
   props: Object,
 ): FormatContext {
-  const itemScoped =
-    parentContext.itemInScope ||
-    (props.itemScope === true && parentContext.insertionMode > HTML_HTML_MODE);
   switch (type) {
     case 'noscript':
-      return createFormatContext(HTML_MODE, null, true, itemScoped);
+      return createFormatContext(HTML_MODE, null, true);
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'svg':
       return createFormatContext(
         SVG_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'math':
       return createFormatContext(
         MATHML_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'foreignObject':
       return createFormatContext(
         HTML_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
@@ -406,7 +396,6 @@ export function getChildFormatContext(
         HTML_TABLE_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'thead':
     case 'tbody':
@@ -415,21 +404,18 @@ export function getChildFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'colgroup':
       return createFormatContext(
         HTML_COLGROUP_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
     case 'tr':
       return createFormatContext(
         HTML_TABLE_ROW_MODE,
         null,
         parentContext.noscriptTagInScope,
-        itemScoped,
       );
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
@@ -439,28 +425,19 @@ export function getChildFormatContext(
       HTML_MODE,
       null,
       parentContext.noscriptTagInScope,
-      itemScoped,
     );
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
     if (type === 'html') {
       // We've emitted the root and is now in <html> mode.
-      return createFormatContext(HTML_HTML_MODE, null, false, itemScoped);
+      return createFormatContext(HTML_HTML_MODE, null, false);
     } else {
       // We've emitted the root and is now in plain HTML mode.
-      return createFormatContext(HTML_MODE, null, false, itemScoped);
+      return createFormatContext(HTML_MODE, null, false);
     }
   } else if (parentContext.insertionMode === HTML_HTML_MODE) {
     // We've emitted the document element and is now in plain HTML mode.
-    return createFormatContext(HTML_MODE, null, false, itemScoped);
-  }
-  if (itemScoped !== parentContext.itemInScope) {
-    return createFormatContext(
-      parentContext.insertionMode,
-      parentContext.selectedValue,
-      parentContext.noscriptTagInScope,
-      itemScoped,
-    );
+    return createFormatContext(HTML_MODE, null, false);
   }
   return parentContext;
 }
@@ -1278,13 +1255,12 @@ function pushMeta(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): null {
   if (enableFloat) {
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      (itemInScope && props.itemProp != null)
+      props.itemProp != null
     ) {
       return pushSelfClosing(target, props, 'meta');
     } else {
@@ -1313,7 +1289,6 @@ function pushLink(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): null {
   if (enableFloat) {
     const rel = props.rel;
@@ -1322,7 +1297,7 @@ function pushLink(
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      (itemInScope && props.itemProp != null) ||
+      props.itemProp != null ||
       typeof rel !== 'string' ||
       typeof href !== 'string' ||
       href === ''
@@ -1566,7 +1541,6 @@ function pushStyle(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     if (hasOwnProperty.call(props, 'children')) {
@@ -1604,7 +1578,7 @@ function pushStyle(
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      (itemInScope && props.itemProp != null) ||
+      props.itemProp != null ||
       typeof precedence !== 'string' ||
       typeof href !== 'string' ||
       href === ''
@@ -1825,7 +1799,6 @@ function pushTitle(
   responseState: ResponseState,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     if (hasOwnProperty.call(props, 'children')) {
@@ -1879,7 +1852,7 @@ function pushTitle(
     if (
       insertionMode !== SVG_MODE &&
       !noscriptTagInScope &&
-      (!itemInScope || props.itemProp == null)
+      props.itemProp == null
     ) {
       pushTitleImpl(responseState.hoistableChunks, props);
       return null;
@@ -2066,13 +2039,12 @@ function pushScript(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
-  itemInScope: boolean,
 ): null {
   if (enableFloat) {
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      (itemInScope && props.itemProp != null) ||
+      props.itemProp != null ||
       typeof props.src !== 'string' ||
       !props.src
     ) {
@@ -2531,7 +2503,6 @@ export function pushStartInstance(
             responseState,
             formatContext.insertionMode,
             formatContext.noscriptTagInScope,
-            formatContext.itemInScope,
           )
         : pushStartTitle(target, props);
     case 'link':
@@ -2543,7 +2514,6 @@ export function pushStartInstance(
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
-        formatContext.itemInScope,
       );
     case 'script':
       return enableFloat
@@ -2554,7 +2524,6 @@ export function pushStartInstance(
             textEmbedded,
             formatContext.insertionMode,
             formatContext.noscriptTagInScope,
-            formatContext.itemInScope,
           )
         : pushStartGenericElement(target, props, type);
     case 'style':
@@ -2565,7 +2534,6 @@ export function pushStartInstance(
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
-        formatContext.itemInScope,
       );
     case 'meta':
       return pushMeta(
@@ -2575,7 +2543,6 @@ export function pushStartInstance(
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
-        formatContext.itemInScope,
       );
     // Newline eating tags
     case 'listing':

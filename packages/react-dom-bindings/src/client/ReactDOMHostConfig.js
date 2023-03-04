@@ -33,7 +33,8 @@ export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createHTMLElement,
-  createElementNS,
+  createSVGElement,
+  createMathElement,
   createTextNode,
   setInitialProperties,
   diffProperties,
@@ -57,6 +58,7 @@ import {
   getEventPriority,
 } from '../events/ReactDOMEventListener';
 import {
+  getChildNamespace,
   SVG_NAMESPACE,
   MATH_NAMESPACE,
   HTML_NAMESPACE,
@@ -111,7 +113,6 @@ export type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
-  itemScope?: null | boolean,
   ...
 };
 type RawProps = {
@@ -146,10 +147,10 @@ export interface SuspenseInstance extends Comment {
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
-  context: HostContextProd,
+  namespace: HostContextProd,
   ancestorInfo: AncestorInfoDev,
 };
-type HostContextProd = number;
+type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
@@ -180,23 +181,14 @@ export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
   let type;
-  let context: HostContextProd;
-  if (enableFloat) {
-    // With float we assume every root is a HoistContext. This is because if you render into a <div> we may still emit
-    // resources into that <div> context that we need to try to avoid when hydrating
-    context = HoistContext;
-  } else {
-    context = NoContext;
-  }
+  let namespace: HostContextProd;
   const nodeType = rootContainerInstance.nodeType;
   switch (nodeType) {
     case DOCUMENT_NODE:
     case DOCUMENT_FRAGMENT_NODE: {
       type = nodeType === DOCUMENT_NODE ? '#document' : '#fragment';
       const root = (rootContainerInstance: any).documentElement;
-      context |= root
-        ? getNamespaceContext(root.namespaceURI)
-        : getChildHostContextImpl(NoContext, '', null);
+      namespace = root ? root.namespaceURI : getChildNamespace(null, '');
       break;
     }
     default: {
@@ -206,107 +198,33 @@ export function getRootHostContext(
           : rootContainerInstance;
       const ownNamespace = container.namespaceURI || null;
       type = container.tagName;
-      context |= ownNamespace
-        ? getChildHostContextImpl(getNamespaceContext(ownNamespace), type, null)
-        : getChildHostContextImpl(NoContext, type, null);
+      namespace = getChildNamespace(ownNamespace, type);
       break;
     }
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfoDev(null, validatedTag);
-    return {context, ancestorInfo};
+    return {namespace, ancestorInfo};
   }
-  return context;
+  return namespace;
 }
 
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  props: Props,
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    const parentContext = parentHostContextDev.context;
-    const context = getChildHostContextImpl(parentContext, type, props);
-
+    const namespace = getChildNamespace(parentHostContextDev.namespace, type);
     const ancestorInfo = updatedAncestorInfoDev(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {context, ancestorInfo};
-  } else {
-    const parentHostContextProd = ((parentHostContext: any): HostContextProd);
-    return getChildHostContextImpl(parentHostContextProd, type, props);
+    return {namespace, ancestorInfo};
   }
-}
-
-const NoContext /*                 */ = 0b000000;
-// Element namespace contexts
-const HTMLNamespaceContext /*      */ = 0b000001;
-const SVGNamespaceContext /*       */ = 0b000010;
-const MathNamespaceContext /*      */ = 0b000100;
-const AnyNamespaceContext /*       */ = 0b000111;
-
-// Ancestor tag/attribute contexts
-const HoistContext /*              */ = 0b001000; // When we are directly inside the HostRoot or inside certain tags like <html>, <head>, and <body>
-const ItemInScope /*               */ = 0b010000; // When we are inside an itemScope deeper than <body>
-const HeadOrBodyInScope /*         */ = 0b100000; // When we are inside a <head> or <body>
-
-function getNamespaceContext(namespaceURI: string) {
-  switch (namespaceURI) {
-    case HTML_NAMESPACE:
-      return HTMLNamespaceContext;
-    case SVG_NAMESPACE:
-      return SVGNamespaceContext;
-    case MATH_NAMESPACE:
-      return MathNamespaceContext;
-    default:
-      return NoContext;
-  }
-}
-
-function getChildHostContextImpl(
-  parentContext: number,
-  type: string,
-  props: null | Props,
-) {
-  // We assume any child context is not a HoistContext. It will get re-added later if certain circumstances warrant it
-  let context = parentContext & ~HoistContext;
-  // We need to determine if we are now in an itemScope.
-  if (props && props.itemScope === true && parentContext & HeadOrBodyInScope) {
-    // We only allow itemscopes deeper than <head> or <body>. This is helpful to disambiguate
-    // resources that need to hoist vs those that do not
-    context |= ItemInScope;
-  }
-
-  const namespaceContext = context & AnyNamespaceContext;
-  const otherContext = context & ~AnyNamespaceContext;
-
-  if (
-    namespaceContext === NoContext ||
-    namespaceContext === HTMLNamespaceContext
-  ) {
-    switch (type) {
-      case 'svg':
-        return SVGNamespaceContext | otherContext;
-      case 'math':
-        return MathNamespaceContext | otherContext;
-      case 'html':
-        return HTMLNamespaceContext | otherContext | HoistContext;
-      case 'head':
-      case 'body':
-        return (
-          HTMLNamespaceContext | otherContext | HoistContext | HeadOrBodyInScope
-        );
-      default:
-        return context;
-    }
-  }
-  if (namespaceContext === SVGNamespaceContext && type === 'foreignObject') {
-    return HTMLNamespaceContext | otherContext;
-  }
-  return context;
+  const parentNamespace = ((parentHostContext: any): HostContextProd);
+  return getChildNamespace(parentNamespace, type);
 }
 
 export function getPublicInstance(instance: Instance): Instance {
@@ -359,11 +277,10 @@ export function createHoistableInstance(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): Instance {
-  const domElement: Instance = createHTMLElement(
-    type,
-    props,
+  const ownerDocument = getOwnerDocumentFromRootContainer(
     rootContainerInstance,
   );
+  const domElement: Instance = createHTMLElement(type, props, ownerDocument);
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
@@ -378,7 +295,7 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  let namespaceContext;
+  let namespace;
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
@@ -394,25 +311,36 @@ export function createInstance(
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
-    namespaceContext = hostContextDev.context & AnyNamespaceContext;
+    namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
-    namespaceContext = hostContextProd & AnyNamespaceContext;
+    namespace = hostContextProd;
   }
 
+  const ownerDocument = getOwnerDocumentFromRootContainer(
+    rootContainerInstance,
+  );
+
   let domElement: Instance;
-  if (
-    namespaceContext === SVGNamespaceContext ||
-    (type === 'svg' && namespaceContext === HTMLNamespaceContext)
-  ) {
-    domElement = createElementNS(SVG_NAMESPACE, type, rootContainerInstance);
-  } else if (
-    namespaceContext === MathNamespaceContext ||
-    (type === 'math' && namespaceContext === HTMLNamespaceContext)
-  ) {
-    domElement = createElementNS(MATH_NAMESPACE, type, rootContainerInstance);
-  } else {
-    domElement = createHTMLElement(type, props, rootContainerInstance);
+  create: switch (namespace) {
+    case SVG_NAMESPACE:
+      domElement = createSVGElement(type, ownerDocument);
+      break;
+    case MATH_NAMESPACE:
+      domElement = createMathElement(type, ownerDocument);
+      break;
+    case HTML_NAMESPACE:
+      switch (type) {
+        case 'svg':
+          domElement = createSVGElement(type, ownerDocument);
+          break create;
+        case 'math':
+          domElement = createMathElement(type, ownerDocument);
+          break create;
+      }
+    // eslint-disable-next-line no-fallthrough
+    default:
+      domElement = createHTMLElement(type, props, ownerDocument);
   }
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
@@ -934,35 +862,24 @@ export function isHydratable(type: string, props: Props): boolean {
 // In certain contexts, namely <body> and <head>, we want to skip past Nodes that are in theory
 // hydratable but do not match the current Fiber being hydrated. We track the hydratable node we
 // are currently attempting using this module global. If the hydration is unsuccessful Fiber will
-// call getNextHydratableAfterFailedAttempt which uses this cursor to return the expected next
+// call getLastAttemptedHydratable which uses this cursor to return the expected next
 // hydratable.
 let hydratableNode: null | HydratableInstance = null;
 
-export function getNextHydratableAfterFailedAttempt(): null | HydratableInstance {
-  return hydratableNode === null
-    ? null
-    : getNextHydratableSibling(hydratableNode);
+export function getLastAttemptedHydratable(): null | HydratableInstance {
+  return hydratableNode;
 }
 
 export function getNextMatchingHydratableInstance(
   instance: HydratableInstance,
   type: string,
   props: Props,
-  hostContext: HostContext,
+  rootOrSingletonContext: boolean,
 ): null | Instance {
+  const anyProps = (props: any);
   // We set this first because it must always be set on every invocation
   hydratableNode = instance;
-
-  let context: HostContextProd;
-  if (__DEV__) {
-    const hostContextDev: HostContextDev = (hostContext: any);
-    context = hostContextDev.context;
-  } else {
-    const hostContextProd: HostContextProd = (hostContext: any);
-    context = hostContextProd;
-  }
-
-  if (context & HoistContext) {
+  if (rootOrSingletonContext) {
     // In the head and body we expect 3rd party scripts to
     let node;
     for (; hydratableNode; hydratableNode = getNextHydratableSibling(node)) {
@@ -980,7 +897,6 @@ export function getNextMatchingHydratableInstance(
       ) {
         // This is either text or a tag type that differs from the tag we are trying to hydrate
         // or a Node we already bound to a hoistable. We skip past it.
-        hydratableNode = getNextHydratableSibling(node);
         continue;
       } else {
         // We have an Element with the right type.
@@ -991,65 +907,82 @@ export function getNextMatchingHydratableInstance(
         // using high entropy attributes for certain types. This technique will fail for strange insertions like
         // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
         switch (type) {
-          // We make a leap and assume that no titles or metas will ever hydrate as components in the <head> or <body>
-          // This is because the only way they would opt out of hoisting semantics is to be in svg, which is not possible
-          // in these scopes, or to have an itemProp while being in an itemScope. We define <head>, <body>, and <html> as not
-          // supporting itemScope to make this a strict guarantee. Because we can never be in this position we elide the check here.
           // case 'title':
-          // case 'meta': {
-          //   continue;
-          // }
+          //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
+          // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
+          case 'meta': {
+            // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
+            // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
+            // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
+            // implications are minimal
+            if (!element.hasAttribute('itemprop')) {
+              // This is a Hoistable
+              continue;
+            }
+            break;
+          }
           case 'link': {
+            // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
+            // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
+            // matches.
             const rel = element.getAttribute('rel');
             if (
               rel === 'stylesheet' &&
               element.hasAttribute('data-precedence')
             ) {
-              // This is a stylesheet resource and necessarily not a target for hydration of a component
+              // This is a stylesheet resource
               continue;
             } else if (
-              rel !== (props: any).rel ||
-              element.getAttribute('href') !== (props: any).href
+              rel !== anyProps.rel ||
+              element.getAttribute('href') !==
+                (anyProps.href == null ? null : anyProps.href) ||
+              element.getAttribute('crossorigin') !==
+                (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
+              element.getAttribute('title') !==
+                (anyProps.title == null ? null : anyProps.title)
             ) {
-              // This link Node is definitely not a match for this rendered link
+              // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
+              // and title could vary for rel alternate
               continue;
             }
             break;
           }
           case 'style': {
+            // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
+            // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
             if (element.hasAttribute('data-precedence')) {
-              // This i a style resource necessarily not a target for hydration of a component
-              continue;
-            } else if (
-              typeof props.children === 'string' &&
-              element.textContent !== props.children
-            ) {
-              // The contents of this style Node do not match the contents of this rendered style
+              // This is a style resource
               continue;
             }
             break;
           }
           case 'script': {
-            if (element.hasAttribute('async')) {
-              // This is an async script resource and necessarily not a target for hydration of a compoennt
+            // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
+            // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
+            // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
+            // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+            // if we learn it is problematic
+            const srcAttr = element.getAttribute('src');
+            if (
+              srcAttr &&
+              element.hasAttribute('async') &&
+              !element.hasAttribute('itemprop')
+            ) {
+              // This is an async script resource
               continue;
             } else if (
-              typeof (props: any).src === 'string' &&
-              element.getAttribute('src') !== (props: any).src
+              srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
+              element.getAttribute('type') !==
+                (anyProps.type == null ? null : anyProps.type) ||
+              element.getAttribute('crossorigin') !==
+                (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
             ) {
               // This script is for a different src
-              continue;
-            } else if (
-              typeof props.children === 'string' &&
-              element.textContent !== props.children
-            ) {
-              // This is an inline script with different text content
               continue;
             }
             break;
           }
         }
-
         // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
         // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
         // that should work in the vast majority of cases.
@@ -1072,7 +1005,7 @@ export function getNextMatchingHydratableInstance(
 export function getNextMatchingHydratableTextInstance(
   instance: HydratableInstance,
   text: string,
-  hostContext: HostContext,
+  rootOrSingletonContext: boolean,
 ): null | TextInstance {
   // We set this first because it must always be set on every invocation
   hydratableNode = instance;
@@ -1080,16 +1013,7 @@ export function getNextMatchingHydratableTextInstance(
   // Return early if there is nothing to hydrate (there will be no dom node if empty text)
   if (text === '') return null;
 
-  let context: HostContextProd;
-  if (__DEV__) {
-    const hostContextDev: HostContextDev = (hostContext: any);
-    context = hostContextDev.context;
-  } else {
-    const hostContextProd: HostContextProd = (hostContext: any);
-    context = hostContextProd;
-  }
-
-  if (context & HoistContext) {
+  if (rootOrSingletonContext) {
     while (hydratableNode) {
       const node = hydratableNode;
       if (node.nodeType === COMMENT_NODE) {
@@ -1117,21 +1041,12 @@ export function getNextMatchingHydratableTextInstance(
 
 export function getNextMatchingHydratableSuspenseInstance(
   instance: HydratableInstance,
-  hostContext: HostContext,
+  rootOrSingletonContext: boolean,
 ): null | SuspenseInstance {
   // We set this first because it must always be set on every invocation
   hydratableNode = instance;
 
-  let context: HostContextProd;
-  if (__DEV__) {
-    const hostContextDev: HostContextDev = (hostContext: any);
-    context = hostContextDev.context;
-  } else {
-    const hostContextProd: HostContextProd = (hostContext: any);
-    context = hostContextProd;
-  }
-
-  if (context & HoistContext) {
+  if (rootOrSingletonContext) {
     while (hydratableNode) {
       if (hydratableNode.nodeType !== COMMENT_NODE) {
         hydratableNode = getNextHydratableSibling(hydratableNode);
@@ -1148,44 +1063,6 @@ export function getNextMatchingHydratableSuspenseInstance(
     // This has now been refined to a suspense node.
     return ((instance: any): SuspenseInstance);
   }
-}
-
-export function canHydrateInstance(
-  instance: HydratableInstance,
-  type: string,
-  props: Props,
-): null | Instance {
-  if (
-    instance.nodeType !== ELEMENT_NODE ||
-    type.toLowerCase() !== instance.nodeName.toLowerCase()
-  ) {
-    return null;
-  }
-  // This has now been refined to an element node.
-  return ((instance: any): Instance);
-}
-
-export function canHydrateTextInstance(
-  instance: HydratableInstance,
-  text: string,
-): null | TextInstance {
-  if (text === '' || instance.nodeType !== TEXT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
-    return null;
-  }
-  // This has now been refined to a text node.
-  return ((instance: any): TextInstance);
-}
-
-export function canHydrateSuspenseInstance(
-  instance: HydratableInstance,
-): null | SuspenseInstance {
-  if (instance.nodeType !== COMMENT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
-    return null;
-  }
-  // This has now been refined to a suspense node.
-  return ((instance: any): SuspenseInstance);
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
@@ -1298,43 +1175,23 @@ export function hydrateInstance(
   const isConcurrentMode =
     ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
 
+  let parentNamespace;
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
-    const namespaceContext = hostContextDev.context & AnyNamespaceContext;
-    let namespaceDev;
-    if (
-      namespaceContext === SVGNamespaceContext ||
-      (type === 'svg' && namespaceContext === HTMLNamespaceContext)
-    ) {
-      namespaceDev = SVG_NAMESPACE;
-    } else if (
-      namespaceContext === MathNamespaceContext ||
-      (type === 'math' && namespaceContext === HTMLNamespaceContext)
-    ) {
-      namespaceDev = MATH_NAMESPACE;
-    } else {
-      namespaceDev = HTML_NAMESPACE;
-    }
-    return diffHydratedProperties(
-      instance,
-      type,
-      props,
-      isConcurrentMode,
-      shouldWarnDev,
-      namespaceDev,
-    );
+    parentNamespace = hostContextDev.namespace;
   } else {
-    // It is no longer free to derive the namespace from the HostContext in Prod. This value
-    // was originally required for diffHydratedProperties but since it is only used in development mode
-    // it is not optional and we omit the work to derive the namespace in prod
-    return diffHydratedProperties(
-      instance,
-      type,
-      props,
-      isConcurrentMode,
-      shouldWarnDev,
-    );
+    const hostContextProd = ((hostContext: any): HostContextProd);
+    parentNamespace = hostContextProd;
   }
+
+  return diffHydratedProperties(
+    instance,
+    type,
+    props,
+    isConcurrentMode,
+    shouldWarnDev,
+    parentNamespace,
+  );
 }
 
 export function hydrateTextInstance(
@@ -1805,20 +1662,39 @@ export function isHostHoistableType(
   hostContext: HostContext,
 ): boolean {
   let outsideHostContainerContext: boolean;
-  let context: HostContextProd;
+  let namespace: HostContextProd;
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
     outsideHostContainerContext =
       !hostContextDev.ancestorInfo.containerTagInScope;
-    context = hostContextDev.context;
+    namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
-    context = hostContextProd;
+    namespace = hostContextProd;
   }
 
   // Global opt out of hoisting for anything in SVG Namespace or anything with an itemProp inside an itemScope
-  if (context & ItemInScope || context & SVGNamespaceContext) {
+  if (namespace === SVG_NAMESPACE || props.itemProp != null) {
+    if (__DEV__) {
+      if (
+        outsideHostContainerContext &&
+        props.itemProp != null &&
+        (type === 'meta' ||
+          type === 'title' ||
+          type === 'style' ||
+          type === 'link' ||
+          type === 'script')
+      ) {
+        console.error(
+          'Cannot render a <%s> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an' +
+            ' `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <%s> remove the `itemProp` prop.' +
+            ' Otherwise, try moving this tag into the <head> or <body> of the Document.',
+          type,
+          type,
+        );
+      }
+    }
     return false;
   }
 
@@ -1998,12 +1874,6 @@ export function resolveSingletonInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     if (validateDOMNestingDev) {
       validateDOMNesting(type, null, hostContextDev.ancestorInfo);
-    }
-    if (hostContextDev.context & ItemInScope && props.itemScope === true) {
-      console.error(
-        'React expected the <%s> element to not have an `itemScope` prop but found this prop instead. React does not support itemScopes on <html>, <head>, or <body> because it interferes with hoisting certain tags. Try moving the itemScope to an element just inside the <body> instead.',
-        type,
-      );
     }
   }
   const ownerDocument = getOwnerDocumentFromRootContainer(

@@ -2303,23 +2303,25 @@ body {
     );
   });
 
-  it('does not hoist anything with an itemprop prop that is inside an itemscope', async () => {
-    await actIntoEmptyDocument(() => {
-      renderToPipeableStream(
+  it('does not hoist anything with an itemprop prop', async () => {
+    function App() {
+      return (
         <html>
-          <meta itemProp="outside" content="unscoped" />
-          <link itemProp="link" rel="foo" href="foo" />
-          <title itemProp="outside-title">title</title>
-          <link
-            itemProp="outside-stylesheet"
-            rel="stylesheet"
-            href="bar"
-            precedence="default"
-          />
-          <style itemProp="outside-style" href="baz" precedence="default">
-            outside style
-          </style>
-          <script itemProp="outside-script" async={true} src="qux" />
+          <head>
+            <meta itemProp="outside" content="unscoped" />
+            <link itemProp="link" rel="foo" href="foo" />
+            <title itemProp="outside-title">title</title>
+            <link
+              itemProp="outside-stylesheet"
+              rel="stylesheet"
+              href="bar"
+              precedence="default"
+            />
+            <style itemProp="outside-style" href="baz" precedence="default">
+              outside style
+            </style>
+            <script itemProp="outside-script" async={true} src="qux" />
+          </head>
           <body>
             <div itemScope={true}>
               <div>
@@ -2339,29 +2341,29 @@ body {
               </div>
             </div>
           </body>
-        </html>,
-      ).pipe(writable);
+        </html>
+      );
+    }
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(<App />).pipe(writable);
     });
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
+          <meta itemprop="outside" content="unscoped" />
+          <link itemprop="link" rel="foo" href="foo" />
+          <title itemprop="outside-title">title</title>
           <link
             itemprop="outside-stylesheet"
             rel="stylesheet"
             href="bar"
-            data-precedence="default"
+            precedence="default"
           />
-          <style
-            itemprop="outside-style"
-            data-href="baz"
-            data-precedence="default">
+          <style itemprop="outside-style" href="baz" precedence="default">
             outside style
           </style>
           <script itemprop="outside-script" async="" src="qux" />
-          <meta itemprop="outside" content="unscoped" />
-          <link itemprop="link" rel="foo" href="foo" />
-          <title itemprop="outside-title">title</title>
         </head>
         <body>
           <div itemscope="">
@@ -2385,64 +2387,25 @@ body {
       </html>,
     );
 
-    ReactDOMClient.hydrateRoot(
-      document,
-      <html>
-        <meta itemProp="outside" content="unscoped" />
-        <link itemProp="link" rel="foo" href="foo" />
-        <title itemProp="outside-title">title</title>
-        <link
-          itemProp="outside-stylesheet"
-          rel="stylesheet"
-          href="bar"
-          precedence="default"
-        />
-        <style itemProp="outside-style" href="baz" precedence="default">
-          outside style
-        </style>
-        <script itemProp="outside-script" async={true} src="qux" />
-        <body>
-          <div itemScope={true}>
-            <div>
-              <meta itemProp="inside-meta" content="scoped" />
-              <link itemProp="inside-link" rel="foo" href="foo" />
-              <title itemProp="inside-title">title</title>
-              <link
-                itemProp="inside-stylesheet"
-                rel="stylesheet"
-                href="bar"
-                precedence="default"
-              />
-              <style itemProp="inside-style" href="baz" precedence="default">
-                inside style
-              </style>
-              <script itemProp="inside-script" async={true} src="qux" />
-            </div>
-          </div>
-        </body>
-      </html>,
-    );
+    ReactDOMClient.hydrateRoot(document, <App />);
     expect(Scheduler).toFlushWithoutYielding();
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
+          <meta itemprop="outside" content="unscoped" />
+          <link itemprop="link" rel="foo" href="foo" />
+          <title itemprop="outside-title">title</title>
           <link
             itemprop="outside-stylesheet"
             rel="stylesheet"
             href="bar"
-            data-precedence="default"
+            precedence="default"
           />
-          <style
-            itemprop="outside-style"
-            data-href="baz"
-            data-precedence="default">
+          <style itemprop="outside-style" href="baz" precedence="default">
             outside style
           </style>
           <script itemprop="outside-script" async="" src="qux" />
-          <meta itemprop="outside" content="unscoped" />
-          <link itemprop="link" rel="foo" href="foo" />
-          <title itemprop="outside-title">title</title>
         </head>
         <body>
           <div itemscope="">
@@ -2465,6 +2428,33 @@ body {
         </body>
       </html>,
     );
+  });
+
+  it('warns if you render a tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
+        <meta itemProp="foo" />
+        <title itemProp="foo">title</title>
+        <style itemProp="foo">style</style>
+        <link itemProp="foo" />
+        <script itemProp="foo" />
+      </html>,
+    );
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev([
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+      'Cannot render a <title> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <title> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+      'Cannot render a <style> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <style> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+      'Cannot render a <link> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <link> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+      'Cannot render a <script> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <script> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+      'validateDOMNesting(...): <meta> cannot appear as a child of <html>',
+      'validateDOMNesting(...): <title> cannot appear as a child of <html>',
+      'validateDOMNesting(...): <style> cannot appear as a child of <html>',
+      'validateDOMNesting(...): <link> cannot appear as a child of <html>',
+      'validateDOMNesting(...): <script> cannot appear as a child of <html>',
+    ]);
   });
 
   // @gate enableFloat
@@ -2490,7 +2480,7 @@ body {
               <link rel="foo" href="foo" onLoad={() => {}} />
             </head>
             <body>
-              {/* Hoistable even though itemProp in itemScope because itemScope on body, head, and html is ignored for hoisting purposes */}
+              {/* Component because it has itemProp */}
               <meta name="foo" content="foo" itemProp="a prop" />
               {/* regular Hoistable */}
               <meta name="foo" content="foo" />
@@ -2499,7 +2489,7 @@ body {
               <div itemScope={true}>
                 <div>
                   <div>deep hello</div>
-                  {/* Component b/c itemProp inside an itemScope deeper than body */}
+                  {/* Component because it has itemProp */}
                   <meta name="foo" content="foo" itemProp="a prop" />
                 </div>
               </div>
@@ -2523,7 +2513,6 @@ body {
           <link rel="preload" as="script" href="sync rendered" />
           <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
-          <meta name="foo" content="foo" itemprop="a prop" />
           <meta name="foo" content="foo" />
           <title>title</title>
           <link rel="foo" href="foo" />
@@ -2535,6 +2524,7 @@ body {
           <link rel="foo" href="foo" />
         </head>
         <body>
+          <meta name="foo" content="foo" itemprop="a prop" />
           <div itemscope="">
             <div>
               <div>deep hello</div>
@@ -2549,10 +2539,6 @@ body {
     // of the head / body.
     const injectedStyle = document.createElement('style');
     injectedStyle.textContent = 'body { background-color: blue; }';
-    document.head.insertBefore(
-      injectedStyle,
-      document.head.querySelector('style'),
-    );
     document.head.prepend(injectedStyle.cloneNode(true));
     document.head.appendChild(injectedStyle.cloneNode(true));
     document.body.prepend(injectedStyle.cloneNode(true));
@@ -2593,13 +2579,11 @@ body {
           <link rel="preload" as="script" href="sync rendered" />
           <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
-          <meta name="foo" content="foo" itemprop="a prop" />
           <meta name="foo" content="foo" />
           <title>title</title>
           <link rel="foo" href="foo" />
           <link rel="stylesheet" href="stylesheet" />
           <script src="sync rendered" data-meaningful="" />
-          <style>{'body { background-color: blue; }'}</style>
           <style>{'body { background-color: red; }'}</style>
           <script src="async rendered" async="" />
           <noscript>&lt;meta name="noscript" content="noscript"/&gt;</noscript>
@@ -2611,6 +2595,7 @@ body {
         <body>
           <script async="" src="injected" />
           <style>{'body { background-color: blue; }'}</style>
+          <meta name="foo" content="foo" itemprop="a prop" />
           <div itemscope="">
             <div>
               <div>deep hello</div>
@@ -2639,7 +2624,6 @@ body {
           <script async="" src="rendered" />
           <link rel="preload" as="script" href="sync rendered" />
           <link rel="preload" as="script" href="async rendered" />
-          <style>{'body { background-color: blue; }'}</style>
           <style>{'body { background-color: blue; }'}</style>
           <div />
           <script async="" src="injected" />

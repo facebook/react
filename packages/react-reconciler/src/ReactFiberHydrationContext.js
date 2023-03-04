@@ -45,9 +45,6 @@ import {
   shouldSetTextContent,
   supportsHydration,
   supportsSingletons,
-  canHydrateInstance,
-  canHydrateTextInstance,
-  canHydrateSuspenseInstance,
   getNextHydratableSibling,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
@@ -72,7 +69,7 @@ import {
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
   resolveSingletonInstance,
-  getNextHydratableAfterFailedAttempt,
+  getLastAttemptedHydratable,
   getNextMatchingHydratableInstance,
   getNextMatchingHydratableTextInstance,
   getNextMatchingHydratableSuspenseInstance,
@@ -98,6 +95,8 @@ let didSuspendOrErrorDEV: boolean = false;
 
 // Hydration errors that were thrown inside this boundary
 let hydrationErrors: Array<CapturedValue<mixed>> | null = null;
+
+let rootOrSingletonContext = false;
 
 function warnIfHydrating() {
   if (__DEV__) {
@@ -134,6 +133,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  rootOrSingletonContext = true;
   return true;
 }
 
@@ -151,6 +151,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  rootOrSingletonContext = false;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
@@ -340,44 +341,35 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   warnNonhydratedInstance(returnFiber, fiber);
 }
 
-function tryHydrate(fiber: Fiber, nextInstance: any, hostContext: HostContext) {
+function tryHydrate(fiber: Fiber, nextInstance: any) {
   switch (fiber.tag) {
     // HostSingleton is intentionally omitted. the hydration pathway for singletons is non-fallible
     // you can find it inlined in claimHydratableSingleton
     case HostComponent: {
       const type = fiber.type;
       const props = fiber.pendingProps;
-      let instance;
-      if (enableFloat) {
-        instance = getNextMatchingHydratableInstance(
-          nextInstance,
-          type,
-          props,
-          hostContext,
-        );
-      } else {
-        instance = canHydrateInstance(nextInstance, type, props);
-      }
+      const instance = getNextMatchingHydratableInstance(
+        nextInstance,
+        type,
+        props,
+        rootOrSingletonContext,
+      );
       if (instance !== null) {
         fiber.stateNode = (instance: Instance);
         hydrationParentFiber = fiber;
         nextHydratableInstance = getFirstHydratableChild(instance);
+        rootOrSingletonContext = false;
         return true;
       }
       return false;
     }
     case HostText: {
       const text = fiber.pendingProps;
-      let textInstance;
-      if (enableFloat) {
-        textInstance = getNextMatchingHydratableTextInstance(
-          nextInstance,
-          text,
-          hostContext,
-        );
-      } else {
-        textInstance = canHydrateTextInstance(nextInstance, text);
-      }
+      const textInstance = getNextMatchingHydratableTextInstance(
+        nextInstance,
+        text,
+        rootOrSingletonContext,
+      );
       if (textInstance !== null) {
         fiber.stateNode = (textInstance: TextInstance);
         hydrationParentFiber = fiber;
@@ -388,15 +380,10 @@ function tryHydrate(fiber: Fiber, nextInstance: any, hostContext: HostContext) {
       return false;
     }
     case SuspenseComponent: {
-      let suspenseInstance: null | SuspenseInstance;
-      if (enableFloat) {
-        suspenseInstance = getNextMatchingHydratableSuspenseInstance(
-          nextInstance,
-          hostContext,
-        );
-      } else {
-        suspenseInstance = canHydrateSuspenseInstance(nextInstance);
-      }
+      const suspenseInstance = getNextMatchingHydratableSuspenseInstance(
+        nextInstance,
+        rootOrSingletonContext,
+      );
       if (suspenseInstance !== null) {
         const suspenseState: SuspenseState = {
           dehydrated: suspenseInstance,
@@ -454,6 +441,7 @@ function claimHydratableSingleton(fiber: Fiber): void {
       false,
     ));
     hydrationParentFiber = fiber;
+    rootOrSingletonContext = true;
     nextHydratableInstance = getFirstHydratableChild(instance);
   }
 }
@@ -487,7 +475,8 @@ function tryToClaimNextHydratableInstance(
     return;
   }
   const firstAttemptedInstance = nextInstance;
-  if (!tryHydrate(fiber, nextInstance, hostContext)) {
+  if (!tryHydrate(fiber, nextInstance)) {
+    nextHydratableInstance = getLastAttemptedHydratable();
     if (shouldClientRenderOnMismatch(fiber)) {
       warnNonhydratedInstance((hydrationParentFiber: any), fiber);
       throwOnHydrationMismatch(fiber);
@@ -495,9 +484,11 @@ function tryToClaimNextHydratableInstance(
     // If we can't hydrate this instance let's try the next one.
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.
-    nextInstance = getNextHydratableAfterFailedAttempt();
+    nextInstance = nextHydratableInstance
+      ? getNextHydratableSibling(nextHydratableInstance)
+      : null;
     const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
-    if (!nextInstance || !tryHydrate(fiber, nextInstance, hostContext)) {
+    if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
       isHydrating = false;
@@ -651,19 +642,21 @@ function skipPastDehydratedSuspenseInstance(
 }
 
 function popToNextHostParent(fiber: Fiber): void {
-  let parent = fiber.return;
-  while (
-    parent !== null &&
-    parent.tag !== HostComponent &&
-    parent.tag !== HostRoot &&
-    parent.tag !== SuspenseComponent &&
-    (!(enableHostSingletons && supportsSingletons)
-      ? true
-      : parent.tag !== HostSingleton)
-  ) {
-    parent = parent.return;
+  hydrationParentFiber = fiber.return;
+  while (hydrationParentFiber) {
+    switch (hydrationParentFiber.tag) {
+      case HostRoot:
+      case HostSingleton:
+        rootOrSingletonContext = true;
+        return;
+      case HostComponent:
+      case SuspenseComponent:
+        rootOrSingletonContext = false;
+        return;
+      default:
+        hydrationParentFiber = hydrationParentFiber.return;
+    }
   }
-  hydrationParentFiber = parent;
 }
 
 function popHydrationState(fiber: Fiber): boolean {
