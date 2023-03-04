@@ -1896,7 +1896,7 @@ describe('ReactIncremental', () => {
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('does not leak own context into context provider (factory components)', () => {
+    it('does not leak own context into context provider (factory components)', async () => {
       function Recurse(props, context) {
         return {
           getChildContext() {
@@ -1919,13 +1919,14 @@ describe('ReactIncremental', () => {
       };
 
       ReactNoop.render(<Recurse />);
-      expect(() =>
-        expect(Scheduler).toFlushAndYield([
-          'Recurse {}',
-          'Recurse {"n":2}',
-          'Recurse {"n":1}',
-          'Recurse {"n":0}',
-        ]),
+      await expect(
+        async () =>
+          await waitForAll([
+            'Recurse {}',
+            'Recurse {"n":2}',
+            'Recurse {"n":1}',
+            'Recurse {"n":0}',
+          ]),
       ).toErrorDev([
         'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
           'Change Recurse to a class that extends React.Component instead. ' +
@@ -2281,7 +2282,7 @@ describe('ReactIncremental', () => {
     instance.setState({
       throwError: true,
     });
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Error boundaries should implement getDerivedStateFromError()',
     );
   });

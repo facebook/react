@@ -11,7 +11,6 @@
 
 let React;
 let ReactNoop;
-let Scheduler;
 let waitForAll;
 
 describe('ReactFragment', () => {
@@ -20,7 +19,6 @@ describe('ReactFragment', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -707,7 +705,7 @@ describe('ReactFragment', () => {
     );
   });
 
-  it('should not preserve state when switching to a keyed fragment to an array', async function () {
+  it('should not preserve state when switching to a keyed fragment to an array', async () => {
     const ops = [];
 
     class Stateful extends React.Component {
@@ -742,7 +740,7 @@ describe('ReactFragment', () => {
     await waitForAll([]);
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -939,7 +937,7 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    await expect(async () => await waitForAll([])).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 

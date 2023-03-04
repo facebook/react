@@ -1518,16 +1518,14 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
-      root.render(
-        <>
-          <Read />
-        </>,
-      );
-      expect(() => expect(Scheduler).toFlushAndYield(['a'])).toErrorDev(
-        'Mutable source should not return a function as the snapshot value.',
-      );
-    });
+    root.render(
+      <>
+        <Read />
+      </>,
+    );
+    await expect(async () => await waitForAll(['a'])).toErrorDev(
+      'Mutable source should not return a function as the snapshot value.',
+    );
     expect(root).toMatchRenderedOutput('a');
   });
 

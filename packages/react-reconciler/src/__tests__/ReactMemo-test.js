@@ -58,7 +58,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -76,7 +76,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',

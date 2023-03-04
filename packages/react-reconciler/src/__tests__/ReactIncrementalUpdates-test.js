@@ -421,27 +421,28 @@ describe('ReactIncrementalUpdates', () => {
       return {a: 'a'};
     });
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(
-        gate(flags =>
-          flags.deferRenderPhaseUpdateToNextBatch
-            ? [
-                'setState updater',
-                // In the new reconciler, updates inside the render phase are
-                // treated as if they came from an event, so the update gets
-                // shifted to a subsequent render.
-                'render',
-                'render',
-              ]
-            : [
-                'setState updater',
-                // In the old reconciler, updates in the render phase receive
-                // the currently rendering expiration time, so the update
-                // flushes immediately in the same render.
-                'render',
-              ],
+    await expect(
+      async () =>
+        await waitForAll(
+          gate(flags =>
+            flags.deferRenderPhaseUpdateToNextBatch
+              ? [
+                  'setState updater',
+                  // In the new reconciler, updates inside the render phase are
+                  // treated as if they came from an event, so the update gets
+                  // shifted to a subsequent render.
+                  'render',
+                  'render',
+                ]
+              : [
+                  'setState updater',
+                  // In the old reconciler, updates in the render phase receive
+                  // the currently rendering expiration time, so the update
+                  // flushes immediately in the same render.
+                  'render',
+                ],
+          ),
         ),
-      ),
     ).toErrorDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +

@@ -144,7 +144,8 @@ describe('Scheduler', () => {
     assertLog([]);
 
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toFlushExpired(['A']);
+    Scheduler.unstable_flushExpired();
+    assertLog(['A']);
   });
 
   it('continues working on same task after yielding', async () => {
@@ -221,7 +222,8 @@ describe('Scheduler', () => {
 
     // Advance time by just a bit more. This should expire all the remaining work.
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toFlushExpired(['C', 'D']);
+    Scheduler.unstable_flushExpired();
+    assertLog(['C', 'D']);
   });
 
   it('continuations are interrupted by higher priority work', async () => {
@@ -326,7 +328,8 @@ describe('Scheduler', () => {
     // Immediate callback hasn't fired, yet.
     assertLog([]);
     // They all flush immediately within the subsequent task.
-    expect(Scheduler).toFlushExpired(['A', 'B', 'C', 'D']);
+    Scheduler.unstable_flushExpired();
+    assertLog(['A', 'B', 'C', 'D']);
   });
 
   it('nested immediate callbacks are added to the queue of immediate callbacks', () => {
@@ -345,7 +348,8 @@ describe('Scheduler', () => {
     );
     assertLog([]);
     // C should flush at the end
-    expect(Scheduler).toFlushExpired(['A', 'B', 'D', 'C']);
+    Scheduler.unstable_flushExpired();
+    assertLog(['A', 'B', 'D', 'C']);
   });
 
   it('wrapped callbacks have same signature as original callback', () => {
@@ -410,12 +414,12 @@ describe('Scheduler', () => {
       throw new Error('Oops C');
     });
 
-    expect(() => expect(Scheduler).toFlushExpired()).toThrow('Oops A');
+    expect(() => Scheduler.unstable_flushExpired()).toThrow('Oops A');
     assertLog(['A']);
 
     // B and C flush in a subsequent event. That way, the second error is not
     // swallowed.
-    expect(() => expect(Scheduler).toFlushExpired()).toThrow('Oops C');
+    expect(() => Scheduler.unstable_flushExpired()).toThrow('Oops C');
     assertLog(['B', 'C']);
   });
 

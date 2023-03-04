@@ -1219,7 +1219,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="a" />);
   });
 
-  it('catches reconciler errors in a boundary during mounting', () => {
+  it('catches reconciler errors in a boundary during mounting', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -1242,7 +1242,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string',
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
@@ -1293,7 +1293,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string',
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
@@ -1319,7 +1319,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Warning: React.createElement: type is invalid -- expected a string',
       {withoutStack: true},
     );
-    expect(Scheduler).toFlushAndThrow(
+    await waitForThrow(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -1425,7 +1425,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // Unmount
     ReactNoop.render(<Foo hide={true} />);
-    expect(Scheduler).toFlushAndThrow('Detach error');
+    await waitForThrow('Detach error');
     assertLog([
       'barRef detach',
       // Bar should unmount even though its ref threw an error while detaching
@@ -1435,16 +1435,16 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
-  it('handles error thrown by host config while working on failed root', () => {
+  it('handles error thrown by host config while working on failed root', async () => {
     ReactNoop.render(<errorInBeginPhase />);
-    expect(Scheduler).toFlushAndThrow('Error in host config.');
+    await waitForThrow('Error in host config.');
   });
 
-  it('handles error thrown by top-level callback', () => {
+  it('handles error thrown by top-level callback', async () => {
     ReactNoop.render(<div />, () => {
       throw new Error('Error!');
     });
-    expect(Scheduler).toFlushAndThrow('Error!');
+    await waitForThrow('Error!');
   });
 
   it('error boundaries capture non-errors', async () => {
@@ -1758,37 +1758,36 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  if (!ReactFeatureFlags.disableModulePatternComponents) {
-    it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
-      function Provider() {
-        return {
-          getChildContext() {
-            return {foo: 'bar'};
-          },
-          render() {
-            return 'Hi';
-          },
-        };
-      }
-      Provider.childContextTypes = {
-        x: () => {},
+  // @gate !disableModulePatternComponents
+  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', async () => {
+    function Provider() {
+      return {
+        getChildContext() {
+          return {foo: 'bar'};
+        },
+        render() {
+          return 'Hi';
+        },
       };
-      Provider.getDerivedStateFromProps = () => {
-        throw new Error('Oops!');
-      };
+    }
+    Provider.childContextTypes = {
+      x: () => {},
+    };
+    Provider.getDerivedStateFromProps = () => {
+      throw new Error('Oops!');
+    };
 
-      ReactNoop.render(<Provider />);
-      expect(() => {
-        expect(Scheduler).toFlushAndThrow('Oops!');
-      }).toErrorDev([
-        'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
-          'Change Provider to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Provider.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      ]);
-    });
-  }
+    ReactNoop.render(<Provider />);
+    await expect(async () => {
+      await waitForThrow('Oops!');
+    }).toErrorDev([
+      'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
+        'Change Provider to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Provider.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    ]);
+  });
 
   it('uncaught errors should be discarded if the render is aborted', async () => {
     const root = ReactNoop.createRoot();
@@ -1924,10 +1923,10 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   if (global.__PERSISTENT__) {
-    it('regression test: should fatal if error is thrown at the root', () => {
+    it('regression test: should fatal if error is thrown at the root', async () => {
       const root = ReactNoop.createRoot();
       root.render('Error when completing root');
-      expect(Scheduler).toFlushAndThrow('Error when completing root');
+      await waitForThrow('Error when completing root');
     });
   }
 });

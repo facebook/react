@@ -1092,8 +1092,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
       const innerHTML = ReactDOMServer.renderToString(<InnerApp />);
       innerContainer.innerHTML = innerHTML;
 
-      expect(OuterScheduler).toHaveYielded(['Outer']);
-      expect(InnerScheduler).toHaveYielded(['Inner']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Outer']);
+      expect(InnerScheduler.unstable_clearYields()).toEqual(['Inner']);
 
       suspendOuter = true;
       suspendInner = true;
@@ -1101,8 +1101,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       OuterReactDOMClient.hydrateRoot(outerContainer, <OuterApp />);
       InnerReactDOMClient.hydrateRoot(innerContainer, <InnerApp />);
 
-      expect(OuterScheduler).toFlushAndYield(['Suspend Outer']);
-      expect(InnerScheduler).toFlushAndYield(['Suspend Inner']);
+      OuterScheduler.unstable_flushAllWithoutAsserting();
+      InnerScheduler.unstable_flushAllWithoutAsserting();
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Suspend Outer']);
+      expect(InnerScheduler.unstable_clearYields()).toEqual(['Suspend Inner']);
 
       innerDiv = document.querySelector('#inner');
 
@@ -1115,7 +1117,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
         InnerScheduler.unstable_flushAllWithoutAsserting();
       });
 
-      expect(OuterScheduler).toHaveYielded(['Suspend Outer']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Suspend Outer']);
       if (
         gate(
           flags =>
@@ -1124,10 +1126,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       ) {
         // InnerApp doesn't see the event because OuterApp calls stopPropagation in
         // capture phase since the event is blocked on suspended component
-        expect(InnerScheduler).toHaveYielded([]);
+        expect(InnerScheduler.unstable_clearYields()).toEqual([]);
       } else {
         // no stopPropagation
-        expect(InnerScheduler).toHaveYielded(['Suspend Inner']);
+        expect(InnerScheduler.unstable_clearYields()).toEqual([
+          'Suspend Inner',
+        ]);
       }
 
       assertLog([]);
@@ -1149,15 +1153,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
         InnerScheduler.unstable_flushAllWithoutAsserting();
       });
 
-      expect(OuterScheduler).toHaveYielded(['Suspend Outer']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Suspend Outer']);
       // Inner App renders because it is unblocked
-      expect(InnerScheduler).toHaveYielded(['Inner']);
+      expect(InnerScheduler.unstable_clearYields()).toEqual(['Inner']);
       // No event is replayed yet
       assertLog([]);
 
       dispatchMouseHoverEvent(innerDiv);
-      expect(OuterScheduler).toHaveYielded([]);
-      expect(InnerScheduler).toHaveYielded([]);
+      expect(OuterScheduler.unstable_clearYields()).toEqual([]);
+      expect(InnerScheduler.unstable_clearYields()).toEqual([]);
       // No event is replayed yet
       assertLog([]);
 
@@ -1172,9 +1176,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       // Nothing happens to inner app yet.
       // Its blocked on the outer app replaying the event
-      expect(InnerScheduler).toHaveYielded([]);
+      expect(InnerScheduler.unstable_clearYields()).toEqual([]);
       // Outer hydrates and schedules Replay
-      expect(OuterScheduler).toHaveYielded(['Outer']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Outer']);
       // No event is replayed yet
       assertLog([]);
 
@@ -1203,9 +1207,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       // Outer resolves and scheduled replay
-      expect(OuterScheduler).toHaveYielded(['Outer']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual(['Outer']);
       // Inner App is still blocked
-      expect(InnerScheduler).toHaveYielded([]);
+      expect(InnerScheduler.unstable_clearYields()).toEqual([]);
 
       // Replay outer event
       await act(async () => {
@@ -1217,12 +1221,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Inner is still blocked so when Outer replays the event in capture phase
       // inner ends up caling stopPropagation
       assertLog([]);
-      expect(OuterScheduler).toHaveYielded([]);
-      expect(InnerScheduler).toHaveYielded(['Suspend Inner']);
+      expect(OuterScheduler.unstable_clearYields()).toEqual([]);
+      expect(InnerScheduler.unstable_clearYields()).toEqual(['Suspend Inner']);
 
       dispatchMouseHoverEvent(innerDiv);
-      expect(OuterScheduler).toHaveYielded([]);
-      expect(InnerScheduler).toHaveYielded([]);
+      expect(OuterScheduler.unstable_clearYields()).toEqual([]);
+      expect(InnerScheduler.unstable_clearYields()).toEqual([]);
       assertLog([]);
 
       await act(async () => {
@@ -1234,9 +1238,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       // Inner hydrates
-      expect(InnerScheduler).toHaveYielded(['Inner']);
+      expect(InnerScheduler.unstable_clearYields()).toEqual(['Inner']);
       // Outer was hydrated earlier
-      expect(OuterScheduler).toHaveYielded([]);
+      expect(OuterScheduler.unstable_clearYields()).toEqual([]);
 
       await act(async () => {
         Scheduler.unstable_flushAllWithoutAsserting();

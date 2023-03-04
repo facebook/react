@@ -20,6 +20,7 @@ let AdvanceTime;
 let assertLog;
 let waitFor;
 let waitForAll;
+let waitForThrow;
 
 function loadModules({
   enableProfilerTimer = true,
@@ -56,6 +57,7 @@ function loadModules({
   assertLog = InternalTestUtils.assertLog;
   waitFor = InternalTestUtils.waitFor;
   waitForAll = InternalTestUtils.waitForAll;
+  waitForThrow = InternalTestUtils.waitForThrow;
 
   AdvanceTime = class extends React.Component {
     static defaultProps = {
@@ -1230,7 +1232,7 @@ describe(`onRender`, () => {
               <errorInCompletePhase>hi</errorInCompletePhase>
             </React.Profiler>,
           );
-          expect(Scheduler).toFlushAndThrow('Error in host config.');
+          await waitForThrow('Error in host config.');
 
           // A similar case we've seen caused by an invariant in ReactDOM.
           // It didn't reproduce without a host component inside.
@@ -1241,7 +1243,7 @@ describe(`onRender`, () => {
               </errorInCompletePhase>
             </React.Profiler>,
           );
-          expect(Scheduler).toFlushAndThrow('Error in host config.');
+          await waitForThrow('Error in host config.');
 
           // So long as the profiler timer's fiber stack is reset correctly,
           // Subsequent renders should not error.

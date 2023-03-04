@@ -14,6 +14,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let waitForAll;
+let waitForThrow;
 
 describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {
@@ -24,6 +25,7 @@ describe('ReactIncrementalErrorLogging', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   // Note: in this test file we won't be using toErrorDev() matchers
@@ -39,7 +41,7 @@ describe('ReactIncrementalErrorLogging', () => {
     oldConsoleError = null;
   });
 
-  it('should log errors that occur during the begin phase', () => {
+  it('should log errors that occur during the begin phase', async () => {
     class ErrorThrowingComponent extends React.Component {
       constructor(props) {
         super(props);
@@ -56,7 +58,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(Scheduler).toFlushAndThrow('constructor error');
+    await waitForThrow('constructor error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -76,7 +78,7 @@ describe('ReactIncrementalErrorLogging', () => {
     );
   });
 
-  it('should log errors that occur during the commit phase', () => {
+  it('should log errors that occur during the commit phase', async () => {
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
         throw new Error('componentDidMount error');
@@ -92,7 +94,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(Scheduler).toFlushAndThrow('componentDidMount error');
+    await waitForThrow('componentDidMount error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -112,7 +114,7 @@ describe('ReactIncrementalErrorLogging', () => {
     );
   });
 
-  it('should ignore errors thrown in log method to prevent cycle', () => {
+  it('should ignore errors thrown in log method to prevent cycle', async () => {
     const logCapturedErrorCalls = [];
     console.error.mockImplementation(error => {
       // Test what happens when logging itself is buggy.
@@ -131,7 +133,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(Scheduler).toFlushAndThrow('render error');
+    await waitForThrow('render error');
     expect(logCapturedErrorCalls.length).toBe(1);
     expect(logCapturedErrorCalls[0]).toEqual(
       __DEV__
