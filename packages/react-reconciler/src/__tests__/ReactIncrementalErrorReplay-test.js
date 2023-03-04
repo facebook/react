@@ -13,6 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let waitForAll;
 
 describe('ReactIncrementalErrorReplay', () => {
   beforeEach(() => {
@@ -20,6 +21,9 @@ describe('ReactIncrementalErrorReplay', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   it('should fail gracefully on error in the host environment', () => {
@@ -27,7 +31,7 @@ describe('ReactIncrementalErrorReplay', () => {
     expect(Scheduler).toFlushAndThrow('Error in host config.');
   });
 
-  it("should ignore error if it doesn't throw on retry", () => {
+  it("should ignore error if it doesn't throw on retry", async () => {
     let didInit = false;
 
     function badLazyInit() {
@@ -45,6 +49,6 @@ describe('ReactIncrementalErrorReplay', () => {
       }
     }
     ReactNoop.render(<App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
   });
 });

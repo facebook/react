@@ -18,6 +18,8 @@ let ReactTestRenderer;
 let Scheduler;
 let ReactDOMServer;
 let act;
+let assertLog;
+let waitForAll;
 
 describe('ReactHooks', () => {
   beforeEach(() => {
@@ -30,6 +32,10 @@ describe('ReactHooks', () => {
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   if (__DEV__) {
@@ -54,7 +60,7 @@ describe('ReactHooks', () => {
     });
   }
 
-  it('bails out in the render phase if all of the state is the same', () => {
+  it('bails out in the render phase if all of the state is the same', async () => {
     const {useState, useLayoutEffect} = React;
 
     function Child({text}) {
@@ -80,11 +86,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
-    expect(Scheduler).toFlushAndYield([
-      'Parent: 0, 0',
-      'Child: 0, 0',
-      'Effect: 0, 0',
-    ]);
+    await waitForAll(['Parent: 0, 0', 'Child: 0, 0', 'Effect: 0, 0']);
     expect(root).toMatchRenderedOutput('0, 0');
 
     // Normal update
@@ -93,15 +95,11 @@ describe('ReactHooks', () => {
       setCounter2(1);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1, 1',
-      'Child: 1, 1',
-      'Effect: 1, 1',
-    ]);
+    assertLog(['Parent: 1, 1', 'Child: 1, 1', 'Effect: 1, 1']);
 
     // Update that bails out.
     act(() => setCounter1(1));
-    expect(Scheduler).toHaveYielded(['Parent: 1, 1']);
+    assertLog(['Parent: 1, 1']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
@@ -110,11 +108,7 @@ describe('ReactHooks', () => {
       setCounter2(2);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1, 2',
-      'Child: 1, 2',
-      'Effect: 1, 2',
-    ]);
+    assertLog(['Parent: 1, 2', 'Child: 1, 2', 'Effect: 1, 2']);
 
     // Lots of updates that eventually resolve to the current values.
     act(() => {
@@ -128,7 +122,7 @@ describe('ReactHooks', () => {
 
     // Because the final values are the same as the current values, the
     // component bails out.
-    expect(Scheduler).toHaveYielded(['Parent: 1, 2']);
+    assertLog(['Parent: 1, 2']);
 
     // prepare to check SameValue
     act(() => {
@@ -136,11 +130,7 @@ describe('ReactHooks', () => {
       setCounter2(NaN);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 0, NaN',
-      'Child: 0, NaN',
-      'Effect: 0, NaN',
-    ]);
+    assertLog(['Parent: 0, NaN', 'Child: 0, NaN', 'Effect: 0, NaN']);
 
     // check if re-setting to negative 0 / NaN still bails out
     act(() => {
@@ -150,20 +140,16 @@ describe('ReactHooks', () => {
       setCounter2(NaN);
     });
 
-    expect(Scheduler).toHaveYielded(['Parent: 0, NaN']);
+    assertLog(['Parent: 0, NaN']);
 
     // check if changing negative 0 to positive 0 does not bail out
     act(() => {
       setCounter1(0);
     });
-    expect(Scheduler).toHaveYielded([
-      'Parent: 0, NaN',
-      'Child: 0, NaN',
-      'Effect: 0, NaN',
-    ]);
+    assertLog(['Parent: 0, NaN', 'Child: 0, NaN', 'Effect: 0, NaN']);
   });
 
-  it('bails out in render phase if all the state is the same and props bail out with memo', () => {
+  it('bails out in render phase if all the state is the same and props bail out with memo', async () => {
     const {useState, memo} = React;
 
     function Child({text}) {
@@ -188,10 +174,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent theme="light" />);
-    expect(Scheduler).toFlushAndYield([
-      'Parent: 0, 0 (light)',
-      'Child: 0, 0 (light)',
-    ]);
+    await waitForAll(['Parent: 0, 0 (light)', 'Child: 0, 0 (light)']);
     expect(root).toMatchRenderedOutput('0, 0 (light)');
 
     // Normal update
@@ -200,14 +183,11 @@ describe('ReactHooks', () => {
       setCounter2(1);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1, 1 (light)',
-      'Child: 1, 1 (light)',
-    ]);
+    assertLog(['Parent: 1, 1 (light)', 'Child: 1, 1 (light)']);
 
     // Update that bails out.
     act(() => setCounter1(1));
-    expect(Scheduler).toHaveYielded(['Parent: 1, 1 (light)']);
+    assertLog(['Parent: 1, 1 (light)']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
@@ -216,10 +196,7 @@ describe('ReactHooks', () => {
       setCounter2(2);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1, 2 (light)',
-      'Child: 1, 2 (light)',
-    ]);
+    assertLog(['Parent: 1, 2 (light)', 'Child: 1, 2 (light)']);
 
     // Updates bail out, but component still renders because props
     // have changed
@@ -229,10 +206,7 @@ describe('ReactHooks', () => {
       root.update(<Parent theme="dark" />);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1, 2 (dark)',
-      'Child: 1, 2 (dark)',
-    ]);
+    assertLog(['Parent: 1, 2 (dark)', 'Child: 1, 2 (dark)']);
 
     // Both props and state bail out
     act(() => {
@@ -241,10 +215,10 @@ describe('ReactHooks', () => {
       root.update(<Parent theme="dark" />);
     });
 
-    expect(Scheduler).toHaveYielded(['Parent: 1, 2 (dark)']);
+    assertLog(['Parent: 1, 2 (dark)']);
   });
 
-  it('warns about setState second argument', () => {
+  it('warns about setState second argument', async () => {
     const {useState} = React;
 
     let setCounter;
@@ -258,7 +232,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Counter />);
-    expect(Scheduler).toFlushAndYield(['Count: 0']);
+    await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     expect(() => {
@@ -274,11 +248,11 @@ describe('ReactHooks', () => {
         'declare it in the component body with useEffect().',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['Count: 1']);
+    assertLog(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });
 
-  it('warns about dispatch second argument', () => {
+  it('warns about dispatch second argument', async () => {
     const {useReducer} = React;
 
     let dispatch;
@@ -292,7 +266,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Counter />);
-    expect(Scheduler).toFlushAndYield(['Count: 0']);
+    await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     expect(() => {
@@ -308,11 +282,11 @@ describe('ReactHooks', () => {
         'declare it in the component body with useEffect().',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['Count: 1']);
+    assertLog(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });
 
-  it('never bails out if context has changed', () => {
+  it('never bails out if context has changed', async () => {
     const {useState, useLayoutEffect, useContext} = React;
 
     const ThemeContext = React.createContext('light');
@@ -355,7 +329,7 @@ describe('ReactHooks', () => {
       );
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Theme: light',
       'Parent: 0 (light)',
       'Child: 0 (light)',
@@ -366,21 +340,17 @@ describe('ReactHooks', () => {
     // Updating the theme to the same value doesn't cause the consumers
     // to re-render.
     setTheme('light');
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('0 (light)');
 
     // Normal update
     act(() => setCounter(1));
-    expect(Scheduler).toHaveYielded([
-      'Parent: 1 (light)',
-      'Child: 1 (light)',
-      'Effect: 1 (light)',
-    ]);
+    assertLog(['Parent: 1 (light)', 'Child: 1 (light)', 'Effect: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, so it bails out
     act(() => setCounter(1));
-    expect(Scheduler).toHaveYielded(['Parent: 1 (light)']);
+    assertLog(['Parent: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, but the context changes, too, so it
@@ -390,7 +360,7 @@ describe('ReactHooks', () => {
       setTheme('dark');
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Theme: dark',
       'Parent: 1 (dark)',
       'Child: 1 (dark)',
@@ -399,7 +369,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('1 (dark)');
   });
 
-  it('can bail out without calling render phase (as an optimization) if queue is known to be empty', () => {
+  it('can bail out without calling render phase (as an optimization) if queue is known to be empty', async () => {
     const {useState, useLayoutEffect} = React;
 
     function Child({text}) {
@@ -420,12 +390,12 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
-    expect(Scheduler).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    await waitForAll(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Normal update
     act(() => setCounter(1));
-    expect(Scheduler).toHaveYielded(['Parent: 1', 'Child: 1', 'Effect: 1']);
+    assertLog(['Parent: 1', 'Child: 1', 'Effect: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state. React doesn't know if the queue is empty
@@ -433,25 +403,25 @@ describe('ReactHooks', () => {
     // enter the render phase before we can bail out. But we bail out before
     // rendering the child, and we don't fire any effects.
     act(() => setCounter(1));
-    expect(Scheduler).toHaveYielded(['Parent: 1']);
+    assertLog(['Parent: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state again. This times, neither fiber has pending
     // update priority, so we can bail out before even entering the render phase.
     act(() => setCounter(1));
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('1');
 
     // This changes the state to something different so it renders normally.
     act(() => setCounter(2));
-    expect(Scheduler).toHaveYielded(['Parent: 2', 'Child: 2', 'Effect: 2']);
+    assertLog(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
 
     // prepare to check SameValue
     act(() => {
       setCounter(0);
     });
-    expect(Scheduler).toHaveYielded(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    assertLog(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to the same state for the first time to flush the queue
@@ -459,25 +429,25 @@ describe('ReactHooks', () => {
       setCounter(0);
     });
 
-    expect(Scheduler).toHaveYielded(['Parent: 0']);
+    assertLog(['Parent: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update again to the same state. Should bail out.
     act(() => {
       setCounter(0);
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to a different state (positive 0 to negative 0)
     act(() => {
       setCounter(0 / -1);
     });
-    expect(Scheduler).toHaveYielded(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    assertLog(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
   });
 
-  it('bails out multiple times in a row without entering render phase', () => {
+  it('bails out multiple times in a row without entering render phase', async () => {
     const {useState} = React;
 
     function Child({text}) {
@@ -495,7 +465,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
-    expect(Scheduler).toFlushAndYield(['Parent: 0', 'Child: 0']);
+    await waitForAll(['Parent: 0', 'Child: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     const update = value => {
@@ -515,7 +485,7 @@ describe('ReactHooks', () => {
       update(3);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // The first four updates were eagerly computed, because the queue is
       // empty before each one.
       'Compute state (0 -> 0)',
@@ -527,7 +497,7 @@ describe('ReactHooks', () => {
     ]);
 
     // Now let's enter the render phase
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       // We don't need to re-compute the first four updates. Only the final two.
       'Compute state (1 -> 2)',
       'Compute state (2 -> 3)',
@@ -537,7 +507,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('3');
   });
 
-  it('can rebase on top of a previously skipped update', () => {
+  it('can rebase on top of a previously skipped update', async () => {
     const {useState} = React;
 
     function Child({text}) {
@@ -555,7 +525,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
-    expect(Scheduler).toFlushAndYield(['Parent: 1', 'Child: 1']);
+    await waitForAll(['Parent: 1', 'Child: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     const update = compute => {
@@ -576,13 +546,13 @@ describe('ReactHooks', () => {
       ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
     }
     // The new state is eagerly computed.
-    expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);
+    assertLog(['Compute state (1 -> 100)']);
 
     // but before it's flushed, a higher priority update interrupts it.
     root.unstable_flushSync(() => {
       update(n => n + 5);
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // The eagerly computed state was completely skipped
       'Compute state (1 -> 6)',
       'Parent: 6',
@@ -593,7 +563,7 @@ describe('ReactHooks', () => {
     // Now when we finish the first update, the second update is rebased on top.
     // Notice we didn't have to recompute the first update even though it was
     // skipped in the previous render.
-    expect(Scheduler).toFlushAndYield([
+    await waitForAll([
       'Compute state (100 -> 105)',
       'Parent: 105',
       'Child: 105',
@@ -612,7 +582,7 @@ describe('ReactHooks', () => {
       return props.dependencies;
     }
     const root = ReactTestRenderer.create(<App dependencies={['A']} />);
-    expect(Scheduler).toHaveYielded(['Did commit: A']);
+    assertLog(['Did commit: A']);
     expect(() => {
       root.update(<App dependencies={['A', 'B']} />);
     }).toErrorDev([
@@ -639,7 +609,7 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(null);
     root.update(<App text="Hello" hasDeps={true} />);
-    expect(Scheduler).toHaveYielded(['Compute']);
+    assertLog(['Compute']);
     expect(root).toMatchRenderedOutput('HELLO');
 
     expect(() => {
@@ -1841,7 +1811,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1873,7 +1843,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1905,7 +1875,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(root).toMatchRenderedOutput('hello');
   });
 
