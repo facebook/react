@@ -13,6 +13,7 @@ import {
   IdentifierId,
   SourceLocation,
 } from "./HIR";
+import { printPlace } from "./PrintHIR";
 import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
 /**
@@ -21,6 +22,7 @@ import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
  */
 export function validateConsistentIdentifiers(fn: HIRFunction): void {
   const identifiers: Identifiers = new Map();
+  const assignments: Set<IdentifierId> = new Set();
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       validate(identifiers, phi.id);
@@ -35,6 +37,15 @@ export function validateConsistentIdentifiers(fn: HIRFunction): void {
           instr.lvalue.loc
         );
       }
+      if (assignments.has(instr.lvalue.identifier.id)) {
+        CompilerError.invariant(
+          `Expected lvalues to be assigned exactly once, found duplicate assignment of '${printPlace(
+            instr.lvalue
+          )}'`,
+          instr.lvalue.loc
+        );
+      }
+      assignments.add(instr.lvalue.identifier.id);
       validate(identifiers, instr.lvalue.identifier, instr.lvalue.loc);
       for (const operand of eachInstructionValueOperand(instr.value)) {
         validate(identifiers, operand.identifier, operand.loc);

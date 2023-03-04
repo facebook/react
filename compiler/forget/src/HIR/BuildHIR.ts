@@ -1041,10 +1041,19 @@ function lowerExpression(
 
       //  Block for the consequent (if the test is truthy)
       const consequentBlock = builder.enter("value", (_blockId) => {
+        const consequent = lowerExpressionToTemporary(
+          builder,
+          expr.get("consequent")
+        );
         builder.push({
           id: makeInstructionId(0),
-          lvalue: { ...place },
-          value: lowerExpression(builder, expr.get("consequent")),
+          lvalue: buildTemporaryPlace(builder, exprLoc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: consequent,
+            loc: exprLoc,
+          },
           loc: exprLoc,
         });
         return {
@@ -1056,10 +1065,19 @@ function lowerExpression(
       });
       //  Block for the alternate (if the test is not truthy)
       const alternateBlock = builder.enter("value", (_blockId) => {
+        const alternate = lowerExpressionToTemporary(
+          builder,
+          expr.get("alternate")
+        );
         builder.push({
           id: makeInstructionId(0),
-          lvalue: { ...place },
-          value: lowerExpression(builder, expr.get("alternate")),
+          lvalue: buildTemporaryPlace(builder, exprLoc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: alternate,
+            loc: exprLoc,
+          },
           loc: exprLoc,
         });
         return {
@@ -1106,10 +1124,11 @@ function lowerExpression(
       const consequent = builder.enter("value", () => {
         builder.push({
           id: makeInstructionId(0),
-          lvalue: { ...place },
+          lvalue: buildTemporaryPlace(builder, leftPlace.loc),
           value: {
-            kind: "LoadLocal",
-            place: { ...leftPlace },
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: { ...leftPlace },
             loc: leftPlace.loc,
           },
           loc: exprLoc,
@@ -1122,10 +1141,16 @@ function lowerExpression(
         };
       });
       const alternate = builder.enter("value", () => {
+        const right = lowerExpressionToTemporary(builder, expr.get("right"));
         builder.push({
           id: makeInstructionId(0),
-          lvalue: { ...place },
-          value: lowerExpression(builder, expr.get("right")),
+          lvalue: buildTemporaryPlace(builder, right.loc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: { ...right },
+            loc: right.loc,
+          },
           loc: exprLoc,
         });
         return {

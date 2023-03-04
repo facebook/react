@@ -519,16 +519,9 @@ class Driver {
     loc: SourceLocation
   ): { block: BlockId; value: ReactiveValue; place: Place; id: InstructionId } {
     const defaultBlock = this.cx.ir.blocks.get(id)!;
-    if (
-      defaultBlock.terminal.kind === "goto" ||
-      defaultBlock.terminal.kind === "branch"
-    ) {
+    if (defaultBlock.terminal.kind === "branch") {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
-        invariant(
-          defaultBlock.terminal.kind === "branch",
-          "Expected instructions for non-branch terminal"
-        );
         return {
           block: defaultBlock.id,
           place: defaultBlock.terminal.test,
@@ -541,6 +534,11 @@ class Driver {
         };
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
+        invariant(
+          instr.lvalue.identifier.id ===
+            defaultBlock.terminal.test.identifier.id,
+          "Expected branch block to end in an instruction that sets the test value"
+        );
         return {
           block: defaultBlock.id,
           place: instr.lvalue!,
@@ -558,7 +556,58 @@ class Driver {
         };
         return {
           block: defaultBlock.id,
-          place: instr.lvalue!,
+          place: defaultBlock.terminal.test,
+          value: sequence,
+          id: defaultBlock.terminal.id,
+        };
+      }
+    } else if (defaultBlock.terminal.kind === "goto") {
+      const instructions = defaultBlock.instructions;
+      if (instructions.length === 0) {
+        invariant(
+          false,
+          "Expected goto value block to have at least one instruction"
+        );
+      } else if (defaultBlock.instructions.length === 1) {
+        const instr = defaultBlock.instructions[0]!;
+        let place: Place = instr.lvalue!;
+        let value: ReactiveValue = instr.value;
+        if (instr.value.kind === "StoreLocal") {
+          place = instr.value.lvalue.place;
+          value = {
+            kind: "LoadLocal",
+            place: instr.value.value,
+            loc: instr.value.value.loc,
+          };
+        }
+        return {
+          block: defaultBlock.id,
+          place,
+          value,
+          id: instr.id,
+        };
+      } else {
+        const instr = defaultBlock.instructions.at(-1)!;
+        let place: Place = instr.lvalue!;
+        let value: ReactiveValue = instr.value;
+        if (instr.value.kind === "StoreLocal") {
+          place = instr.value.lvalue.place;
+          value = {
+            kind: "LoadLocal",
+            place: instr.value.value,
+            loc: instr.value.value.loc,
+          };
+        }
+        const sequence: ReactiveSequenceValue = {
+          kind: "SequenceExpression",
+          instructions: defaultBlock.instructions.slice(0, -1),
+          id: instr.id,
+          value,
+          loc: loc,
+        };
+        return {
+          block: defaultBlock.id,
+          place,
           value: sequence,
           id: instr.id,
         };
@@ -675,7 +724,7 @@ class Driver {
         };
         invariant(
           consequent.place.identifier === alternate.place.identifier,
-          "Expected the consquent and alternate of a ternary to store a value to the same place"
+          "Expected the consequent and alternate of a ternary to store a value to the same place"
         );
         return {
           place: { ...consequent.place },

@@ -58,6 +58,8 @@ export function* run(
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
+  validateConsistentIdentifiers(hir);
+
   enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
 
