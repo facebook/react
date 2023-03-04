@@ -1010,6 +1010,9 @@ export function hydrateHoistable(
         for (let i = 0; i < nodes.length; i++) {
           const node = nodes[i];
 
+          // We coerce content to string because it is the most likely one to
+          // use a `toString` capable value. For the rest we just do identity match
+          // passing non-strings here is not really valid anyway.
           if (__DEV__) {
             checkAttributeStringCoercion(props.content, 'content');
           }
@@ -1020,6 +1023,8 @@ export function hydrateHoistable(
               (props.name == null ? null : props.name) ||
             node.getAttribute('property') !==
               (props.property == null ? null : props.property) ||
+            node.getAttribute('http-equiv') !==
+              (props.httpEquiv == null ? null : props.httpEquiv) ||
             node.getAttribute('charset') !==
               (props.charSet == null ? null : props.charSet)
           ) {
