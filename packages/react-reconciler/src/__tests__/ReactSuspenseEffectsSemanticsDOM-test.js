@@ -15,6 +15,8 @@ let ReactDOMClient;
 let Scheduler;
 let act;
 let container;
+let waitForAll;
+let assertLog;
 
 describe('ReactSuspenseEffectsSemanticsDOM', () => {
   beforeEach(() => {
@@ -25,6 +27,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -139,23 +145,23 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     act(() => {
       root.render(<Parent swap={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
 
     await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Ref mount: A']);
+    await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Ref unmount: A']);
+    assertLog(['Loading...', 'Ref unmount: A']);
     expect(container.innerHTML).toBe(
       '<span style="display: none;">A</span>Loading...',
     );
 
     await LazyChildB;
-    expect(Scheduler).toFlushAndYield(['B', 'Ref mount: B']);
+    await waitForAll(['B', 'Ref mount: B']);
     expect(container.innerHTML).toBe('<span>B</span>');
   });
 
@@ -199,21 +205,21 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     act(() => {
       root.render(<Parent swap={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
 
     await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
     await LazyChildB;
-    expect(Scheduler).toFlushAndYield(['B', 'Did mount: B']);
+    await waitForAll(['B', 'Did mount: B']);
     expect(container.innerHTML).toBe('B');
   });
 
@@ -251,24 +257,24 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     act(() => {
       root.render(<Parent swap={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
 
     await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
     // Destroy the whole tree, including the hidden A
     ReactDOM.flushSync(() => {
       root.render(<h1>Hello</h1>);
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
   });
 
@@ -318,17 +324,17 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     act(() => {
       root.render(<Parent swap={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
 
     await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Ref mount: A']);
+    await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Ref unmount: A']);
+    assertLog(['Loading...', 'Ref unmount: A']);
     expect(container.innerHTML).toBe(
       '<span style="display: none;">A</span>Loading...',
     );
@@ -337,7 +343,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     ReactDOM.flushSync(() => {
       root.render(<h1>Hello</h1>);
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
   });
 
@@ -381,24 +387,24 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     act(() => {
       root.render(<Parent swap={false} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...']);
+    assertLog(['Loading...']);
 
     await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
     // Destroy the whole tree, including the hidden A
     ReactDOM.flushSync(() => {
       root.render(<h1>Hello</h1>);
     });
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
   });
 
@@ -432,12 +438,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     // Initial render
     ReactDOM.render(<App showMore={false} />, container);
-    expect(Scheduler).toHaveYielded(['Child', 'Mount']);
+    assertLog(['Child', 'Mount']);
 
     // Update that suspends, causing the existing tree to switches it to
     // a fallback.
     ReactDOM.render(<App showMore={true} />, container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Child',
       'Loading...',
 
@@ -448,6 +454,6 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     // Delete the tree and unmount the effect
     ReactDOM.render(null, container);
-    expect(Scheduler).toHaveYielded(['Unmount']);
+    assertLog(['Unmount']);
   });
 });
