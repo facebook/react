@@ -43,9 +43,9 @@ describe('internal act()', () => {
     function App() {
       const [ctr, setCtr] = React.useState(0);
       async function someAsyncFunction() {
-        Scheduler.unstable_yieldValue('stage 1');
+        Scheduler.log('stage 1');
         await null;
-        Scheduler.unstable_yieldValue('stage 2');
+        Scheduler.log('stage 2');
         await null;
         setCtr(1);
       }

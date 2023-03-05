@@ -69,7 +69,7 @@ describe('ReactExpiration', () => {
       const record = textCache.get(text);
       if (record !== undefined) {
         if (record.status === 'pending') {
-          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          Scheduler.log(`Promise resolved [${text}]`);
           record.ping();
           record.ping = null;
           record.status = 'resolved';
@@ -88,7 +88,7 @@ describe('ReactExpiration', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -96,18 +96,18 @@ describe('ReactExpiration', () => {
     const text = props.text;
     try {
       readText(text);
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        Scheduler.log(`Suspend! [${text}]`);
         if (typeof props.ms === 'number' && promise._timer === undefined) {
           promise._timer = setTimeout(() => {
             resolveText(text);
           }, props.ms);
         }
       } else {
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        Scheduler.log(`Error! [${text}]`);
       }
       throw promise;
     }
@@ -147,13 +147,13 @@ describe('ReactExpiration', () => {
   it('two updates of like priority in the same event always flush within the same batch', async () => {
     class TextClass extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
+        Scheduler.log(`${this.props.text} [commit]`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
+        Scheduler.log(`${this.props.text} [commit]`);
       }
       render() {
-        Scheduler.unstable_yieldValue(`${this.props.text} [render]`);
+        Scheduler.log(`${this.props.text} [render]`);
         return <span prop={this.props.text} />;
       }
     }
@@ -204,13 +204,13 @@ describe('ReactExpiration', () => {
     async () => {
       class TextClass extends React.Component {
         componentDidMount() {
-          Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
+          Scheduler.log(`${this.props.text} [commit]`);
         }
         componentDidUpdate() {
-          Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
+          Scheduler.log(`${this.props.text} [commit]`);
         }
         render() {
-          Scheduler.unstable_yieldValue(`${this.props.text} [render]`);
+          Scheduler.log(`${this.props.text} [render]`);
           return <span prop={this.props.text} />;
         }
       }
@@ -268,19 +268,13 @@ describe('ReactExpiration', () => {
       state = {text: store.text};
       componentDidMount() {
         subscribers.push(this);
-        Scheduler.unstable_yieldValue(
-          `${this.state.text} [${this.props.label}] [commit]`,
-        );
+        Scheduler.log(`${this.state.text} [${this.props.label}] [commit]`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          `${this.state.text} [${this.props.label}] [commit]`,
-        );
+        Scheduler.log(`${this.state.text} [${this.props.label}] [commit]`);
       }
       render() {
-        Scheduler.unstable_yieldValue(
-          `${this.state.text} [${this.props.label}] [render]`,
-        );
+        Scheduler.log(`${this.state.text} [${this.props.label}] [render]`);
         return <span prop={this.state.text} />;
       }
     }
@@ -717,7 +711,7 @@ describe('ReactExpiration', () => {
   it('passive effects of expired update flush after paint', async () => {
     function App({step}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect: ' + step);
+        Scheduler.log('Effect: ' + step);
       }, [step]);
       return (
         <>

@@ -57,7 +57,7 @@ describe('ReactSuspenseFuzz', () => {
             };
             const timeoutID = setTimeout(() => {
               pendingTasks.delete(task);
-              Scheduler.unstable_yieldValue(task.label);
+              Scheduler.log(task.label);
               setStep(i + 1);
             }, remountAfter);
             pendingTasks.add(task);
@@ -87,7 +87,7 @@ describe('ReactSuspenseFuzz', () => {
             };
             const timeoutID = setTimeout(() => {
               pendingTasks.delete(task);
-              Scheduler.unstable_yieldValue(task.label);
+              Scheduler.log(task.label);
               setStep([i + 1, suspendFor]);
             }, beginAfter);
             pendingTasks.add(task);
@@ -117,24 +117,24 @@ describe('ReactSuspenseFuzz', () => {
               setTimeout(() => {
                 cache.set(fullText, fullText);
                 pendingTasks.delete(task);
-                Scheduler.unstable_yieldValue(task.label);
+                Scheduler.log(task.label);
                 resolve();
               }, delay);
             },
           };
           cache.set(fullText, thenable);
-          Scheduler.unstable_yieldValue(`Suspended! [${fullText}]`);
+          Scheduler.log(`Suspended! [${fullText}]`);
           throw thenable;
         } else if (typeof resolvedText.then === 'function') {
           const thenable = resolvedText;
-          Scheduler.unstable_yieldValue(`Suspended! [${fullText}]`);
+          Scheduler.log(`Suspended! [${fullText}]`);
           throw thenable;
         }
       } else {
         resolvedText = fullText;
       }
 
-      Scheduler.unstable_yieldValue(resolvedText);
+      Scheduler.log(resolvedText);
       return resolvedText;
     }
 

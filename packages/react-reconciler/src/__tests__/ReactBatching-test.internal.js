@@ -28,7 +28,7 @@ describe('ReactBlockingMode', () => {
       ([text, ms = 0]) => {
         return new Promise((resolve, reject) =>
           setTimeout(() => {
-            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+            Scheduler.log(`Promise resolved [${text}]`);
             resolve(text);
           }, ms),
         );
@@ -38,7 +38,7 @@ describe('ReactBlockingMode', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -46,13 +46,13 @@ describe('ReactBlockingMode', () => {
     const text = props.text;
     try {
       TextResource.read([props.text, props.ms]);
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return props.text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        Scheduler.log(`Suspend! [${text}]`);
       } else {
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        Scheduler.log(`Error! [${text}]`);
       }
       throw promise;
     }
@@ -81,7 +81,7 @@ describe('ReactBlockingMode', () => {
 
     function App() {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Layout effect');
+        Scheduler.log('Layout effect');
       });
       return <Text text="Hi" />;
     }

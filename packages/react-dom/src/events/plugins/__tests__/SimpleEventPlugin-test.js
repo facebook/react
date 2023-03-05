@@ -200,7 +200,7 @@ describe('SimpleEventPlugin', function () {
           count: state.count + 1,
         }));
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(`didUpdate - Count: ${this.state.count}`);
+        Scheduler.log(`didUpdate - Count: ${this.state.count}`);
       }
       render() {
         return (
@@ -263,12 +263,12 @@ describe('SimpleEventPlugin', function () {
         state = {disabled: false};
         onClick = () => {
           // Perform some side-effect
-          Scheduler.unstable_yieldValue('Side-effect');
+          Scheduler.log('Side-effect');
           // Disable the button
           this.setState({disabled: true});
         };
         render() {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `render button: ${this.state.disabled ? 'disabled' : 'enabled'}`,
           );
           return (

@@ -55,7 +55,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushAll returns array of yielded values', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -81,7 +81,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushThrough flushes until the expected values is yielded', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -113,7 +113,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('supports high priority interruptions', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
 

@@ -51,7 +51,7 @@ describe('useEffectEvent', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span prop={props.text} />;
   }
 
@@ -298,7 +298,7 @@ describe('useEffectEvent', () => {
       );
 
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Effect: by ' + incrementBy * 2);
+        Scheduler.log('Effect: by ' + incrementBy * 2);
         increment(incrementBy * 2);
       }, [incrementBy]);
 
@@ -398,7 +398,7 @@ describe('useEffectEvent', () => {
       );
 
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect: by ' + incrementBy * 2);
+        Scheduler.log('Effect: by ' + incrementBy * 2);
         increment(incrementBy * 2);
       }, [incrementBy]);
 
@@ -503,7 +503,7 @@ describe('useEffectEvent', () => {
       const [count, increment] = useCount(incrementBy);
 
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect: by ' + incrementBy * 2);
+        Scheduler.log('Effect: by ' + incrementBy * 2);
         increment(incrementBy * 2);
       }, [incrementBy]);
 
@@ -588,14 +588,14 @@ describe('useEffectEvent', () => {
   it('is mutated before all other effects', async () => {
     function Counter({value}) {
       useInsertionEffect(() => {
-        Scheduler.unstable_yieldValue('Effect value: ' + value);
+        Scheduler.log('Effect value: ' + value);
         increment();
       }, [value]);
 
       // This is defined after the insertion effect, but it should
       // update the event fn _before_ the insertion effect fires.
       const increment = useEffectEvent(() => {
-        Scheduler.unstable_yieldValue('Event value: ' + value);
+        Scheduler.log('Event value: ' + value);
       });
 
       return <></>;
@@ -612,7 +612,7 @@ describe('useEffectEvent', () => {
   it("doesn't provide a stable identity", async () => {
     function Counter({shouldRender, value}) {
       const onClick = useEffectEvent(() => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'onClick, shouldRender=' + shouldRender + ', value=' + value,
         );
       });
@@ -662,7 +662,7 @@ describe('useEffectEvent', () => {
         () => {
           // Log when the effect fires. In the test below, we'll assert that this
           // only happens during initial render, not during updates.
-          Scheduler.unstable_yieldValue('Commit new event handler');
+          Scheduler.log('Commit new event handler');
           committedEventHandler = event;
           return () => {
             committedEventHandler = null;
@@ -727,7 +727,7 @@ describe('useEffectEvent', () => {
 
     function ChatRoom({roomId, theme}) {
       const onConnected = useEffectEvent(() => {
-        Scheduler.unstable_yieldValue('Connected! theme: ' + theme);
+        Scheduler.log('Connected! theme: ' + theme);
       });
 
       useEffect(() => {
@@ -815,7 +815,7 @@ describe('useEffectEvent', () => {
       const numberOfItems = items.length;
 
       const onVisit = useEffectEvent(visitedUrl => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'url: ' + visitedUrl + ', numberOfItems: ' + numberOfItems,
         );
       });

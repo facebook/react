@@ -799,7 +799,7 @@ describe('ReactFlight', () => {
       }
 
       function ClientDoubler({el}) {
-        Scheduler.unstable_yieldValue('ClientDoubler');
+        Scheduler.log('ClientDoubler');
         return (
           <>
             {el}
@@ -990,10 +990,10 @@ describe('ReactFlight', () => {
 
       function Bar() {
         if (!promise.unsuspend) {
-          Scheduler.unstable_yieldValue('suspended');
+          Scheduler.log('suspended');
           throw promise;
         }
-        Scheduler.unstable_yieldValue('rendered');
+        Scheduler.log('rendered');
         const context = React.useContext(ServerContext);
         return context;
       }
@@ -1027,7 +1027,7 @@ describe('ReactFlight', () => {
       );
 
       function ClientBar() {
-        Scheduler.unstable_yieldValue('ClientBar');
+        Scheduler.log('ClientBar');
         const context = React.useContext(ServerContext);
         return <span>{context}</span>;
       }

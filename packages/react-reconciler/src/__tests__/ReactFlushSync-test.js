@@ -28,7 +28,7 @@ describe('ReactFlushSync', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -126,7 +126,7 @@ describe('ReactFlushSync', () => {
   test('flushes passive effects synchronously when they are the result of a sync render', async () => {
     function App() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
+        Scheduler.log('Effect');
       }, []);
       return <Text text="Child" />;
     }
@@ -149,7 +149,7 @@ describe('ReactFlushSync', () => {
   test('do not flush passive effects synchronously after render in legacy mode', async () => {
     function App() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
+        Scheduler.log('Effect');
       }, []);
       return <Text text="Child" />;
     }
@@ -176,7 +176,7 @@ describe('ReactFlushSync', () => {
     function App({step}) {
       useEffect(() => {
         currentStep = step;
-        Scheduler.unstable_yieldValue('Effect: ' + step);
+        Scheduler.log('Effect: ' + step);
       }, [step]);
       return <Text text={step} />;
     }
@@ -207,7 +207,7 @@ describe('ReactFlushSync', () => {
   test("do not flush passive effects synchronously when they aren't the result of a sync render", async () => {
     function App() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
+        Scheduler.log('Effect');
       }, []);
       return <Text text="Child" />;
     }
@@ -229,7 +229,7 @@ describe('ReactFlushSync', () => {
   test('does not flush pending passive effects', async () => {
     function App() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
+        Scheduler.log('Effect');
       }, []);
       return <Text text="Child" />;
     }

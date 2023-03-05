@@ -77,7 +77,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     //   const record = textCache.get(text);
     //   if (record !== undefined) {
     //     if (record.status === 'pending') {
-    //       Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
+    //       Scheduler.log(`Promise rejected [${text}]`);
     //       record.ping();
     //       record.status = 'rejected';
     //       clearTimeout(record.promise._timer);
@@ -95,7 +95,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -103,13 +103,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     const text = props.text;
     try {
       readText(text);
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        Scheduler.log(`Suspend! [${text}]`);
       } else {
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        Scheduler.log(`Error! [${text}]`);
       }
       throw promise;
     }

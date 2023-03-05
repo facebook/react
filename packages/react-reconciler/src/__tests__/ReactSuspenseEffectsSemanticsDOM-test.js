@@ -45,7 +45,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
   }
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -105,9 +105,9 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
         <span
           ref={node => {
             if (node) {
-              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+              Scheduler.log('Ref mount: ' + label);
             } else {
-              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+              Scheduler.log('Ref unmount: ' + label);
             }
           }}>
           <Text text={label} />
@@ -120,9 +120,9 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
         <span
           ref={node => {
             if (node) {
-              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+              Scheduler.log('Ref mount: ' + label);
             } else {
-              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+              Scheduler.log('Ref unmount: ' + label);
             }
           }}>
           <Text text={label} />
@@ -168,10 +168,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
   it('does not call componentWillUnmount twice when hidden child is removed', async () => {
     class ChildA extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+        Scheduler.log('Will unmount: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -180,10 +180,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     class ChildB extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+        Scheduler.log('Will unmount: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -226,18 +226,18 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
   it('does not destroy layout effects twice when parent suspense is removed', async () => {
     function ChildA({label}) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Did mount: ' + label);
+        Scheduler.log('Did mount: ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Will unmount: ' + label);
+          Scheduler.log('Will unmount: ' + label);
         };
       }, []);
       return <Text text={label} />;
     }
     function ChildB({label}) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Did mount: ' + label);
+        Scheduler.log('Did mount: ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Will unmount: ' + label);
+          Scheduler.log('Will unmount: ' + label);
         };
       }, []);
       return <Text text={label} />;
@@ -284,9 +284,9 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
         <span
           ref={node => {
             if (node) {
-              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+              Scheduler.log('Ref mount: ' + label);
             } else {
-              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+              Scheduler.log('Ref unmount: ' + label);
             }
           }}>
           <Text text={label} />
@@ -299,9 +299,9 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
         <span
           ref={node => {
             if (node) {
-              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+              Scheduler.log('Ref mount: ' + label);
             } else {
-              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+              Scheduler.log('Ref unmount: ' + label);
             }
           }}>
           <Text text={label} />
@@ -350,10 +350,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
   it('does not call componentWillUnmount twice when parent suspense is removed', async () => {
     class ChildA extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+        Scheduler.log('Will unmount: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -362,10 +362,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     class ChildB extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+        Scheduler.log('Will unmount: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -414,9 +414,9 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     function Child() {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount');
+        Scheduler.log('Mount');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount');
+          Scheduler.log('Unmount');
         };
       }, []);
       return <Text text="Child" />;

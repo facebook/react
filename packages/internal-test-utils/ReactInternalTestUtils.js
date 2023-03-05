@@ -13,7 +13,7 @@ import {equals} from '@jest/expect-utils';
 import enqueueTask from './enqueueTask';
 
 function assertYieldsWereCleared(Scheduler) {
-  const actualYields = Scheduler.unstable_clearYields();
+  const actualYields = Scheduler.unstable_clearLog();
   if (actualYields.length !== 0) {
     const error = Error(
       'The event log is not empty. Call assertLog(...) first.',
@@ -45,14 +45,14 @@ export async function waitFor(expectedLog) {
       SchedulerMock.unstable_flushNumberOfYields(
         expectedLog.length - actualLog.length,
       );
-      actualLog.push(...SchedulerMock.unstable_clearYields());
+      actualLog.push(...SchedulerMock.unstable_clearLog());
       if (expectedLog.length > actualLog.length) {
         // Continue flushing until we've logged the expected number of items.
       } else {
         // Once we've reached the expected sequence, wait one more microtask to
         // flush any remaining synchronous work.
         await waitForMicrotasks();
-        actualLog.push(...SchedulerMock.unstable_clearYields());
+        actualLog.push(...SchedulerMock.unstable_clearLog());
         break;
       }
     } else {
@@ -91,7 +91,7 @@ export async function waitForAll(expectedLog) {
     SchedulerMock.unstable_flushAllWithoutAsserting();
   } while (true);
 
-  const actualLog = SchedulerMock.unstable_clearYields();
+  const actualLog = SchedulerMock.unstable_clearLog();
   if (equals(actualLog, expectedLog)) {
     return;
   }
@@ -166,7 +166,7 @@ export async function waitForPaint(expectedLog) {
     await waitForMicrotasks();
   }
 
-  const actualLog = SchedulerMock.unstable_clearYields();
+  const actualLog = SchedulerMock.unstable_clearLog();
   if (equals(actualLog, expectedLog)) {
     return;
   }
@@ -180,7 +180,7 @@ ${diff(expectedLog, actualLog)}
 }
 
 export function assertLog(expectedLog) {
-  const actualLog = SchedulerMock.unstable_clearYields();
+  const actualLog = SchedulerMock.unstable_clearLog();
   if (equals(actualLog, expectedLog)) {
     return;
   }

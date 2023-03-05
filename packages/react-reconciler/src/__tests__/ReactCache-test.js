@@ -100,9 +100,7 @@ describe('ReactCache', () => {
         record.cleanupScheduled = true;
         if (getCacheSignal) {
           signal.addEventListener('abort', () => {
-            Scheduler.unstable_yieldValue(
-              `Cache cleanup: ${text} [v${textCache.version}]`,
-            );
+            Scheduler.log(`Cache cleanup: ${text} [v${textCache.version}]`);
           });
         }
       }
@@ -115,7 +113,7 @@ describe('ReactCache', () => {
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Cache miss! [${text}]`);
+      Scheduler.log(`Cache miss! [${text}]`);
 
       let resolve;
       let reject;
@@ -148,9 +146,7 @@ describe('ReactCache', () => {
 
       if (getCacheSignal) {
         signal.addEventListener('abort', () => {
-          Scheduler.unstable_yieldValue(
-            `Cache cleanup: ${text} [v${textCache.version}]`,
-          );
+          Scheduler.log(`Cache cleanup: ${text} [v${textCache.version}]`);
         });
       }
       throw thenable;
@@ -158,14 +154,14 @@ describe('ReactCache', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
   function AsyncText({text, showVersion}) {
     const version = readText(text);
     const fullText = showVersion ? `${text} [v${version}]` : text;
-    Scheduler.unstable_yieldValue(fullText);
+    Scheduler.log(fullText);
     return fullText;
   }
 

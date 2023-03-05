@@ -258,7 +258,7 @@ describe('ReactDOMRoot', () => {
   it('callback passed to legacy hydrate() API', () => {
     container.innerHTML = '<div>Hi</div>';
     ReactDOM.hydrate(<div>Hi</div>, container, () => {
-      Scheduler.unstable_yieldValue('callback');
+      Scheduler.log('callback');
     });
     expect(container.textContent).toEqual('Hi');
     assertLog(['callback']);
@@ -394,7 +394,7 @@ describe('ReactDOMRoot', () => {
     });
 
     function Foo({value}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return <div>{value}</div>;
     }
 

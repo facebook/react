@@ -51,14 +51,10 @@ describe('ReactIncrementalReflection', () => {
       }
       UNSAFE_componentWillMount() {
         instances.push(this);
-        Scheduler.unstable_yieldValue(
-          'componentWillMount: ' + this._isMounted(),
-        );
+        Scheduler.log('componentWillMount: ' + this._isMounted());
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'componentDidMount: ' + this._isMounted(),
-        );
+        Scheduler.log('componentDidMount: ' + this._isMounted());
       }
       render() {
         return <span />;
@@ -95,18 +91,16 @@ describe('ReactIncrementalReflection', () => {
         instances.push(this);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'componentWillUnmount: ' + this._isMounted(),
-        );
+        Scheduler.log('componentWillUnmount: ' + this._isMounted());
       }
       render() {
-        Scheduler.unstable_yieldValue('Component');
+        Scheduler.log('Component');
         return <span />;
       }
     }
 
     function Other() {
-      Scheduler.unstable_yieldValue('Other');
+      Scheduler.log('Other');
       return <span />;
     }
 
@@ -153,37 +147,22 @@ describe('ReactIncrementalReflection', () => {
     class Component extends React.Component {
       UNSAFE_componentWillMount() {
         classInstance = this;
-        Scheduler.unstable_yieldValue([
-          'componentWillMount',
-          findInstance(this),
-        ]);
+        Scheduler.log(['componentWillMount', findInstance(this)]);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue([
-          'componentDidMount',
-          findInstance(this),
-        ]);
+        Scheduler.log(['componentDidMount', findInstance(this)]);
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue([
-          'componentWillUpdate',
-          findInstance(this),
-        ]);
+        Scheduler.log(['componentWillUpdate', findInstance(this)]);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue([
-          'componentDidUpdate',
-          findInstance(this),
-        ]);
+        Scheduler.log(['componentDidUpdate', findInstance(this)]);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue([
-          'componentWillUnmount',
-          findInstance(this),
-        ]);
+        Scheduler.log(['componentWillUnmount', findInstance(this)]);
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         return this.props.step < 2 ? (
           <span ref={ref => (this.span = ref)} />
         ) : this.props.step === 2 ? (
@@ -196,7 +175,7 @@ describe('ReactIncrementalReflection', () => {
 
     function Sibling() {
       // Sibling is used to assert that we've rendered past the first component.
-      Scheduler.unstable_yieldValue('render sibling');
+      Scheduler.log('render sibling');
       return <span />;
     }
 

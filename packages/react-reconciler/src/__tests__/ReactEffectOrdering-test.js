@@ -41,14 +41,14 @@ describe('ReactEffectOrdering', () => {
 
     function Parent() {
       useLayoutEffect(() => {
-        return () => Scheduler.unstable_yieldValue('Unmount parent');
+        return () => Scheduler.log('Unmount parent');
       });
       return <Child />;
     }
 
     function Child() {
       useLayoutEffect(() => {
-        return () => Scheduler.unstable_yieldValue('Unmount child');
+        return () => Scheduler.log('Unmount child');
       });
       return 'Child';
     }
@@ -68,14 +68,14 @@ describe('ReactEffectOrdering', () => {
 
     function Parent() {
       useEffect(() => {
-        return () => Scheduler.unstable_yieldValue('Unmount parent');
+        return () => Scheduler.log('Unmount parent');
       });
       return <Child />;
     }
 
     function Child() {
       useEffect(() => {
-        return () => Scheduler.unstable_yieldValue('Unmount child');
+        return () => Scheduler.log('Unmount child');
       });
       return 'Child';
     }

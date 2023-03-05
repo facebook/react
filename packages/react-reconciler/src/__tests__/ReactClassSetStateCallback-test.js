@@ -18,7 +18,7 @@ describe('ReactClassSetStateCallback', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -41,19 +41,13 @@ describe('ReactClassSetStateCallback', () => {
     await act(async () => {
       if (gate(flags => flags.enableUnifiedSyncLane)) {
         React.startTransition(() => {
-          app.setState({step: 1}, () =>
-            Scheduler.unstable_yieldValue('Callback 1'),
-          );
+          app.setState({step: 1}, () => Scheduler.log('Callback 1'));
         });
       } else {
-        app.setState({step: 1}, () =>
-          Scheduler.unstable_yieldValue('Callback 1'),
-        );
+        app.setState({step: 1}, () => Scheduler.log('Callback 1'));
       }
       ReactNoop.flushSync(() => {
-        app.setState({step: 2}, () =>
-          Scheduler.unstable_yieldValue('Callback 2'),
-        );
+        app.setState({step: 2}, () => Scheduler.log('Callback 2'));
       });
     });
     assertLog([2, 'Callback 2', 2, 'Callback 1']);

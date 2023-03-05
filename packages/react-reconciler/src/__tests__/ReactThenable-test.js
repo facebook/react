@@ -54,7 +54,7 @@ describe('ReactThenable', () => {
     // getAsyncText is completely uncached — it performs a new async operation
     // every time it's called. During a transition, React should be able to
     // unwrap it anyway.
-    Scheduler.unstable_yieldValue(`Async text requested [${text}]`);
+    Scheduler.log(`Async text requested [${text}]`);
     return new Promise(resolve => {
       const requests = pendingTextRequests.get(text);
       if (requests !== undefined) {
@@ -67,7 +67,7 @@ describe('ReactThenable', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -82,9 +82,9 @@ describe('ReactThenable', () => {
       if (fulfilled) {
         return <Text text="Async" />;
       }
-      Scheduler.unstable_yieldValue('Suspend!');
+      Scheduler.log('Suspend!');
       throw Promise.resolve().then(() => {
-        Scheduler.unstable_yieldValue('Resolve in microtask');
+        Scheduler.log('Resolve in microtask');
         fulfilled = true;
       });
     }
@@ -121,9 +121,9 @@ describe('ReactThenable', () => {
       if (fulfilled) {
         return <Text text="Async" />;
       }
-      Scheduler.unstable_yieldValue('Suspend!');
+      Scheduler.log('Suspend!');
       throw Promise.resolve().then(() => {
-        Scheduler.unstable_yieldValue('Resolve in microtask');
+        Scheduler.log('Resolve in microtask');
         fulfilled = true;
       });
     }
@@ -160,7 +160,7 @@ describe('ReactThenable', () => {
       if (i++ > 50) {
         throw new Error('Infinite loop detected');
       }
-      Scheduler.unstable_yieldValue('Suspend!');
+      Scheduler.log('Suspend!');
       // This thenable should never be thrown because it already fulfilled.
       // But if it is thrown, React should handle it gracefully.
       throw thenable;
@@ -381,7 +381,7 @@ describe('ReactThenable', () => {
       try {
         use(Promise.resolve('Async'));
       } catch (e) {
-        Scheduler.unstable_yieldValue('Suspend! [Async]');
+        Scheduler.log('Suspend! [Async]');
         throw e;
       }
       throw new Error('Oops!');
@@ -730,7 +730,7 @@ describe('ReactThenable', () => {
       const [childShouldSuspend, _setChildShouldSuspend] = useState(false);
       setChildShouldSuspend = _setChildShouldSuspend;
 
-      Scheduler.unstable_yieldValue(
+      Scheduler.log(
         `childShouldSuspend: ${childShouldSuspend}, showChild: ${showChild}`,
       );
       return showChild ? (
@@ -795,7 +795,7 @@ describe('ReactThenable', () => {
       // This computes the uppercased version of some text. Pretend it's an
       // expensive operation that we want to reuse.
       const uppercaseText = useMemo(() => {
-        Scheduler.unstable_yieldValue('Compute uppercase: ' + text);
+        Scheduler.log('Compute uppercase: ' + text);
         return text.toUpperCase();
       }, [text]);
 
@@ -807,7 +807,7 @@ describe('ReactThenable', () => {
       // is to show that you can suspend in the middle of a sequence of hooks
       // without breaking anything.
       const sparklingText = useMemo(() => {
-        Scheduler.unstable_yieldValue('Add sparkles: ' + exclamatoryText);
+        Scheduler.log('Add sparkles: ' + exclamatoryText);
         return `✨ ${exclamatoryText} ✨`;
       }, [exclamatoryText]);
 

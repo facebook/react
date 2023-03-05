@@ -30,7 +30,7 @@ describe('ReactSuspenseList', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span>{props.text}</span>;
   }
 
@@ -38,7 +38,7 @@ describe('ReactSuspenseList', () => {
     let resolved = false;
     const Component = function () {
       if (!resolved) {
-        Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
+        Scheduler.log('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
@@ -2607,7 +2607,7 @@ describe('ReactSuspenseList', () => {
     function TwoPass({text}) {
       const [pass, setPass] = React.useState(0);
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + text);
+        Scheduler.log('Mount ' + text);
         setPass(1);
       }, []);
       return <Text text={pass === 0 ? 'First Pass ' + text : text} />;
@@ -2619,7 +2619,7 @@ describe('ReactSuspenseList', () => {
     }
 
     function App() {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return (
         <SuspenseList revealOrder="forwards" tail="hidden">
           <Suspense fallback={<Text text="Loading A" />}>
@@ -2668,7 +2668,7 @@ describe('ReactSuspenseList', () => {
     function TwoPass({text}) {
       const [pass, setPass] = React.useState(0);
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + text);
+        Scheduler.log('Mount ' + text);
         setPass(1);
       }, []);
       return <Text text={pass === 0 ? 'First Pass ' + text : text} />;
@@ -2680,7 +2680,7 @@ describe('ReactSuspenseList', () => {
     }
 
     function App() {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return (
         <SuspenseList revealOrder="forwards">
           <Suspense fallback={<Text text="Loading A" />}>
@@ -2747,7 +2747,7 @@ describe('ReactSuspenseList', () => {
     const onRender = jest.fn();
 
     const Fallback = () => {
-      Scheduler.unstable_yieldValue('Fallback');
+      Scheduler.log('Fallback');
       Scheduler.unstable_advanceTime(3);
       return <span>Loading...</span>;
     };
@@ -2765,7 +2765,7 @@ describe('ReactSuspenseList', () => {
     }
 
     function App({addRow, suspendTail}) {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return (
         <Profiler id="root" onRender={onRender}>
           <SuspenseList revealOrder="forwards">

@@ -193,12 +193,12 @@ describe('Timeline profiler', () => {
 
     it('should mark render yields', async () => {
       function Bar() {
-        Scheduler.unstable_yieldValue('Bar');
+        Scheduler.log('Bar');
         return null;
       }
 
       function Foo() {
-        Scheduler.unstable_yieldValue('Foo');
+        Scheduler.log('Foo');
         return <Bar />;
       }
 
@@ -908,37 +908,37 @@ describe('Timeline profiler', () => {
     it('should mark passive and layout effects', async () => {
       function ComponentWithEffects() {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 1 mount');
+          Scheduler.log('layout 1 mount');
           return () => {
-            Scheduler.unstable_yieldValue('layout 1 unmount');
+            Scheduler.log('layout 1 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 1 mount');
+          Scheduler.log('passive 1 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 1 unmount');
+            Scheduler.log('passive 1 unmount');
           };
         }, []);
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 2 mount');
+          Scheduler.log('layout 2 mount');
           return () => {
-            Scheduler.unstable_yieldValue('layout 2 unmount');
+            Scheduler.log('layout 2 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 2 mount');
+          Scheduler.log('passive 2 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 2 unmount');
+            Scheduler.log('passive 2 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 3 mount');
+          Scheduler.log('passive 3 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 3 unmount');
+            Scheduler.log('passive 3 unmount');
           };
         }, []);
 
@@ -1327,12 +1327,12 @@ describe('Timeline profiler', () => {
       // @reactVersion >=18.0
       it('should mark render yields', async () => {
         function Bar() {
-          Scheduler.unstable_yieldValue('Bar');
+          Scheduler.log('Bar');
           return null;
         }
 
         function Foo() {
-          Scheduler.unstable_yieldValue('Foo');
+          Scheduler.log('Foo');
           return <Bar />;
         }
 
@@ -1363,7 +1363,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          Scheduler.log(resolved ? 'resolved' : 'suspended');
           if (!resolved) {
             throw suspensePromise;
           }
@@ -1421,7 +1421,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          Scheduler.log(rejected ? 'rejected' : 'suspended');
           if (!rejected) {
             throw suspensePromise;
           }
@@ -1479,7 +1479,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          Scheduler.log(resolved ? 'resolved' : 'suspended');
           if (!resolved) {
             throw suspensePromise;
           }
@@ -1537,7 +1537,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          Scheduler.log(rejected ? 'rejected' : 'suspended');
           if (!rejected) {
             throw suspensePromise;
           }
@@ -1591,9 +1591,7 @@ describe('Timeline profiler', () => {
           }
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
-              this.state.didMount ? 'update' : 'mount',
-            );
+            Scheduler.log(this.state.didMount ? 'update' : 'mount');
             return null;
           }
         }
@@ -1652,7 +1650,7 @@ describe('Timeline profiler', () => {
           }
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'mount');
+            Scheduler.log(forced ? 'force update' : 'mount');
             return null;
           }
         }
@@ -1708,7 +1706,7 @@ describe('Timeline profiler', () => {
               this.setState({didRender: true});
             }
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
+            Scheduler.log(
               this.state.didRender ? 'second render' : 'first render',
             );
             return null;
@@ -1775,7 +1773,7 @@ describe('Timeline profiler', () => {
         class Example extends React.Component {
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'render');
+            Scheduler.log(forced ? 'force update' : 'render');
             if (!forced) {
               forced = true;
               this.forceUpdate();
@@ -1845,7 +1843,7 @@ describe('Timeline profiler', () => {
             setDidMount(true);
           }, []);
           Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          Scheduler.log(didMount ? 'update' : 'mount');
           return didMount;
         }
 
@@ -1909,7 +1907,7 @@ describe('Timeline profiler', () => {
             setDidMount(true);
           }, []);
           Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          Scheduler.log(didMount ? 'update' : 'mount');
           return didMount;
         }
 
@@ -1971,7 +1969,7 @@ describe('Timeline profiler', () => {
           if (!didRender) {
             setDidRender(true);
           }
-          Scheduler.unstable_yieldValue(didRender ? 'update' : 'mount');
+          Scheduler.log(didRender ? 'update' : 'mount');
           return didRender;
         }
 
@@ -2024,16 +2022,16 @@ describe('Timeline profiler', () => {
           render() {
             Scheduler.unstable_advanceTime(10);
             if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              Scheduler.log('ErrorBoundary fallback');
               return null;
             }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            Scheduler.log('ErrorBoundary render');
             return this.props.children;
           }
         }
 
         function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          Scheduler.log('ExampleThatThrows');
           throw Error('Expected error');
         }
 
@@ -2119,16 +2117,16 @@ describe('Timeline profiler', () => {
           render() {
             Scheduler.unstable_advanceTime(10);
             if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              Scheduler.log('ErrorBoundary fallback');
               return null;
             }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            Scheduler.log('ErrorBoundary render');
             return this.props.children;
           }
         }
 
         function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          Scheduler.log('ExampleThatThrows');
           // eslint-disable-next-line no-throw-literal
           throw 'Expected error';
         }
@@ -2231,37 +2229,37 @@ describe('Timeline profiler', () => {
       it('should mark passive and layout effects', async () => {
         function ComponentWithEffects() {
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 1 mount');
+            Scheduler.log('layout 1 mount');
             return () => {
-              Scheduler.unstable_yieldValue('layout 1 unmount');
+              Scheduler.log('layout 1 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 1 mount');
+            Scheduler.log('passive 1 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 1 unmount');
+              Scheduler.log('passive 1 unmount');
             };
           }, []);
 
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 2 mount');
+            Scheduler.log('layout 2 mount');
             return () => {
-              Scheduler.unstable_yieldValue('layout 2 unmount');
+              Scheduler.log('layout 2 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 2 mount');
+            Scheduler.log('passive 2 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 2 unmount');
+              Scheduler.log('passive 2 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 3 mount');
+            Scheduler.log('passive 3 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 3 unmount');
+              Scheduler.log('passive 3 unmount');
             };
           }, []);
 
@@ -2464,7 +2462,7 @@ describe('Timeline profiler', () => {
 
       it('should generate component stacks for state update', async () => {
         function CommponentWithChildren({initialRender}) {
-          Scheduler.unstable_yieldValue('Render ComponentWithChildren');
+          Scheduler.log('Render ComponentWithChildren');
           return <Child initialRender={initialRender} />;
         }
 
@@ -2473,7 +2471,7 @@ describe('Timeline profiler', () => {
           if (!didRender) {
             setDidRender(true);
           }
-          Scheduler.unstable_yieldValue('Render Child');
+          Scheduler.log('Render Child');
           return null;
         }
 

@@ -2423,7 +2423,7 @@ describe('ReactFresh', () => {
     const AppV1 = prepare(() => {
       function Hello() {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('Hello#layout');
+          Scheduler.log('Hello#layout');
         });
         const [val, setVal] = React.useState(0);
         return (
@@ -2436,7 +2436,7 @@ describe('ReactFresh', () => {
 
       return function App({offscreen}) {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App#layout');
+          Scheduler.log('App#layout');
         });
         return (
           <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
@@ -2457,7 +2457,7 @@ describe('ReactFresh', () => {
     patch(() => {
       function Hello() {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('Hello#layout');
+          Scheduler.log('Hello#layout');
         });
         const [val, setVal] = React.useState(0);
         return (
@@ -2496,7 +2496,7 @@ describe('ReactFresh', () => {
     patch(() => {
       function Hello() {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('Hello#layout');
+          Scheduler.log('Hello#layout');
         });
         const [val, setVal] = React.useState(0);
         return (

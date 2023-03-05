@@ -137,7 +137,7 @@ describe('useMutableSourceHydration', () => {
 
   function Component({getSnapshot, label, mutableSource, subscribe}) {
     const snapshot = useMutableSource(mutableSource, getSnapshot, subscribe);
-    Scheduler.unstable_yieldValue(`${label}:${snapshot}`);
+    Scheduler.log(`${label}:${snapshot}`);
     return <div>{`${label}:${snapshot}`}</div>;
   }
 
@@ -204,7 +204,7 @@ describe('useMutableSourceHydration', () => {
         ReactDOMClient.hydrateRoot(container, <TestComponent />, {
           mutableSources: [mutableSource],
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue('Log error: ' + error.message);
+            Scheduler.log('Log error: ' + error.message);
           },
         });
 
@@ -264,7 +264,7 @@ describe('useMutableSourceHydration', () => {
           ReactDOMClient.hydrateRoot(container, <TestComponent />, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
-              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              Scheduler.log('Log error: ' + error.message);
             },
           });
         });
@@ -348,7 +348,7 @@ describe('useMutableSourceHydration', () => {
           ReactDOMClient.hydrateRoot(container, fragment, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
-              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              Scheduler.log('Log error: ' + error.message);
             },
           });
         });

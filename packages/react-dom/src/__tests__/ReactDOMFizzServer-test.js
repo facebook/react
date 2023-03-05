@@ -2118,7 +2118,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -2153,9 +2153,7 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Log recoverable error: ' + error.message,
-        );
+        Scheduler.log('Log recoverable error: ' + error.message);
       },
     });
 
@@ -2203,7 +2201,7 @@ describe('ReactDOMFizzServer', () => {
       return () => {};
     }
     function Child({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
     function App() {
@@ -2238,9 +2236,7 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Log recoverable error: ' + error.message,
-        );
+        Scheduler.log('Log recoverable error: ' + error.message);
       },
     });
 
@@ -2296,7 +2292,7 @@ describe('ReactDOMFizzServer', () => {
           getClientSnapshot,
           getServerSnapshot,
         );
-        Scheduler.unstable_yieldValue(value);
+        Scheduler.log(value);
         return value;
       }
 
@@ -2323,7 +2319,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       });
 
@@ -2378,7 +2374,7 @@ describe('ReactDOMFizzServer', () => {
           getClientSnapshot,
           getServerSnapshot,
         );
-        Scheduler.unstable_yieldValue(value);
+        Scheduler.log(value);
         return value;
       }
 
@@ -2413,7 +2409,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       });
 
@@ -2468,7 +2464,7 @@ describe('ReactDOMFizzServer', () => {
         if (isClient) {
           throw new Error('Oops!');
         }
-        Scheduler.unstable_yieldValue('Yay!');
+        Scheduler.log('Yay!');
         return 'Yay!';
       }
 
@@ -2527,7 +2523,7 @@ describe('ReactDOMFizzServer', () => {
       } else {
         throw Error('Oops.');
       }
-      Scheduler.unstable_yieldValue('Yay!');
+      Scheduler.log('Yay!');
       return 'Yay!';
     }
 
@@ -2546,7 +2542,7 @@ describe('ReactDOMFizzServer', () => {
     await act(async () => {
       const {pipe} = renderToPipeableStream(<App />, {
         onError(error) {
-          Scheduler.unstable_yieldValue('[s!] ' + error.message);
+          Scheduler.log('[s!] ' + error.message);
         },
       });
       pipe(writable);
@@ -2561,7 +2557,7 @@ describe('ReactDOMFizzServer', () => {
     isClient = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue('[c!] ' + error.message);
+        Scheduler.log('[c!] ' + error.message);
       },
     });
     // This should not report any errors yet.
@@ -2612,7 +2608,7 @@ describe('ReactDOMFizzServer', () => {
         } else {
           throw Error('Oops.');
         }
-        Scheduler.unstable_yieldValue('Yay! (' + color + ')');
+        Scheduler.log('Yay! (' + color + ')');
         return 'Yay! (' + color + ')';
       }
 
@@ -2631,7 +2627,7 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         const {pipe} = renderToPipeableStream(<App color="red" />, {
           onError(error) {
-            Scheduler.unstable_yieldValue('[s!] ' + error.message);
+            Scheduler.log('[s!] ' + error.message);
           },
         });
         pipe(writable);
@@ -2646,7 +2642,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       const root = ReactDOMClient.hydrateRoot(container, <App color="red" />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue('[c!] ' + error.message);
+          Scheduler.log('[c!] ' + error.message);
         },
       });
       // This should not report any errors yet.
@@ -2709,7 +2705,7 @@ describe('ReactDOMFizzServer', () => {
         } else {
           throw Error('Oops.');
         }
-        Scheduler.unstable_yieldValue(value);
+        Scheduler.log(value);
         return value;
       }
 
@@ -2731,7 +2727,7 @@ describe('ReactDOMFizzServer', () => {
           <App fallbackText="Loading..." />,
           {
             onError(error) {
-              Scheduler.unstable_yieldValue('[s!] ' + error.message);
+              Scheduler.log('[s!] ' + error.message);
             },
           },
         );
@@ -2749,7 +2745,7 @@ describe('ReactDOMFizzServer', () => {
         <App fallbackText="Loading..." />,
         {
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue('[c!] ' + error.message);
+            Scheduler.log('[c!] ' + error.message);
           },
         },
       );
@@ -2833,7 +2829,7 @@ describe('ReactDOMFizzServer', () => {
         if (isClient) {
           readText(value);
         }
-        Scheduler.unstable_yieldValue(value);
+        Scheduler.log(value);
         return value;
       }
 
@@ -2868,7 +2864,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       });
 
@@ -2914,15 +2910,15 @@ describe('ReactDOMFizzServer', () => {
 
     function A() {
       if (shouldThrow) {
-        Scheduler.unstable_yieldValue('Oops!');
+        Scheduler.log('Oops!');
         throw new Error('Oops!');
       }
-      Scheduler.unstable_yieldValue('A');
+      Scheduler.log('A');
       return 'A';
     }
 
     function B() {
-      Scheduler.unstable_yieldValue('B');
+      Scheduler.log('B');
       return 'B';
     }
 
@@ -2937,9 +2933,7 @@ describe('ReactDOMFizzServer', () => {
 
     const root = ReactDOMClient.createRoot(container, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Logged a recoverable error: ' + error.message,
-        );
+        Scheduler.log('Logged a recoverable error: ' + error.message);
       },
     });
     React.startTransition(() => {
@@ -2990,7 +2984,7 @@ describe('ReactDOMFizzServer', () => {
       // useSyncExternalStore in this test is because getServerSnapshot has the
       // ability to observe whether we're hydrating.
       useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
-      Scheduler.unstable_yieldValue(label);
+      Scheduler.log(label);
       return label;
     }
 
@@ -3018,9 +3012,7 @@ describe('ReactDOMFizzServer', () => {
     isClient = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Logged recoverable error: ' + error.message,
-        );
+        Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
 
@@ -3722,9 +3714,7 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Logged recoverable error: ' + error.message,
-        );
+        Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -3801,9 +3791,7 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp text="replaced" />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Logged recoverable error: ' + error.message,
-        );
+        Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -3872,9 +3860,7 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App text="replaced" />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Logged recoverable error: ' + error.message,
-          );
+          Scheduler.log('Logged recoverable error: ' + error.message);
         },
       });
       await waitForAll([
@@ -3963,9 +3949,7 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Logged recoverable error: ' + error.message,
-        );
+        Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
     await waitForAll([
@@ -4005,7 +3989,7 @@ describe('ReactDOMFizzServer', () => {
 
     function ThrowUntilOnClient({children, message}) {
       if (isClient && shouldThrow) {
-        Scheduler.unstable_yieldValue('throwing: ' + message);
+        Scheduler.log('throwing: ' + message);
         throw new Error(message);
       }
       return children;
@@ -4055,9 +4039,7 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Logged recoverable error: ' + error.message,
-          );
+          Scheduler.log('Logged recoverable error: ' + error.message);
         },
       });
       await waitForAll([
@@ -4127,7 +4109,7 @@ describe('ReactDOMFizzServer', () => {
             };
           });
         }
-        Scheduler.unstable_yieldValue('suspending');
+        Scheduler.log('suspending');
         throw promise;
       }
       return null;
@@ -4135,7 +4117,7 @@ describe('ReactDOMFizzServer', () => {
 
     function ThrowUntilOnClient({children, message}) {
       if (isClient && shouldThrow) {
-        Scheduler.unstable_yieldValue('throwing: ' + message);
+        Scheduler.log('throwing: ' + message);
         throw new Error(message);
       }
       return children;
@@ -4186,9 +4168,7 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Logged recoverable error: ' + error.message,
-          );
+          Scheduler.log('Logged recoverable error: ' + error.message);
         },
       });
       await waitForAll([
@@ -4250,7 +4230,7 @@ describe('ReactDOMFizzServer', () => {
             };
           });
         }
-        Scheduler.unstable_yieldValue('suspending');
+        Scheduler.log('suspending');
         throw promise;
       }
       return null;
@@ -4258,7 +4238,7 @@ describe('ReactDOMFizzServer', () => {
 
     function ThrowUntilOnClient({children, message}) {
       if (isClient && shouldThrow) {
-        Scheduler.unstable_yieldValue('throwing: ' + message);
+        Scheduler.log('throwing: ' + message);
         throw new Error(message);
       }
       return children;
@@ -4309,9 +4289,7 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Logged recoverable error: ' + error.message,
-          );
+          Scheduler.log('Logged recoverable error: ' + error.message);
         },
       });
       await waitForAll([

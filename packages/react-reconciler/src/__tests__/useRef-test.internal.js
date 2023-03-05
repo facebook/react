@@ -46,7 +46,7 @@ describe('useRef', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span prop={props.text} />;
   }
 
@@ -74,7 +74,7 @@ describe('useRef', () => {
     function App() {
       ping = useDebouncedCallback(
         value => {
-          Scheduler.unstable_yieldValue('ping: ' + value);
+          Scheduler.log('ping: ' + value);
         },
         100,
         [],

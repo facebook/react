@@ -26,7 +26,7 @@ const Scheduler = require('scheduler/unstable_mock');
 describe('ReactInternalTestUtils', () => {
   test('waitFor', async () => {
     const Yield = ({id}) => {
-      Scheduler.unstable_yieldValue(id);
+      Scheduler.log(id);
       return id;
     };
 
@@ -51,7 +51,7 @@ describe('ReactInternalTestUtils', () => {
 
   test('waitForAll', async () => {
     const Yield = ({id}) => {
-      Scheduler.unstable_yieldValue(id);
+      Scheduler.log(id);
       return id;
     };
 
@@ -72,7 +72,7 @@ describe('ReactInternalTestUtils', () => {
 
   test('waitForThrow', async () => {
     const Yield = ({id}) => {
-      Scheduler.unstable_yieldValue(id);
+      Scheduler.log(id);
       return id;
     };
 
@@ -113,7 +113,7 @@ describe('ReactInternalTestUtils', () => {
     function App({prop}) {
       const deferred = useDeferredValue(prop);
       const text = `Urgent: ${prop}, Deferred: ${deferred}`;
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -137,7 +137,7 @@ describe('ReactInternalTestUtils', () => {
 
   test('assertLog', async () => {
     const Yield = ({id}) => {
-      Scheduler.unstable_yieldValue(id);
+      Scheduler.log(id);
       return id;
     };
 

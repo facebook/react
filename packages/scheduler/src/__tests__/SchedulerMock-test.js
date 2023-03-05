@@ -53,10 +53,10 @@ describe('Scheduler', () => {
   });
 
   it('flushes work incrementally', async () => {
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('B'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('C'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('D'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('C'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('D'));
 
     await waitFor(['A', 'B']);
     await waitFor(['C']);
@@ -64,11 +64,11 @@ describe('Scheduler', () => {
   });
 
   it('cancels work', async () => {
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('A'));
     const callbackHandleB = scheduleCallback(NormalPriority, () =>
-      Scheduler.unstable_yieldValue('B'),
+      Scheduler.log('B'),
     );
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('C'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('C'));
 
     cancelCallback(callbackHandleB);
 
@@ -80,18 +80,14 @@ describe('Scheduler', () => {
   });
 
   it('executes the highest priority callbacks first', async () => {
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('B'));
 
     // Yield before B is flushed
     await waitFor(['A']);
 
-    scheduleCallback(UserBlockingPriority, () =>
-      Scheduler.unstable_yieldValue('C'),
-    );
-    scheduleCallback(UserBlockingPriority, () =>
-      Scheduler.unstable_yieldValue('D'),
-    );
+    scheduleCallback(UserBlockingPriority, () => Scheduler.log('C'));
+    scheduleCallback(UserBlockingPriority, () => Scheduler.log('D'));
 
     // C and D should come first, because they are higher priority
     await waitForAll(['C', 'D', 'B']);
@@ -100,15 +96,15 @@ describe('Scheduler', () => {
   it('expires work', async () => {
     scheduleCallback(NormalPriority, didTimeout => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue(`A (did timeout: ${didTimeout})`);
+      Scheduler.log(`A (did timeout: ${didTimeout})`);
     });
     scheduleCallback(UserBlockingPriority, didTimeout => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue(`B (did timeout: ${didTimeout})`);
+      Scheduler.log(`B (did timeout: ${didTimeout})`);
     });
     scheduleCallback(UserBlockingPriority, didTimeout => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue(`C (did timeout: ${didTimeout})`);
+      Scheduler.log(`C (did timeout: ${didTimeout})`);
     });
 
     // Advance time, but not by enough to expire any work
@@ -118,11 +114,11 @@ describe('Scheduler', () => {
     // Schedule a few more callbacks
     scheduleCallback(NormalPriority, didTimeout => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue(`D (did timeout: ${didTimeout})`);
+      Scheduler.log(`D (did timeout: ${didTimeout})`);
     });
     scheduleCallback(NormalPriority, didTimeout => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue(`E (did timeout: ${didTimeout})`);
+      Scheduler.log(`E (did timeout: ${didTimeout})`);
     });
 
     // Advance by just a bit more to expire the user blocking callbacks
@@ -138,7 +134,7 @@ describe('Scheduler', () => {
   });
 
   it('has a default expiration of ~5 seconds', () => {
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('A'));
 
     Scheduler.unstable_advanceTime(4999);
     assertLog([]);
@@ -151,11 +147,11 @@ describe('Scheduler', () => {
   it('continues working on same task after yielding', async () => {
     scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue('A');
+      Scheduler.log('A');
     });
     scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue('B');
+      Scheduler.log('B');
     });
 
     let didYield = false;
@@ -168,7 +164,7 @@ describe('Scheduler', () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
         Scheduler.unstable_advanceTime(ms);
-        Scheduler.unstable_yieldValue(label);
+        Scheduler.log(label);
         if (shouldYield()) {
           didYield = true;
           return C;
@@ -180,11 +176,11 @@ describe('Scheduler', () => {
 
     scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue('D');
+      Scheduler.log('D');
     });
     scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue('E');
+      Scheduler.log('E');
     });
 
     // Flush, then yield while in the middle of C.
@@ -207,7 +203,7 @@ describe('Scheduler', () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
         Scheduler.unstable_advanceTime(ms);
-        Scheduler.unstable_yieldValue(label);
+        Scheduler.log(label);
         if (shouldYield()) {
           return work;
         }
@@ -237,7 +233,7 @@ describe('Scheduler', () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
         Scheduler.unstable_advanceTime(ms);
-        Scheduler.unstable_yieldValue(label);
+        Scheduler.log(label);
         if (tasks.length > 0 && shouldYield()) {
           return work;
         }
@@ -248,7 +244,7 @@ describe('Scheduler', () => {
 
     scheduleCallback(UserBlockingPriority, () => {
       Scheduler.unstable_advanceTime(100);
-      Scheduler.unstable_yieldValue('High pri');
+      Scheduler.log('High pri');
     });
 
     await waitForAll(['High pri', 'B', 'C', 'D']);
@@ -269,13 +265,13 @@ describe('Scheduler', () => {
           const task = tasks.shift();
           const [label, ms] = task;
           Scheduler.unstable_advanceTime(ms);
-          Scheduler.unstable_yieldValue(label);
+          Scheduler.log(label);
           if (label === 'B') {
             // Schedule high pri work from inside another callback
-            Scheduler.unstable_yieldValue('Schedule high pri');
+            Scheduler.log('Schedule high pri');
             scheduleCallback(UserBlockingPriority, () => {
               Scheduler.unstable_advanceTime(100);
-              Scheduler.unstable_yieldValue('High pri');
+              Scheduler.log('High pri');
             });
           }
           if (tasks.length > 0) {
@@ -301,9 +297,9 @@ describe('Scheduler', () => {
 
   it('cancelling a continuation', async () => {
     const task = scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Yield');
+      Scheduler.log('Yield');
       return () => {
-        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.log('Continuation');
       };
     });
 
@@ -313,18 +309,10 @@ describe('Scheduler', () => {
   });
 
   it('top-level immediate callbacks fire in a subsequent task', () => {
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('A'),
-    );
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('B'),
-    );
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('C'),
-    );
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('D'),
-    );
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('A'));
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('B'));
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('C'));
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('D'));
     // Immediate callback hasn't fired, yet.
     assertLog([]);
     // They all flush immediately within the subsequent task.
@@ -333,19 +321,13 @@ describe('Scheduler', () => {
   });
 
   it('nested immediate callbacks are added to the queue of immediate callbacks', () => {
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('A'),
-    );
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('A'));
     scheduleCallback(ImmediatePriority, () => {
-      Scheduler.unstable_yieldValue('B');
+      Scheduler.log('B');
       // This callback should go to the end of the queue
-      scheduleCallback(ImmediatePriority, () =>
-        Scheduler.unstable_yieldValue('C'),
-      );
+      scheduleCallback(ImmediatePriority, () => Scheduler.log('C'));
     });
-    scheduleCallback(ImmediatePriority, () =>
-      Scheduler.unstable_yieldValue('D'),
-    );
+    scheduleCallback(ImmediatePriority, () => Scheduler.log('D'));
     assertLog([]);
     // C should flush at the end
     Scheduler.unstable_flushExpired();
@@ -360,7 +342,7 @@ describe('Scheduler', () => {
   it('wrapped callbacks inherit the current priority', () => {
     const wrappedCallback = runWithPriority(NormalPriority, () =>
       wrapCallback(() => {
-        Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+        Scheduler.log(getCurrentPriorityLevel());
       }),
     );
 
@@ -368,7 +350,7 @@ describe('Scheduler', () => {
       UserBlockingPriority,
       () =>
         wrapCallback(() => {
-          Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+          Scheduler.log(getCurrentPriorityLevel());
         }),
     );
 
@@ -385,11 +367,11 @@ describe('Scheduler', () => {
 
     runWithPriority(NormalPriority, () => {
       wrappedCallback = wrapCallback(() => {
-        Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+        Scheduler.log(getCurrentPriorityLevel());
       });
       wrappedUserBlockingCallback = runWithPriority(UserBlockingPriority, () =>
         wrapCallback(() => {
-          Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+          Scheduler.log(getCurrentPriorityLevel());
         }),
       );
     });
@@ -403,14 +385,14 @@ describe('Scheduler', () => {
 
   it("immediate callbacks fire even if there's an error", () => {
     scheduleCallback(ImmediatePriority, () => {
-      Scheduler.unstable_yieldValue('A');
+      Scheduler.log('A');
       throw new Error('Oops A');
     });
     scheduleCallback(ImmediatePriority, () => {
-      Scheduler.unstable_yieldValue('B');
+      Scheduler.log('B');
     });
     scheduleCallback(ImmediatePriority, () => {
-      Scheduler.unstable_yieldValue('C');
+      Scheduler.log('C');
       throw new Error('Oops C');
     });
 
@@ -436,16 +418,16 @@ describe('Scheduler', () => {
   });
 
   it('exposes the current priority level', () => {
-    Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+    Scheduler.log(getCurrentPriorityLevel());
     runWithPriority(ImmediatePriority, () => {
-      Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+      Scheduler.log(getCurrentPriorityLevel());
       runWithPriority(NormalPriority, () => {
-        Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+        Scheduler.log(getCurrentPriorityLevel());
         runWithPriority(UserBlockingPriority, () => {
-          Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+          Scheduler.log(getCurrentPriorityLevel());
         });
       });
-      Scheduler.unstable_yieldValue(getCurrentPriorityLevel());
+      Scheduler.log(getCurrentPriorityLevel());
     });
 
     assertLog([
@@ -495,25 +477,19 @@ describe('Scheduler', () => {
       }
 
       scheduleCallback(ImmediatePriority, () =>
-        Scheduler.unstable_yieldValue(
-          'Immediate: ' + inferPriorityFromCallstack(),
-        ),
+        Scheduler.log('Immediate: ' + inferPriorityFromCallstack()),
       );
       scheduleCallback(UserBlockingPriority, () =>
-        Scheduler.unstable_yieldValue(
-          'UserBlocking: ' + inferPriorityFromCallstack(),
-        ),
+        Scheduler.log('UserBlocking: ' + inferPriorityFromCallstack()),
       );
       scheduleCallback(NormalPriority, () =>
-        Scheduler.unstable_yieldValue(
-          'Normal: ' + inferPriorityFromCallstack(),
-        ),
+        Scheduler.log('Normal: ' + inferPriorityFromCallstack()),
       );
       scheduleCallback(LowPriority, () =>
-        Scheduler.unstable_yieldValue('Low: ' + inferPriorityFromCallstack()),
+        Scheduler.log('Low: ' + inferPriorityFromCallstack()),
       );
       scheduleCallback(IdlePriority, () =>
-        Scheduler.unstable_yieldValue('Idle: ' + inferPriorityFromCallstack()),
+        Scheduler.log('Idle: ' + inferPriorityFromCallstack()),
       );
 
       await waitForAll([
@@ -528,13 +504,9 @@ describe('Scheduler', () => {
 
   describe('delayed tasks', () => {
     it('schedules a delayed task', async () => {
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('A'),
-        {
-          delay: 1000,
-        },
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('A'), {
+        delay: 1000,
+      });
 
       // Should flush nothing, because delay hasn't elapsed
       await waitForAll([]);
@@ -552,37 +524,21 @@ describe('Scheduler', () => {
     });
 
     it('schedules multiple delayed tasks', async () => {
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('C'),
-        {
-          delay: 300,
-        },
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('C'), {
+        delay: 300,
+      });
 
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('B'),
-        {
-          delay: 200,
-        },
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('B'), {
+        delay: 200,
+      });
 
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('D'),
-        {
-          delay: 400,
-        },
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('D'), {
+        delay: 400,
+      });
 
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('A'),
-        {
-          delay: 100,
-        },
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('A'), {
+        delay: 100,
+      });
 
       // Should flush nothing, because delay hasn't elapsed
       await waitForAll([]);
@@ -601,32 +557,28 @@ describe('Scheduler', () => {
     it('interleaves normal tasks and delayed tasks', async () => {
       // Schedule some high priority callbacks with a delay. When their delay
       // elapses, they will be the most important callback in the queue.
-      scheduleCallback(
-        UserBlockingPriority,
-        () => Scheduler.unstable_yieldValue('Timer 2'),
-        {delay: 300},
-      );
-      scheduleCallback(
-        UserBlockingPriority,
-        () => Scheduler.unstable_yieldValue('Timer 1'),
-        {delay: 100},
-      );
+      scheduleCallback(UserBlockingPriority, () => Scheduler.log('Timer 2'), {
+        delay: 300,
+      });
+      scheduleCallback(UserBlockingPriority, () => Scheduler.log('Timer 1'), {
+        delay: 100,
+      });
 
       // Schedule some tasks at default priority.
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('A');
+        Scheduler.log('A');
         Scheduler.unstable_advanceTime(100);
       });
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('B');
+        Scheduler.log('B');
         Scheduler.unstable_advanceTime(100);
       });
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('C');
+        Scheduler.log('C');
         Scheduler.unstable_advanceTime(100);
       });
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('D');
+        Scheduler.log('D');
         Scheduler.unstable_advanceTime(100);
       });
 
@@ -638,16 +590,12 @@ describe('Scheduler', () => {
     it('interleaves delayed tasks with time-sliced tasks', async () => {
       // Schedule some high priority callbacks with a delay. When their delay
       // elapses, they will be the most important callback in the queue.
-      scheduleCallback(
-        UserBlockingPriority,
-        () => Scheduler.unstable_yieldValue('Timer 2'),
-        {delay: 300},
-      );
-      scheduleCallback(
-        UserBlockingPriority,
-        () => Scheduler.unstable_yieldValue('Timer 1'),
-        {delay: 100},
-      );
+      scheduleCallback(UserBlockingPriority, () => Scheduler.log('Timer 2'), {
+        delay: 300,
+      });
+      scheduleCallback(UserBlockingPriority, () => Scheduler.log('Timer 1'), {
+        delay: 100,
+      });
 
       // Schedule a time-sliced task at default priority.
       const tasks = [
@@ -661,7 +609,7 @@ describe('Scheduler', () => {
           const task = tasks.shift();
           const [label, ms] = task;
           Scheduler.unstable_advanceTime(ms);
-          Scheduler.unstable_yieldValue(label);
+          Scheduler.log(label);
           if (tasks.length > 0) {
             return work;
           }
@@ -678,19 +626,15 @@ describe('Scheduler', () => {
       // Schedule several tasks with the same delay
       const options = {delay: 100};
 
-      scheduleCallback(
-        NormalPriority,
-        () => Scheduler.unstable_yieldValue('A'),
-        options,
-      );
+      scheduleCallback(NormalPriority, () => Scheduler.log('A'), options);
       const taskB = scheduleCallback(
         NormalPriority,
-        () => Scheduler.unstable_yieldValue('B'),
+        () => Scheduler.log('B'),
         options,
       );
       const taskC = scheduleCallback(
         NormalPriority,
-        () => Scheduler.unstable_yieldValue('C'),
+        () => Scheduler.log('C'),
         options,
       );
 
@@ -722,11 +666,11 @@ describe('Scheduler', () => {
 
     it('toFlushUntilNextPaint stops if a continuation is returned', async () => {
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('Original Task');
-        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
-        Scheduler.unstable_yieldValue('Return a continuation');
+        Scheduler.log('Original Task');
+        Scheduler.log('shouldYield: ' + shouldYield());
+        Scheduler.log('Return a continuation');
         return () => {
-          Scheduler.unstable_yieldValue('Continuation Task');
+          Scheduler.log('Continuation Task');
         };
       });
 
@@ -749,11 +693,11 @@ describe('Scheduler', () => {
 
     it("toFlushAndYield keeps flushing even if there's a continuation", async () => {
       scheduleCallback(NormalPriority, () => {
-        Scheduler.unstable_yieldValue('Original Task');
-        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
-        Scheduler.unstable_yieldValue('Return a continuation');
+        Scheduler.log('Original Task');
+        Scheduler.log('shouldYield: ' + shouldYield());
+        Scheduler.log('Return a continuation');
         return () => {
-          Scheduler.unstable_yieldValue('Continuation Task');
+          Scheduler.log('Continuation Task');
         };
       });
 

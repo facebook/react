@@ -141,7 +141,7 @@ function runActTests(label, render, unmount, rerender) {
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(100);
+            Scheduler.log(100);
           });
           return null;
         }
@@ -158,7 +158,7 @@ function runActTests(label, render, unmount, rerender) {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(ctr);
+            Scheduler.log(ctr);
           });
           return (
             <button id="button" onClick={() => setCtr(x => x + 1)}>
@@ -213,7 +213,7 @@ function runActTests(label, render, unmount, rerender) {
       it('should flush effects only on exiting the outermost act', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(0);
+            Scheduler.log(0);
           });
           return null;
         }
@@ -546,7 +546,7 @@ function runActTests(label, render, unmount, rerender) {
             something();
           }, []);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            Scheduler.log(state);
           });
           return state;
         }
@@ -571,7 +571,7 @@ function runActTests(label, render, unmount, rerender) {
             setState(x => x + 1);
           }
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            Scheduler.log(state);
             ticker();
           }, [Math.min(state, 4)]);
           return state;
@@ -644,7 +644,7 @@ function runActTests(label, render, unmount, rerender) {
       it('should cleanup after errors - sync', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('oh yes');
+            Scheduler.log('oh yes');
           });
           return null;
         }
@@ -671,7 +671,7 @@ function runActTests(label, render, unmount, rerender) {
         function App() {
           async function somethingAsync() {
             await null;
-            Scheduler.unstable_yieldValue('oh yes');
+            Scheduler.log('oh yes');
           }
           React.useEffect(() => {
             somethingAsync();

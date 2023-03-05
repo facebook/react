@@ -287,7 +287,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     const target = React.createRef(null);
     function Foo({hovered}) {
       const hoverString = hovered ? 'hovered' : 'not hovered';
-      Scheduler.unstable_yieldValue(hoverString);
+      Scheduler.log(hoverString);
       return <div ref={target}>{hoverString}</div>;
     }
 
@@ -367,7 +367,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
                 ReactDOM.unstable_batchedUpdates(() => {
                   setCount(count + 1);
                 });
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   container.textContent + ' [after batchedUpdates]',
                 );
               };

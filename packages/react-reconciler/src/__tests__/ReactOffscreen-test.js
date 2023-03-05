@@ -38,22 +38,22 @@ describe('ReactOffscreen', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span prop={props.text}>{props.children}</span>;
   }
 
   function LoggedText({text, children}) {
     useEffect(() => {
-      Scheduler.unstable_yieldValue(`mount ${text}`);
+      Scheduler.log(`mount ${text}`);
       return () => {
-        Scheduler.unstable_yieldValue(`unmount ${text}`);
+        Scheduler.log(`unmount ${text}`);
       };
     });
 
     useLayoutEffect(() => {
-      Scheduler.unstable_yieldValue(`mount layout ${text}`);
+      Scheduler.log(`mount layout ${text}`);
       return () => {
-        Scheduler.unstable_yieldValue(`unmount layout ${text}`);
+        Scheduler.log(`unmount layout ${text}`);
       };
     });
     return <Text text={text}>{children}</Text>;
@@ -213,9 +213,9 @@ describe('ReactOffscreen', () => {
   it('mounts without layout effects when hidden', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount layout');
+        Scheduler.log('Mount layout');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount layout');
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -251,9 +251,9 @@ describe('ReactOffscreen', () => {
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount layout');
+        Scheduler.log('Mount layout');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount layout');
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -304,11 +304,11 @@ describe('ReactOffscreen', () => {
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
     }
 
@@ -366,7 +366,7 @@ describe('ReactOffscreen', () => {
       );
     });
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
 
     await act(async () => {
       // Outer offscreen is visible.
@@ -401,9 +401,9 @@ describe('ReactOffscreen', () => {
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount layout');
+        Scheduler.log('Mount layout');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount layout');
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -449,11 +449,11 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
     function Child({text}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount layout');
+        Scheduler.log('Mount layout');
         return () => {
           // The child should not be hidden yet.
           expect(root).toMatchRenderedOutput(<span prop="Child" />);
-          Scheduler.unstable_yieldValue('Unmount layout');
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -489,9 +489,9 @@ describe('ReactOffscreen', () => {
     // do anything to effects. Only used by www, as a temporary migration step.
     function Child({text}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount layout');
+        Scheduler.log('Mount layout');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount layout');
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -818,7 +818,7 @@ describe('ReactOffscreen', () => {
     // the component isn't visible.
     await act(async () => {
       child.setState({text: 'B'}, () => {
-        Scheduler.unstable_yieldValue('B update finished');
+        Scheduler.log('B update finished');
       });
     });
     assertLog(['B']);
@@ -834,7 +834,7 @@ describe('ReactOffscreen', () => {
         </Offscreen>,
       );
       child.setState({text: 'C'}, () => {
-        Scheduler.unstable_yieldValue('C update finished');
+        Scheduler.log('C update finished');
       });
     });
     assertLog(['C', 'B update finished', 'C update finished']);
@@ -845,13 +845,13 @@ describe('ReactOffscreen', () => {
   it('does not call componentDidUpdate when reappearing a hidden class component', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
       render() {
         return 'Child';
@@ -898,9 +898,9 @@ describe('ReactOffscreen', () => {
     async () => {
       function Child({label}) {
         useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('Mount ' + label);
+          Scheduler.log('Mount ' + label);
           return () => {
-            Scheduler.unstable_yieldValue('Unmount ' + label);
+            Scheduler.log('Unmount ' + label);
           };
         }, [label]);
         return label;
@@ -951,10 +951,10 @@ describe('ReactOffscreen', () => {
     async () => {
       class Child extends React.Component {
         componentDidMount() {
-          Scheduler.unstable_yieldValue('Mount ' + this.props.label);
+          Scheduler.log('Mount ' + this.props.label);
         }
         componentWillUnmount() {
-          Scheduler.unstable_yieldValue('Unmount ' + this.props.label);
+          Scheduler.log('Unmount ' + this.props.label);
         }
         render() {
           return this.props.label;
@@ -990,7 +990,7 @@ describe('ReactOffscreen', () => {
       // Reappear the component and also add some new siblings.
       await act(async () => {
         setStateB(null, () => {
-          Scheduler.unstable_yieldValue('setState callback B');
+          Scheduler.log('setState callback B');
         });
         root.render(
           <Offscreen mode="visible">
@@ -1011,9 +1011,9 @@ describe('ReactOffscreen', () => {
   it('defer passive effects when prerendering a new Offscreen tree', async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + label);
+        Scheduler.log('Mount ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Unmount ' + label);
+          Scheduler.log('Unmount ' + label);
         };
       }, [label]);
       return <Text text={label} />;
@@ -1073,9 +1073,9 @@ describe('ReactOffscreen', () => {
   it('do not defer passive effects when prerendering a new LegacyHidden tree', async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + label);
+        Scheduler.log('Mount ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Unmount ' + label);
+          Scheduler.log('Unmount ' + label);
         };
       }, [label]);
       return <Text text={label} />;
@@ -1129,9 +1129,9 @@ describe('ReactOffscreen', () => {
   it('passive effects are connected and disconnected when the visibility changes', async () => {
     function Child({step}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue(`Commit mount [${step}]`);
+        Scheduler.log(`Commit mount [${step}]`);
         return () => {
-          Scheduler.unstable_yieldValue(`Commit unmount [${step}]`);
+          Scheduler.log(`Commit unmount [${step}]`);
         };
       }, [step]);
       return <Text text={step} />;
@@ -1186,18 +1186,18 @@ describe('ReactOffscreen', () => {
   it('passive effects are unmounted on hide in the same order as during a deletion: parent before child', async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Child');
+        Scheduler.log('Mount Child');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Child');
+          Scheduler.log('Unmount Child');
         };
       }, []);
       return <div>Hi</div>;
     }
     function Parent() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Parent');
+        Scheduler.log('Mount Parent');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Parent');
+          Scheduler.log('Unmount Parent');
         };
       }, []);
       return <Child />;
@@ -1244,9 +1244,9 @@ describe('ReactOffscreen', () => {
   it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + label);
+        Scheduler.log('Mount ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Unmount ' + label);
+          Scheduler.log('Unmount ' + label);
         };
       }, [label]);
       return <Text text={label} />;
@@ -1300,9 +1300,9 @@ describe('ReactOffscreen', () => {
   it('does not mount effects when prerendering a nested Offscreen boundary', async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + label);
+        Scheduler.log('Mount ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Unmount ' + label);
+          Scheduler.log('Unmount ' + label);
         };
       }, [label]);
       return <Text text={label} />;
@@ -1378,9 +1378,9 @@ describe('ReactOffscreen', () => {
   it('reveal an outer Offscreen boundary without revealing an inner one', async () => {
     function Child({label}) {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount ' + label);
+        Scheduler.log('Mount ' + label);
         return () => {
-          Scheduler.unstable_yieldValue('Unmount ' + label);
+          Scheduler.log('Unmount ' + label);
         };
       }, [label]);
       return <Text text={label} />;
@@ -1819,15 +1819,15 @@ describe('ReactOffscreen', () => {
     function Child() {
       spanRef = useRef(null);
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Child');
+        Scheduler.log('Mount Child');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Child');
+          Scheduler.log('Unmount Child');
         };
       });
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Layout Child');
+        Scheduler.log('Mount Layout Child');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Layout Child');
+          Scheduler.log('Unmount Layout Child');
         };
       });
 
@@ -1974,9 +1974,9 @@ describe('ReactOffscreen', () => {
   it('batches multiple attach and detach calls scheduled from an event handler', async () => {
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('attach child');
+        Scheduler.log('attach child');
         return () => {
-          Scheduler.unstable_yieldValue('detach child');
+          Scheduler.log('detach child');
         };
       }, []);
       return 'child';
@@ -2028,9 +2028,9 @@ describe('ReactOffscreen', () => {
   it('batches multiple attach and detach calls scheduled from an effect', async () => {
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('attach child');
+        Scheduler.log('attach child');
         return () => {
-          Scheduler.unstable_yieldValue('detach child');
+          Scheduler.log('detach child');
         };
       }, []);
       return 'child';

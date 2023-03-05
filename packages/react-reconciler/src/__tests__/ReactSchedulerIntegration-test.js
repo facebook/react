@@ -60,25 +60,21 @@ describe('ReactSchedulerIntegration', () => {
     const {useEffect, useLayoutEffect} = React;
     function Effects({step}) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Layout Effect');
+        Scheduler.log('Layout Effect');
         Scheduler.unstable_scheduleCallback(NormalPriority, () =>
-          Scheduler.unstable_yieldValue(
-            'Scheduled Normal Callback from Layout Effect',
-          ),
+          Scheduler.log('Scheduled Normal Callback from Layout Effect'),
         );
       });
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Passive Effect');
+        Scheduler.log('Passive Effect');
       });
       return null;
     }
     function CleanupEffect() {
       useLayoutEffect(() => () => {
-        Scheduler.unstable_yieldValue('Cleanup Layout Effect');
+        Scheduler.log('Cleanup Layout Effect');
         Scheduler.unstable_scheduleCallback(NormalPriority, () =>
-          Scheduler.unstable_yieldValue(
-            'Scheduled Normal Callback from Cleanup Layout Effect',
-          ),
+          Scheduler.log('Scheduled Normal Callback from Cleanup Layout Effect'),
         );
       });
       return null;
@@ -107,9 +103,9 @@ describe('ReactSchedulerIntegration', () => {
     root.render('Initial');
     await waitForAll([]);
 
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('B'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('C'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('C'));
 
     // Schedule a React render. React will request a paint after committing it.
     React.startTransition(() => {
@@ -119,8 +115,8 @@ describe('ReactSchedulerIntegration', () => {
     // Advance time just to be sure the next tasks have lower priority
     Scheduler.unstable_advanceTime(2000);
 
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('D'));
-    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('E'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('D'));
+    scheduleCallback(NormalPriority, () => Scheduler.log('E'));
 
     // Flush everything up to the next paint. Should yield after the
     // React commit.
@@ -131,7 +127,7 @@ describe('ReactSchedulerIntegration', () => {
   // @gate www
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -200,7 +196,7 @@ describe(
           ...actual,
           unstable_shouldYield() {
             if (logDuringShouldYield) {
-              actual.unstable_yieldValue('shouldYield');
+              actual.log('shouldYield');
             }
             return actual.unstable_shouldYield();
           },
@@ -273,7 +269,7 @@ describe(
       // Scheduler API. That being said, feel free to rewrite or delete this
       // test if/when the API changes.
       function Text({text}) {
-        Scheduler.unstable_yieldValue(text);
+        Scheduler.log(text);
         return text;
       }
 

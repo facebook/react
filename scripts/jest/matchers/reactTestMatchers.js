@@ -21,7 +21,7 @@ function captureAssertion(fn) {
 }
 
 function assertYieldsWereCleared(Scheduler) {
-  const actualYields = Scheduler.unstable_clearYields();
+  const actualYields = Scheduler.unstable_clearLog();
   if (actualYields.length !== 0) {
     const error = Error(
       'The event log is not empty. Call assertLog(...) first.'
