@@ -59,7 +59,8 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
     "react.default_value"
   ),
-  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function PropertyInfoRecord(
   name,
   type,
@@ -915,15 +916,24 @@ function resolveModelToJSON(request, parent, key, value) {
         throw Error(
           "Tried to pop a Context at the root of the app. This is a bug in React."
         );
-      key = request.parentValue;
+      value = request.parentValue;
       request.context._currentValue =
-        key === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+        value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
           ? request.context._defaultValue
-          : key;
+          : value;
       currentActiveSnapshot = request.parent;
       return;
     }
-    return value;
+    return !isArrayImpl(value) &&
+      (null === value || "object" !== typeof value
+        ? (request = null)
+        : ((request =
+            (MAYBE_ITERATOR_SYMBOL && value[MAYBE_ITERATOR_SYMBOL]) ||
+            value["@@iterator"]),
+          (request = "function" === typeof request ? request : null)),
+      request)
+      ? Array.from(value)
+      : value;
   }
   if ("string" === typeof value)
     return (request = "$" === value[0] ? "$" + value : value), request;

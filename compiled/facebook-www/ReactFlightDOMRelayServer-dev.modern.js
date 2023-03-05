@@ -174,6 +174,23 @@ var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
   "react.default_value"
 );
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = "@@iterator";
+function getIteratorFn(maybeIterable) {
+  if (maybeIterable === null || typeof maybeIterable !== "object") {
+    return null;
+  }
+
+  var maybeIterator =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+  if (typeof maybeIterator === "function") {
+    return maybeIterator;
+  }
+
+  return null;
+}
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
@@ -2168,6 +2185,14 @@ function resolveModelToJSON(request, parent, key, value) {
       }
 
       return undefined;
+    }
+
+    if (!isArray(value)) {
+      var iteratorFn = getIteratorFn(value);
+
+      if (iteratorFn) {
+        return Array.from(value);
+      }
     }
 
     {
