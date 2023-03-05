@@ -232,9 +232,9 @@ function createServerReferenceProxy(response, metaData) {
     var args = Array.prototype.slice.call(arguments),
       p = metaData.bound;
     return "fulfilled" === p.status
-      ? callServer(metaData, p.value.concat(args))
+      ? callServer(metaData.id, p.value.concat(args))
       : Promise.resolve(p).then(function (bound) {
-          return callServer(metaData, bound.concat(args));
+          return callServer(metaData.id, bound.concat(args));
         });
   };
 }
