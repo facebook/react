@@ -29,8 +29,7 @@ module.exports = function register() {
       // $FlowFixMe[method-unbinding]
       const args = Array.prototype.slice.call(arguments, 1);
       newFn.$$typeof = SERVER_REFERENCE;
-      newFn.$$filepath = this.$$filepath;
-      newFn.$$name = this.$$name;
+      newFn.$$id = this.$$id;
       newFn.$$bound = this.$$bound.concat(args);
     }
     return newFn;
@@ -44,14 +43,14 @@ module.exports = function register() {
           // These names are a little too common. We should probably have a way to
           // have the Flight runtime extract the inner target instead.
           return target.$$typeof;
-        case 'filepath':
-          return target.filepath;
+        case '$$id':
+          return target.$$id;
+        case '$$async':
+          return target.$$async;
         case 'name':
           return target.name;
         case 'displayName':
           return undefined;
-        case 'async':
-          return target.async;
         // We need to special case this because createElement reads it if we pass this
         // reference.
         case 'defaultProps':
@@ -69,20 +68,8 @@ module.exports = function register() {
               `that itself renders a Client Context Provider.`,
           );
       }
-      let expression;
-      switch (target.name) {
-        case '':
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          expression = String(name);
-          break;
-        case '*':
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          expression = String(name);
-          break;
-        default:
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          expression = String(target.name) + '.' + String(name);
-      }
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      const expression = String(target.name) + '.' + String(name);
       throw new Error(
         `Cannot access ${expression} on the server. ` +
           'You cannot dot into a client module from a server component. ' +
@@ -103,15 +90,13 @@ module.exports = function register() {
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
-          // These names are a little too common. We should probably have a way to
-          // have the Flight runtime extract the inner target instead.
           return target.$$typeof;
-        case 'filepath':
-          return target.filepath;
+        case '$$id':
+          return target.$$id;
+        case '$$async':
+          return target.$$async;
         case 'name':
           return target.name;
-        case 'async':
-          return target.async;
         // We need to special case this because createElement reads it if we pass this
         // reference.
         case 'defaultProps':
@@ -125,7 +110,7 @@ module.exports = function register() {
         case '__esModule':
           // Something is conditionally checking which export to use. We'll pretend to be
           // an ESM compat module but then we'll check again on the client.
-          const moduleId = target.filepath;
+          const moduleId = target.$$id;
           target.default = Object.defineProperties(
             (function () {
               throw new Error(
@@ -136,12 +121,11 @@ module.exports = function register() {
               );
             }: any),
             {
+              $$typeof: {value: CLIENT_REFERENCE},
               // This a placeholder value that tells the client to conditionally use the
               // whole object or just the default export.
-              name: {value: ''},
-              $$typeof: {value: CLIENT_REFERENCE},
-              filepath: {value: target.filepath},
-              async: {value: target.async},
+              $$id: {value: target.$$id + '#'},
+              $$async: {value: target.$$async},
             },
           );
           return true;
@@ -150,17 +134,15 @@ module.exports = function register() {
             // Use a cached value
             return target.then;
           }
-          if (!target.async) {
+          if (!target.$$async) {
             // If this module is expected to return a Promise (such as an AsyncModule) then
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
 
             const clientReference = Object.defineProperties(({}: any), {
-              // Represents the whole Module object instead of a particular import.
-              name: {value: '*'},
               $$typeof: {value: CLIENT_REFERENCE},
-              filepath: {value: target.filepath},
-              async: {value: true},
+              $$id: {value: target.$$id},
+              $$async: {value: true},
             });
             const proxy = new Proxy(clientReference, proxyHandlers);
 
@@ -176,10 +158,9 @@ module.exports = function register() {
               // If this is not used as a Promise but is treated as a reference to a `.then`
               // export then we should treat it as a reference to that name.
               {
-                name: {value: 'then'},
                 $$typeof: {value: CLIENT_REFERENCE},
-                filepath: {value: target.filepath},
-                async: {value: false},
+                $$id: {value: target.$$id + '#then'},
+                $$async: {value: false},
               },
             ));
             return then;
@@ -206,8 +187,8 @@ module.exports = function register() {
           {
             name: {value: name},
             $$typeof: {value: CLIENT_REFERENCE},
-            filepath: {value: target.filepath},
-            async: {value: target.async},
+            $$id: {value: target.$$id + '#' + name},
+            $$async: {value: target.$$async},
           },
         );
         cachedReference = target[name] = new Proxy(
@@ -284,11 +265,10 @@ module.exports = function register() {
     if (useClient) {
       const moduleId: string = (url.pathToFileURL(filename).href: any);
       const clientReference = Object.defineProperties(({}: any), {
-        // Represents the whole Module object instead of a particular import.
-        name: {value: '*'},
         $$typeof: {value: CLIENT_REFERENCE},
-        filepath: {value: moduleId},
-        async: {value: false},
+        // Represents the whole Module object instead of a particular import.
+        $$id: {value: moduleId},
+        $$async: {value: false},
       });
       // $FlowFixMe[incompatible-call] found when upgrading Flow
       this.exports = new Proxy(clientReference, proxyHandlers);
@@ -306,10 +286,9 @@ module.exports = function register() {
       if (typeof exports === 'function') {
         // The module exports a function directly,
         Object.defineProperties((exports: any), {
-          // Represents the whole Module object instead of a particular import.
           $$typeof: {value: SERVER_REFERENCE},
-          $$filepath: {value: moduleId},
-          $$name: {value: '*'},
+          // Represents the whole Module object instead of a particular import.
+          $$id: {value: moduleId},
           $$bound: {value: []},
         });
       } else {
@@ -320,8 +299,7 @@ module.exports = function register() {
           if (typeof value === 'function') {
             Object.defineProperties((value: any), {
               $$typeof: {value: SERVER_REFERENCE},
-              $$filepath: {value: moduleId},
-              $$name: {value: key},
+              $$id: {value: moduleId + '#' + key},
               $$bound: {value: []},
             });
           }

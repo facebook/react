@@ -473,7 +473,7 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
   response: Response,
-  metaData: any,
+  metaData: {id: any, bound: Thenable<Array<any>>},
 ): (...A) => Promise<T> {
   const callServer = response._callServer;
   const proxy = function (): Promise<T> {
@@ -482,12 +482,14 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
     const p = metaData.bound;
     if (p.status === INITIALIZED) {
       const bound = p.value;
-      return callServer(metaData, bound.concat(args));
+      return callServer(metaData.id, bound.concat(args));
     }
     // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
     // TODO: Remove the wrapper once that's fixed.
-    return Promise.resolve(p).then(function (bound) {
-      return callServer(metaData, bound.concat(args));
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(function (
+      bound,
+    ) {
+      return callServer(metaData.id, bound.concat(args));
     });
   };
   return proxy;

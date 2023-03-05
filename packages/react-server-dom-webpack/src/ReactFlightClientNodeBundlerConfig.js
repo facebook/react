@@ -25,7 +25,6 @@ export opaque type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
   name: string,
-  async: boolean,
 };
 
 // eslint-disable-next-line no-unused-vars

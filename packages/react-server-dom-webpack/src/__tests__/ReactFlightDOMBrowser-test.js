@@ -755,7 +755,7 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   function requireServerRef(ref) {
-    const metaData = webpackServerMap[ref.id][ref.name];
+    const metaData = webpackServerMap[ref];
     const mod = __webpack_require__(metaData.id);
     if (metaData.name === '*') {
       return mod;

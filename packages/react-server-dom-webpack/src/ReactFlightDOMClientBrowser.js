@@ -20,10 +20,7 @@ import {
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-type CallServerCallback = <A, T>(
-  {filepath: string, name: string},
-  args: A,
-) => Promise<T>;
+type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
   callServer?: CallServerCallback,

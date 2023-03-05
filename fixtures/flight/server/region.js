@@ -98,8 +98,8 @@ app.post('/', bodyParser.text(), async function (req, res) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
-  const serverReference = JSON.parse(req.get('rsc-action'));
-  const {filepath, name} = serverReference;
+  const serverReference = req.get('rsc-action');
+  const [filepath, name] = serverReference.split('#');
   const action = (await import(filepath))[name];
   // Validate that this is actually a function we intended to expose and
   // not the client trying to invoke arbitrary functions. In a real app,

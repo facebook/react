@@ -10,32 +10,24 @@
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
 
 type WebpackMap = {
-  [filepath: string]: {
-    [name: string]: ClientReferenceMetadata,
-  },
+  [id: string]: ClientReferenceMetadata,
 };
 
 export type BundlerConfig = WebpackMap;
 
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
-  $$filepath: string,
-  $$name: string,
+  $$id: string,
   $$bound: Array<ReactModel>,
 };
 
-export type ServerReferenceMetadata = {
-  id: string,
-  name: string,
-  bound: Promise<Array<ReactModel>>,
-};
+export type ServerReferenceId = string;
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
   $$typeof: symbol,
-  filepath: string,
-  name: string,
-  async: boolean,
+  $$id: string,
+  $$async: boolean,
 };
 
 export type ClientReferenceMetadata = {
@@ -53,12 +45,7 @@ const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
-  return (
-    reference.filepath +
-    '#' +
-    reference.name +
-    (reference.async ? '#async' : '')
-  );
+  return reference.$$async ? reference.$$id + '#async' : reference.$$id;
 }
 
 export function isClientReference(reference: Object): boolean {
@@ -73,9 +60,8 @@ export function resolveClientReferenceMetadata<T>(
   config: BundlerConfig,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const resolvedModuleData =
-    config[clientReference.filepath][clientReference.name];
-  if (clientReference.async) {
+  const resolvedModuleData = config[clientReference.$$id];
+  if (clientReference.$$async) {
     return {
       id: resolvedModuleData.id,
       chunks: resolvedModuleData.chunks,
@@ -90,10 +76,9 @@ export function resolveClientReferenceMetadata<T>(
 export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): ServerReferenceMetadata {
+): {id: ServerReferenceId, bound: Promise<Array<any>>} {
   return {
-    id: serverReference.$$filepath,
-    name: serverReference.$$name,
+    id: serverReference.$$id,
     bound: Promise.resolve(serverReference.$$bound),
   };
 }

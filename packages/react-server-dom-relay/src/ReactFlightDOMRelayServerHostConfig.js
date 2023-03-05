@@ -19,7 +19,7 @@ import isArray from 'shared/isArray';
 
 export type ClientReference<T> = JSResourceReference<T>;
 export type ServerReference<T> = T;
-export type ServerReferenceMetadata = {};
+export type ServerReferenceId = {};
 
 import type {
   Destination,
@@ -69,7 +69,7 @@ export function resolveClientReferenceMetadata<T>(
 export function resolveServerReferenceMetadata<T>(
   config: BundlerConfig,
   resource: ServerReference<T>,
-): ServerReferenceMetadata {
+): {id: ServerReferenceId, bound: Promise<Array<any>>} {
   throw new Error('Not implemented.');
 }
 
