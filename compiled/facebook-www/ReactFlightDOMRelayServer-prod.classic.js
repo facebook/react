@@ -564,8 +564,11 @@ function serializeThenable(request, thenable) {
       pingTask(request, newTask);
     },
     function (reason) {
+      newTask.status = 4;
       reason = logRecoverableError(request, reason);
       emitErrorChunkProd(request, newTask.id, reason);
+      null !== request.destination &&
+        flushCompletedChunks(request, request.destination);
     }
   );
   return newTask.id;
