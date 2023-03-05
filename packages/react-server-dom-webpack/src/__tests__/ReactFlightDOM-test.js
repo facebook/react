@@ -1046,4 +1046,72 @@ describe('ReactFlightDOM', () => {
     });
     expect(container.innerHTML).toBe('<p>async hello</p>');
   });
+
+  // @gate enableUseHook
+  it('should throw on the client if a passed promise eventually rejects', async () => {
+    const reportedErrors = [];
+    const theError = new Error('Server throw');
+
+    async function getData() {
+      throw theError;
+    }
+
+    function Component({data}) {
+      const text = use(data);
+      return <p>{text}</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    function ServerComponent() {
+      const data = getData(); // no await here
+      return <ClientComponent data={data} />;
+    }
+
+    function Await({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <ErrorBoundary
+            fallback={e => (
+              <p>
+                {__DEV__ ? e.message + ' + ' : null}
+                {e.digest}
+              </p>
+            )}>
+            <Await response={response} />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe(
+      __DEV__
+        ? '<p>Server throw + a dev digest</p>'
+        : '<p>digest("Server throw")</p>',
+    );
+    expect(reportedErrors).toEqual([theError]);
+  });
 });

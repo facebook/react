@@ -285,13 +285,17 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
       pingTask(request, newTask);
     },
     reason => {
-      // TODO: Is it safe to directly emit these without being inside a retry?
+      newTask.status = ERRORED;
+      // TODO: We should ideally do this inside performWork so it's scheduled
       const digest = logRecoverableError(request, reason);
       if (__DEV__) {
         const {message, stack} = getErrorMessageAndStackDev(reason);
         emitErrorChunkDev(request, newTask.id, digest, message, stack);
       } else {
         emitErrorChunkProd(request, newTask.id, digest);
+      }
+      if (request.destination !== null) {
+        flushCompletedChunks(request, request.destination);
       }
     },
   );
