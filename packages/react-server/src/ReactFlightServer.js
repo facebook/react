@@ -73,6 +73,7 @@ import {
 } from './ReactFlightNewContext';
 
 import {
+  getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -1058,6 +1059,12 @@ export function resolveModelToJSON(
         isInsideContextValue = false;
       }
       return (undefined: any);
+    }
+    if (!isArray(value)) {
+      const iteratorFn = getIteratorFn(value);
+      if (iteratorFn) {
+        return Array.from((value: any));
+      }
     }
 
     if (__DEV__) {

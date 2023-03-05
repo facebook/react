@@ -169,6 +169,34 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
   });
 
+  it('can render an iterable as an array', async () => {
+    function ItemListClient(props) {
+      return <span>{props.items}</span>;
+    }
+    const ItemList = clientReference(ItemListClient);
+
+    function Items() {
+      const iterable = {
+        [Symbol.iterator]: function* () {
+          yield 'A';
+          yield 'B';
+          yield 'C';
+        },
+      };
+      return <ItemList items={iterable} />;
+    }
+
+    const model = <Items />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
+  });
+
   it('can render a lazy component as a shared component on the server', async () => {
     function SharedComponent({text}) {
       return (
