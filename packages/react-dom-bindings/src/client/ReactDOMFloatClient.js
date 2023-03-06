@@ -25,7 +25,7 @@ import {
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
 
-import {createHTMLElement, setInitialProperties} from './ReactDOMComponent';
+import {setInitialProperties} from './ReactDOMComponent';
 import {
   precacheFiberNode,
   getResourcesFromRoot,
@@ -179,11 +179,7 @@ function preconnectAs(
 
       const preconnectProps = {rel, crossOrigin, href};
       if (null === ownerDocument.querySelector(key)) {
-        const preloadInstance = createHTMLElement(
-          'link',
-          preconnectProps,
-          ownerDocument,
-        );
+        const preloadInstance = ownerDocument.createElement('link');
         setInitialProperties(preloadInstance, 'link', preconnectProps);
         markNodeAsHoistable(preloadInstance);
         (ownerDocument.head: any).appendChild(preloadInstance);
@@ -293,11 +289,7 @@ function preload(href: string, options: PreloadOptions) {
       preloadPropsMap.set(key, preloadProps);
 
       if (null === ownerDocument.querySelector(preloadKey)) {
-        const preloadInstance = createHTMLElement(
-          'link',
-          preloadProps,
-          ownerDocument,
-        );
+        const preloadInstance = ownerDocument.createElement('link');
         setInitialProperties(preloadInstance, 'link', preloadProps);
         markNodeAsHoistable(preloadInstance);
         (ownerDocument.head: any).appendChild(preloadInstance);
@@ -374,11 +366,7 @@ function preinit(href: string, options: PreinitOptions) {
             preloadPropsMap.set(key, preloadProps);
 
             if (null === preloadDocument.querySelector(preloadKey)) {
-              const preloadInstance = createHTMLElement(
-                'link',
-                preloadProps,
-                preloadDocument,
-              );
+              const preloadInstance = preloadDocument.createElement('link');
               setInitialProperties(preloadInstance, 'link', preloadProps);
               markNodeAsHoistable(preloadInstance);
               (preloadDocument.head: any).appendChild(preloadInstance);
@@ -420,7 +408,7 @@ function preinit(href: string, options: PreinitOptions) {
             adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
           }
           const ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = createHTMLElement('link', stylesheetProps, ownerDocument);
+          instance = ownerDocument.createElement('link');
           markNodeAsHoistable(instance);
           setInitialProperties(instance, 'link', stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
@@ -462,7 +450,7 @@ function preinit(href: string, options: PreinitOptions) {
             adoptPreloadPropsForScript(scriptProps, preloadProps);
           }
           const ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = createHTMLElement('script', scriptProps, ownerDocument);
+          instance = ownerDocument.createElement('script');
           markNodeAsHoistable(instance);
           setInitialProperties(instance, 'link', scriptProps);
           (ownerDocument.head: any).appendChild(instance);
@@ -697,11 +685,7 @@ function preloadStylesheet(
       null ===
       ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
     ) {
-      const preloadInstance = createHTMLElement(
-        'link',
-        preloadProps,
-        ownerDocument,
-      );
+      const preloadInstance = ownerDocument.createElement('link');
       setInitialProperties(preloadInstance, 'link', preloadProps);
       markNodeAsHoistable(preloadInstance);
       (ownerDocument.head: any).appendChild(preloadInstance);
@@ -761,7 +745,7 @@ export function acquireResource(
 
         const styleProps = styleTagPropsFromRawProps(props);
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = createHTMLElement('style', styleProps, ownerDocument);
+        instance = ownerDocument.createElement('style');
 
         markNodeAsHoistable(instance);
         setInitialProperties(instance, 'style', styleProps);
@@ -795,7 +779,7 @@ export function acquireResource(
 
         // Construct and insert a new instance
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = createHTMLElement('link', stylesheetProps, ownerDocument);
+        instance = ownerDocument.createElement('link');
         markNodeAsHoistable(instance);
         const linkInstance: HTMLLinkElement = (instance: any);
         (linkInstance: any)._p = new Promise((resolve, reject) => {
@@ -837,7 +821,7 @@ export function acquireResource(
 
         // Construct and insert a new instance
         const ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = createHTMLElement('script', scriptProps, ownerDocument);
+        instance = ownerDocument.createElement('script');
         markNodeAsHoistable(instance);
         setInitialProperties(instance, 'link', scriptProps);
         (ownerDocument.head: any).appendChild(instance);
@@ -945,7 +929,7 @@ export function hydrateHoistable(
         instance.namespaceURI === SVG_NAMESPACE ||
         instance.hasAttribute('itemprop')
       ) {
-        instance = createHTMLElement(type, props, ownerDocument);
+        instance = ownerDocument.createElement(type);
         (ownerDocument.head: any).insertBefore(
           instance,
           ownerDocument.querySelector('head > title'),
@@ -991,7 +975,7 @@ export function hydrateHoistable(
           break getInstance;
         }
       }
-      instance = createHTMLElement(type, props, ownerDocument);
+      instance = ownerDocument.createElement(type);
       setInitialProperties(instance, type, props);
       (ownerDocument.head: any).appendChild(instance);
       break;
@@ -1040,7 +1024,7 @@ export function hydrateHoistable(
           break getInstance;
         }
       }
-      instance = createHTMLElement(type, props, ownerDocument);
+      instance = ownerDocument.createElement(type);
       setInitialProperties(instance, type, props);
       (ownerDocument.head: any).appendChild(instance);
       break;

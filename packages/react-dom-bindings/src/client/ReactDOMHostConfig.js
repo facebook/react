@@ -33,6 +33,8 @@ export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createHTMLElement,
+  createPotentiallyInlineScriptElement,
+  createSelectElement,
   createSVGElement,
   createMathElement,
   createTextNode,
@@ -61,7 +63,6 @@ import {
   getChildNamespace,
   SVG_NAMESPACE,
   MATH_NAMESPACE,
-  HTML_NAMESPACE,
 } from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -322,25 +323,30 @@ export function createInstance(
   );
 
   let domElement: Instance;
-  create: switch (namespace) {
+  switch (namespace) {
     case SVG_NAMESPACE:
       domElement = createSVGElement(type, ownerDocument);
       break;
     case MATH_NAMESPACE:
       domElement = createMathElement(type, ownerDocument);
       break;
-    case HTML_NAMESPACE:
+    default:
       switch (type) {
         case 'svg':
           domElement = createSVGElement(type, ownerDocument);
-          break create;
+          break;
         case 'math':
           domElement = createMathElement(type, ownerDocument);
-          break create;
+          break;
+        case 'script':
+          domElement = createPotentiallyInlineScriptElement(ownerDocument);
+          break;
+        case 'select':
+          domElement = createSelectElement(props, ownerDocument);
+          break;
+        default:
+          domElement = createHTMLElement(type, props, ownerDocument);
       }
-    // eslint-disable-next-line no-fallthrough
-    default:
-      domElement = createHTMLElement(type, props, ownerDocument);
   }
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
