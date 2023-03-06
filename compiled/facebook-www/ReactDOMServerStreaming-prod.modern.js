@@ -529,6 +529,7 @@ function pushLink(
   if (
     3 === insertionMode ||
     noscriptTagInScope ||
+    null != props.itemProp ||
     "string" !== typeof rel ||
     "string" !== typeof href ||
     "" === href
@@ -917,7 +918,9 @@ function pushStartInstance(
       return null;
     case "title":
       return (
-        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        null != props.itemProp
           ? (target = pushTitleImpl(target, props))
           : (pushTitleImpl(responseState.hoistableChunks, props),
             (target = null)),
@@ -937,6 +940,7 @@ function pushStartInstance(
       a: if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
+        null != props.itemProp ||
         "string" !== typeof props.src ||
         !props.src
       )
@@ -996,6 +1000,7 @@ function pushStartInstance(
       if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
+        null != props.itemProp ||
         "string" !== typeof propKey$jscomp$0 ||
         "string" !== typeof value ||
         "" === value
@@ -1086,7 +1091,9 @@ function pushStartInstance(
       return target;
     case "meta":
       return (
-        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        null != props.itemProp
           ? (target = pushSelfClosing(target, props, "meta"))
           : (textEmbedded && target.push("\x3c!-- --\x3e"),
             (target =

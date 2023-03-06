@@ -5567,101 +5567,93 @@ function updateDOMProperties(
       setValueForProperty(domElement, propKey, propValue, isCustomComponentTag);
     }
   }
-}
+} // Creates elements in the HTML namesapce
 
-function createElement(type, props, rootContainerElement, parentNamespace) {
-  var isCustomComponentTag; // We create tags in the namespace of their parent container, except HTML
-  // tags get no namespace.
-
-  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerElement);
+function createHTMLElement(type, props, ownerDocument) {
+  var isCustomComponentTag;
   var domElement;
-  var namespaceURI = parentNamespace;
 
-  if (namespaceURI === HTML_NAMESPACE) {
-    namespaceURI = getIntrinsicNamespace(type);
+  {
+    isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
+    // allow <SVG> or <mATH>.
+
+    if (!isCustomComponentTag && type !== type.toLowerCase()) {
+      error(
+        "<%s /> is using incorrect casing. " +
+          "Use PascalCase for React components, " +
+          "or lowercase for HTML elements.",
+        type
+      );
+    }
   }
 
-  if (namespaceURI === HTML_NAMESPACE) {
-    {
-      isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
-      // allow <SVG> or <mATH>.
+  if (type === "script") {
+    // Create the script via .innerHTML so its "parser-inserted" flag is
+    // set to true and it does not execute
+    var div = ownerDocument.createElement("div");
 
-      if (!isCustomComponentTag && type !== type.toLowerCase()) {
-        error(
-          "<%s /> is using incorrect casing. " +
-            "Use PascalCase for React components, " +
-            "or lowercase for HTML elements.",
-          type
-        );
-      }
-    }
+    div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
+    // This is guaranteed to yield a script element.
 
-    if (type === "script") {
-      // Create the script via .innerHTML so its "parser-inserted" flag is
-      // set to true and it does not execute
-      var div = ownerDocument.createElement("div");
-
-      div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
-      // This is guaranteed to yield a script element.
-
-      var firstChild = div.firstChild;
-      domElement = div.removeChild(firstChild);
-    } else if (typeof props.is === "string") {
-      domElement = ownerDocument.createElement(type, {
-        is: props.is
-      });
-    } else {
-      // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-      // See discussion in https://github.com/facebook/react/pull/6896
-      // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-      domElement = ownerDocument.createElement(type); // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
-      // attributes on `select`s needs to be added before `option`s are inserted.
-      // This prevents:
-      // - a bug where the `select` does not scroll to the correct option because singular
-      //  `select` elements automatically pick the first item #13222
-      // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
-      // See https://github.com/facebook/react/issues/13222
-      // and https://github.com/facebook/react/issues/14239
-
-      if (type === "select") {
-        var node = domElement;
-
-        if (props.multiple) {
-          node.multiple = true;
-        } else if (props.size) {
-          // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-          // it is possible that no option is selected.
-          //
-          // This is only necessary when a select in "single selection mode".
-          node.size = props.size;
-        }
-      }
-    }
+    var firstChild = div.firstChild;
+    domElement = div.removeChild(firstChild);
+  } else if (typeof props.is === "string") {
+    domElement = ownerDocument.createElement(type, {
+      is: props.is
+    });
   } else {
-    domElement = ownerDocument.createElementNS(namespaceURI, type);
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    domElement = ownerDocument.createElement(type); // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
+    // attributes on `select`s needs to be added before `option`s are inserted.
+    // This prevents:
+    // - a bug where the `select` does not scroll to the correct option because singular
+    //  `select` elements automatically pick the first item #13222
+    // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
+    // See https://github.com/facebook/react/issues/13222
+    // and https://github.com/facebook/react/issues/14239
+
+    if (type === "select") {
+      var node = domElement;
+
+      if (props.multiple) {
+        node.multiple = true;
+      } else if (props.size) {
+        // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+        // it is possible that no option is selected.
+        //
+        // This is only necessary when a select in "single selection mode".
+        node.size = props.size;
+      }
+    }
   }
 
   {
-    if (namespaceURI === HTML_NAMESPACE) {
-      if (
-        !isCustomComponentTag && // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(domElement) ===
-          "[object HTMLUnknownElement]" &&
-        !hasOwnProperty.call(warnedUnknownTags, type)
-      ) {
-        warnedUnknownTags[type] = true;
+    if (
+      !isCustomComponentTag && // $FlowFixMe[method-unbinding]
+      Object.prototype.toString.call(domElement) ===
+        "[object HTMLUnknownElement]" &&
+      !hasOwnProperty.call(warnedUnknownTags, type)
+    ) {
+      warnedUnknownTags[type] = true;
 
-        error(
-          "The tag <%s> is unrecognized in this browser. " +
-            "If you meant to render a React component, start its name with " +
-            "an uppercase letter.",
-          type
-        );
-      }
+      error(
+        "The tag <%s> is unrecognized in this browser. " +
+          "If you meant to render a React component, start its name with " +
+          "an uppercase letter.",
+        type
+      );
     }
   }
 
   return domElement;
+}
+function createSVGElement(type, ownerDocument) {
+  return ownerDocument.createElementNS(SVG_NAMESPACE, type);
+}
+function createMathElement(type, ownerDocument) {
+  return ownerDocument.createElementNS(MATH_NAMESPACE, type);
 }
 function createTextNode(text, rootContainerElement) {
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
@@ -6064,9 +6056,9 @@ function diffHydratedProperties(
   domElement,
   tag,
   rawProps,
-  parentNamespace,
   isConcurrentMode,
-  shouldWarnDev
+  shouldWarnDev,
+  parentNamespaceDev
 ) {
   var isCustomComponentTag;
   var extraAttributeNames;
@@ -6305,13 +6297,13 @@ function diffHydratedProperties(
             propertyInfo
           );
         } else {
-          var ownNamespace = parentNamespace;
+          var ownNamespaceDev = parentNamespaceDev;
 
-          if (ownNamespace === HTML_NAMESPACE) {
-            ownNamespace = getIntrinsicNamespace(tag);
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            ownNamespaceDev = getIntrinsicNamespace(tag);
           }
 
-          if (ownNamespace === HTML_NAMESPACE) {
+          if (ownNamespaceDev === HTML_NAMESPACE) {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {
@@ -8424,6 +8416,137 @@ function lanesToEventPriority(lanes) {
   return IdleEventPriority;
 }
 
+var valueStack = [];
+var fiberStack;
+
+{
+  fiberStack = [];
+}
+
+var index = -1;
+
+function createCursor(defaultValue) {
+  return {
+    current: defaultValue
+  };
+}
+
+function pop(cursor, fiber) {
+  if (index < 0) {
+    {
+      error("Unexpected pop.");
+    }
+
+    return;
+  }
+
+  {
+    if (fiber !== fiberStack[index]) {
+      error("Unexpected Fiber popped.");
+    }
+  }
+
+  cursor.current = valueStack[index];
+  valueStack[index] = null;
+
+  {
+    fiberStack[index] = null;
+  }
+
+  index--;
+}
+
+function push(cursor, value, fiber) {
+  index++;
+  valueStack[index] = cursor.current;
+
+  {
+    fiberStack[index] = fiber;
+  }
+
+  cursor.current = value;
+}
+
+var contextStackCursor$1 = createCursor(null);
+var contextFiberStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null);
+
+function requiredContext(c) {
+  {
+    if (c === null) {
+      error(
+        "Expected host context to exist. This error is likely caused by a bug " +
+          "in React. Please file an issue."
+      );
+    }
+  }
+
+  return c;
+}
+
+function getCurrentRootHostContainer() {
+  return rootInstanceStackCursor.current;
+}
+
+function getRootHostContainer() {
+  var rootInstance = requiredContext(rootInstanceStackCursor.current);
+  return rootInstance;
+}
+
+function pushHostContainer(fiber, nextRootInstance) {
+  // Push current root instance onto the stack;
+  // This allows us to reset root when portals are popped.
+  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
+  // However, we can't just call getRootHostContext() and push it because
+  // we'd have a different number of entries on the stack depending on
+  // whether getRootHostContext() throws somewhere in renderer code or not.
+  // So we push an empty value first. This lets us safely unwind on errors.
+
+  push(contextStackCursor$1, null, fiber);
+  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
+
+  pop(contextStackCursor$1, fiber);
+  push(contextStackCursor$1, nextRootContext, fiber);
+}
+
+function popHostContainer(fiber) {
+  pop(contextStackCursor$1, fiber);
+  pop(contextFiberStackCursor, fiber);
+  pop(rootInstanceStackCursor, fiber);
+}
+
+function getHostContext() {
+  var context = requiredContext(contextStackCursor$1.current);
+  return context;
+}
+
+function pushHostContext(fiber) {
+  var context = requiredContext(contextStackCursor$1.current);
+  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
+
+  if (context === nextContext) {
+    return;
+  } // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber);
+  push(contextStackCursor$1, nextContext, fiber);
+}
+
+function popHostContext(fiber) {
+  // Do not pop unless this Fiber provided the current context.
+  // pushHostContext() only pushes Fibers that provide unique contexts.
+  if (contextFiberStackCursor.current !== fiber) {
+    return;
+  }
+
+  pop(contextStackCursor$1, fiber);
+  pop(contextFiberStackCursor, fiber);
+}
+
 var Internals = {
   usingClientEntryPoint: false,
   Events: null,
@@ -8532,57 +8655,6 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
   }
 }
 
-var valueStack = [];
-var fiberStack;
-
-{
-  fiberStack = [];
-}
-
-var index = -1;
-
-function createCursor(defaultValue) {
-  return {
-    current: defaultValue
-  };
-}
-
-function pop(cursor, fiber) {
-  if (index < 0) {
-    {
-      error("Unexpected pop.");
-    }
-
-    return;
-  }
-
-  {
-    if (fiber !== fiberStack[index]) {
-      error("Unexpected Fiber popped.");
-    }
-  }
-
-  cursor.current = valueStack[index];
-  valueStack[index] = null;
-
-  {
-    fiberStack[index] = null;
-  }
-
-  index--;
-}
-
-function push(cursor, value, fiber) {
-  index++;
-  valueStack[index] = cursor.current;
-
-  {
-    fiberStack[index] = fiber;
-  }
-
-  cursor.current = value;
-}
-
 var warnedAboutMissingGetChildContext;
 
 {
@@ -8595,7 +8667,7 @@ var emptyContextObject = {};
   Object.freeze(emptyContextObject);
 } // A cursor to the current merged context object on the stack.
 
-var contextStackCursor$1 = createCursor(emptyContextObject); // A cursor to a boolean indicating whether the context has changed.
+var contextStackCursor = createCursor(emptyContextObject); // A cursor to a boolean indicating whether the context has changed.
 
 var didPerformWorkStackCursor = createCursor(false); // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
@@ -8617,7 +8689,7 @@ function getUnmaskedContext(
       return previousContext;
     }
 
-    return contextStackCursor$1.current;
+    return contextStackCursor.current;
   }
 }
 
@@ -8685,27 +8757,27 @@ function isContextProvider(type) {
 function popContext(fiber) {
   {
     pop(didPerformWorkStackCursor, fiber);
-    pop(contextStackCursor$1, fiber);
+    pop(contextStackCursor, fiber);
   }
 }
 
 function popTopLevelContextObject(fiber) {
   {
     pop(didPerformWorkStackCursor, fiber);
-    pop(contextStackCursor$1, fiber);
+    pop(contextStackCursor, fiber);
   }
 }
 
 function pushTopLevelContextObject(fiber, context, didChange) {
   {
-    if (contextStackCursor$1.current !== emptyContextObject) {
+    if (contextStackCursor.current !== emptyContextObject) {
       throw new Error(
         "Unexpected context found on stack. " +
           "This error is likely caused by a bug in React. Please file an issue."
       );
     }
 
-    push(contextStackCursor$1, context, fiber);
+    push(contextStackCursor, context, fiber);
     push(didPerformWorkStackCursor, didChange, fiber);
   }
 }
@@ -8769,8 +8841,8 @@ function pushContextProvider(workInProgress) {
       emptyContextObject; // Remember the parent context so we can merge with it later.
     // Inherit the parent's did-perform-work value to avoid inadvertently blocking updates.
 
-    previousContext = contextStackCursor$1.current;
-    push(contextStackCursor$1, memoizedMergedChildContext, workInProgress);
+    previousContext = contextStackCursor.current;
+    push(contextStackCursor, memoizedMergedChildContext, workInProgress);
     push(
       didPerformWorkStackCursor,
       didPerformWorkStackCursor.current,
@@ -8804,9 +8876,9 @@ function invalidateContextProvider(workInProgress, type, didChange) {
       // It is important to unwind the context in the reverse order.
 
       pop(didPerformWorkStackCursor, workInProgress);
-      pop(contextStackCursor$1, workInProgress); // Now push the new context and mark that it has changed.
+      pop(contextStackCursor, workInProgress); // Now push the new context and mark that it has changed.
 
-      push(contextStackCursor$1, mergedContext, workInProgress);
+      push(contextStackCursor, mergedContext, workInProgress);
       push(didPerformWorkStackCursor, didChange, workInProgress);
     } else {
       pop(didPerformWorkStackCursor, workInProgress);
@@ -9148,86 +9220,6 @@ function warnIfNotHydrating() {
   }
 }
 
-var contextStackCursor = createCursor(null);
-var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
-
-function requiredContext(c) {
-  {
-    if (c === null) {
-      error(
-        "Expected host context to exist. This error is likely caused by a bug " +
-          "in React. Please file an issue."
-      );
-    }
-  }
-
-  return c;
-}
-
-function getCurrentRootHostContainer() {
-  return rootInstanceStackCursor.current;
-}
-
-function getRootHostContainer() {
-  var rootInstance = requiredContext(rootInstanceStackCursor.current);
-  return rootInstance;
-}
-
-function pushHostContainer(fiber, nextRootInstance) {
-  // Push current root instance onto the stack;
-  // This allows us to reset root when portals are popped.
-  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
-  // However, we can't just call getRootHostContext() and push it because
-  // we'd have a different number of entries on the stack depending on
-  // whether getRootHostContext() throws somewhere in renderer code or not.
-  // So we push an empty value first. This lets us safely unwind on errors.
-
-  push(contextStackCursor, null, fiber);
-  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
-
-  pop(contextStackCursor, fiber);
-  push(contextStackCursor, nextRootContext, fiber);
-}
-
-function popHostContainer(fiber) {
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
-  pop(rootInstanceStackCursor, fiber);
-}
-
-function getHostContext() {
-  var context = requiredContext(contextStackCursor.current);
-  return context;
-}
-
-function pushHostContext(fiber) {
-  var context = requiredContext(contextStackCursor.current);
-  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
-
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
-}
-
-function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
-  }
-
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
-}
-
 // This may have been an insertion or a hydration.
 
 var hydrationParentFiber = null;
@@ -9238,6 +9230,7 @@ var isHydrating = false; // This flag allows for warning supression when we expe
 var didSuspendOrErrorDEV = false; // Hydration errors that were thrown inside this boundary
 
 var hydrationErrors = null;
+var rootOrSingletonContext = false;
 
 function warnIfHydrating() {
   {
@@ -9263,6 +9256,7 @@ function enterHydrationState(fiber) {
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  rootOrSingletonContext = true;
   return true;
 }
 
@@ -9277,6 +9271,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  rootOrSingletonContext = false;
 
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
@@ -9449,70 +9444,64 @@ function insertNonHydratedInstance(returnFiber, fiber) {
   warnNonhydratedInstance(returnFiber, fiber);
 }
 
-function tryHydrate(fiber, nextInstance) {
-  switch (fiber.tag) {
-    // HostSingleton is intentionally omitted. the hydration pathway for singletons is non-fallible
-    // you can find it inlined in claimHydratableSingleton
-    case HostComponent: {
-      var type = fiber.type;
-      var instance = canHydrateInstance(nextInstance, type);
+function tryHydrateInstance(fiber, nextInstance) {
+  // fiber is a HostComponent Fiber
+  var instance = canHydrateInstance(nextInstance, fiber.type);
 
-      if (instance !== null) {
-        fiber.stateNode = instance;
-        hydrationParentFiber = fiber;
-        nextHydratableInstance = getFirstHydratableChild(instance);
-        return true;
-      }
-
-      return false;
-    }
-
-    case HostText: {
-      var text = fiber.pendingProps;
-      var textInstance = canHydrateTextInstance(nextInstance, text);
-
-      if (textInstance !== null) {
-        fiber.stateNode = textInstance;
-        hydrationParentFiber = fiber; // Text Instances don't have children so there's nothing to hydrate.
-
-        nextHydratableInstance = null;
-        return true;
-      }
-
-      return false;
-    }
-
-    case SuspenseComponent: {
-      var suspenseInstance = canHydrateSuspenseInstance(nextInstance);
-
-      if (suspenseInstance !== null) {
-        var suspenseState = {
-          dehydrated: suspenseInstance,
-          treeContext: getSuspendedTreeContext(),
-          retryLane: OffscreenLane
-        };
-        fiber.memoizedState = suspenseState; // Store the dehydrated fragment as a child fiber.
-        // This simplifies the code for getHostSibling and deleting nodes,
-        // since it doesn't have to consider all Suspense boundaries and
-        // check if they're dehydrated ones or not.
-
-        var dehydratedFragment =
-          createFiberFromDehydratedFragment(suspenseInstance);
-        dehydratedFragment.return = fiber;
-        fiber.child = dehydratedFragment;
-        hydrationParentFiber = fiber; // While a Suspense Instance does have children, we won't step into
-        // it during the first pass. Instead, we'll reenter it later.
-
-        nextHydratableInstance = null;
-        return true;
-      }
-
-      return false;
-    }
-
-    default:
-      return false;
+  if (instance !== null) {
+    fiber.stateNode = instance;
+    hydrationParentFiber = fiber;
+    nextHydratableInstance = getFirstHydratableChild(instance);
+    rootOrSingletonContext = false;
+    return true;
   }
+
+  return false;
+}
+
+function tryHydrateText(fiber, nextInstance) {
+  // fiber is a HostText Fiber
+  var text = fiber.pendingProps;
+  var textInstance = canHydrateTextInstance(nextInstance, text);
+
+  if (textInstance !== null) {
+    fiber.stateNode = textInstance;
+    hydrationParentFiber = fiber; // Text Instances don't have children so there's nothing to hydrate.
+
+    nextHydratableInstance = null;
+    return true;
+  }
+
+  return false;
+}
+
+function tryHydrateSuspense(fiber, nextInstance) {
+  // fiber is a SuspenseComponent Fiber
+  var suspenseInstance = canHydrateSuspenseInstance(nextInstance);
+
+  if (suspenseInstance !== null) {
+    var suspenseState = {
+      dehydrated: suspenseInstance,
+      treeContext: getSuspendedTreeContext(),
+      retryLane: OffscreenLane
+    };
+    fiber.memoizedState = suspenseState; // Store the dehydrated fragment as a child fiber.
+    // This simplifies the code for getHostSibling and deleting nodes,
+    // since it doesn't have to consider all Suspense boundaries and
+    // check if they're dehydrated ones or not.
+
+    var dehydratedFragment =
+      createFiberFromDehydratedFragment(suspenseInstance);
+    dehydratedFragment.return = fiber;
+    fiber.child = dehydratedFragment;
+    hydrationParentFiber = fiber; // While a Suspense Instance does have children, we won't step into
+    // it during the first pass. Instead, we'll reenter it later.
+
+    nextHydratableInstance = null;
+    return true;
+  }
+
+  return false;
 }
 
 function shouldClientRenderOnMismatch(fiber) {
@@ -9545,7 +9534,46 @@ function claimHydratableSingleton(fiber) {
       false
     ));
     hydrationParentFiber = fiber;
+    rootOrSingletonContext = true;
     nextHydratableInstance = getFirstHydratableChild(instance);
+  }
+}
+
+function advanceToFirstAttempableInstance(fiber) {
+  // fiber is HostComponent Fiber
+  while (
+    nextHydratableInstance &&
+    shouldSkipHydratableForInstance(
+      nextHydratableInstance,
+      fiber.type,
+      fiber.pendingProps
+    )
+  ) {
+    // Flow doesn't understand that inside this block nextHydratableInstance is not null
+    var instance = nextHydratableInstance;
+    nextHydratableInstance = getNextHydratableSibling(instance);
+  }
+}
+
+function advanceToFirstAttempableTextInstance() {
+  while (
+    nextHydratableInstance &&
+    shouldSkipHydratableForTextInstance(nextHydratableInstance)
+  ) {
+    // Flow doesn't understand that inside this block nextHydratableInstance is not null
+    var instance = nextHydratableInstance;
+    nextHydratableInstance = getNextHydratableSibling(instance);
+  }
+}
+
+function advanceToFirstAttempableSuspenseInstance() {
+  while (
+    nextHydratableInstance &&
+    shouldSkipHydratableForSuspenseInstance(nextHydratableInstance)
+  ) {
+    // Flow doesn't understand that inside this block nextHydratableInstance is not null
+    var instance = nextHydratableInstance;
+    nextHydratableInstance = getNextHydratableSibling(instance);
   }
 }
 
@@ -9554,12 +9582,21 @@ function tryToClaimNextHydratableInstance(fiber) {
     return;
   }
 
-  if (!isHydratable(fiber.type, fiber.pendingProps)) {
-    // This fiber never hydrates from the DOM and always does an insert
-    fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-    isHydrating = false;
-    hydrationParentFiber = fiber;
-    return;
+  {
+    if (!isHydratableType(fiber.type, fiber.pendingProps)) {
+      // This fiber never hydrates from the DOM and always does an insert
+      fiber.flags = (fiber.flags & ~Hydrating) | Placement;
+      isHydrating = false;
+      hydrationParentFiber = fiber;
+      return;
+    }
+  }
+
+  var initialInstance = nextHydratableInstance;
+
+  if (rootOrSingletonContext) {
+    // We may need to skip past certain nodes in these contexts
+    advanceToFirstAttempableInstance(fiber);
   }
 
   var nextInstance = nextHydratableInstance;
@@ -9573,12 +9610,13 @@ function tryToClaimNextHydratableInstance(fiber) {
     insertNonHydratedInstance(hydrationParentFiber, fiber);
     isHydrating = false;
     hydrationParentFiber = fiber;
+    nextHydratableInstance = initialInstance;
     return;
   }
 
   var firstAttemptedInstance = nextInstance;
 
-  if (!tryHydrate(fiber, nextInstance)) {
+  if (!tryHydrateInstance(fiber, nextInstance)) {
     if (shouldClientRenderOnMismatch(fiber)) {
       warnNonhydratedInstance(hydrationParentFiber, fiber);
       throwOnHydrationMismatch();
@@ -9586,14 +9624,157 @@ function tryToClaimNextHydratableInstance(fiber) {
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.
 
-    nextInstance = getNextHydratableSibling(firstAttemptedInstance);
+    nextHydratableInstance = getNextHydratableSibling(nextInstance);
     var prevHydrationParentFiber = hydrationParentFiber;
 
-    if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
+    if (rootOrSingletonContext) {
+      // We may need to skip past certain nodes in these contexts
+      advanceToFirstAttempableInstance(fiber);
+    }
+
+    if (
+      !nextHydratableInstance ||
+      !tryHydrateInstance(fiber, nextHydratableInstance)
+    ) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance(hydrationParentFiber, fiber);
       isHydrating = false;
       hydrationParentFiber = fiber;
+      nextHydratableInstance = initialInstance;
+      return;
+    } // We matched the next one, we'll now assume that the first one was
+    // superfluous and we'll delete it. Since we can't eagerly delete it
+    // we'll have to schedule a deletion. To do that, this node needs a dummy
+    // fiber associated with it.
+
+    deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
+  }
+}
+
+function tryToClaimNextHydratableTextInstance(fiber) {
+  if (!isHydrating) {
+    return;
+  }
+
+  var text = fiber.pendingProps;
+  var isHydratable = isHydratableText(text);
+  var initialInstance = nextHydratableInstance;
+
+  if (rootOrSingletonContext && isHydratable) {
+    // We may need to skip past certain nodes in these contexts.
+    // We don't skip if the text is not hydratable because we know no hydratables
+    // exist which could match this Fiber
+    advanceToFirstAttempableTextInstance();
+  }
+
+  var nextInstance = nextHydratableInstance;
+
+  if (!nextInstance || !isHydratable) {
+    // We exclude non hydrabable text because we know there are no matching hydratables.
+    // We either throw or insert depending on the render mode.
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance(hydrationParentFiber, fiber);
+      throwOnHydrationMismatch();
+    } // Nothing to hydrate. Make it an insertion.
+
+    insertNonHydratedInstance(hydrationParentFiber, fiber);
+    isHydrating = false;
+    hydrationParentFiber = fiber;
+    nextHydratableInstance = initialInstance;
+    return;
+  }
+
+  var firstAttemptedInstance = nextInstance;
+
+  if (!tryHydrateText(fiber, nextInstance)) {
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance(hydrationParentFiber, fiber);
+      throwOnHydrationMismatch();
+    } // If we can't hydrate this instance let's try the next one.
+    // We use this as a heuristic. It's based on intuition and not data so it
+    // might be flawed or unnecessary.
+
+    nextHydratableInstance = getNextHydratableSibling(nextInstance);
+    var prevHydrationParentFiber = hydrationParentFiber;
+
+    if (rootOrSingletonContext && isHydratable) {
+      // We may need to skip past certain nodes in these contexts
+      advanceToFirstAttempableTextInstance();
+    }
+
+    if (
+      !nextHydratableInstance ||
+      !tryHydrateText(fiber, nextHydratableInstance)
+    ) {
+      // Nothing to hydrate. Make it an insertion.
+      insertNonHydratedInstance(hydrationParentFiber, fiber);
+      isHydrating = false;
+      hydrationParentFiber = fiber;
+      nextHydratableInstance = initialInstance;
+      return;
+    } // We matched the next one, we'll now assume that the first one was
+    // superfluous and we'll delete it. Since we can't eagerly delete it
+    // we'll have to schedule a deletion. To do that, this node needs a dummy
+    // fiber associated with it.
+
+    deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
+  }
+}
+
+function tryToClaimNextHydratableSuspenseInstance(fiber) {
+  if (!isHydrating) {
+    return;
+  }
+
+  var initialInstance = nextHydratableInstance;
+
+  if (rootOrSingletonContext) {
+    // We may need to skip past certain nodes in these contexts
+    advanceToFirstAttempableSuspenseInstance();
+  }
+
+  var nextInstance = nextHydratableInstance;
+
+  if (!nextInstance) {
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance(hydrationParentFiber, fiber);
+      throwOnHydrationMismatch();
+    } // Nothing to hydrate. Make it an insertion.
+
+    insertNonHydratedInstance(hydrationParentFiber, fiber);
+    isHydrating = false;
+    hydrationParentFiber = fiber;
+    nextHydratableInstance = initialInstance;
+    return;
+  }
+
+  var firstAttemptedInstance = nextInstance;
+
+  if (!tryHydrateSuspense(fiber, nextInstance)) {
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance(hydrationParentFiber, fiber);
+      throwOnHydrationMismatch();
+    } // If we can't hydrate this instance let's try the next one.
+    // We use this as a heuristic. It's based on intuition and not data so it
+    // might be flawed or unnecessary.
+
+    nextHydratableInstance = getNextHydratableSibling(nextInstance);
+    var prevHydrationParentFiber = hydrationParentFiber;
+
+    if (rootOrSingletonContext) {
+      // We may need to skip past certain nodes in these contexts
+      advanceToFirstAttempableSuspenseInstance();
+    }
+
+    if (
+      !nextHydratableInstance ||
+      !tryHydrateSuspense(fiber, nextHydratableInstance)
+    ) {
+      // Nothing to hydrate. Make it an insertion.
+      insertNonHydratedInstance(hydrationParentFiber, fiber);
+      isHydrating = false;
+      hydrationParentFiber = fiber;
+      nextHydratableInstance = initialInstance;
       return;
     } // We matched the next one, we'll now assume that the first one was
     // superfluous and we'll delete it. Since we can't eagerly delete it
@@ -9710,19 +9891,24 @@ function skipPastDehydratedSuspenseInstance(fiber) {
 }
 
 function popToNextHostParent(fiber) {
-  var parent = fiber.return;
+  hydrationParentFiber = fiber.return;
 
-  while (
-    parent !== null &&
-    parent.tag !== HostComponent &&
-    parent.tag !== HostRoot &&
-    parent.tag !== SuspenseComponent &&
-    parent.tag !== HostSingleton
-  ) {
-    parent = parent.return;
+  while (hydrationParentFiber) {
+    switch (hydrationParentFiber.tag) {
+      case HostRoot:
+      case HostSingleton:
+        rootOrSingletonContext = true;
+        return;
+
+      case HostComponent:
+      case SuspenseComponent:
+        rootOrSingletonContext = false;
+        return;
+
+      default:
+        hydrationParentFiber = hydrationParentFiber.return;
+    }
   }
-
-  hydrationParentFiber = parent;
 }
 
 function popHydrationState(fiber) {
@@ -18818,7 +19004,7 @@ function updateHostSingleton(current, workInProgress, renderLanes) {
 
 function updateHostText$1(current, workInProgress) {
   if (current === null) {
-    tryToClaimNextHydratableInstance(workInProgress);
+    tryToClaimNextHydratableTextInstance(workInProgress);
   } // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
 
@@ -19289,7 +19475,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         pushFallbackTreeSuspenseHandler(workInProgress);
       }
 
-      tryToClaimNextHydratableInstance(workInProgress); // This could've been a dehydrated suspense component.
+      tryToClaimNextHydratableSuspenseInstance(workInProgress); // This could've been a dehydrated suspense component.
 
       var suspenseState = workInProgress.memoizedState;
 
@@ -31253,7 +31439,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-7b506ede";
+var ReactVersion = "18.3.0-www-classic-adfb6580";
 
 function createPortal$1(
   children,
@@ -33268,11 +33454,10 @@ function preconnectAs(rel, crossOrigin, href) {
       };
 
       if (null === ownerDocument.querySelector(key)) {
-        var preloadInstance = createElement(
+        var preloadInstance = createHTMLElement(
           "link",
           preconnectProps,
-          ownerDocument,
-          HTML_NAMESPACE
+          ownerDocument
         );
         setInitialProperties(preloadInstance, "link", preconnectProps);
         markNodeAsResource(preloadInstance);
@@ -33381,11 +33566,10 @@ function preload(href, options) {
       preloadPropsMap.set(key, preloadProps);
 
       if (null === ownerDocument.querySelector(preloadKey)) {
-        var preloadInstance = createElement(
+        var preloadInstance = createHTMLElement(
           "link",
           preloadProps,
-          ownerDocument,
-          HTML_NAMESPACE
+          ownerDocument
         );
         setInitialProperties(preloadInstance, "link", preloadProps);
         markNodeAsResource(preloadInstance);
@@ -33460,11 +33644,10 @@ function preinit(href, options) {
             preloadPropsMap.set(key, preloadProps);
 
             if (null === preloadDocument.querySelector(preloadKey)) {
-              var preloadInstance = createElement(
+              var preloadInstance = createHTMLElement(
                 "link",
                 preloadProps,
-                preloadDocument,
-                HTML_NAMESPACE
+                preloadDocument
               );
               setInitialProperties(preloadInstance, "link", preloadProps);
               markNodeAsResource(preloadInstance);
@@ -33511,12 +33694,8 @@ function preinit(href, options) {
             adoptPreloadPropsForStylesheet(stylesheetProps, _preloadProps);
           }
 
-          instance = createElement(
-            "link",
-            stylesheetProps,
-            resourceRoot,
-            HTML_NAMESPACE
-          );
+          var ownerDocument = getDocumentFromRoot(resourceRoot);
+          instance = createHTMLElement("link", stylesheetProps, ownerDocument);
           markNodeAsResource(instance);
           setInitialProperties(instance, "link", stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
@@ -33559,12 +33738,9 @@ function preinit(href, options) {
             adoptPreloadPropsForScript(scriptProps, _preloadProps2);
           }
 
-          _instance = createElement(
-            "script",
-            scriptProps,
-            resourceRoot,
-            HTML_NAMESPACE
-          );
+          var _ownerDocument = getDocumentFromRoot(resourceRoot);
+
+          _instance = createHTMLElement("script", scriptProps, _ownerDocument);
           markNodeAsResource(_instance);
           setInitialProperties(_instance, "link", scriptProps);
           getDocumentFromRoot(resourceRoot).head.appendChild(_instance);
@@ -33779,11 +33955,10 @@ function preloadStylesheet(ownerDocument, key, preloadProps) {
       null ===
       ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
     ) {
-      var preloadInstance = createElement(
+      var preloadInstance = createHTMLElement(
         "link",
         preloadProps,
-        ownerDocument,
-        HTML_NAMESPACE
+        ownerDocument
       );
       setInitialProperties(preloadInstance, "link", preloadProps);
       markNodeAsResource(preloadInstance);
@@ -33831,16 +34006,13 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (instance) {
           resource.instance = instance;
+          markNodeAsResource(instance);
           return instance;
         }
 
         var styleProps = styleTagPropsFromRawProps(props);
-        instance = createElement(
-          "style",
-          styleProps,
-          hoistableRoot,
-          HTML_NAMESPACE
-        );
+        var ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement("style", styleProps, ownerDocument);
         markNodeAsResource(instance);
         setInitialProperties(instance, "style", styleProps);
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
@@ -33862,6 +34034,7 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (_instance2) {
           resource.instance = _instance2;
+          markNodeAsResource(_instance2);
           return _instance2;
         }
 
@@ -33872,11 +34045,12 @@ function acquireResource(hoistableRoot, resource, props) {
           adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
         } // Construct and insert a new instance
 
-        _instance2 = createElement(
+        var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
+
+        _instance2 = createHTMLElement(
           "link",
           stylesheetProps,
-          hoistableRoot,
-          HTML_NAMESPACE
+          _ownerDocument2
         );
         markNodeAsResource(_instance2);
         var linkInstance = _instance2;
@@ -33911,6 +34085,7 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (_instance3) {
           resource.instance = _instance3;
+          markNodeAsResource(_instance3);
           return _instance3;
         }
 
@@ -33923,12 +34098,9 @@ function acquireResource(hoistableRoot, resource, props) {
           adoptPreloadPropsForScript(scriptProps, _preloadProps3);
         } // Construct and insert a new instance
 
-        _instance3 = createElement(
-          "script",
-          scriptProps,
-          hoistableRoot,
-          HTML_NAMESPACE
-        );
+        var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
+
+        _instance3 = createHTMLElement("script", scriptProps, _ownerDocument3);
         markNodeAsResource(_instance3);
         setInitialProperties(_instance3, "link", scriptProps);
         getDocumentFromRoot(hoistableRoot).head.appendChild(_instance3);
@@ -34165,7 +34337,7 @@ function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
     return node;
   } // There is no matching instance to hydrate, we create it now
 
-  var instance = createElement(type, props, ownerDocument, HTML_NAMESPACE);
+  var instance = createHTMLElement(type, props, ownerDocument);
   setInitialProperties(instance, type, props);
   precacheFiberNode(internalInstanceHandle, instance);
   markNodeAsResource(instance);
@@ -34306,12 +34478,8 @@ function createHoistableInstance(
   rootContainerInstance,
   internalInstanceHandle
 ) {
-  var domElement = createElement(
-    type,
-    props,
-    rootContainerInstance,
-    HTML_NAMESPACE
-  );
+  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
+  var domElement = createHTMLElement(type, props, ownerDocument);
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
@@ -34325,7 +34493,7 @@ function createInstance(
   hostContext,
   internalInstanceHandle
 ) {
-  var parentNamespace;
+  var namespace;
 
   {
     // TODO: take namespace into account when validating.
@@ -34344,15 +34512,38 @@ function createInstance(
       validateDOMNesting(null, string, ownAncestorInfo);
     }
 
-    parentNamespace = hostContextDev.namespace;
+    namespace = hostContextDev.namespace;
   }
 
-  var domElement = createElement(
-    type,
-    props,
-    rootContainerInstance,
-    parentNamespace
-  );
+  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
+  var domElement;
+
+  create: switch (namespace) {
+    case SVG_NAMESPACE:
+      domElement = createSVGElement(type, ownerDocument);
+      break;
+
+    case MATH_NAMESPACE:
+      domElement = createMathElement(type, ownerDocument);
+      break;
+
+    case HTML_NAMESPACE:
+      switch (type) {
+        case "svg":
+          domElement = createSVGElement(type, ownerDocument);
+          break create;
+
+        case "math":
+          domElement = createMathElement(type, ownerDocument);
+          break create;
+      }
+
+    // eslint-disable-next-line no-fallthrough
+
+    default:
+      domElement = createHTMLElement(type, props, ownerDocument);
+  }
+
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   return domElement;
@@ -34744,15 +34935,9 @@ function clearContainerSparingly(container) {
 } // Making this so we can eventually move all of the instance caching to the commit phase.
 // inserted without breaking hydration
 
-function isHydratable(type, props) {
+function isHydratableType(type, props) {
   {
-    if (type === "link") {
-      if (props.rel === "stylesheet" && typeof props.precedence !== "string") {
-        return true;
-      }
-
-      return false;
-    } else if (type === "script") {
+    if (type === "script") {
       var async = props.async,
         onLoad = props.onLoad,
         onError = props.onError;
@@ -34762,18 +34947,140 @@ function isHydratable(type, props) {
     return true;
   }
 }
+function isHydratableText(text) {
+  return text !== "";
+}
+function shouldSkipHydratableForInstance(instance, type, props) {
+  if (instance.nodeType !== ELEMENT_NODE) {
+    // This is a suspense boundary or Text node.
+    // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
+    // and this is a hydration error.
+    // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
+    // but it seems reasonable and conservative to reject this as a hydration error as well
+    return false;
+  } else if (
+    instance.nodeName.toLowerCase() !== type.toLowerCase() ||
+    isMarkedResource(instance)
+  ) {
+    // We are either about to
+    return true;
+  } else {
+    // We have an Element with the right type.
+    var element = instance;
+    var anyProps = props; // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
+    // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
+    // using high entropy attributes for certain types. This technique will fail for strange insertions like
+    // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
+
+    switch (type) {
+      // case 'title':
+      //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
+      // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
+      case "meta": {
+        // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
+        // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
+        // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
+        // implications are minimal
+        if (!element.hasAttribute("itemprop")) {
+          // This is a Hoistable
+          return true;
+        }
+
+        break;
+      }
+
+      case "link": {
+        // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
+        // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
+        // matches.
+        var rel = element.getAttribute("rel");
+
+        if (rel === "stylesheet" && element.hasAttribute("data-precedence")) {
+          // This is a stylesheet resource
+          return true;
+        } else if (
+          rel !== anyProps.rel ||
+          element.getAttribute("href") !==
+            (anyProps.href == null ? null : anyProps.href) ||
+          element.getAttribute("crossorigin") !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
+          element.getAttribute("title") !==
+            (anyProps.title == null ? null : anyProps.title)
+        ) {
+          // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
+          // and title could vary for rel alternate
+          return true;
+        }
+
+        break;
+      }
+
+      case "style": {
+        // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
+        // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
+        if (element.hasAttribute("data-precedence")) {
+          // This is a style resource
+          return true;
+        }
+
+        break;
+      }
+
+      case "script": {
+        // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
+        // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
+        // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
+        // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+        // if we learn it is problematic
+        var srcAttr = element.getAttribute("src");
+
+        if (
+          srcAttr &&
+          element.hasAttribute("async") &&
+          !element.hasAttribute("itemprop")
+        ) {
+          // This is an async script resource
+          return true;
+        } else if (
+          srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
+          element.getAttribute("type") !==
+            (anyProps.type == null ? null : anyProps.type) ||
+          element.getAttribute("crossorigin") !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
+        ) {
+          // This script is for a different src
+          return true;
+        }
+
+        break;
+      }
+    } // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
+    // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+    // that should work in the vast majority of cases.
+
+    return false;
+  }
+}
+function shouldSkipHydratableForTextInstance(instance) {
+  return instance.nodeType === ELEMENT_NODE;
+}
+function shouldSkipHydratableForSuspenseInstance(instance) {
+  return instance.nodeType === ELEMENT_NODE;
+}
 function canHydrateInstance(instance, type, props) {
   if (
     instance.nodeType !== ELEMENT_NODE ||
-    type.toLowerCase() !== instance.nodeName.toLowerCase()
+    instance.nodeName.toLowerCase() !== type.toLowerCase()
   ) {
     return null;
-  } // This has now been refined to an element node.
-
-  return instance;
+  } else {
+    return instance;
+  }
 }
 function canHydrateTextInstance(instance, text) {
-  if (text === "" || instance.nodeType !== TEXT_NODE) {
+  if (text === "") return null;
+
+  if (instance.nodeType !== TEXT_NODE) {
     // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   } // This has now been refined to a text node.
@@ -34782,7 +35089,6 @@ function canHydrateTextInstance(instance, text) {
 }
 function canHydrateSuspenseInstance(instance) {
   if (instance.nodeType !== COMMENT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   } // This has now been refined to a suspense node.
 
@@ -34824,71 +35130,8 @@ function getNextHydratable(node) {
   for (; node != null; node = node.nextSibling) {
     var nodeType = node.nodeType;
 
-    {
-      if (nodeType === ELEMENT_NODE) {
-        var element = node;
-
-        switch (element.tagName) {
-          // This is subtle. in SVG scope the title tag is case sensitive. we don't want to skip
-          // titles in svg but we do want to skip them outside of svg. there is an edge case where
-          // you could do `React.createElement('TITLE', ...)` inside an svg scope but the SSR serializer
-          // will still emit lowercase. Practically speaking the only time the DOM will have a non-uppercased
-          // title tagName is if it is inside an svg.
-          // Other Resource types like META, BASE, LINK, and SCRIPT should be treated as resources even inside
-          // svg scope because they are invalid otherwise. We still don't need to handle the lowercase variant
-          // because if they are present in the DOM already they would have been hoisted outside the SVG scope
-          // as Resources. So while it would be correct to skip a <link> inside <svg> and this algorithm won't
-          // skip that link because the tagName will not be uppercased it functionally is irrelevant. If one
-          // tries to render incompatible types such as a non-resource stylesheet inside an svg the server will
-          // emit that invalid html and hydration will fail. In Dev this will present warnings guiding the
-          // developer on how to fix.
-          case "TITLE":
-          case "META":
-          case "HTML":
-          case "HEAD":
-          case "BODY": {
-            continue;
-          }
-
-          case "LINK": {
-            var linkEl = element; // All links that are server rendered are resources except
-            // stylesheets that do not have a precedence
-
-            if (
-              linkEl.rel === "stylesheet" &&
-              !linkEl.hasAttribute("data-precedence")
-            ) {
-              break;
-            }
-
-            continue;
-          }
-
-          case "STYLE": {
-            var styleEl = element;
-
-            if (styleEl.hasAttribute("data-precedence")) {
-              continue;
-            }
-
-            break;
-          }
-
-          case "SCRIPT": {
-            var scriptEl = element;
-
-            if (scriptEl.hasAttribute("async")) {
-              continue;
-            }
-
-            break;
-          }
-        }
-
-        break;
-      } else if (nodeType === TEXT_NODE) {
-        break;
-      }
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+      break;
     }
 
     if (nodeType === COMMENT_NODE) {
@@ -34934,24 +35177,25 @@ function hydrateInstance(
   precacheFiberNode(internalInstanceHandle, instance); // TODO: Possibly defer this until the commit phase where all the events
   // get attached.
 
-  updateFiberProps(instance, props);
+  updateFiberProps(instance, props); // TODO: Temporary hack to check if we're in a concurrent root. We can delete
+  // when the legacy root API is removed.
+
+  var isConcurrentMode =
+    (internalInstanceHandle.mode & ConcurrentMode) !== NoMode;
   var parentNamespace;
 
   {
     var hostContextDev = hostContext;
     parentNamespace = hostContextDev.namespace;
-  } // TODO: Temporary hack to check if we're in a concurrent root. We can delete
-  // when the legacy root API is removed.
+  }
 
-  var isConcurrentMode =
-    (internalInstanceHandle.mode & ConcurrentMode) !== NoMode;
   return diffHydratedProperties(
     instance,
     type,
     props,
-    parentNamespace,
     isConcurrentMode,
-    shouldWarnDev
+    shouldWarnDev,
+    parentNamespace
   );
 }
 function hydrateTextInstance(
@@ -35331,20 +35575,43 @@ function isHostHoistableType(type, props, hostContext) {
     outsideHostContainerContext =
       !hostContextDev.ancestorInfo.containerTagInScope;
     namespace = hostContextDev.namespace;
+  } // Global opt out of hoisting for anything in SVG Namespace or anything with an itemProp inside an itemScope
+
+  if (namespace === SVG_NAMESPACE || props.itemProp != null) {
+    {
+      if (
+        outsideHostContainerContext &&
+        props.itemProp != null &&
+        (type === "meta" ||
+          type === "title" ||
+          type === "style" ||
+          type === "link" ||
+          type === "script")
+      ) {
+        error(
+          "Cannot render a <%s> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an" +
+            " `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <%s> remove the `itemProp` prop." +
+            " Otherwise, try moving this tag into the <head> or <body> of the Document.",
+          type,
+          type
+        );
+      }
+    }
+
+    return false;
   }
 
   switch (type) {
     case "meta":
     case "title": {
-      return namespace !== SVG_NAMESPACE;
+      return true;
     }
 
     case "style": {
       if (
         typeof props.precedence !== "string" ||
         typeof props.href !== "string" ||
-        props.href === "" ||
-        namespace === SVG_NAMESPACE
+        props.href === ""
       ) {
         {
           if (outsideHostContainerContext) {
@@ -35371,8 +35638,7 @@ function isHostHoistableType(type, props, hostContext) {
         typeof props.href !== "string" ||
         props.href === "" ||
         props.onLoad ||
-        props.onError ||
-        namespace === SVG_NAMESPACE
+        props.onError
       ) {
         {
           if (
@@ -35436,8 +35702,7 @@ function isHostHoistableType(type, props, hostContext) {
         props.onLoad ||
         props.onError ||
         typeof props.src !== "string" ||
-        !props.src ||
-        namespace === SVG_NAMESPACE
+        !props.src
       ) {
         {
           if (outsideHostContainerContext) {
@@ -35506,8 +35771,9 @@ function resolveSingletonInstance(
   validateDOMNestingDev
 ) {
   {
+    var hostContextDev = hostContext;
+
     if (validateDOMNestingDev) {
-      var hostContextDev = hostContext;
       validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     }
   }

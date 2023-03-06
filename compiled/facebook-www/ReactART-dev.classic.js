@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-41d9d61e";
+var ReactVersion = "18.3.0-www-classic-62fa5a08";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;

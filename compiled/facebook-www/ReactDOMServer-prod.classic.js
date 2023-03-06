@@ -521,6 +521,7 @@ function pushLink(
   if (
     3 === insertionMode ||
     noscriptTagInScope ||
+    null != props.itemProp ||
     "string" !== typeof rel ||
     "string" !== typeof href ||
     "" === href
@@ -896,7 +897,9 @@ function pushStartInstance(
       return null;
     case "title":
       return (
-        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        null != props.itemProp
           ? (target = pushTitleImpl(target, props))
           : (pushTitleImpl(responseState.hoistableChunks, props),
             (target = null)),
@@ -916,6 +919,7 @@ function pushStartInstance(
       a: if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
+        null != props.itemProp ||
         "string" !== typeof props.src ||
         !props.src
       )
@@ -975,6 +979,7 @@ function pushStartInstance(
       if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
+        null != props.itemProp ||
         "string" !== typeof propKey$jscomp$0 ||
         "string" !== typeof value ||
         "" === value
@@ -1065,7 +1070,9 @@ function pushStartInstance(
       return target;
     case "meta":
       return (
-        3 === formatContext.insertionMode || formatContext.noscriptTagInScope
+        3 === formatContext.insertionMode ||
+        formatContext.noscriptTagInScope ||
+        null != props.itemProp
           ? (target = pushSelfClosing(target, props, "meta"))
           : (textEmbedded && target.push("\x3c!-- --\x3e"),
             (target =
@@ -3771,4 +3778,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-edb46d4a";
+exports.version = "18.3.0-www-classic-2819a804";

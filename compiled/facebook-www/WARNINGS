@@ -93,6 +93,7 @@
 "Cannot record touch end without a touch start.\nTouch End: %s\nTouch Bank: %s"
 "Cannot record touch move without a touch start.\nTouch Move: %s\nTouch Bank: %s"
 "Cannot render <%s> outside the main document. Try moving it into the root <head> tag."
+"Cannot render a <%s> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <%s> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document."
 "Cannot render a <link rel=\"stylesheet\" /> outside the main document without knowing its precedence. Consider adding precedence=\"default\" or moving it into the root <head> tag."
 "Cannot render a <link> outside the main document without a `rel` and `href` prop. Try adding a `rel` and/or `href` prop to this <link> or moving the link into the <head> tag"
 "Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>."

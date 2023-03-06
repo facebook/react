@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-2b8f2d2e";
+var ReactVersion = "18.3.0-www-classic-ad36e92a";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -3770,7 +3770,11 @@ function pushMeta(
   noscriptTagInScope
 ) {
   {
-    if (insertionMode === SVG_MODE || noscriptTagInScope) {
+    if (
+      insertionMode === SVG_MODE ||
+      noscriptTagInScope ||
+      props.itemProp != null
+    ) {
       return pushSelfClosing(target, props, "meta");
     } else {
       if (textEmbedded) {
@@ -3805,6 +3809,7 @@ function pushLink(
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
+      props.itemProp != null ||
       typeof rel !== "string" ||
       typeof href !== "string" ||
       href === ""
@@ -4113,6 +4118,7 @@ function pushStyle(
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
+      props.itemProp != null ||
       typeof precedence !== "string" ||
       typeof href !== "string" ||
       href === ""
@@ -4393,7 +4399,11 @@ function pushTitle(
   }
 
   {
-    if (insertionMode !== SVG_MODE && !noscriptTagInScope) {
+    if (
+      insertionMode !== SVG_MODE &&
+      !noscriptTagInScope &&
+      props.itemProp == null
+    ) {
       pushTitleImpl(responseState.hoistableChunks, props);
       return null;
     } else {
@@ -4493,6 +4503,7 @@ function pushScript(
     if (
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
+      props.itemProp != null ||
       typeof props.src !== "string" ||
       !props.src
     ) {
