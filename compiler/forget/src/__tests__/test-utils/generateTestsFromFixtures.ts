@@ -48,6 +48,7 @@ export default function generateTestsFromFixtures(
     options: {
       debug: boolean;
       enableOnlyOnUseForgetDirective: boolean;
+      gatingModule: string | null;
     }
   ) => string
 ) {
@@ -83,6 +84,7 @@ export default function generateTestsFromFixtures(
         let input: string | null = null;
         let debug = false;
         let enableOnlyOnUseForgetDirective = false;
+        let gatingModule: string | null = null;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -97,6 +99,9 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@forgetDirective") !== -1) {
             enableOnlyOnUseForgetDirective = true;
           }
+          if (lines[0]!.indexOf("@gatingModule") !== -1) {
+            gatingModule = "ReactForgetFeatureFlag";
+          }
         }
 
         testCommand(basename, () => {
@@ -105,6 +110,7 @@ export default function generateTestsFromFixtures(
             receivedOutput = transform(input, basename, {
               debug,
               enableOnlyOnUseForgetDirective,
+              gatingModule,
             });
           } else {
             receivedOutput = "<<input deleted>>";
