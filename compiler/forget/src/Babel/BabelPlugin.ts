@@ -19,6 +19,15 @@ type BabelPluginPass = {
   opts: PluginOptions;
 };
 
+function hasUseForgetDirective(directives: t.Directive[]): boolean {
+  for (const directive of directives) {
+    if (directive.value.value === "use forget") {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * The React Forget Babel Plugin
  * @param {*} _babel
@@ -33,17 +42,11 @@ export default function ReactForgetBabelPlugin(
       pass: BabelPluginPass
     ) {
       if (pass.opts.enableOnlyOnUseForgetDirective) {
-        let hasUseForgetDirective = false;
-        for (const directive of fn.node.body.directives) {
-          if (directive.value.value === "use forget") {
-            hasUseForgetDirective = true;
-            break;
-          }
-        }
-        if (!hasUseForgetDirective) {
+        if (!hasUseForgetDirective(fn.node.body.directives)) {
           return;
         }
       }
+
       if (fn.scope.getProgramParent() !== fn.scope.parent) {
         return;
       }
