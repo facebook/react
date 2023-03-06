@@ -136,7 +136,13 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "ArrayExpression": {
-      yield* instrValue.elements;
+      for (const element of instrValue.elements) {
+        if (element.kind === "Identifier") {
+          yield element;
+        } else {
+          yield element.place;
+        }
+      }
       break;
     }
     case "FunctionExpression": {
@@ -331,7 +337,14 @@ export function mapInstructionOperands(
       break;
     }
     case "ArrayExpression": {
-      instrValue.elements = instrValue.elements.map((e) => fn(e));
+      instrValue.elements = instrValue.elements.map((element) => {
+        if (element.kind === "Identifier") {
+          return fn(element);
+        } else {
+          element.place = fn(element.place);
+          return element;
+        }
+      });
       break;
     }
     case "JsxFragment": {

@@ -222,7 +222,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
   switch (instrValue.kind) {
     case "ArrayExpression": {
       value = `Array [${instrValue.elements
-        .map((element) => printPlace(element))
+        .map((element) => {
+          if (element.kind === "Identifier") {
+            return printPlace(element);
+          } else {
+            return `...${printPlace(element.place)}`;
+          }
+        })
         .join(", ")}]`;
       break;
     }

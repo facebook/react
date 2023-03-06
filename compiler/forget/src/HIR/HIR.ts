@@ -521,7 +521,11 @@ export type InstructionValue =
       properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
-  | { kind: "ArrayExpression"; elements: Array<Place>; loc: SourceLocation }
+  | {
+      kind: "ArrayExpression";
+      elements: Array<Place | SpreadPattern>;
+      loc: SourceLocation;
+    }
   | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
 
   // store `object.property = value`

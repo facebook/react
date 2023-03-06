@@ -858,9 +858,24 @@ function lowerExpression(
     }
     case "ArrayExpression": {
       const expr = exprPath as NodePath<t.ArrayExpression>;
-      let elements: Place[] = [];
+      let elements: Array<Place | SpreadPattern> = [];
       for (const element of expr.get("elements")) {
-        if (element.node == null || !element.isExpression()) {
+        if (element.node == null) {
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
+            severity: ErrorSeverity.Todo,
+            nodePath: element,
+          });
+          continue;
+        } else if (element.isExpression()) {
+          elements.push(lowerExpressionToTemporary(builder, element));
+        } else if (element.isSpreadElement()) {
+          const place = lowerExpressionToTemporary(
+            builder,
+            element.get("argument")
+          );
+          elements.push({ kind: "Spread", place });
+        } else {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
             severity: ErrorSeverity.Todo,
@@ -868,9 +883,6 @@ function lowerExpression(
           });
           continue;
         }
-        elements.push(
-          lowerExpressionToTemporary(builder, element as NodePath<t.Expression>)
-        );
       }
       return {
         kind: "ArrayExpression",

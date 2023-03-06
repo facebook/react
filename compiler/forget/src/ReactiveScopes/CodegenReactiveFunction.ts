@@ -525,9 +525,13 @@ function codegenInstructionValue(
   let value: t.Expression;
   switch (instrValue.kind) {
     case "ArrayExpression": {
-      const elements = instrValue.elements.map((element) =>
-        codegenPlace(cx, element)
-      );
+      const elements = instrValue.elements.map((element) => {
+        if (element.kind === "Identifier") {
+          return codegenPlace(cx, element);
+        } else {
+          return t.spreadElement(codegenPlace(cx, element.place));
+        }
+      });
       value = t.arrayExpression(elements);
       break;
     }
