@@ -71,7 +71,7 @@ function getHostContext(): HostContext {
   return context;
 }
 
-function pushHostContext(fiber: Fiber) {
+function pushHostContext(fiber: Fiber): void {
   const context: HostContext = requiredContext(contextStackCursor.current);
   const nextContext = getChildHostContext(context, fiber.type);
 
