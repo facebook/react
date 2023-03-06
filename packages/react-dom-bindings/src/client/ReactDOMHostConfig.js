@@ -847,7 +847,7 @@ export const supportsHydration = true;
 
 // With Resources, some HostComponent types will never be server rendered and need to be
 // inserted without breaking hydration
-export function isHydratable(type: string, props: Props): boolean {
+export function isHydratableType(type: string, props: Props): boolean {
   if (enableFloat) {
     if (type === 'script') {
       const {async, onLoad, onError} = (props: any);
@@ -858,211 +858,167 @@ export function isHydratable(type: string, props: Props): boolean {
     return true;
   }
 }
-
-// In certain contexts, namely <body> and <head>, we want to skip past Nodes that are in theory
-// hydratable but do not match the current Fiber being hydrated. We track the hydratable node we
-// are currently attempting using this module global. If the hydration is unsuccessful Fiber will
-// call getLastAttemptedHydratable which uses this cursor to return the expected next
-// hydratable.
-let hydratableNode: null | HydratableInstance = null;
-
-export function getLastAttemptedHydratable(): null | HydratableInstance {
-  return hydratableNode;
+export function isHydratableText(text: string): boolean {
+  return text !== '';
 }
 
-export function getNextMatchingHydratableInstance(
+export function shouldSkipHydratableForInstance(
   instance: HydratableInstance,
   type: string,
   props: Props,
-  rootOrSingletonContext: boolean,
-): null | Instance {
-  const anyProps = (props: any);
-  // We set this first because it must always be set on every invocation
-  hydratableNode = instance;
-  if (rootOrSingletonContext) {
-    // In the head and body we expect 3rd party scripts to
-    let node;
-    for (; hydratableNode; hydratableNode = getNextHydratableSibling(node)) {
-      node = hydratableNode;
-      if (node.nodeType !== ELEMENT_NODE) {
-        // This is a suspense boundary or Text node.
-        // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
-        // and this is a hydration error.
-        // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
-        // but it seems reasonable and conservative to reject this as a hydration error as well
-        return null;
-      } else if (
-        node.nodeName.toLowerCase() !== type.toLowerCase() ||
-        isMarkedResource(node)
-      ) {
-        // This is either text or a tag type that differs from the tag we are trying to hydrate
-        // or a Node we already bound to a hoistable. We skip past it.
-        continue;
-      } else {
-        // We have an Element with the right type.
-        const element: Element = (node: any);
+): boolean {
+  if (instance.nodeType !== ELEMENT_NODE) {
+    // This is a suspense boundary or Text node.
+    // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
+    // and this is a hydration error.
+    // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
+    // but it seems reasonable and conservative to reject this as a hydration error as well
+    return false;
+  } else if (
+    instance.nodeName.toLowerCase() !== type.toLowerCase() ||
+    isMarkedResource(instance)
+  ) {
+    // We are either about to
+    return true;
+  } else {
+    // We have an Element with the right type.
+    const element: Element = (instance: any);
+    const anyProps = (props: any);
 
-        // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
-        // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
-        // using high entropy attributes for certain types. This technique will fail for strange insertions like
-        // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
-        switch (type) {
-          // case 'title':
-          //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
-          // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
-          case 'meta': {
-            // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
-            // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
-            // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
-            // implications are minimal
-            if (!element.hasAttribute('itemprop')) {
-              // This is a Hoistable
-              continue;
-            }
-            break;
-          }
-          case 'link': {
-            // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
-            // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
-            // matches.
-            const rel = element.getAttribute('rel');
-            if (
-              rel === 'stylesheet' &&
-              element.hasAttribute('data-precedence')
-            ) {
-              // This is a stylesheet resource
-              continue;
-            } else if (
-              rel !== anyProps.rel ||
-              element.getAttribute('href') !==
-                (anyProps.href == null ? null : anyProps.href) ||
-              element.getAttribute('crossorigin') !==
-                (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
-              element.getAttribute('title') !==
-                (anyProps.title == null ? null : anyProps.title)
-            ) {
-              // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
-              // and title could vary for rel alternate
-              continue;
-            }
-            break;
-          }
-          case 'style': {
-            // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
-            // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
-            if (element.hasAttribute('data-precedence')) {
-              // This is a style resource
-              continue;
-            }
-            break;
-          }
-          case 'script': {
-            // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
-            // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
-            // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
-            // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
-            // if we learn it is problematic
-            const srcAttr = element.getAttribute('src');
-            if (
-              srcAttr &&
-              element.hasAttribute('async') &&
-              !element.hasAttribute('itemprop')
-            ) {
-              // This is an async script resource
-              continue;
-            } else if (
-              srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
-              element.getAttribute('type') !==
-                (anyProps.type == null ? null : anyProps.type) ||
-              element.getAttribute('crossorigin') !==
-                (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
-            ) {
-              // This script is for a different src
-              continue;
-            }
-            break;
-          }
+    // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
+    // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
+    // using high entropy attributes for certain types. This technique will fail for strange insertions like
+    // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
+    switch (type) {
+      // case 'title':
+      //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
+      // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
+      case 'meta': {
+        // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
+        // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
+        // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
+        // implications are minimal
+        if (!element.hasAttribute('itemprop')) {
+          // This is a Hoistable
+          return true;
         }
-        // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
-        // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
-        // that should work in the vast majority of cases.
-        return element;
+        break;
+      }
+      case 'link': {
+        // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
+        // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
+        // matches.
+        const rel = element.getAttribute('rel');
+        if (rel === 'stylesheet' && element.hasAttribute('data-precedence')) {
+          // This is a stylesheet resource
+          return true;
+        } else if (
+          rel !== anyProps.rel ||
+          element.getAttribute('href') !==
+            (anyProps.href == null ? null : anyProps.href) ||
+          element.getAttribute('crossorigin') !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
+          element.getAttribute('title') !==
+            (anyProps.title == null ? null : anyProps.title)
+        ) {
+          // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
+          // and title could vary for rel alternate
+          return true;
+        }
+        break;
+      }
+      case 'style': {
+        // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
+        // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
+        if (element.hasAttribute('data-precedence')) {
+          // This is a style resource
+          return true;
+        }
+        break;
+      }
+      case 'script': {
+        // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
+        // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
+        // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
+        // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+        // if we learn it is problematic
+        const srcAttr = element.getAttribute('src');
+        if (
+          srcAttr &&
+          element.hasAttribute('async') &&
+          !element.hasAttribute('itemprop')
+        ) {
+          // This is an async script resource
+          return true;
+        } else if (
+          srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
+          element.getAttribute('type') !==
+            (anyProps.type == null ? null : anyProps.type) ||
+          element.getAttribute('crossorigin') !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
+        ) {
+          // This script is for a different src
+          return true;
+        }
+        break;
       }
     }
-    return null;
-  } else {
-    if (
-      instance.nodeType !== ELEMENT_NODE ||
-      instance.nodeName.toLowerCase() !== type.toLowerCase()
-    ) {
-      return null;
-    } else {
-      return ((instance: any): Instance);
-    }
+    // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
+    // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+    // that should work in the vast majority of cases.
+    return false;
   }
 }
 
-export function getNextMatchingHydratableTextInstance(
+export function shouldSkipHydratableForTextInstance(
+  instance: HydratableInstance,
+): boolean {
+  return instance.nodeType === ELEMENT_NODE;
+}
+
+export function shouldSkipHydratableForSuspenseInstance(
+  instance: HydratableInstance,
+): boolean {
+  return instance.nodeType === ELEMENT_NODE;
+}
+
+export function canHydrateInstance(
+  instance: HydratableInstance,
+  type: string,
+  props: Props,
+): null | Instance {
+  if (
+    instance.nodeType !== ELEMENT_NODE ||
+    instance.nodeName.toLowerCase() !== type.toLowerCase()
+  ) {
+    return null;
+  } else {
+    return ((instance: any): Instance);
+  }
+}
+
+export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
-  rootOrSingletonContext: boolean,
 ): null | TextInstance {
-  // We set this first because it must always be set on every invocation
-  hydratableNode = instance;
-
-  // Return early if there is nothing to hydrate (there will be no dom node if empty text)
   if (text === '') return null;
 
-  if (rootOrSingletonContext) {
-    while (hydratableNode) {
-      const node = hydratableNode;
-      if (node.nodeType === COMMENT_NODE) {
-        // This is a suspense boundary we must halt here because we know this was not injected by 3rd party
-        return null;
-      } else if (node.nodeType !== TEXT_NODE) {
-        // Empty strings are not parsed by HTML so there won't be a correct match here.
-        hydratableNode = getNextHydratableSibling(node);
-        continue;
-      }
-      // This has now been refined to a text node.
-      return ((hydratableNode: any): TextInstance);
-    }
-  } else {
-    if (instance.nodeType !== TEXT_NODE) {
-      // Empty strings are not parsed by HTML so there won't be a correct match here.
-      return null;
-    }
-    // This has now been refined to a text node.
-    return ((instance: any): TextInstance);
+  if (instance.nodeType !== TEXT_NODE) {
+    // Empty strings are not parsed by HTML so there won't be a correct match here.
+    return null;
   }
-
-  return null;
+  // This has now been refined to a text node.
+  return ((instance: any): TextInstance);
 }
 
-export function getNextMatchingHydratableSuspenseInstance(
+export function canHydrateSuspenseInstance(
   instance: HydratableInstance,
-  rootOrSingletonContext: boolean,
 ): null | SuspenseInstance {
-  // We set this first because it must always be set on every invocation
-  hydratableNode = instance;
-
-  if (rootOrSingletonContext) {
-    while (hydratableNode) {
-      if (hydratableNode.nodeType !== COMMENT_NODE) {
-        hydratableNode = getNextHydratableSibling(hydratableNode);
-        continue;
-      }
-      // This has now been refined to a suspense node.
-      return ((hydratableNode: any): SuspenseInstance);
-    }
+  if (instance.nodeType !== COMMENT_NODE) {
     return null;
-  } else {
-    if (instance.nodeType !== COMMENT_NODE) {
-      return null;
-    }
-    // This has now been refined to a suspense node.
-    return ((instance: any): SuspenseInstance);
   }
+  // This has now been refined to a suspense node.
+  return ((instance: any): SuspenseInstance);
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {

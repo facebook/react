@@ -175,7 +175,6 @@ import {
   pushHostContext,
   pushHostContainer,
   getRootHostContainer,
-  getHostContext,
 } from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
@@ -228,6 +227,8 @@ import {
   resetHydrationState,
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
+  tryToClaimNextHydratableTextInstance,
+  tryToClaimNextHydratableSuspenseInstance,
   warnIfHydrating,
   queueHydrationError,
 } from './ReactFiberHydrationContext';
@@ -1600,15 +1601,10 @@ function updateHostComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  // We need the parent HostContext when we try to claim the next hydratable for this workInProgress.
-  // Ideally we could just move the hydration to be above the pushHostContext but since hydration can throw
-  // and we balance the context push/pop in begin/complete work we need to ensure the push happens before any
-  // code that might throw is run. getHostContext() never throws so we can read the parent context here
-  const parentContext = getHostContext();
   pushHostContext(workInProgress);
 
   if (current === null) {
-    tryToClaimNextHydratableInstance(workInProgress, parentContext);
+    tryToClaimNextHydratableInstance(workInProgress);
   }
 
   const type = workInProgress.type;
@@ -1700,7 +1696,7 @@ function updateHostSingleton(
 
 function updateHostText(current: null | Fiber, workInProgress: Fiber) {
   if (current === null) {
-    tryToClaimNextHydratableInstance(workInProgress, getHostContext());
+    tryToClaimNextHydratableTextInstance(workInProgress);
   }
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
@@ -2256,7 +2252,7 @@ function updateSuspenseComponent(
       } else {
         pushFallbackTreeSuspenseHandler(workInProgress);
       }
-      tryToClaimNextHydratableInstance(workInProgress, getHostContext());
+      tryToClaimNextHydratableSuspenseInstance(workInProgress);
       // This could've been a dehydrated suspense component.
       const suspenseState: null | SuspenseState = workInProgress.memoizedState;
       if (suspenseState !== null) {
