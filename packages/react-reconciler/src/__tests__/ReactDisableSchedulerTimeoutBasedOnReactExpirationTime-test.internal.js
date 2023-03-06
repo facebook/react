@@ -29,7 +29,7 @@ describe('ReactSuspenseList', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -37,7 +37,7 @@ describe('ReactSuspenseList', () => {
     let resolved = false;
     const Component = function () {
       if (!resolved) {
-        Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
+        Scheduler.log('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
@@ -79,11 +79,11 @@ describe('ReactSuspenseList', () => {
     expect(root).toMatchRenderedOutput(null);
 
     scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Resolve A');
+      Scheduler.log('Resolve A');
       A.resolve();
     });
     scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Resolve B');
+      Scheduler.log('Resolve B');
       B.resolve();
     });
 

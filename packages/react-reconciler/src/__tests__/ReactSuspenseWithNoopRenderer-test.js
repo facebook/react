@@ -91,16 +91,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          Scheduler.log(`Error! [${text}]`);
           throw record.value;
         case 'resolved':
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
 
       const thenable = {
         pings: [],
@@ -124,14 +124,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return <span prop={text} />;
   }
 
   function AsyncText({text, showVersion}) {
     const version = readText(text);
     const fullText = showVersion ? `${text} [v${version}]` : text;
-    Scheduler.unstable_yieldValue(fullText);
+    Scheduler.log(fullText);
     return <span prop={fullText} />;
   }
 
@@ -194,12 +194,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('does not restart rendering for initial render', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return props.children;
     }
 
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -260,12 +260,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('suspends rendering and continues later', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return props.children;
     }
 
     function Foo({renderBar}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           {renderBar ? (
@@ -1153,10 +1153,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('flushes all expired updates in a single batch', async () => {
     class Foo extends React.Component {
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Commit: ' + this.props.text);
+        Scheduler.log('Commit: ' + this.props.text);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Commit: ' + this.props.text);
+        Scheduler.log('Commit: ' + this.props.text);
       }
       render() {
         return (
@@ -1292,7 +1292,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // Update.
       text.current.setState({step: 2}, () =>
-        Scheduler.unstable_yieldValue('Update did commit'),
+        Scheduler.log('Update did commit'),
       );
 
       expect(ReactNoop.flushNextYield()).toEqual([
@@ -1328,10 +1328,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     it('does not re-render siblings in loose mode', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
-          Scheduler.unstable_yieldValue(`Mount [${this.props.text}]`);
+          Scheduler.log(`Mount [${this.props.text}]`);
         }
         componentDidUpdate() {
-          Scheduler.unstable_yieldValue(`Update [${this.props.text}]`);
+          Scheduler.log(`Update [${this.props.text}]`);
         }
         render() {
           return <Text {...this.props} />;
@@ -1340,10 +1340,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       class AsyncTextWithLifecycle extends React.Component {
         componentDidMount() {
-          Scheduler.unstable_yieldValue(`Mount [${this.props.text}]`);
+          Scheduler.log(`Mount [${this.props.text}]`);
         }
         componentDidUpdate() {
-          Scheduler.unstable_yieldValue(`Update [${this.props.text}]`);
+          Scheduler.log(`Update [${this.props.text}]`);
         }
         render() {
           return <AsyncText {...this.props} />;
@@ -1361,7 +1361,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       ReactNoop.renderLegacySyncRoot(<App />, () =>
-        Scheduler.unstable_yieldValue('Commit root'),
+        Scheduler.log('Commit root'),
       );
       assertLog([
         'A',
@@ -1405,15 +1405,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         constructor(props) {
           super(props);
           const text = props.text;
-          Scheduler.unstable_yieldValue('constructor');
+          Scheduler.log('constructor');
           readText(text);
           this.state = {text};
         }
         componentDidMount() {
-          Scheduler.unstable_yieldValue('componentDidMount');
+          Scheduler.log('componentDidMount');
         }
         render() {
-          Scheduler.unstable_yieldValue(this.state.text);
+          Scheduler.log(this.state.text);
           return <span prop={this.state.text} />;
         }
       }
@@ -1486,7 +1486,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           const child = useRef(null);
 
           useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue(ReactNoop.getPendingChildrenAsJSX());
+            Scheduler.log(ReactNoop.getPendingChildrenAsJSX());
           });
 
           return (
@@ -1530,9 +1530,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           const child = useRef(null);
 
           useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue(
-              'Child is hidden: ' + child.current.hidden,
-            );
+            Scheduler.log('Child is hidden: ' + child.current.hidden);
           });
 
           return (
@@ -1622,9 +1620,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         }
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('Mount');
+          Scheduler.log('Mount');
           return () => {
-            Scheduler.unstable_yieldValue('Unmount');
+            Scheduler.log('Unmount');
           };
         }, []);
 
@@ -1656,13 +1654,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('does not call lifecycles of a suspended component', async () => {
     class TextWithLifecycle extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue(`Mount [${this.props.text}]`);
+        Scheduler.log(`Mount [${this.props.text}]`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(`Update [${this.props.text}]`);
+        Scheduler.log(`Update [${this.props.text}]`);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(`Unmount [${this.props.text}]`);
+        Scheduler.log(`Unmount [${this.props.text}]`);
       }
       render() {
         return <Text {...this.props} />;
@@ -1671,18 +1669,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     class AsyncTextWithLifecycle extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue(`Mount [${this.props.text}]`);
+        Scheduler.log(`Mount [${this.props.text}]`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(`Update [${this.props.text}]`);
+        Scheduler.log(`Update [${this.props.text}]`);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(`Unmount [${this.props.text}]`);
+        Scheduler.log(`Unmount [${this.props.text}]`);
       }
       render() {
         const text = this.props.text;
         readText(text);
-        Scheduler.unstable_yieldValue(text);
+        Scheduler.log(text);
         return <span prop={text} />;
       }
     }
@@ -1697,9 +1695,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     }
 
-    ReactNoop.renderLegacySyncRoot(<App />, () =>
-      Scheduler.unstable_yieldValue('Commit root'),
-    );
+    ReactNoop.renderLegacySyncRoot(<App />, () => Scheduler.log('Commit root'));
     assertLog([
       'A',
       'Suspend! [B]',
@@ -1726,17 +1722,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('does not call lifecycles of a suspended component (hooks)', async () => {
     function TextWithLifecycle(props) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+        Scheduler.log(`Layout Effect [${props.text}]`);
         return () => {
-          Scheduler.unstable_yieldValue(
-            `Destroy Layout Effect [${props.text}]`,
-          );
+          Scheduler.log(`Destroy Layout Effect [${props.text}]`);
         };
       }, [props.text]);
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+        Scheduler.log(`Effect [${props.text}]`);
         return () => {
-          Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          Scheduler.log(`Destroy Effect [${props.text}]`);
         };
       }, [props.text]);
       return <Text {...props} />;
@@ -1744,22 +1738,20 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function AsyncTextWithLifecycle(props) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+        Scheduler.log(`Layout Effect [${props.text}]`);
         return () => {
-          Scheduler.unstable_yieldValue(
-            `Destroy Layout Effect [${props.text}]`,
-          );
+          Scheduler.log(`Destroy Layout Effect [${props.text}]`);
         };
       }, [props.text]);
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+        Scheduler.log(`Effect [${props.text}]`);
         return () => {
-          Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          Scheduler.log(`Destroy Effect [${props.text}]`);
         };
       }, [props.text]);
       const text = props.text;
       readText(text);
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return <span prop={text} />;
     }
 
@@ -1774,7 +1766,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.renderLegacySyncRoot(<App text="B" />, () =>
-      Scheduler.unstable_yieldValue('Commit root'),
+      Scheduler.log('Commit root'),
     );
     assertLog([
       'A',
@@ -1821,7 +1813,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Update
     ReactNoop.renderLegacySyncRoot(<App text="B2" />, () =>
-      Scheduler.unstable_yieldValue('Commit root'),
+      Scheduler.log('Commit root'),
     );
 
     assertLog([
@@ -1861,7 +1853,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {
     function Foo({renderContent}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           {renderContent ? <AsyncText text="A" /> : null}
@@ -1917,7 +1909,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('does not suspends if a fallback has been shown for a long time', async () => {
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
@@ -1978,7 +1970,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('does suspend if a fallback has been shown for a short time', async () => {
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
@@ -2033,7 +2025,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('does not suspend for very long after a higher priority update', async () => {
     function Foo({renderContent}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           {renderContent ? <AsyncText text="A" /> : null}
@@ -2245,7 +2237,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache && enableSuspenseAvoidThisFallback
   it('shows the parent fallback if the inner fallback should be avoided', async () => {
     function Foo({showC}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Initial load..." />}>
           <Suspense
@@ -2304,7 +2296,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('does not show the parent fallback if the inner fallback is not defined', async () => {
     function Foo({showC}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Initial load..." />}>
           <Suspense>
@@ -2369,7 +2361,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('favors showing the inner fallback for nested top level avoided fallback', async () => {
     function Foo({showB}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense
           unstable_avoidThisFallback={true}
@@ -2401,7 +2393,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache && enableSuspenseAvoidThisFallback
   it('keeps showing an avoided parent fallback if it is already showing', async () => {
     function Foo({showB}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Initial load..." />}>
           <Suspense
@@ -2443,7 +2435,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache
   it('keeps showing an undefined fallback if it is already showing', async () => {
     function Foo({showB}) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Initial load..." />}>
           <Suspense fallback={undefined}>
@@ -3053,7 +3045,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         foo = this;
 
         if (this.state.suspend) {
-          Scheduler.unstable_yieldValue('Suspend!');
+          Scheduler.log('Suspend!');
           throw thenable;
         }
 
@@ -3091,12 +3083,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache && enableLegacyHidden
   it('should not render hidden content while suspended on higher pri', async () => {
     function Offscreen() {
-      Scheduler.unstable_yieldValue('Offscreen');
+      Scheduler.log('Offscreen');
       return 'Offscreen';
     }
     function App({showContent}) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit');
+        Scheduler.log('Commit');
       });
       return (
         <>
@@ -3141,12 +3133,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // @gate enableLegacyCache && enableLegacyHidden
   it('should be able to unblock higher pri content before suspended hidden', async () => {
     function Offscreen() {
-      Scheduler.unstable_yieldValue('Offscreen');
+      Scheduler.log('Offscreen');
       return 'Offscreen';
     }
     function App({showContent}) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit');
+        Scheduler.log('Commit');
       });
       return (
         <Suspense fallback={<Text text="Loading..." />}>
@@ -3589,11 +3581,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // This will log if the component commits in an inconsistent state
         useEffect(() => {
           if (text === outerText) {
-            Scheduler.unstable_yieldValue('Commit Child');
+            Scheduler.log('Commit Child');
           } else {
-            Scheduler.unstable_yieldValue(
-              'FIXME: Texts are inconsistent (tearing)',
-            );
+            Scheduler.log('FIXME: Texts are inconsistent (tearing)');
           }
         }, [text, outerText]);
 
@@ -3725,11 +3715,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // This will log if the component commits in an inconsistent state
       useEffect(() => {
         if (text === outerText) {
-          Scheduler.unstable_yieldValue('Commit Child');
+          Scheduler.log('Commit Child');
         } else {
-          Scheduler.unstable_yieldValue(
-            'FIXME: Texts are inconsistent (tearing)',
-          );
+          Scheduler.log('FIXME: Texts are inconsistent (tearing)');
         }
       }, [text, outerText]);
 
@@ -4014,9 +4002,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Child');
+        Scheduler.log('Mount Child');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Child');
+          Scheduler.log('Unmount Child');
         };
       }, []);
       return <span prop="Child" />;
@@ -4062,9 +4050,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Mount Child');
+        Scheduler.log('Mount Child');
         return () => {
-          Scheduler.unstable_yieldValue('Unmount Child');
+          Scheduler.log('Unmount Child');
         };
       }, []);
       return <span prop="Child" />;

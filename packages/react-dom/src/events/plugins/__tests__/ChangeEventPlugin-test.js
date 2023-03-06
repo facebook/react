@@ -512,7 +512,7 @@ describe('ChangeEventPlugin', () => {
         state = {value: 'initial'};
         onChange = event => this.setState({value: event.target.value});
         render() {
-          Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
+          Scheduler.log(`render: ${this.state.value}`);
           const controlledValue =
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (
@@ -556,7 +556,7 @@ describe('ChangeEventPlugin', () => {
           this.setState({checked: event.target.checked});
         };
         render() {
-          Scheduler.unstable_yieldValue(`render: ${this.state.checked}`);
+          Scheduler.log(`render: ${this.state.checked}`);
           const controlledValue = this.props.reverse
             ? !this.state.checked
             : this.state.checked;
@@ -609,7 +609,7 @@ describe('ChangeEventPlugin', () => {
         state = {value: 'initial'};
         onChange = event => this.setState({value: event.target.value});
         render() {
-          Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
+          Scheduler.log(`render: ${this.state.value}`);
           const controlledValue =
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (
@@ -651,7 +651,7 @@ describe('ChangeEventPlugin', () => {
         state = {value: 'initial'};
         onChange = event => this.setState({value: event.target.value});
         render() {
-          Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
+          Scheduler.log(`render: ${this.state.value}`);
           const controlledValue =
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (
@@ -700,7 +700,7 @@ describe('ChangeEventPlugin', () => {
           this.setState({value: ''});
         };
         render() {
-          Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
+          Scheduler.log(`render: ${this.state.value}`);
           const controlledValue =
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (

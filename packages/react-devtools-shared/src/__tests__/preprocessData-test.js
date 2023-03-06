@@ -1352,7 +1352,7 @@ describe('Timeline profiler', () => {
           // @reactVersion >= 18.0
           it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
             function Yield({id, value}) {
-              Scheduler.unstable_yieldValue(`${id}:${value}`);
+              Scheduler.log(`${id}:${value}`);
               return null;
             }
 
@@ -1415,9 +1415,7 @@ describe('Timeline profiler', () => {
           it('should not warn about short nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               React.useLayoutEffect(() => {
                 setDidMount(true);
               }, []);
@@ -1453,7 +1451,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1485,9 +1483,7 @@ describe('Timeline profiler', () => {
           it.skip('should warn about long nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               // Fake a long render
               startTime += 20000;
               React.useLayoutEffect(() => {
@@ -1549,7 +1545,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1606,13 +1602,11 @@ describe('Timeline profiler', () => {
               // eslint-disable-next-line no-unused-vars
               const [isPending, startTransition] = React.useTransition();
 
-              Scheduler.unstable_yieldValue(
-                `Component rendered with value ${value}`,
-              );
+              Scheduler.log(`Component rendered with value ${value}`);
 
               // Fake a long render
               if (value !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1677,13 +1671,13 @@ describe('Timeline profiler', () => {
               const [value, setValue] = React.useState(0);
               const deferredValue = React.useDeferredValue(value);
 
-              Scheduler.unstable_yieldValue(
+              Scheduler.log(
                 `Component rendered with value ${value} and deferredValue ${deferredValue}`,
               );
 
               // Fake a long render
               if (deferredValue !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1805,7 +1799,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }
@@ -1863,7 +1857,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }

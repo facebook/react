@@ -980,7 +980,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushNextYield(): Array<mixed> {
       Scheduler.unstable_flushNumberOfYields(1);
-      return Scheduler.unstable_clearYields();
+      return Scheduler.unstable_clearLog();
     },
 
     flushWithHostCounters(fn: () => void):

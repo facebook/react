@@ -1959,7 +1959,7 @@ describe('DOMPluginEventSystem', () => {
                 });
               });
 
-              Scheduler.unstable_yieldValue('Test');
+              Scheduler.log('Test');
               return <button ref={ref}>Press me</button>;
             }
 

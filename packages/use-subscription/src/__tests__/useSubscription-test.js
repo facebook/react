@@ -59,7 +59,7 @@ describe('useSubscription', () => {
 
   it('supports basic subscription pattern', async () => {
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     }
 
@@ -103,7 +103,7 @@ describe('useSubscription', () => {
 
   it('should support observable types like RxJS ReplaySubject', async () => {
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     }
 
@@ -153,7 +153,7 @@ describe('useSubscription', () => {
 
   it('should unsubscribe from old sources and subscribe to new sources when memoized props change', async () => {
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     }
 
@@ -214,7 +214,7 @@ describe('useSubscription', () => {
 
   it('should unsubscribe from old sources and subscribe to new sources when useCallback functions change', async () => {
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     }
 
@@ -274,12 +274,12 @@ describe('useSubscription', () => {
     const log = [];
 
     function Grandchild({value}) {
-      Scheduler.unstable_yieldValue('Grandchild: ' + value);
+      Scheduler.log('Grandchild: ' + value);
       return null;
     }
 
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue('Child: ' + value);
+      Scheduler.log('Child: ' + value);
       return <Grandchild value={value} />;
     }
 
@@ -377,12 +377,12 @@ describe('useSubscription', () => {
     const log = [];
 
     function Grandchild({value}) {
-      Scheduler.unstable_yieldValue('Grandchild: ' + value);
+      Scheduler.log('Grandchild: ' + value);
       return null;
     }
 
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue('Child: ' + value);
+      Scheduler.log('Child: ' + value);
       return <Grandchild value={value} />;
     }
 
@@ -481,7 +481,7 @@ describe('useSubscription', () => {
 
   it('should guard against updates that happen after unmounting', () => {
     function Child({value = 'default'}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     }
 
@@ -593,7 +593,7 @@ describe('useSubscription', () => {
 
     const Subscriber = ({id}) => {
       const value = useSubscription(subscription);
-      Scheduler.unstable_yieldValue(`render:${id}:${value}`);
+      Scheduler.log(`render:${id}:${value}`);
       return value;
     };
 

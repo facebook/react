@@ -15,7 +15,6 @@ let ReactTestRenderer;
 let Scheduler;
 let waitForAll;
 let waitFor;
-let assertLog;
 
 describe('ReactTestRendererAsync', () => {
   beforeEach(() => {
@@ -28,7 +27,6 @@ describe('ReactTestRendererAsync', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
-    assertLog = InternalTestUtils.assertLog;
   });
 
   it('flushAll flushes all work', async () => {
@@ -57,7 +55,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushAll returns array of yielded values', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -83,7 +81,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushThrough flushes until the expected values is yielded', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -115,7 +113,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('supports high priority interruptions', async () => {
     function Child(props) {
-      Scheduler.unstable_yieldValue(props.children);
+      Scheduler.log(props.children);
       return props.children;
     }
 
@@ -154,133 +152,5 @@ describe('ReactTestRendererAsync', () => {
 
     // Only the higher priority properties have been committed
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2']);
-  });
-
-  describe('Jest matchers', () => {
-    it('toFlushAndYieldThrough', () => {
-      const Yield = ({id}) => {
-        Scheduler.unstable_yieldValue(id);
-        return id;
-      };
-
-      ReactTestRenderer.create(
-        <div>
-          <Yield id="foo" />
-          <Yield id="bar" />
-          <Yield id="baz" />
-        </div>,
-        {
-          unstable_isConcurrent: true,
-        },
-      );
-
-      expect(() =>
-        expect(Scheduler).toFlushAndYieldThrough(['foo', 'baz']),
-      ).toThrow('// deep equality');
-    });
-
-    it('toFlushAndYield', () => {
-      const Yield = ({id}) => {
-        Scheduler.unstable_yieldValue(id);
-        return id;
-      };
-
-      const renderer = ReactTestRenderer.create(
-        <div>
-          <Yield id="foo" />
-          <Yield id="bar" />
-          <Yield id="baz" />
-        </div>,
-        {
-          unstable_isConcurrent: true,
-        },
-      );
-
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toThrowError(
-        '// deep equality',
-      );
-
-      renderer.update(
-        <div>
-          <Yield id="foo" />
-          <Yield id="bar" />
-          <Yield id="baz" />
-        </div>,
-      );
-
-      expect(() => expect(Scheduler).toFlushAndYield(['foo', 'baz'])).toThrow(
-        '// deep equality',
-      );
-    });
-
-    it('toFlushAndThrow', () => {
-      const Yield = ({id}) => {
-        Scheduler.unstable_yieldValue(id);
-        return id;
-      };
-
-      function BadRender() {
-        throw new Error('Oh no!');
-      }
-
-      function App() {
-        return (
-          <div>
-            <Yield id="A" />
-            <Yield id="B" />
-            <BadRender />
-            <Yield id="C" />
-            <Yield id="D" />
-          </div>
-        );
-      }
-
-      const renderer = ReactTestRenderer.create(<App />, {
-        unstable_isConcurrent: true,
-      });
-
-      expect(Scheduler).toFlushAndThrow('Oh no!');
-      assertLog(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
-
-      renderer.update(<App />);
-
-      expect(Scheduler).toFlushAndThrow('Oh no!');
-      assertLog(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
-
-      renderer.update(<App />);
-      expect(Scheduler).toFlushAndThrow('Oh no!');
-    });
-  });
-
-  it('toHaveYielded', () => {
-    const Yield = ({id}) => {
-      Scheduler.unstable_yieldValue(id);
-      return id;
-    };
-
-    function App() {
-      return (
-        <div>
-          <Yield id="A" />
-          <Yield id="B" />
-          <Yield id="C" />
-        </div>
-      );
-    }
-
-    ReactTestRenderer.create(<App />);
-    expect(() => expect(Scheduler).toHaveYielded(['A', 'B'])).toThrow(
-      '// deep equality',
-    );
-  });
-
-  it('flush methods throw if log is not empty', () => {
-    ReactTestRenderer.create(<div />, {
-      unstable_isConcurrent: true,
-    });
-    Scheduler.unstable_yieldValue('Something');
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toThrow(
-      'Log of yielded values is not empty.',
-    );
   });
 });

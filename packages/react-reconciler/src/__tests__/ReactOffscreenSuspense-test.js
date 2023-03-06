@@ -55,7 +55,7 @@ describe('ReactOffscreen', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
           throw record.value;
@@ -63,7 +63,7 @@ describe('ReactOffscreen', () => {
           return record.value;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
       const thenable = {
         pings: [],
         then(resolve) {
@@ -86,13 +86,13 @@ describe('ReactOffscreen', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
   function AsyncText({text}) {
     readText(text);
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -427,11 +427,9 @@ describe('ReactOffscreen', () => {
         // Inner and outer values are always updated simultaneously, so they
         // should always be consistent.
         if (inner !== outer) {
-          Scheduler.unstable_yieldValue(
-            'Tearing! Inner and outer are inconsistent!',
-          );
+          Scheduler.log('Tearing! Inner and outer are inconsistent!');
         } else {
-          Scheduler.unstable_yieldValue('Inner and outer are consistent');
+          Scheduler.log('Inner and outer are consistent');
         }
       }, [inner, outer]);
 

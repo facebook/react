@@ -47,10 +47,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
       render() {
         if (this.state.error) {
-          Scheduler.unstable_yieldValue('ErrorBoundary render: catch');
+          Scheduler.log('ErrorBoundary render: catch');
           return this.props.fallback;
         }
-        Scheduler.unstable_yieldValue('ErrorBoundary render: try');
+        Scheduler.log('ErrorBoundary render: try');
         return this.props.children;
       }
     };
@@ -112,16 +112,16 @@ describe('ReactSuspenseEffectsSemantics', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend:${text}`);
+          Scheduler.log(`Suspend:${text}`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error:${text}`);
+          Scheduler.log(`Error:${text}`);
           throw record.value;
         case 'resolved':
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend:${text}`);
+      Scheduler.log(`Suspend:${text}`);
 
       const thenable = {
         pings: [],
@@ -145,17 +145,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
   }
 
   function Text({children = null, text}) {
-    Scheduler.unstable_yieldValue(`Text:${text} render`);
+    Scheduler.log(`Text:${text} render`);
     React.useLayoutEffect(() => {
-      Scheduler.unstable_yieldValue(`Text:${text} create layout`);
+      Scheduler.log(`Text:${text} create layout`);
       return () => {
-        Scheduler.unstable_yieldValue(`Text:${text} destroy layout`);
+        Scheduler.log(`Text:${text} destroy layout`);
       };
     }, []);
     React.useEffect(() => {
-      Scheduler.unstable_yieldValue(`Text:${text} create passive`);
+      Scheduler.log(`Text:${text} create passive`);
       return () => {
-        Scheduler.unstable_yieldValue(`Text:${text} destroy passive`);
+        Scheduler.log(`Text:${text} destroy passive`);
       };
     }, []);
     return <span prop={text}>{children}</span>;
@@ -163,17 +163,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
   function AsyncText({children = null, text}) {
     readText(text);
-    Scheduler.unstable_yieldValue(`AsyncText:${text} render`);
+    Scheduler.log(`AsyncText:${text} render`);
     React.useLayoutEffect(() => {
-      Scheduler.unstable_yieldValue(`AsyncText:${text} create layout`);
+      Scheduler.log(`AsyncText:${text} create layout`);
       return () => {
-        Scheduler.unstable_yieldValue(`AsyncText:${text} destroy layout`);
+        Scheduler.log(`AsyncText:${text} destroy layout`);
       };
     }, []);
     React.useEffect(() => {
-      Scheduler.unstable_yieldValue(`AsyncText:${text} create passive`);
+      Scheduler.log(`AsyncText:${text} create passive`);
       return () => {
-        Scheduler.unstable_yieldValue(`AsyncText:${text} destroy passive`);
+        Scheduler.log(`AsyncText:${text} destroy passive`);
       };
     }, []);
     return <span prop={text}>{children}</span>;
@@ -209,37 +209,35 @@ describe('ReactSuspenseEffectsSemantics', () => {
       class ClassText extends React.Component {
         componentDidMount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidMount`);
+          Scheduler.log(`ClassText:${text} componentDidMount`);
         }
         componentDidUpdate() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidUpdate`);
+          Scheduler.log(`ClassText:${text} componentDidUpdate`);
         }
         componentWillUnmount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(
-            `ClassText:${text} componentWillUnmount`,
-          );
+          Scheduler.log(`ClassText:${text} componentWillUnmount`);
         }
         render() {
           const {children, text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} render`);
+          Scheduler.log(`ClassText:${text} render`);
           return <span prop={text}>{children}</span>;
         }
       }
 
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -330,37 +328,35 @@ describe('ReactSuspenseEffectsSemantics', () => {
       class ClassText extends React.Component {
         componentDidMount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidMount`);
+          Scheduler.log(`ClassText:${text} componentDidMount`);
         }
         componentDidUpdate() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidUpdate`);
+          Scheduler.log(`ClassText:${text} componentDidUpdate`);
         }
         componentWillUnmount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(
-            `ClassText:${text} componentWillUnmount`,
-          );
+          Scheduler.log(`ClassText:${text} componentWillUnmount`);
         }
         render() {
           const {children, text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} render`);
+          Scheduler.log(`ClassText:${text} render`);
           return <span prop={text}>{children}</span>;
         }
       }
 
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -451,17 +447,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should not be destroyed or recreated in legacy roots', async () => {
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -582,17 +578,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -720,37 +716,35 @@ describe('ReactSuspenseEffectsSemantics', () => {
       class ClassText extends React.Component {
         componentDidMount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidMount`);
+          Scheduler.log(`ClassText:${text} componentDidMount`);
         }
         componentDidUpdate() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidUpdate`);
+          Scheduler.log(`ClassText:${text} componentDidUpdate`);
         }
         componentWillUnmount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(
-            `ClassText:${text} componentWillUnmount`,
-          );
+          Scheduler.log(`ClassText:${text} componentWillUnmount`);
         }
         render() {
           const {children, text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} render`);
+          Scheduler.log(`ClassText:${text} render`);
           return <span prop={text}>{children}</span>;
         }
       }
 
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -869,17 +863,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -996,17 +990,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
       const MemoizedText = React.memo(Text, () => true);
 
       function App({children = null}) {
-        Scheduler.unstable_yieldValue('App render');
+        Scheduler.log('App render');
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App create layout');
+          Scheduler.log('App create layout');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy layout');
+            Scheduler.log('App destroy layout');
           };
         }, []);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App create passive');
+          Scheduler.log('App create passive');
           return () => {
-            Scheduler.unstable_yieldValue('App destroy passive');
+            Scheduler.log('App destroy passive');
           };
         }, []);
         return (
@@ -1853,28 +1847,26 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         class ThrowsInDidMount extends React.Component {
           componentWillUnmount() {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInDidMount componentWillUnmount',
-            );
+            Scheduler.log('ThrowsInDidMount componentWillUnmount');
           }
           componentDidMount() {
-            Scheduler.unstable_yieldValue('ThrowsInDidMount componentDidMount');
+            Scheduler.log('ThrowsInDidMount componentDidMount');
             if (componentDidMountShouldThrow) {
               throw Error('expected');
             }
           }
           render() {
-            Scheduler.unstable_yieldValue('ThrowsInDidMount render');
+            Scheduler.log('ThrowsInDidMount render');
             return <span prop="ThrowsInDidMount" />;
           }
         }
 
         function App({children = null}) {
-          Scheduler.unstable_yieldValue('App render');
+          Scheduler.log('App render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App create layout');
+            Scheduler.log('App create layout');
             return () => {
-              Scheduler.unstable_yieldValue('App destroy layout');
+              Scheduler.log('App destroy layout');
             };
           }, []);
           return (
@@ -1993,28 +1985,24 @@ describe('ReactSuspenseEffectsSemantics', () => {
       it('are properly handled for componentWillUnmount', async () => {
         class ThrowsInWillUnmount extends React.Component {
           componentDidMount() {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInWillUnmount componentDidMount',
-            );
+            Scheduler.log('ThrowsInWillUnmount componentDidMount');
           }
           componentWillUnmount() {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInWillUnmount componentWillUnmount',
-            );
+            Scheduler.log('ThrowsInWillUnmount componentWillUnmount');
             throw Error('expected');
           }
           render() {
-            Scheduler.unstable_yieldValue('ThrowsInWillUnmount render');
+            Scheduler.log('ThrowsInWillUnmount render');
             return <span prop="ThrowsInWillUnmount" />;
           }
         }
 
         function App({children = null}) {
-          Scheduler.unstable_yieldValue('App render');
+          Scheduler.log('App render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App create layout');
+            Scheduler.log('App create layout');
             return () => {
-              Scheduler.unstable_yieldValue('App destroy layout');
+              Scheduler.log('App destroy layout');
             };
           }, []);
           return (
@@ -2108,29 +2096,25 @@ describe('ReactSuspenseEffectsSemantics', () => {
         let useLayoutEffectShouldThrow = false;
 
         function ThrowsInLayoutEffect() {
-          Scheduler.unstable_yieldValue('ThrowsInLayoutEffect render');
+          Scheduler.log('ThrowsInLayoutEffect render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInLayoutEffect useLayoutEffect create',
-            );
+            Scheduler.log('ThrowsInLayoutEffect useLayoutEffect create');
             if (useLayoutEffectShouldThrow) {
               throw Error('expected');
             }
             return () => {
-              Scheduler.unstable_yieldValue(
-                'ThrowsInLayoutEffect useLayoutEffect destroy',
-              );
+              Scheduler.log('ThrowsInLayoutEffect useLayoutEffect destroy');
             };
           }, []);
           return <span prop="ThrowsInLayoutEffect" />;
         }
 
         function App({children = null}) {
-          Scheduler.unstable_yieldValue('App render');
+          Scheduler.log('App render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App create layout');
+            Scheduler.log('App create layout');
             return () => {
-              Scheduler.unstable_yieldValue('App destroy layout');
+              Scheduler.log('App destroy layout');
             };
           }, []);
           return (
@@ -2249,13 +2233,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect destruction', async () => {
         function ThrowsInLayoutEffectDestroy() {
-          Scheduler.unstable_yieldValue('ThrowsInLayoutEffectDestroy render');
+          Scheduler.log('ThrowsInLayoutEffectDestroy render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInLayoutEffectDestroy useLayoutEffect create',
-            );
+            Scheduler.log('ThrowsInLayoutEffectDestroy useLayoutEffect create');
             return () => {
-              Scheduler.unstable_yieldValue(
+              Scheduler.log(
                 'ThrowsInLayoutEffectDestroy useLayoutEffect destroy',
               );
               throw Error('expected');
@@ -2265,11 +2247,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
         }
 
         function App({children = null}) {
-          Scheduler.unstable_yieldValue('App render');
+          Scheduler.log('App render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App create layout');
+            Scheduler.log('App create layout');
             return () => {
-              Scheduler.unstable_yieldValue('App destroy layout');
+              Scheduler.log('App destroy layout');
             };
           }, []);
           return (
@@ -2363,21 +2345,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
       class ClassText extends React.Component {
         componentDidMount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidMount`);
+          Scheduler.log(`ClassText:${text} componentDidMount`);
         }
         componentDidUpdate() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidUpdate`);
+          Scheduler.log(`ClassText:${text} componentDidUpdate`);
         }
         componentWillUnmount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(
-            `ClassText:${text} componentWillUnmount`,
-          );
+          Scheduler.log(`ClassText:${text} componentWillUnmount`);
         }
         render() {
           const {children, text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} render`);
+          Scheduler.log(`ClassText:${text} render`);
           return <span prop={text}>{children}</span>;
         }
       }
@@ -2511,21 +2491,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
       class ClassText extends React.Component {
         componentDidMount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidMount`);
+          Scheduler.log(`ClassText:${text} componentDidMount`);
         }
         componentDidUpdate() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} componentDidUpdate`);
+          Scheduler.log(`ClassText:${text} componentDidUpdate`);
         }
         componentWillUnmount() {
           const {text} = this.props;
-          Scheduler.unstable_yieldValue(
-            `ClassText:${text} componentWillUnmount`,
-          );
+          Scheduler.log(`ClassText:${text} componentWillUnmount`);
         }
         render() {
           const {children, text} = this.props;
-          Scheduler.unstable_yieldValue(`ClassText:${text} render`);
+          Scheduler.log(`ClassText:${text} render`);
           return <span prop={text}>{children}</span>;
         }
       }
@@ -2533,7 +2511,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       let textToRead = null;
 
       function Suspender() {
-        Scheduler.unstable_yieldValue(`Suspender "${textToRead}" render`);
+        Scheduler.log(`Suspender "${textToRead}" render`);
         if (textToRead !== null) {
           readText(textToRead);
         }
@@ -2663,22 +2641,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       const manualRef = React.useMemo(() => ({current: null}), []);
       const refCallback = React.useCallback(value => {
-        Scheduler.unstable_yieldValue(
-          `RefCheckerOuter refCallback value? ${value != null}`,
-        );
+        Scheduler.log(`RefCheckerOuter refCallback value? ${value != null}`);
         manualRef.current = value;
       }, []);
 
-      Scheduler.unstable_yieldValue(`RefCheckerOuter render`);
+      Scheduler.log(`RefCheckerOuter render`);
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `RefCheckerOuter create layout refObject? ${
             refObject.current != null
           } refCallback? ${manualRef.current != null}`,
         );
         return () => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `RefCheckerOuter destroy layout refObject? ${
               refObject.current != null
             } refCallback? ${manualRef.current != null}`,
@@ -2699,15 +2675,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
     }
 
     function RefCheckerInner({forwardedRef, text}) {
-      Scheduler.unstable_yieldValue(`RefCheckerInner:${text} render`);
+      Scheduler.log(`RefCheckerInner:${text} render`);
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `RefCheckerInner:${text} create layout ref? ${
             forwardedRef.current != null
           }`,
         );
         return () => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `RefCheckerInner:${text} destroy layout ref? ${
               forwardedRef.current != null
             }`,
@@ -2721,15 +2697,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should not be cleared within legacy roots', async () => {
       class ClassComponent extends React.Component {
         render() {
-          Scheduler.unstable_yieldValue(
-            `ClassComponent:${this.props.prop} render`,
-          );
+          Scheduler.log(`ClassComponent:${this.props.prop} render`);
           return this.props.children;
         }
       }
 
       function App({children}) {
-        Scheduler.unstable_yieldValue(`App render`);
+        Scheduler.log(`App render`);
         return (
           <Suspense fallback={<Text text="Fallback" />}>
             {children}
@@ -2806,7 +2780,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should be cleared and reset for host components', async () => {
       function App({children}) {
-        Scheduler.unstable_yieldValue(`App render`);
+        Scheduler.log(`App render`);
         return (
           <Suspense fallback={<Text text="Fallback" />}>
             {children}
@@ -2909,15 +2883,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should be cleared and reset for class components', async () => {
       class ClassComponent extends React.Component {
         render() {
-          Scheduler.unstable_yieldValue(
-            `ClassComponent:${this.props.prop} render`,
-          );
+          Scheduler.log(`ClassComponent:${this.props.prop} render`);
           return this.props.children;
         }
       }
 
       function App({children}) {
-        Scheduler.unstable_yieldValue(`App render`);
+        Scheduler.log(`App render`);
         return (
           <Suspense fallback={<Text text="Fallback" />}>
             {children}
@@ -3008,7 +2980,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should be cleared and reset for function components with useImperativeHandle', async () => {
       const FunctionComponent = React.forwardRef((props, ref) => {
-        Scheduler.unstable_yieldValue('FunctionComponent render');
+        Scheduler.log('FunctionComponent render');
         React.useImperativeHandle(
           ref,
           () => ({
@@ -3021,7 +2993,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       FunctionComponent.displayName = 'FunctionComponent';
 
       function App({children}) {
-        Scheduler.unstable_yieldValue(`App render`);
+        Scheduler.log(`App render`);
         return (
           <Suspense fallback={<Text text="Fallback" />}>
             {children}
@@ -3112,13 +3084,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
     // @gate enableLegacyCache
     it('should not reset for user-managed values', async () => {
       function RefChecker({forwardedRef}) {
-        Scheduler.unstable_yieldValue(`RefChecker render`);
+        Scheduler.log(`RefChecker render`);
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `RefChecker create layout ref? ${forwardedRef.current === 'test'}`,
           );
           return () => {
-            Scheduler.unstable_yieldValue(
+            Scheduler.log(
               `RefChecker destroy layout ref? ${
                 forwardedRef.current === 'test'
               }`,
@@ -3130,15 +3102,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       function App({children = null}) {
         const ref = React.useRef('test');
-        Scheduler.unstable_yieldValue(`App render`);
+        Scheduler.log(`App render`);
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue(
-            `App create layout ref? ${ref.current === 'test'}`,
-          );
+          Scheduler.log(`App create layout ref? ${ref.current === 'test'}`);
           return () => {
-            Scheduler.unstable_yieldValue(
-              `App destroy layout ref? ${ref.current === 'test'}`,
-            );
+            Scheduler.log(`App destroy layout ref? ${ref.current === 'test'}`);
           };
         }, []);
         return (
@@ -3213,11 +3181,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         let useRefCallbackShouldThrow = false;
 
         function ThrowsInRefCallback() {
-          Scheduler.unstable_yieldValue('ThrowsInRefCallback render');
+          Scheduler.log('ThrowsInRefCallback render');
           const refCallback = React.useCallback(value => {
-            Scheduler.unstable_yieldValue(
-              'ThrowsInRefCallback refCallback ref? ' + !!value,
-            );
+            Scheduler.log('ThrowsInRefCallback refCallback ref? ' + !!value);
             if (useRefCallbackShouldThrow) {
               throw Error('expected');
             }
@@ -3226,11 +3192,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
         }
 
         function App({children = null}) {
-          Scheduler.unstable_yieldValue('App render');
+          Scheduler.log('App render');
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App create layout');
+            Scheduler.log('App create layout');
             return () => {
-              Scheduler.unstable_yieldValue('App destroy layout');
+              Scheduler.log('App destroy layout');
             };
           }, []);
           return (

@@ -145,7 +145,7 @@ describe('useMutableSource', () => {
 
   function Component({getSnapshot, label, mutableSource, subscribe}) {
     const snapshot = useMutableSource(mutableSource, getSnapshot, subscribe);
-    Scheduler.unstable_yieldValue(`${label}:${snapshot}`);
+    Scheduler.log(`${label}:${snapshot}`);
     return <div>{`${label}:${snapshot}`}</div>;
   }
 
@@ -173,7 +173,7 @@ describe('useMutableSource', () => {
           />
         </>,
         'root',
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitFor(['a:one', 'b:one', 'Sync effect']);
 
@@ -197,7 +197,7 @@ describe('useMutableSource', () => {
           />
         </>,
         'root',
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:two', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -237,7 +237,7 @@ describe('useMutableSource', () => {
               subscribe={defaultSubscribe}
             />
           </>,
-          () => Scheduler.unstable_yieldValue('Sync effect'),
+          () => Scheduler.log('Sync effect'),
         );
       });
       // Do enough work to read from one component
@@ -272,7 +272,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
 
       // Finish rendering
@@ -309,7 +309,7 @@ describe('useMutableSource', () => {
           mutableSource={mutableSourceA}
           subscribe={defaultSubscribe}
         />,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:a-one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -327,7 +327,7 @@ describe('useMutableSource', () => {
           mutableSource={mutableSourceB}
           subscribe={defaultSubscribe}
         />,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:b-one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -375,7 +375,7 @@ describe('useMutableSource', () => {
           subscribe={subscribeA}
         />,
         'root',
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:a-one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -392,7 +392,7 @@ describe('useMutableSource', () => {
           subscribe={subscribeB}
         />,
         'root',
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:a-one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -430,7 +430,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'b:one', 'Sync effect']);
 
@@ -459,7 +459,7 @@ describe('useMutableSource', () => {
               subscribe={defaultSubscribe}
             />
           </>,
-          () => Scheduler.unstable_yieldValue('Sync effect'),
+          () => Scheduler.log('Sync effect'),
         );
       });
       assertLog(['a:one', 'b:one', 'Sync effect']);
@@ -483,7 +483,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'Sync effect']);
 
@@ -502,7 +502,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'b:one', 'Sync effect']);
     });
@@ -529,7 +529,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'b:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -562,7 +562,7 @@ describe('useMutableSource', () => {
               subscribe={defaultSubscribe}
             />
           </>,
-          () => Scheduler.unstable_yieldValue('Sync effect'),
+          () => Scheduler.log('Sync effect'),
         );
       });
       assertLog(['a:new:two', 'b:new:two', 'Sync effect']);
@@ -590,7 +590,7 @@ describe('useMutableSource', () => {
             subscribe={defaultSubscribe}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'b:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -623,7 +623,7 @@ describe('useMutableSource', () => {
               subscribe={defaultSubscribe}
             />
           </>,
-          () => Scheduler.unstable_yieldValue('Sync effect'),
+          () => Scheduler.log('Sync effect'),
         );
       });
       assertLog(['a:new:two', 'b:new:two', 'Sync effect']);
@@ -657,7 +657,7 @@ describe('useMutableSource', () => {
             subscribe={subscribeB}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:a:one', 'b:b:one', 'Sync effect']);
 
@@ -690,7 +690,7 @@ describe('useMutableSource', () => {
             subscribe={subscribeA}
           />
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:a:one', 'Sync effect']);
 
@@ -718,7 +718,7 @@ describe('useMutableSource', () => {
               subscribe={subscribeB}
             />
           </>,
-          () => Scheduler.unstable_yieldValue('Sync effect'),
+          () => Scheduler.log('Sync effect'),
         );
       });
       await waitFor(['a:a:one', 'b:b:one']);
@@ -746,7 +746,7 @@ describe('useMutableSource', () => {
           mutableSource={mutableSource}
           subscribe={defaultSubscribe}
         />,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitFor(['only:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -782,7 +782,7 @@ describe('useMutableSource', () => {
 
     await act(async () => {
       ReactNoop.render(<WrapperWithState />, () =>
-        Scheduler.unstable_yieldValue('Sync effect'),
+        Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -873,7 +873,7 @@ describe('useMutableSource', () => {
             <WrapperWithState />
           </React.Profiler>
         </>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitForAll(['a:one', 'b:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -914,7 +914,7 @@ describe('useMutableSource', () => {
 
     await act(async () => {
       ReactNoop.render(<WrapperWithState />, () =>
-        Scheduler.unstable_yieldValue('Sync effect'),
+        Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -973,14 +973,12 @@ describe('useMutableSource', () => {
         getSnapshot,
         defaultSubscribe,
       );
-      Scheduler.unstable_yieldValue(`${id}:${name}`);
+      Scheduler.log(`${id}:${name}`);
       return <li>{name}</li>;
     }
 
     await act(async () => {
-      ReactNoop.render(<FriendsList />, () =>
-        Scheduler.unstable_yieldValue('Sync effect'),
-      );
+      ReactNoop.render(<FriendsList />, () => Scheduler.log('Sync effect'));
       await waitForAll(['1:Foo', '2:Bar', 'Sync effect']);
 
       // This mutation will cause the "Bar" component to throw,
@@ -1004,7 +1002,7 @@ describe('useMutableSource', () => {
 
     function Wrapper() {
       React.useLayoutEffect(() => () => {
-        Scheduler.unstable_yieldValue('layout unmount');
+        Scheduler.log('layout unmount');
       });
       return (
         <Component
@@ -1018,7 +1016,7 @@ describe('useMutableSource', () => {
 
     await act(async () => {
       ReactNoop.renderToRootWithID(<Wrapper />, 'root', () =>
-        Scheduler.unstable_yieldValue('Sync effect'),
+        Scheduler.log('Sync effect'),
       );
       await waitForAll(['only:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
@@ -1222,7 +1220,7 @@ describe('useMutableSource', () => {
       }
 
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue(result);
+        Scheduler.log(result);
       }, [result]);
 
       return result;
@@ -1296,9 +1294,9 @@ describe('useMutableSource', () => {
         defaultSubscribe,
       );
 
-      Scheduler.unstable_yieldValue('Render: ' + value);
+      Scheduler.log('Render: ' + value);
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('Commit: ' + value);
+        Scheduler.log('Commit: ' + value);
       }, [value]);
 
       return value;
@@ -1436,12 +1434,12 @@ describe('useMutableSource', () => {
           getSnapshot,
           defaultSubscribe,
         );
-        Scheduler.unstable_yieldValue(value);
+        Scheduler.log(value);
         return value;
       }
 
       function Text({text}) {
-        Scheduler.unstable_yieldValue(text);
+        Scheduler.log(text);
         return text;
       }
 
@@ -1513,7 +1511,7 @@ describe('useMutableSource', () => {
     function Read() {
       const fn = useMutableSource(mutableSource, getSnapshot, defaultSubscribe);
       const value = fn();
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return value;
     }
 
@@ -1553,7 +1551,7 @@ describe('useMutableSource', () => {
         subscribe,
       );
 
-      Scheduler.unstable_yieldValue('Parent: ' + parentValue);
+      Scheduler.log('Parent: ' + parentValue);
 
       return (
         <Child
@@ -1572,7 +1570,7 @@ describe('useMutableSource', () => {
         subscribe,
       );
 
-      Scheduler.unstable_yieldValue('Child: ' + childValue);
+      Scheduler.log('Child: ' + childValue);
 
       let result = `${parentValue}, ${childValue}`;
 
@@ -1585,7 +1583,7 @@ describe('useMutableSource', () => {
       }
 
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Commit: ' + result);
+        Scheduler.log('Commit: ' + result);
       }, [result]);
 
       return result;
@@ -1648,7 +1646,7 @@ describe('useMutableSource', () => {
         defaultGetSnapshot,
         defaultSubscribe,
       );
-      Scheduler.unstable_yieldValue(`a:${snapshot}`);
+      Scheduler.log(`a:${snapshot}`);
       React.useEffect(() => {
         committedA = snapshot;
       }, [snapshot]);
@@ -1660,7 +1658,7 @@ describe('useMutableSource', () => {
         defaultGetSnapshot,
         defaultSubscribe,
       );
-      Scheduler.unstable_yieldValue(`b:${snapshot}`);
+      Scheduler.log(`b:${snapshot}`);
       React.useEffect(() => {
         committedB = snapshot;
       }, [snapshot]);
@@ -1673,7 +1671,7 @@ describe('useMutableSource', () => {
         <React.Profiler id="root" onRender={onRender}>
           <ComponentA />
         </React.Profiler>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
     });
     assertLog(['a:one', 'Sync effect']);
@@ -1686,7 +1684,7 @@ describe('useMutableSource', () => {
           <ComponentA />
           <ComponentB />
         </React.Profiler>,
-        () => Scheduler.unstable_yieldValue('Sync effect'),
+        () => Scheduler.log('Sync effect'),
       );
       await waitFor(['a:one', 'b:one', 'Sync effect']);
       expect(source.listenerCount).toBe(1);

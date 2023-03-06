@@ -77,7 +77,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 

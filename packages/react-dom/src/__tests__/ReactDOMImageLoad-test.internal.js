@@ -29,12 +29,12 @@ let waitFor;
 let assertLog;
 
 function PhaseMarkers({children}) {
-  Scheduler.unstable_yieldValue('render start');
+  Scheduler.log('render start');
   React.useLayoutEffect(() => {
-    Scheduler.unstable_yieldValue('last layout');
+    Scheduler.log('last layout');
   });
   React.useEffect(() => {
-    Scheduler.unstable_yieldValue('last passive');
+    Scheduler.log('last passive');
   });
   return children;
 }
@@ -50,7 +50,7 @@ function last(arr) {
 }
 
 function Text(props) {
-  Scheduler.unstable_yieldValue(props.text);
+  Scheduler.log(props.text);
   return props.text;
 }
 
@@ -58,13 +58,13 @@ function Text(props) {
 //   const text = props.text;
 //   try {
 //     TextResource.read([props.text, props.ms]);
-//     Scheduler.unstable_yieldValue(text);
+//     Scheduler.log(text);
 //     return text;
 //   } catch (promise) {
 //     if (typeof promise.then === 'function') {
-//       Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+//       Scheduler.log(`Suspend! [${text}]`);
 //     } else {
-//       Scheduler.unstable_yieldValue(`Error! [${text}]`);
+//       Scheduler.log(`Error! [${text}]`);
 //     }
 //     throw promise;
 //   }
@@ -72,12 +72,12 @@ function Text(props) {
 
 function Img({src: maybeSrc, onLoad, useImageLoader, ref}) {
   const src = maybeSrc || 'default';
-  Scheduler.unstable_yieldValue('Img ' + src);
+  Scheduler.log('Img ' + src);
   return <img src={src} onLoad={onLoad} />;
 }
 
 function Yield() {
-  Scheduler.unstable_yieldValue('Yield');
+  Scheduler.log('Yield');
   Scheduler.unstable_requestPaint();
   return null;
 }
@@ -105,12 +105,12 @@ describe('ReactDOMImageLoad', () => {
 
     onLoadSpy = jest.fn(reactEvent => {
       const src = reactEvent.target.getAttribute('src');
-      Scheduler.unstable_yieldValue('onLoadSpy [' + src + ']');
+      Scheduler.log('onLoadSpy [' + src + ']');
     });
 
     actualLoadSpy = jest.fn(nativeEvent => {
       const src = nativeEvent.target.getAttribute('src');
-      Scheduler.unstable_yieldValue('actualLoadSpy [' + src + ']');
+      Scheduler.log('actualLoadSpy [' + src + ']');
       nativeEvent.__originalDispatch = false;
     });
 
@@ -127,14 +127,14 @@ describe('ReactDOMImageLoad', () => {
     //               listeners = [{resolve, reject}];
     //               setTimeout(() => {
     //                 if (textResourceShouldFail) {
-    //                   Scheduler.unstable_yieldValue(
+    //                   Scheduler.log(
     //                     `Promise rejected [${text}]`,
     //                   );
     //                   status = 'rejected';
     //                   value = new Error('Failed to load: ' + text);
     //                   listeners.forEach(listener => listener.reject(value));
     //                 } else {
-    //                   Scheduler.unstable_yieldValue(
+    //                   Scheduler.log(
     //                     `Promise resolved [${text}]`,
     //                   );
     //                   status = 'resolved';
@@ -185,7 +185,7 @@ describe('ReactDOMImageLoad', () => {
         return this.getAttribute('src');
       },
       set(value) {
-        Scheduler.unstable_yieldValue('load triggered');
+        Scheduler.log('load triggered');
         this.__needsDispatch = true;
         this.setAttribute('src', value);
       },
@@ -438,7 +438,7 @@ describe('ReactDOMImageLoad', () => {
 
   // it('captures the load event if it happens in a suspended subtree and replays it between layout and passive effects on resumption', async function() {
   //   function SuspendingWithImage() {
-  //     Scheduler.unstable_yieldValue('SuspendingWithImage');
+  //     Scheduler.log('SuspendingWithImage');
   //     return (
   //       <Suspense fallback={<Text text="Loading..." />}>
   //         <AsyncText text="A" ms={100} />
@@ -511,9 +511,9 @@ describe('ReactDOMImageLoad', () => {
     }
 
     function YieldingWithImage({src}) {
-      Scheduler.unstable_yieldValue('YieldingWithImage');
+      Scheduler.log('YieldingWithImage');
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('Committed');
+        Scheduler.log('Committed');
       });
       return (
         <>

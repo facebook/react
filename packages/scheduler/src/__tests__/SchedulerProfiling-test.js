@@ -270,19 +270,19 @@ describe('Scheduler', () => {
       NormalPriority,
       () => {
         Scheduler.unstable_advanceTime(300);
-        Scheduler.unstable_yieldValue('Yield 1');
+        Scheduler.log('Yield 1');
         scheduleCallback(
           UserBlockingPriority,
           () => {
-            Scheduler.unstable_yieldValue('Yield 2');
+            Scheduler.log('Yield 2');
             Scheduler.unstable_advanceTime(300);
           },
           {label: 'Bar'},
         );
         Scheduler.unstable_advanceTime(100);
-        Scheduler.unstable_yieldValue('Yield 3');
+        Scheduler.log('Yield 3');
         return () => {
-          Scheduler.unstable_yieldValue('Yield 4');
+          Scheduler.log('Yield 4');
           Scheduler.unstable_advanceTime(300);
         };
       },
@@ -305,11 +305,11 @@ Task 1 [Normal]              │  ████████░░░░░░░�
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task = scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Yield 1');
+      Scheduler.log('Yield 1');
       Scheduler.unstable_advanceTime(300);
-      Scheduler.unstable_yieldValue('Yield 2');
+      Scheduler.log('Yield 2');
       return () => {
-        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.log('Continuation');
         Scheduler.unstable_advanceTime(200);
       };
     });
@@ -354,20 +354,20 @@ Task 1 [Normal]              │██████🡐 errored
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task1 = scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Yield 1');
+      Scheduler.log('Yield 1');
       Scheduler.unstable_advanceTime(300);
-      Scheduler.unstable_yieldValue('Yield 2');
+      Scheduler.log('Yield 2');
       return () => {
-        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.log('Continuation');
         Scheduler.unstable_advanceTime(200);
       };
     });
     const task2 = scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('Yield 3');
+      Scheduler.log('Yield 3');
       Scheduler.unstable_advanceTime(300);
-      Scheduler.unstable_yieldValue('Yield 4');
+      Scheduler.log('Yield 4');
       return () => {
-        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.log('Continuation');
         Scheduler.unstable_advanceTime(200);
       };
     });
@@ -397,7 +397,7 @@ Task 2 [Normal]              │░░░░░░░░🡐 canceled
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task = scheduleCallback(NormalPriority, () => {
-      Scheduler.unstable_yieldValue('A');
+      Scheduler.log('A');
       Scheduler.unstable_advanceTime(1000);
     });
     await waitForAll(['A']);
@@ -416,7 +416,7 @@ Task 1 [Normal]              │████████████████
     scheduleCallback(
       NormalPriority,
       () => {
-        Scheduler.unstable_yieldValue('A');
+        Scheduler.log('A');
         Scheduler.unstable_advanceTime(1000);
       },
       {label: 'A'},
@@ -425,7 +425,7 @@ Task 1 [Normal]              │████████████████
     const task = scheduleCallback(
       NormalPriority,
       () => {
-        Scheduler.unstable_yieldValue('B');
+        Scheduler.log('B');
         Scheduler.unstable_advanceTime(1000);
       },
       {label: 'B'},
@@ -450,7 +450,7 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
       NormalPriority,
       () => {
         Scheduler.unstable_advanceTime(1000);
-        Scheduler.unstable_yieldValue('A');
+        Scheduler.log('A');
       },
       {
         delay: 1000,
@@ -472,11 +472,9 @@ Task 1 [Normal]              │                    █████████�
 
   it('handles cancelling a delayed task', async () => {
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
-    const task = scheduleCallback(
-      NormalPriority,
-      () => Scheduler.unstable_yieldValue('A'),
-      {delay: 1000},
-    );
+    const task = scheduleCallback(NormalPriority, () => Scheduler.log('A'), {
+      delay: 1000,
+    });
     cancelCallback(task);
     await waitForAll([]);
     expect(stopProfilingAndPrintFlamegraph()).toEqual(

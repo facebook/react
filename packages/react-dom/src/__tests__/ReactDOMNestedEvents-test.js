@@ -41,9 +41,7 @@ describe('ReactDOMNestedEvents', () => {
         // The update triggered by the focus event should not have flushed yet.
         // Nor the click update. They would have if we had wrapped the focus
         // call in `flushSync`, though.
-        Scheduler.unstable_yieldValue(
-          'Value right after focus call: ' + el.innerHTML,
-        );
+        Scheduler.log('Value right after focus call: ' + el.innerHTML);
       };
       const onFocus = () => {
         setIsFocused(true);

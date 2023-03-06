@@ -40,13 +40,13 @@ describe('StrictEffectsMode defaults', () => {
   it('should not double invoke effects in legacy mode', () => {
     function App({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect mount');
-        return () => Scheduler.unstable_yieldValue('useEffect unmount');
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
-        return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
       });
 
       return text;
@@ -62,15 +62,15 @@ describe('StrictEffectsMode defaults', () => {
   it('should not double invoke class lifecycles in legacy mode', () => {
     class App extends React.PureComponent {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
 
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       render() {
@@ -89,9 +89,8 @@ describe('StrictEffectsMode defaults', () => {
     it('should flush double-invoked effects within the same frame as layout effects if there are no passive effects', async () => {
       function ComponentWithEffects({label}) {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue(`useLayoutEffect mount "${label}"`);
-          return () =>
-            Scheduler.unstable_yieldValue(`useLayoutEffect unmount "${label}"`);
+          Scheduler.log(`useLayoutEffect mount "${label}"`);
+          return () => Scheduler.log(`useLayoutEffect unmount "${label}"`);
         });
 
         return label;
@@ -138,15 +137,13 @@ describe('StrictEffectsMode defaults', () => {
     it('should double invoke effects only for newly mounted components', async () => {
       function ComponentWithEffects({label}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue(`useEffect mount "${label}"`);
-          return () =>
-            Scheduler.unstable_yieldValue(`useEffect unmount "${label}"`);
+          Scheduler.log(`useEffect mount "${label}"`);
+          return () => Scheduler.log(`useEffect unmount "${label}"`);
         });
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue(`useLayoutEffect mount "${label}"`);
-          return () =>
-            Scheduler.unstable_yieldValue(`useLayoutEffect unmount "${label}"`);
+          Scheduler.log(`useLayoutEffect mount "${label}"`);
+          return () => Scheduler.log(`useLayoutEffect unmount "${label}"`);
         });
 
         return label;
@@ -200,13 +197,13 @@ describe('StrictEffectsMode defaults', () => {
     it('double invoking for effects for modern roots', () => {
       function App({text}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('useEffect mount');
-          return () => Scheduler.unstable_yieldValue('useEffect unmount');
+          Scheduler.log('useEffect mount');
+          return () => Scheduler.log('useEffect unmount');
         });
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect mount');
-          return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+          Scheduler.log('useLayoutEffect mount');
+          return () => Scheduler.log('useLayoutEffect unmount');
         });
 
         return text;
@@ -245,13 +242,13 @@ describe('StrictEffectsMode defaults', () => {
     it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
       function App({text}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('useEffect One mount');
-          return () => Scheduler.unstable_yieldValue('useEffect One unmount');
+          Scheduler.log('useEffect One mount');
+          return () => Scheduler.log('useEffect One unmount');
         });
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('useEffect Two mount');
-          return () => Scheduler.unstable_yieldValue('useEffect Two unmount');
+          Scheduler.log('useEffect Two mount');
+          return () => Scheduler.log('useEffect Two unmount');
         });
 
         return text;
@@ -291,15 +288,13 @@ describe('StrictEffectsMode defaults', () => {
     it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
       function App({text}) {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect One mount');
-          return () =>
-            Scheduler.unstable_yieldValue('useLayoutEffect One unmount');
+          Scheduler.log('useLayoutEffect One mount');
+          return () => Scheduler.log('useLayoutEffect One unmount');
         });
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect Two mount');
-          return () =>
-            Scheduler.unstable_yieldValue('useLayoutEffect Two unmount');
+          Scheduler.log('useLayoutEffect Two mount');
+          return () => Scheduler.log('useLayoutEffect Two unmount');
         });
 
         return text;
@@ -339,11 +334,11 @@ describe('StrictEffectsMode defaults', () => {
     it('useEffect and useLayoutEffect is called twice when there is no unmount', () => {
       function App({text}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('useEffect mount');
+          Scheduler.log('useEffect mount');
         });
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect mount');
+          Scheduler.log('useLayoutEffect mount');
         });
 
         return text;
@@ -403,17 +398,17 @@ describe('StrictEffectsMode defaults', () => {
 
         componentDidMount() {
           this.test();
-          Scheduler.unstable_yieldValue('componentDidMount');
+          Scheduler.log('componentDidMount');
         }
 
         componentDidUpdate() {
           this.test();
-          Scheduler.unstable_yieldValue('componentDidUpdate');
+          Scheduler.log('componentDidUpdate');
         }
 
         componentWillUnmount() {
           this.test();
-          Scheduler.unstable_yieldValue('componentWillUnmount');
+          Scheduler.log('componentWillUnmount');
         }
 
         render() {
@@ -435,15 +430,15 @@ describe('StrictEffectsMode defaults', () => {
     it('double invoking works for class components', () => {
       class App extends React.PureComponent {
         componentDidMount() {
-          Scheduler.unstable_yieldValue('componentDidMount');
+          Scheduler.log('componentDidMount');
         }
 
         componentDidUpdate() {
-          Scheduler.unstable_yieldValue('componentDidUpdate');
+          Scheduler.log('componentDidUpdate');
         }
 
         componentWillUnmount() {
-          Scheduler.unstable_yieldValue('componentWillUnmount');
+          Scheduler.log('componentWillUnmount');
         }
 
         render() {
@@ -481,16 +476,16 @@ describe('StrictEffectsMode defaults', () => {
           if (state !== 1) {
             setState(1);
           }
-          Scheduler.unstable_yieldValue('useEffect mount');
-          return () => Scheduler.unstable_yieldValue('useEffect unmount');
+          Scheduler.log('useEffect mount');
+          return () => Scheduler.log('useEffect unmount');
         });
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect mount');
-          return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+          Scheduler.log('useLayoutEffect mount');
+          return () => Scheduler.log('useLayoutEffect unmount');
         });
 
-        Scheduler.unstable_yieldValue(text);
+        Scheduler.log(text);
         return text;
       }
 
@@ -518,13 +513,12 @@ describe('StrictEffectsMode defaults', () => {
       let _setShowChild;
       function Child() {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('Child useEffect mount');
-          return () => Scheduler.unstable_yieldValue('Child useEffect unmount');
+          Scheduler.log('Child useEffect mount');
+          return () => Scheduler.log('Child useEffect unmount');
         });
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('Child useLayoutEffect mount');
-          return () =>
-            Scheduler.unstable_yieldValue('Child useLayoutEffect unmount');
+          Scheduler.log('Child useLayoutEffect mount');
+          return () => Scheduler.log('Child useLayoutEffect unmount');
         });
 
         return null;
@@ -534,13 +528,12 @@ describe('StrictEffectsMode defaults', () => {
         const [showChild, setShowChild] = React.useState(false);
         _setShowChild = setShowChild;
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('App useEffect mount');
-          return () => Scheduler.unstable_yieldValue('App useEffect unmount');
+          Scheduler.log('App useEffect mount');
+          return () => Scheduler.log('App useEffect unmount');
         });
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('App useLayoutEffect mount');
-          return () =>
-            Scheduler.unstable_yieldValue('App useLayoutEffect unmount');
+          Scheduler.log('App useLayoutEffect mount');
+          return () => Scheduler.log('App useLayoutEffect unmount');
         });
 
         return showChild && <Child />;
@@ -580,11 +573,11 @@ describe('StrictEffectsMode defaults', () => {
     it('classes and functions are double invoked together correctly', () => {
       class ClassChild extends React.PureComponent {
         componentDidMount() {
-          Scheduler.unstable_yieldValue('componentDidMount');
+          Scheduler.log('componentDidMount');
         }
 
         componentWillUnmount() {
-          Scheduler.unstable_yieldValue('componentWillUnmount');
+          Scheduler.log('componentWillUnmount');
         }
 
         render() {
@@ -594,12 +587,12 @@ describe('StrictEffectsMode defaults', () => {
 
       function FunctionChild({text}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('useEffect mount');
-          return () => Scheduler.unstable_yieldValue('useEffect unmount');
+          Scheduler.log('useEffect mount');
+          return () => Scheduler.log('useEffect unmount');
         });
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('useLayoutEffect mount');
-          return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+          Scheduler.log('useLayoutEffect mount');
+          return () => Scheduler.log('useLayoutEffect unmount');
         });
         return text;
       }

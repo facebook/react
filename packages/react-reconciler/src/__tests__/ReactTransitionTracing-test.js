@@ -112,16 +112,16 @@ describe('ReactInteractionTracing', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend [${text}]`);
+          Scheduler.log(`Suspend [${text}]`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error [${text}]`);
+          Scheduler.log(`Error [${text}]`);
           throw record.value;
         case 'resolved':
           return record.value;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend [${text}]`);
+      Scheduler.log(`Suspend [${text}]`);
 
       const thenable = {
         pings: [],
@@ -146,12 +146,12 @@ describe('ReactInteractionTracing', () => {
 
   function AsyncText({text}) {
     const fullText = readText(text);
-    Scheduler.unstable_yieldValue(fullText);
+    Scheduler.log(fullText);
     return fullText;
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -183,18 +183,16 @@ describe('ReactInteractionTracing', () => {
   it(' should not call callbacks when transition is not defined', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -206,12 +204,12 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -266,18 +264,16 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace basic interaction', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -326,12 +322,10 @@ describe('ReactInteractionTracing', () => {
   it('multiple updates in transition callback should only result in one transitionStart/transitionComplete call', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -391,18 +385,16 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace interactions for async roots', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -469,18 +461,16 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace multiple separate root interactions', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -578,18 +568,16 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace multiple intertwined root interactions', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -695,18 +683,16 @@ describe('ReactInteractionTracing', () => {
   it('trace interaction with nested and sibling suspense boundaries', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -813,18 +799,16 @@ describe('ReactInteractionTracing', () => {
   it('trace interactions with the same child suspense boundaries', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -979,18 +963,16 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace basic interaction with tracing markers', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1002,12 +984,12 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1065,12 +1047,10 @@ describe('ReactInteractionTracing', () => {
   it('should correctly trace interactions for tracing markers', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1082,12 +1062,12 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1176,12 +1156,10 @@ describe('ReactInteractionTracing', () => {
   it('trace interaction with multiple tracing markers', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1193,12 +1171,12 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1304,18 +1282,16 @@ describe('ReactInteractionTracing', () => {
   it.skip('warn and calls marker incomplete if name changes before transition completes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1327,7 +1303,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -1337,14 +1313,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1420,18 +1396,16 @@ describe('ReactInteractionTracing', () => {
   it('marker incomplete for tree with parent and sibling tracing markers', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1443,7 +1417,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -1453,14 +1427,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1576,18 +1550,16 @@ describe('ReactInteractionTracing', () => {
   it('marker gets deleted', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1599,7 +1571,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -1609,14 +1581,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1711,18 +1683,16 @@ describe('ReactInteractionTracing', () => {
   it('Suspense boundary added by the transition is deleted', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1734,7 +1704,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -1744,14 +1714,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1869,18 +1839,16 @@ describe('ReactInteractionTracing', () => {
   it('Suspense boundary not added by the transition is deleted ', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -1892,7 +1860,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -1902,14 +1870,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -1979,18 +1947,16 @@ describe('ReactInteractionTracing', () => {
   it('marker incomplete gets called properly if child suspense marker is not part of it', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -2002,7 +1968,7 @@ describe('ReactInteractionTracing', () => {
         pending,
       ) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
@@ -2012,14 +1978,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -2118,12 +2084,10 @@ describe('ReactInteractionTracing', () => {
   it('warns when marker name changes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -2133,14 +2097,14 @@ describe('ReactInteractionTracing', () => {
         startTime,
         deletions,
       ) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
             deletions,
           )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -2212,17 +2176,15 @@ describe('ReactInteractionTracing', () => {
   it('offscreen trees should not stop transition from completing', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
         );
       },
@@ -2282,18 +2244,16 @@ describe('ReactInteractionTracing', () => {
   it('discrete events', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -2344,18 +2304,16 @@ describe('ReactInteractionTracing', () => {
   it('multiple commits happen before a paint', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
-        Scheduler.unstable_yieldValue(
-          `onTransitionStart(${name}, ${startTime})`,
-        );
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
       },
       onTransitionProgress: (name, startTime, endTime, pending) => {
         const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
         );
       },
       onTransitionComplete: (name, startTime, endTime) => {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
@@ -2420,18 +2378,18 @@ describe('ReactInteractionTracing', () => {
     const getTransitionCallbacks = transitionName => {
       return {
         onTransitionStart: (name, startTime) => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `onTransitionStart(${name}, ${startTime}) /${transitionName}/`,
           );
         },
         onTransitionProgress: (name, startTime, endTime, pending) => {
           const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}]) /${transitionName}/`,
           );
         },
         onTransitionComplete: (name, startTime, endTime) => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `onTransitionComplete(${name}, ${startTime}, ${endTime}) /${transitionName}/`,
           );
         },

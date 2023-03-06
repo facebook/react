@@ -600,7 +600,7 @@ describe('ReactDOMFiberAsync', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function Text(props) {
-      Scheduler.unstable_yieldValue(props.text);
+      Scheduler.log(props.text);
       return props.text;
     }
 

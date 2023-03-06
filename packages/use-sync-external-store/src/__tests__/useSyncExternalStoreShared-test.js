@@ -84,7 +84,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -288,7 +288,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       function App() {
         const value = useSyncExternalStore(store.subscribe, store.getState);
         useEffect(() => {
-          Scheduler.unstable_yieldValue('Passive effect: ' + value);
+          Scheduler.log('Passive effect: ' + value);
         }, [value]);
         return <Text text={value} />;
       }
@@ -337,7 +337,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           // that changed the getSnapshot in Child2. Child2's effects haven't
           // fired yet, so it doesn't have access to the latest getSnapshot. So
           // it can't use the getSnapshot to bail out.
-          Scheduler.unstable_yieldValue('Update B in commit phase');
+          Scheduler.log('Update B in commit phase');
           store.set({a: value.a, b: 2});
         }
       }, [step]);
@@ -397,7 +397,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           // that changed the getSnapshot in Child2. Child2's effects haven't
           // fired yet, so it doesn't have access to the latest getSnapshot. So
           // it can't use the getSnapshot to bail out.
-          Scheduler.unstable_yieldValue('Update B in commit phase');
+          Scheduler.log('Update B in commit phase');
           store.set({a: value.a, b: 2});
         }
       }, [step]);
@@ -449,7 +449,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const value = useSyncExternalStore(store.subscribe, store.getState);
       useLayoutEffect(() => {
         if (value === 1) {
-          Scheduler.unstable_yieldValue('Reset back to 0');
+          Scheduler.log('Reset back to 0');
           store.set(0);
         }
       }, [value]);
@@ -629,12 +629,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const store = createExternalStore({a: 0, b: 0});
 
       function selector(state) {
-        Scheduler.unstable_yieldValue('Selector');
+        Scheduler.log('Selector');
         return state.a;
       }
 
       function App() {
-        Scheduler.unstable_yieldValue('App');
+        Scheduler.log('App');
         const a = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
@@ -738,7 +738,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           () => 'server',
         );
         useEffect(() => {
-          Scheduler.unstable_yieldValue('Passive effect: ' + text);
+          Scheduler.log('Passive effect: ' + text);
         }, [text]);
         return (
           <div ref={ref}>
@@ -838,7 +838,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     function App({step}) {
       const inlineSelector = state => {
-        Scheduler.unstable_yieldValue('Inline selector');
+        Scheduler.log('Inline selector');
         return [...state.items, 'C'];
       };
       const items = useSyncExternalStoreWithSelector(

@@ -202,7 +202,7 @@ describe(`onRender`, () => {
     const callback = jest.fn();
 
     const Yield = ({value}) => {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     };
 
@@ -233,7 +233,7 @@ describe(`onRender`, () => {
       return {
         ...ActualScheduler,
         unstable_now: function mockUnstableNow() {
-          ActualScheduler.unstable_yieldValue('read current time');
+          ActualScheduler.log('read current time');
           return ActualScheduler.unstable_now();
         },
       };
@@ -244,7 +244,7 @@ describe(`onRender`, () => {
     loadModules();
 
     // Clear yields in case the current time is read during initialization.
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
 
     ReactTestRenderer.create(
       <div>
@@ -665,7 +665,7 @@ describe(`onRender`, () => {
         }
       }, [didMount, didMountAndUpdate]);
 
-      Scheduler.unstable_yieldValue(`${didMount}:${didMountAndUpdate}`);
+      Scheduler.log(`${didMount}:${didMountAndUpdate}`);
 
       return null;
     }
@@ -698,7 +698,7 @@ describe(`onRender`, () => {
       React.useLayoutEffect(() => {
         setDidMount(true);
       }, []);
-      Scheduler.unstable_yieldValue(didMount);
+      Scheduler.log(didMount);
       return didMount;
     }
 
@@ -735,7 +735,7 @@ describe(`onRender`, () => {
 
       const Yield = ({renderTime}) => {
         Scheduler.unstable_advanceTime(renderTime);
-        Scheduler.unstable_yieldValue('Yield:' + renderTime);
+        Scheduler.log('Yield:' + renderTime);
         return null;
       };
 
@@ -771,7 +771,7 @@ describe(`onRender`, () => {
 
       const Yield = ({renderTime}) => {
         Scheduler.unstable_advanceTime(renderTime);
-        Scheduler.unstable_yieldValue('Yield:' + renderTime);
+        Scheduler.log('Yield:' + renderTime);
         return null;
       };
 
@@ -823,7 +823,7 @@ describe(`onRender`, () => {
 
       const Yield = ({renderTime}) => {
         Scheduler.unstable_advanceTime(renderTime);
-        Scheduler.unstable_yieldValue('Yield:' + renderTime);
+        Scheduler.log('Yield:' + renderTime);
         return null;
       };
 
@@ -879,7 +879,7 @@ describe(`onRender`, () => {
 
       const Yield = ({renderTime}) => {
         Scheduler.unstable_advanceTime(renderTime);
-        Scheduler.unstable_yieldValue('Yield:' + renderTime);
+        Scheduler.log('Yield:' + renderTime);
         return null;
       };
 
@@ -962,7 +962,7 @@ describe(`onRender`, () => {
 
       const Yield = ({renderTime}) => {
         Scheduler.unstable_advanceTime(renderTime);
-        Scheduler.unstable_yieldValue('Yield:' + renderTime);
+        Scheduler.log('Yield:' + renderTime);
         return null;
       };
 
@@ -972,9 +972,7 @@ describe(`onRender`, () => {
         render() {
           first = this;
           Scheduler.unstable_advanceTime(this.state.renderTime);
-          Scheduler.unstable_yieldValue(
-            'FirstComponent:' + this.state.renderTime,
-          );
+          Scheduler.log('FirstComponent:' + this.state.renderTime);
           return <Yield renderTime={4} />;
         }
       }
@@ -984,9 +982,7 @@ describe(`onRender`, () => {
         render() {
           second = this;
           Scheduler.unstable_advanceTime(this.state.renderTime);
-          Scheduler.unstable_yieldValue(
-            'SecondComponent:' + this.state.renderTime,
-          );
+          Scheduler.log('SecondComponent:' + this.state.renderTime);
           return <Yield renderTime={7} />;
         }
       }
@@ -2375,7 +2371,7 @@ describe(`onNestedUpdateScheduled`, () => {
       React.useLayoutEffect(() => {
         setDidMount(true);
       }, []);
-      Scheduler.unstable_yieldValue(`Component:${didMount}`);
+      Scheduler.log(`Component:${didMount}`);
       return didMount;
     }
 
@@ -2404,7 +2400,7 @@ describe(`onNestedUpdateScheduled`, () => {
           setDidMount(true);
         });
       }, []);
-      Scheduler.unstable_yieldValue(`Component:${didMount}`);
+      Scheduler.log(`Component:${didMount}`);
       return didMount;
     }
 
@@ -2435,7 +2431,7 @@ describe(`onNestedUpdateScheduled`, () => {
       React.useLayoutEffect(() => {
         setDidMount(true);
       }, []);
-      Scheduler.unstable_yieldValue(`Component:${didMount}`);
+      Scheduler.log(`Component:${didMount}`);
       return didMount;
     }
     const onNestedUpdateScheduledOne = jest.fn();
@@ -2476,7 +2472,7 @@ describe(`onNestedUpdateScheduled`, () => {
     function ComponentRootOne() {
       const [state, setState] = React.useState(false);
       setStateRef.current = setState;
-      Scheduler.unstable_yieldValue(`ComponentRootOne:${state}`);
+      Scheduler.log(`ComponentRootOne:${state}`);
       return state;
     }
 
@@ -2484,7 +2480,7 @@ describe(`onNestedUpdateScheduled`, () => {
       React.useLayoutEffect(() => {
         setStateRef.current(true);
       }, []);
-      Scheduler.unstable_yieldValue('ComponentRootTwo');
+      Scheduler.log('ComponentRootTwo');
       return null;
     }
 
@@ -2524,7 +2520,7 @@ describe(`onNestedUpdateScheduled`, () => {
       React.useEffect(() => {
         setDidMount(true);
       }, []);
-      Scheduler.unstable_yieldValue(`Component:${didMount}`);
+      Scheduler.log(`Component:${didMount}`);
       return didMount;
     }
 
@@ -2550,7 +2546,7 @@ describe(`onNestedUpdateScheduled`, () => {
     function Component() {
       const [state, setState] = React.useState(false);
       updateFnRef.current = () => setState(true);
-      Scheduler.unstable_yieldValue(`Component:${state}`);
+      Scheduler.log(`Component:${state}`);
       return state;
     }
 
@@ -2580,7 +2576,7 @@ describe(`onNestedUpdateScheduled`, () => {
       if (state === false) {
         setState(true);
       }
-      Scheduler.unstable_yieldValue(`Component:${state}`);
+      Scheduler.log(`Component:${state}`);
       return state;
     }
 
@@ -2611,7 +2607,7 @@ describe(`onNestedUpdateScheduled`, () => {
           setRefDetached(true);
         }
       }, []);
-      Scheduler.unstable_yieldValue(`Component:${refAttached}:${refDetached}`);
+      Scheduler.log(`Component:${refAttached}:${refDetached}`);
       return mountChild ? <div ref={refSetter} /> : null;
     }
 
@@ -2656,7 +2652,7 @@ describe(`onNestedUpdateScheduled`, () => {
       }
       render() {
         const {value} = this.state;
-        Scheduler.unstable_yieldValue(`Component:${value}`);
+        Scheduler.log(`Component:${value}`);
         return value;
       }
     }
@@ -2694,7 +2690,7 @@ describe(`onNestedUpdateScheduled`, () => {
       render() {
         const {scheduleNestedUpdate} = this.props;
         const {nestedUpdateSheduled} = this.state;
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `Component:${scheduleNestedUpdate}:${nestedUpdateSheduled}`,
         );
         return nestedUpdateSheduled;
@@ -2740,7 +2736,7 @@ describe(`onNestedUpdateScheduled`, () => {
       render() {
         const {value} = this.state;
         updateFnRef.current = () => this.setState({value: true});
-        Scheduler.unstable_yieldValue(`Component:${value}`);
+        Scheduler.log(`Component:${value}`);
         return value;
       }
     }

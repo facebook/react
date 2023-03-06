@@ -64,7 +64,7 @@ describe('ReactHooks', () => {
     const {useState, useLayoutEffect} = React;
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -77,9 +77,9 @@ describe('ReactHooks', () => {
       setCounter2 = _setCounter2;
 
       const text = `${counter1}, ${counter2}`;
-      Scheduler.unstable_yieldValue(`Parent: ${text}`);
+      Scheduler.log(`Parent: ${text}`);
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(`Effect: ${text}`);
+        Scheduler.log(`Effect: ${text}`);
       });
       return <Child text={text} />;
     }
@@ -153,7 +153,7 @@ describe('ReactHooks', () => {
     const {useState, memo} = React;
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -166,7 +166,7 @@ describe('ReactHooks', () => {
       setCounter2 = _setCounter2;
 
       const text = `${counter1}, ${counter2} (${theme})`;
-      Scheduler.unstable_yieldValue(`Parent: ${text}`);
+      Scheduler.log(`Parent: ${text}`);
       return <Child text={text} />;
     }
 
@@ -226,7 +226,7 @@ describe('ReactHooks', () => {
       const [counter, _setCounter] = useState(0);
       setCounter = _setCounter;
 
-      Scheduler.unstable_yieldValue(`Count: ${counter}`);
+      Scheduler.log(`Count: ${counter}`);
       return counter;
     }
 
@@ -260,7 +260,7 @@ describe('ReactHooks', () => {
       const [counter, _dispatch] = useReducer((s, a) => a, 0);
       dispatch = _dispatch;
 
-      Scheduler.unstable_yieldValue(`Count: ${counter}`);
+      Scheduler.log(`Count: ${counter}`);
       return counter;
     }
 
@@ -294,7 +294,7 @@ describe('ReactHooks', () => {
     let setTheme;
     function ThemeProvider({children}) {
       const [theme, _setTheme] = useState('light');
-      Scheduler.unstable_yieldValue('Theme: ' + theme);
+      Scheduler.log('Theme: ' + theme);
       setTheme = _setTheme;
       return (
         <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
@@ -302,7 +302,7 @@ describe('ReactHooks', () => {
     }
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -314,9 +314,9 @@ describe('ReactHooks', () => {
       const theme = useContext(ThemeContext);
 
       const text = `${counter} (${theme})`;
-      Scheduler.unstable_yieldValue(`Parent: ${text}`);
+      Scheduler.log(`Parent: ${text}`);
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(`Effect: ${text}`);
+        Scheduler.log(`Effect: ${text}`);
       });
       return <Child text={text} />;
     }
@@ -373,7 +373,7 @@ describe('ReactHooks', () => {
     const {useState, useLayoutEffect} = React;
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -381,9 +381,9 @@ describe('ReactHooks', () => {
     function Parent() {
       const [counter, _setCounter] = useState(0);
       setCounter = _setCounter;
-      Scheduler.unstable_yieldValue('Parent: ' + counter);
+      Scheduler.log('Parent: ' + counter);
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Effect: ' + counter);
+        Scheduler.log('Effect: ' + counter);
       });
       return <Child text={counter} />;
     }
@@ -451,7 +451,7 @@ describe('ReactHooks', () => {
     const {useState} = React;
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -459,7 +459,7 @@ describe('ReactHooks', () => {
     function Parent() {
       const [counter, _setCounter] = useState(0);
       setCounter = _setCounter;
-      Scheduler.unstable_yieldValue('Parent: ' + counter);
+      Scheduler.log('Parent: ' + counter);
       return <Child text={counter} />;
     }
 
@@ -470,9 +470,7 @@ describe('ReactHooks', () => {
 
     const update = value => {
       setCounter(previous => {
-        Scheduler.unstable_yieldValue(
-          `Compute state (${previous} -> ${value})`,
-        );
+        Scheduler.log(`Compute state (${previous} -> ${value})`);
         return value;
       });
     };
@@ -511,7 +509,7 @@ describe('ReactHooks', () => {
     const {useState} = React;
 
     function Child({text}) {
-      Scheduler.unstable_yieldValue('Child: ' + text);
+      Scheduler.log('Child: ' + text);
       return text;
     }
 
@@ -519,7 +517,7 @@ describe('ReactHooks', () => {
     function Parent() {
       const [counter, _setCounter] = useState(1);
       setCounter = _setCounter;
-      Scheduler.unstable_yieldValue('Parent: ' + counter);
+      Scheduler.log('Parent: ' + counter);
       return <Child text={counter} />;
     }
 
@@ -531,9 +529,7 @@ describe('ReactHooks', () => {
     const update = compute => {
       setCounter(previous => {
         const value = compute(previous);
-        Scheduler.unstable_yieldValue(
-          `Compute state (${previous} -> ${value})`,
-        );
+        Scheduler.log(`Compute state (${previous} -> ${value})`);
         return value;
       });
     };
@@ -575,9 +571,7 @@ describe('ReactHooks', () => {
     const {useLayoutEffect} = React;
     function App(props) {
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(
-          'Did commit: ' + props.dependencies.join(', '),
-        );
+        Scheduler.log('Did commit: ' + props.dependencies.join(', '));
       }, props.dependencies);
       return props.dependencies;
     }
@@ -599,7 +593,7 @@ describe('ReactHooks', () => {
     function App({text, hasDeps}) {
       const resolvedText = useMemo(
         () => {
-          Scheduler.unstable_yieldValue('Compute');
+          Scheduler.log('Compute');
           return text.toUpperCase();
         },
         hasDeps ? null : [text],

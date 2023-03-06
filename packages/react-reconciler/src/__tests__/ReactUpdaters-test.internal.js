@@ -41,7 +41,7 @@ describe('updaters', () => {
       isDevToolsPresent: true,
       onCommitRoot: jest.fn(fiberRoot => {
         if (onCommitRootShouldYield) {
-          Scheduler.unstable_yieldValue('onCommitRoot');
+          Scheduler.log('onCommitRoot');
         }
         const schedulerTags = [];
         const schedulerTypes = [];
@@ -199,7 +199,7 @@ describe('updaters', () => {
     };
     const CascadingChild = ({cascade}) => {
       const [count, setCount] = React.useState(0);
-      Scheduler.unstable_yieldValue(`CascadingChild ${count}`);
+      Scheduler.log(`CascadingChild ${count}`);
       React.useLayoutEffect(() => {
         if (cascade === 'active') {
           setCount(prevCount => prevCount + 1);
@@ -348,7 +348,7 @@ describe('updaters', () => {
       }
     }
     const Yield = ({value}) => {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return null;
     };
     const BrokenRender = () => {
@@ -387,7 +387,7 @@ describe('updaters', () => {
     const SyncPriorityUpdater = () => {
       const [count, setCount] = React.useState(0);
       triggerSyncPriorityUpdate = () => setCount(prevCount => prevCount + 1);
-      Scheduler.unstable_yieldValue(`SyncPriorityUpdater ${count}`);
+      Scheduler.log(`SyncPriorityUpdater ${count}`);
       return <Yield value={`HighPriority ${count}`} />;
     };
     const LowPriorityUpdater = () => {
@@ -397,11 +397,11 @@ describe('updaters', () => {
           setCount(prevCount => prevCount + 1);
         });
       };
-      Scheduler.unstable_yieldValue(`LowPriorityUpdater ${count}`);
+      Scheduler.log(`LowPriorityUpdater ${count}`);
       return <Yield value={`LowPriority ${count}`} />;
     };
     const Yield = ({value}) => {
-      Scheduler.unstable_yieldValue(`Yield ${value}`);
+      Scheduler.log(`Yield ${value}`);
       return null;
     };
 

@@ -234,7 +234,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -271,15 +271,15 @@ describe('ReactDOMServerPartialHydration', () => {
     });
     function Child() {
       if (suspend) {
-        Scheduler.unstable_yieldValue('Suspend');
+        Scheduler.log('Suspend');
         throw promise;
       } else {
-        Scheduler.unstable_yieldValue('Hello');
+        Scheduler.log('Hello');
         return 'Hello';
       }
     }
     function Component({shouldMismatch}) {
-      Scheduler.unstable_yieldValue('Component');
+      Scheduler.log('Component');
       if (shouldMismatch && client) {
         return <article>Mismatch</article>;
       }
@@ -311,7 +311,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       });
       await waitForAll([
@@ -435,7 +435,7 @@ describe('ReactDOMServerPartialHydration', () => {
         deleted.push(node);
       },
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     await waitForAll([]);
@@ -513,7 +513,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue(error.message);
+            Scheduler.log(error.message);
           },
         });
       });
@@ -639,7 +639,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue(error.message);
+            Scheduler.log(error.message);
           },
         });
       });
@@ -1086,7 +1086,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       },
     );
@@ -1165,7 +1165,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       },
     );
@@ -1242,7 +1242,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       },
     );
@@ -1367,7 +1367,7 @@ describe('ReactDOMServerPartialHydration', () => {
     function Child() {
       const [state, setState] = React.useState('Hello');
       updateText = setState;
-      Scheduler.unstable_yieldValue('Child');
+      Scheduler.log('Child');
       if (suspend) {
         throw promise;
       } else {
@@ -1376,7 +1376,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     function Sibling() {
-      Scheduler.unstable_yieldValue('Sibling');
+      Scheduler.log('Sibling');
       return null;
     }
 
@@ -1559,7 +1559,7 @@ describe('ReactDOMServerPartialHydration', () => {
       </Context.Provider>,
       {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       },
     );
@@ -1635,7 +1635,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     if (__DEV__) {
@@ -1708,7 +1708,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     if (__DEV__) {
@@ -1786,7 +1786,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     if (__DEV__) {
@@ -1994,12 +1994,12 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     function Before() {
-      Scheduler.unstable_yieldValue('Before');
+      Scheduler.log('Before');
       return null;
     }
 
     function After() {
-      Scheduler.unstable_yieldValue('After');
+      Scheduler.log('After');
       return null;
     }
 
@@ -2106,7 +2106,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
 
@@ -2182,7 +2182,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        Scheduler.log(error.message);
       },
     });
     if (__DEV__) {
@@ -2299,7 +2299,7 @@ describe('ReactDOMServerPartialHydration', () => {
       </ClassName.Provider>,
       {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.log(error.message);
         },
       },
     );
@@ -2980,15 +2980,15 @@ describe('ReactDOMServerPartialHydration', () => {
       if (suspend) {
         throw promise;
       } else {
-        Scheduler.unstable_yieldValue('Child');
+        Scheduler.log('Child');
         return 'Hello';
       }
     }
 
     function Sibling() {
-      Scheduler.unstable_yieldValue('Sibling');
+      Scheduler.log('Sibling');
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit Sibling');
+        Scheduler.log('Commit Sibling');
       });
       return 'World';
     }
@@ -3175,9 +3175,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(
-          'Log recoverable error: ' + error.message,
-        );
+        Scheduler.log('Log recoverable error: ' + error.message);
       },
     });
 
@@ -3280,12 +3278,12 @@ describe('ReactDOMServerPartialHydration', () => {
     const visibleRef = React.createRef();
 
     function HiddenChild() {
-      Scheduler.unstable_yieldValue('HiddenChild');
+      Scheduler.log('HiddenChild');
       return <span>Hidden</span>;
     }
 
     function App() {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return (
         <>
           <span ref={visibleRef}>Visible</span>
@@ -3422,9 +3420,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOMClient.hydrateRoot(container, <App />, {
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue(
-              'Log recoverable error: ' + error.message,
-            );
+            Scheduler.log('Log recoverable error: ' + error.message);
           },
         });
       });
@@ -3474,7 +3470,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
           onRecoverableError(error) {
-            Scheduler.unstable_yieldValue(error.message);
+            Scheduler.log(error.message);
           },
         });
       });
@@ -3518,7 +3514,7 @@ describe('ReactDOMServerPartialHydration', () => {
           <TextChildWithSibling text="bad" />,
           {
             onRecoverableError(error) {
-              Scheduler.unstable_yieldValue(error.message);
+              Scheduler.log(error.message);
             },
           },
         );

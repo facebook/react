@@ -1,7 +1,8 @@
 'use strict';
 
 const JestReact = require('jest-react');
-const SchedulerMatchers = require('./schedulerTestMatchers');
+
+// TODO: Move to ReactInternalTestUtils
 
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
@@ -20,12 +21,13 @@ function captureAssertion(fn) {
 }
 
 function assertYieldsWereCleared(Scheduler) {
-  const actualYields = Scheduler.unstable_clearYields();
+  const actualYields = Scheduler.unstable_clearLog();
   if (actualYields.length !== 0) {
-    throw new Error(
-      'Log of yielded values is not empty. ' +
-        'Call expect(Scheduler).toHaveYielded(...) first.'
+    const error = Error(
+      'The event log is not empty. Call assertLog(...) first.'
     );
+    Error.captureStackTrace(error, assertYieldsWereCleared);
+    throw error;
   }
 }
 
@@ -41,6 +43,5 @@ function toMatchRenderedOutput(ReactNoop, expectedJSX) {
 }
 
 module.exports = {
-  ...SchedulerMatchers,
   toMatchRenderedOutput,
 };

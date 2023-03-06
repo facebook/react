@@ -108,16 +108,16 @@ describe('ReactTransition', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          Scheduler.log(`Error! [${text}]`);
           throw record.value;
         case 'resolved':
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
 
       const thenable = {
         pings: [],
@@ -141,13 +141,13 @@ describe('ReactTransition', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
   function AsyncText({text}) {
     readText(text);
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -622,9 +622,7 @@ describe('ReactTransition', () => {
       function Parent({children}) {
         const [shouldHideInParent, _setShouldHideInParent] = useState(false);
         setShouldHideInParent = _setShouldHideInParent;
-        Scheduler.unstable_yieldValue(
-          'shouldHideInParent: ' + shouldHideInParent,
-        );
+        Scheduler.log('shouldHideInParent: ' + shouldHideInParent);
         if (shouldHideInParent) {
           return <Text text="(empty)" />;
         }
@@ -782,7 +780,7 @@ describe('ReactTransition', () => {
       updateNormalPri = () => setNormalPri(n => n + 1);
 
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit');
+        Scheduler.log('Commit');
       });
 
       return (
@@ -834,7 +832,7 @@ describe('ReactTransition', () => {
       updateNormalPri = () => setNormalPri(n => n + 1);
 
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit');
+        Scheduler.log('Commit');
       });
 
       return (
@@ -897,7 +895,7 @@ describe('ReactTransition', () => {
       updateNormalPri = () => setNormalPri(n => n + 1);
 
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit');
+        Scheduler.log('Commit');
       });
       return (
         <>

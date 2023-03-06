@@ -50,7 +50,7 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        Scheduler.unstable_yieldValue('commit');
+        Scheduler.log('commit');
         React.startTransition(() => {
           // Has low priority
           this.setState({b: 'b'});
@@ -99,13 +99,13 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         instance = this;
         return <div />;
       }
@@ -152,7 +152,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        Scheduler.unstable_yieldValue(letter);
+        Scheduler.log(letter);
         return {
           [letter]: letter,
         };
@@ -239,7 +239,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        Scheduler.unstable_yieldValue(letter);
+        Scheduler.log(letter);
         return {
           [letter]: letter,
         };
@@ -340,16 +340,16 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        Scheduler.unstable_yieldValue('did mount');
+        Scheduler.log('did mount');
         this.setState({a: 'a'}, () => {
-          Scheduler.unstable_yieldValue('callback a');
+          Scheduler.log('callback a');
           this.setState({b: 'b'}, () => {
-            Scheduler.unstable_yieldValue('callback b');
+            Scheduler.log('callback b');
           });
         });
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         return <div />;
       }
     }
@@ -371,11 +371,11 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue('componentWillReceiveProps');
+        Scheduler.log('componentWillReceiveProps');
         this.setState({b: 'b'});
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         instance = this;
         return <div />;
       }
@@ -403,7 +403,7 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         instance = this;
         return <div />;
       }
@@ -416,7 +416,7 @@ describe('ReactIncrementalUpdates', () => {
     ]);
 
     instance.setState(function a() {
-      Scheduler.unstable_yieldValue('setState updater');
+      Scheduler.log('setState updater');
       this.setState({b: 'b'});
       return {a: 'a'};
     });
@@ -526,10 +526,10 @@ describe('ReactIncrementalUpdates', () => {
     function App() {
       const [count, _setCount] = useState(0);
       setCount = _setCount;
-      Scheduler.unstable_yieldValue('Render: ' + count);
+      Scheduler.log('Render: ' + count);
       useLayoutEffect(() => {
         setCount(prevCount => prevCount + 1);
-        Scheduler.unstable_yieldValue('Commit: ' + count);
+        Scheduler.log('Commit: ' + count);
       }, []);
       return null;
     }
@@ -553,7 +553,7 @@ describe('ReactIncrementalUpdates', () => {
 
   it('regression: does not expire soon due to previous flushSync', () => {
     function Text({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -573,7 +573,7 @@ describe('ReactIncrementalUpdates', () => {
 
   it('regression: does not expire soon due to previous expired work', () => {
     function Text({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -604,7 +604,7 @@ describe('ReactIncrementalUpdates', () => {
       };
 
       useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Committed: ' + log);
+        Scheduler.log('Committed: ' + log);
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
           ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
@@ -663,7 +663,7 @@ describe('ReactIncrementalUpdates', () => {
         this.setState(prevState => ({log: prevState.log + msg}));
       };
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
+        Scheduler.log('Committed: ' + this.state.log);
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
           ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>

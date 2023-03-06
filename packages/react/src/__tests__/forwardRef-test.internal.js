@@ -32,7 +32,7 @@ describe('forwardRef', () => {
   it('should work without a ref to be forwarded', async () => {
     class Child extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(this.props.value);
+        Scheduler.log(this.props.value);
         return null;
       }
     }
@@ -52,7 +52,7 @@ describe('forwardRef', () => {
   it('should forward a ref for a single child', async () => {
     class Child extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(this.props.value);
+        Scheduler.log(this.props.value);
         return null;
       }
     }
@@ -75,7 +75,7 @@ describe('forwardRef', () => {
   it('should forward a ref for multiple children', async () => {
     class Child extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(this.props.value);
+        Scheduler.log(this.props.value);
         return null;
       }
     }
@@ -107,7 +107,7 @@ describe('forwardRef', () => {
         super(props);
       }
       render() {
-        Scheduler.unstable_yieldValue(this.props.value);
+        Scheduler.log(this.props.value);
         return null;
       }
     }
@@ -142,29 +142,29 @@ describe('forwardRef', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
-        Scheduler.unstable_yieldValue('ErrorBoundary.componentDidCatch');
+        Scheduler.log('ErrorBoundary.componentDidCatch');
         this.setState({error});
       }
       render() {
         if (this.state.error) {
-          Scheduler.unstable_yieldValue('ErrorBoundary.render: catch');
+          Scheduler.log('ErrorBoundary.render: catch');
           return null;
         }
-        Scheduler.unstable_yieldValue('ErrorBoundary.render: try');
+        Scheduler.log('ErrorBoundary.render: try');
         return this.props.children;
       }
     }
 
     class BadRender extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue('BadRender throw');
+        Scheduler.log('BadRender throw');
         throw new Error('oops!');
       }
     }
 
     function Wrapper(props) {
       const forwardedRef = props.forwardedRef;
-      Scheduler.unstable_yieldValue('Wrapper');
+      Scheduler.log('Wrapper');
       return <BadRender {...props} ref={forwardedRef} />;
     }
 
@@ -201,24 +201,24 @@ describe('forwardRef', () => {
 
     class Inner extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue('Inner');
+        Scheduler.log('Inner');
         inst = this;
         return <div ref={this.props.forwardedRef} />;
       }
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <Inner {...props} />;
     }
 
     const Forward = React.forwardRef((props, ref) => {
-      Scheduler.unstable_yieldValue('Forward');
+      Scheduler.log('Forward');
       return <Middle {...props} forwardedRef={ref} />;
     });
 
     function App() {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return <Forward />;
     }
 

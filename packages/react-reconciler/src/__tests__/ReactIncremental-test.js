@@ -62,7 +62,7 @@ describe('ReactIncremental', () => {
 
   it('should render a simple component, in steps if needed', async () => {
     function Bar() {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return (
         <span>
           <div>Hello World</div>
@@ -71,14 +71,12 @@ describe('ReactIncremental', () => {
     }
 
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
     React.startTransition(() => {
-      ReactNoop.render(<Foo />, () =>
-        Scheduler.unstable_yieldValue('callback'),
-      );
+      ReactNoop.render(<Foo />, () => Scheduler.log('callback'));
     });
     // Do one step of work.
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
@@ -89,17 +87,17 @@ describe('ReactIncremental', () => {
 
   it('updates a previous render', async () => {
     function Header() {
-      Scheduler.unstable_yieldValue('Header');
+      Scheduler.log('Header');
       return <h1>Hi</h1>;
     }
 
     function Content(props) {
-      Scheduler.unstable_yieldValue('Content');
+      Scheduler.log('Content');
       return <div>{props.children}</div>;
     }
 
     function Footer() {
-      Scheduler.unstable_yieldValue('Footer');
+      Scheduler.log('Footer');
       return <footer>Bye</footer>;
     }
 
@@ -107,7 +105,7 @@ describe('ReactIncremental', () => {
     const footer = <Footer />;
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           {header}
@@ -118,7 +116,7 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Foo text="foo" />, () =>
-      Scheduler.unstable_yieldValue('renderCallbackCalled'),
+      Scheduler.log('renderCallbackCalled'),
     );
     await waitForAll([
       'Foo',
@@ -129,10 +127,10 @@ describe('ReactIncremental', () => {
     ]);
 
     ReactNoop.render(<Foo text="bar" />, () =>
-      Scheduler.unstable_yieldValue('firstRenderCallbackCalled'),
+      Scheduler.log('firstRenderCallbackCalled'),
     );
     ReactNoop.render(<Foo text="bar" />, () =>
-      Scheduler.unstable_yieldValue('secondRenderCallbackCalled'),
+      Scheduler.log('secondRenderCallbackCalled'),
     );
     // TODO: Test bail out of host components. This is currently unobservable.
 
@@ -148,12 +146,12 @@ describe('ReactIncremental', () => {
 
   it('can cancel partially rendered work and restart', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -214,10 +212,10 @@ describe('ReactIncremental', () => {
     React.startTransition(() => {
       inst.setState(
         () => {
-          Scheduler.unstable_yieldValue('setState1');
+          Scheduler.log('setState1');
           return {text: 'bar'};
         },
-        () => Scheduler.unstable_yieldValue('callback1'),
+        () => Scheduler.log('callback1'),
       );
     });
 
@@ -229,10 +227,10 @@ describe('ReactIncremental', () => {
     React.startTransition(() => {
       inst.setState(
         () => {
-          Scheduler.unstable_yieldValue('setState2');
+          Scheduler.log('setState2');
           return {text2: 'baz'};
         },
-        () => Scheduler.unstable_yieldValue('callback2'),
+        () => Scheduler.log('callback2'),
       );
     });
 
@@ -244,17 +242,17 @@ describe('ReactIncremental', () => {
   // @gate www
   it('can deprioritize unfinished work and resume it later', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <span>{props.children}</span>;
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -284,17 +282,17 @@ describe('ReactIncremental', () => {
   // @gate www
   it('can deprioritize a tree from without dropping work', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <span>{props.children}</span>;
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -329,19 +327,19 @@ describe('ReactIncremental', () => {
 
   xit('can resume work in a subtree even when a parent bails out', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
     function Tester() {
       // This component is just here to ensure that the bail out is
       // in fact in effect in the expected place for this test.
-      Scheduler.unstable_yieldValue('Tester');
+      Scheduler.log('Tester');
       return <div />;
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <span>{props.children}</span>;
     }
 
@@ -357,7 +355,7 @@ describe('ReactIncremental', () => {
     );
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -385,7 +383,7 @@ describe('ReactIncremental', () => {
 
   xit('can resume work in a bailed subtree within one pass', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
@@ -396,13 +394,13 @@ describe('ReactIncremental', () => {
       render() {
         // This component is just here to ensure that the bail out is
         // in fact in effect in the expected place for this test.
-        Scheduler.unstable_yieldValue('Tester');
+        Scheduler.log('Tester');
         return <div />;
       }
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <span>{props.children}</span>;
     }
 
@@ -425,7 +423,7 @@ describe('ReactIncremental', () => {
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div hidden={props.text === 'bar'}>
           <Bar>{props.text}</Bar>
@@ -484,17 +482,17 @@ describe('ReactIncremental', () => {
       constructor(props) {
         super(props);
         // Test based on a www bug where props was null on resume
-        Scheduler.unstable_yieldValue('Foo constructor: ' + props.prop);
+        Scheduler.log('Foo constructor: ' + props.prop);
       }
       render() {
         foo = this;
-        Scheduler.unstable_yieldValue('Foo');
+        Scheduler.log('Foo');
         return <Bar />;
       }
     }
 
     function Bar() {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div />;
     }
 
@@ -523,37 +521,33 @@ describe('ReactIncremental', () => {
       constructor(props) {
         super(props);
         // Test based on a www bug where props was null on resume
-        Scheduler.unstable_yieldValue('constructor: ' + props.prop);
+        Scheduler.log('constructor: ' + props.prop);
         constructorCount++;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('componentWillMount: ' + this.props.prop);
+        Scheduler.log('componentWillMount: ' + this.props.prop);
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'componentWillReceiveProps: ' + this.props.prop,
-        );
+        Scheduler.log('componentWillReceiveProps: ' + this.props.prop);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount: ' + this.props.prop);
+        Scheduler.log('componentDidMount: ' + this.props.prop);
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'componentWillUpdate: ' + this.props.prop,
-        );
+        Scheduler.log('componentWillUpdate: ' + this.props.prop);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate: ' + this.props.prop);
+        Scheduler.log('componentDidUpdate: ' + this.props.prop);
       }
       render() {
         foo = this;
-        Scheduler.unstable_yieldValue('render: ' + this.props.prop);
+        Scheduler.log('render: ' + this.props.prop);
         return <Bar />;
       }
     }
 
     function Bar() {
-      Scheduler.unstable_yieldValue('Foo did complete');
+      Scheduler.log('Foo did complete');
       return <div />;
     }
 
@@ -580,12 +574,12 @@ describe('ReactIncremental', () => {
 
   xit('can reuse work done after being preempted', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      Scheduler.unstable_yieldValue('Middle');
+      Scheduler.log('Middle');
       return <span>{props.children}</span>;
     }
 
@@ -606,7 +600,7 @@ describe('ReactIncremental', () => {
     );
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text2}</Bar>
@@ -661,12 +655,12 @@ describe('ReactIncremental', () => {
     let sibling;
 
     function GreatGrandchild() {
-      Scheduler.unstable_yieldValue('GreatGrandchild');
+      Scheduler.log('GreatGrandchild');
       return <div />;
     }
 
     function Grandchild() {
-      Scheduler.unstable_yieldValue('Grandchild');
+      Scheduler.log('Grandchild');
       return <GreatGrandchild />;
     }
 
@@ -674,21 +668,21 @@ describe('ReactIncremental', () => {
       state = {step: 0};
       render() {
         child = this;
-        Scheduler.unstable_yieldValue('Child');
+        Scheduler.log('Child');
         return <Grandchild />;
       }
     }
 
     class Sibling extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue('Sibling');
+        Scheduler.log('Sibling');
         sibling = this;
         return <div />;
       }
     }
 
     function Parent() {
-      Scheduler.unstable_yieldValue('Parent');
+      Scheduler.log('Parent');
       return [
         // The extra div is necessary because when Parent bails out during the
         // high priority update, its progressedPriority is set to high.
@@ -732,7 +726,7 @@ describe('ReactIncremental', () => {
 
   xit('can reuse work if shouldComponentUpdate is false, after being preempted', async () => {
     function Bar(props) {
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <div>{props.children}</div>;
     }
 
@@ -741,7 +735,7 @@ describe('ReactIncremental', () => {
         return this.props.children !== nextProps.children;
       }
       render() {
-        Scheduler.unstable_yieldValue('Middle');
+        Scheduler.log('Middle');
         return <span>{this.props.children}</span>;
       }
     }
@@ -751,7 +745,7 @@ describe('ReactIncremental', () => {
         return this.props.step !== nextProps.step;
       }
       render() {
-        Scheduler.unstable_yieldValue('Content');
+        Scheduler.log('Content');
         return (
           <div>
             <Middle>{this.props.step === 0 ? 'Hi' : 'Hello'}</Middle>
@@ -763,7 +757,7 @@ describe('ReactIncremental', () => {
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -808,11 +802,11 @@ describe('ReactIncremental', () => {
         // this.props is the memoized props. So this should return true for
         // every update except the first one.
         const shouldUpdate = this.props.step !== 1;
-        Scheduler.unstable_yieldValue('shouldComponentUpdate: ' + shouldUpdate);
+        Scheduler.log('shouldComponentUpdate: ' + shouldUpdate);
         return shouldUpdate;
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         return <div />;
       }
     }
@@ -997,7 +991,7 @@ describe('ReactIncremental', () => {
 
   it('can forceUpdate', async () => {
     function Baz() {
-      Scheduler.unstable_yieldValue('Baz');
+      Scheduler.log('Baz');
       return <div />;
     }
 
@@ -1011,13 +1005,13 @@ describe('ReactIncremental', () => {
         return false;
       }
       render() {
-        Scheduler.unstable_yieldValue('Bar');
+        Scheduler.log('Bar');
         return <Baz />;
       }
     }
 
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return (
         <div>
           <Bar />
@@ -1037,7 +1031,7 @@ describe('ReactIncremental', () => {
     class Foo extends React.PureComponent {
       render() {
         const msg = `A: ${a}, B: ${this.props.b}`;
-        Scheduler.unstable_yieldValue(msg);
+        Scheduler.log(msg);
         return msg;
       }
     }
@@ -1067,13 +1061,13 @@ describe('ReactIncremental', () => {
         return this.props.x !== newProps.x || this.state.y !== newState.y;
       }
       render() {
-        Scheduler.unstable_yieldValue('Bar:' + this.props.x);
+        Scheduler.log('Bar:' + this.props.x);
         return <span prop={String(this.props.x === this.state.y)} />;
       }
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return [
         <Bar key="a" x="A" />,
         <Bar key="b" x={props.step === 0 ? 'B' : 'B2'} />,
@@ -1114,9 +1108,7 @@ describe('ReactIncremental', () => {
         });
       }
       render() {
-        Scheduler.unstable_yieldValue(
-          'Bar:' + this.props.x + '-' + this.props.step,
-        );
+        Scheduler.log('Bar:' + this.props.x + '-' + this.props.step);
         return <span prop={String(this.props.x === this.state.y)} />;
       }
     }
@@ -1124,12 +1116,12 @@ describe('ReactIncremental', () => {
     function Baz() {
       // This component is used as a sibling to Foo so that we can fully
       // complete Foo, without committing.
-      Scheduler.unstable_yieldValue('Baz');
+      Scheduler.log('Baz');
       return <div />;
     }
 
     function Foo(props) {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       return [
         <Bar key="a" x="A" step={props.step} />,
         <Bar key="b" x="B" step={props.step} />,
@@ -1167,20 +1159,18 @@ describe('ReactIncremental', () => {
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'componentWillReceiveProps:' + this.state.x + '-' + nextProps.x,
         );
         this.setState({x: nextProps.x});
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'componentWillMount:' + this.state.x + '-' + this.props.x,
         );
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'componentDidMount:' + this.state.x + '-' + this.props.x,
-        );
+        Scheduler.log('componentDidMount:' + this.state.x + '-' + this.props.x);
       }
       render() {
         return <span />;
@@ -1188,12 +1178,12 @@ describe('ReactIncremental', () => {
     }
 
     function Trail() {
-      Scheduler.unstable_yieldValue('Trail');
+      Scheduler.log('Trail');
       return null;
     }
 
     function App(props) {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return (
         <div>
           <LifeCycle x={props.x} />
@@ -1224,20 +1214,20 @@ describe('ReactIncremental', () => {
         this.state = {x: this.props.x + '(ctor)'};
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('componentWillMount:' + this.state.x);
+        Scheduler.log('componentWillMount:' + this.state.x);
         this.setState({x: this.props.x + '(willMount)'});
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount:' + this.state.x);
+        Scheduler.log('componentDidMount:' + this.state.x);
       }
       render() {
-        Scheduler.unstable_yieldValue('render:' + this.state.x);
+        Scheduler.log('render:' + this.state.x);
         return <span />;
       }
     }
 
     function App(props) {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return <LifeCycle x={props.x} />;
     }
 
@@ -1258,34 +1248,32 @@ describe('ReactIncremental', () => {
   xit('calls componentWill* twice if an update render is aborted', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('componentWillMount:' + this.props.x);
+        Scheduler.log('componentWillMount:' + this.props.x);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount:' + this.props.x);
+        Scheduler.log('componentDidMount:' + this.props.x);
       }
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'componentWillReceiveProps:' + this.props.x + '-' + nextProps.x,
         );
       }
       shouldComponentUpdate(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'shouldComponentUpdate:' + this.props.x + '-' + nextProps.x,
         );
         return true;
       }
       UNSAFE_componentWillUpdate(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'componentWillUpdate:' + this.props.x + '-' + nextProps.x,
         );
       }
       componentDidUpdate(prevProps) {
-        Scheduler.unstable_yieldValue(
-          'componentDidUpdate:' + this.props.x + '-' + prevProps.x,
-        );
+        Scheduler.log('componentDidUpdate:' + this.props.x + '-' + prevProps.x);
       }
       render() {
-        Scheduler.unstable_yieldValue('render:' + this.props.x);
+        Scheduler.log('render:' + this.props.x);
         return <span />;
       }
     }
@@ -1293,12 +1281,12 @@ describe('ReactIncremental', () => {
     function Sibling() {
       // The sibling is used to confirm that we've completed the first child,
       // but not yet flushed.
-      Scheduler.unstable_yieldValue('Sibling');
+      Scheduler.log('Sibling');
       return <span />;
     }
 
     function App(props) {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
 
       return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
     }
@@ -1344,17 +1332,17 @@ describe('ReactIncremental', () => {
     class LifeCycle extends React.Component {
       state = {};
       static getDerivedStateFromProps(props, prevState) {
-        Scheduler.unstable_yieldValue('getDerivedStateFromProps');
+        Scheduler.log('getDerivedStateFromProps');
         return {foo: 'foo'};
       }
       changeState() {
         this.setState({foo: 'bar'});
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         instance = this;
         return null;
       }
@@ -1377,18 +1365,18 @@ describe('ReactIncremental', () => {
     class Parent extends React.Component {
       state = {parentRenders: 0};
       static getDerivedStateFromProps(props, prevState) {
-        Scheduler.unstable_yieldValue('getDerivedStateFromProps');
+        Scheduler.log('getDerivedStateFromProps');
         return prevState.parentRenders + 1;
       }
       render() {
-        Scheduler.unstable_yieldValue('Parent');
+        Scheduler.log('Parent');
         return <Child parentRenders={this.state.parentRenders} ref={child} />;
       }
     }
 
     class Child extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue('Child');
+        Scheduler.log('Child');
         return this.props.parentRenders;
       }
     }
@@ -1414,32 +1402,30 @@ describe('ReactIncremental', () => {
       }
       UNSAFE_componentWillMount() {
         instances.push(this);
-        Scheduler.unstable_yieldValue('componentWillMount:' + this.state.x);
+        Scheduler.log('componentWillMount:' + this.state.x);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount:' + this.state.x);
+        Scheduler.log('componentDidMount:' + this.state.x);
       }
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue('componentWillReceiveProps');
+        Scheduler.log('componentWillReceiveProps');
       }
       shouldComponentUpdate(nextProps, nextState) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'shouldComponentUpdate:' + this.state.x + '-' + nextState.x,
         );
         return true;
       }
       UNSAFE_componentWillUpdate(nextProps, nextState) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'componentWillUpdate:' + this.state.x + '-' + nextState.x,
         );
       }
       componentDidUpdate(prevProps, prevState) {
-        Scheduler.unstable_yieldValue(
-          'componentDidUpdate:' + this.state.x + '-' + prevState.x,
-        );
+        Scheduler.log('componentDidUpdate:' + this.state.x + '-' + prevState.x);
       }
       render() {
-        Scheduler.unstable_yieldValue('render:' + this.state.x);
+        Scheduler.log('render:' + this.state.x);
         return <span />;
       }
     }
@@ -1458,7 +1444,7 @@ describe('ReactIncremental', () => {
         });
       }
       render() {
-        Scheduler.unstable_yieldValue('Wrap');
+        Scheduler.log('Wrap');
         return <LifeCycle y={this.state.y} />;
       }
     }
@@ -1466,12 +1452,12 @@ describe('ReactIncremental', () => {
     function Sibling() {
       // The sibling is used to confirm that we've completed the first child,
       // but not yet flushed.
-      Scheduler.unstable_yieldValue('Sibling');
+      Scheduler.log('Sibling');
       return <span />;
     }
 
     function App(props) {
-      Scheduler.unstable_yieldValue('App');
+      Scheduler.log('App');
       return [<Wrap key="a" />, <Sibling key="b" />];
     }
 
@@ -1544,33 +1530,33 @@ describe('ReactIncremental', () => {
   xit('skips will/DidUpdate when bailing unless an update was already in progress', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('componentWillMount');
+        Scheduler.log('componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue('componentWillReceiveProps');
+        Scheduler.log('componentWillReceiveProps');
       }
       shouldComponentUpdate(nextProps) {
-        Scheduler.unstable_yieldValue('shouldComponentUpdate');
+        Scheduler.log('shouldComponentUpdate');
         // Bail
         return this.props.x !== nextProps.x;
       }
       UNSAFE_componentWillUpdate(nextProps) {
-        Scheduler.unstable_yieldValue('componentWillUpdate');
+        Scheduler.log('componentWillUpdate');
       }
       componentDidUpdate(prevProps) {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         return <span />;
       }
     }
 
     function Sibling() {
-      Scheduler.unstable_yieldValue('render sibling');
+      Scheduler.log('render sibling');
       return <span />;
     }
 
@@ -1641,22 +1627,14 @@ describe('ReactIncremental', () => {
 
     ReactNoop.flushSync(() => {
       ReactNoop.batchedUpdates(() => {
-        instance.setState({n: 1}, () =>
-          Scheduler.unstable_yieldValue('setState 1'),
-        );
-        instance.setState({n: 2}, () =>
-          Scheduler.unstable_yieldValue('setState 2'),
-        );
+        instance.setState({n: 1}, () => Scheduler.log('setState 1'));
+        instance.setState({n: 2}, () => Scheduler.log('setState 2'));
         ReactNoop.batchedUpdates(() => {
-          instance.setState({n: 3}, () =>
-            Scheduler.unstable_yieldValue('setState 3'),
-          );
-          instance.setState({n: 4}, () =>
-            Scheduler.unstable_yieldValue('setState 4'),
-          );
-          Scheduler.unstable_yieldValue('end inner batchedUpdates');
+          instance.setState({n: 3}, () => Scheduler.log('setState 3'));
+          instance.setState({n: 4}, () => Scheduler.log('setState 4'));
+          Scheduler.log('end inner batchedUpdates');
         });
-        Scheduler.unstable_yieldValue('end outer batchedUpdates');
+        Scheduler.log('end outer batchedUpdates');
       });
     });
 
@@ -1691,16 +1669,12 @@ describe('ReactIncremental', () => {
       return {n: n + 1};
     }
 
-    instance.setState(updater, () =>
-      Scheduler.unstable_yieldValue('first callback'),
-    );
+    instance.setState(updater, () => Scheduler.log('first callback'));
     instance.setState(updater, () => {
-      Scheduler.unstable_yieldValue('second callback');
+      Scheduler.log('second callback');
       throw new Error('callback error');
     });
-    instance.setState(updater, () =>
-      Scheduler.unstable_yieldValue('third callback'),
-    );
+    instance.setState(updater, () => Scheduler.log('third callback'));
 
     await waitForThrow('callback error');
 
@@ -1720,7 +1694,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.unstable_yieldValue('Intl ' + JSON.stringify(this.context));
+        Scheduler.log('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1735,7 +1709,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.unstable_yieldValue('Router ' + JSON.stringify(this.context));
+        Scheduler.log('Router ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1745,9 +1719,7 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowLocale ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
@@ -1757,15 +1729,13 @@ describe('ReactIncremental', () => {
         route: PropTypes.string,
       };
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowRoute ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowRoute ' + JSON.stringify(this.context));
         return this.context.route;
       }
     }
 
     function ShowBoth(props, context) {
-      Scheduler.unstable_yieldValue('ShowBoth ' + JSON.stringify(context));
+      Scheduler.log('ShowBoth ' + JSON.stringify(context));
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
@@ -1775,18 +1745,14 @@ describe('ReactIncremental', () => {
 
     class ShowNeither extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowNeither ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowNeither ' + JSON.stringify(this.context));
         return null;
       }
     }
 
     class Indirection extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(
-          'Indirection ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('Indirection ' + JSON.stringify(this.context));
         return [
           <ShowLocale key="a" />,
           <ShowRoute key="b" />,
@@ -1876,9 +1842,7 @@ describe('ReactIncremental', () => {
         return {n: (this.context.n || 3) - 1};
       }
       render() {
-        Scheduler.unstable_yieldValue(
-          'Recurse ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('Recurse ' + JSON.stringify(this.context));
         if (this.context.n === 0) {
           return null;
         }
@@ -1903,7 +1867,7 @@ describe('ReactIncremental', () => {
             return {n: (context.n || 3) - 1};
           },
           render() {
-            Scheduler.unstable_yieldValue('Recurse ' + JSON.stringify(context));
+            Scheduler.log('Recurse ' + JSON.stringify(context));
             if (context.n === 0) {
               return null;
             }
@@ -1949,7 +1913,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.unstable_yieldValue('Intl ' + JSON.stringify(this.context));
+        Scheduler.log('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1959,9 +1923,7 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowLocale ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
@@ -2004,15 +1966,11 @@ describe('ReactIncremental', () => {
         const childContext = {
           locale: this.props.locale,
         };
-        Scheduler.unstable_yieldValue(
-          'Intl:provide ' + JSON.stringify(childContext),
-        );
+        Scheduler.log('Intl:provide ' + JSON.stringify(childContext));
         return childContext;
       }
       render() {
-        Scheduler.unstable_yieldValue(
-          'Intl:read ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('Intl:read ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2022,17 +1980,13 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowLocaleClass:read ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowLocaleClass:read ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
 
     function ShowLocaleFn(props, context) {
-      Scheduler.unstable_yieldValue(
-        'ShowLocaleFn:read ' + JSON.stringify(context),
-      );
+      Scheduler.log('ShowLocaleFn:read ' + JSON.stringify(context));
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
@@ -2048,15 +2002,13 @@ describe('ReactIncremental', () => {
     }
 
     function IndirectionFn(props, context) {
-      Scheduler.unstable_yieldValue('IndirectionFn ' + JSON.stringify(context));
+      Scheduler.log('IndirectionFn ' + JSON.stringify(context));
       return props.children;
     }
 
     class IndirectionClass extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(
-          'IndirectionClass ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('IndirectionClass ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2100,15 +2052,11 @@ describe('ReactIncremental', () => {
         const childContext = {
           locale: this.props.locale,
         };
-        Scheduler.unstable_yieldValue(
-          'Intl:provide ' + JSON.stringify(childContext),
-        );
+        Scheduler.log('Intl:provide ' + JSON.stringify(childContext));
         return childContext;
       }
       render() {
-        Scheduler.unstable_yieldValue(
-          'Intl:read ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('Intl:read ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2118,17 +2066,13 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.unstable_yieldValue(
-          'ShowLocaleClass:read ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('ShowLocaleClass:read ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
 
     function ShowLocaleFn(props, context) {
-      Scheduler.unstable_yieldValue(
-        'ShowLocaleFn:read ' + JSON.stringify(context),
-      );
+      Scheduler.log('ShowLocaleFn:read ' + JSON.stringify(context));
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
@@ -2136,15 +2080,13 @@ describe('ReactIncremental', () => {
     };
 
     function IndirectionFn(props, context) {
-      Scheduler.unstable_yieldValue('IndirectionFn ' + JSON.stringify(context));
+      Scheduler.log('IndirectionFn ' + JSON.stringify(context));
       return props.children;
     }
 
     class IndirectionClass extends React.Component {
       render() {
-        Scheduler.unstable_yieldValue(
-          'IndirectionClass ' + JSON.stringify(this.context),
-        );
+        Scheduler.log('IndirectionClass ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2293,25 +2235,25 @@ describe('ReactIncremental', () => {
     class MyComponent extends React.Component {
       static contextTypes = {};
       componentDidMount(prevProps, prevState) {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
         this.setState({setStateInCDU: true});
       }
       componentDidUpdate(prevProps, prevState) {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
         if (this.state.setStateInCDU) {
           this.setState({setStateInCDU: false});
         }
       }
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue('componentWillReceiveProps');
+        Scheduler.log('componentWillReceiveProps');
         this.setState({setStateInCDU: true});
       }
       render() {
-        Scheduler.unstable_yieldValue('render');
+        Scheduler.log('render');
         return null;
       }
       shouldComponentUpdate(nextProps, nextState) {
-        Scheduler.unstable_yieldValue('shouldComponentUpdate');
+        Scheduler.log('shouldComponentUpdate');
         return scuCounter++ < 5; // Don't let test hang
       }
     }
@@ -2443,7 +2385,7 @@ describe('ReactIncremental', () => {
         count: PropTypes.number,
       };
       render = () => {
-        Scheduler.unstable_yieldValue(`count:${this.context.count}`);
+        Scheduler.log(`count:${this.context.count}`);
         return null;
       };
     }
@@ -2498,7 +2440,7 @@ describe('ReactIncremental', () => {
         count: PropTypes.number,
       };
       render = () => {
-        Scheduler.unstable_yieldValue(`count:${this.context.count}`);
+        Scheduler.log(`count:${this.context.count}`);
         return null;
       };
     }
@@ -2560,7 +2502,7 @@ describe('ReactIncremental', () => {
         count: PropTypes.number,
       };
       render = () => {
-        Scheduler.unstable_yieldValue(`count:${this.context.count}`);
+        Scheduler.log(`count:${this.context.count}`);
         return null;
       };
     }
@@ -2634,9 +2576,7 @@ describe('ReactIncremental', () => {
         name: PropTypes.string,
       };
       render = () => {
-        Scheduler.unstable_yieldValue(
-          `count:${this.context.count}, name:${this.context.name}`,
-        );
+        Scheduler.log(`count:${this.context.count}, name:${this.context.name}`);
         return null;
       };
     }
@@ -2660,12 +2600,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at same priority', async () => {
     function Parent(props) {
-      Scheduler.unstable_yieldValue('Parent: ' + props.step);
+      Scheduler.log('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.unstable_yieldValue('Child: ' + props.step);
+      Scheduler.log('Child: ' + props.step);
       return null;
     }
 
@@ -2682,12 +2622,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at lower priority', async () => {
     function Parent(props) {
-      Scheduler.unstable_yieldValue('Parent: ' + props.step);
+      Scheduler.log('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.unstable_yieldValue('Child: ' + props.step);
+      Scheduler.log('Child: ' + props.step);
       return null;
     }
 
@@ -2705,12 +2645,12 @@ describe('ReactIncremental', () => {
 
   it('does interrupt for update at higher priority', async () => {
     function Parent(props) {
-      Scheduler.unstable_yieldValue('Parent: ' + props.step);
+      Scheduler.log('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.unstable_yieldValue('Child: ' + props.step);
+      Scheduler.log('Child: ' + props.step);
       return null;
     }
 

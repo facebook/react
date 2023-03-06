@@ -38,7 +38,7 @@ describe('memo', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span prop={props.text} />;
   }
 
@@ -209,7 +209,7 @@ describe('memo', () => {
           useEffect(() => {
             if (props !== prevProps.current) {
               prevProps.current = props;
-              Scheduler.unstable_yieldValue('Props changed [SimpleMemo]');
+              Scheduler.log('Props changed [SimpleMemo]');
             }
           }, [props]);
 
@@ -226,7 +226,7 @@ describe('memo', () => {
             useEffect(() => {
               if (props !== prevProps.current) {
                 prevProps.current = props;
-                Scheduler.unstable_yieldValue('Props changed [ComplexMemo]');
+                Scheduler.log('Props changed [ComplexMemo]');
               }
             }, [props]);
 
@@ -246,9 +246,7 @@ describe('memo', () => {
           useEffect(() => {
             if (props !== prevProps.current) {
               prevProps.current = props;
-              Scheduler.unstable_yieldValue(
-                'Props changed [MemoWithIndirection]',
-              );
+              Scheduler.log('Props changed [MemoWithIndirection]');
             }
           }, [props]);
 
@@ -336,7 +334,7 @@ describe('memo', () => {
           return <Text text={count} />;
         }
         Counter = memo(Counter, (oldProps, newProps) => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;

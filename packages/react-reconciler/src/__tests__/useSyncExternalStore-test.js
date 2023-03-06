@@ -53,7 +53,7 @@ describe('useSyncExternalStore', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -110,7 +110,7 @@ describe('useSyncExternalStore', () => {
           const aText = refA.current;
           const bText = refB.current;
           const cText = refC.current;
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `Children observed during layout: A${aText}B${bText}C${cText}`,
           );
         });

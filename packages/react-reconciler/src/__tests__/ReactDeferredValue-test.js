@@ -37,7 +37,7 @@ describe('ReactDeferredValue', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 

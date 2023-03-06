@@ -1331,7 +1331,7 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
 
     function Baz() {
-      Scheduler.unstable_yieldValue('Baz');
+      Scheduler.log('Baz');
       return <p>baz</p>;
     }
 
@@ -1339,14 +1339,14 @@ describe('ReactUpdates', () => {
     function Bar() {
       const [counter, _setCounter] = React.useState(0);
       setCounter = _setCounter;
-      Scheduler.unstable_yieldValue('Bar');
+      Scheduler.log('Bar');
       return <p>bar {counter}</p>;
     }
 
     function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
+      Scheduler.log('Foo');
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('Foo#effect');
+        Scheduler.log('Foo#effect');
       });
       return (
         <div>
@@ -1627,7 +1627,7 @@ describe('ReactUpdates', () => {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
           setStep(x => x + 1);
-          Scheduler.unstable_yieldValue(step);
+          Scheduler.log(step);
         });
         return step;
       }
@@ -1650,7 +1650,7 @@ describe('ReactUpdates', () => {
             ReactDOM.render(<App />, container);
             while (error === null) {
               Scheduler.unstable_flushNumberOfYields(1);
-              Scheduler.unstable_clearYields();
+              Scheduler.unstable_clearLog();
             }
             expect(error).toContain('Warning: Maximum update depth exceeded.');
             expect(stack).toContain(' NonTerminating');
@@ -1675,7 +1675,7 @@ describe('ReactUpdates', () => {
             setStep(x => x + 1);
           }
         });
-        Scheduler.unstable_yieldValue(step);
+        Scheduler.log(step);
         return step;
       }
 
@@ -1697,7 +1697,7 @@ describe('ReactUpdates', () => {
           for (let i = 0; i < 1000; i++) {
             setStep(x => x + 1);
           }
-          Scheduler.unstable_yieldValue('Done');
+          Scheduler.log('Done');
         }, []);
         return step;
       }

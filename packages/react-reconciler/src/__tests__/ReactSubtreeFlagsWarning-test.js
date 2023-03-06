@@ -86,16 +86,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          Scheduler.log(`Error! [${text}]`);
           throw record.value;
         case 'resolved':
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
 
       const thenable = {
         pings: [],
@@ -142,10 +142,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       readText(text);
 
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
+        Scheduler.log('Effect');
       }, []);
 
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     });
 

@@ -31,7 +31,7 @@ describe('ReactUpdatePriority', () => {
   });
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -65,7 +65,7 @@ describe('ReactUpdatePriority', () => {
       const [defaultState, _setDefaultState] = useState(1);
       setDefaultState = _setDefaultState;
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Idle update');
+        Scheduler.log('Idle update');
         setIdleState(2);
       }, []);
       return <Text text={`Idle: ${idleState}, Default: ${defaultState}`} />;

@@ -42,7 +42,7 @@ describe('ReactLazy', () => {
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return props.text;
   }
 
@@ -246,10 +246,10 @@ describe('ReactLazy', () => {
   it('mount and reorder', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+        Scheduler.log('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -334,7 +334,7 @@ describe('ReactLazy', () => {
 
   it('resolves defaultProps without breaking memoization', async () => {
     function LazyImpl(props) {
-      Scheduler.unstable_yieldValue('Lazy');
+      Scheduler.log('Lazy');
       return (
         <>
           <Text text={props.siblingText} />
@@ -482,42 +482,38 @@ describe('ReactLazy', () => {
       state = {};
 
       static getDerivedStateFromProps(props) {
-        Scheduler.unstable_yieldValue(
-          `getDerivedStateFromProps: ${props.text}`,
-        );
+        Scheduler.log(`getDerivedStateFromProps: ${props.text}`);
         return null;
       }
 
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue(`constructor: ${this.props.text}`);
+        Scheduler.log(`constructor: ${this.props.text}`);
       }
 
       componentDidMount() {
-        Scheduler.unstable_yieldValue(`componentDidMount: ${this.props.text}`);
+        Scheduler.log(`componentDidMount: ${this.props.text}`);
       }
 
       componentDidUpdate(prevProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `componentDidUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          `componentWillUnmount: ${this.props.text}`,
-        );
+        Scheduler.log(`componentWillUnmount: ${this.props.text}`);
       }
 
       shouldComponentUpdate(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `shouldComponentUpdate: ${this.props.text} -> ${nextProps.text}`,
         );
         return true;
       }
 
       getSnapshotBeforeUpdate(prevProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `getSnapshotBeforeUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
         return null;
@@ -586,19 +582,17 @@ describe('ReactLazy', () => {
       state = {};
 
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          `UNSAFE_componentWillMount: ${this.props.text}`,
-        );
+        Scheduler.log(`UNSAFE_componentWillMount: ${this.props.text}`);
       }
 
       UNSAFE_componentWillUpdate(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `UNSAFE_componentWillUpdate: ${this.props.text} -> ${nextProps.text}`,
         );
       }
 
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${nextProps.text}`,
         );
       }
@@ -649,7 +643,7 @@ describe('ReactLazy', () => {
 
   it('resolves defaultProps on the outer wrapper but warns', async () => {
     function T(props) {
-      Scheduler.unstable_yieldValue(props.inner + ' ' + props.outer);
+      Scheduler.log(props.inner + ' ' + props.outer);
       return props.inner + ' ' + props.outer;
     }
     T.defaultProps = {inner: 'Hi'};
@@ -1022,7 +1016,7 @@ describe('ReactLazy', () => {
   it('includes lazy-loaded component in warning stack', async () => {
     const Foo = props => <div>{[<Text text="A" />, <Text text="B" />]}</div>;
     const LazyFoo = lazy(() => {
-      Scheduler.unstable_yieldValue('Started loading');
+      Scheduler.log('Started loading');
       return fakeImport(Foo);
     });
 
@@ -1062,7 +1056,7 @@ describe('ReactLazy', () => {
       }
     }
     const ForwardRefBar = React.forwardRef((props, ref) => {
-      Scheduler.unstable_yieldValue('forwardRef');
+      Scheduler.log('forwardRef');
       return <Bar ref={ref} />;
     });
 
@@ -1335,13 +1329,13 @@ describe('ReactLazy', () => {
   it('mount and reorder lazy types', async () => {
     class Child extends React.Component {
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('Did unmount: ' + this.props.label);
+        Scheduler.log('Did unmount: ' + this.props.label);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+        Scheduler.log('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -1357,20 +1351,20 @@ describe('ReactLazy', () => {
     }
 
     const LazyChildA = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A');
+      Scheduler.log('Init A');
       return fakeImport(ChildA);
     });
     const LazyChildB = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B');
+      Scheduler.log('Init B');
       return fakeImport(ChildB);
     });
     const LazyChildA2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A2');
+      Scheduler.log('Init A2');
       return fakeImport(ChildA);
     });
     let resolveB2;
     const LazyChildB2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B2');
+      Scheduler.log('Init B2');
       return new Promise(r => {
         resolveB2 = r;
       });
@@ -1423,10 +1417,10 @@ describe('ReactLazy', () => {
   it('mount and reorder lazy types (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+        Scheduler.log('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -1442,19 +1436,19 @@ describe('ReactLazy', () => {
     }
 
     const LazyChildA = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A');
+      Scheduler.log('Init A');
       return fakeImport(ChildA);
     });
     const LazyChildB = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B');
+      Scheduler.log('Init B');
       return fakeImport(ChildB);
     });
     const LazyChildA2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A2');
+      Scheduler.log('Init A2');
       return fakeImport(ChildA);
     });
     const LazyChildB2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B2');
+      Scheduler.log('Init B2');
       return fakeImport(ChildB);
     });
 
@@ -1496,10 +1490,10 @@ describe('ReactLazy', () => {
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+        Scheduler.log('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -1508,22 +1502,22 @@ describe('ReactLazy', () => {
 
     const ChildA = <Child key="A" label="A" />;
     const lazyChildA = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A');
+      Scheduler.log('Init A');
       return fakeImport(ChildA);
     });
     const ChildB = <Child key="B" label="B" />;
     const lazyChildB = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B');
+      Scheduler.log('Init B');
       return fakeImport(ChildB);
     });
     const ChildA2 = <Child key="A" label="a" />;
     const lazyChildA2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A2');
+      Scheduler.log('Init A2');
       return fakeImport(ChildA2);
     });
     const ChildB2 = <Child key="B" label="b" />;
     const lazyChildB2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B2');
+      Scheduler.log('Init B2');
       return fakeImport(ChildB2);
     });
 
@@ -1567,10 +1561,10 @@ describe('ReactLazy', () => {
   it('mount and reorder lazy elements (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+        Scheduler.log('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+        Scheduler.log('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -1579,22 +1573,22 @@ describe('ReactLazy', () => {
 
     const ChildA = <Child key="A" label="A" />;
     const lazyChildA = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A');
+      Scheduler.log('Init A');
       return fakeImport(ChildA);
     });
     const ChildB = <Child key="B" label="B" />;
     const lazyChildB = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B');
+      Scheduler.log('Init B');
       return fakeImport(ChildB);
     });
     const ChildA2 = <Child key="A" label="a" />;
     const lazyChildA2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init A2');
+      Scheduler.log('Init A2');
       return fakeImport(ChildA2);
     });
     const ChildB2 = <Child key="B" label="b" />;
     const lazyChildB2 = lazy(() => {
-      Scheduler.unstable_yieldValue('Init B2');
+      Scheduler.log('Init B2');
       return fakeImport(ChildB2);
     });
 

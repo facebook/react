@@ -146,7 +146,7 @@ describe('ReactProfiler DevTools integration', () => {
 
   it('regression test: #17159', async () => {
     function Text({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
