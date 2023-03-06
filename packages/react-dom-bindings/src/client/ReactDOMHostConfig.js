@@ -35,8 +35,6 @@ import {
   createHTMLElement,
   createPotentiallyInlineScriptElement,
   createSelectElement,
-  createSVGElement,
-  createMathElement,
   createTextNode,
   setInitialProperties,
   diffProperties,
@@ -325,18 +323,16 @@ export function createInstance(
   let domElement: Instance;
   switch (namespace) {
     case SVG_NAMESPACE:
-      domElement = createSVGElement(type, ownerDocument);
-      break;
     case MATH_NAMESPACE:
-      domElement = createMathElement(type, ownerDocument);
+      domElement = ownerDocument.createElementNS(namespace, type);
       break;
     default:
       switch (type) {
         case 'svg':
-          domElement = createSVGElement(type, ownerDocument);
+          domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
           break;
         case 'math':
-          domElement = createMathElement(type, ownerDocument);
+          domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
           break;
         case 'script':
           domElement = createPotentiallyInlineScriptElement(ownerDocument);

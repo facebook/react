@@ -55,12 +55,7 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {
-  HTML_NAMESPACE,
-  MATH_NAMESPACE,
-  SVG_NAMESPACE,
-  getIntrinsicNamespace,
-} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -440,10 +435,15 @@ export function createHTMLElement(
     switch (type) {
       case 'script':
       case 'select':
+        console.error(
+          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
+          type,
+        );
+        break;
       case 'svg':
       case 'math':
         console.error(
-          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
+          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
           type,
         );
     }
@@ -494,20 +494,6 @@ export function createHTMLElement(
   }
 
   return element;
-}
-
-export function createSVGElement(
-  type: string,
-  ownerDocument: Document,
-): Element {
-  return ownerDocument.createElementNS(SVG_NAMESPACE, type);
-}
-
-export function createMathElement(
-  type: string,
-  ownerDocument: Document,
-): Element {
-  return ownerDocument.createElementNS(MATH_NAMESPACE, type);
 }
 
 export function createTextNode(
