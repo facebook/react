@@ -13,6 +13,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
 } from "../HIR/HIR";
+import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import {
   eachReactiveValueOperand,
@@ -66,6 +67,9 @@ class Visitor extends ReactiveFunctionVisitor<State> {
     state.reactivityMap.set(lval.identifier.id, hasReactiveInput);
 
     if (hasReactiveInput) {
+      for (const lvalue of eachInstructionLValue(instr)) {
+        state.reactivityMap.set(lvalue.identifier.id, true);
+      }
       // all mutating effects must also be marked as reactive
       for (const operand of eachReactiveValueOperand(value)) {
         switch (operand.effect) {

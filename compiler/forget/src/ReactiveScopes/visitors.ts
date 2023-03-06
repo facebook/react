@@ -17,7 +17,10 @@ import {
   ReactiveTerminalStatement,
   ReactiveValue,
 } from "../HIR/HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+} from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 export function visitReactiveFunction<TState>(
@@ -69,8 +72,8 @@ export class ReactiveFunctionVisitor<TState = void> {
   }
   traverseInstruction(instruction: ReactiveInstruction, state: TState): void {
     this.visitID(instruction.id, state);
-    if (instruction.lvalue !== null) {
-      this.visitLValue(instruction.id, instruction.lvalue, state);
+    for (const operand of eachInstructionLValue(instruction)) {
+      this.visitLValue(instruction.id, operand, state);
     }
     this.visitValue(instruction.id, instruction.value, state);
   }

@@ -7,18 +7,33 @@
 
 import { assertExhaustive } from "../Utils/utils";
 import {
-  BasicBlock,
   BlockId,
-  HIR,
   Instruction,
   InstructionValue,
   makeInstructionId,
   Pattern,
   Place,
-  ReactiveScope,
-  ScopeId,
+  ReactiveInstruction,
   Terminal,
 } from "./HIR";
+
+export function* eachInstructionLValue(
+  instr: ReactiveInstruction
+): Iterable<Place> {
+  if (instr.lvalue !== null) {
+    yield instr.lvalue;
+  }
+  switch (instr.value.kind) {
+    case "StoreLocal": {
+      yield instr.value.lvalue.place;
+      break;
+    }
+    case "Destructure": {
+      yield* eachPatternOperand(instr.value.lvalue.pattern);
+      break;
+    }
+  }
+}
 
 export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   yield* eachInstructionValueOperand(instr.value);
@@ -54,12 +69,10 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "StoreLocal": {
-      yield instrValue.lvalue.place;
       yield instrValue.value;
       break;
     }
     case "Destructure": {
-      yield* eachPatternOperand(instrValue.lvalue.pattern);
       yield instrValue.value;
       break;
     }
@@ -197,6 +210,26 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
         `Unexpected pattern kind '${(pattern as any).kind}'`
       );
     }
+  }
+}
+
+export function mapInstructionLValues(
+  instr: Instruction,
+  fn: (place: Place) => Place
+): void {
+  switch (instr.value.kind) {
+    case "StoreLocal": {
+      const lvalue = instr.value.lvalue;
+      lvalue.place = fn(lvalue.place);
+      break;
+    }
+    case "Destructure": {
+      mapPatternOperands(instr.value.lvalue.pattern, fn);
+      break;
+    }
+  }
+  if (instr.lvalue !== null) {
+    instr.lvalue = fn(instr.lvalue);
   }
 }
 
@@ -668,35 +701,6 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
         terminal,
         `Unexpected terminal kind '${(terminal as any).kind}'`
       );
-    }
-  }
-}
-
-/**
- * Iterates over all {@link Place}s within a {@link BasicBlock}.
- */
-export function* eachBlockOperand(block: BasicBlock): Iterable<Place> {
-  for (const instr of block.instructions) {
-    yield* eachInstructionOperand(instr);
-    if (instr.lvalue != null) {
-      yield instr.lvalue;
-    }
-  }
-  yield* eachTerminalOperand(block.terminal);
-}
-
-export function* eachReactiveScope(ir: HIR): Iterable<ReactiveScope> {
-  const seenScopes: Set<ScopeId> = new Set();
-  for (const [, block] of ir.blocks) {
-    for (const operand of eachBlockOperand(block)) {
-      const scope = operand.identifier.scope;
-      if (scope != null) {
-        if (seenScopes.has(scope.id)) {
-          continue;
-        }
-        seenScopes.add(scope.id);
-        yield scope;
-      }
     }
   }
 }

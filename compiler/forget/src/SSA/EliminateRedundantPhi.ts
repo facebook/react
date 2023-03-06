@@ -7,7 +7,11 @@
 
 import invariant from "invariant";
 import { BlockId, HIRFunction, Identifier, Place } from "../HIR/HIR";
-import { eachInstructionOperand, eachTerminalOperand } from "../HIR/visitors";
+import {
+  eachInstructionLValue,
+  eachInstructionOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 
 /**
  * Pass to eliminate redundant phi nodes:
@@ -79,6 +83,9 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
 
       // Rewrite all instruction lvalues and operands
       for (const instr of block.instructions) {
+        for (const place of eachInstructionLValue(instr)) {
+          rewritePlace(place, rewrites);
+        }
         for (const place of eachInstructionOperand(instr)) {
           rewritePlace(place, rewrites);
         }

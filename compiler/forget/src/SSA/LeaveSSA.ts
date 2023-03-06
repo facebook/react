@@ -24,6 +24,7 @@ import {
 } from "../HIR/HIR";
 import { printPlace } from "../HIR/PrintHIR";
 import {
+  eachInstructionLValue,
   eachInstructionValueOperand,
   eachPatternOperand,
   eachTerminalOperand,
@@ -188,6 +189,9 @@ export function leaveSSA(fn: HIRFunction): void {
         value.lvalue.kind = kind;
       }
       rewritePlace(lvalue, rewrites, declarations);
+      for (const operand of eachInstructionLValue(instr)) {
+        rewritePlace(operand, rewrites, declarations);
+      }
       for (const operand of eachInstructionValueOperand(instr.value)) {
         rewritePlace(operand, rewrites, declarations);
       }

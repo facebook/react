@@ -14,7 +14,11 @@ import {
   SourceLocation,
 } from "./HIR";
 import { printPlace } from "./PrintHIR";
-import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from "./visitors";
 
 /**
  * Validation pass to check that there is a 1:1 mapping between Identifier objects and IdentifierIds,
@@ -46,7 +50,9 @@ export function validateConsistentIdentifiers(fn: HIRFunction): void {
         );
       }
       assignments.add(instr.lvalue.identifier.id);
-      validate(identifiers, instr.lvalue.identifier, instr.lvalue.loc);
+      for (const operand of eachInstructionLValue(instr)) {
+        validate(identifiers, operand.identifier, operand.loc);
+      }
       for (const operand of eachInstructionValueOperand(instr.value)) {
         validate(identifiers, operand.identifier, operand.loc);
       }

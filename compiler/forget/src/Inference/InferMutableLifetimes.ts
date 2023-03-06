@@ -14,7 +14,7 @@ import {
   Place,
 } from "../HIR/HIR";
 import { printInstruction, printPlace } from "../HIR/PrintHIR";
-import { eachInstructionOperand, eachPatternOperand } from "../HIR/visitors";
+import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -118,32 +118,20 @@ export function inferMutableLifetimes(
     }
 
     for (const instr of block.instructions) {
-      if (instr.value.kind === "StoreLocal") {
-        inferPlace(instr.value.value, instr, inferMutableRangeForStores);
-        instr.value.lvalue.place.identifier.mutableRange.start = instr.id;
-        instr.value.lvalue.place.identifier.mutableRange.end =
-          makeInstructionId(instr.id + 1);
-      } else if (instr.value.kind === "Destructure") {
-        inferPlace(instr.value.value, instr, inferMutableRangeForStores);
-        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
-          place.identifier.mutableRange.start = instr.id;
-          place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
-        }
-      } else {
-        for (const input of eachInstructionOperand(instr)) {
-          inferPlace(input, instr, inferMutableRangeForStores);
-        }
+      for (const operand of eachInstructionLValue(instr)) {
+        const lvalueId = operand.identifier;
+
+        // lvalue start being mutable when they're initially assigned a
+        // value.
+        lvalueId.mutableRange.start = instr.id;
+
+        // Let's be optimistic and assume this lvalue is not mutable by
+        // default.
+        lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
       }
-
-      const lvalueId = instr.lvalue.identifier;
-
-      // lvalue start being mutable when they're initially assigned a
-      // value.
-      lvalueId.mutableRange.start = instr.id;
-
-      // Let's be optimistic and assume this lvalue is not mutable by
-      // default.
-      lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
+      for (const operand of eachInstructionOperand(instr)) {
+        inferPlace(operand, instr, inferMutableRangeForStores);
+      }
     }
   }
 }

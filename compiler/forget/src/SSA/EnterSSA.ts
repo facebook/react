@@ -15,8 +15,8 @@ import {
 import { printIdentifier } from "../HIR/PrintHIR";
 import {
   eachTerminalSuccessor,
+  mapInstructionLValues,
   mapInstructionOperands,
-  mapPatternOperands,
   mapTerminalOperands,
 } from "../HIR/visitors";
 
@@ -224,24 +224,8 @@ export default function enterSSA(func: HIRFunction): void {
     }
 
     for (const instr of block.instructions) {
-      if (instr.value.kind === "StoreLocal") {
-        const oldPlace = instr.value.lvalue.place;
-        const newPlace = builder.definePlace(oldPlace);
-        instr.value.lvalue.place = newPlace;
-
-        instr.value.value = builder.getPlace(instr.value.value);
-      } else if (instr.value.kind === "Destructure") {
-        mapPatternOperands(instr.value.lvalue.pattern, (place) =>
-          builder.definePlace(place)
-        );
-        instr.value.value = builder.getPlace(instr.value.value);
-      } else {
-        mapInstructionOperands(instr, (place) => builder.getPlace(place));
-      }
-
-      const oldPlace = instr.lvalue;
-      const newPlace = builder.definePlace(oldPlace);
-      instr.lvalue = newPlace;
+      mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
+      mapInstructionOperands(instr, (place) => builder.getPlace(place));
     }
 
     mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));

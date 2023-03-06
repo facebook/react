@@ -9,7 +9,7 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
-import { eachInstructionOperand } from "../HIR/visitors";
+import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   switch (op) {
@@ -50,6 +50,9 @@ function apply(func: HIRFunction, unifier: Unifier) {
       phi.type = unifier.get(phi.type);
     }
     for (const instr of block.instructions) {
+      for (const operand of eachInstructionLValue(instr)) {
+        operand.identifier.type = unifier.get(operand.identifier.type);
+      }
       for (const place of eachInstructionOperand(instr)) {
         place.identifier.type = unifier.get(place.identifier.type);
       }

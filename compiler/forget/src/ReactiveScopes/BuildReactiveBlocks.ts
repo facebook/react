@@ -18,6 +18,7 @@ import {
   ReactiveStatement,
   ScopeId,
 } from "../HIR";
+import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import { eachReactiveValueOperand, mapTerminalBlocks } from "./visitors";
 
@@ -178,22 +179,22 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
   }
 }
 
-export function getInstructionScope({
-  id,
-  lvalue,
-  value,
-}: ReactiveInstruction): ReactiveScope | null {
+export function getInstructionScope(
+  instr: ReactiveInstruction
+): ReactiveScope | null {
   invariant(
-    lvalue !== null,
+    instr.lvalue !== null,
     "Expected lvalues to not be null when assigning scopes. " +
       "Pruning lvalues too early can result in missing scope information."
   );
-  const lvalueScope = getPlaceScope(id, lvalue);
-  if (lvalueScope !== null) {
-    return lvalueScope;
+  for (const operand of eachInstructionLValue(instr)) {
+    const operandScope = getPlaceScope(instr.id, operand);
+    if (operandScope !== null) {
+      return operandScope;
+    }
   }
-  for (const operand of eachReactiveValueOperand(value)) {
-    const operandScope = getPlaceScope(id, operand);
+  for (const operand of eachReactiveValueOperand(instr.value)) {
+    const operandScope = getPlaceScope(instr.id, operand);
     if (operandScope !== null) {
       return operandScope;
     }
