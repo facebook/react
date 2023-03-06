@@ -42,7 +42,14 @@ expect.extend({
 
 export default function generateTestsFromFixtures(
   fixturesPath: string,
-  transform: (input: string, file: any, options: { debug: boolean }) => string
+  transform: (
+    input: string,
+    file: any,
+    options: {
+      debug: boolean;
+      enableOnlyOnUseForgetDirective: boolean;
+    }
+  ) => string
 ) {
   const files = fs.readdirSync(fixturesPath);
   const fixtures = matchInputOutputFixtures(files, fixturesPath);
@@ -75,6 +82,8 @@ export default function generateTestsFromFixtures(
         let testCommand = test;
         let input: string | null = null;
         let debug = false;
+        let enableOnlyOnUseForgetDirective = false;
+
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
           const lines = input.split("\n");
@@ -85,12 +94,18 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@skip") !== -1) {
             testCommand = test.skip;
           }
+          if (lines[0]!.indexOf("@forgetDirective") !== -1) {
+            enableOnlyOnUseForgetDirective = true;
+          }
         }
 
         testCommand(basename, () => {
           let receivedOutput;
           if (input !== null) {
-            receivedOutput = transform(input, basename, { debug });
+            receivedOutput = transform(input, basename, {
+              debug,
+              enableOnlyOnUseForgetDirective,
+            });
           } else {
             receivedOutput = "<<input deleted>>";
           }
