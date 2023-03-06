@@ -3380,7 +3380,6 @@ describe('ReactDOMServerPartialHydration', () => {
   itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
 
   it('fallback to client render on hydration mismatch at root', async () => {
-    let isClient = false;
     let suspend = true;
     let resolve;
     const promise = new Promise((res, rej) => {
@@ -3389,36 +3388,35 @@ describe('ReactDOMServerPartialHydration', () => {
         res();
       };
     });
-    function App() {
+    function App({isClient}) {
       return (
         <>
           <Suspense fallback={<div>Loading</div>}>
-            <ChildThatSuspends id={1} />
+            <ChildThatSuspends id={1} isClient={isClient} />
           </Suspense>
           {isClient ? <span>client</span> : <div>server</div>}
           <Suspense fallback={<div>Loading</div>}>
-            <ChildThatSuspends id={2} />
+            <ChildThatSuspends id={2} isClient={isClient} />
           </Suspense>
         </>
       );
     }
-    function ChildThatSuspends({id}) {
+    function ChildThatSuspends({id, isClient}) {
       if (isClient && suspend) {
         throw promise;
       }
       return <div>{id}</div>;
     }
 
-    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App isClient={false} />);
 
     const container = document.createElement('div');
     document.body.appendChild(container);
     container.innerHTML = finalHTML;
-    isClient = true;
 
     expect(() => {
       act(() => {
-        ReactDOMClient.hydrateRoot(container, <App />, {
+        ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
           onRecoverableError(error) {
             Scheduler.log('Log recoverable error: ' + error.message);
           },
@@ -3435,9 +3433,6 @@ describe('ReactDOMServerPartialHydration', () => {
       {withoutStack: 1},
     );
     assertLog([
-      'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-      // TODO: There were multiple mismatches in a single container. Should
-      // we attempt to de-dupe them?
       'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
     ]);

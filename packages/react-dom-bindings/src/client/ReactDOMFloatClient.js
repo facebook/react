@@ -9,30 +9,32 @@
 
 import type {Instance, Container} from './ReactDOMHostConfig';
 
-import {isAttributeNameSafe} from '../shared/DOMProperty';
-import {precacheFiberNode} from './ReactDOMComponentTree';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
+import {
+  checkAttributeStringCoercion,
+  checkPropStringCoercion,
+} from 'shared/CheckStringCoercion';
+
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {isAttributeNameSafe} from '../shared/DOMProperty';
+import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {
   validatePreloadArguments,
   validatePreinitArguments,
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
-import {createElement, setInitialProperties} from './ReactDOMComponent';
-import {
-  checkAttributeStringCoercion,
-  checkPropStringCoercion,
-} from 'shared/CheckStringCoercion';
+
+import {precacheFiberNode} from './ReactDOMComponentTree';
+import {createHTMLElement, setInitialProperties} from './ReactDOMComponent';
 import {
   getResourcesFromRoot,
   isMarkedResource,
   markNodeAsResource,
 } from './ReactDOMComponentTree';
-import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
-import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -174,11 +176,10 @@ function preconnectAs(
 
       const preconnectProps = {rel, crossOrigin, href};
       if (null === ownerDocument.querySelector(key)) {
-        const preloadInstance = createElement(
+        const preloadInstance = createHTMLElement(
           'link',
           preconnectProps,
           ownerDocument,
-          HTML_NAMESPACE,
         );
         setInitialProperties(preloadInstance, 'link', preconnectProps);
         markNodeAsResource(preloadInstance);
@@ -289,11 +290,10 @@ function preload(href: string, options: PreloadOptions) {
       preloadPropsMap.set(key, preloadProps);
 
       if (null === ownerDocument.querySelector(preloadKey)) {
-        const preloadInstance = createElement(
+        const preloadInstance = createHTMLElement(
           'link',
           preloadProps,
           ownerDocument,
-          HTML_NAMESPACE,
         );
         setInitialProperties(preloadInstance, 'link', preloadProps);
         markNodeAsResource(preloadInstance);
@@ -371,11 +371,10 @@ function preinit(href: string, options: PreinitOptions) {
             preloadPropsMap.set(key, preloadProps);
 
             if (null === preloadDocument.querySelector(preloadKey)) {
-              const preloadInstance = createElement(
+              const preloadInstance = createHTMLElement(
                 'link',
                 preloadProps,
                 preloadDocument,
-                HTML_NAMESPACE,
               );
               setInitialProperties(preloadInstance, 'link', preloadProps);
               markNodeAsResource(preloadInstance);
@@ -417,12 +416,8 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
           }
-          instance = createElement(
-            'link',
-            stylesheetProps,
-            resourceRoot,
-            HTML_NAMESPACE,
-          );
+          const ownerDocument = getDocumentFromRoot(resourceRoot);
+          instance = createHTMLElement('link', stylesheetProps, ownerDocument);
           markNodeAsResource(instance);
           setInitialProperties(instance, 'link', stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
@@ -463,12 +458,8 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForScript(scriptProps, preloadProps);
           }
-          instance = createElement(
-            'script',
-            scriptProps,
-            resourceRoot,
-            HTML_NAMESPACE,
-          );
+          const ownerDocument = getDocumentFromRoot(resourceRoot);
+          instance = createHTMLElement('script', scriptProps, ownerDocument);
           markNodeAsResource(instance);
           setInitialProperties(instance, 'link', scriptProps);
           (getDocumentFromRoot(resourceRoot).head: any).appendChild(instance);
@@ -703,11 +694,10 @@ function preloadStylesheet(
       null ===
       ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
     ) {
-      const preloadInstance = createElement(
+      const preloadInstance = createHTMLElement(
         'link',
         preloadProps,
         ownerDocument,
-        HTML_NAMESPACE,
       );
       setInitialProperties(preloadInstance, 'link', preloadProps);
       markNodeAsResource(preloadInstance);
@@ -762,16 +752,13 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
+          markNodeAsResource(instance);
           return instance;
         }
 
         const styleProps = styleTagPropsFromRawProps(props);
-        instance = createElement(
-          'style',
-          styleProps,
-          hoistableRoot,
-          HTML_NAMESPACE,
-        );
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('style', styleProps, ownerDocument);
 
         markNodeAsResource(instance);
         setInitialProperties(instance, 'style', styleProps);
@@ -793,6 +780,7 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
+          markNodeAsResource(instance);
           return instance;
         }
 
@@ -803,12 +791,8 @@ export function acquireResource(
         }
 
         // Construct and insert a new instance
-        instance = createElement(
-          'link',
-          stylesheetProps,
-          hoistableRoot,
-          HTML_NAMESPACE,
-        );
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('link', stylesheetProps, ownerDocument);
         markNodeAsResource(instance);
         const linkInstance: HTMLLinkElement = (instance: any);
         (linkInstance: any)._p = new Promise((resolve, reject) => {
@@ -837,6 +821,7 @@ export function acquireResource(
         );
         if (instance) {
           resource.instance = instance;
+          markNodeAsResource(instance);
           return instance;
         }
 
@@ -848,12 +833,8 @@ export function acquireResource(
         }
 
         // Construct and insert a new instance
-        instance = createElement(
-          'script',
-          scriptProps,
-          hoistableRoot,
-          HTML_NAMESPACE,
-        );
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = createHTMLElement('script', scriptProps, ownerDocument);
         markNodeAsResource(instance);
         setInitialProperties(instance, 'link', scriptProps);
         (getDocumentFromRoot(hoistableRoot).head: any).appendChild(instance);
@@ -1092,7 +1073,7 @@ export function hydrateHoistable(
   }
 
   // There is no matching instance to hydrate, we create it now
-  const instance = createElement(type, props, ownerDocument, HTML_NAMESPACE);
+  const instance = createHTMLElement(type, props, ownerDocument);
   setInitialProperties(instance, type, props);
   precacheFiberNode(internalInstanceHandle, instance);
   markNodeAsResource(instance);

@@ -130,11 +130,8 @@ export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 //     Hydration
 //     (optional)
 // -------------------
-export const isHydratable = $$$hostConfig.isHydratable;
-export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
-export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
-export const canHydrateSuspenseInstance =
-  $$$hostConfig.canHydrateSuspenseInstance;
+export const isHydratableType = $$$hostConfig.isHydratableType;
+export const isHydratableText = $$$hostConfig.isHydratableText;
 export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
@@ -149,6 +146,16 @@ export const getFirstHydratableChildWithinContainer =
   $$$hostConfig.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
+export const shouldSkipHydratableForInstance =
+  $$$hostConfig.shouldSkipHydratableForInstance;
+export const shouldSkipHydratableForTextInstance =
+  $$$hostConfig.shouldSkipHydratableForTextInstance;
+export const shouldSkipHydratableForSuspenseInstance =
+  $$$hostConfig.shouldSkipHydratableForSuspenseInstance;
+export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
+export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
+export const canHydrateSuspenseInstance =
+  $$$hostConfig.canHydrateSuspenseInstance;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
