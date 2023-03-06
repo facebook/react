@@ -230,7 +230,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const properties = [];
       if (instrValue.properties !== null) {
         for (const property of instrValue.properties) {
-          properties.push(`${property.name}: ${printPlace(property.place)}`);
+          if (property.kind === "ObjectProperty") {
+            properties.push(`${property.name}: ${printPlace(property.place)}`);
+          } else {
+            properties.push(`...${printPlace(property.place)}`);
+          }
         }
       }
       value = `Object { ${properties.join(", ")} }`;

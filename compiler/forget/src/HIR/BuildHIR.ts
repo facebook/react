@@ -33,6 +33,7 @@ import {
   Place,
   ReturnTerminal,
   SourceLocation,
+  SpreadPattern,
   ThrowTerminal,
 } from "./HIR";
 import HIRBuilder from "./HIRBuilder";
@@ -799,9 +800,48 @@ function lowerExpression(
     case "ObjectExpression": {
       const expr = exprPath as NodePath<t.ObjectExpression>;
       const propertyPaths = expr.get("properties");
-      const properties: Array<ObjectProperty> = [];
+      const properties: Array<ObjectProperty | SpreadPattern> = [];
       for (const propertyPath of propertyPaths) {
-        if (!propertyPath.isObjectProperty()) {
+        if (propertyPath.isObjectProperty()) {
+          const key = propertyPath.node.key;
+          let keyName: string;
+          if (key.type === "Identifier") {
+            keyName = key.name;
+          } else if (key.type === "StringLiteral") {
+            keyName = key.value;
+          } else {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
+              severity: ErrorSeverity.InvalidInput,
+              nodePath: propertyPath,
+            });
+            continue;
+          }
+          const valuePath = propertyPath.get("value");
+          if (!valuePath.isExpression()) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
+              severity: ErrorSeverity.Todo,
+              nodePath: valuePath,
+            });
+            continue;
+          }
+          const value = lowerExpressionToTemporary(builder, valuePath);
+          properties.push({
+            kind: "ObjectProperty",
+            name: keyName,
+            place: value,
+          });
+        } else if (propertyPath.isSpreadElement()) {
+          const place = lowerExpressionToTemporary(
+            builder,
+            propertyPath.get("argument")
+          );
+          properties.push({
+            kind: "Spread",
+            place,
+          });
+        } else {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
             severity: ErrorSeverity.Todo,
@@ -809,35 +849,6 @@ function lowerExpression(
           });
           continue;
         }
-        const key = propertyPath.node.key;
-        let keyName: string;
-        if (key.type === "Identifier") {
-          keyName = key.name;
-        } else if (key.type === "StringLiteral") {
-          keyName = key.value;
-        } else {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-            severity: ErrorSeverity.InvalidInput,
-            nodePath: propertyPath,
-          });
-          continue;
-        }
-        const valuePath = propertyPath.get("value");
-        if (!valuePath.isExpression()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
-            severity: ErrorSeverity.Todo,
-            nodePath: valuePath,
-          });
-          continue;
-        }
-        const value = lowerExpressionToTemporary(builder, valuePath);
-        properties.push({
-          kind: "ObjectProperty",
-          name: keyName,
-          place: value,
-        });
       }
       return {
         kind: "ObjectExpression",

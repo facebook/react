@@ -518,7 +518,7 @@ export type InstructionValue =
     }
   | {
       kind: "ObjectExpression";
-      properties: Array<ObjectProperty>; // null === empty object
+      properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
   | { kind: "ArrayExpression"; elements: Array<Place>; loc: SourceLocation }
