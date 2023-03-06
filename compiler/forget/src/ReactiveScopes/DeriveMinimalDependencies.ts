@@ -1,5 +1,6 @@
 import invariant from "invariant";
 import { Identifier, IdentifierId, ReactiveScopeDependency } from "../HIR";
+import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
 export type ReactiveScopeDependencyInfo = ReactiveScopeDependency & {
@@ -109,6 +110,23 @@ export class ReactiveScopeDependencyTree {
         );
       }
     }
+  }
+
+  /**
+   * Prints dependency tree to string for debugging.
+   * @param includeAccesses
+   * @returns string representation of DependencyTree
+   */
+  printDeps(includeAccesses: boolean): string {
+    let res = [];
+
+    for (const [rootId, rootNode] of this.#roots.entries()) {
+      const rootResults = printSubtree(rootNode, includeAccesses).map(
+        (result) => `${printIdentifier(rootId)}.${result}`
+      );
+      res.push(rootResults);
+    }
+    return res.flat().join("\n");
   }
 }
 
@@ -331,6 +349,23 @@ function addSubtreeIntersection(
       currNode.accessType = merge(externalAccessType, currNode.accessType);
     }
   }
+}
+
+function printSubtree(
+  node: DependencyNode,
+  includeAccesses: boolean
+): Array<string> {
+  const results: Array<string> = [];
+  for (const [propertyName, propertyNode] of node.properties) {
+    if (includeAccesses || isDependency(propertyNode.accessType)) {
+      results.push(`${propertyName} (${propertyNode.accessType})`);
+    }
+    const propertyResults = printSubtree(propertyNode, includeAccesses);
+    results.push(
+      ...propertyResults.map((result) => `${propertyName}.${result}`)
+    );
+  }
+  return results;
 }
 
 function mapNonNull<T extends NonNullable<V>, V, U>(

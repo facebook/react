@@ -113,6 +113,15 @@ class Context {
   }
 
   /**
+   * Prints dependency tree to string for debugging.
+   * @param includeAccesses
+   * @returns string representation of DependencyTree
+   */
+  printDeps(includeAccesses: boolean = false): string {
+    return this.#dependencies.printDeps(includeAccesses);
+  }
+
+  /**
    * We track and return unconditional accesses / deps within this conditional.
    * If an object property is always used (i.e. in every conditional path), we
    * want to promote it to an unconditional access / dependency.
