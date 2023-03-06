@@ -3,7 +3,10 @@
 // separately from props.b)
 // Correctness:
 //   y depends on either props.b or props.b + 1
-function PrimitiveAsDep(props) {
+function PrimitiveAsDepNested(props) {
+  let x = {};
+  mutate(x);
   let y = foo(props.b + 1);
-  return y;
+  mutate(x, props.a);
+  return [x, y];
 }
