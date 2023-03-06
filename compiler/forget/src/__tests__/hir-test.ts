@@ -62,7 +62,8 @@ describe("React Forget (HIR version)", () => {
       try {
         items.push({
           js: runReactForgetBabelPlugin(input, file, language, {
-            enableOnlyOnUseForgetDirective: false,
+            enableOnlyOnUseForgetDirective:
+              options.enableOnlyOnUseForgetDirective,
             environment: {
               customHooks: new Map([
                 [
@@ -77,7 +78,7 @@ describe("React Forget (HIR version)", () => {
               ]),
             },
             logger: null,
-            gatingModule: null,
+            gatingModule: options.gatingModule,
           }).code,
         });
       } catch (e) {
