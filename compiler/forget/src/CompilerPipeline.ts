@@ -51,7 +51,7 @@ export type CompilerPipelineValue =
 export function* run(
   func: NodePath<t.FunctionDeclaration>,
   options?: Partial<EnvironmentOptions> | null
-): Generator<CompilerPipelineValue, t.Function> {
+): Generator<CompilerPipelineValue, t.FunctionDeclaration> {
   const hir = lower(func, mergeOptions(options ?? null)).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
@@ -196,7 +196,7 @@ export function* run(
 export function compile(
   func: NodePath<t.FunctionDeclaration>,
   options?: Partial<EnvironmentOptions> | null
-): t.Function {
+): t.FunctionDeclaration {
   let generator = run(func, options);
   while (true) {
     const next = generator.next();
