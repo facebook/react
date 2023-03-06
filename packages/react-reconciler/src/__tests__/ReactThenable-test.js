@@ -651,6 +651,47 @@ describe('ReactThenable', () => {
   });
 
   // @gate enableUseHook
+  test('when waiting for data to resolve, an update on a different root does not cause work to be dropped', async () => {
+    const getCachedAsyncText = cache(getAsyncText);
+
+    function App() {
+      return <Text text={use(getCachedAsyncText('Hi'))} />;
+    }
+
+    const root1 = ReactNoop.createRoot();
+    await act(async () => {
+      root1.render(<Suspense fallback={<Text text="Loading..." />} />);
+    });
+
+    // Start a transition on one root. It will suspend.
+    await act(async () => {
+      startTransition(() => {
+        root1.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    assertLog(['Async text requested [Hi]']);
+
+    // While we're waiting for the first root's data to resolve, a second
+    // root renders.
+    const root2 = ReactNoop.createRoot();
+    await act(async () => {
+      root2.render('Do re mi');
+    });
+    expect(root2).toMatchRenderedOutput('Do re mi');
+
+    // Once the first root's data is ready, we should finish its transition.
+    await act(async () => {
+      await resolveTextRequests('Hi');
+    });
+    assertLog(['Hi']);
+    expect(root1).toMatchRenderedOutput('Hi');
+  });
+
+  // @gate enableUseHook
   test('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
     function App() {
       return <Text text={use(getAsyncText('Will never resolve'))} />;

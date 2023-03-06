@@ -322,7 +322,7 @@ const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
-const SuspendedAndReadyToUnwind: SuspendedReason = 5;
+const SuspendedAndReadyToContinue: SuspendedReason = 5;
 const SuspendedOnHydration: SuspendedReason = 6;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
@@ -892,6 +892,18 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     return;
   }
 
+  // If this root is currently suspended and waiting for data to resolve, don't
+  // schedule a task to render it. We'll either wait for a ping, or wait to
+  // receive an update.
+  if (
+    workInProgressSuspendedReason === SuspendedOnData &&
+    workInProgressRoot === root
+  ) {
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    return;
+  }
+
   // We use the highest priority lane to represent the priority of the callback.
   const newCallbackPriority = getHighestPriorityLane(nextLanes);
 
@@ -1153,20 +1165,6 @@ function performConcurrentWorkOnRoot(
   if (root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
-    if (
-      workInProgressSuspendedReason === SuspendedOnData &&
-      workInProgressRoot === root
-    ) {
-      // Special case: The work loop is currently suspended and waiting for
-      // data to resolve. Unschedule the current task.
-      //
-      // TODO: The factoring is a little weird. Arguably this should be checked
-      // in ensureRootIsScheduled instead. I went back and forth, not totally
-      // sure yet.
-      root.callbackPriority = NoLane;
-      root.callbackNode = null;
-      return null;
-    }
     return performConcurrentWorkOnRoot.bind(null, root);
   }
   return null;
@@ -1858,7 +1856,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
       case SuspendedOnData:
       case SuspendedOnImmediate:
       case SuspendedOnDeprecatedThrowPromise:
-      case SuspendedAndReadyToUnwind: {
+      case SuspendedAndReadyToContinue: {
         const wakeable: Wakeable = (thrownValue: any);
         markComponentSuspended(
           erroredWork,
@@ -2216,6 +2214,17 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // `status` field, but if the promise already has a status, we won't
             // have added a listener until right here.
             const onResolution = () => {
+              // Check if the root is still suspended on this promise.
+              if (
+                workInProgressSuspendedReason === SuspendedOnData &&
+                workInProgressRoot === root
+              ) {
+                // Mark the root as ready to continue rendering.
+                workInProgressSuspendedReason = SuspendedAndReadyToContinue;
+              }
+              // Ensure the root is scheduled. We should do this even if we're
+              // currently working on a different root, so that we resume
+              // rendering later.
               ensureRootIsScheduled(root, now());
             };
             thenable.then(onResolution, onResolution);
@@ -2225,10 +2234,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // If this fiber just suspended, it's possible the data is already
             // cached. Yield to the main thread to give it a chance to ping. If
             // it does, we can retry immediately without unwinding the stack.
-            workInProgressSuspendedReason = SuspendedAndReadyToUnwind;
+            workInProgressSuspendedReason = SuspendedAndReadyToContinue;
             break outer;
           }
-          case SuspendedAndReadyToUnwind: {
+          case SuspendedAndReadyToContinue: {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
