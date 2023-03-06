@@ -77,6 +77,7 @@ describe("React Forget (HIR version)", () => {
               ]),
             },
             logger: null,
+            gatingModule: null,
           }).code,
         });
       } catch (e) {

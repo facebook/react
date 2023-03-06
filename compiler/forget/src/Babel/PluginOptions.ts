@@ -16,6 +16,25 @@ export type PluginOptions = {
   environment: Partial<EnvironmentOptions> | null;
 
   logger: Logger | null;
+
+  /**
+   * Specifying a `gatingModule`, makes Forget compile and emit a separate
+   * version of the function gated by importing an `isForgetEnabled` from the
+   * specified `gatingModule`.
+   *
+   * For example:
+   *  gatingModule: 'ReactForgetFeatureFlag'
+   *
+   * produces:
+   *  import isForgetEnabled from ReactForgetFeatureFlag
+   *
+   *  Foo_forget()   {}
+   *
+   *  Foo_uncompiled() {}
+   *
+   *  var Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
+   */
+  gatingModule: string | null;
 };
 
 export type Logger = {
@@ -26,6 +45,7 @@ export const defaultOptions: PluginOptions = {
   enableOnlyOnUseForgetDirective: false,
   environment: null,
   logger: null,
+  gatingModule: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {
