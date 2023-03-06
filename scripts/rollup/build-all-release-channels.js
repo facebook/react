@@ -332,7 +332,7 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
-    const replacedText = originalText.replace(
+    const replacedText = originalText.replaceAll(
       PLACEHOLDER_REACT_VERSION,
       newVersion
     );
