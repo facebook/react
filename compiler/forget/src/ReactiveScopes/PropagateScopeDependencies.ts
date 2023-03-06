@@ -98,18 +98,20 @@ class Context {
     this.#dependencies = previousDependencies;
     this.#inConditionalWithinScope = prevInConditional;
 
-    const minScopeDependencies = scopedDependencies.deriveMinimalDependencies();
+    // Derive minimal dependencies now, since next line may mutate scopedDependencies
+    const minInnerScopeDependencies =
+      scopedDependencies.deriveMinimalDependencies();
+
     // propagate dependencies upward using the same rules as normal dependency
     // collection. child scopes may have dependencies on values created within
     // the outer scope, which necessarily cannot be dependencies of the outer
     // scope
-    // TODO(@mofeiZ): instead of merging derived minimal dependencies here, we
-    // can instead merge the scoped dependency tree. This would let us retain
-    // info about unconditional accesses.
-    for (const dep of minScopeDependencies) {
-      this.visitDependency({ ...dep, cond: this.#inConditionalWithinScope });
-    }
-    return minScopeDependencies;
+    this.#dependencies.addDepsFromInnerScope(
+      scopedDependencies,
+      this.#inConditionalWithinScope,
+      this.#checkValidDependencyId.bind(this)
+    );
+    return minInnerScopeDependencies;
   }
 
   /**
@@ -202,6 +204,23 @@ class Context {
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
+  // Checks if identifier is a valid dependency in the current scope
+  #checkValidDependencyId(identifier: Identifier) {
+    // If this operand is used in a scope, has a dynamic value, and was defined
+    // before this scope, then its a dependency of the scope.
+    const currentDeclaration =
+      this.#reassignments.get(identifier) ??
+      this.#declarations.get(identifier.id);
+    const currentScope = this.currentScope;
+    return (
+      currentScope != null &&
+      currentDeclaration !== undefined &&
+      currentDeclaration.id < currentScope.range.start &&
+      (currentDeclaration.scope == null ||
+        currentDeclaration.scope !== currentScope)
+    );
+  }
+
   #isScopeActive(scope: ReactiveScope): boolean {
     return this.#scopes.indexOf(scope) !== -1;
   }
@@ -277,19 +296,7 @@ class Context {
       );
     }
 
-    // If this operand is used in a scope, has a dynamic value, and was defined
-    // before this scope, then its a dependency of the scope.
-    const currentDeclaration =
-      this.#reassignments.get(maybeDependency.identifier) ??
-      this.#declarations.get(maybeDependency.identifier.id);
-    const currentScope = this.currentScope;
-    if (
-      currentScope != null &&
-      currentDeclaration !== undefined &&
-      currentDeclaration.id < currentScope.range.start &&
-      (currentDeclaration.scope == null ||
-        currentDeclaration.scope !== currentScope)
-    ) {
+    if (this.#checkValidDependencyId(maybeDependency.identifier)) {
       this.#depsInCurrentConditional.add({
         ...maybeDependency,
         cond: true,

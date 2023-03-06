@@ -32,18 +32,23 @@ export type ReactiveScopeDependencyInfo = ReactiveScopeDependency & {
 export class ReactiveScopeDependencyTree {
   #roots: Map<Identifier, DependencyNode> = new Map();
 
-  add(dep: ReactiveScopeDependencyInfo) {
-    let root = this.#roots.get(dep.identifier);
-    const path = dep.path ?? [];
-    if (root == null) {
-      // roots can always be accessed unconditionally in JS
-      root = {
+  #getOrCreateRoot(identifier: Identifier): DependencyNode {
+    // roots can always be accessed unconditionally in JS
+    let rootNode = this.#roots.get(identifier);
+
+    if (rootNode === undefined) {
+      rootNode = {
         properties: new Map(),
         accessType: PropertyAccessType.UnconditionalAccess,
       };
-      this.#roots.set(dep.identifier, root);
+      this.#roots.set(identifier, rootNode);
     }
-    let currNode: DependencyNode = root;
+    return rootNode;
+  }
+
+  add(dep: ReactiveScopeDependencyInfo) {
+    const path = dep.path ?? [];
+    let currNode = this.#getOrCreateRoot(dep.identifier);
 
     const accessType = dep.cond
       ? PropertyAccessType.ConditionalAccess
@@ -91,6 +96,25 @@ export class ReactiveScopeDependencyTree {
     }
 
     return results;
+  }
+
+  addDepsFromInnerScope(
+    depsFromInnerScope: ReactiveScopeDependencyTree,
+    innerScopeInConditionalWithinParent: boolean,
+    checkValidDepIdFn: (id: Identifier) => boolean
+  ) {
+    for (const [id, otherRoot] of depsFromInnerScope.#roots) {
+      if (!checkValidDepIdFn(id)) {
+        continue;
+      }
+      let currRoot = this.#getOrCreateRoot(id);
+      addSubtree(currRoot, otherRoot, innerScopeInConditionalWithinParent);
+      if (!isUnconditional(currRoot.accessType)) {
+        currRoot.accessType = isDependency(currRoot.accessType)
+          ? PropertyAccessType.UnconditionalDependency
+          : PropertyAccessType.UnconditionalAccess;
+      }
+    }
   }
 
   promoteDepsFromExhaustiveConditionals(
@@ -285,6 +309,73 @@ function deriveMinimalDependenciesInSubtree(
         dep.accessType,
         "[PropgateScopeDependencies] Unhandled access type!"
       );
+    }
+  }
+}
+
+/**
+ * Demote all unconditional accesses + dependencies in subtree to the
+ * conditional equivalent, mutating subtree in place.
+ * @param subtree unconditional node representing a subtree of dependencies
+ */
+function demoteSubtreeToConditional(subtree: DependencyNode) {
+  const stack: Array<DependencyNode> = [subtree];
+
+  let node;
+  while ((node = stack.pop()) !== undefined) {
+    const { accessType, properties } = node;
+    invariant(isUnconditional(accessType), "");
+    node.accessType = isDependency(accessType)
+      ? PropertyAccessType.ConditionalDependency
+      : PropertyAccessType.ConditionalAccess;
+
+    for (const childNode of properties.values()) {
+      if (isUnconditional(accessType)) {
+        // No conditional node can have an unconditional node as a child, so
+        // we only process childNode if it is unconditional
+        stack.push(childNode);
+      }
+    }
+  }
+}
+
+/**
+ * Calculates currNode = union(currNode, otherNode), mutating currNode in place
+ * If demoteOtherNode is specified, we demote the subtree represented by
+ * otherNode to conditional access/deps before taking the union.
+ *
+ * This is a helper function used to join an inner scope to its parent scope.
+ * @param currNode (mutable) return by argument
+ * @param otherNode (move) {@link addSubtree} takes ownership of the subtree
+ * represented by otherNode, which may be mutated or moved to currNode. It is
+ * invalid to use otherNode after this call.
+ * @param demoteOtherNode
+ */
+function addSubtree(
+  currNode: DependencyNode,
+  otherNode: DependencyNode,
+  demoteOtherNode: boolean
+) {
+  let otherType = otherNode.accessType;
+  if (demoteOtherNode) {
+    otherType = isDependency(otherType)
+      ? PropertyAccessType.ConditionalDependency
+      : PropertyAccessType.ConditionalAccess;
+  }
+  currNode.accessType = merge(currNode.accessType, otherType);
+
+  for (const [propertyName, otherChild] of otherNode.properties) {
+    const currChild = currNode.properties.get(propertyName);
+    if (currChild) {
+      // recursively calculate currChild = union(currChild, otherChild)
+      addSubtree(currChild, otherChild, demoteOtherNode);
+    } else {
+      // if currChild doesn't exist, we can just move otherChild
+      // currChild = otherChild.
+      if (demoteOtherNode) {
+        demoteSubtreeToConditional(otherChild);
+      }
+      currNode.properties.set(propertyName, otherChild);
     }
   }
 }
