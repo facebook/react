@@ -91,6 +91,25 @@ export class ReactiveScopeDependencyTree {
 
     return results;
   }
+
+  promoteDepsFromExhaustiveConditionals(
+    trees: Array<ReactiveScopeDependencyTree>
+  ) {
+    invariant(
+      trees.length > 1,
+      "Expected trees to be at least 2 elements long."
+    );
+
+    for (const [id, root] of this.#roots) {
+      const nodesForRootId = mapNonNull(trees, (tree) => tree.#roots.get(id));
+      if (nodesForRootId) {
+        addSubtreeIntersection(
+          nodesForRootId.map((root) => root.properties),
+          root.properties
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -250,4 +269,82 @@ function deriveMinimalDependenciesInSubtree(
       );
     }
   }
+}
+
+/**
+ * Adds intersection(otherProperties) to currProperties, mutating
+ * currProperties in place. i.e.
+ *   currProperties = union(currProperties, intersection(otherProperties))
+ *
+ * Used to merge unconditional accesses from exhaustive conditional branches
+ * into the parent ReactiveDeps Tree.
+ * intersection(currProperties) is determined as such:
+ *  - a node is present in the intersection iff it is present in all every
+ *    branch
+ *  - the type of an added node is `UnconditionalDependency` if it is a
+ *    dependency in at least one branch (otherwise `UnconditionalAccess`)
+ *
+ * @param otherProperties (read-only) an array of node properties containing
+ *        only unconditionally accessed nodes. Each element represents a
+ *        subtree of reactive dependencies from a single CFG branch.
+ *        otherProperties must represent all reachable branches.
+ * @param currProperties (mutable) return by argument properties of a node
+ *
+ * otherProperties and currProperties must be properties of disjoint nodes
+ * that represent the same dependency (identifier + path).
+ */
+function addSubtreeIntersection(
+  otherProperties: Array<Map<string, DependencyNode>>,
+  currProperties: Map<string, DependencyNode>
+) {
+  invariant(
+    otherProperties.length > 1,
+    "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long."
+  );
+
+  otherProperties.forEach((properties) =>
+    properties.forEach((node, _) =>
+      invariant(
+        !isUnconditional(node.accessType),
+        "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!"
+      )
+    )
+  );
+
+  for (const [propertyName, currNode] of currProperties) {
+    const otherNodes = mapNonNull(otherProperties, (properties) =>
+      properties.get(propertyName)
+    );
+
+    // intersection(otherNodes[propertyName]) only exists if each element in
+    // otherProperties accesses propertyName.
+    if (otherNodes) {
+      addSubtreeIntersection(
+        otherNodes.map((node) => node.properties),
+        currNode.properties
+      );
+
+      const isDep = otherNodes.some((tree) => isDependency(tree.accessType));
+      const externalAccessType = isDep
+        ? PropertyAccessType.UnconditionalDependency
+        : PropertyAccessType.UnconditionalAccess;
+      currNode.accessType = merge(externalAccessType, currNode.accessType);
+    }
+  }
+}
+
+function mapNonNull<T extends NonNullable<V>, V, U>(
+  arr: Array<U>,
+  fn: (arg0: U) => T | undefined | null
+): Array<T> | null {
+  const result = [];
+  for (let i = 0; i < arr.length; i++) {
+    const element = fn(arr[i]);
+    if (element) {
+      result.push(element);
+    } else {
+      return null;
+    }
+  }
+  return result;
 }

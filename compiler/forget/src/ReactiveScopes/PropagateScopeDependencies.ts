@@ -63,11 +63,18 @@ type Scopes = Array<ReactiveScope>;
 class Context {
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
+  // Reactive dependencies used in the current reactive scope.
   #dependencies: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
   #properties: Map<Identifier, ReactiveScopeDependencyInfo> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
+  // Reactive dependencies used unconditionally in the current conditional.
+  // Composed of dependencies:
+  //  - directly accessed within block (added in visitDep)
+  //  - accessed by all cfg branches (added through promoteDeps)
+  #depsInCurrentConditional: ReactiveScopeDependencyTree =
+    new ReactiveScopeDependencyTree();
   #scopes: Scopes = [];
 
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
@@ -105,11 +112,48 @@ class Context {
     return minScopeDependencies;
   }
 
-  enterConditional(fn: () => void) {
+  /**
+   * We track and return unconditional accesses / deps within this conditional.
+   * If an object property is always used (i.e. in every conditional path), we
+   * want to promote it to an unconditional access / dependency.
+   *
+   * The caller of `enterConditional` is responsible determining for promotion.
+   * i.e. call promoteDepsFromExhaustiveConditionals to merge returned results.
+   *
+   * e.g. we want to mark props.a.b as an unconditional dep here
+   *  if (foo(...)) {
+   *    access(props.a.b);
+   *  } else {
+   *    access(props.a.b);
+   *  }
+   */
+  enterConditional(fn: () => void): ReactiveScopeDependencyTree {
     const prevInConditional = this.#inConditionalWithinScope;
+    const prevUncondAccessed = this.#depsInCurrentConditional;
     this.#inConditionalWithinScope = true;
+    this.#depsInCurrentConditional = new ReactiveScopeDependencyTree();
     fn();
+    const result = this.#depsInCurrentConditional;
     this.#inConditionalWithinScope = prevInConditional;
+    this.#depsInCurrentConditional = prevUncondAccessed;
+    return result;
+  }
+
+  /**
+   * Add dependencies from exhaustive CFG paths into the current ReactiveDeps
+   * tree. If a property is used in every CFG path, it is promoted to an
+   * unconditional access / dependency here.
+   * @param depsInConditionals
+   */
+  promoteDepsFromExhaustiveConditionals(
+    depsInConditionals: Array<ReactiveScopeDependencyTree>
+  ) {
+    this.#dependencies.promoteDepsFromExhaustiveConditionals(
+      depsInConditionals
+    );
+    this.#depsInCurrentConditional.promoteDepsFromExhaustiveConditionals(
+      depsInConditionals
+    );
   }
 
   /**
@@ -237,6 +281,10 @@ class Context {
       (currentDeclaration.scope == null ||
         currentDeclaration.scope !== currentScope)
     ) {
+      this.#depsInCurrentConditional.add({
+        ...maybeDependency,
+        cond: true,
+      });
       // Add info about this dependency to the existing tree
       // We do not try to join/reduce dependencies here due to missing info
       this.#dependencies.add(maybeDependency);
@@ -316,38 +364,43 @@ function visit(context: Context, block: ReactiveBlock): void {
           }
           case "if": {
             context.visitOperand(terminal.test);
-            /**
-             * TODO: Track dependencies always accessed within consequent and ones
-             * always accessed within alternate. If a dependency is always accessed in
-             * both, we can promote it to an unconditional dependency.
-             *
-             * e.g. props.a.b is unconditionally accessed here.
-             *  if (foo(...)) {
-             *    access(props.a.b);
-             *  } else {
-             *    access(props.a.b);
-             *  }
-             *
-             * To deal with nested if-branches, enterConditional should return a list
-             * of dependencies unconditionally accessed within the callback.
-             */
-            context.enterConditional(() => {
-              visit(context, terminal.consequent);
-              if (terminal.alternate !== null) {
-                visit(context, terminal.alternate);
-              }
+            const { consequent, alternate } = terminal;
+            const depsInIf = context.enterConditional(() => {
+              visit(context, consequent);
             });
+            if (alternate !== null) {
+              const depsInElse = context.enterConditional(() => {
+                visit(context, alternate);
+              });
+              context.promoteDepsFromExhaustiveConditionals([
+                depsInIf,
+                depsInElse,
+              ]);
+            }
             break;
           }
           case "switch": {
             context.visitOperand(terminal.test);
-            context.enterConditional(() => {
-              for (const case_ of terminal.cases) {
-                if (case_.block !== undefined) {
-                  visit(context, case_.block);
-                }
+            const depsInCases = [];
+            let foundDefault = false;
+            // This can underestimate unconditional accesses due to the current
+            // CFG representation for fallthrough. This is safe. It only
+            // reduces granularity of dependencies.
+            for (const { test, block } of terminal.cases) {
+              if (test == null) {
+                foundDefault = true;
               }
-            });
+              if (block !== undefined) {
+                depsInCases.push(
+                  context.enterConditional(() => {
+                    visit(context, block);
+                  })
+                );
+              }
+            }
+            if (foundDefault) {
+              context.promoteDepsFromExhaustiveConditionals(depsInCases);
+            }
             break;
           }
           default: {
@@ -382,10 +435,16 @@ function visitReactiveValue(
     case "ConditionalExpression": {
       visitReactiveValue(context, id, value.test);
 
-      context.enterConditional(() => {
+      const consequentDeps = context.enterConditional(() => {
         visitReactiveValue(context, id, value.consequent);
+      });
+      const alternateDeps = context.enterConditional(() => {
         visitReactiveValue(context, id, value.alternate);
       });
+      context.promoteDepsFromExhaustiveConditionals([
+        consequentDeps,
+        alternateDeps,
+      ]);
       break;
     }
     case "SequenceExpression": {
