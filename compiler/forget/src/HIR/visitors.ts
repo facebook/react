@@ -130,8 +130,8 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "ObjectExpression": {
-      if (instrValue.properties !== null) {
-        yield* instrValue.properties.values();
+      for (const property of instrValue.properties) {
+        yield property.place;
       }
       break;
     }
@@ -325,11 +325,8 @@ export function mapInstructionOperands(
       break;
     }
     case "ObjectExpression": {
-      if (instrValue.properties !== null) {
-        const props = instrValue.properties;
-        for (const [prop, place] of props) {
-          props.set(prop, fn(place));
-        }
+      for (const property of instrValue.properties) {
+        property.place = fn(property.place);
       }
       break;
     }

@@ -229,8 +229,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     case "ObjectExpression": {
       const properties = [];
       if (instrValue.properties !== null) {
-        for (const [key, value] of instrValue.properties) {
-          properties.push(`${key}: ${printPlace(value)}`);
+        for (const property of instrValue.properties) {
+          properties.push(`${property.name}: ${printPlace(property.place)}`);
         }
       }
       value = `Object { ${properties.join(", ")} }`;

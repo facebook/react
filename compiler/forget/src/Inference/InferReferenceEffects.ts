@@ -100,7 +100,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
     // TODO(gsn): This is a hack.
     const value: InstructionValue = {
       kind: "ObjectExpression",
-      properties: null,
+      properties: [],
       loc: ref.loc,
     };
     initialState.initialize(value, ValueKind.Context);

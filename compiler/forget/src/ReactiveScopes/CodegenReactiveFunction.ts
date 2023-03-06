@@ -585,12 +585,13 @@ function codegenInstructionValue(
     }
     case "ObjectExpression": {
       const properties = [];
-      if (instrValue.properties !== null) {
-        for (const [property, value] of instrValue.properties) {
-          properties.push(
-            t.objectProperty(t.stringLiteral(property), codegenPlace(cx, value))
-          );
-        }
+      for (const property of instrValue.properties) {
+        properties.push(
+          t.objectProperty(
+            t.stringLiteral(property.name),
+            codegenPlace(cx, property.place)
+          )
+        );
       }
       value = t.objectExpression(properties);
       break;

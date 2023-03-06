@@ -29,6 +29,7 @@ import {
   JsxAttribute,
   makeInstructionId,
   ObjectPattern,
+  ObjectProperty,
   Place,
   ReturnTerminal,
   SourceLocation,
@@ -798,7 +799,7 @@ function lowerExpression(
     case "ObjectExpression": {
       const expr = exprPath as NodePath<t.ObjectExpression>;
       const propertyPaths = expr.get("properties");
-      const properties: Map<string, Place> = new Map();
+      const properties: Array<ObjectProperty> = [];
       for (const propertyPath of propertyPaths) {
         if (!propertyPath.isObjectProperty()) {
           builder.errors.push({
@@ -832,7 +833,11 @@ function lowerExpression(
           continue;
         }
         const value = lowerExpressionToTemporary(builder, valuePath);
-        properties.set(keyName, value);
+        properties.push({
+          kind: "ObjectProperty",
+          name: keyName,
+          place: value,
+        });
       }
       return {
         kind: "ObjectExpression",
