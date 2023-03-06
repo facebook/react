@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import {
   Identifier,
   IdentifierId,
@@ -25,6 +24,10 @@ import {
   eachPatternOperand,
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+import {
+  ReactiveScopeDependencyInfo,
+  ReactiveScopeDependencyTree,
+} from "./DeriveMinimalDependencies";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -57,289 +60,11 @@ type Decl = {
 
 type Scopes = Array<ReactiveScope>;
 
-// TODO(@mofeiZ): remove once we replace Context.#dependencies, #properties with tree
-// representation
-function areDependenciesEqual(
-  dep1: ReactiveScopeDependencyInfo,
-  dep2: ReactiveScopeDependencyInfo
-): boolean {
-  if (dep1.identifier.id !== dep2.identifier.id || dep1.cond !== dep2.cond) {
-    return false;
-  }
-  const dep1Path = dep1.path;
-  const dep2Path = dep2.path;
-
-  if (dep1Path === dep2Path) {
-    // dep1Path and dep2Path might both be null (representing the empty path)
-    return true;
-  } else if (
-    dep1Path === null ||
-    dep2Path === null ||
-    dep2Path.length !== dep1Path.length
-  ) {
-    return false;
-  }
-
-  return dep1Path.every((dep1Property, idx) => {
-    return dep1Property === dep2Path[idx];
-  });
-}
-
-type ReactiveScopeDependencyInfo = ReactiveScopeDependency & { cond: boolean };
-
-/**
- * Enum representing the access type of single property on a parent object.
- * We distinguish on two independent axes:
- * Conditional / Unconditional:
- *   - whether this property is accessed unconditionally (within the ReactiveBlock)
- * Access / Dependency:
- *   - Access: this property is read on the path of a dependency. We do not
- *     need to track change variables for accessed properties. Tracking accesses
- *     helps Forget do more granular dependency tracking.
- *   - Dependency: this property is read as a dependency and we must track changes
- *     to it for correctness.
- *
- *   ```javascript
- *   // props.a is a dependency here and must be tracked
- *   deps: {props.a, props.a.b} ---> minimalDeps: {props.a}
- *   // props.a is just an access here and does not need to be tracked
- *   deps: {props.a.b} ---> minimalDeps: {props.a.b}
- *   ```
- */
-enum PropertyAccessType {
-  ConditionalAccess = "ConditionalAccess",
-  UnconditionalAccess = "UnconditionalAccess",
-  ConditionalDependency = "ConditionalDependency",
-  UnconditionalDependency = "UnconditionalDependency",
-}
-
-function isUnconditional(access: PropertyAccessType) {
-  return (
-    access === PropertyAccessType.UnconditionalAccess ||
-    access === PropertyAccessType.UnconditionalDependency
-  );
-}
-function isDependency(access: PropertyAccessType) {
-  return (
-    access === PropertyAccessType.ConditionalDependency ||
-    access === PropertyAccessType.UnconditionalDependency
-  );
-}
-
-function merge(
-  access1: PropertyAccessType,
-  access2: PropertyAccessType
-): PropertyAccessType {
-  const resultIsUnconditional =
-    isUnconditional(access1) || isUnconditional(access2);
-  const resultIsDependency = isDependency(access1) || isDependency(access2);
-
-  // Straightforward merge.
-  // This can be represented as bitwise OR, but is written out for readability
-  //
-  // Observe that `UnconditionalAccess | ConditionalDependency` produces an
-  // unconditionally accessed conditional dependency. We currently use these
-  // as we use unconditional dependencies. (i.e. to codegen change variables)
-  if (resultIsUnconditional) {
-    if (resultIsDependency) {
-      return PropertyAccessType.UnconditionalDependency;
-    } else {
-      return PropertyAccessType.UnconditionalAccess;
-    }
-  } else {
-    if (resultIsDependency) {
-      return PropertyAccessType.ConditionalDependency;
-    } else {
-      return PropertyAccessType.ConditionalAccess;
-    }
-  }
-}
-
-type DependencyNode = {
-  properties: Map<string, DependencyNode>;
-  accessType: PropertyAccessType;
-};
-
-type ReduceResultNode = {
-  relativePath: Array<string>;
-  accessType: PropertyAccessType;
-};
-
-const promoteUncondResult = [
-  {
-    relativePath: [],
-    accessType: PropertyAccessType.UnconditionalDependency,
-  },
-];
-
-const promoteCondResult = [
-  {
-    relativePath: [],
-    accessType: PropertyAccessType.ConditionalDependency,
-  },
-];
-
-/**
- * Recursively calculates minimal dependencies in a subtree.
- * @param dep DependencyNode representing a dependency subtree.
- * @returns a minimal list of dependencies in this subtree.
- */
-function deriveMinimalDependenciesInSubtree(
-  dep: DependencyNode
-): Array<ReduceResultNode> {
-  const results: Array<ReduceResultNode> = [];
-  for (const [childName, childNode] of dep.properties) {
-    const childResult = deriveMinimalDependenciesInSubtree(childNode).map(
-      ({ relativePath, accessType }) => {
-        return {
-          relativePath: [childName, ...relativePath],
-          accessType,
-        };
-      }
-    );
-    results.push(...childResult);
-  }
-
-  switch (dep.accessType) {
-    case PropertyAccessType.UnconditionalDependency: {
-      return promoteUncondResult;
-    }
-    case PropertyAccessType.UnconditionalAccess: {
-      if (
-        results.every(
-          ({ accessType }) =>
-            accessType === PropertyAccessType.UnconditionalDependency
-        )
-      ) {
-        // all children are unconditional dependencies, return them to preserve granularity
-        return results;
-      } else {
-        // at least one child is accessed conditionally, so this node needs to be promoted to
-        // unconditional dependency
-        return promoteUncondResult;
-      }
-    }
-    case PropertyAccessType.ConditionalAccess:
-    case PropertyAccessType.ConditionalDependency: {
-      if (
-        results.every(
-          ({ accessType }) =>
-            accessType === PropertyAccessType.ConditionalDependency
-        )
-      ) {
-        // No children are accessed unconditionally, so we cannot promote this node to
-        // unconditional access.
-        // Truncate results of child nodes here, since we shouldn't access them anyways
-        return promoteCondResult;
-      } else {
-        // at least one child is accessed unconditionally, so this node can be promoted to
-        // unconditional dependency
-        return promoteUncondResult;
-      }
-    }
-    default: {
-      assertExhaustive(
-        dep.accessType,
-        "[PropgateScopeDependencies] Unhandled access type!"
-      );
-    }
-  }
-}
-
-/**
- * Finalizes a set of ReactiveScopeDependencies to produce a set of minimal unconditional
- * dependencies, preserving granular accesses when possible.
- *
- * Correctness properties:
- *  - All dependencies to a ReactiveBlock must be tracked.
- *    We can always truncate a dependency's path to a subpath, due to Forget assuming
- *    deep immutability. If the value produced by a subpath has not changed, then
- *    dependency must have not changed.
- *    i.e. props.a === $[..] implies props.a.b === $[..]
- *
- *    Note the inverse is not true, but this only means a false positive (we run the
- *    reactive block more than needed).
- *    i.e. props.a !== $[..] does not imply props.a.b !== $[..]
- *
- *  - The dependencies of a finalized ReactiveBlock must be all safe to access
- *    unconditionally (i.e. preserve program semantics with respect to nullthrows).
- *    If a dependency is only accessed within a conditional, we must track the nearest
- *    unconditionally accessed subpath instead.
- * @param initialDeps
- * @returns
- */
-
-// TODO(@mofeiZ): change once we replace Context.#dependencies, #properties with tree
-// representation
-function deriveMinimalDependencies(
-  initialDeps: Set<ReactiveScopeDependencyInfo>
-): Set<ReactiveScopeDependency> {
-  const depRoots = new Map<Identifier, DependencyNode>();
-
-  for (const dep of initialDeps) {
-    let root = depRoots.get(dep.identifier);
-    const path = dep.path ?? [];
-    if (root == null) {
-      // roots can always be accessed unconditionally in JS
-      root = {
-        properties: new Map(),
-        accessType: PropertyAccessType.UnconditionalAccess,
-      };
-      depRoots.set(dep.identifier, root);
-    }
-    let currNode: DependencyNode = root;
-
-    const accessType = dep.cond
-      ? PropertyAccessType.ConditionalAccess
-      : PropertyAccessType.UnconditionalAccess;
-    const depType = dep.cond
-      ? PropertyAccessType.ConditionalDependency
-      : PropertyAccessType.UnconditionalDependency;
-
-    for (const property of path) {
-      // all properties read 'on the way' to a dependency are marked as 'access'
-      let currChild = currNode.properties.get(property);
-      if (currChild == null) {
-        currChild = {
-          properties: new Map(),
-          accessType,
-        };
-        currNode.properties.set(property, currChild);
-      } else {
-        currChild.accessType = merge(currChild.accessType, accessType);
-      }
-      currNode = currChild;
-    }
-
-    // final property read should be marked as `dependency`
-    currNode.accessType = merge(currNode.accessType, depType);
-  }
-
-  const results = new Set<ReactiveScopeDependency>();
-  for (const [root, rootNode] of depRoots.entries()) {
-    const deps = deriveMinimalDependenciesInSubtree(rootNode);
-    invariant(
-      deps.every(
-        (dep) => dep.accessType === PropertyAccessType.UnconditionalDependency
-      ),
-      "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies."
-    );
-
-    for (const dep of deps) {
-      results.add({
-        identifier: root,
-        path: dep.relativePath,
-      });
-    }
-  }
-
-  return results;
-}
-
 class Context {
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
-  #dependencies: Set<ReactiveScopeDependencyInfo> = new Set();
+  #dependencies: ReactiveScopeDependencyTree =
+    new ReactiveScopeDependencyTree();
   #properties: Map<Identifier, ReactiveScopeDependencyInfo> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
@@ -354,7 +79,7 @@ class Context {
     // A nested scope should add all deps it directly uses as its own
     // unconditional deps, regardless of whether the nested scope is itself
     // within a conditional
-    const scopedDependencies = new Set<ReactiveScopeDependencyInfo>();
+    const scopedDependencies = new ReactiveScopeDependencyTree();
     this.#inConditionalWithinScope = false;
     this.#dependencies = scopedDependencies;
     this.#scopes.push(scope);
@@ -366,18 +91,21 @@ class Context {
     this.#dependencies = previousDependencies;
     this.#inConditionalWithinScope = prevInConditional;
 
-    const minScopeDependencies = deriveMinimalDependencies(scopedDependencies);
+    const minScopeDependencies = scopedDependencies.deriveMinimalDependencies();
     // propagate dependencies upward using the same rules as normal dependency
     // collection. child scopes may have dependencies on values created within
     // the outer scope, which necessarily cannot be dependencies of the outer
     // scope
+    // TODO(@mofeiZ): instead of merging derived minimal dependencies here, we
+    // can instead merge the scoped dependency tree. This would let us retain
+    // info about unconditional accesses.
     for (const dep of minScopeDependencies) {
       this.visitDependency({ ...dep, cond: this.#inConditionalWithinScope });
     }
     return minScopeDependencies;
   }
 
-  enterConditional(fn: () => void): void {
+  enterConditional(fn: () => void) {
     const prevInConditional = this.#inConditionalWithinScope;
     this.#inConditionalWithinScope = true;
     fn();
@@ -509,13 +237,8 @@ class Context {
       (currentDeclaration.scope == null ||
         currentDeclaration.scope !== currentScope)
     ) {
-      // Check if there is an existing dependency that describes this operand
+      // Add info about this dependency to the existing tree
       // We do not try to join/reduce dependencies here due to missing info
-      for (const dep of this.#dependencies) {
-        if (areDependenciesEqual(dep, maybeDependency)) {
-          return;
-        }
-      }
       this.#dependencies.add(maybeDependency);
     }
   }
