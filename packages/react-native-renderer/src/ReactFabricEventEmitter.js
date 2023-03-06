@@ -29,6 +29,7 @@ import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
 import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {getPublicInstance} from './ReactFabricHostConfig';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -92,7 +93,8 @@ export function dispatchEvent(
     const stateNode = targetFiber.stateNode;
     // Guard against Fiber being unmounted
     if (stateNode != null) {
-      eventTarget = stateNode.canonical;
+      // $FlowExpectedError[incompatible-cast] public instances in Fabric do not implement `EventTarget` yet.
+      eventTarget = (getPublicInstance(stateNode): EventTarget);
     }
   }
 

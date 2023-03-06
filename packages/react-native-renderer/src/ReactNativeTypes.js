@@ -218,18 +218,6 @@ export type ReactFabricType = {
   ...
 };
 
-export type ReactNativeEventTarget = {
-  node: {...},
-  canonical: {
-    _nativeTag: number,
-    viewConfig: ViewConfig,
-    currentProps: {...},
-    _internalInstanceHandle: {...},
-    ...
-  },
-  ...
-};
-
 export type ReactFabricEventTouch = {
   identifier: number,
   locationX: number,
