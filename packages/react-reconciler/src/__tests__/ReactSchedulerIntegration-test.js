@@ -320,3 +320,71 @@ describe(
     });
   },
 );
+
+describe('`act` bypasses Scheduler methods completely,', () => {
+  let infiniteLoopGuard;
+
+  beforeEach(() => {
+    jest.resetModules();
+
+    infiniteLoopGuard = 0;
+
+    jest.mock('scheduler', () => {
+      const actual = jest.requireActual('scheduler/unstable_mock');
+      return {
+        ...actual,
+        unstable_shouldYield() {
+          // This simulates a bug report where `shouldYield` returns true in a
+          // unit testing environment. Because `act` will keep working until
+          // there's no more work left, it would fall into an infinite loop.
+          // The fix is that when performing work inside `act`, we should bypass
+          // `shouldYield` completely, because we can't trust it to be correct.
+          if (infiniteLoopGuard++ > 100) {
+            throw new Error('Detected an infinite loop');
+          }
+          return true;
+        },
+      };
+    });
+
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    startTransition = React.startTransition;
+  });
+
+  afterEach(() => {
+    jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
+  });
+
+  // @gate __DEV__
+  it('inside `act`, does not call `shouldYield`, even during a concurrent render', async () => {
+    function App() {
+      return (
+        <>
+          <div>A</div>
+          <div>B</div>
+          <div>C</div>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    const publicAct = React.unstable_act;
+    const prevIsReactActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
+    try {
+      global.IS_REACT_ACT_ENVIRONMENT = true;
+      await publicAct(async () => {
+        startTransition(() => root.render(<App />));
+      });
+    } finally {
+      global.IS_REACT_ACT_ENVIRONMENT = prevIsReactActEnvironment;
+    }
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>A</div>
+        <div>B</div>
+        <div>C</div>
+      </>,
+    );
+  });
+});
