@@ -809,7 +809,12 @@ function lowerExpression(
           continue;
         }
         const key = propertyPath.node.key;
-        if (key.type !== "Identifier") {
+        let keyName: string;
+        if (key.type === "Identifier") {
+          keyName = key.name;
+        } else if (key.type === "StringLiteral") {
+          keyName = key.value;
+        } else {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
             severity: ErrorSeverity.InvalidInput,
@@ -827,7 +832,7 @@ function lowerExpression(
           continue;
         }
         const value = lowerExpressionToTemporary(builder, valuePath);
-        properties.set(key.name, value);
+        properties.set(keyName, value);
       }
       return {
         kind: "ObjectExpression",
