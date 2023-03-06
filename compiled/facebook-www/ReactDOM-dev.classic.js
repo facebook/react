@@ -7579,7 +7579,7 @@ var LowPriority = Scheduler.unstable_LowPriority;
 var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 // on scheduler/unstable_mock, which we'll need for internal testing
 
-var unstable_yieldValue = Scheduler.unstable_yieldValue;
+var log$2 = Scheduler.log;
 var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
 
 var rendererID = null;
@@ -7744,8 +7744,8 @@ function onCommitUnmount(fiber) {
 }
 function setIsStrictModeForDevtools(newIsStrictMode) {
   {
-    if (typeof unstable_yieldValue === "function") {
-      // We're in a test because Scheduler.unstable_yieldValue only exists
+    if (typeof log$2 === "function") {
+      // We're in a test because Scheduler.log only exists
       // in SchedulerMock. To reduce the noise in strict mode tests,
       // suppress warnings and disable scheduler yielding during the double render
       unstable_setDisableYieldValue(newIsStrictMode);
@@ -42117,7 +42117,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-4bbac04cd-20230306";
+var ReactVersion = "18.3.0-www-classic-1528c5ccd-20230306";
 
 function createPortal$1(
   children,

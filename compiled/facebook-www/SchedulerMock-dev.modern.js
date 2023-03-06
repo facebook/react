@@ -817,7 +817,7 @@ function unstable_flushAllWithoutAsserting() {
   }
 }
 
-function unstable_clearYields() {
+function unstable_clearLog() {
   if (yieldedValues === null) {
     return [];
   }
@@ -846,7 +846,7 @@ function unstable_flushAll() {
   }
 }
 
-function unstable_yieldValue(value) {
+function log(value) {
   // eslint-disable-next-line react-internal/no-production-logging
   if (console.log.name === "disabledLog" || disableYieldValue) {
     // If console.log has been patched, we assume we're in render
@@ -888,6 +888,7 @@ var unstable_Profiling = enableProfiling
     }
   : null;
 
+exports.log = log;
 exports.reset = reset;
 exports.unstable_IdlePriority = IdlePriority;
 exports.unstable_ImmediatePriority = ImmediatePriority;
@@ -897,7 +898,7 @@ exports.unstable_Profiling = unstable_Profiling;
 exports.unstable_UserBlockingPriority = UserBlockingPriority;
 exports.unstable_advanceTime = unstable_advanceTime;
 exports.unstable_cancelCallback = unstable_cancelCallback;
-exports.unstable_clearYields = unstable_clearYields;
+exports.unstable_clearLog = unstable_clearLog;
 exports.unstable_continueExecution = unstable_continueExecution;
 exports.unstable_flushAll = unstable_flushAll;
 exports.unstable_flushAllWithoutAsserting = unstable_flushAllWithoutAsserting;
@@ -917,7 +918,6 @@ exports.unstable_scheduleCallback = unstable_scheduleCallback;
 exports.unstable_setDisableYieldValue = setDisableYieldValue;
 exports.unstable_shouldYield = shouldYieldToHost;
 exports.unstable_wrapCallback = unstable_wrapCallback;
-exports.unstable_yieldValue = unstable_yieldValue;
 
   })();
 }

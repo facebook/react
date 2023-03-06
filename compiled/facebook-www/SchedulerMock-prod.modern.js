@@ -193,6 +193,13 @@ function unstable_flushAllWithoutAsserting() {
     }
   } else return !1;
 }
+exports.log = function (value) {
+  "disabledLog" === console.log.name ||
+    disableYieldValue ||
+    (null === yieldedValues
+      ? (yieldedValues = [value])
+      : yieldedValues.push(value));
+};
 exports.reset = function () {
   if (isFlushing) throw Error("Cannot reset while already flushing work.");
   currentMockTime = 0;
@@ -221,7 +228,7 @@ exports.unstable_advanceTime = function (ms) {
 exports.unstable_cancelCallback = function (task) {
   task.callback = null;
 };
-exports.unstable_clearYields = function () {
+exports.unstable_clearLog = function () {
   if (null === yieldedValues) return [];
   var values = yieldedValues;
   yieldedValues = null;
@@ -416,11 +423,4 @@ exports.unstable_wrapCallback = function (callback) {
       currentPriorityLevel = previousPriorityLevel;
     }
   };
-};
-exports.unstable_yieldValue = function (value) {
-  "disabledLog" === console.log.name ||
-    disableYieldValue ||
-    (null === yieldedValues
-      ? (yieldedValues = [value])
-      : yieldedValues.push(value));
 };

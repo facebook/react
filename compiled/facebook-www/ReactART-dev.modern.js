@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-4bbac04cd-20230306";
+var ReactVersion = "18.3.0-www-modern-1528c5ccd-20230306";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -952,7 +952,7 @@ var NormalPriority$1 = Scheduler.unstable_NormalPriority;
 var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 // on scheduler/unstable_mock, which we'll need for internal testing
 
-var unstable_yieldValue = Scheduler.unstable_yieldValue;
+var log$2 = Scheduler.log;
 var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
 
 // Helpers to patch console.logs to avoid logging during side-effect free
@@ -1214,8 +1214,8 @@ function onCommitUnmount(fiber) {
 }
 function setIsStrictModeForDevtools(newIsStrictMode) {
   {
-    if (typeof unstable_yieldValue === "function") {
-      // We're in a test because Scheduler.unstable_yieldValue only exists
+    if (typeof log$2 === "function") {
+      // We're in a test because Scheduler.log only exists
       // in SchedulerMock. To reduce the noise in strict mode tests,
       // suppress warnings and disable scheduler yielding during the double render
       unstable_setDisableYieldValue(newIsStrictMode);
