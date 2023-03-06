@@ -11710,6 +11710,8 @@ function ensureRootIsScheduled(root, currentTime) {
     null !== existingCallbackNode && cancelCallback$1(existingCallbackNode),
       (root.callbackNode = null),
       (root.callbackPriority = 0);
+  else if (2 === workInProgressSuspendedReason && workInProgressRoot === root)
+    (root.callbackPriority = 0), (root.callbackNode = null);
   else if (
     ((currentTime = nextLanes & -nextLanes),
     root.callbackPriority !== currentTime)
@@ -11918,9 +11920,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   }
   ensureRootIsScheduled(root, now());
   return root.callbackNode === originalCallbackNode
-    ? 2 === workInProgressSuspendedReason && workInProgressRoot === root
-      ? ((root.callbackPriority = 0), (root.callbackNode = null))
-      : performConcurrentWorkOnRoot.bind(null, root)
+    ? performConcurrentWorkOnRoot.bind(null, root)
     : null;
 }
 function recoverFromConcurrentError(
@@ -12250,6 +12250,9 @@ function renderRootConcurrent(root, lanes) {
               break;
             }
             lanes = function () {
+              2 === workInProgressSuspendedReason &&
+                workInProgressRoot === root &&
+                (workInProgressSuspendedReason = 5);
               ensureRootIsScheduled(root, now());
             };
             thrownValue.then(lanes, lanes);
@@ -13881,7 +13884,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1652 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1528c5ccd-20230306",
+  version: "18.3.0-www-modern-6e1756a5a-20230306",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2032 = {
@@ -13912,7 +13915,7 @@ var internals$jscomp$inline_2032 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-1528c5ccd-20230306"
+  reconcilerVersion: "18.3.0-next-6e1756a5a-20230306"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2033 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14240,4 +14243,4 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-1528c5ccd-20230306";
+exports.version = "18.3.0-next-6e1756a5a-20230306";

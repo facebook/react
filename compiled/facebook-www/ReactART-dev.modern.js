@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-1528c5ccd-20230306";
+var ReactVersion = "18.3.0-www-modern-6e1756a5a-20230306";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -22522,7 +22522,7 @@ var SuspendedOnError = 1;
 var SuspendedOnData = 2;
 var SuspendedOnImmediate = 3;
 var SuspendedOnDeprecatedThrowPromise = 4;
-var SuspendedAndReadyToUnwind = 5;
+var SuspendedAndReadyToContinue = 5;
 var SuspendedOnHydration = 6; // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
 // after this happens. If the fiber is pinged before we resume, we can retry
@@ -23023,6 +23023,17 @@ function ensureRootIsScheduled(root, currentTime) {
     root.callbackNode = null;
     root.callbackPriority = NoLane;
     return;
+  } // If this root is currently suspended and waiting for data to resolve, don't
+  // schedule a task to render it. We'll either wait for a ping, or wait to
+  // receive an update.
+
+  if (
+    workInProgressSuspendedReason === SuspendedOnData &&
+    workInProgressRoot === root
+  ) {
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    return;
   } // We use the highest priority lane to represent the priority of the callback.
 
   var newCallbackPriority = getHighestPriorityLane(nextLanes); // Check if there's an existing task. We may be able to reuse it.
@@ -23263,21 +23274,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
-    if (
-      workInProgressSuspendedReason === SuspendedOnData &&
-      workInProgressRoot === root
-    ) {
-      // Special case: The work loop is currently suspended and waiting for
-      // data to resolve. Unschedule the current task.
-      //
-      // TODO: The factoring is a little weird. Arguably this should be checked
-      // in ensureRootIsScheduled instead. I went back and forth, not totally
-      // sure yet.
-      root.callbackPriority = NoLane;
-      root.callbackNode = null;
-      return null;
-    }
-
     return performConcurrentWorkOnRoot.bind(null, root);
   }
 
@@ -23859,7 +23855,7 @@ function handleThrow(root, thrownValue) {
       case SuspendedOnData:
       case SuspendedOnImmediate:
       case SuspendedOnDeprecatedThrowPromise:
-      case SuspendedAndReadyToUnwind: {
+      case SuspendedAndReadyToContinue: {
         var wakeable = thrownValue;
         markComponentSuspended(
           erroredWork,
@@ -24198,6 +24194,17 @@ function renderRootConcurrent(root, lanes) {
             // have added a listener until right here.
 
             var onResolution = function () {
+              // Check if the root is still suspended on this promise.
+              if (
+                workInProgressSuspendedReason === SuspendedOnData &&
+                workInProgressRoot === root
+              ) {
+                // Mark the root as ready to continue rendering.
+                workInProgressSuspendedReason = SuspendedAndReadyToContinue;
+              } // Ensure the root is scheduled. We should do this even if we're
+              // currently working on a different root, so that we resume
+              // rendering later.
+
               ensureRootIsScheduled(root, now$1());
             };
 
@@ -24209,11 +24216,11 @@ function renderRootConcurrent(root, lanes) {
             // If this fiber just suspended, it's possible the data is already
             // cached. Yield to the main thread to give it a chance to ping. If
             // it does, we can retry immediately without unwinding the stack.
-            workInProgressSuspendedReason = SuspendedAndReadyToUnwind;
+            workInProgressSuspendedReason = SuspendedAndReadyToContinue;
             break outer;
           }
 
-          case SuspendedAndReadyToUnwind: {
+          case SuspendedAndReadyToContinue: {
             var _thenable = thrownValue;
 
             if (isThenableResolved(_thenable)) {
