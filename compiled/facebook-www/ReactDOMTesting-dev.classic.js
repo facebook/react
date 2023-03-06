@@ -10338,7 +10338,6 @@ function processUpdateQueue(workInProgress, props, instance, renderLanes) {
   hasForceUpdate = false;
 
   {
-    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 
@@ -31247,7 +31246,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-eb616a12f-20230306";
+var ReactVersion = "18.3.0-www-classic-4bbac04cd-20230306";
 
 function createPortal$1(
   children,
