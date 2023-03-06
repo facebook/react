@@ -37,6 +37,8 @@ module.exports = function register() {
 
   const deepProxyHandlers = {
     get: function (target: Function, name: string, receiver: Proxy<Function>) {
+      const [, targetName] = target.$$id.split('#');
+
       switch (name) {
         // These names are read by the Flight runtime if you end up using the exports object.
         case '$$typeof':
@@ -48,7 +50,7 @@ module.exports = function register() {
         case '$$async':
           return target.$$async;
         case 'name':
-          return target.name;
+          return targetName;
         case 'displayName':
           return undefined;
         // We need to special case this because createElement reads it if we pass this
@@ -69,7 +71,7 @@ module.exports = function register() {
           );
       }
       // eslint-disable-next-line react-internal/safe-string-coercion
-      const expression = String(target.name) + '.' + String(name);
+      const expression = String(targetName) + '.' + String(name);
       throw new Error(
         `Cannot access ${expression} on the server. ` +
           'You cannot dot into a client module from a server component. ' +
@@ -95,8 +97,6 @@ module.exports = function register() {
           return target.$$id;
         case '$$async':
           return target.$$async;
-        case 'name':
-          return target.name;
         // We need to special case this because createElement reads it if we pass this
         // reference.
         case 'defaultProps':
@@ -185,7 +185,6 @@ module.exports = function register() {
             );
           }: any),
           {
-            name: {value: name},
             $$typeof: {value: CLIENT_REFERENCE},
             $$id: {value: target.$$id + '#' + name},
             $$async: {value: target.$$async},
