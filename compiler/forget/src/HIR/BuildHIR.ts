@@ -799,7 +799,6 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.ObjectExpression>;
       const propertyPaths = expr.get("properties");
       const properties: Map<string, Place> = new Map();
-      let hasError = false;
       for (const propertyPath of propertyPaths) {
         if (!propertyPath.isObjectProperty()) {
           builder.errors.push({
@@ -807,7 +806,6 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: propertyPath,
           });
-          hasError = true;
           continue;
         }
         const key = propertyPath.node.key;
@@ -817,7 +815,6 @@ function lowerExpression(
             severity: ErrorSeverity.InvalidInput,
             nodePath: propertyPath,
           });
-          hasError = true;
           continue;
         }
         const valuePath = propertyPath.get("value");
@@ -827,23 +824,19 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: valuePath,
           });
-          hasError = true;
           continue;
         }
         const value = lowerExpressionToTemporary(builder, valuePath);
         properties.set(key.name, value);
       }
-      return hasError
-        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-        : {
-            kind: "ObjectExpression",
-            properties,
-            loc: exprLoc,
-          };
+      return {
+        kind: "ObjectExpression",
+        properties,
+        loc: exprLoc,
+      };
     }
     case "ArrayExpression": {
       const expr = exprPath as NodePath<t.ArrayExpression>;
-      let hasError = false;
       let elements: Place[] = [];
       for (const element of expr.get("elements")) {
         if (element.node == null || !element.isExpression()) {
@@ -852,20 +845,17 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: element,
           });
-          hasError = true;
           continue;
         }
         elements.push(
           lowerExpressionToTemporary(builder, element as NodePath<t.Expression>)
         );
       }
-      return hasError
-        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-        : {
-            kind: "ArrayExpression",
-            elements,
-            loc: exprLoc,
-          };
+      return {
+        kind: "ArrayExpression",
+        elements,
+        loc: exprLoc,
+      };
     }
     case "NewExpression": {
       const expr = exprPath as NodePath<t.NewExpression>;
@@ -880,7 +870,6 @@ function lowerExpression(
       }
       const callee = lowerExpressionToTemporary(builder, calleePath);
       let args: Place[] = [];
-      let hasError = false;
       for (const argPath of expr.get("arguments")) {
         if (!argPath.isExpression()) {
           builder.errors.push({
@@ -888,25 +877,21 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: argPath,
           });
-          hasError = true;
           continue;
         }
         args.push(lowerExpressionToTemporary(builder, argPath));
       }
 
-      return hasError
-        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-        : {
-            kind: "NewExpression",
-            callee,
-            args,
-            loc: exprLoc,
-          };
+      return {
+        kind: "NewExpression",
+        callee,
+        args,
+        loc: exprLoc,
+      };
     }
     case "CallExpression": {
       const expr = exprPath as NodePath<t.CallExpression>;
       const calleePath = expr.get("callee");
-      let hasError = false;
       if (!calleePath.isExpression()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
@@ -925,7 +910,6 @@ function lowerExpression(
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
             });
-            hasError = true;
             continue;
           }
           args.push(lowerExpressionToTemporary(builder, argPath));
@@ -957,19 +941,16 @@ function lowerExpression(
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
             });
-            hasError = true;
             continue;
           }
           args.push(lowerExpressionToTemporary(builder, argPath));
         }
-        return hasError
-          ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-          : {
-              kind: "CallExpression",
-              callee,
-              args,
-              loc: exprLoc,
-            };
+        return {
+          kind: "CallExpression",
+          callee,
+          args,
+          loc: exprLoc,
+        };
       }
     }
     case "BinaryExpression": {
@@ -1359,7 +1340,6 @@ function lowerExpression(
         .get("children")
         .map((child) => lowerJsxElement(builder, child));
       const props: Array<JsxAttribute> = [];
-      let hasError = false;
       for (const attribute of opening.get("attributes")) {
         if (attribute.isJSXSpreadAttribute()) {
           const argument = lowerExpressionToTemporary(
@@ -1375,7 +1355,6 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: attribute,
           });
-          hasError = true;
           continue;
         }
         const name = attribute.get("name");
@@ -1385,7 +1364,6 @@ function lowerExpression(
             severity: ErrorSeverity.Todo,
             nodePath: name,
           });
-          hasError = true;
           continue;
         }
         const valueExpr = attribute.get("value");
@@ -1399,7 +1377,6 @@ function lowerExpression(
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
             });
-            hasError = true;
             continue;
           }
           const expression = valueExpr.get("expression");
@@ -1409,7 +1386,6 @@ function lowerExpression(
               severity: ErrorSeverity.Todo,
               nodePath: valueExpr,
             });
-            hasError = true;
             continue;
           }
           value = lowerExpressionToTemporary(builder, expression);
@@ -1417,15 +1393,13 @@ function lowerExpression(
         const prop: string = name.node.name;
         props.push({ kind: "JsxAttribute", name: prop, place: value });
       }
-      return hasError
-        ? { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
-        : {
-            kind: "JsxExpression",
-            tag,
-            props,
-            children,
-            loc: exprLoc,
-          };
+      return {
+        kind: "JsxExpression",
+        tag,
+        props,
+        children,
+        loc: exprLoc,
+      };
     }
     case "JSXFragment": {
       const expr = exprPath as NodePath<t.JSXFragment>;
