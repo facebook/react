@@ -126,6 +126,7 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
+  // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(model, request.toJSON);
   const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
@@ -146,6 +147,7 @@ export function processImportChunk(
   id: number,
   clientReferenceMetadata: ReactModel,
 ): Chunk {
+  // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(clientReferenceMetadata);
   const row = serializeRowHeader('I', id) + json + '\n';
   return stringToChunk(row);

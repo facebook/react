@@ -165,7 +165,7 @@ export type UpdateQueue<S, A> = {
 };
 
 let didWarnAboutMismatchedHooksForComponent;
-let didWarnUncachedGetSnapshot;
+let didWarnUncachedGetSnapshot: void | true;
 let didWarnAboutUseWrappedInTryCatch;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set<string | null>();

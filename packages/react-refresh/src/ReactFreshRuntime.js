@@ -642,8 +642,8 @@ export function createSignatureFunctionForTransform(): <T>(
   getCustomHooks?: () => Array<Function>,
 ) => T | void {
   if (__DEV__) {
-    let savedType;
-    let hasCustomHooks;
+    let savedType: mixed;
+    let hasCustomHooks: boolean;
     let didCollectHooks = false;
     return function <T>(
       type: T,
