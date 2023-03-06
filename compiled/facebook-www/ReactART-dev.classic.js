@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-106ea1c58-20230305";
+var ReactVersion = "18.3.0-www-classic-49f741046-20230305";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -24600,7 +24600,17 @@ function renderRootConcurrent(root, lanes) {
         }
       }
 
-      workLoopConcurrent();
+      if (true && ReactCurrentActQueue.current !== null) {
+        // `act` special case: If we're inside an `act` scope, don't consult
+        // `shouldYield`. Always keep working until the render is complete.
+        // This is not just an optimization: in a unit test environment, we
+        // can't trust the result of `shouldYield`, because the host I/O is
+        // likely mocked.
+        workLoopSync();
+      } else {
+        workLoopConcurrent();
+      }
+
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
