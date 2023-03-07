@@ -13,7 +13,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let act;
 
 describe('ReactES6Class', () => {
   let container;
@@ -31,7 +30,6 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    act = require('jest-react').act;
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -49,7 +47,7 @@ describe('ReactES6Class', () => {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    act(() => root.render(element));
+    ReactDOM.flushSync(() => root.render(element));
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
@@ -63,7 +61,7 @@ describe('ReactES6Class', () => {
   it('throws if no render function is defined', () => {
     class Foo extends React.Component {}
     expect(() => {
-      expect(() => act(() => root.render(<Foo />))).toThrow();
+      expect(() => ReactDOM.flushSync(() => root.render(<Foo />))).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
       'Warning: Foo(...): No `render` method found on the returned component ' +
@@ -118,7 +116,7 @@ describe('ReactES6Class', () => {
     }
     const ref = React.createRef();
     test(<Foo initialValue="foo" ref={ref} />, 'DIV', 'foo');
-    act(() => ref.current.changeState());
+    ReactDOM.flushSync(() => ref.current.changeState());
     test(<Foo />, 'SPAN', 'bar');
   });
 
@@ -148,7 +146,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => {
-      act(() => root.render(<Foo foo="foo" />));
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
     }).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
@@ -165,7 +163,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => {
-      act(() => root.render(<Foo foo="foo" />));
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
     }).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
@@ -180,7 +178,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => {
-      act(() => root.render(<Foo foo="foo" />));
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
     }).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
@@ -200,7 +198,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => {
-      act(() => root.render(<Foo foo="foo" />));
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
     }).toErrorDev(
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
@@ -347,7 +345,7 @@ describe('ReactES6Class', () => {
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
 
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -388,7 +386,7 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -437,7 +435,7 @@ describe('ReactES6Class', () => {
       'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
-    act(() => root.unmount());
+    ReactDOM.flushSync(() => root.unmount());
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 

@@ -22,7 +22,6 @@ describe 'ReactCoffeeScriptClass', ->
     React = require 'react'
     ReactDOM = require 'react-dom'
     ReactDOMClient = require 'react-dom/client'
-    act = require('jest-react').act
     PropTypes = require 'prop-types'
     container = document.createElement 'div'
     root = ReactDOMClient.createRoot container
@@ -36,7 +35,7 @@ describe 'ReactCoffeeScriptClass', ->
         return React.createElement('div', className: this.props.name)
 
   test = (element, expectedTag, expectedClassName) ->
-    act ->
+    ReactDOM.flushSync ->
       root.render(element)
     expect(container.firstChild).not.toBeNull()
     expect(container.firstChild.tagName).toBe(expectedTag)
@@ -50,7 +49,7 @@ describe 'ReactCoffeeScriptClass', ->
     class Foo extends React.Component
     expect(->
       expect(->
-        act ->
+        ReactDOM.flushSync ->
           root.render React.createElement(Foo)
       ).toThrow()
     ).toErrorDev([
@@ -103,7 +102,8 @@ describe 'ReactCoffeeScriptClass', ->
 
     ref = React.createRef()
     test React.createElement(Foo, initialValue: 'foo', ref: ref), 'DIV', 'foo'
-    ref.current.changeState()
+    ReactDOM.flushSync ->
+      ref.current.changeState()
     test React.createElement(Foo), 'SPAN', 'bar'
 
   it 'sets initial state with value returned by static getDerivedStateFromProps', ->
@@ -129,7 +129,7 @@ describe 'ReactCoffeeScriptClass', ->
       getDerivedStateFromProps: ->
         {}
     expect(->
-      act ->
+      ReactDOM.flushSync ->
         root.render React.createElement(Foo, foo: 'foo')
       return
     ).toErrorDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
@@ -141,7 +141,7 @@ describe 'ReactCoffeeScriptClass', ->
       getDerivedStateFromError: ->
         {}
     expect(->
-      act ->
+      ReactDOM.flushSync ->
         root.render React.createElement(Foo, foo: 'foo')
       return
     ).toErrorDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
@@ -153,7 +153,7 @@ describe 'ReactCoffeeScriptClass', ->
     Foo.getSnapshotBeforeUpdate = () ->
       {}
     expect(->
-      act ->
+      ReactDOM.flushSync ->
         root.render React.createElement(Foo, foo: 'foo')
       return
     ).toErrorDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
@@ -170,7 +170,7 @@ describe 'ReactCoffeeScriptClass', ->
         bar: 'bar'
       }
     expect(->
-      act ->
+      ReactDOM.flushSync ->
         root.render React.createElement(Foo, foo: 'foo')
       return
     ).toErrorDev (
@@ -303,7 +303,7 @@ describe 'ReactCoffeeScriptClass', ->
         )
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
-    act ->
+    ReactDOM.flushSync ->
       attachedListener()
     expect(renderedName).toBe 'bar'
 
@@ -340,7 +340,7 @@ describe 'ReactCoffeeScriptClass', ->
         )
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
-    act ->
+    ReactDOM.flushSync ->
       attachedListener()
     expect(renderedName).toBe 'bar'
 
@@ -391,7 +391,7 @@ describe 'ReactCoffeeScriptClass', ->
       'did-update',    { value: 'foo' }, {}
     ]
     lifeCycles = [] # reset
-    act ->
+    ReactDOM.flushSync ->
       root.unmount()
     expect(lifeCycles).toEqual ['will-unmount']
 
