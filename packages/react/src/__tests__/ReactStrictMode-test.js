@@ -356,7 +356,7 @@ describe('ReactStrictMode', () => {
     const root = ReactDOMClient.createRoot(container);
 
     // Mount
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <Uppercased text="hello" />
@@ -372,7 +372,7 @@ describe('ReactStrictMode', () => {
     log = [];
 
     // Update
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <Uppercased text="goodbye" />
@@ -407,7 +407,7 @@ describe('ReactStrictMode', () => {
     const root = ReactDOMClient.createRoot(container);
 
     // Mount
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <Uppercased text="hello" />
@@ -429,7 +429,7 @@ describe('ReactStrictMode', () => {
     log = [];
 
     // Update
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <Uppercased text="goodbye" />
@@ -463,7 +463,7 @@ describe('ReactStrictMode', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <App />
@@ -472,7 +472,7 @@ describe('ReactStrictMode', () => {
     });
     expect(container.textContent).toBe('0');
 
-    await act(() => {
+    await act(async () => {
       setCount(() => {
         log.push('Compute count: 1');
         return 1;
@@ -501,7 +501,7 @@ describe('ReactStrictMode', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    await act(() => {
+    await act(async () => {
       root.render(
         <React.StrictMode>
           <App />
@@ -510,7 +510,7 @@ describe('ReactStrictMode', () => {
     });
     expect(container.textContent).toBe('0');
 
-    await act(() => {
+    await act(async () => {
       dispatch(1);
     });
     expect(container.textContent).toBe('1');

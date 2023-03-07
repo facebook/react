@@ -1622,7 +1622,7 @@ describe('ReactUpdates', () => {
 
   // TODO: Replace this branch with @gate pragmas
   if (__DEV__) {
-    it('warns about a deferred infinite update loop with useEffect', () => {
+    it('warns about a deferred infinite update loop with useEffect', async () => {
       function NonTerminating() {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
@@ -1646,24 +1646,22 @@ describe('ReactUpdates', () => {
       try {
         const container = document.createElement('div');
         expect(() => {
-          act(() => {
-            ReactDOM.render(<App />, container);
-            while (error === null) {
-              Scheduler.unstable_flushNumberOfYields(1);
-              Scheduler.unstable_clearLog();
-            }
-            expect(error).toContain('Warning: Maximum update depth exceeded.');
-            expect(stack).toContain(' NonTerminating');
-            // rethrow error to prevent going into an infinite loop when act() exits
-            throw error;
-          });
+          ReactDOM.render(<App />, container);
+          while (error === null) {
+            Scheduler.unstable_flushNumberOfYields(1);
+            Scheduler.unstable_clearLog();
+          }
+          expect(error).toContain('Warning: Maximum update depth exceeded.');
+          expect(stack).toContain(' NonTerminating');
+          // rethrow error to prevent going into an infinite loop when act() exits
+          throw error;
         }).toThrow('Maximum update depth exceeded.');
       } finally {
         console.error = originalConsoleError;
       }
     });
 
-    it('can have nested updates if they do not cross the limit', () => {
+    it('can have nested updates if they do not cross the limit', async () => {
       let _setStep;
       const LIMIT = 50;
 
@@ -1680,17 +1678,17 @@ describe('ReactUpdates', () => {
       }
 
       const container = document.createElement('div');
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<Terminating />, container);
       });
       expect(container.textContent).toBe('50');
-      act(() => {
+      await act(async () => {
         _setStep(0);
       });
       expect(container.textContent).toBe('50');
     });
 
-    it('can have many updates inside useEffect without triggering a warning', () => {
+    it('can have many updates inside useEffect without triggering a warning', async () => {
       function Terminating() {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
@@ -1703,7 +1701,7 @@ describe('ReactUpdates', () => {
       }
 
       const container = document.createElement('div');
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<Terminating />, container);
       });
 

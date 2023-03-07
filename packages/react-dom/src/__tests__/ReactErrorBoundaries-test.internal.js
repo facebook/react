@@ -1862,9 +1862,9 @@ describe('ReactErrorBoundaries', () => {
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
-  it('catches errors in useEffect', () => {
+  it('catches errors in useEffect', async () => {
     const container = document.createElement('div');
-    act(() => {
+    await act(async () => {
       ReactDOM.render(
         <ErrorBoundary>
           <BrokenUseEffect>Initial value</BrokenUseEffect>

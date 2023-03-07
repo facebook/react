@@ -26,7 +26,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ReactDebugTools = require('react-debug-tools');
   });
 
-  it('should inspect the current state of useState hooks', () => {
+  it('should inspect the current state of useState hooks', async () => {
     const useState = React.useState;
     function Foo(props) {
       const [state1, setState1] = useState('hello');
@@ -61,7 +61,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const {onMouseDown: setStateA, onMouseUp: setStateB} =
       renderer.root.findByType('div').props;
 
-    act(() => setStateA('Hi'));
+    await act(async () => setStateA('Hi'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -83,7 +83,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    act(() => setStateB('world!'));
+    await act(async () => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -106,7 +106,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inspect the current state of all stateful hooks', () => {
+  it('should inspect the current state of all stateful hooks', async () => {
     const outsideRef = React.createRef();
     function effect() {}
     function Foo(props) {
@@ -129,12 +129,8 @@ describe('ReactHooksInspectionIntegration', () => {
       React.useMemo(() => state1 + state2, [state1]);
 
       function update() {
-        act(() => {
-          setState('A');
-        });
-        act(() => {
-          dispatch({value: 'B'});
-        });
+        setState('A');
+        dispatch({value: 'B'});
         ref.current = 'C';
       }
       const memoizedUpdate = React.useCallback(update, []);
@@ -145,7 +141,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -207,7 +203,9 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    updateStates();
+    await act(async () => {
+      updateStates();
+    });
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -266,7 +264,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inspect the current state of all stateful hooks, including useInsertionEffect', () => {
+  it('should inspect the current state of all stateful hooks, including useInsertionEffect', async () => {
     const useInsertionEffect = React.useInsertionEffect;
     const outsideRef = React.createRef();
     function effect() {}
@@ -290,13 +288,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
       React.useMemo(() => state1 + state2, [state1]);
 
-      function update() {
-        act(() => {
-          setState('A');
-        });
-        act(() => {
-          dispatch({value: 'B'});
-        });
+      async function update() {
+        setState('A');
+        dispatch({value: 'B'});
         ref.current = 'C';
       }
       const memoizedUpdate = React.useCallback(update, []);
@@ -307,7 +301,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -376,7 +370,9 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    updateStates();
+    await act(async () => {
+      updateStates();
+    });
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -967,7 +963,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   // This test case is based on an open source bug report:
   // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
-  it('should properly advance the current hook for useContext', () => {
+  it('should properly advance the current hook for useContext', async () => {
     const MyContext = React.createContext(1);
 
     let incrementCount;
