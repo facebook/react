@@ -117,7 +117,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
+    await act(async () => {
       root.render(<App />);
     });
     assertLog(['client']);
@@ -161,13 +161,13 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     }
 
     const root = ReactNoop.createRoot();
-    act(() => root.render(<App />));
+    await act(async () => root.render(<App />));
 
     assertLog(['A0', 'B0']);
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Update b but not a
-    await act(() => {
+    await act(async () => {
       store.set({a: 0, b: 1});
     });
     // Only b re-renders
@@ -175,7 +175,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     expect(root).toMatchRenderedOutput('A0B1');
 
     // Update a but not b
-    await act(() => {
+    await act(async () => {
       store.set({a: 1, b: 1});
     });
     // Only a re-renders

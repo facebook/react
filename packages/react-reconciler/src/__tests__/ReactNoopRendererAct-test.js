@@ -26,7 +26,7 @@ describe('internal act()', () => {
     }
 
     const calledLog = [];
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <App
           callback={() => {

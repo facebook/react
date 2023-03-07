@@ -782,7 +782,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
+    await act(async () => {
       root.render(<Parent />);
     });
     assertLog(['childShouldSuspend: false, showChild: true', 'Child']);
