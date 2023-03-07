@@ -67,6 +67,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   // Cannot assign to globals
   someUnknownGlobal = true;
   moduleLocal = true;
+
+  function component(a) {
+    // Add support for function declarations once we support `var` hoisting.
+    function t() {}
+    t();
+  }
 }
 
 let moduleLocal = false;
@@ -363,17 +369,26 @@ let moduleLocal = false;
 > 64 |   someUnknownGlobal = true;
      |   ^^^^^^^^^^^^^^^^^
   65 |   moduleLocal = true;
-  66 | }
-  67 |
+  66 |
+  67 |   function component(a) {
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
   63 |   // Cannot assign to globals
   64 |   someUnknownGlobal = true;
 > 65 |   moduleLocal = true;
      |   ^^^^^^^^^^^
-  66 | }
-  67 |
-  68 | let moduleLocal = false;
+  66 |
+  67 |   function component(a) {
+  68 |     // Add support for function declarations once we support `var` hoisting.
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle FunctionDeclaration statements
+  65 |   moduleLocal = true;
+  66 |
+> 67 |   function component(a) {
+     |   ^
+  68 |     // Add support for function declarations once we support `var` hoisting.
+  69 |     function t() {}
+  70 |     t();
 ```
           
       

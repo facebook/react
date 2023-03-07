@@ -63,6 +63,12 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   // Cannot assign to globals
   someUnknownGlobal = true;
   moduleLocal = true;
+
+  function component(a) {
+    // Add support for function declarations once we support `var` hoisting.
+    function t() {}
+    t();
+  }
 }
 
 let moduleLocal = false;
