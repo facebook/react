@@ -270,7 +270,7 @@ describe(`onRender`, () => {
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
   });
 
-  it('does not report work done on a sibling', () => {
+  it('does not report work done on a sibling', async () => {
     const callback = jest.fn();
 
     const DoesNotUpdate = React.memo(
@@ -646,7 +646,7 @@ describe(`onRender`, () => {
     expect(updateCall[5]).toBe(43); // commit time
   });
 
-  it('should clear nested-update flag when multiple cascading renders are scheduled', () => {
+  it('should clear nested-update flag when multiple cascading renders are scheduled', async () => {
     loadModules({
       useNoopRenderer: true,
     });
@@ -672,7 +672,7 @@ describe(`onRender`, () => {
 
     const onRender = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler id="root" onRender={onRender}>
           <Component />
@@ -1569,7 +1569,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(1011); // commit start time (before mutations or effects)
   });
 
-  it('should bubble time spent in layout effects to higher profilers', () => {
+  it('should bubble time spent in layout effects to higher profilers', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = ({cleanupDuration, duration, setCountRef}) => {
@@ -1590,7 +1590,7 @@ describe(`onCommit`, () => {
     const setCountRef = React.createRef(null);
 
     let renderer = null;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <React.Profiler id="root-mount" onCommit={callback}>
           <React.Profiler id="a">
@@ -1617,7 +1617,7 @@ describe(`onCommit`, () => {
     expect(call[2]).toBe(1010); // durations
     expect(call[3]).toBe(2); // commit start time (before mutations or effects)
 
-    act(() => setCountRef.current(count => count + 1));
+    await act(async () => setCountRef.current(count => count + 1));
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1629,7 +1629,7 @@ describe(`onCommit`, () => {
     expect(call[2]).toBe(110); // durations
     expect(call[3]).toBe(1013); // commit start time (before mutations or effects)
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="root-update" onCommit={callback}>
           <React.Profiler id="b">
@@ -1650,7 +1650,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(1124); // commit start time (before mutations or effects)
   });
 
-  it('should properly report time in layout effects even when there are errors', () => {
+  it('should properly report time in layout effects even when there are errors', async () => {
     const callback = jest.fn();
 
     class ErrorBoundary extends React.Component {
@@ -1688,7 +1688,7 @@ describe(`onCommit`, () => {
 
     // Test an error that happens during an effect
 
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
@@ -1736,7 +1736,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(10110111); // commit start time (before mutations or effects)
   });
 
-  it('should properly report time in layout effect cleanup functions even when there are errors', () => {
+  it('should properly report time in layout effect cleanup functions even when there are errors', async () => {
     const callback = jest.fn();
 
     class ErrorBoundary extends React.Component {
@@ -1774,7 +1774,7 @@ describe(`onCommit`, () => {
 
     let renderer = null;
 
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
@@ -1816,7 +1816,7 @@ describe(`onCommit`, () => {
 
     // Test an error that happens during an cleanup function
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
@@ -1901,7 +1901,7 @@ describe(`onPostCommit`, () => {
     Scheduler.unstable_advanceTime(1);
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <React.Profiler id="mount-test" onPostCommit={callback}>
           <ComponentWithEffects />
@@ -1922,7 +1922,7 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="update-test" onPostCommit={callback}>
           <ComponentWithEffects />
@@ -1943,7 +1943,7 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="unmount-test" onPostCommit={callback} />,
       );
@@ -1965,7 +1965,7 @@ describe(`onPostCommit`, () => {
     expect(call[3]).toBe(12030); // commit start time (before mutations or effects)
   });
 
-  it('should report time spent in passive effects with cascading renders', () => {
+  it('should report time spent in passive effects with cascading renders', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = () => {
@@ -1985,7 +1985,7 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(
         <React.Profiler id="mount-test" onPostCommit={callback}>
           <ComponentWithEffects />
@@ -2012,7 +2012,7 @@ describe(`onPostCommit`, () => {
     expect(call[3]).toBe(2011); // commit start time (before mutations or effects)
   });
 
-  it('should bubble time spent in effects to higher profilers', () => {
+  it('should bubble time spent in effects to higher profilers', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = ({cleanupDuration, duration, setCountRef}) => {
@@ -2033,7 +2033,7 @@ describe(`onPostCommit`, () => {
     const setCountRef = React.createRef(null);
 
     let renderer = null;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <React.Profiler id="root-mount" onPostCommit={callback}>
           <React.Profiler id="a">
@@ -2060,7 +2060,7 @@ describe(`onPostCommit`, () => {
     expect(call[2]).toBe(1010); // durations
     expect(call[3]).toBe(2); // commit start time (before mutations or effects)
 
-    act(() => setCountRef.current(count => count + 1));
+    await act(async () => setCountRef.current(count => count + 1));
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -2072,7 +2072,7 @@ describe(`onPostCommit`, () => {
     expect(call[2]).toBe(110); // durations
     expect(call[3]).toBe(1013); // commit start time (before mutations or effects)
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="root-update" onPostCommit={callback}>
           <React.Profiler id="b">
@@ -2093,7 +2093,7 @@ describe(`onPostCommit`, () => {
     expect(call[3]).toBe(1124); // commit start time (before mutations or effects)
   });
 
-  it('should properly report time in passive effects even when there are errors', () => {
+  it('should properly report time in passive effects even when there are errors', async () => {
     const callback = jest.fn();
 
     class ErrorBoundary extends React.Component {
@@ -2131,7 +2131,7 @@ describe(`onPostCommit`, () => {
 
     // Test an error that happens during an effect
 
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
@@ -2179,7 +2179,7 @@ describe(`onPostCommit`, () => {
     expect(call[3]).toBe(10110111); // commit start time (before mutations or effects)
   });
 
-  it('should properly report time in passive effect cleanup functions even when there are errors', () => {
+  it('should properly report time in passive effect cleanup functions even when there are errors', async () => {
     const callback = jest.fn();
 
     class ErrorBoundary extends React.Component {
@@ -2218,7 +2218,7 @@ describe(`onPostCommit`, () => {
 
     let renderer = null;
 
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
@@ -2260,7 +2260,7 @@ describe(`onPostCommit`, () => {
 
     // Test an error that happens during an cleanup function
 
-    act(() => {
+    await act(async () => {
       renderer.update(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
@@ -2365,7 +2365,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
   });
 
-  it('is called when a function component schedules an update during a layout effect', () => {
+  it('is called when a function component schedules an update during a layout effect', async () => {
     function Component() {
       const [didMount, setDidMount] = React.useState(false);
       React.useLayoutEffect(() => {
@@ -2377,7 +2377,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2425,7 +2425,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('root');
   });
 
-  it('bubbles up and calls all ancestor Profilers', () => {
+  it('bubbles up and calls all ancestor Profilers', async () => {
     function Component() {
       const [didMount, setDidMount] = React.useState(false);
       React.useLayoutEffect(() => {
@@ -2438,7 +2438,7 @@ describe(`onNestedUpdateScheduled`, () => {
     const onNestedUpdateScheduledTwo = jest.fn();
     const onNestedUpdateScheduledThree = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="one"
@@ -2466,7 +2466,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduledThree).not.toHaveBeenCalled();
   });
 
-  it('is not called when an update is scheduled for another doort during a layout effect', () => {
+  it('is not called when an update is scheduled for another doort during a layout effect', async () => {
     const setStateRef = React.createRef(null);
 
     function ComponentRootOne() {
@@ -2486,7 +2486,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.renderToRootWithID(
         <React.Profiler
           id="test"
@@ -2514,7 +2514,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
   });
 
-  it('is not called when a function component schedules an update during a passive effect', () => {
+  it('is not called when a function component schedules an update during a passive effect', async () => {
     function Component() {
       const [didMount, setDidMount] = React.useState(false);
       React.useEffect(() => {
@@ -2526,7 +2526,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2540,7 +2540,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
   });
 
-  it('is not called when a function component schedules an update outside of render', () => {
+  it('is not called when a function component schedules an update outside of render', async () => {
     const updateFnRef = React.createRef(null);
 
     function Component() {
@@ -2552,7 +2552,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2563,14 +2563,14 @@ describe(`onNestedUpdateScheduled`, () => {
     });
     assertLog(['Component:false']);
 
-    act(() => {
+    await act(async () => {
       updateFnRef.current();
     });
     assertLog(['Component:true']);
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
   });
 
-  it('it is not called when a component schedules an update during render', () => {
+  it('it is not called when a component schedules an update during render', async () => {
     function Component() {
       const [state, setState] = React.useState(false);
       if (state === false) {
@@ -2582,7 +2582,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2596,7 +2596,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
   });
 
-  it('it is called when a component schedules an update from a ref callback', () => {
+  it('it is called when a component schedules an update from a ref callback', async () => {
     function Component({mountChild}) {
       const [refAttached, setRefAttached] = React.useState(false);
       const [refDetached, setRefDetached] = React.useState(false);
@@ -2613,7 +2613,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2627,7 +2627,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
     expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2642,7 +2642,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled.mock.calls[1][0]).toBe('test');
   });
 
-  it('is called when a class component schedules an update from the componentDidMount lifecycles', () => {
+  it('is called when a class component schedules an update from the componentDidMount lifecycles', async () => {
     class Component extends React.Component {
       state = {
         value: false,
@@ -2659,7 +2659,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2674,7 +2674,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
   });
 
-  it('is called when a class component schedules an update from the componentDidUpdate lifecycles', () => {
+  it('is called when a class component schedules an update from the componentDidUpdate lifecycles', async () => {
     class Component extends React.Component {
       state = {
         nestedUpdateSheduled: false,
@@ -2699,7 +2699,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2711,7 +2711,7 @@ describe(`onNestedUpdateScheduled`, () => {
     assertLog(['Component:false:false']);
     expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2726,7 +2726,7 @@ describe(`onNestedUpdateScheduled`, () => {
     expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
   });
 
-  it('is not called when a class component schedules an update outside of render', () => {
+  it('is not called when a class component schedules an update outside of render', async () => {
     const updateFnRef = React.createRef(null);
 
     class Component extends React.Component {
@@ -2743,7 +2743,7 @@ describe(`onNestedUpdateScheduled`, () => {
 
     const onNestedUpdateScheduled = jest.fn();
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler
           id="test"
@@ -2754,7 +2754,7 @@ describe(`onNestedUpdateScheduled`, () => {
     });
     assertLog(['Component:false']);
 
-    act(() => {
+    await act(async () => {
       updateFnRef.current();
     });
     assertLog(['Component:true']);

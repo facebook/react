@@ -74,7 +74,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(() => {
+    await act(async () => {
       root.render(<Form />);
     });
 

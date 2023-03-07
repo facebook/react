@@ -509,8 +509,8 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<span>B</span>');
     expect(ref.current).toBe(null);
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -579,7 +579,7 @@ describe('ReactDOMServerPartialHydration', () => {
       expect(ref.current).toBe(null);
 
       shouldSuspend = true;
-      act(() => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />);
       });
 
@@ -635,8 +635,8 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<span>B</span>');
     expect(ref.current).toBe(null);
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -698,7 +698,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(deleted.length).toBe(0);
 
-    act(() => {
+    await act(async () => {
       root.render(<App deleted={true} />);
     });
 
@@ -743,8 +743,8 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we try to hydrate.
     suspend = true;
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOM.hydrate(<App />, container);
       });
     }).toErrorDev(
@@ -785,7 +785,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
-  it('can insert siblings before the dehydrated boundary', () => {
+  it('can insert siblings before the dehydrated boundary', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
     let showSibling;
@@ -829,20 +829,20 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
 
-    act(() => {
+    await act(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
 
     // In this state, we can still update the siblings.
-    act(() => showSibling());
+    await act(async () => showSibling());
 
     expect(container.firstChild.firstChild.tagName).toBe('DIV');
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
 
-  it('can delete the dehydrated boundary before it is hydrated', () => {
+  it('can delete the dehydrated boundary before it is hydrated', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
     let hideMiddle;
@@ -885,14 +885,14 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    act(() => {
+    await act(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');
 
     // In this state, we can still delete the boundary.
-    act(() => hideMiddle());
+    await act(async () => hideMiddle());
 
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
@@ -1880,7 +1880,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('AB');
 
     // Add more rows before we've hydrated the first two.
-    act(() => {
+    await act(async () => {
       root.render(<App showMore={true} />);
     });
 
@@ -3414,8 +3414,8 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.appendChild(container);
     container.innerHTML = finalHTML;
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
           onRecoverableError(error) {
             Scheduler.log('Log recoverable error: ' + error.message);
@@ -3461,8 +3461,8 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = ReactDOMServer.renderToString(
       <DirectTextChild text="good" />,
     );
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -3502,8 +3502,8 @@ describe('ReactDOMServerPartialHydration', () => {
     container2.innerHTML = ReactDOMServer.renderToString(
       <TextChildWithSibling text="good" />,
     );
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(
           container2,
           <TextChildWithSibling text="bad" />,

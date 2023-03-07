@@ -17,6 +17,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   let NoError;
   let container;
   let windowOnError;
+  let waitForThrow;
 
   beforeEach(() => {
     jest.resetModules();
@@ -24,6 +25,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForThrow = InternalTestUtils.waitForThrow;
 
     ErrorBoundary = class extends React.Component {
       state = {error: null};
@@ -53,7 +57,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   });
 
   describe('ReactDOMClient.createRoot', () => {
-    it('logs errors during event handlers', () => {
+    it('logs errors during event handlers', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -68,11 +72,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(<Foo />);
       });
 
-      act(() => {
+      await act(async () => {
         container.firstChild.dispatchEvent(
           new MouseEvent('click', {
             bubbles: true,
@@ -142,7 +146,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -152,7 +156,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs render errors without an error boundary', () => {
+    it('logs render errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -160,11 +164,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      expect(() => {
-        act(() => {
-          root.render(<Foo />);
-        });
-      }).toThrow('Boom');
+      await act(async () => {
+        root.render(<Foo />);
+        await waitForThrow('Boom');
+      });
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -226,7 +229,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -236,7 +239,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs render errors with an error boundary', () => {
+    it('logs render errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -244,7 +247,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -312,7 +315,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -322,7 +325,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors without an error boundary', () => {
+    it('logs layout effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -333,11 +336,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      expect(() => {
-        act(() => {
-          root.render(<Foo />);
-        });
-      }).toThrow('Boom');
+      await act(async () => {
+        root.render(<Foo />);
+        await waitForThrow('Boom');
+      });
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -382,7 +384,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -392,7 +394,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors with an error boundary', () => {
+    it('logs layout effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -403,7 +405,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -454,7 +456,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -464,7 +466,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors without an error boundary', () => {
+    it('logs passive effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -475,11 +477,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      expect(() => {
-        act(() => {
-          root.render(<Foo />);
-        });
-      }).toThrow('Boom');
+      await act(async () => {
+        root.render(<Foo />);
+        await waitForThrow('Boom');
+      });
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -524,7 +525,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -534,7 +535,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors with an error boundary', () => {
+    it('logs passive effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -545,7 +546,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -596,7 +597,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -608,7 +609,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   });
 
   describe('ReactDOM.render', () => {
-    it('logs errors during event handlers', () => {
+    it('logs errors during event handlers', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -622,11 +623,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<Foo />, container);
       });
 
-      act(() => {
+      await act(async () => {
         container.firstChild.dispatchEvent(
           new MouseEvent('click', {
             bubbles: true,
@@ -697,7 +698,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -709,7 +710,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs render errors without an error boundary', () => {
+    it('logs render errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -717,9 +718,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       expect(() => {
-        act(() => {
-          ReactDOM.render(<Foo />, container);
-        });
+        ReactDOM.render(<Foo />, container);
       }).toThrow('Boom');
 
       if (__DEV__) {
@@ -766,7 +765,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -778,14 +777,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs render errors with an error boundary', () => {
+    it('logs render errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
         throw Error('Boom');
       }
 
-      act(() => {
+      await act(async () => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -838,7 +837,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -850,7 +849,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors without an error boundary', () => {
+    it('logs layout effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -861,9 +860,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       expect(() => {
-        act(() => {
-          ReactDOM.render(<Foo />, container);
-        });
+        ReactDOM.render(<Foo />, container);
       }).toThrow('Boom');
 
       if (__DEV__) {
@@ -910,7 +907,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -922,7 +919,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors with an error boundary', () => {
+    it('logs layout effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -932,7 +929,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -985,7 +982,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -997,7 +994,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors without an error boundary', () => {
+    it('logs passive effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -1007,11 +1004,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      expect(() => {
-        act(() => {
-          ReactDOM.render(<Foo />, container);
-        });
-      }).toThrow('Boom');
+      await act(async () => {
+        ReactDOM.render(<Foo />, container);
+        await waitForThrow('Boom');
+      });
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -1057,7 +1053,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -1069,7 +1065,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors with an error boundary', () => {
+    it('logs passive effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -1079,7 +1075,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -1132,7 +1128,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');

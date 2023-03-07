@@ -298,7 +298,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
   });
 
   // @gate www
-  it('should correctly handle focus visibility when typing into an input', () => {
+  it('should correctly handle focus visibility when typing into an input', async () => {
     const onFocusWithinVisibleChange = jest.fn();
     const ref = React.createRef();
     const inputRef = React.createRef();
@@ -312,7 +312,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         </div>
       );
     };
-    act(() => {
+    await act(async () => {
       ReactDOM.render(<Component />, container);
     });
 
@@ -477,7 +477,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is called after a focused suspended element is hidden', () => {
+    it('is called after a focused suspended element is hidden', async () => {
       const Suspense = React.Suspense;
       let suspend = false;
       let resolve;
@@ -508,7 +508,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       const root = ReactDOMClient.createRoot(container2);
 
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();
@@ -522,7 +522,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
 
       suspend = true;
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();
@@ -535,7 +535,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is called after a focused suspended element is hidden then shown', () => {
+    it('is called after a focused suspended element is hidden then shown', async () => {
       const Suspense = React.Suspense;
       let suspend = false;
       let resolve;
@@ -567,7 +567,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       const root = ReactDOMClient.createRoot(container2);
 
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();
@@ -576,14 +576,14 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
 
       suspend = true;
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
 
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();
@@ -592,7 +592,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       buttonRef.current.focus();
       suspend = false;
-      act(() => {
+      await act(async () => {
         root.render(<Component />);
       });
       jest.runAllTimers();

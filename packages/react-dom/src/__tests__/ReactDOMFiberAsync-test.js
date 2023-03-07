@@ -620,7 +620,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(container.textContent).toEqual('ABC');
   });
 
-  it('unmounted roots should never clear newer root content from a container', () => {
+  it('unmounted roots should never clear newer root content from a container', async () => {
     const ref = React.createRef();
 
     function OldApp() {
@@ -643,7 +643,7 @@ describe('ReactDOMFiberAsync', () => {
     }
 
     const oldRoot = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       oldRoot.render(<OldApp />);
     });
 
