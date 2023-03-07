@@ -129,28 +129,32 @@ class ReactFabricHostComponent implements NativeMethods {
   }
 
   blur() {
-    TextInputState.blurTextInput(this);
+    if (this._internalInstanceHandle != null) {
+      TextInputState.blurTextInput(this);
+    }
   }
 
   focus() {
-    TextInputState.focusTextInput(this);
+    if (this._internalInstanceHandle != null) {
+      TextInputState.focusTextInput(this);
+    }
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
+    const fiber = this._internalInstanceHandle;
+    if (fiber != null && fiber.stateNode != null) {
       fabricMeasure(
-        stateNode.node,
+        fiber.stateNode.node,
         mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     }
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
+    const fiber = this._internalInstanceHandle;
+    if (fiber != null && fiber.stateNode != null) {
       fabricMeasureInWindow(
-        stateNode.node,
+        fiber.stateNode.node,
         mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     }
@@ -173,7 +177,12 @@ class ReactFabricHostComponent implements NativeMethods {
 
       return;
     }
-
+    if (
+      this._internalInstanceHandle == null ||
+      relativeToNativeNode._internalInstanceHandle == null
+    ) {
+      return;
+    }
     const toStateNode = this._internalInstanceHandle.stateNode;
     const fromStateNode =
       relativeToNativeNode._internalInstanceHandle.stateNode;
@@ -516,8 +525,10 @@ export function preparePortalMount(portalInstance: Instance): void {
   // noop
 }
 
-export function detachDeletedInstance(node: Instance): void {
-  // noop
+export function detachDeletedInstance(instance: Instance): void {
+  const canonical = instance.canonical;
+  canonical.currentProps = null;
+  canonical._internalInstanceHandle = null;
 }
 
 export function requestPostPaintCallback(callback: (time: number) => void) {
