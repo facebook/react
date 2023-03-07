@@ -24,11 +24,11 @@ function component(a, b) {
   const c_1 = $[1] !== b;
   let x;
   if (c_0 || c_1) {
-    const z = { a: a };
+    const z = { a };
     const c_3 = $[3] !== b;
     let t0;
     if (c_3) {
-      t0 = { b: b };
+      t0 = { b };
       $[3] = b;
       $[4] = t0;
     } else {

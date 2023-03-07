@@ -21,7 +21,7 @@ function component(a) {
   const c_0 = $[0] !== a;
   let x;
   if (c_0) {
-    const y = { b: { a: a } };
+    const y = { b: { a } };
     x = function () {
       y.b.a = 2;
     };

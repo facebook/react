@@ -45,7 +45,7 @@ function foo(a, b, c) {
   const c_3 = $[3] !== o;
   let t0;
   if (c_0 || c_1 || c_2 || c_3) {
-    t0 = { d: d, g: g, n: n, o: o };
+    t0 = { d, g, n, o };
     $[0] = d;
     $[1] = g;
     $[2] = n;

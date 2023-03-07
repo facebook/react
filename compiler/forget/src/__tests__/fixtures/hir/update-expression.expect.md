@@ -26,7 +26,7 @@ function foo(props) {
   const c_2 = $[2] !== z;
   let t0;
   if (c_0 || c_1 || c_2) {
-    t0 = { x: x, y: y, z: z };
+    t0 = { x, y, z };
     $[0] = x;
     $[1] = y;
     $[2] = z;

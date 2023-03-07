@@ -22,7 +22,7 @@ function component(a) {
   const c_0 = $[0] !== a;
   let z;
   if (c_0) {
-    z = { a: a };
+    z = { a };
     (function () {
       (function () {
         z.b = 1;

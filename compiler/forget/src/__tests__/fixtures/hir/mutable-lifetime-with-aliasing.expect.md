@@ -44,7 +44,7 @@ function Component(props) {
   const a = {};
   const b = [a];
   const c = {};
-  const d = { c: c };
+  const d = { c };
 
   const x = {};
   x.b = b;

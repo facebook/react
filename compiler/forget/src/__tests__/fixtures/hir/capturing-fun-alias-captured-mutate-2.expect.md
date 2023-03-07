@@ -25,8 +25,8 @@ function component(foo, bar) {
   const c_1 = $[1] !== bar;
   let x;
   if (c_0 || c_1) {
-    x = { foo: foo };
-    const y = { bar: bar };
+    x = { foo };
+    const y = { bar };
     (function () {
       let a = { y };
       let b = x;

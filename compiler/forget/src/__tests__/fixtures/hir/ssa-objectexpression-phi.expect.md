@@ -28,7 +28,7 @@ function foo() {
   const y = 3;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { x: x, y: y };
+    t0 = { x, y };
     $[0] = t0;
   } else {
     t0 = $[0];

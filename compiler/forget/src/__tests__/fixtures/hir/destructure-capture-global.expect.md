@@ -19,7 +19,7 @@ function component(a) {
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
-    t0 = { a: a, someGlobal: someGlobal };
+    t0 = { a, someGlobal };
     $[0] = a;
     $[1] = t0;
   } else {

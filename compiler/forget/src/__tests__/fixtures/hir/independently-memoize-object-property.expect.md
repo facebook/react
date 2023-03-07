@@ -22,7 +22,7 @@ function foo(a, b, c) {
   const c_2 = $[2] !== c;
   let x;
   if (c_0 || c_1 || c_2) {
-    x = { a: a };
+    x = { a };
     const c_4 = $[4] !== b;
     const c_5 = $[5] !== c;
     let t0;

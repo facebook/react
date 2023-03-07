@@ -23,7 +23,7 @@ function component(a, b) {
   const c_0 = $[0] !== b;
   let t0;
   if (c_0) {
-    t0 = { b: b };
+    t0 = { b };
     $[0] = b;
     $[1] = t0;
   } else {
@@ -34,7 +34,7 @@ function component(a, b) {
   const c_3 = $[3] !== y.b;
   let x;
   if (c_2 || c_3) {
-    const z = { a: a };
+    const z = { a };
     x = function () {
       z.a = 2;
       y.b;

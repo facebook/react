@@ -44,7 +44,7 @@ function component(props) {
   const c_5 = $[5] !== b;
   let t2;
   if (c_4 || c_5) {
-    t2 = { a: a, b: b };
+    t2 = { a, b };
     $[4] = a;
     $[5] = b;
     $[6] = t2;

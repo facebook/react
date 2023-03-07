@@ -27,9 +27,9 @@ function foo(a, b, c, d) {
   if (c_0 || c_1) {
     x = undefined;
     if (someVal) {
-      x = { b: b };
+      x = { b };
     } else {
-      x = { c: c };
+      x = { c };
     }
     x.f = 1;
     $[0] = b;

@@ -21,7 +21,7 @@ function component(a, b) {
   const c_1 = $[1] !== b;
   let t0;
   if (c_0 || c_1) {
-    t0 = { a: a, b: b };
+    t0 = { a, b };
     $[0] = a;
     $[1] = b;
     $[2] = t0;

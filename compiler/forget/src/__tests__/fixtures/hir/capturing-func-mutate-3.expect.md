@@ -22,7 +22,7 @@ function component(a, b) {
   const c_0 = $[0] !== b;
   let t0;
   if (c_0) {
-    t0 = { b: b };
+    t0 = { b };
     $[0] = b;
     $[1] = t0;
   } else {
@@ -32,7 +32,7 @@ function component(a, b) {
   const c_2 = $[2] !== a;
   let t1;
   if (c_2) {
-    t1 = { a: a };
+    t1 = { a };
     $[2] = a;
     $[3] = t1;
   } else {

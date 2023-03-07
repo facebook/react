@@ -21,8 +21,8 @@ function component(a, b) {
   const c_1 = $[1] !== b;
   let x;
   if (c_0 || c_1) {
-    const y = { a: a };
-    x = { b: b };
+    const y = { a };
+    x = { b };
     x.y = y;
 
     mutate(x);

@@ -15,7 +15,7 @@ function Component(c) {
 
 ```javascript
 function Component(c) {
-  const x = { c: c };
+  const x = { c };
   mutate(x);
 }
 

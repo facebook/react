@@ -25,7 +25,7 @@ function foo(a, b, c, d) {
     const c_0 = $[0] !== b;
     let t0;
     if (c_0) {
-      t0 = { b: b };
+      t0 = { b };
       $[0] = b;
       $[1] = t0;
     } else {
@@ -36,7 +36,7 @@ function foo(a, b, c, d) {
     const c_2 = $[2] !== c;
     let t1;
     if (c_2) {
-      t1 = { c: c };
+      t1 = { c };
       $[2] = c;
       $[3] = t1;
     } else {

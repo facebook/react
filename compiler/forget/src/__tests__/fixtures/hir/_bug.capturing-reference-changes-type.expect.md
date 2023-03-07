@@ -18,7 +18,7 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const x = { a: a };
+  const x = { a };
 
   (function () {
     y = x;

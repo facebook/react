@@ -591,10 +591,14 @@ function codegenInstructionValue(
       const properties = [];
       for (const property of instrValue.properties) {
         if (property.kind === "ObjectProperty") {
+          const key = t.identifier(property.name);
+          const value = codegenPlace(cx, property.place);
           properties.push(
             t.objectProperty(
-              t.stringLiteral(property.name),
-              codegenPlace(cx, property.place)
+              key,
+              value,
+              false,
+              value.type === "Identifier" && value.name === key.name
             )
           );
         } else {
