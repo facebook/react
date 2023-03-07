@@ -55,12 +55,7 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {
-  HTML_NAMESPACE,
-  MATH_NAMESPACE,
-  SVG_NAMESPACE,
-  getIntrinsicNamespace,
-} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -380,15 +375,83 @@ function updateDOMProperties(
   }
 }
 
+// creates a script element that won't execute
+export function createPotentiallyInlineScriptElement(
+  ownerDocument: Document,
+): Element {
+  // Create the script via .innerHTML so its "parser-inserted" flag is
+  // set to true and it does not execute
+  const div = ownerDocument.createElement('div');
+  if (__DEV__) {
+    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+      console.error(
+        'Encountered a script tag while rendering React component. ' +
+          'Scripts inside React components are never executed when rendering ' +
+          'on the client. Consider using template tag instead ' +
+          '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+      );
+      didWarnScriptTags = true;
+    }
+  }
+  div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
+  // This is guaranteed to yield a script element.
+  const firstChild = ((div.firstChild: any): HTMLScriptElement);
+  const element = div.removeChild(firstChild);
+  return element;
+}
+
+export function createSelectElement(
+  props: Object,
+  ownerDocument: Document,
+): Element {
+  let element;
+  if (typeof props.is === 'string') {
+    element = ownerDocument.createElement('select', {is: props.is});
+  } else {
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement('select');
+  }
+  if (props.multiple) {
+    element.multiple = true;
+  } else if (props.size) {
+    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+    // it is possible that no option is selected.
+    //
+    // This is only necessary when a select in "single selection mode".
+    element.size = props.size;
+  }
+  return element;
+}
+
 // Creates elements in the HTML namesapce
 export function createHTMLElement(
   type: string,
   props: Object,
   ownerDocument: Document,
 ): Element {
+  if (__DEV__) {
+    switch (type) {
+      case 'script':
+      case 'select':
+        console.error(
+          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
+          type,
+        );
+        break;
+      case 'svg':
+      case 'math':
+        console.error(
+          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
+          type,
+        );
+    }
+  }
+
   let isCustomComponentTag;
 
-  let domElement: Element;
+  let element: Element;
   if (__DEV__) {
     isCustomComponentTag = isCustomComponent(type, props);
     // Should this check be gated by parent namespace? Not sure we want to
@@ -403,59 +466,20 @@ export function createHTMLElement(
     }
   }
 
-  if (type === 'script') {
-    // Create the script via .innerHTML so its "parser-inserted" flag is
-    // set to true and it does not execute
-    const div = ownerDocument.createElement('div');
-    if (__DEV__) {
-      if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-        console.error(
-          'Encountered a script tag while rendering React component. ' +
-            'Scripts inside React components are never executed when rendering ' +
-            'on the client. Consider using template tag instead ' +
-            '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
-        );
-        didWarnScriptTags = true;
-      }
-    }
-    div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
-    // This is guaranteed to yield a script element.
-    const firstChild = ((div.firstChild: any): HTMLScriptElement);
-    domElement = div.removeChild(firstChild);
-  } else if (typeof props.is === 'string') {
-    domElement = ownerDocument.createElement(type, {is: props.is});
+  if (typeof props.is === 'string') {
+    element = ownerDocument.createElement(type, {is: props.is});
   } else {
     // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
     // See discussion in https://github.com/facebook/react/pull/6896
     // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    domElement = ownerDocument.createElement(type);
-    // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
-    // attributes on `select`s needs to be added before `option`s are inserted.
-    // This prevents:
-    // - a bug where the `select` does not scroll to the correct option because singular
-    //  `select` elements automatically pick the first item #13222
-    // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
-    // See https://github.com/facebook/react/issues/13222
-    // and https://github.com/facebook/react/issues/14239
-    if (type === 'select') {
-      const node = ((domElement: any): HTMLSelectElement);
-      if (props.multiple) {
-        node.multiple = true;
-      } else if (props.size) {
-        // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-        // it is possible that no option is selected.
-        //
-        // This is only necessary when a select in "single selection mode".
-        node.size = props.size;
-      }
-    }
+    element = ownerDocument.createElement(type);
   }
 
   if (__DEV__) {
     if (
       !isCustomComponentTag &&
       // $FlowFixMe[method-unbinding]
-      Object.prototype.toString.call(domElement) ===
+      Object.prototype.toString.call(element) ===
         '[object HTMLUnknownElement]' &&
       !hasOwnProperty.call(warnedUnknownTags, type)
     ) {
@@ -469,21 +493,7 @@ export function createHTMLElement(
     }
   }
 
-  return domElement;
-}
-
-export function createSVGElement(
-  type: string,
-  ownerDocument: Document,
-): Element {
-  return ownerDocument.createElementNS(SVG_NAMESPACE, type);
-}
-
-export function createMathElement(
-  type: string,
-  ownerDocument: Document,
-): Element {
-  return ownerDocument.createElementNS(MATH_NAMESPACE, type);
+  return element;
 }
 
 export function createTextNode(

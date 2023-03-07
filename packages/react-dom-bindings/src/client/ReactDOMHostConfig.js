@@ -26,15 +26,15 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
   detachDeletedInstance,
-  isMarkedResource,
-  markNodeAsResource,
+  isMarkedHoistable,
+  markNodeAsHoistable,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createHTMLElement,
-  createSVGElement,
-  createMathElement,
+  createPotentiallyInlineScriptElement,
+  createSelectElement,
   createTextNode,
   setInitialProperties,
   diffProperties,
@@ -61,7 +61,6 @@ import {
   getChildNamespace,
   SVG_NAMESPACE,
   MATH_NAMESPACE,
-  HTML_NAMESPACE,
 } from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -284,7 +283,7 @@ export function createHoistableInstance(
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
-  markNodeAsResource(domElement);
+  markNodeAsHoistable(domElement);
   return domElement;
 }
 
@@ -322,25 +321,28 @@ export function createInstance(
   );
 
   let domElement: Instance;
-  create: switch (namespace) {
+  switch (namespace) {
     case SVG_NAMESPACE:
-      domElement = createSVGElement(type, ownerDocument);
-      break;
     case MATH_NAMESPACE:
-      domElement = createMathElement(type, ownerDocument);
+      domElement = ownerDocument.createElementNS(namespace, type);
       break;
-    case HTML_NAMESPACE:
+    default:
       switch (type) {
         case 'svg':
-          domElement = createSVGElement(type, ownerDocument);
-          break create;
+          domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
+          break;
         case 'math':
-          domElement = createMathElement(type, ownerDocument);
-          break create;
+          domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
+          break;
+        case 'script':
+          domElement = createPotentiallyInlineScriptElement(ownerDocument);
+          break;
+        case 'select':
+          domElement = createSelectElement(props, ownerDocument);
+          break;
+        default:
+          domElement = createHTMLElement(type, props, ownerDocument);
       }
-    // eslint-disable-next-line no-fallthrough
-    default:
-      domElement = createHTMLElement(type, props, ownerDocument);
   }
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
@@ -876,7 +878,7 @@ export function shouldSkipHydratableForInstance(
     return false;
   } else if (
     instance.nodeName.toLowerCase() !== type.toLowerCase() ||
-    isMarkedResource(instance)
+    isMarkedHoistable(instance)
   ) {
     // We are either about to
     return true;
@@ -1807,6 +1809,7 @@ export {
   hydrateHoistable,
   mountHoistable,
   unmountHoistable,
+  prepareToCommitHoistables,
 } from './ReactDOMFloatClient';
 
 // -------------------
@@ -1936,7 +1939,7 @@ export function clearSingleton(instance: Instance): void {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
     if (
-      isMarkedResource(node) ||
+      isMarkedHoistable(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||

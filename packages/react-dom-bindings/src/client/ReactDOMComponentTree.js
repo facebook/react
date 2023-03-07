@@ -47,7 +47,7 @@ const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
-const internalResourceMarker = '__reactMarker$' + randomKey;
+const internalHoistableMarker = '__reactMarker$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -288,10 +288,16 @@ export function getResourcesFromRoot(root: HoistableRoot): RootResources {
   return resources;
 }
 
-export function isMarkedResource(node: Node): boolean {
-  return !!(node: any)[internalResourceMarker];
+export function isMarkedHoistable(node: Node): boolean {
+  return !!(node: any)[internalHoistableMarker];
 }
 
-export function markNodeAsResource(node: Node) {
-  (node: any)[internalResourceMarker] = true;
+export function markNodeAsHoistable(node: Node) {
+  (node: any)[internalHoistableMarker] = true;
+}
+
+export function isOwnedInstance(node: Node): boolean {
+  return !!(
+    (node: any)[internalHoistableMarker] || (node: any)[internalInstanceKey]
+  );
 }

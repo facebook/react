@@ -2388,7 +2388,7 @@ body {
     );
 
     ReactDOMClient.hydrateRoot(document, <App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -2441,8 +2441,8 @@ body {
         <script itemProp="foo" />
       </html>,
     );
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
+    await expect(async () => {
+      await waitForAll([]);
     }).toErrorDev([
       'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'Cannot render a <title> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <title> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
@@ -2567,7 +2567,7 @@ body {
     // script insertion that happens because we do not SSR async scripts with load handlers.
     // All the extra inject nodes are preset
     const root = ReactDOMClient.hydrateRoot(document, <App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html itemscope="">
         <head>
@@ -5401,6 +5401,120 @@ background-color: green;
         <html>
           <head />
           <body>foo</body>
+        </html>,
+      );
+    });
+
+    it('can hydrate hoistable tags inside late suspense boundaries', async () => {
+      function App() {
+        return (
+          <html>
+            <body>
+              <link rel="rel1" href="linkhref" />
+              <link rel="rel2" href="linkhref" />
+              <meta name="name1" content="metacontent" />
+              <meta name="name2" content="metacontent" />
+              <Suspense fallback="loading...">
+                <link rel="rel3" href="linkhref" />
+                <link rel="rel4" href="linkhref" />
+                <meta name="name3" content="metacontent" />
+                <meta name="name4" content="metacontent" />
+                <BlockedOn value="release">
+                  <link rel="rel5" href="linkhref" />
+                  <link rel="rel6" href="linkhref" />
+                  <meta name="name5" content="metacontent" />
+                  <meta name="name6" content="metacontent" />
+                  <div>hello world</div>
+                </BlockedOn>
+              </Suspense>
+            </body>
+          </html>
+        );
+      }
+      await actIntoEmptyDocument(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="rel1" href="linkhref" />
+            <link rel="rel2" href="linkhref" />
+            <meta name="name1" content="metacontent" />
+            <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App />);
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="rel1" href="linkhref" />
+            <link rel="rel2" href="linkhref" />
+            <meta name="name1" content="metacontent" />
+            <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+
+      const thirdPartyLink = document.createElement('link');
+      thirdPartyLink.setAttribute('href', 'linkhref');
+      thirdPartyLink.setAttribute('rel', '3rdparty');
+      document.body.prepend(thirdPartyLink);
+
+      const thirdPartyMeta = document.createElement('meta');
+      thirdPartyMeta.setAttribute('content', 'metacontent');
+      thirdPartyMeta.setAttribute('name', '3rdparty');
+      document.body.prepend(thirdPartyMeta);
+
+      await act(() => {
+        resolveText('release');
+      });
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="rel1" href="linkhref" />
+            <link rel="rel2" href="linkhref" />
+            <meta name="name1" content="metacontent" />
+            <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
+          </head>
+          <body>
+            <meta name="3rdparty" content="metacontent" />
+            <link rel="3rdparty" href="linkhref" />
+            <div>hello world</div>
+            <link rel="rel5" href="linkhref" />
+            <link rel="rel6" href="linkhref" />
+            <meta name="name5" content="metacontent" />
+            <meta name="name6" content="metacontent" />
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <meta name="3rdparty" content="metacontent" />
+            <link rel="3rdparty" href="linkhref" />
+          </body>
         </html>,
       );
     });

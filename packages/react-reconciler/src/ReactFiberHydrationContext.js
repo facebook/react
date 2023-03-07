@@ -436,7 +436,7 @@ function claimHydratableSingleton(fiber: Fiber): void {
   }
 }
 
-function advanceToFirstAttempableInstance(fiber: Fiber) {
+function advanceToFirstAttemptableInstance(fiber: Fiber) {
   // fiber is HostComponent Fiber
   while (
     nextHydratableInstance &&
@@ -452,7 +452,7 @@ function advanceToFirstAttempableInstance(fiber: Fiber) {
   }
 }
 
-function advanceToFirstAttempableTextInstance() {
+function advanceToFirstAttemptableTextInstance() {
   while (
     nextHydratableInstance &&
     shouldSkipHydratableForTextInstance(nextHydratableInstance)
@@ -463,7 +463,7 @@ function advanceToFirstAttempableTextInstance() {
   }
 }
 
-function advanceToFirstAttempableSuspenseInstance() {
+function advanceToFirstAttemptableSuspenseInstance() {
   while (
     nextHydratableInstance &&
     shouldSkipHydratableForSuspenseInstance(nextHydratableInstance)
@@ -490,7 +490,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   const initialInstance = nextHydratableInstance;
   if (rootOrSingletonContext) {
     // We may need to skip past certain nodes in these contexts
-    advanceToFirstAttempableInstance(fiber);
+    advanceToFirstAttemptableInstance(fiber);
   }
   const nextInstance = nextHydratableInstance;
   if (!nextInstance) {
@@ -518,7 +518,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
     if (rootOrSingletonContext) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableInstance(fiber);
+      advanceToFirstAttemptableInstance(fiber);
     }
     if (
       !nextHydratableInstance ||
@@ -551,7 +551,7 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
     // We may need to skip past certain nodes in these contexts.
     // We don't skip if the text is not hydratable because we know no hydratables
     // exist which could match this Fiber
-    advanceToFirstAttempableTextInstance();
+    advanceToFirstAttemptableTextInstance();
   }
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !isHydratable) {
@@ -582,7 +582,7 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
 
     if (rootOrSingletonContext && isHydratable) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableTextInstance();
+      advanceToFirstAttemptableTextInstance();
     }
 
     if (
@@ -611,7 +611,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   const initialInstance = nextHydratableInstance;
   if (rootOrSingletonContext) {
     // We may need to skip past certain nodes in these contexts
-    advanceToFirstAttempableSuspenseInstance();
+    advanceToFirstAttemptableSuspenseInstance();
   }
   const nextInstance = nextHydratableInstance;
   if (!nextInstance) {
@@ -640,7 +640,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
 
     if (rootOrSingletonContext) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableSuspenseInstance();
+      advanceToFirstAttemptableSuspenseInstance();
     }
 
     if (
