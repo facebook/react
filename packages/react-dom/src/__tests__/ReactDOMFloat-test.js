@@ -2388,7 +2388,7 @@ body {
     );
 
     ReactDOMClient.hydrateRoot(document, <App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -2441,8 +2441,8 @@ body {
         <script itemProp="foo" />
       </html>,
     );
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
+    await expect(async () => {
+      await waitForAll([]);
     }).toErrorDev([
       'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'Cannot render a <title> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <title> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
@@ -2567,7 +2567,7 @@ body {
     // script insertion that happens because we do not SSR async scripts with load handlers.
     // All the extra inject nodes are preset
     const root = ReactDOMClient.hydrateRoot(document, <App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html itemscope="">
         <head>
