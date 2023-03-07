@@ -1666,7 +1666,7 @@ describe('useMutableSource', () => {
     }
 
     // Mount ComponentA with data version 1
-    act(() => {
+    await act(async () => {
       ReactNoop.render(
         <React.Profiler id="root" onRender={onRender}>
           <ComponentA />
@@ -1703,7 +1703,7 @@ describe('useMutableSource', () => {
   if (__DEV__) {
     describe('dev warnings', () => {
       // @gate enableUseMutableSource
-      it('should warn if the subscribe function does not return an unsubscribe function', () => {
+      it('should warn if the subscribe function does not return an unsubscribe function', async () => {
         const source = createSource('one');
         const mutableSource = createMutableSource(
           source,
@@ -1712,8 +1712,8 @@ describe('useMutableSource', () => {
 
         const brokenSubscribe = () => {};
 
-        expect(() => {
-          act(() => {
+        await expect(async () => {
+          await act(async () => {
             ReactNoop.render(
               <Component
                 label="only"

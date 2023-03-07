@@ -37,7 +37,7 @@ describe('StrictEffectsMode defaults', () => {
     ReactFeatureFlags.createRootStrictEffectsByDefault = __DEV__;
   });
 
-  it('should not double invoke effects in legacy mode', () => {
+  it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
       React.useEffect(() => {
         Scheduler.log('useEffect mount');
@@ -52,14 +52,14 @@ describe('StrictEffectsMode defaults', () => {
       return text;
     }
 
-    act(() => {
+    await act(async () => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
   });
 
-  it('should not double invoke class lifecycles in legacy mode', () => {
+  it('should not double invoke class lifecycles in legacy mode', async () => {
     class App extends React.PureComponent {
       componentDidMount() {
         Scheduler.log('componentDidMount');
@@ -78,7 +78,7 @@ describe('StrictEffectsMode defaults', () => {
       }
     }
 
-    act(() => {
+    await act(async () => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
@@ -194,7 +194,7 @@ describe('StrictEffectsMode defaults', () => {
       });
     });
 
-    it('double invoking for effects for modern roots', () => {
+    it('double invoking for effects for modern roots', async () => {
       function App({text}) {
         React.useEffect(() => {
           Scheduler.log('useEffect mount');
@@ -208,7 +208,7 @@ describe('StrictEffectsMode defaults', () => {
 
         return text;
       }
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -221,7 +221,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -232,14 +232,14 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 
       assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
     });
 
-    it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
+    it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', async () => {
       function App({text}) {
         React.useEffect(() => {
           Scheduler.log('useEffect One mount');
@@ -254,7 +254,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -267,7 +267,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -278,14 +278,14 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 
       assertLog(['useEffect One unmount', 'useEffect Two unmount']);
     });
 
-    it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
+    it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', async () => {
       function App({text}) {
         React.useLayoutEffect(() => {
           Scheduler.log('useLayoutEffect One mount');
@@ -300,7 +300,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -313,7 +313,7 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -324,14 +324,14 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 
       assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
     });
 
-    it('useEffect and useLayoutEffect is called twice when there is no unmount', () => {
+    it('useEffect and useLayoutEffect is called twice when there is no unmount', async () => {
       function App({text}) {
         React.useEffect(() => {
           Scheduler.log('useEffect mount');
@@ -344,7 +344,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -355,13 +355,13 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'update'} />);
       });
 
       assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 
@@ -369,7 +369,7 @@ describe('StrictEffectsMode defaults', () => {
     });
 
     //@gate useModernStrictMode
-    it('disconnects refs during double invoking', () => {
+    it('disconnects refs during double invoking', async () => {
       const onRefMock = jest.fn();
       function App({text}) {
         return (
@@ -382,7 +382,7 @@ describe('StrictEffectsMode defaults', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -392,7 +392,7 @@ describe('StrictEffectsMode defaults', () => {
       expect(onRefMock.mock.calls[2][0]).not.toBeNull();
     });
 
-    it('passes the right context to class component lifecycles', () => {
+    it('passes the right context to class component lifecycles', async () => {
       class App extends React.PureComponent {
         test() {}
 
@@ -416,7 +416,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
 
@@ -427,7 +427,7 @@ describe('StrictEffectsMode defaults', () => {
       ]);
     });
 
-    it('double invoking works for class components', () => {
+    it('double invoking works for class components', async () => {
       class App extends React.PureComponent {
         componentDidMount() {
           Scheduler.log('componentDidMount');
@@ -446,7 +446,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -456,20 +456,20 @@ describe('StrictEffectsMode defaults', () => {
         'componentDidMount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'update'} />);
       });
 
       assertLog(['componentDidUpdate']);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 
       assertLog(['componentWillUnmount']);
     });
 
-    it('double flushing passive effects only results in one double invoke', () => {
+    it('double flushing passive effects only results in one double invoke', async () => {
       function App({text}) {
         const [state, setState] = React.useState(0);
         React.useEffect(() => {
@@ -489,7 +489,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -509,7 +509,7 @@ describe('StrictEffectsMode defaults', () => {
       ]);
     });
 
-    it('newly mounted components after initial mount get double invoked', () => {
+    it('newly mounted components after initial mount get double invoked', async () => {
       let _setShowChild;
       function Child() {
         React.useEffect(() => {
@@ -539,7 +539,7 @@ describe('StrictEffectsMode defaults', () => {
         return showChild && <Child />;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
 
@@ -552,7 +552,7 @@ describe('StrictEffectsMode defaults', () => {
         'App useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         _setShowChild(true);
       });
 
@@ -570,7 +570,7 @@ describe('StrictEffectsMode defaults', () => {
       ]);
     });
 
-    it('classes and functions are double invoked together correctly', () => {
+    it('classes and functions are double invoked together correctly', async () => {
       class ClassChild extends React.PureComponent {
         componentDidMount() {
           Scheduler.log('componentDidMount');
@@ -606,7 +606,7 @@ describe('StrictEffectsMode defaults', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -622,7 +622,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -633,7 +633,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
 

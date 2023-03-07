@@ -50,7 +50,7 @@ describe('useRef', () => {
     return <span prop={props.text} />;
   }
 
-  it('creates a ref object initialized with the provided value', () => {
+  it('creates a ref object initialized with the provided value', async () => {
     jest.useFakeTimers();
 
     function useDebouncedCallback(callback, ms, inputs) {
@@ -82,7 +82,7 @@ describe('useRef', () => {
       return null;
     }
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(<App />);
     });
     assertLog([]);
@@ -134,7 +134,7 @@ describe('useRef', () => {
   });
 
   if (__DEV__) {
-    it('should never warn when attaching to children', () => {
+    it('should never warn when attaching to children', async () => {
       class Component extends React.Component {
         render() {
           return null;
@@ -152,16 +152,16 @@ describe('useRef', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example phase="mount" />);
       });
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example phase="update" />);
       });
     });
 
     // @gate enableUseRefAccessWarning
-    it('should warn about reads during render', () => {
+    it('should warn about reads during render', async () => {
       function Example() {
         const ref = useRef(123);
         let value;
@@ -173,12 +173,12 @@ describe('useRef', () => {
         return value;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
-    it('should not warn about lazy init during render', () => {
+    it('should not warn about lazy init during render', async () => {
       function Example() {
         const ref1 = useRef(null);
         const ref2 = useRef(undefined);
@@ -192,17 +192,17 @@ describe('useRef', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
 
       // Should not warn after an update either.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
-    it('should not warn about lazy init outside of render', () => {
+    it('should not warn about lazy init outside of render', async () => {
       function Example() {
         // eslint-disable-next-line no-unused-vars
         const [didMount, setDidMount] = useState(false);
@@ -216,13 +216,13 @@ describe('useRef', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
     // @gate enableUseRefAccessWarning
-    it('should warn about unconditional lazy init during render', () => {
+    it('should warn about unconditional lazy init during render', async () => {
       function Example() {
         const ref1 = useRef(null);
         const ref2 = useRef(undefined);
@@ -251,19 +251,19 @@ describe('useRef', () => {
       }
 
       let shouldExpectWarning = true;
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
 
       // Should not warn again on update.
       shouldExpectWarning = false;
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
     // @gate enableUseRefAccessWarning
-    it('should warn about reads to ref after lazy init pattern', () => {
+    it('should warn about reads to ref after lazy init pattern', async () => {
       function Example() {
         const ref1 = useRef(null);
         const ref2 = useRef(undefined);
@@ -291,13 +291,13 @@ describe('useRef', () => {
         return value;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
     // @gate enableUseRefAccessWarning
-    it('should warn about writes to ref after lazy init pattern', () => {
+    it('should warn about writes to ref after lazy init pattern', async () => {
       function Example() {
         const ref1 = useRef(null);
         const ref2 = useRef(undefined);
@@ -323,12 +323,12 @@ describe('useRef', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
     });
 
-    it('should not warn about reads or writes within effect', () => {
+    it('should not warn about reads or writes within effect', async () => {
       function Example() {
         const ref = useRef(123);
         useLayoutEffect(() => {
@@ -344,21 +344,21 @@ describe('useRef', () => {
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
 
       ReactNoop.flushPassiveEffects();
     });
 
-    it('should not warn about reads or writes outside of render phase (e.g. event handler)', () => {
+    it('should not warn about reads or writes outside of render phase (e.g. event handler)', async () => {
       let ref;
       function Example() {
         ref = useRef(123);
         return null;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<Example />);
       });
 

@@ -17,6 +17,7 @@ let ReactDOMClient;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
+let internalAct;
 let createReactClass;
 let waitFor;
 let assertLog;
@@ -33,7 +34,8 @@ describe('ReactFresh', () => {
       ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
-      act = require('jest-react').act;
+      act = require('react-dom/test-utils').act;
+      internalAct = require('jest-react').act;
 
       const InternalTestUtils = require('internal-test-utils');
       waitFor = InternalTestUtils.waitFor;
@@ -2480,7 +2482,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild.textContent).toBe('0');
     expect(el.firstChild.style.color).toBe('red');
 
-    await act(async () => {
+    await internalAct(async () => {
       el.firstChild.dispatchEvent(
         new MouseEvent('click', {
           bubbles: true,
