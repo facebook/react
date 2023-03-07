@@ -18,10 +18,7 @@ import type {
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
-import {
-  mountSafeCallback_NOT_REALLY_SAFE,
-  warnForStyleProps,
-} from './NativeMethodsMixinUtils';
+import {warnForStyleProps} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
@@ -107,6 +104,8 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
+const noop = () => {};
+
 /**
  * This is used for refs on host components.
  */
@@ -137,22 +136,20 @@ class ReactFabricHostComponent implements NativeMethods {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      fabricMeasure(
-        stateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
+    const node = getShadowNodeFromInternalInstanceHandle(
+      this._internalInstanceHandle,
+    );
+    if (node != null) {
+      fabricMeasure(node, callback);
     }
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      fabricMeasureInWindow(
-        stateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
+    const node = getShadowNodeFromInternalInstanceHandle(
+      this._internalInstanceHandle,
+    );
+    if (node != null) {
+      fabricMeasureInWindow(node, callback);
     }
   }
 
@@ -174,24 +171,29 @@ class ReactFabricHostComponent implements NativeMethods {
       return;
     }
 
-    const toStateNode = this._internalInstanceHandle.stateNode;
-    const fromStateNode =
-      relativeToNativeNode._internalInstanceHandle.stateNode;
+    const toStateNode = getShadowNodeFromInternalInstanceHandle(
+      this._internalInstanceHandle,
+    );
+    const fromStateNode = getShadowNodeFromInternalInstanceHandle(
+      relativeToNativeNode._internalInstanceHandle,
+    );
 
     if (toStateNode != null && fromStateNode != null) {
       fabricMeasureLayout(
-        toStateNode.node,
-        fromStateNode.node,
-        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
-        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
+        toStateNode,
+        fromStateNode,
+        onFail != null ? onFail : noop,
+        onSuccess != null ? onSuccess : noop,
       );
     }
   }
 
   unstable_getBoundingClientRect(): DOMRect {
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null) {
-      const rect = fabricGetBoundingClientRect(stateNode.node);
+    const node = getShadowNodeFromInternalInstanceHandle(
+      this._internalInstanceHandle,
+    );
+    if (node != null) {
+      const rect = fabricGetBoundingClientRect(node);
 
       if (rect) {
         return new DOMRect(rect[0], rect[1], rect[2], rect[3]);
@@ -208,11 +210,29 @@ class ReactFabricHostComponent implements NativeMethods {
     }
     const updatePayload = create(nativeProps, this.viewConfig.validAttributes);
 
-    const {stateNode} = this._internalInstanceHandle;
-    if (stateNode != null && updatePayload != null) {
-      setNativeProps(stateNode.node, updatePayload);
+    const node = getShadowNodeFromInternalInstanceHandle(
+      this._internalInstanceHandle,
+    );
+    if (node != null && updatePayload != null) {
+      setNativeProps(node, updatePayload);
     }
   }
+}
+
+type ParamOf<Fn> = $Call<<T>((arg: T) => mixed) => T, Fn>;
+type ShadowNode = ParamOf<(typeof nativeFabricUIManager)['measure']>;
+
+export function getShadowNodeFromInternalInstanceHandle(
+  internalInstanceHandle: mixed,
+): ?ShadowNode {
+  return (
+    // $FlowExpectedError[incompatible-return] internalInstanceHandle is opaque but we need to make an exception here.
+    internalInstanceHandle &&
+    // $FlowExpectedError[incompatible-return]
+    internalInstanceHandle.stateNode &&
+    // $FlowExpectedError[incompatible-use]
+    internalInstanceHandle.stateNode.node
+  );
 }
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';

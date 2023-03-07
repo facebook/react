@@ -122,6 +122,7 @@ export {
 };
 
 injectIntoDevTools({
+  // $FlowExpectedError[incompatible-call] The type of `Instance` in `getClosestInstanceFromNode` does not match in Fabric and the legacy renderer, so it fails to typecheck here.
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
