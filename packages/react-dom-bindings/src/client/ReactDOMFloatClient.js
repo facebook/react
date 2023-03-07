@@ -31,8 +31,6 @@ import {
   getResourcesFromRoot,
   isOwnedInstance,
   markNodeAsHoistable,
-  isMarkedCached,
-  markNodeAsCached,
 } from './ReactDOMComponentTree';
 
 // The resource types we support. currently they match the form for the as argument.
@@ -104,7 +102,7 @@ export function cleanupAfterRenderResources() {
 }
 
 export function prepareToCommitHoistables() {
-  refreshedCaches.clear();
+  tagCaches = null;
 }
 
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
@@ -908,8 +906,7 @@ function adoptPreloadPropsForScript(
 
 type KeyedTagCache = Map<string, Array<Element>>;
 type DocumentTagCaches = Map<Document, KeyedTagCache>;
-const metaCaches: DocumentTagCaches = new Map();
-const linkCaches: DocumentTagCaches = new Map();
+let tagCaches: null | DocumentTagCaches = null;
 
 export function hydrateHoistable(
   hoistableRoot: HoistableRoot,
@@ -941,13 +938,8 @@ export function hydrateHoistable(
       return instance;
     }
     case 'link': {
-      const cache = getHydratableHoistableCache(
-        'href',
-        'link',
-        ownerDocument,
-        linkCaches,
-      );
-      const key = props.href || '';
+      const cache = getHydratableHoistableCache('link', 'href', ownerDocument);
+      const key = type + (props.href || '');
       const maybeNodes = cache.get(key);
       if (maybeNodes) {
         const nodes = maybeNodes;
@@ -967,11 +959,7 @@ export function hydrateHoistable(
             continue;
           }
           instance = node;
-          if (nodes.length === 1) {
-            cache.delete(key);
-          } else {
-            nodes.splice(i, 1);
-          }
+          nodes.splice(i, 1);
           break getInstance;
         }
       }
@@ -982,12 +970,11 @@ export function hydrateHoistable(
     }
     case 'meta': {
       const cache = getHydratableHoistableCache(
-        'content',
         'meta',
+        'content',
         ownerDocument,
-        metaCaches,
       );
-      const key = props.content || '';
+      const key = type + (props.content || '');
       const maybeNodes = cache.get(key);
       if (maybeNodes) {
         const nodes = maybeNodes;
@@ -1016,11 +1003,7 @@ export function hydrateHoistable(
             continue;
           }
           instance = node;
-          if (nodes.length === 1) {
-            cache.delete(key);
-          } else {
-            nodes.splice(i, 1);
-          }
+          nodes.splice(i, 1);
           break getInstance;
         }
       }
@@ -1041,41 +1024,51 @@ export function hydrateHoistable(
   return instance;
 }
 
-const refreshedCaches: Set<KeyedTagCache> = new Set();
-
 function getHydratableHoistableCache(
-  keyAttribute: string,
   type: HoistableTagType,
+  keyAttribute: string,
   ownerDocument: Document,
-  documentCaches: DocumentTagCaches,
 ): KeyedTagCache {
-  let cache = documentCaches.get(ownerDocument);
-  if (!cache) {
+  let cache: KeyedTagCache;
+  let caches: DocumentTagCaches;
+  if (tagCaches === null) {
     cache = new Map();
-    documentCaches.set(ownerDocument, cache);
-  } else if (refreshedCaches.has(cache)) {
+    caches = tagCaches = new Map();
+    caches.set(ownerDocument, cache);
+  } else {
+    caches = tagCaches;
+    const maybeCache = caches.get(ownerDocument);
+    if (!maybeCache) {
+      cache = new Map();
+      caches.set(ownerDocument, cache);
+    } else {
+      cache = maybeCache;
+    }
+  }
+
+  if (cache.has(type)) {
+    // We use type as a special key that signals that this cache has been seeded for this type
     return cache;
   }
 
-  refreshedCaches.add(cache);
+  // Mark this cache as seeded for this type
+  cache.set(type, (null: any));
 
   const nodes = ownerDocument.getElementsByTagName(type);
-
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     if (
       !isOwnedInstance(node) &&
-      !isMarkedCached(node) &&
       (type !== 'link' || node.getAttribute('rel') !== 'stylesheet') &&
       node.namespaceURI !== SVG_NAMESPACE
     ) {
-      markNodeAsCached(node);
       const nodeKey = node.getAttribute(keyAttribute) || '';
-      const existing = cache.get(nodeKey);
+      const key = type + nodeKey;
+      const existing = cache.get(key);
       if (existing) {
         existing.push(node);
       } else {
-        cache.set(nodeKey, [node]);
+        cache.set(key, [node]);
       }
     }
   }
