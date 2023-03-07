@@ -604,7 +604,7 @@ describe('useEffectEvent', () => {
     ReactNoop.render(<Counter value={1} />);
     await waitForAll(['Effect value: 1', 'Event value: 1']);
 
-    act(() => ReactNoop.render(<Counter value={2} />));
+    await act(async () => ReactNoop.render(<Counter value={2} />));
     assertLog(['Effect value: 2', 'Event value: 2']);
   });
 
@@ -742,52 +742,58 @@ describe('useEffectEvent', () => {
       return <Text text={`Welcome to the ${roomId} room!`} />;
     }
 
-    act(() => ReactNoop.render(<ChatRoom roomId="general" theme="light" />));
-    assertLog(['Welcome to the general room!']);
+    await act(async () =>
+      ReactNoop.render(<ChatRoom roomId="general" theme="light" />),
+    );
+    await act(async () => jest.runAllTimers());
+    assertLog(['Welcome to the general room!', 'Connected! theme: light']);
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the general room!" />,
     );
 
-    jest.advanceTimersByTime(100);
-    Scheduler.unstable_advanceTime(100);
-    assertLog(['Connected! theme: light']);
-
     // change roomId only
-    act(() => ReactNoop.render(<ChatRoom roomId="music" theme="light" />));
-    assertLog(['Welcome to the music room!']);
+    await act(async () =>
+      ReactNoop.render(<ChatRoom roomId="music" theme="light" />),
+    );
+    await act(async () => jest.runAllTimers());
+    assertLog([
+      'Welcome to the music room!',
+      // should trigger a reconnect
+      'Connected! theme: light',
+    ]);
+
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the music room!" />,
     );
-    jest.advanceTimersByTime(100);
-    Scheduler.unstable_advanceTime(100);
-    // should trigger a reconnect
-    assertLog(['Connected! theme: light']);
 
     // change theme only
-    act(() => ReactNoop.render(<ChatRoom roomId="music" theme="dark" />));
+    await act(async () =>
+      ReactNoop.render(<ChatRoom roomId="music" theme="dark" />),
+    );
+    await act(async () => jest.runAllTimers());
+    // should not trigger a reconnect
     assertLog(['Welcome to the music room!']);
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the music room!" />,
     );
-    jest.advanceTimersByTime(100);
-    Scheduler.unstable_advanceTime(100);
-    // should not trigger a reconnect
-    await waitForAll([]);
 
     // change roomId only
-    act(() => ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />));
-    assertLog(['Welcome to the travel room!']);
+    await act(async () =>
+      ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />),
+    );
+    await act(async () => jest.runAllTimers());
+    assertLog([
+      'Welcome to the travel room!',
+      // should trigger a reconnect
+      'Connected! theme: dark',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the travel room!" />,
     );
-    jest.advanceTimersByTime(100);
-    Scheduler.unstable_advanceTime(100);
-    // should trigger a reconnect
-    assertLog(['Connected! theme: dark']);
   });
 
   // @gate enableUseEffectEventHook
-  it('integration: implements the docs logVisit example', () => {
+  it('integration: implements the docs logVisit example', async () => {
     class AddToCartButton extends React.PureComponent {
       addToCart = () => {
         this.props.onClick();
@@ -835,7 +841,7 @@ describe('useEffectEvent', () => {
     }
 
     const button = React.createRef(null);
-    act(() =>
+    await act(async () =>
       ReactNoop.render(
         <AppShell>
           <Page url="/shop/1" />
@@ -846,7 +852,7 @@ describe('useEffectEvent', () => {
     act(button.current.addToCart);
     assertLog(['Add to cart']);
 
-    act(() =>
+    await act(async () =>
       ReactNoop.render(
         <AppShell>
           <Page url="/shop/2" />

@@ -81,7 +81,7 @@ describe('useSubscription', () => {
 
     const observable = createBehaviorSubject();
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observable} />,
         {unstable_isConcurrent: true},
@@ -90,14 +90,14 @@ describe('useSubscription', () => {
     assertLog(['default']);
 
     // Updates while subscribed should re-render the child component
-    act(() => observable.next(123));
+    await act(async () => observable.next(123));
     assertLog([123]);
-    act(() => observable.next('abc'));
+    await act(async () => observable.next('abc'));
     assertLog(['abc']);
 
     // Unmounting the subscriber should remove listeners
-    act(() => renderer.update(<div />));
-    act(() => observable.next(456));
+    await act(async () => renderer.update(<div />));
+    await act(async () => observable.next(456));
     await waitForAll([]);
   });
 
@@ -133,21 +133,23 @@ describe('useSubscription', () => {
 
     let observable = createReplaySubject('initial');
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observable} />,
         {unstable_isConcurrent: true},
       );
     });
     assertLog(['initial']);
-    act(() => observable.next('updated'));
+    await act(async () => observable.next('updated'));
     assertLog(['updated']);
 
     await waitForAll([]);
 
     // Unsetting the subscriber prop should reset subscribed values
     observable = createReplaySubject(undefined);
-    act(() => renderer.update(<Subscription source={observable} />));
+    await act(async () =>
+      renderer.update(<Subscription source={observable} />),
+    );
     assertLog(['default']);
   });
 
@@ -182,7 +184,7 @@ describe('useSubscription', () => {
     expect(subscriptions).toHaveLength(0);
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observableA} />,
         {unstable_isConcurrent: true},
@@ -195,18 +197,20 @@ describe('useSubscription', () => {
     expect(subscriptions[0]).toBe(observableA);
 
     // Unsetting the subscriber prop should reset subscribed values
-    act(() => renderer.update(<Subscription source={observableB} />));
+    await act(async () =>
+      renderer.update(<Subscription source={observableB} />),
+    );
 
     assertLog(['b-0']);
     expect(subscriptions).toHaveLength(2);
     expect(subscriptions[1]).toBe(observableB);
 
     // Updates to the old subscribable should not re-render the child component
-    act(() => observableA.next('a-1'));
+    await act(async () => observableA.next('a-1'));
     await waitForAll([]);
 
     // Updates to the bew subscribable should re-render the child component
-    act(() => observableB.next('b-1'));
+    await act(async () => observableB.next('b-1'));
     assertLog(['b-1']);
 
     expect(subscriptions).toHaveLength(2);
@@ -241,7 +245,7 @@ describe('useSubscription', () => {
     expect(subscriptions).toHaveLength(0);
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observableA} />,
         {unstable_isConcurrent: true},
@@ -254,17 +258,19 @@ describe('useSubscription', () => {
     expect(subscriptions[0]).toBe(observableA);
 
     // Unsetting the subscriber prop should reset subscribed values
-    act(() => renderer.update(<Subscription source={observableB} />));
+    await act(async () =>
+      renderer.update(<Subscription source={observableB} />),
+    );
     assertLog(['b-0']);
     expect(subscriptions).toHaveLength(2);
     expect(subscriptions[1]).toBe(observableB);
 
     // Updates to the old subscribable should not re-render the child component
-    act(() => observableA.next('a-1'));
+    await act(async () => observableA.next('a-1'));
     await waitForAll([]);
 
     // Updates to the bew subscribable should re-render the child component
-    act(() => observableB.next('b-1'));
+    await act(async () => observableB.next('b-1'));
     assertLog(['b-1']);
 
     expect(subscriptions).toHaveLength(2);
@@ -329,7 +335,7 @@ describe('useSubscription', () => {
     const observableB = createBehaviorSubject('b-0');
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
         unstable_isConcurrent: true,
       });
@@ -353,7 +359,7 @@ describe('useSubscription', () => {
     });
 
     // Update again
-    act(() => renderer.update(<Parent observed={observableA} />));
+    await act(async () => renderer.update(<Parent observed={observableA} />));
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the last emitted update to be rendered (because of the commit phase value check)
@@ -432,7 +438,7 @@ describe('useSubscription', () => {
     const observableB = createBehaviorSubject('b-0');
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
         unstable_isConcurrent: true,
       });
@@ -474,12 +480,12 @@ describe('useSubscription', () => {
 
     // Updates from the new subscribable should be ignored.
     log.splice(0);
-    act(() => observableB.next('b-1'));
+    await act(async () => observableB.next('b-1'));
     await waitForAll([]);
     expect(log).toEqual([]);
   });
 
-  it('should guard against updates that happen after unmounting', () => {
+  it('should guard against updates that happen after unmounting', async () => {
     function Child({value = 'default'}) {
       Scheduler.log(value);
       return null;
@@ -529,7 +535,7 @@ describe('useSubscription', () => {
     });
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription source={eventHandler} />,
         {unstable_isConcurrent: true},
@@ -563,7 +569,7 @@ describe('useSubscription', () => {
     }
 
     let renderer;
-    act(() => {
+    await act(async () => {
       renderer = ReactTestRenderer.create(
         <Subscription subscription={subscription1} />,
         {unstable_isConcurrent: true},
@@ -571,7 +577,9 @@ describe('useSubscription', () => {
     });
     await waitForAll([]);
 
-    act(() => renderer.update(<Subscription subscription={subscription2} />));
+    await act(async () =>
+      renderer.update(<Subscription subscription={subscription2} />),
+    );
     await waitForAll([]);
   });
 

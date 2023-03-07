@@ -142,7 +142,7 @@ describe('useMutableSourceHydration', () => {
   }
 
   // @gate enableUseMutableSource
-  it('should render and hydrate', () => {
+  it('should render and hydrate', async () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
 
@@ -165,7 +165,7 @@ describe('useMutableSourceHydration', () => {
     assertLog(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    act(() => {
+    await act(async () => {
       ReactDOMClient.hydrateRoot(container, <TestComponent />, {
         mutableSources: [mutableSource],
       });
@@ -176,7 +176,7 @@ describe('useMutableSourceHydration', () => {
 
   // @gate enableUseMutableSource
   // @gate enableClientRenderFallbackOnTextMismatch
-  it('should detect a tear before hydrating a component', () => {
+  it('should detect a tear before hydrating a component', async () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
 
@@ -199,8 +199,8 @@ describe('useMutableSourceHydration', () => {
     assertLog(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactDOMClient.hydrateRoot(container, <TestComponent />, {
           mutableSources: [mutableSource],
           onRecoverableError(error) {

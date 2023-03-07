@@ -85,7 +85,7 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it('can render a Client Component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', async () => {
     function UserClient(props) {
       return (
         <span>
@@ -110,7 +110,7 @@ describe('ReactFlightDOMRelay', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(modelClient.greeting);
     });
 
