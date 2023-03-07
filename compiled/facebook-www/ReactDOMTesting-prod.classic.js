@@ -1272,25 +1272,9 @@ function getOwnerDocumentFromRootContainer(rootContainerElement) {
 }
 function noop$1() {}
 function createHTMLElement(type, props, ownerDocument) {
-  "script" === type
-    ? ((props = ownerDocument.createElement("div")),
-      (props.innerHTML = "<script>\x3c/script>"),
-      (ownerDocument = props.removeChild(props.firstChild)))
-    : "string" === typeof props.is
-    ? (ownerDocument = ownerDocument.createElement(type, { is: props.is }))
-    : ((ownerDocument = ownerDocument.createElement(type)),
-      "select" === type &&
-        ((type = ownerDocument),
-        props.multiple
-          ? (type.multiple = !0)
-          : props.size && (type.size = props.size)));
-  return ownerDocument;
-}
-function createMathElement(type, ownerDocument) {
-  return ownerDocument.createElementNS(
-    "http://www.w3.org/1998/Math/MathML",
-    type
-  );
+  return "string" === typeof props.is
+    ? ownerDocument.createElement(type, { is: props.is })
+    : ownerDocument.createElement(type);
 }
 function setInitialProperties(domElement, tag, rawProps) {
   var isCustomComponentTag = isCustomComponent(tag, rawProps);
@@ -2224,7 +2208,7 @@ function shouldClientRenderOnMismatch(fiber) {
 function throwOnHydrationMismatch() {
   throw Error(formatProdErrorMessage(418));
 }
-function advanceToFirstAttempableInstance(fiber) {
+function advanceToFirstAttemptableInstance(fiber) {
   for (
     ;
     nextHydratableInstance &&
@@ -2239,13 +2223,13 @@ function advanceToFirstAttempableInstance(fiber) {
       nextHydratableInstance.nextSibling
     );
 }
-function advanceToFirstAttempableTextInstance() {
+function advanceToFirstAttemptableTextInstance() {
   for (; nextHydratableInstance && 1 === nextHydratableInstance.nodeType; )
     nextHydratableInstance = getNextHydratable(
       nextHydratableInstance.nextSibling
     );
 }
-function advanceToFirstAttempableSuspenseInstance() {
+function advanceToFirstAttemptableSuspenseInstance() {
   for (; nextHydratableInstance && 1 === nextHydratableInstance.nodeType; )
     nextHydratableInstance = getNextHydratable(
       nextHydratableInstance.nextSibling
@@ -5304,7 +5288,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         : reuseSuspenseHandlerOnStack();
       isHydrating &&
         (((current = nextHydratableInstance),
-        rootOrSingletonContext && advanceToFirstAttempableSuspenseInstance(),
+        rootOrSingletonContext && advanceToFirstAttemptableSuspenseInstance(),
         (didSuspend = nextHydratableInstance),
         didSuspend)
           ? tryHydrateSuspense(workInProgress, didSuspend) ||
@@ -5315,7 +5299,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             )),
             (JSCompiler_temp = hydrationParentFiber),
             rootOrSingletonContext &&
-              advanceToFirstAttempableSuspenseInstance(),
+              advanceToFirstAttemptableSuspenseInstance(),
             nextHydratableInstance &&
             tryHydrateSuspense(workInProgress, nextHydratableInstance)
               ? deleteHydratableInstance(JSCompiler_temp, didSuspend)
@@ -6488,30 +6472,42 @@ function completeWork(current, workInProgress, renderLanes) {
           type = getOwnerDocumentFromRootContainer(
             rootInstanceStackCursor.current
           );
-          a: switch (current) {
+          switch (current) {
             case "http://www.w3.org/2000/svg":
-              current = type.createElementNS(
-                "http://www.w3.org/2000/svg",
-                renderLanes
-              );
-              break;
             case "http://www.w3.org/1998/Math/MathML":
-              current = createMathElement(renderLanes, type);
+              current = type.createElementNS(current, renderLanes);
               break;
-            case "http://www.w3.org/1999/xhtml":
+            default:
               switch (renderLanes) {
                 case "svg":
                   current = type.createElementNS(
                     "http://www.w3.org/2000/svg",
                     renderLanes
                   );
-                  break a;
+                  break;
                 case "math":
-                  current = createMathElement(renderLanes, type);
-                  break a;
+                  current = type.createElementNS(
+                    "http://www.w3.org/1998/Math/MathML",
+                    renderLanes
+                  );
+                  break;
+                case "script":
+                  current = type.createElement("div");
+                  current.innerHTML = "<script>\x3c/script>";
+                  current = current.removeChild(current.firstChild);
+                  break;
+                case "select":
+                  current =
+                    "string" === typeof newProps.is
+                      ? type.createElement("select", { is: newProps.is })
+                      : type.createElement("select");
+                  newProps.multiple
+                    ? (current.multiple = !0)
+                    : newProps.size && (current.size = newProps.size);
+                  break;
+                default:
+                  current = createHTMLElement(renderLanes, newProps, type);
               }
-            default:
-              current = createHTMLElement(renderLanes, newProps, type);
           }
           current[internalInstanceKey] = workInProgress;
           current[internalPropsKey] = newProps;
@@ -7830,105 +7826,96 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 current = finishedWork.type;
                 flags = finishedWork.memoizedProps;
                 root = hoistableRoot.ownerDocument || hoistableRoot;
-                hoistableRoot = root.getElementsByTagName(current);
-                var children = flags.children;
-                children = Array.isArray(children)
-                  ? 1 === children.length
-                    ? children[0]
-                    : null
-                  : children;
-                children =
-                  "function" !== typeof children &&
-                  "symbol" !== typeof children &&
-                  null !== children &&
-                  void 0 !== children
-                    ? "" + children
-                    : "";
-                var i = 0;
-                b: for (; i < hoistableRoot.length; i++) {
-                  var node = hoistableRoot[i];
-                  if (
-                    !node[internalResourceMarker] &&
-                    "http://www.w3.org/2000/svg" !== node.namespaceURI &&
-                    node.textContent === children
-                  ) {
-                    var checkedAttributes = 0;
-                    for (propName in flags) {
-                      var propValue = flags[propName];
-                      if (flags.hasOwnProperty(propName)) {
-                        switch (propName) {
-                          case "children":
-                          case "defaultValue":
-                          case "dangerouslySetInnerHTML":
-                          case "defaultChecked":
-                          case "innerHTML":
-                          case "suppressContentEditableWarning":
-                          case "suppressHydrationWarning":
-                          case "style":
-                            continue;
-                          case "className":
-                            if (node.getAttribute("class") !== "" + propValue)
-                              continue b;
-                            break;
-                          case "httpEquiv":
-                            if (
-                              node.getAttribute("http-equiv") !==
-                              "" + propValue
-                            )
-                              continue b;
-                            break;
-                          case "contentEditable":
-                          case "draggable":
-                          case "spellCheck":
-                            if (node.getAttribute(propName) !== "" + propValue)
-                              continue b;
-                            break;
-                          case "async":
-                          case "defer":
-                          case "disabled":
-                          case "hidden":
-                          case "noModule":
-                          case "scoped":
-                          case "itemScope":
-                            if (propValue !== node.hasAttribute(propName))
-                              continue b;
-                            break;
-                          default:
-                            if (isAttributeNameSafe(propName)) {
-                              var attributeName = propName;
-                              if (
-                                null == propValue &&
-                                node.hasAttribute(attributeName)
-                              )
-                                continue b;
-                              if (
-                                node.getAttribute(attributeName) !==
-                                "" + propValue
-                              )
-                                continue b;
-                            }
-                        }
-                        checkedAttributes++;
-                      }
-                    }
-                    if (node.attributes.length !== checkedAttributes)
-                      continue b;
-                    markNodeAsResource(node);
-                    current = node;
+                b: switch (current) {
+                  case "title":
+                    hoistableRoot = root.getElementsByTagName("title")[0];
+                    if (
+                      !hoistableRoot ||
+                      hoistableRoot[internalHoistableMarker] ||
+                      hoistableRoot[internalInstanceKey] ||
+                      "http://www.w3.org/2000/svg" ===
+                        hoistableRoot.namespaceURI ||
+                      hoistableRoot.hasAttribute("itemprop")
+                    )
+                      (hoistableRoot = root.createElement(current)),
+                        root.head.insertBefore(
+                          hoistableRoot,
+                          root.querySelector("head > title")
+                        );
+                    setInitialProperties(hoistableRoot, current, flags);
+                    hoistableRoot[internalInstanceKey] = finishedWork;
+                    markNodeAsHoistable(hoistableRoot);
+                    current = hoistableRoot;
                     break a;
-                  }
+                  case "link":
+                    var maybeNodes = getHydratableHoistableCache(
+                      "link",
+                      "href",
+                      root
+                    ).get(current + (flags.href || ""));
+                    if (maybeNodes)
+                      for (var i = 0; i < maybeNodes.length; i++)
+                        if (
+                          ((hoistableRoot = maybeNodes[i]),
+                          hoistableRoot.getAttribute("href") ===
+                            (null == flags.href ? null : flags.href) &&
+                            hoistableRoot.getAttribute("rel") ===
+                              (null == flags.rel ? null : flags.rel) &&
+                            hoistableRoot.getAttribute("title") ===
+                              (null == flags.title ? null : flags.title) &&
+                            hoistableRoot.getAttribute("crossorigin") ===
+                              (null == flags.crossOrigin
+                                ? null
+                                : flags.crossOrigin))
+                        ) {
+                          maybeNodes.splice(i, 1);
+                          break b;
+                        }
+                    hoistableRoot = root.createElement(current);
+                    setInitialProperties(hoistableRoot, current, flags);
+                    root.head.appendChild(hoistableRoot);
+                    break;
+                  case "meta":
+                    if (
+                      (maybeNodes = getHydratableHoistableCache(
+                        "meta",
+                        "content",
+                        root
+                      ).get(current + (flags.content || "")))
+                    )
+                      for (i = 0; i < maybeNodes.length; i++)
+                        if (
+                          ((hoistableRoot = maybeNodes[i]),
+                          hoistableRoot.getAttribute("content") ===
+                            (null == flags.content
+                              ? null
+                              : "" + flags.content) &&
+                            hoistableRoot.getAttribute("name") ===
+                              (null == flags.name ? null : flags.name) &&
+                            hoistableRoot.getAttribute("property") ===
+                              (null == flags.property
+                                ? null
+                                : flags.property) &&
+                            hoistableRoot.getAttribute("http-equiv") ===
+                              (null == flags.httpEquiv
+                                ? null
+                                : flags.httpEquiv) &&
+                            hoistableRoot.getAttribute("charset") ===
+                              (null == flags.charSet ? null : flags.charSet))
+                        ) {
+                          maybeNodes.splice(i, 1);
+                          break b;
+                        }
+                    hoistableRoot = root.createElement(current);
+                    setInitialProperties(hoistableRoot, current, flags);
+                    root.head.appendChild(hoistableRoot);
+                    break;
+                  default:
+                    throw Error(formatProdErrorMessage(468, current));
                 }
-                var propName = createHTMLElement(current, flags, root);
-                setInitialProperties(propName, current, flags);
-                propName[internalInstanceKey] = finishedWork;
-                markNodeAsResource(propName);
-                root.head.insertBefore(
-                  propName,
-                  "title" === current
-                    ? root.querySelector("head > title")
-                    : null
-                );
-                current = propName;
+                hoistableRoot[internalInstanceKey] = finishedWork;
+                markNodeAsHoistable(hoistableRoot);
+                current = hoistableRoot;
               }
               finishedWork.stateNode = current;
             } else
@@ -7968,16 +7955,16 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           null !== flags)
         )
           try {
-            (propValue = finishedWork.stateNode),
-              (attributeName = finishedWork.memoizedProps),
-              updateProperties(
-                propValue,
-                flags,
-                finishedWork.type,
-                current.memoizedProps,
-                attributeName
-              ),
-              (propValue[internalPropsKey] = attributeName);
+            var domElement = finishedWork.stateNode,
+              newProps = finishedWork.memoizedProps;
+            updateProperties(
+              domElement,
+              flags,
+              finishedWork.type,
+              current.memoizedProps,
+              newProps
+            );
+            domElement[internalPropsKey] = newProps;
           } catch (error$126) {
             captureCommitPhaseError(
               finishedWork,
@@ -7988,25 +7975,25 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 27:
       if (flags & 4 && null === finishedWork.alternate) {
-        propName = finishedWork.stateNode;
-        hoistableRoot = finishedWork.memoizedProps;
-        for (children = propName.firstChild; children; )
-          (i = children.nextSibling),
-            (node = children.nodeName),
-            children[internalResourceMarker] ||
-              "HEAD" === node ||
-              "BODY" === node ||
-              "STYLE" === node ||
-              ("LINK" === node &&
-                "stylesheet" === children.rel.toLowerCase()) ||
-              propName.removeChild(children),
-            (children = i);
-        children = finishedWork.type;
-        for (i = propName.attributes; i.length; )
-          propName.removeAttributeNode(i[0]);
-        setInitialProperties(propName, children, hoistableRoot);
-        propName[internalInstanceKey] = finishedWork;
-        propName[internalPropsKey] = hoistableRoot;
+        hoistableRoot = finishedWork.stateNode;
+        maybeNodes = finishedWork.memoizedProps;
+        for (i = hoistableRoot.firstChild; i; ) {
+          var nextNode = i.nextSibling,
+            nodeName = i.nodeName;
+          i[internalHoistableMarker] ||
+            "HEAD" === nodeName ||
+            "BODY" === nodeName ||
+            "STYLE" === nodeName ||
+            ("LINK" === nodeName && "stylesheet" === i.rel.toLowerCase()) ||
+            hoistableRoot.removeChild(i);
+          i = nextNode;
+        }
+        i = finishedWork.type;
+        for (nextNode = hoistableRoot.attributes; nextNode.length; )
+          hoistableRoot.removeAttributeNode(nextNode[0]);
+        setInitialProperties(hoistableRoot, i, maybeNodes);
+        hoistableRoot[internalInstanceKey] = finishedWork;
+        hoistableRoot[internalPropsKey] = maybeNodes;
       }
     case 5:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8015,9 +8002,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         null !== current &&
         safelyDetachRef(current, current.return);
       if (finishedWork.flags & 32) {
-        propName = finishedWork.stateNode;
+        root = finishedWork.stateNode;
         try {
-          setTextContent(propName, "");
+          setTextContent(root, "");
         } catch (error$127) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$127);
         }
@@ -8026,16 +8013,16 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         flags & 4 &&
         ((flags = finishedWork.stateNode),
         null != flags &&
-          ((propName = finishedWork.memoizedProps),
-          (current = null !== current ? current.memoizedProps : propName),
-          (root = finishedWork.type),
-          (hoistableRoot = finishedWork.updateQueue),
+          ((root = finishedWork.memoizedProps),
+          (current = null !== current ? current.memoizedProps : root),
+          (hoistableRoot = finishedWork.type),
+          (maybeNodes = finishedWork.updateQueue),
           (finishedWork.updateQueue = null),
-          null !== hoistableRoot))
+          null !== maybeNodes))
       )
         try {
-          updateProperties(flags, hoistableRoot, root, current, propName),
-            (flags[internalPropsKey] = propName);
+          updateProperties(flags, maybeNodes, hoistableRoot, current, root),
+            (flags[internalPropsKey] = root);
         } catch (error$130) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$130);
         }
@@ -8056,10 +8043,11 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       }
       break;
     case 3:
-      propName = currentHoistableRoot;
+      tagCaches = null;
+      hoistableRoot = currentHoistableRoot;
       currentHoistableRoot = getHoistableRoot(root.containerInfo);
       recursivelyTraverseMutationEffects(root, finishedWork);
-      currentHoistableRoot = propName;
+      currentHoistableRoot = hoistableRoot;
       commitReconciliationEffects(finishedWork);
       if (flags & 4 && null !== current && current.memoizedState.isDehydrated)
         try {
@@ -8108,16 +8096,16 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       flags & 512 &&
         null !== current &&
         safelyDetachRef(current, current.return);
-      propName = null !== finishedWork.memoizedState;
-      propValue = null !== current && null !== current.memoizedState;
+      domElement = null !== finishedWork.memoizedState;
+      newProps = null !== current && null !== current.memoizedState;
       finishedWork.mode & 1
-        ? ((attributeName = offscreenSubtreeIsHidden),
-          (suspenseCallback = offscreenSubtreeWasHidden),
-          (offscreenSubtreeIsHidden = attributeName || propName),
-          (offscreenSubtreeWasHidden = suspenseCallback || propValue),
+        ? ((suspenseCallback = offscreenSubtreeIsHidden),
+          (wakeables = offscreenSubtreeWasHidden),
+          (offscreenSubtreeIsHidden = suspenseCallback || domElement),
+          (offscreenSubtreeWasHidden = wakeables || newProps),
           recursivelyTraverseMutationEffects(root, finishedWork),
-          (offscreenSubtreeWasHidden = suspenseCallback),
-          (offscreenSubtreeIsHidden = attributeName))
+          (offscreenSubtreeWasHidden = wakeables),
+          (offscreenSubtreeIsHidden = suspenseCallback))
         : recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       root = finishedWork.stateNode;
@@ -8126,13 +8114,13 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       root._visibility |= root._pendingVisibility & 2;
       if (
         flags & 8192 &&
-        ((root._visibility = propName
+        ((root._visibility = domElement
           ? root._visibility & -2
           : root._visibility | 1),
-        propName &&
+        domElement &&
           ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
-            propValue ||
+            newProps ||
             root ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))),
@@ -8145,22 +8133,22 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
               current = root;
               try {
                 (hoistableRoot = root.stateNode),
-                  propName
-                    ? ((children = hoistableRoot.style),
-                      "function" === typeof children.setProperty
-                        ? children.setProperty("display", "none", "important")
-                        : (children.display = "none"))
+                  domElement
+                    ? ((maybeNodes = hoistableRoot.style),
+                      "function" === typeof maybeNodes.setProperty
+                        ? maybeNodes.setProperty("display", "none", "important")
+                        : (maybeNodes.display = "none"))
                     : ((i = root.stateNode),
-                      (node = root.memoizedProps.style),
-                      (checkedAttributes =
-                        void 0 !== node &&
-                        null !== node &&
-                        node.hasOwnProperty("display")
-                          ? node.display
+                      (nextNode = root.memoizedProps.style),
+                      (nodeName =
+                        void 0 !== nextNode &&
+                        null !== nextNode &&
+                        nextNode.hasOwnProperty("display")
+                          ? nextNode.display
                           : null),
                       (i.style.display = dangerousStyleValue(
                         "display",
-                        checkedAttributes
+                        nodeName
                       )));
               } catch (error) {
                 captureCommitPhaseError(
@@ -8173,7 +8161,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           } else if (6 === root.tag) {
             if (null === current)
               try {
-                root.stateNode.nodeValue = propName ? "" : root.memoizedProps;
+                root.stateNode.nodeValue = domElement ? "" : root.memoizedProps;
               } catch (error$115) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -10500,7 +10488,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           (Component[internalInstanceKey] = workInProgress),
           (Component[internalPropsKey] = current),
           setInitialProperties(Component, renderLanes, current),
-          markNodeAsResource(Component),
+          markNodeAsHoistable(Component),
           (workInProgress.stateNode = Component)),
         null
       );
@@ -10544,7 +10532,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           Component)
             ? ((Component = nextHydratableInstance),
               rootOrSingletonContext &&
-                advanceToFirstAttempableInstance(workInProgress),
+                advanceToFirstAttemptableInstance(workInProgress),
               (context = nextHydratableInstance),
               context)
               ? tryHydrateInstance(workInProgress, context) ||
@@ -10555,7 +10543,7 @@ beginWork = function (current, workInProgress, renderLanes) {
                 )),
                 (prevState = hydrationParentFiber),
                 rootOrSingletonContext &&
-                  advanceToFirstAttempableInstance(workInProgress),
+                  advanceToFirstAttemptableInstance(workInProgress),
                 nextHydratableInstance &&
                 tryHydrateInstance(workInProgress, nextHydratableInstance)
                   ? deleteHydratableInstance(prevState, context)
@@ -10596,7 +10584,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           (current = nextHydratableInstance),
           rootOrSingletonContext &&
             renderLanes &&
-            advanceToFirstAttempableTextInstance(),
+            advanceToFirstAttemptableTextInstance(),
           (Component = nextHydratableInstance),
           Component && renderLanes)
             ? tryHydrateText(workInProgress, Component) ||
@@ -10608,7 +10596,7 @@ beginWork = function (current, workInProgress, renderLanes) {
               (context = hydrationParentFiber),
               rootOrSingletonContext &&
                 renderLanes &&
-                advanceToFirstAttempableTextInstance(),
+                advanceToFirstAttemptableTextInstance(),
               nextHydratableInstance &&
               tryHydrateText(workInProgress, nextHydratableInstance)
                 ? deleteHydratableInstance(context, Component)
@@ -11631,17 +11619,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1543 = {
+var devToolsConfig$jscomp$inline_1551 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-62fa5a08",
+  version: "18.3.0-www-classic-9d9aef36",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2082 = {
-  bundleType: devToolsConfig$jscomp$inline_1543.bundleType,
-  version: devToolsConfig$jscomp$inline_1543.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1543.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1543.rendererConfig,
+var internals$jscomp$inline_2103 = {
+  bundleType: devToolsConfig$jscomp$inline_1551.bundleType,
+  version: devToolsConfig$jscomp$inline_1551.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1551.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1551.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11657,26 +11645,26 @@ var internals$jscomp$inline_2082 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1543.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1551.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-62fa5a08"
+  reconcilerVersion: "18.3.0-www-classic-9d9aef36"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2083 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2104 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2083.isDisabled &&
-    hook$jscomp$inline_2083.supportsFiber
+    !hook$jscomp$inline_2104.isDisabled &&
+    hook$jscomp$inline_2104.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2083.inject(
-        internals$jscomp$inline_2082
+      (rendererID = hook$jscomp$inline_2104.inject(
+        internals$jscomp$inline_2103
       )),
-        (injectedHook = hook$jscomp$inline_2083);
+        (injectedHook = hook$jscomp$inline_2104);
     } catch (err) {}
 }
 var Dispatcher = Internals.Dispatcher,
@@ -11721,9 +11709,9 @@ function preconnectAs(rel, crossOrigin, href) {
       (preconnectsSet.add(limitedEscapedHref),
       (rel = { rel: rel, crossOrigin: crossOrigin, href: href }),
       null === ownerDocument.querySelector(limitedEscapedHref) &&
-        ((crossOrigin = createHTMLElement("link", rel, ownerDocument)),
+        ((crossOrigin = ownerDocument.createElement("link")),
         setInitialProperties(crossOrigin, "link", rel),
-        markNodeAsResource(crossOrigin),
+        markNodeAsHoistable(crossOrigin),
         ownerDocument.head.appendChild(crossOrigin)));
   }
 }
@@ -11776,9 +11764,9 @@ function preload(href, options) {
       }),
       preloadPropsMap.set(key, href),
       null === ownerDocument.querySelector(limitedEscapedHref) &&
-        ((options = createHTMLElement("link", href, ownerDocument)),
+        ((options = ownerDocument.createElement("link")),
         setInitialProperties(options, "link", href),
-        markNodeAsResource(options),
+        markNodeAsHoistable(options),
         ownerDocument.head.appendChild(options)));
   }
 }
@@ -11811,12 +11799,10 @@ function preinit(href, options) {
             }),
             (options = preloadPropsMap.get(key$162)) &&
               adoptPreloadPropsForStylesheet(href, options),
-            (resource = createHTMLElement(
-              "link",
-              href,
+            (resource = (
               resourceRoot.ownerDocument || resourceRoot
-            )),
-            markNodeAsResource(resource),
+            ).createElement("link")),
+            markNodeAsHoistable(resource),
             setInitialProperties(resource, "link", href),
             insertStylesheet(resource, precedence, resourceRoot));
           resource = { type: "stylesheet", instance: resource, count: 1 };
@@ -11839,16 +11825,11 @@ function preinit(href, options) {
                 }),
                 (options = preloadPropsMap.get(key$162)) &&
                   adoptPreloadPropsForScript(href, options),
-                (precedence = createHTMLElement(
-                  "script",
-                  href,
-                  resourceRoot.ownerDocument || resourceRoot
-                )),
-                markNodeAsResource(precedence),
+                (options = resourceRoot.ownerDocument || resourceRoot),
+                (precedence = options.createElement("script")),
+                markNodeAsHoistable(precedence),
                 setInitialProperties(precedence, "link", href),
-                (resourceRoot.ownerDocument || resourceRoot).head.appendChild(
-                  precedence
-                )),
+                options.head.appendChild(precedence)),
               (precedence = { type: "script", instance: precedence, count: 1 }),
               as.set(key$162, precedence));
       }
@@ -11874,9 +11855,9 @@ function preinit(href, options) {
           }),
           preloadPropsMap.set(precedence, href),
           null === resourceRoot.querySelector(key$162) &&
-            ((options = createHTMLElement("link", href, resourceRoot)),
+            ((options = resourceRoot.createElement("link")),
             setInitialProperties(options, "link", href),
-            markNodeAsResource(options),
+            markNodeAsHoistable(options),
             resourceRoot.head.appendChild(options)));
       }
   }
@@ -11929,13 +11910,9 @@ function getResource(type, currentProps, pendingProps) {
                 currentProps.querySelector(
                   'link[rel="preload"][as="style"][' + key$169 + "]"
                 ) ||
-              ((key$169 = createHTMLElement(
-                "link",
-                pendingProps,
-                currentProps
-              )),
+              ((key$169 = currentProps.createElement("link")),
               setInitialProperties(key$169, "link", pendingProps),
-              markNodeAsResource(key$169),
+              markNodeAsHoistable(key$169),
               currentProps.head.appendChild(key$169))));
         return type;
       }
@@ -11970,19 +11947,17 @@ function acquireResource(hoistableRoot, resource, props) {
       case "style":
         var key = getStyleKey(props.href);
         if ((key = hoistableRoot.querySelector("style[data-" + key + "]")))
-          return (resource.instance = key), markNodeAsResource(key), key;
+          return (resource.instance = key), markNodeAsHoistable(key), key;
         var styleProps = assign({}, props, {
           "data-href": props.href,
           "data-precedence": props.precedence,
           href: null,
           precedence: null
         });
-        key = createHTMLElement(
-          "style",
-          styleProps,
-          hoistableRoot.ownerDocument || hoistableRoot
+        key = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
+          "style"
         );
-        markNodeAsResource(key);
+        markNodeAsHoistable(key);
         setInitialProperties(key, "style", styleProps);
         insertStylesheet(key, props.precedence, hoistableRoot);
         return (resource.instance = key);
@@ -11994,7 +11969,7 @@ function acquireResource(hoistableRoot, resource, props) {
         if (instance$176)
           return (
             (resource.instance = instance$176),
-            markNodeAsResource(instance$176),
+            markNodeAsHoistable(instance$176),
             instance$176
           );
         key = assign({}, props, {
@@ -12003,12 +11978,10 @@ function acquireResource(hoistableRoot, resource, props) {
         });
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(key, styleProps);
-        instance$176 = createHTMLElement(
-          "link",
-          key,
+        instance$176 = (
           hoistableRoot.ownerDocument || hoistableRoot
-        );
-        markNodeAsResource(instance$176);
+        ).createElement("link");
+        markNodeAsHoistable(instance$176);
         var linkInstance = instance$176;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
@@ -12025,32 +11998,27 @@ function acquireResource(hoistableRoot, resource, props) {
         insertStylesheet(instance$176, props.precedence, hoistableRoot);
         return (resource.instance = instance$176);
       case "script":
-        styleProps = getScriptKey(props.src);
+        instance$176 = getScriptKey(props.src);
         if (
-          (instance$176 = hoistableRoot.querySelector(
-            "script[async]" + styleProps
+          (styleProps = hoistableRoot.querySelector(
+            "script[async]" + instance$176
           ))
         )
           return (
-            (resource.instance = instance$176),
-            markNodeAsResource(instance$176),
-            instance$176
+            (resource.instance = styleProps),
+            markNodeAsHoistable(styleProps),
+            styleProps
           );
         key = props;
-        if ((styleProps = preloadPropsMap.get(styleProps)))
+        if ((styleProps = preloadPropsMap.get(instance$176)))
           (key = assign({}, props)),
             adoptPreloadPropsForScript(key, styleProps);
-        instance$176 = createHTMLElement(
-          "script",
-          key,
-          hoistableRoot.ownerDocument || hoistableRoot
-        );
-        markNodeAsResource(instance$176);
-        setInitialProperties(instance$176, "link", key);
-        (hoistableRoot.ownerDocument || hoistableRoot).head.appendChild(
-          instance$176
-        );
-        return (resource.instance = instance$176);
+        hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
+        styleProps = hoistableRoot.createElement("script");
+        markNodeAsHoistable(styleProps);
+        setInitialProperties(styleProps, "link", key);
+        hoistableRoot.head.appendChild(styleProps);
+        return (resource.instance = styleProps);
       case "void":
         return null;
       default:
@@ -12092,6 +12060,37 @@ function adoptPreloadPropsForScript(scriptProps, preloadProps) {
     (scriptProps.referrerPolicy = preloadProps.referrerPolicy);
   null == scriptProps.integrity &&
     (scriptProps.referrerPolicy = preloadProps.integrity);
+}
+var tagCaches = null;
+function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
+  if (null === tagCaches) {
+    var cache = new Map();
+    var caches = (tagCaches = new Map());
+    caches.set(ownerDocument, cache);
+  } else
+    (caches = tagCaches),
+      (cache = caches.get(ownerDocument)),
+      cache || ((cache = new Map()), caches.set(ownerDocument, cache));
+  if (cache.has(type)) return cache;
+  cache.set(type, null);
+  ownerDocument = ownerDocument.getElementsByTagName(type);
+  for (caches = 0; caches < ownerDocument.length; caches++) {
+    var node = ownerDocument[caches];
+    if (
+      !(
+        node[internalHoistableMarker] ||
+        node[internalInstanceKey] ||
+        ("link" === type && "stylesheet" === node.getAttribute("rel"))
+      ) &&
+      "http://www.w3.org/2000/svg" !== node.namespaceURI
+    ) {
+      var nodeKey = node.getAttribute(keyAttribute) || "";
+      nodeKey = type + nodeKey;
+      var existing = cache.get(nodeKey);
+      existing ? existing.push(node) : cache.set(nodeKey, [node]);
+    }
+  }
+  return cache;
 }
 function mountHoistable(hoistableRoot, type, instance) {
   hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -12221,7 +12220,7 @@ function shouldSkipHydratableForInstance(instance, type, props) {
   if (1 !== instance.nodeType) return !1;
   if (
     instance.nodeName.toLowerCase() !== type.toLowerCase() ||
-    instance[internalResourceMarker]
+    instance[internalHoistableMarker]
   )
     return !0;
   switch (type) {
@@ -12415,7 +12414,7 @@ var randomKey = Math.random().toString(36).slice(2),
   internalEventHandlerListenersKey = "__reactListeners$" + randomKey,
   internalEventHandlesSetKey = "__reactHandles$" + randomKey,
   internalRootNodeResourcesKey = "__reactResources$" + randomKey,
-  internalResourceMarker = "__reactMarker$" + randomKey;
+  internalHoistableMarker = "__reactMarker$" + randomKey;
 function detachDeletedInstance(node) {
   delete node[internalInstanceKey];
   delete node[internalPropsKey];
@@ -12500,8 +12499,8 @@ function getResourcesFromRoot(root) {
       { hoistableStyles: new Map(), hoistableScripts: new Map() });
   return resources;
 }
-function markNodeAsResource(node) {
-  node[internalResourceMarker] = !0;
+function markNodeAsHoistable(node) {
+  node[internalHoistableMarker] = !0;
 }
 function getListener(inst, registrationName) {
   var stateNode = inst.stateNode;
@@ -13020,19 +13019,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$288;
+  var JSCompiler_inline_result$jscomp$294;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1615 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1615) {
-      var element$jscomp$inline_1616 = document.createElement("div");
-      element$jscomp$inline_1616.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1615 =
-        "function" === typeof element$jscomp$inline_1616.oninput;
+    var isSupported$jscomp$inline_1626 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1626) {
+      var element$jscomp$inline_1627 = document.createElement("div");
+      element$jscomp$inline_1627.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1626 =
+        "function" === typeof element$jscomp$inline_1627.oninput;
     }
-    JSCompiler_inline_result$jscomp$288 = isSupported$jscomp$inline_1615;
-  } else JSCompiler_inline_result$jscomp$288 = !1;
+    JSCompiler_inline_result$jscomp$294 = isSupported$jscomp$inline_1626;
+  } else JSCompiler_inline_result$jscomp$294 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$288 &&
+    JSCompiler_inline_result$jscomp$294 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13170,20 +13169,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1628 = 0;
-  i$jscomp$inline_1628 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1628++
+  var i$jscomp$inline_1639 = 0;
+  i$jscomp$inline_1639 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1639++
 ) {
-  var eventName$jscomp$inline_1629 =
-      simpleEventPluginEvents[i$jscomp$inline_1628],
-    domEventName$jscomp$inline_1630 =
-      eventName$jscomp$inline_1629.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1631 =
-      eventName$jscomp$inline_1629[0].toUpperCase() +
-      eventName$jscomp$inline_1629.slice(1);
+  var eventName$jscomp$inline_1640 =
+      simpleEventPluginEvents[i$jscomp$inline_1639],
+    domEventName$jscomp$inline_1641 =
+      eventName$jscomp$inline_1640.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1642 =
+      eventName$jscomp$inline_1640[0].toUpperCase() +
+      eventName$jscomp$inline_1640.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1630,
-    "on" + capitalizedEvent$jscomp$inline_1631
+    domEventName$jscomp$inline_1641,
+    "on" + capitalizedEvent$jscomp$inline_1642
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14902,4 +14901,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-62fa5a08";
+exports.version = "18.3.0-www-classic-9d9aef36";

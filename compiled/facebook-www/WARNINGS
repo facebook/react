@@ -362,6 +362,8 @@
 "contextTypes was defined as an instance property on %s. Use a static property to define contextTypes instead."
 "copyWithRename() expects paths of the same length"
 "copyWithRename() expects paths to be the same except for the deepest key"
+"createHTMLElement was called with a \"%s\" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React."
+"createHTMLElement was called with a \"%s\" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React."
 "createRoot(): Creating roots directly with document.body is discouraged, since its children are often manipulated by third-party scripts and browser extensions. This may lead to subtle reconciliation issues. Try using a container element created for your app."
 "disabledDepth fell below zero. This is a bug in React. Please file an issue."
 "dispatchCommand was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component"

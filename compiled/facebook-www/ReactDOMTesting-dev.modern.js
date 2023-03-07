@@ -137,7 +137,7 @@ var internalEventHandlersKey = "__reactEvents$" + randomKey;
 var internalEventHandlerListenersKey = "__reactListeners$" + randomKey;
 var internalEventHandlesSetKey = "__reactHandles$" + randomKey;
 var internalRootNodeResourcesKey = "__reactResources$" + randomKey;
-var internalResourceMarker = "__reactMarker$" + randomKey;
+var internalHoistableMarker = "__reactMarker$" + randomKey;
 function detachDeletedInstance(node) {
   // TODO: This function is only called on host components. I don't think all of
   // these fields are relevant.
@@ -356,11 +356,14 @@ function getResourcesFromRoot(root) {
 
   return resources;
 }
-function isMarkedResource(node) {
-  return !!node[internalResourceMarker];
+function isMarkedHoistable(node) {
+  return !!node[internalHoistableMarker];
 }
-function markNodeAsResource(node) {
-  node[internalResourceMarker] = true;
+function markNodeAsHoistable(node) {
+  node[internalHoistableMarker] = true;
+}
+function isOwnedInstance(node) {
+  return !!(node[internalHoistableMarker] || node[internalInstanceKey]);
 }
 
 // Below code forked from dom-accessibility-api
@@ -11374,11 +11377,70 @@ function updateDOMProperties(
       setValueForProperty(domElement, propKey, propValue, isCustomComponentTag);
     }
   }
+} // creates a script element that won't execute
+
+function createPotentiallyInlineScriptElement(ownerDocument) {
+  // Create the script via .innerHTML so its "parser-inserted" flag is
+  // set to true and it does not execute
+  var div = ownerDocument.createElement("div");
+
+  div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
+  // This is guaranteed to yield a script element.
+
+  var firstChild = div.firstChild;
+  var element = div.removeChild(firstChild);
+  return element;
+}
+function createSelectElement(props, ownerDocument) {
+  var element;
+
+  if (typeof props.is === "string") {
+    element = ownerDocument.createElement("select", {
+      is: props.is
+    });
+  } else {
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement("select");
+  }
+
+  if (props.multiple) {
+    element.multiple = true;
+  } else if (props.size) {
+    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+    // it is possible that no option is selected.
+    //
+    // This is only necessary when a select in "single selection mode".
+    element.size = props.size;
+  }
+
+  return element;
 } // Creates elements in the HTML namesapce
 
 function createHTMLElement(type, props, ownerDocument) {
+  {
+    switch (type) {
+      case "script":
+      case "select":
+        error(
+          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
+          type
+        );
+
+        break;
+
+      case "svg":
+      case "math":
+        error(
+          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
+          type
+        );
+    }
+  }
+
   var isCustomComponentTag;
-  var domElement;
+  var element;
 
   {
     isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
@@ -11394,52 +11456,21 @@ function createHTMLElement(type, props, ownerDocument) {
     }
   }
 
-  if (type === "script") {
-    // Create the script via .innerHTML so its "parser-inserted" flag is
-    // set to true and it does not execute
-    var div = ownerDocument.createElement("div");
-
-    div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
-    // This is guaranteed to yield a script element.
-
-    var firstChild = div.firstChild;
-    domElement = div.removeChild(firstChild);
-  } else if (typeof props.is === "string") {
-    domElement = ownerDocument.createElement(type, {
+  if (typeof props.is === "string") {
+    element = ownerDocument.createElement(type, {
       is: props.is
     });
   } else {
     // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
     // See discussion in https://github.com/facebook/react/pull/6896
     // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    domElement = ownerDocument.createElement(type); // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
-    // attributes on `select`s needs to be added before `option`s are inserted.
-    // This prevents:
-    // - a bug where the `select` does not scroll to the correct option because singular
-    //  `select` elements automatically pick the first item #13222
-    // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
-    // See https://github.com/facebook/react/issues/13222
-    // and https://github.com/facebook/react/issues/14239
-
-    if (type === "select") {
-      var node = domElement;
-
-      if (props.multiple) {
-        node.multiple = true;
-      } else if (props.size) {
-        // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-        // it is possible that no option is selected.
-        //
-        // This is only necessary when a select in "single selection mode".
-        node.size = props.size;
-      }
-    }
+    element = ownerDocument.createElement(type);
   }
 
   {
     if (
       !isCustomComponentTag && // $FlowFixMe[method-unbinding]
-      Object.prototype.toString.call(domElement) ===
+      Object.prototype.toString.call(element) ===
         "[object HTMLUnknownElement]" &&
       !hasOwnProperty.call(warnedUnknownTags, type)
     ) {
@@ -11454,13 +11485,7 @@ function createHTMLElement(type, props, ownerDocument) {
     }
   }
 
-  return domElement;
-}
-function createSVGElement(type, ownerDocument) {
-  return ownerDocument.createElementNS(SVG_NAMESPACE, type);
-}
-function createMathElement(type, ownerDocument) {
-  return ownerDocument.createElementNS(MATH_NAMESPACE, type);
+  return element;
 }
 function createTextNode(text, rootContainerElement) {
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
@@ -13111,6 +13136,9 @@ function prepareToRenderResources(rootContainer) {
 function cleanupAfterRenderResources() {
   Dispatcher$1.current = previousDispatcher;
   previousDispatcher = null;
+}
+function prepareToCommitHoistables() {
+  tagCaches = null;
 } // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
 // internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
@@ -13183,13 +13211,9 @@ function preconnectAs(rel, crossOrigin, href) {
       };
 
       if (null === ownerDocument.querySelector(key)) {
-        var preloadInstance = createHTMLElement(
-          "link",
-          preconnectProps,
-          ownerDocument
-        );
+        var preloadInstance = ownerDocument.createElement("link");
         setInitialProperties(preloadInstance, "link", preconnectProps);
-        markNodeAsResource(preloadInstance);
+        markNodeAsHoistable(preloadInstance);
         ownerDocument.head.appendChild(preloadInstance);
       }
     }
@@ -13208,7 +13232,7 @@ function prefetchDNS$1(href, options) {
     } else if (options != null) {
       if (
         typeof options === "object" &&
-        options.hasOwnProperty("crossOrigin")
+        hasOwnProperty.call(options, "crossOrigin")
       ) {
         error(
           "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
@@ -13295,13 +13319,9 @@ function preload$1(href, options) {
       preloadPropsMap.set(key, preloadProps);
 
       if (null === ownerDocument.querySelector(preloadKey)) {
-        var preloadInstance = createHTMLElement(
-          "link",
-          preloadProps,
-          ownerDocument
-        );
+        var preloadInstance = ownerDocument.createElement("link");
         setInitialProperties(preloadInstance, "link", preloadProps);
-        markNodeAsResource(preloadInstance);
+        markNodeAsHoistable(preloadInstance);
         ownerDocument.head.appendChild(preloadInstance);
       }
     }
@@ -13373,13 +13393,9 @@ function preinit$1(href, options) {
             preloadPropsMap.set(key, preloadProps);
 
             if (null === preloadDocument.querySelector(preloadKey)) {
-              var preloadInstance = createHTMLElement(
-                "link",
-                preloadProps,
-                preloadDocument
-              );
+              var preloadInstance = preloadDocument.createElement("link");
               setInitialProperties(preloadInstance, "link", preloadProps);
-              markNodeAsResource(preloadInstance);
+              markNodeAsHoistable(preloadInstance);
               preloadDocument.head.appendChild(preloadInstance);
             }
           }
@@ -13424,8 +13440,8 @@ function preinit$1(href, options) {
           }
 
           var ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = createHTMLElement("link", stylesheetProps, ownerDocument);
-          markNodeAsResource(instance);
+          instance = ownerDocument.createElement("link");
+          markNodeAsHoistable(instance);
           setInitialProperties(instance, "link", stylesheetProps);
           insertStylesheet(instance, precedence, resourceRoot);
         } // Construct a Resource and cache it
@@ -13469,10 +13485,11 @@ function preinit$1(href, options) {
 
           var _ownerDocument = getDocumentFromRoot(resourceRoot);
 
-          _instance = createHTMLElement("script", scriptProps, _ownerDocument);
-          markNodeAsResource(_instance);
+          _instance = _ownerDocument.createElement("script");
+          markNodeAsHoistable(_instance);
           setInitialProperties(_instance, "link", scriptProps);
-          getDocumentFromRoot(resourceRoot).head.appendChild(_instance);
+
+          _ownerDocument.head.appendChild(_instance);
         } // Construct a Resource and cache it
 
         _resource = {
@@ -13684,13 +13701,9 @@ function preloadStylesheet(ownerDocument, key, preloadProps) {
       null ===
       ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
     ) {
-      var preloadInstance = createHTMLElement(
-        "link",
-        preloadProps,
-        ownerDocument
-      );
+      var preloadInstance = ownerDocument.createElement("link");
       setInitialProperties(preloadInstance, "link", preloadProps);
-      markNodeAsResource(preloadInstance);
+      markNodeAsHoistable(preloadInstance);
       ownerDocument.head.appendChild(preloadInstance);
     }
   }
@@ -13735,14 +13748,14 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (instance) {
           resource.instance = instance;
-          markNodeAsResource(instance);
+          markNodeAsHoistable(instance);
           return instance;
         }
 
         var styleProps = styleTagPropsFromRawProps(props);
         var ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = createHTMLElement("style", styleProps, ownerDocument);
-        markNodeAsResource(instance);
+        instance = ownerDocument.createElement("style");
+        markNodeAsHoistable(instance);
         setInitialProperties(instance, "style", styleProps);
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
@@ -13763,7 +13776,7 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (_instance2) {
           resource.instance = _instance2;
-          markNodeAsResource(_instance2);
+          markNodeAsHoistable(_instance2);
           return _instance2;
         }
 
@@ -13776,12 +13789,8 @@ function acquireResource(hoistableRoot, resource, props) {
 
         var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
 
-        _instance2 = createHTMLElement(
-          "link",
-          stylesheetProps,
-          _ownerDocument2
-        );
-        markNodeAsResource(_instance2);
+        _instance2 = _ownerDocument2.createElement("link");
+        markNodeAsHoistable(_instance2);
         var linkInstance = _instance2;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
@@ -13814,7 +13823,7 @@ function acquireResource(hoistableRoot, resource, props) {
 
         if (_instance3) {
           resource.instance = _instance3;
-          markNodeAsResource(_instance3);
+          markNodeAsHoistable(_instance3);
           return _instance3;
         }
 
@@ -13829,10 +13838,12 @@ function acquireResource(hoistableRoot, resource, props) {
 
         var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
 
-        _instance3 = createHTMLElement("script", scriptProps, _ownerDocument3);
-        markNodeAsResource(_instance3);
+        _instance3 = _ownerDocument3.createElement("script");
+        markNodeAsHoistable(_instance3);
         setInitialProperties(_instance3, "link", scriptProps);
-        getDocumentFromRoot(hoistableRoot).head.appendChild(_instance3);
+
+        _ownerDocument3.head.appendChild(_instance3);
+
         resource.instance = _instance3;
         return _instance3;
       }
@@ -13905,177 +13916,188 @@ function adoptPreloadPropsForScript(scriptProps, preloadProps) {
 //      Hoistable Element Reconciliation
 // --------------------------------------
 
+var tagCaches = null;
 function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
   var ownerDocument = getDocumentFromRoot(hoistableRoot);
-  var nodes = ownerDocument.getElementsByTagName(type);
-  var children = props.children;
-  var child, childString;
+  var instance = null;
 
-  if (Array.isArray(children)) {
-    child = children.length === 1 ? children[0] : null;
-  } else {
-    child = children;
-  }
+  getInstance: switch (type) {
+    case "title": {
+      instance = ownerDocument.getElementsByTagName("title")[0];
 
-  if (
-    typeof child !== "function" &&
-    typeof child !== "symbol" &&
-    child !== null &&
-    child !== undefined
-  ) {
-    {
-      checkPropStringCoercion(child, "children");
+      if (
+        !instance ||
+        isOwnedInstance(instance) ||
+        instance.namespaceURI === SVG_NAMESPACE ||
+        instance.hasAttribute("itemprop")
+      ) {
+        instance = ownerDocument.createElement(type);
+        ownerDocument.head.insertBefore(
+          instance,
+          ownerDocument.querySelector("head > title")
+        );
+      }
+
+      setInitialProperties(instance, type, props);
+      precacheFiberNode(internalInstanceHandle, instance);
+      markNodeAsHoistable(instance);
+      return instance;
     }
 
-    childString = "" + child;
+    case "link": {
+      var cache = getHydratableHoistableCache("link", "href", ownerDocument);
+      var key = type + (props.href || "");
+      var maybeNodes = cache.get(key);
+
+      if (maybeNodes) {
+        var nodes = maybeNodes;
+
+        for (var i = 0; i < nodes.length; i++) {
+          var node = nodes[i];
+
+          if (
+            node.getAttribute("href") !==
+              (props.href == null ? null : props.href) ||
+            node.getAttribute("rel") !==
+              (props.rel == null ? null : props.rel) ||
+            node.getAttribute("title") !==
+              (props.title == null ? null : props.title) ||
+            node.getAttribute("crossorigin") !==
+              (props.crossOrigin == null ? null : props.crossOrigin)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = node;
+          nodes.splice(i, 1);
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    case "meta": {
+      var _cache = getHydratableHoistableCache(
+        "meta",
+        "content",
+        ownerDocument
+      );
+
+      var _key7 = type + (props.content || "");
+
+      var _maybeNodes = _cache.get(_key7);
+
+      if (_maybeNodes) {
+        var _nodes = _maybeNodes;
+
+        for (var _i = 0; _i < _nodes.length; _i++) {
+          var _node = _nodes[_i]; // We coerce content to string because it is the most likely one to
+          // use a `toString` capable value. For the rest we just do identity match
+          // passing non-strings here is not really valid anyway.
+
+          {
+            checkAttributeStringCoercion(props.content, "content");
+          }
+
+          if (
+            _node.getAttribute("content") !==
+              (props.content == null ? null : "" + props.content) ||
+            _node.getAttribute("name") !==
+              (props.name == null ? null : props.name) ||
+            _node.getAttribute("property") !==
+              (props.property == null ? null : props.property) ||
+            _node.getAttribute("http-equiv") !==
+              (props.httpEquiv == null ? null : props.httpEquiv) ||
+            _node.getAttribute("charset") !==
+              (props.charSet == null ? null : props.charSet)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = _node;
+
+          _nodes.splice(_i, 1);
+
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    default:
+      throw new Error(
+        'getNodesForType encountered a type it did not expect: "' +
+          type +
+          '". This is a bug in React.'
+      );
+  } // This node is a match
+
+  precacheFiberNode(internalInstanceHandle, instance);
+  markNodeAsHoistable(instance);
+  return instance;
+}
+
+function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
+  var cache;
+  var caches;
+
+  if (tagCaches === null) {
+    cache = new Map();
+    caches = tagCaches = new Map();
+    caches.set(ownerDocument, cache);
   } else {
-    childString = "";
+    caches = tagCaches;
+    var maybeCache = caches.get(ownerDocument);
+
+    if (!maybeCache) {
+      cache = new Map();
+      caches.set(ownerDocument, cache);
+    } else {
+      cache = maybeCache;
+    }
   }
 
-  nodeLoop: for (var i = 0; i < nodes.length; i++) {
+  if (cache.has(type)) {
+    // We use type as a special key that signals that this cache has been seeded for this type
+    return cache;
+  } // Mark this cache as seeded for this type
+
+  cache.set(type, null);
+  var nodes = ownerDocument.getElementsByTagName(type);
+
+  for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
 
     if (
-      isMarkedResource(node) ||
-      node.namespaceURI === SVG_NAMESPACE ||
-      node.textContent !== childString
+      !isOwnedInstance(node) &&
+      (type !== "link" || node.getAttribute("rel") !== "stylesheet") &&
+      node.namespaceURI !== SVG_NAMESPACE
     ) {
-      continue;
-    }
+      var nodeKey = node.getAttribute(keyAttribute) || "";
+      var key = type + nodeKey;
+      var existing = cache.get(key);
 
-    var checkedAttributes = 0;
-
-    for (var propName in props) {
-      var propValue = props[propName];
-
-      if (!props.hasOwnProperty(propName)) {
-        continue;
+      if (existing) {
+        existing.push(node);
+      } else {
+        cache.set(key, [node]);
       }
-
-      switch (propName) {
-        // Reserved props will never have an attribute partner
-        case "children":
-        case "defaultValue":
-        case "dangerouslySetInnerHTML":
-        case "defaultChecked":
-        case "innerHTML":
-        case "suppressContentEditableWarning":
-        case "suppressHydrationWarning":
-        case "style":
-          // we advance to the next prop
-          continue;
-        // Name remapped props used by hoistable tag types
-
-        case "className": {
-          {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-
-          if (node.getAttribute("class") !== "" + propValue) continue nodeLoop;
-          break;
-        }
-
-        case "httpEquiv": {
-          {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-
-          if (node.getAttribute("http-equiv") !== "" + propValue)
-            continue nodeLoop;
-          break;
-        }
-        // Booleanish props used by hoistable tag types
-
-        case "contentEditable":
-        case "draggable":
-        case "spellCheck": {
-          {
-            checkAttributeStringCoercion(propValue, propName);
-          }
-
-          if (node.getAttribute(propName) !== "" + propValue) continue nodeLoop;
-          break;
-        }
-        // Boolean props used by hoistable tag types
-
-        case "async":
-        case "defer":
-        case "disabled":
-        case "hidden":
-        case "noModule":
-        case "scoped":
-        case "itemScope":
-          if (propValue !== node.hasAttribute(propName)) continue nodeLoop;
-          break;
-        // The following properties are left out because they do not apply to
-        // the current set of hoistable types. They may have special handling
-        // requirements if they end up applying to a hoistable type in the future
-        // case 'acceptCharset':
-        // case 'value':
-        // case 'allowFullScreen':
-        // case 'autoFocus':
-        // case 'autoPlay':
-        // case 'controls':
-        // case 'default':
-        // case 'disablePictureInPicture':
-        // case 'disableRemotePlayback':
-        // case 'formNoValidate':
-        // case 'loop':
-        // case 'noValidate':
-        // case 'open':
-        // case 'playsInline':
-        // case 'readOnly':
-        // case 'required':
-        // case 'reversed':
-        // case 'seamless':
-        // case 'multiple':
-        // case 'selected':
-        // case 'capture':
-        // case 'download':
-        // case 'cols':
-        // case 'rows':
-        // case 'size':
-        // case 'span':
-        // case 'rowSpan':
-        // case 'start':
-
-        default:
-          if (isAttributeNameSafe(propName)) {
-            var attributeName = propName;
-            if (propValue == null && node.hasAttribute(attributeName))
-              continue nodeLoop;
-
-            {
-              checkAttributeStringCoercion(propValue, attributeName);
-            }
-
-            if (node.getAttribute(attributeName) !== "" + propValue)
-              continue nodeLoop;
-          }
-      }
-
-      checkedAttributes++;
     }
+  }
 
-    if (node.attributes.length !== checkedAttributes) {
-      // We didn't match ever attribute so we abandon this node
-      continue nodeLoop;
-    } // We found a matching instance. We can return early after marking it
-
-    markNodeAsResource(node);
-    return node;
-  } // There is no matching instance to hydrate, we create it now
-
-  var instance = createHTMLElement(type, props, ownerDocument);
-  setInitialProperties(instance, type, props);
-  precacheFiberNode(internalInstanceHandle, instance);
-  markNodeAsResource(instance);
-  ownerDocument.head.insertBefore(
-    instance,
-    type === "title" ? ownerDocument.querySelector("head > title") : null
-  );
-  return instance;
+  return cache;
 }
+
 function mountHoistable(hoistableRoot, type, instance) {
   var ownerDocument = getDocumentFromRoot(hoistableRoot);
   ownerDocument.head.insertBefore(
@@ -14212,7 +14234,7 @@ function createHoistableInstance(
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
-  markNodeAsResource(domElement);
+  markNodeAsHoistable(domElement);
   return domElement;
 }
 function createInstance(
@@ -14247,30 +14269,33 @@ function createInstance(
   var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
   var domElement;
 
-  create: switch (namespace) {
+  switch (namespace) {
     case SVG_NAMESPACE:
-      domElement = createSVGElement(type, ownerDocument);
-      break;
-
     case MATH_NAMESPACE:
-      domElement = createMathElement(type, ownerDocument);
+      domElement = ownerDocument.createElementNS(namespace, type);
       break;
-
-    case HTML_NAMESPACE:
-      switch (type) {
-        case "svg":
-          domElement = createSVGElement(type, ownerDocument);
-          break create;
-
-        case "math":
-          domElement = createMathElement(type, ownerDocument);
-          break create;
-      }
-
-    // eslint-disable-next-line no-fallthrough
 
     default:
-      domElement = createHTMLElement(type, props, ownerDocument);
+      switch (type) {
+        case "svg":
+          domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
+          break;
+
+        case "math":
+          domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
+          break;
+
+        case "script":
+          domElement = createPotentiallyInlineScriptElement(ownerDocument);
+          break;
+
+        case "select":
+          domElement = createSelectElement(props, ownerDocument);
+          break;
+
+        default:
+          domElement = createHTMLElement(type, props, ownerDocument);
+      }
   }
 
   precacheFiberNode(internalInstanceHandle, domElement);
@@ -14688,7 +14713,7 @@ function shouldSkipHydratableForInstance(instance, type, props) {
     return false;
   } else if (
     instance.nodeName.toLowerCase() !== type.toLowerCase() ||
-    isMarkedResource(instance)
+    isMarkedHoistable(instance)
   ) {
     // We are either about to
     return true;
@@ -15624,7 +15649,7 @@ function clearSingleton(instance) {
     var nodeName = node.nodeName;
 
     if (
-      isMarkedResource(node) ||
+      isMarkedHoistable(node) ||
       nodeName === "HEAD" ||
       nodeName === "BODY" ||
       nodeName === "STYLE" ||
@@ -16363,7 +16388,7 @@ function claimHydratableSingleton(fiber) {
   }
 }
 
-function advanceToFirstAttempableInstance(fiber) {
+function advanceToFirstAttemptableInstance(fiber) {
   // fiber is HostComponent Fiber
   while (
     nextHydratableInstance &&
@@ -16379,7 +16404,7 @@ function advanceToFirstAttempableInstance(fiber) {
   }
 }
 
-function advanceToFirstAttempableTextInstance() {
+function advanceToFirstAttemptableTextInstance() {
   while (
     nextHydratableInstance &&
     shouldSkipHydratableForTextInstance(nextHydratableInstance)
@@ -16390,7 +16415,7 @@ function advanceToFirstAttempableTextInstance() {
   }
 }
 
-function advanceToFirstAttempableSuspenseInstance() {
+function advanceToFirstAttemptableSuspenseInstance() {
   while (
     nextHydratableInstance &&
     shouldSkipHydratableForSuspenseInstance(nextHydratableInstance)
@@ -16420,7 +16445,7 @@ function tryToClaimNextHydratableInstance(fiber) {
 
   if (rootOrSingletonContext) {
     // We may need to skip past certain nodes in these contexts
-    advanceToFirstAttempableInstance(fiber);
+    advanceToFirstAttemptableInstance(fiber);
   }
 
   var nextInstance = nextHydratableInstance;
@@ -16453,7 +16478,7 @@ function tryToClaimNextHydratableInstance(fiber) {
 
     if (rootOrSingletonContext) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableInstance(fiber);
+      advanceToFirstAttemptableInstance(fiber);
     }
 
     if (
@@ -16488,7 +16513,7 @@ function tryToClaimNextHydratableTextInstance(fiber) {
     // We may need to skip past certain nodes in these contexts.
     // We don't skip if the text is not hydratable because we know no hydratables
     // exist which could match this Fiber
-    advanceToFirstAttempableTextInstance();
+    advanceToFirstAttemptableTextInstance();
   }
 
   var nextInstance = nextHydratableInstance;
@@ -16523,7 +16548,7 @@ function tryToClaimNextHydratableTextInstance(fiber) {
 
     if (rootOrSingletonContext && isHydratable) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableTextInstance();
+      advanceToFirstAttemptableTextInstance();
     }
 
     if (
@@ -16554,7 +16579,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber) {
 
   if (rootOrSingletonContext) {
     // We may need to skip past certain nodes in these contexts
-    advanceToFirstAttempableSuspenseInstance();
+    advanceToFirstAttemptableSuspenseInstance();
   }
 
   var nextInstance = nextHydratableInstance;
@@ -16587,7 +16612,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber) {
 
     if (rootOrSingletonContext) {
       // We may need to skip past certain nodes in these contexts
-      advanceToFirstAttempableSuspenseInstance();
+      advanceToFirstAttemptableSuspenseInstance();
     }
 
     if (
@@ -32001,6 +32026,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case HostRoot: {
       {
+        prepareToCommitHoistables();
         var previousHoistableRoot = currentHoistableRoot;
         currentHoistableRoot = getHoistableRoot(root.containerInfo);
         recursivelyTraverseMutationEffects(root, finishedWork);
@@ -38010,7 +38036,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-20cacfa7";
+var ReactVersion = "18.3.0-www-modern-52b31d1f";
 
 function createPortal$1(
   children,
