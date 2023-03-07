@@ -72,14 +72,35 @@ export default function ReactForgetBabelPlugin(
           const compiledFn = fn.insertAfter(ast)[0];
           compiledFn.skip();
 
-          // Build and append gating test
-          compiledFn.insertAfter(
-            buildTest({
-              compiled: ast.id,
-              uncompiled: fn.node.id,
-              original,
-            })
-          );
+          // Build gating test
+          const test = buildTest({
+            compiled: ast.id,
+            uncompiled: fn.node.id,
+            original,
+          });
+
+          // Re-export new declaration
+          const parent = fn.parent;
+          if (t.isExportDefaultDeclaration(parent)) {
+            // Re-add uncompiled function
+            fn.insertAfter(fn.node)[0].skip();
+
+            // Add test
+            compiledFn.insertAfter(test);
+
+            // Update declartion to original id
+            parent.declaration = original;
+          } else if (t.isExportNamedDeclaration(parent)) {
+            invariant(parent.declaration !== null, "");
+            // Re-add uncompiled function
+            fn.insertAfter(fn.node)[0].skip();
+
+            // Update declartion to test
+            parent.declaration = test;
+          } else {
+            // Just add the test, no need for re-export
+            compiledFn.insertAfter(test);
+          }
         } else {
           fn.replaceWith(ast);
         }
@@ -147,7 +168,7 @@ function buildTest(ids: {
   ]);
 }
 
-function buildImportForGatingModule(gatingModule: string) {
+function buildImportForGatingModule(gatingModule: string): t.ImportDeclaration {
   const importDefaultSpecifier = t.importDefaultSpecifier(testId);
   return t.importDeclaration(
     [importDefaultSpecifier],
