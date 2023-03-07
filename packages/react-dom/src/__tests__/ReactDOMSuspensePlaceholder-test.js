@@ -153,7 +153,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactDOM.render(<App />, container);
       });
       expect(container.innerHTML).toEqual(
@@ -161,15 +161,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
           '"display: none;"></span>Loading...',
       );
 
-      act(() => setIsVisible(true));
-      expect(container.innerHTML).toEqual(
-        '<span style="display: none;">Sibling</span><span style=' +
-          '"display: none;"></span>Loading...',
-      );
-
-      await advanceTimers(500);
-
-      Scheduler.unstable_flushAll();
+      await act(async () => setIsVisible(true));
 
       expect(container.innerHTML).toEqual(
         '<span style="display: inline;">Sibling</span><span style="">Async</span>',

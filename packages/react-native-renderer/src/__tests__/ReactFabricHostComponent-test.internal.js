@@ -30,7 +30,7 @@ beforeEach(() => {
  * If the corresponding array of keys is null, the returned element at that
  * index will also be null.
  */
-function mockRenderKeys(keyLists) {
+async function mockRenderKeys(keyLists) {
   const ReactFabric = require('react-native-renderer/fabric');
   const createReactNativeComponentClass =
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
@@ -43,10 +43,12 @@ function mockRenderKeys(keyLists) {
     uiViewClassName: 'RCTMockView',
   }));
 
-  return keyLists.map(keyList => {
+  const result = [];
+  for (let i = 0; i < keyLists.length; i++) {
+    const keyList = keyLists[i];
     if (Array.isArray(keyList)) {
       const refs = keyList.map(key => undefined);
-      act(() => {
+      await act(async () => {
         ReactFabric.render(
           <MockView>
             {keyList.map((key, index) => (
@@ -62,27 +64,31 @@ function mockRenderKeys(keyLists) {
         );
       });
       // Clone `refs` to ignore future passes.
-      return [...refs];
+      result.push([...refs]);
+      continue;
     }
     if (keyList == null) {
-      act(() => {
+      await act(async () => {
         ReactFabric.stopSurface(mockContainerTag);
       });
-      return null;
+      result.push(null);
+      continue;
     }
     throw new TypeError(
       `Invalid 'keyLists' element of type ${typeof keyList}.`,
     );
-  });
+  }
+
+  return result;
 }
 
 describe('blur', () => {
-  test('blur() invokes TextInputState', () => {
+  test('blur() invokes TextInputState', async () => {
     const {
       TextInputState,
     } = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
 
     fooRef.blur();
 
@@ -91,12 +97,12 @@ describe('blur', () => {
 });
 
 describe('focus', () => {
-  test('focus() invokes TextInputState', () => {
+  test('focus() invokes TextInputState', async () => {
     const {
       TextInputState,
     } = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
 
     fooRef.focus();
 
@@ -105,8 +111,8 @@ describe('focus', () => {
 });
 
 describe('measure', () => {
-  test('component.measure(...) invokes callback', () => {
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+  test('component.measure(...) invokes callback', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
 
     const callback = jest.fn();
     fooRef.measure(callback);
@@ -115,8 +121,8 @@ describe('measure', () => {
     expect(callback.mock.calls).toEqual([[10, 10, 100, 100, 0, 0]]);
   });
 
-  test('unmounted.measure(...) does nothing', () => {
-    const [[fooRef]] = mockRenderKeys([['foo'], null]);
+  test('unmounted.measure(...) does nothing', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo'], null]);
 
     const callback = jest.fn();
     fooRef.measure(callback);
@@ -127,8 +133,8 @@ describe('measure', () => {
 });
 
 describe('measureInWindow', () => {
-  test('component.measureInWindow(...) invokes callback', () => {
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+  test('component.measureInWindow(...) invokes callback', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
 
     const callback = jest.fn();
     fooRef.measureInWindow(callback);
@@ -137,8 +143,8 @@ describe('measureInWindow', () => {
     expect(callback.mock.calls).toEqual([[10, 10, 100, 100]]);
   });
 
-  test('unmounted.measureInWindow(...) does nothing', () => {
-    const [[fooRef]] = mockRenderKeys([['foo'], null]);
+  test('unmounted.measureInWindow(...) does nothing', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo'], null]);
 
     const callback = jest.fn();
     fooRef.measureInWindow(callback);
@@ -149,8 +155,8 @@ describe('measureInWindow', () => {
 });
 
 describe('measureLayout', () => {
-  test('component.measureLayout(component, ...) invokes callback', () => {
-    const [[fooRef, barRef]] = mockRenderKeys([['foo', 'bar']]);
+  test('component.measureLayout(component, ...) invokes callback', async () => {
+    const [[fooRef, barRef]] = await mockRenderKeys([['foo', 'bar']]);
 
     const successCallback = jest.fn();
     const failureCallback = jest.fn();
@@ -160,8 +166,8 @@ describe('measureLayout', () => {
     expect(successCallback.mock.calls).toEqual([[1, 1, 100, 100]]);
   });
 
-  test('unmounted.measureLayout(component, ...) does nothing', () => {
-    const [[fooRef, barRef]] = mockRenderKeys([
+  test('unmounted.measureLayout(component, ...) does nothing', async () => {
+    const [[fooRef, barRef]] = await mockRenderKeys([
       ['foo', 'bar'],
       ['foo', null],
     ]);
@@ -174,8 +180,8 @@ describe('measureLayout', () => {
     expect(successCallback).not.toHaveBeenCalled();
   });
 
-  test('component.measureLayout(unmounted, ...) does nothing', () => {
-    const [[fooRef, barRef]] = mockRenderKeys([
+  test('component.measureLayout(unmounted, ...) does nothing', async () => {
+    const [[fooRef, barRef]] = await mockRenderKeys([
       ['foo', 'bar'],
       [null, 'bar'],
     ]);
@@ -188,8 +194,8 @@ describe('measureLayout', () => {
     expect(successCallback).not.toHaveBeenCalled();
   });
 
-  test('unmounted.measureLayout(unmounted, ...) does nothing', () => {
-    const [[fooRef, barRef]] = mockRenderKeys([['foo', 'bar'], null]);
+  test('unmounted.measureLayout(unmounted, ...) does nothing', async () => {
+    const [[fooRef, barRef]] = await mockRenderKeys([['foo', 'bar'], null]);
 
     const successCallback = jest.fn();
     const failureCallback = jest.fn();
@@ -201,8 +207,8 @@ describe('measureLayout', () => {
 });
 
 describe('unstable_getBoundingClientRect', () => {
-  test('component.unstable_getBoundingClientRect() returns DOMRect', () => {
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+  test('component.unstable_getBoundingClientRect() returns DOMRect', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
 
     const rect = fooRef.unstable_getBoundingClientRect();
 
@@ -217,8 +223,8 @@ describe('unstable_getBoundingClientRect', () => {
     });
   });
 
-  test('unmounted.unstable_getBoundingClientRect() returns empty DOMRect', () => {
-    const [[fooRef]] = mockRenderKeys([['foo'], null]);
+  test('unmounted.unstable_getBoundingClientRect() returns empty DOMRect', async () => {
+    const [[fooRef]] = await mockRenderKeys([['foo'], null]);
 
     const rect = fooRef.unstable_getBoundingClientRect();
 
@@ -228,12 +234,12 @@ describe('unstable_getBoundingClientRect', () => {
 });
 
 describe('setNativeProps', () => {
-  test('setNativeProps(...) invokes setNativeProps on Fabric UIManager', () => {
+  test('setNativeProps(...) invokes setNativeProps on Fabric UIManager', async () => {
     const {
       UIManager,
     } = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 
-    const [[fooRef]] = mockRenderKeys([['foo']]);
+    const [[fooRef]] = await mockRenderKeys([['foo']]);
     fooRef.setNativeProps({foo: 'baz'});
 
     expect(UIManager.updateView).not.toBeCalled();

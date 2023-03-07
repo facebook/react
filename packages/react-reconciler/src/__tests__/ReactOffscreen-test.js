@@ -1992,7 +1992,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
+    await act(async () => {
       root.render(<App />);
     });
 
@@ -2052,7 +2052,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
+    await act(async () => {
       root.render(<App />);
     });
     assertLog(['attach child']);
