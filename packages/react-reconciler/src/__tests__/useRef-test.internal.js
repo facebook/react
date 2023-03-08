@@ -33,7 +33,7 @@ describe('useRef', () => {
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useCallback = React.useCallback;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;

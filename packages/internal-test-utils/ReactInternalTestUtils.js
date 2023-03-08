@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// TODO: Move `internalAct` and other test helpers to this package, too
-
 import * as SchedulerMock from 'scheduler/unstable_mock';
 import {diff} from 'jest-diff';
 import {equals} from '@jest/expect-utils';
 import enqueueTask from './enqueueTask';
+
+export {act} from './internalAct';
 
 function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearLog();

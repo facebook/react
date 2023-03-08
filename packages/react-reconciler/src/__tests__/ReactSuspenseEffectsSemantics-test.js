@@ -29,7 +29,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Suspense = React.Suspense;
 
     getCacheForType = React.unstable_getCacheForType;

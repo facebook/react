@@ -34,7 +34,7 @@ describe('Store component filters', () => {
     React = require('react');
     Types = require('react-devtools-shared/src/types');
     utils = require('./utils');
-    internalAct = require('jest-react').act;
+    internalAct = require('internal-test-utils').act;
 
     legacyRender = utils.legacyRender;
   });

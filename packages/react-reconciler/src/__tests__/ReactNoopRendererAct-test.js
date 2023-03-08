@@ -12,7 +12,7 @@
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const Scheduler = require('scheduler');
-const act = require('jest-react').act;
+const act = require('internal-test-utils').act;
 const {assertLog, waitForAll} = require('internal-test-utils');
 
 // TODO: These tests are no longer specific to the noop renderer

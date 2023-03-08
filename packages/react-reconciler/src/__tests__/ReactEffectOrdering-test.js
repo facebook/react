@@ -28,7 +28,7 @@ describe('ReactEffectOrdering', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
 

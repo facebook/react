@@ -22,7 +22,7 @@ describe('useMemoCache()', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useState = React.useState;
     useMemoCache = React.unstable_useMemoCache;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');

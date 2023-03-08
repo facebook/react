@@ -35,7 +35,7 @@ describe('useEffectEvent', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     createContext = React.createContext;
     useContext = React.useContext;
     useState = React.useState;

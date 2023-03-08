@@ -18,7 +18,7 @@ import type {Thenable} from 'shared/ReactTypes';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 
-import enqueueTask from 'shared/enqueueTask';
+import enqueueTask from './enqueueTask';
 
 let actingUpdatesScopeDepth = 0;
 
@@ -40,32 +40,29 @@ export function act<T>(scope: () => Thenable<T>): Thenable<T> {
   const previousIsActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
   const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   actingUpdatesScopeDepth++;
-  if (__DEV__ && actingUpdatesScopeDepth === 1) {
+  if (actingUpdatesScopeDepth === 1) {
     // Because this is not the "real" `act`, we set this to `false` so React
     // knows not to fire `act` warnings.
     global.IS_REACT_ACT_ENVIRONMENT = false;
   }
 
   const unwind = () => {
-    if (__DEV__ && actingUpdatesScopeDepth === 1) {
+    if (actingUpdatesScopeDepth === 1) {
       global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
     }
     actingUpdatesScopeDepth--;
 
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can
-        // assume the 'other' one has warned
-        console.error(
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
+    if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+      // if it's _less than_ previousActingUpdatesScopeDepth, then we can
+      // assume the 'other' one has warned
+      throw new Error(
+        'You seem to have overlapping act() calls, this is not supported. ' +
+          'Be sure to await previous act() calls before making a new one. ',
+      );
     }
   };
 
-  // TODO: This would be way simpler if we could use async/await. Move this
-  // function to the internal-test-utils package.
+  // TODO: This would be way simpler if we used async/await.
   try {
     const result = scope();
     if (

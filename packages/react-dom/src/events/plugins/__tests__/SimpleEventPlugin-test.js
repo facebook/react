@@ -250,7 +250,7 @@ describe('SimpleEventPlugin', function () {
       assertLog = InternalTestUtils.assertLog;
       waitForAll = InternalTestUtils.waitForAll;
 
-      act = require('jest-react').act;
+      act = require('internal-test-utils').act;
     });
 
     it('flushes pending interactive work before exiting event handler', async () => {

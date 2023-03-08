@@ -43,7 +43,7 @@ function loadModules({
 
   React = require('react');
   Scheduler = require('scheduler');
-  act = require('jest-react').act;
+  act = require('internal-test-utils').act;
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');

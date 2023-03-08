@@ -137,7 +137,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
 

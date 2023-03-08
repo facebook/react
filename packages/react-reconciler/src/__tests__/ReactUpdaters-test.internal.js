@@ -93,7 +93,7 @@ describe('updaters', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;

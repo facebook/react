@@ -28,7 +28,7 @@ function initModules() {
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
-  act = require('jest-react').act;
+  act = require('internal-test-utils').act;
   if (gate(flags => flags.enableSuspenseList)) {
     SuspenseList = React.SuspenseList;
   }
