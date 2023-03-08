@@ -176,7 +176,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Initial mount
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     // Inner contents finish in separate commit from outer
@@ -189,7 +189,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     // Update
-    await act(async () => {
+    await act(() => {
       setCount(1);
     });
     // Entire update finishes in a single commit
@@ -277,7 +277,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     // Each level commits separately

@@ -48,7 +48,7 @@ async function mockRenderKeys(keyLists) {
     const keyList = keyLists[i];
     if (Array.isArray(keyList)) {
       const refs = keyList.map(key => undefined);
-      await act(async () => {
+      await act(() => {
         ReactFabric.render(
           <MockView>
             {keyList.map((key, index) => (
@@ -68,7 +68,7 @@ async function mockRenderKeys(keyLists) {
       continue;
     }
     if (keyList == null) {
-      await act(async () => {
+      await act(() => {
         ReactFabric.stopSurface(mockContainerTag);
       });
       result.push(null);

@@ -82,7 +82,7 @@ describe('useRef', () => {
       return null;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(<App />);
     });
     assertLog([]);
@@ -152,10 +152,10 @@ describe('useRef', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example phase="mount" />);
       });
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example phase="update" />);
       });
     });
@@ -173,7 +173,7 @@ describe('useRef', () => {
         return value;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -192,12 +192,12 @@ describe('useRef', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
 
       // Should not warn after an update either.
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -216,7 +216,7 @@ describe('useRef', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -251,13 +251,13 @@ describe('useRef', () => {
       }
 
       let shouldExpectWarning = true;
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
 
       // Should not warn again on update.
       shouldExpectWarning = false;
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -291,7 +291,7 @@ describe('useRef', () => {
         return value;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -323,7 +323,7 @@ describe('useRef', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
     });
@@ -344,7 +344,7 @@ describe('useRef', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
 
@@ -358,7 +358,7 @@ describe('useRef', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<Example />);
       });
 

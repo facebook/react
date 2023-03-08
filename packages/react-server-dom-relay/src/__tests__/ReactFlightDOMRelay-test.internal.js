@@ -110,7 +110,7 @@ describe('ReactFlightDOMRelay', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(modelClient.greeting);
     });
 

@@ -141,7 +141,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -180,7 +180,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -220,7 +220,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -271,7 +271,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -307,7 +307,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -353,7 +353,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -404,7 +404,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -453,7 +453,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -509,7 +509,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -546,7 +546,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -579,7 +579,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );
@@ -624,7 +624,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
       );

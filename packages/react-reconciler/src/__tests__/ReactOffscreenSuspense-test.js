@@ -118,7 +118,7 @@ describe('ReactOffscreen', () => {
     // The hidden tree hasn't finished loading, but we should still be able to
     // show the surrounding contents. The outer Suspense boundary
     // isn't affected.
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Visible', 'Suspend! [Hidden]']);
@@ -158,7 +158,7 @@ describe('ReactOffscreen', () => {
     }
 
     // Unlike Offscreen, LegacyHidden never captures if something suspends
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Visible', 'Suspend! [Hidden]', 'Loading...']);
@@ -192,7 +192,7 @@ describe('ReactOffscreen', () => {
     // The hidden tree hasn't finished loading, but we should still be able to
     // show the surrounding contents. It doesn't matter that there's no
     // Suspense boundary because the unfinished content isn't visible.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Details open={false}>
           <AsyncText text="Async" />
@@ -204,7 +204,7 @@ describe('ReactOffscreen', () => {
 
     // But when we switch the boundary from hidden to visible, it should
     // now bubble to the nearest Suspense boundary.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={true}>
@@ -249,7 +249,7 @@ describe('ReactOffscreen', () => {
     }
 
     // Initial mount. Nothing suspends
-    await act(async () => {
+    await act(() => {
       root.render(
         <Details open={true}>
           <Text text="(empty)" />
@@ -265,7 +265,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Update that suspends inside the currently visible tree
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={true}>
@@ -285,7 +285,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Update that hides the suspended tree
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={false}>
@@ -338,12 +338,12 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
     resolveText('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
     assertLog(['A']);
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         setText('B');
       });
@@ -376,13 +376,13 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
     resolveText('A0');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
     assertLog(['A0']);
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
-    await act(async () => {
+    await act(() => {
       React.startTransition(() => {
         setStep(1);
       });
@@ -400,7 +400,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
     // Resolve the data and finish rendering
-    await act(async () => {
+    await act(() => {
       resolveText('B1');
     });
     assertLog(['B1']);
@@ -462,7 +462,7 @@ describe('ReactOffscreen', () => {
     // Render a hidden tree
     const root = ReactNoop.createRoot();
     resolveText('Async: 0');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} />);
     });
     assertLog([

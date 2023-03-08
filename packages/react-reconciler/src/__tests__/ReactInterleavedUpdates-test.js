@@ -52,7 +52,7 @@ describe('ReactInterleavedUpdates', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Child />
@@ -101,7 +101,7 @@ describe('ReactInterleavedUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A0', 'B0', 'C0']);

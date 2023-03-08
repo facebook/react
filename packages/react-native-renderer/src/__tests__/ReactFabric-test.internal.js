@@ -50,7 +50,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<View foo="test" />, 1);
     });
     expect(nativeFabricUIManager.createNode).toBeCalled();
@@ -68,13 +68,13 @@ describe('ReactFabric', () => {
 
     nativeFabricUIManager.createNode.mockReturnValue(firstNode);
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<View foo="foo" />, 11);
     });
 
     expect(nativeFabricUIManager.createNode).toHaveBeenCalledTimes(1);
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<View foo="bar" />, 11);
     });
 
@@ -98,7 +98,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTText',
     }));
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Text foo="a">1</Text>, 11);
     });
     expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
@@ -109,7 +109,7 @@ describe('ReactFabric', () => {
     ).not.toBeCalled();
 
     // If no properties have changed, we shouldn't call cloneNode.
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Text foo="a">1</Text>, 11);
     });
     expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
@@ -120,7 +120,7 @@ describe('ReactFabric', () => {
     ).not.toBeCalled();
 
     // Only call cloneNode for the changed property (and not for text).
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Text foo="b">1</Text>, 11);
     });
     expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
@@ -133,7 +133,7 @@ describe('ReactFabric', () => {
     ).not.toBeCalled();
 
     // Only call cloneNode for the changed text (and no other properties).
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Text foo="b">2</Text>, 11);
     });
     expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
@@ -148,7 +148,7 @@ describe('ReactFabric', () => {
     ).not.toBeCalled();
 
     // Call cloneNode for both changed text and properties.
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Text foo="c">3</Text>, 11);
     });
     expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
@@ -169,7 +169,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTText',
     }));
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text foo="a" bar="a">
           1
@@ -184,7 +184,7 @@ describe('ReactFabric', () => {
       nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
     ).not.toBeCalled();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text foo="a" bar="b">
           1
@@ -201,7 +201,7 @@ describe('ReactFabric', () => {
       nativeFabricUIManager.__dumpHierarchyForJestTestsOnly(),
     ).toMatchSnapshot();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text foo="b" bar="b">
           2
@@ -228,7 +228,7 @@ describe('ReactFabric', () => {
     nativeFabricUIManager.dispatchCommand.mockClear();
 
     let viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View
           ref={ref => {
@@ -259,7 +259,7 @@ describe('ReactFabric', () => {
     nativeFabricUIManager.dispatchCommand.mockReset();
 
     let viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <BasicClass
           ref={ref => {
@@ -289,7 +289,7 @@ describe('ReactFabric', () => {
     nativeFabricUIManager.sendAccessibilityEvent.mockClear();
 
     let viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View
           ref={ref => {
@@ -321,7 +321,7 @@ describe('ReactFabric', () => {
     nativeFabricUIManager.sendAccessibilityEvent.mockReset();
 
     let viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <BasicClass
           ref={ref => {
@@ -386,14 +386,14 @@ describe('ReactFabric', () => {
     const before = 'abcdefghijklmnopqrst';
     const after = 'mxhpgwfralkeoivcstzy';
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Component chars={before} />, 11);
     });
     expect(
       nativeFabricUIManager.__dumpHierarchyForJestTestsOnly(),
     ).toMatchSnapshot();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Component chars={after} />, 11);
     });
     expect(
@@ -428,7 +428,7 @@ describe('ReactFabric', () => {
 
     const ref = React.createRef();
     // Wrap in a host node.
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View>
           <Component ref={ref} />
@@ -461,7 +461,7 @@ describe('ReactFabric', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<Component />, 11);
     });
     expect(mockArgs.length).toEqual(0);
@@ -483,7 +483,7 @@ describe('ReactFabric', () => {
       );
     });
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View foo="a">
           <View foo="b" />
@@ -508,7 +508,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text>
           <View />
@@ -517,7 +517,7 @@ describe('ReactFabric', () => {
       );
     });
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text>
           <Image />
@@ -542,13 +542,13 @@ describe('ReactFabric', () => {
     }));
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactFabric.render(<View>this should warn</View>, 11);
       });
     }).toErrorDev(['Text strings must be rendered within a <Text> component.']);
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactFabric.render(
           <Text>
             <ScrollView>hi hello hi</ScrollView>
@@ -567,7 +567,7 @@ describe('ReactFabric', () => {
 
     const Indirection = () => 'Hi';
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <Text>
           <Indirection />
@@ -591,7 +591,7 @@ describe('ReactFabric', () => {
     const touchStart = jest.fn();
     const touchStart2 = jest.fn();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<View onTouchStart={touchStart} />, 11);
     });
 
@@ -617,7 +617,7 @@ describe('ReactFabric', () => {
     expect(touchStart).toBeCalled();
     expect(touchStart2).not.toBeCalled();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(<View onTouchStart={touchStart2} />, 11);
     });
 
@@ -665,7 +665,7 @@ describe('ReactFabric', () => {
 
       const event = {};
 
-      await act(async () => {
+      await act(() => {
         ReactFabric.render(
           <View
             onSkippedBubblingEventCapture={ancestorCapture}
@@ -752,7 +752,7 @@ describe('ReactFabric', () => {
     const ref1 = React.createRef();
     const ref2 = React.createRef();
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View id="parent">
           <View
@@ -834,7 +834,7 @@ describe('ReactFabric', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <ContainsStrictModeChild ref={n => (parent = n)} />,
         11,
@@ -871,7 +871,7 @@ describe('ReactFabric', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <StrictMode>
           <IsInStrictMode ref={n => (parent = n)} />
@@ -914,7 +914,7 @@ describe('ReactFabric', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <ContainsStrictModeChild ref={n => (parent = n)} />,
         11,
@@ -949,7 +949,7 @@ describe('ReactFabric', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <StrictMode>
           <IsInStrictMode ref={n => (parent = n)} />
@@ -980,7 +980,7 @@ describe('ReactFabric', () => {
     nativeFabricUIManager.sendAccessibilityEvent.mockReset();
 
     let viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.render(
         <View
           ref={ref => {
@@ -991,7 +991,7 @@ describe('ReactFabric', () => {
       );
     });
     const dangerouslyRetainedViewRef = viewRef;
-    await act(async () => {
+    await act(() => {
       ReactFabric.stopSurface(11);
     });
 

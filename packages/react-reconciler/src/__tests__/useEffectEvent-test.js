@@ -88,7 +88,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 1']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -97,7 +97,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -121,7 +121,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 12']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -174,7 +174,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 5']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -183,7 +183,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.multiply());
+    await act(() => button.current.multiply());
     assertLog(['Increment', 'Count: 25']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -233,7 +233,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.greet());
+    await act(() => button.current.greet());
     assertLog(['Say hej', 'Greeting: undefined says hej']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -327,7 +327,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -340,7 +340,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -370,7 +370,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -426,7 +426,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -439,7 +439,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -469,7 +469,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -531,7 +531,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -544,7 +544,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -574,7 +574,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    await act(async () => button.current.increment());
+    await act(() => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -604,7 +604,7 @@ describe('useEffectEvent', () => {
     ReactNoop.render(<Counter value={1} />);
     await waitForAll(['Effect value: 1', 'Event value: 1']);
 
-    await act(async () => ReactNoop.render(<Counter value={2} />));
+    await act(() => ReactNoop.render(<Counter value={2} />));
     assertLog(['Effect value: 2', 'Event value: 2']);
   });
 
@@ -678,7 +678,7 @@ describe('useEffectEvent', () => {
 
     // Initial render
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App value={1} />);
     });
     assertLog(['Commit new event handler']);
@@ -686,7 +686,7 @@ describe('useEffectEvent', () => {
     expect(committedEventHandler()).toBe('Value seen by useEffectEvent: 1');
 
     // Update
-    await act(async () => {
+    await act(() => {
       root.render(<App value={2} />);
     });
     // No new event handler should be committed, because it was omitted from
@@ -742,20 +742,20 @@ describe('useEffectEvent', () => {
       return <Text text={`Welcome to the ${roomId} room!`} />;
     }
 
-    await act(async () =>
+    await act(() =>
       ReactNoop.render(<ChatRoom roomId="general" theme="light" />),
     );
-    await act(async () => jest.runAllTimers());
+    await act(() => jest.runAllTimers());
     assertLog(['Welcome to the general room!', 'Connected! theme: light']);
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the general room!" />,
     );
 
     // change roomId only
-    await act(async () =>
+    await act(() =>
       ReactNoop.render(<ChatRoom roomId="music" theme="light" />),
     );
-    await act(async () => jest.runAllTimers());
+    await act(() => jest.runAllTimers());
     assertLog([
       'Welcome to the music room!',
       // should trigger a reconnect
@@ -767,10 +767,8 @@ describe('useEffectEvent', () => {
     );
 
     // change theme only
-    await act(async () =>
-      ReactNoop.render(<ChatRoom roomId="music" theme="dark" />),
-    );
-    await act(async () => jest.runAllTimers());
+    await act(() => ReactNoop.render(<ChatRoom roomId="music" theme="dark" />));
+    await act(() => jest.runAllTimers());
     // should not trigger a reconnect
     assertLog(['Welcome to the music room!']);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -778,10 +776,10 @@ describe('useEffectEvent', () => {
     );
 
     // change roomId only
-    await act(async () =>
+    await act(() =>
       ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />),
     );
-    await act(async () => jest.runAllTimers());
+    await act(() => jest.runAllTimers());
     assertLog([
       'Welcome to the travel room!',
       // should trigger a reconnect
@@ -841,7 +839,7 @@ describe('useEffectEvent', () => {
     }
 
     const button = React.createRef(null);
-    await act(async () =>
+    await act(() =>
       ReactNoop.render(
         <AppShell>
           <Page url="/shop/1" />
@@ -849,10 +847,10 @@ describe('useEffectEvent', () => {
       ),
     );
     assertLog(['Add to cart', 'url: /shop/1, numberOfItems: 0']);
-    await act(async () => button.current.addToCart());
+    await act(() => button.current.addToCart());
     assertLog(['Add to cart']);
 
-    await act(async () =>
+    await act(() =>
       ReactNoop.render(
         <AppShell>
           <Page url="/shop/2" />

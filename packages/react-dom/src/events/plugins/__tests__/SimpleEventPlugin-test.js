@@ -301,7 +301,7 @@ describe('SimpleEventPlugin', function () {
       }
 
       // Click the button to trigger the side-effect
-      await act(async () => click());
+      await act(() => click());
       assertLog([
         // The handler fired
         'Side-effect',
@@ -370,17 +370,17 @@ describe('SimpleEventPlugin', function () {
       }
 
       // Click the button a single time
-      await act(async () => click());
+      await act(() => click());
       // The counter should update synchronously, even in concurrent mode.
       expect(button.textContent).toEqual('Count: 1');
 
       // Click the button many more times
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
 
       // Flush the remaining work
       await waitForAll([]);

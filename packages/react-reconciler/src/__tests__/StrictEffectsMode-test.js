@@ -51,7 +51,7 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
@@ -74,7 +74,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -93,7 +93,7 @@ describe('StrictEffectsMode', () => {
       assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
@@ -104,7 +104,7 @@ describe('StrictEffectsMode', () => {
       'useEffect mount',
     ]);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount();
     });
 
@@ -127,7 +127,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -146,7 +146,7 @@ describe('StrictEffectsMode', () => {
       assertLog(['useEffect One mount', 'useEffect Two mount']);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
@@ -157,7 +157,7 @@ describe('StrictEffectsMode', () => {
       'useEffect Two mount',
     ]);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount(null);
     });
 
@@ -180,7 +180,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -199,7 +199,7 @@ describe('StrictEffectsMode', () => {
       assertLog(['useLayoutEffect One mount', 'useLayoutEffect Two mount']);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
@@ -210,7 +210,7 @@ describe('StrictEffectsMode', () => {
       'useLayoutEffect Two mount',
     ]);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount();
     });
 
@@ -231,7 +231,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -248,13 +248,13 @@ describe('StrictEffectsMode', () => {
       assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount();
     });
 
@@ -285,7 +285,7 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
@@ -320,7 +320,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -336,13 +336,13 @@ describe('StrictEffectsMode', () => {
       assertLog(['componentDidMount']);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
     assertLog(['componentDidUpdate']);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount();
     });
 
@@ -368,7 +368,7 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
@@ -395,7 +395,7 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -460,7 +460,7 @@ describe('StrictEffectsMode', () => {
       return showChild && <Child />;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
@@ -477,7 +477,7 @@ describe('StrictEffectsMode', () => {
       assertLog(['App useLayoutEffect mount', 'App useEffect mount']);
     }
 
-    await act(async () => {
+    await act(() => {
       _setShowChild(true);
     });
 
@@ -543,7 +543,7 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
@@ -569,7 +569,7 @@ describe('StrictEffectsMode', () => {
       ]);
     }
 
-    await act(async () => {
+    await act(() => {
       renderer.update(<App text={'mount'} />);
     });
 
@@ -580,7 +580,7 @@ describe('StrictEffectsMode', () => {
       'useEffect mount',
     ]);
 
-    await act(async () => {
+    await act(() => {
       renderer.unmount();
     });
 

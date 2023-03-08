@@ -185,7 +185,7 @@ describe('ReactTransition', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['(empty)']);
@@ -245,7 +245,7 @@ describe('ReactTransition', () => {
 
       // Initial render
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         seedNextTextCache('A content');
         root.render(<App />);
       });
@@ -257,7 +257,7 @@ describe('ReactTransition', () => {
       );
 
       // Switch to B
-      await act(async () => {
+      await act(() => {
         update('B');
       });
       assertLog([
@@ -278,7 +278,7 @@ describe('ReactTransition', () => {
       );
 
       // Before B finishes loading, switch to C
-      await act(async () => {
+      await act(() => {
         update('C');
       });
       assertLog([
@@ -299,7 +299,7 @@ describe('ReactTransition', () => {
 
       // Finish loading B. But we're not allowed to render B because it's
       // entangled with C. So we're still pending.
-      await act(async () => {
+      await act(() => {
         resolveText('B content');
       });
       assertLog([
@@ -315,7 +315,7 @@ describe('ReactTransition', () => {
       );
 
       // Now finish loading C. This is the terminal update, so it can finish.
-      await act(async () => {
+      await act(() => {
         resolveText('C content');
       });
       assertLog(['C label', 'C content']);
@@ -370,7 +370,7 @@ describe('ReactTransition', () => {
 
       // Initial render
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         seedNextTextCache('A content');
         root.render(<App />);
       });
@@ -382,7 +382,7 @@ describe('ReactTransition', () => {
       );
 
       // Switch to B
-      await act(async () => {
+      await act(() => {
         update('B');
       });
       assertLog([
@@ -403,7 +403,7 @@ describe('ReactTransition', () => {
       );
 
       // Before B finishes loading, switch to C
-      await act(async () => {
+      await act(() => {
         update('C');
       });
       assertLog([
@@ -424,7 +424,7 @@ describe('ReactTransition', () => {
 
       // Finish loading B. But we're not allowed to render B because it's
       // entangled with C. So we're still pending.
-      await act(async () => {
+      await act(() => {
         resolveText('B content');
       });
       assertLog([
@@ -440,7 +440,7 @@ describe('ReactTransition', () => {
       );
 
       // Now finish loading C. This is the terminal update, so it can finish.
-      await act(async () => {
+      await act(() => {
         resolveText('C content');
       });
       assertLog(['C label', 'C content']);
@@ -488,14 +488,14 @@ describe('ReactTransition', () => {
 
       // Initial render. Start with all children hidden.
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
       assertLog([]);
       expect(root).toMatchRenderedOutput(null);
 
       // Switch to A.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           setShowA(true);
         });
@@ -504,7 +504,7 @@ describe('ReactTransition', () => {
       expect(root).toMatchRenderedOutput(null);
 
       // Before A loads, switch to B. This should entangle A with B.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           setShowA(false);
           setShowB(true);
@@ -515,7 +515,7 @@ describe('ReactTransition', () => {
 
       // Before A or B loads, switch to C. This should entangle C with B, and
       // transitively entangle C with A.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           setShowB(false);
           setShowC(true);
@@ -528,7 +528,7 @@ describe('ReactTransition', () => {
 
       // First resolve B. This will attempt to render C, since everything is
       // entangled.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           resolveText('B');
         });
@@ -538,7 +538,7 @@ describe('ReactTransition', () => {
 
       // Now resolve A. Again, this will attempt to render C, since everything
       // is entangled.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           resolveText('A');
         });
@@ -547,7 +547,7 @@ describe('ReactTransition', () => {
       expect(root).toMatchRenderedOutput(null);
 
       // Finally, resolve C. This time we can finish.
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           resolveText('C');
         });
@@ -561,7 +561,7 @@ describe('ReactTransition', () => {
   test('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Suspense fallback={<Text text="Loading..." />} />
@@ -729,7 +729,7 @@ describe('ReactTransition', () => {
 
       const root = ReactNoop.createRoot();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App shouldSuspend={false} step={0} />);
       });
       assertLog(['A0', 'B0', 'C0']);
@@ -793,7 +793,7 @@ describe('ReactTransition', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 
@@ -801,7 +801,7 @@ describe('ReactTransition', () => {
     assertLog(['Transition pri: 0', 'Normal pri: 0', 'Commit']);
     expect(root).toMatchRenderedOutput('Transition pri: 0, Normal pri: 0');
 
-    await act(async () => {
+    await act(() => {
       updateTransitionPri();
       updateNormalPri();
     });
@@ -845,7 +845,7 @@ describe('ReactTransition', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 
@@ -853,7 +853,7 @@ describe('ReactTransition', () => {
     assertLog(['(empty)', 'Normal pri: 0', 'Commit']);
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
 
-    await act(async () => {
+    await act(() => {
       updateTransitionPri();
     });
 
@@ -907,7 +907,7 @@ describe('ReactTransition', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Transition pri: 0', 'Normal pri: 0', 'Commit']);

@@ -135,7 +135,7 @@ describe('ReactDOMHooks', () => {
     Scheduler.unstable_flushAll();
 
     inputRef.current.value = 'abc';
-    await act(async () => {
+    await act(() => {
       inputRef.current.dispatchEvent(
         new Event('input', {
           bubbles: true,

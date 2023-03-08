@@ -618,13 +618,13 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Committed: ']);
     expect(root).toMatchRenderedOutput(null);
 
-    await act(async () => {
+    await act(() => {
       React.startTransition(() => {
         pushToLog('A');
       });
@@ -679,13 +679,13 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput(null);
 
-    await act(async () => {
+    await act(() => {
       React.startTransition(() => {
         pushToLog('A');
       });
@@ -742,20 +742,20 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App prop="A" />);
     });
     expect(root).toMatchRenderedOutput('0');
 
     // Changing the prop causes the count to increase by 100
-    await act(async () => {
+    await act(() => {
       root.render(<App prop="B" />);
     });
     expect(root).toMatchRenderedOutput('100');
 
     // Now increment the count by 1 with a state update. And, in the same
     // batch, change the prop back to its original value.
-    await act(async () => {
+    await act(() => {
       root.render(<App prop="A" />);
       app.setState(state => ({count: state.count + 1}));
     });

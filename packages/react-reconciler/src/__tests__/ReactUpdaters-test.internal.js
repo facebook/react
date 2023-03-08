@@ -108,12 +108,12 @@ describe('updaters', () => {
     const Child = () => null;
     const container = document.createElement('div');
 
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(<Parent />, container);
     });
     expect(allSchedulerTags).toEqual([[HostRoot]]);
 
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(<Parent />, container);
     });
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
@@ -141,19 +141,19 @@ describe('updaters', () => {
     };
     const Child = () => null;
 
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(<Parent />, document.createElement('div'));
     });
     expect(scheduleForA).not.toBeNull();
     expect(scheduleForB).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
-    await act(async () => {
+    await act(() => {
       scheduleForA();
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponentA]]);
 
-    await act(async () => {
+    await act(() => {
       scheduleForB();
     });
     expect(allSchedulerTypes).toEqual([
@@ -174,13 +174,13 @@ describe('updaters', () => {
     }
     const Child = () => null;
     let instance;
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(<Parent />, document.createElement('div'));
     });
     expect(allSchedulerTypes).toEqual([[null]]);
 
     expect(instance).not.toBeNull();
-    await act(async () => {
+    await act(() => {
       instance.setState({});
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponent]]);
@@ -294,21 +294,21 @@ describe('updaters', () => {
       }
     };
 
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(<Parent />, document.createElement('div'));
       assertLog(['onCommitRoot']);
     });
     expect(setShouldSuspend).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
-    await act(async () => {
+    await act(() => {
       setShouldSuspend(true);
     });
     assertLog(['onCommitRoot']);
     expect(allSchedulerTypes).toEqual([[null], [Suspender]]);
 
     expect(resolver).not.toBeNull();
-    await act(async () => {
+    await act(() => {
       resolver('abc');
       return promise;
     });
@@ -356,7 +356,7 @@ describe('updaters', () => {
     };
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await act(async () => {
+    await act(() => {
       root.render(<Parent shouldError={false} />);
     });
     assertLog(['initial', 'onCommitRoot']);
@@ -365,7 +365,7 @@ describe('updaters', () => {
     allSchedulerTypes.splice(0);
     onCommitRootShouldYield = true;
 
-    await act(async () => {
+    await act(() => {
       triggerError();
     });
     assertLog(['onCommitRoot', 'error', 'onCommitRoot']);

@@ -129,12 +129,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
       return null;
     }
 
-    await act(async () => {
+    await act(() => {
       const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
     });
 
-    await act(async () => {
+    await act(() => {
       scheduleSuspendingUpdate();
     });
   });
@@ -182,7 +182,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
@@ -242,7 +242,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
@@ -294,7 +294,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
@@ -361,7 +361,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
@@ -424,7 +424,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);

@@ -168,7 +168,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe(
@@ -205,7 +205,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>$1</p>');
@@ -240,7 +240,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
@@ -290,7 +290,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Hello World</p>');
@@ -328,7 +328,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Hello World</p>');
@@ -369,7 +369,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
@@ -408,7 +408,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Async Text</p>');
@@ -446,7 +446,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>and then</p>');
@@ -607,7 +607,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
           <ProfilePage response={response} />
@@ -617,17 +617,17 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
-    await act(async () => {
+    await act(() => {
       resolveFriends();
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
-    await act(async () => {
+    await act(() => {
       resolveName();
     });
     // Advance time enough to trigger a nested fallback.
-    await act(async () => {
+    await act(() => {
       jest.advanceTimersByTime(500);
     });
     expect(container.innerHTML).toBe(
@@ -723,7 +723,7 @@ describe('ReactFlightDOM', () => {
     const response1 = ReactServerDOMReader.createFromReadableStream(
       stream1.readable,
     );
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
           <Page response={response1} />
@@ -751,7 +751,7 @@ describe('ReactFlightDOM', () => {
     const response2 = ReactServerDOMReader.createFromReadableStream(
       stream2.readable,
     );
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
           <Page response={response2} />
@@ -799,7 +799,7 @@ describe('ReactFlightDOM', () => {
       return use(res);
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary
           fallback={e => (
@@ -816,7 +816,7 @@ describe('ReactFlightDOM', () => {
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
-    await act(async () => {
+    await act(() => {
       abort('for reasons');
     });
     if (__DEV__) {
@@ -862,7 +862,7 @@ describe('ReactFlightDOM', () => {
       return use(res);
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary fallback={e => <p>{e.message}</p>}>
           <Suspense fallback={<p>(loading)</p>}>
@@ -913,7 +913,7 @@ describe('ReactFlightDOM', () => {
       return use(res);
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary fallback={e => <p>{e.message}</p>}>
           <Suspense fallback={<p>(loading)</p>}>
@@ -925,7 +925,7 @@ describe('ReactFlightDOM', () => {
 
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
-    await act(async () => {
+    await act(() => {
       rejectPromise(new Error('async module init error'));
     });
 
@@ -975,7 +975,7 @@ describe('ReactFlightDOM', () => {
       return use(res);
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary
           fallback={e => (
@@ -1041,7 +1041,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>async hello</p>');
@@ -1104,7 +1104,7 @@ describe('ReactFlightDOM', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe(

@@ -95,13 +95,13 @@ describe('ReactFlushSync', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['0, 0']);
     expect(root).toMatchRenderedOutput('0, 0');
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.flushSync(() => {
         startTransition(() => {
           // This should be async even though flushSync is on the stack, because
@@ -132,7 +132,7 @@ describe('ReactFlushSync', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       ReactNoop.flushSync(() => {
         root.render(<App />);
       });
@@ -155,7 +155,7 @@ describe('ReactFlushSync', () => {
     }
 
     const root = ReactNoop.createLegacyRoot();
-    await act(async () => {
+    await act(() => {
       ReactNoop.flushSync(() => {
         root.render(<App />);
       });
@@ -182,7 +182,7 @@ describe('ReactFlushSync', () => {
     }
 
     const root = ReactNoop.createLegacyRoot();
-    await act(async () => {
+    await act(() => {
       ReactNoop.flushSync(() => {
         root.render(<App step={1} />);
       });

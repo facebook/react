@@ -475,7 +475,7 @@ describe('ReactFlight', () => {
       return use(promise);
     }
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         ReactNoop.render(
           <>
@@ -554,7 +554,7 @@ describe('ReactFlight', () => {
       return use(promise);
     }
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         ReactNoop.render(
           <NoErrorExpected>

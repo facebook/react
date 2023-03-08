@@ -652,7 +652,7 @@ describe('DOMPluginEventSystem', () => {
           Scheduler.unstable_flushAll();
 
           // The Suspense boundary is not yet hydrated.
-          await act(async () => {
+          await act(() => {
             a.click();
           });
           expect(clicks).toBe(0);
@@ -703,14 +703,14 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          await act(async () => {
+          await act(() => {
             ReactDOM.render(<Parent />, container);
           });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
 
-          await act(async () => {
+          await act(() => {
             dispatchClickEvent(parent);
           });
 
@@ -719,7 +719,7 @@ describe('DOMPluginEventSystem', () => {
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
 
-          await act(async () => {
+          await act(() => {
             dispatchClickEvent(child);
           });
 
@@ -752,14 +752,14 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          await act(async () => {
+          await act(() => {
             ReactDOM.render(<Parent />, container);
           });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
 
-          await act(async () => {
+          await act(() => {
             dispatchClickEvent(parent);
           });
 
@@ -768,7 +768,7 @@ describe('DOMPluginEventSystem', () => {
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
 
-          await act(async () => {
+          await act(() => {
             dispatchClickEvent(child);
           });
 
@@ -2575,7 +2575,7 @@ describe('DOMPluginEventSystem', () => {
 
             const root = ReactDOMClient.createRoot(container2);
 
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2587,7 +2587,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onAfterBlur).toHaveBeenCalledTimes(0);
 
             suspend = true;
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2661,7 +2661,7 @@ describe('DOMPluginEventSystem', () => {
 
             const root = ReactDOMClient.createRoot(container2);
 
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2672,7 +2672,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onBeforeBlur).toHaveBeenCalledTimes(0);
 
             suspend = true;
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2726,7 +2726,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.appendChild(container2);
 
             const root = ReactDOMClient.createRoot(container2);
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
 
@@ -2737,7 +2737,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Suspend. This hides the input node, causing it to lose focus.
             suspend = true;
-            await act(async () => {
+            await act(() => {
               root.render(<Component />);
             });
 

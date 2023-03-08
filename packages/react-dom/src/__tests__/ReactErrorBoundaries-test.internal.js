@@ -1864,7 +1864,7 @@ describe('ReactErrorBoundaries', () => {
 
   it('catches errors in useEffect', async () => {
     const container = document.createElement('div');
-    await act(async () => {
+    await act(() => {
       ReactDOM.render(
         <ErrorBoundary>
           <BrokenUseEffect>Initial value</BrokenUseEffect>

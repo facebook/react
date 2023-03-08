@@ -165,7 +165,7 @@ describe('useMutableSourceHydration', () => {
     assertLog(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    await act(async () => {
+    await act(() => {
       ReactDOMClient.hydrateRoot(container, <TestComponent />, {
         mutableSources: [mutableSource],
       });
@@ -200,7 +200,7 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(0);
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <TestComponent />, {
           mutableSources: [mutableSource],
           onRecoverableError(error) {

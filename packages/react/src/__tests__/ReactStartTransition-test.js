@@ -47,14 +47,14 @@ describe('ReactStartTransition', () => {
       return null;
     };
 
-    await act(async () => {
+    await act(() => {
       ReactTestRenderer.create(<Component level={0} />, {
         unstable_isConcurrent: true,
       });
     });
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         React.startTransition(() => {
           subs.forEach(setState => {
             setState(state => state + 1);
@@ -71,7 +71,7 @@ describe('ReactStartTransition', () => {
     );
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         triggerHookTransition(() => {
           subs.forEach(setState => {
             setState(state => state + 1);

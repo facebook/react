@@ -182,7 +182,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<App />, container);
       });
       expect(container.innerHTML).toEqual(
@@ -192,14 +192,14 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
       // Update the inline display style. It will be overridden because it's
       // inside a hidden fallback.
-      await act(async () => setIsVisible(true));
+      await act(() => setIsVisible(true));
       expect(container.innerHTML).toEqual(
         '<span style="display: none;">Sibling</span><span style=' +
           '"display: none;"></span>Loading...',
       );
 
       // Unsuspend. The style should now match the inline prop.
-      await act(async () => resolveText('Async'));
+      await act(() => resolveText('Async'));
       expect(container.innerHTML).toEqual(
         '<span style="display: inline;">Sibling</span><span style="">Async</span>',
       );

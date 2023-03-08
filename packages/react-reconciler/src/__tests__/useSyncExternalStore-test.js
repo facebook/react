@@ -195,19 +195,19 @@ describe('useSyncExternalStore', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       // Start a render that reads from the store and yields value
       root.render(<App />);
     });
     assertLog(['value:initial']);
 
-    await act(async () => {
+    await act(() => {
       store.set('value:changed');
     });
     assertLog(['value:changed']);
 
     // If cached value was updated, we expect a re-render
-    await act(async () => {
+    await act(() => {
       store.set('value:initial');
     });
     assertLog(['value:initial']);

@@ -68,7 +68,7 @@ describe('ReactDeferredValue', () => {
     const root = ReactNoop.createRoot();
 
     // Initial render
-    await act(async () => {
+    await act(() => {
       root.render(<App value={1} />);
     });
     assertLog(['Original: 1', 'Deferred: 1']);
@@ -129,7 +129,7 @@ describe('ReactDeferredValue', () => {
     const root = ReactNoop.createRoot();
 
     // Initial render
-    await act(async () => {
+    await act(() => {
       root.render(<App value={1} />);
     });
     assertLog(['Original: 1', 'Deferred: 1']);
@@ -195,7 +195,7 @@ describe('ReactDeferredValue', () => {
     const root = ReactNoop.createRoot();
 
     // Initial render
-    await act(async () => {
+    await act(() => {
       root.render(<App value={1} />);
     });
     assertLog(['Original: 1', 'Deferred: 1']);

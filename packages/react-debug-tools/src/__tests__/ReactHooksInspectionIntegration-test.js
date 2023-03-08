@@ -61,7 +61,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const {onMouseDown: setStateA, onMouseUp: setStateB} =
       renderer.root.findByType('div').props;
 
-    await act(async () => setStateA('Hi'));
+    await act(() => setStateA('Hi'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -83,7 +83,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    await act(async () => setStateB('world!'));
+    await act(() => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -141,7 +141,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -203,7 +203,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    await act(async () => {
+    await act(() => {
       updateStates();
     });
 
@@ -301,7 +301,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    await act(async () => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -370,7 +370,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    await act(async () => {
+    await act(() => {
       updateStates();
     });
 
@@ -984,7 +984,7 @@ describe('ReactHooksInspectionIntegration', () => {
       children: ['count: ', '1'],
     });
 
-    await act(async () => incrementCount());
+    await act(() => incrementCount());
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},

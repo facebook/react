@@ -59,14 +59,14 @@ describe('ReactDOMNestedEvents', () => {
     document.body.appendChild(container);
     const root = ReactDOMClient.createRoot(container);
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     expect(buttonRef.current.innerHTML).toEqual(
       'Clicked: false, Focused: false',
     );
 
-    await act(async () => {
+    await act(() => {
       buttonRef.current.click();
     });
     assertLog(['Value right after focus call: Clicked: false, Focused: false']);

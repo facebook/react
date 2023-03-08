@@ -203,13 +203,13 @@ describe('ReactLazyContextPropagation', () => {
         return <Text text={value} />;
       }
 
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
       assertLog([0]);
       expect(root).toMatchRenderedOutput('0');
 
-      await act(async () => {
+      await act(() => {
         setValue(1);
       });
       assertLog([1]);
@@ -245,13 +245,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       setValue(1);
     });
     assertLog([1]);
@@ -288,13 +288,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       setValue(1);
     });
     assertLog([1]);
@@ -326,13 +326,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     });
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Consumer', 0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally calling setState to some other arbitrary value before
       // setting it back to the current one. That way an update is scheduled,
       // but we'll bail out during render when nothing has changed.
@@ -388,13 +388,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -468,13 +468,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -529,13 +529,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -583,13 +583,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B']);
@@ -644,13 +644,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B', 'B']);
@@ -686,13 +686,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B']);
@@ -740,13 +740,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B']);
@@ -803,13 +803,13 @@ describe('ReactLazyContextPropagation', () => {
 
     const root = ReactNoop.createRoot();
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['Suspend! [B]', 'Loading...']);
@@ -864,13 +864,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B']);
@@ -913,13 +913,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
     assertLog(['B', 'B']);
