@@ -410,7 +410,7 @@ describe('ReactSuspense', () => {
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    await act(async () => setValue('new value'));
+    await act(() => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
 
     await resolveText('new value');
@@ -456,7 +456,7 @@ describe('ReactSuspense', () => {
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    await act(async () => setValue('new value'));
+    await act(() => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
 
     await resolveText('new value');
@@ -500,7 +500,7 @@ describe('ReactSuspense', () => {
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    await act(async () => setValue('new value'));
+    await act(() => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
 
     await resolveText('new value');
@@ -544,7 +544,7 @@ describe('ReactSuspense', () => {
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    await act(async () => setValue('new value'));
+    await act(() => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
 
     await resolveText('new value');
@@ -583,7 +583,7 @@ describe('ReactSuspense', () => {
     await waitForAll(['Child 1', 'create layout']);
     expect(root).toMatchRenderedOutput('Child 1');
 
-    await act(async () => {
+    await act(() => {
       _setShow(true);
     });
     assertLog([
@@ -856,7 +856,7 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Step: 1');
 
       // Update that suspends
-      await act(async () => {
+      await act(() => {
         instance.setState({step: 2});
       });
       assertLog(['Suspend! [Step: 2]', 'Loading...']);
@@ -976,7 +976,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['Tab: 0']);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
-      await act(async () => setTab(1));
+      await act(() => setTab(1));
       assertLog(['Suspend! [Tab: 1]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -984,7 +984,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['Tab: 1']);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
-      await act(async () => setTab(2));
+      await act(() => setTab(2));
       assertLog(['Suspend! [Tab: 2]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -1018,11 +1018,11 @@ describe('ReactSuspense', () => {
       await waitForPaint(['A:0']);
       expect(root).toMatchRenderedOutput('A:0');
 
-      await act(async () => setStep(1));
+      await act(() => setStep(1));
       assertLog(['Suspend! [A:1]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      await act(async () => {
+      await act(() => {
         root.update(null);
       });
     });
@@ -1103,7 +1103,7 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(null);
 
-      await act(async () => {
+      await act(() => {
         root.update(<App name="world" />);
       });
     });
@@ -1139,7 +1139,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      await act(async () => setValue('new value'));
+      await act(() => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
 
       await resolveText('new value');
@@ -1183,7 +1183,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      await act(async () => setValue('new value'));
+      await act(() => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
 
       await resolveText('new value');
@@ -1226,7 +1226,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      await act(async () => setValue('new value'));
+      await act(() => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
 
       await resolveText('new value');
@@ -1265,7 +1265,7 @@ describe('ReactSuspense', () => {
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      await act(async () => setValue('new value'));
+      await act(() => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
 
       await resolveText('new value');
@@ -1316,11 +1316,11 @@ describe('ReactSuspense', () => {
       assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
 
-      await act(async () => setValue('new value'));
+      await act(() => setValue('new value'));
       assertLog(['Received context value [new value]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      await act(async () => setValue('default'));
+      await act(() => setValue('default'));
       assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
     });

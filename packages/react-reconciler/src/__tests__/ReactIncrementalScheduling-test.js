@@ -102,7 +102,7 @@ describe('ReactIncrementalScheduling', () => {
       return text;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.renderToRootWithID(<Text text="a:1" />, 'a');
       ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
       ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');

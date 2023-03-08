@@ -1678,11 +1678,11 @@ describe('ReactUpdates', () => {
       }
 
       const container = document.createElement('div');
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<Terminating />, container);
       });
       expect(container.textContent).toBe('50');
-      await act(async () => {
+      await act(() => {
         _setStep(0);
       });
       expect(container.textContent).toBe('50');
@@ -1701,7 +1701,7 @@ describe('ReactUpdates', () => {
       }
 
       const container = document.createElement('div');
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<Terminating />, container);
       });
 

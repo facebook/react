@@ -53,11 +53,11 @@ describe('ReactEffectOrdering', () => {
       return 'Child';
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Parent />);
     });
     expect(root).toMatchRenderedOutput('Child');
-    await act(async () => {
+    await act(() => {
       root.render(null);
     });
     assertLog(['Unmount parent', 'Unmount child']);
@@ -80,11 +80,11 @@ describe('ReactEffectOrdering', () => {
       return 'Child';
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Parent />);
     });
     expect(root).toMatchRenderedOutput('Child');
-    await act(async () => {
+    await act(() => {
       root.render(null);
     });
     assertLog(['Unmount parent', 'Unmount child']);

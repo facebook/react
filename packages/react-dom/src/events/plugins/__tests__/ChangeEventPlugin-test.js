@@ -753,12 +753,12 @@ describe('ChangeEventPlugin', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         root.render(<Foo />);
       });
       expect(container.textContent).toEqual('not hovered');
 
-      await act(async () => {
+      await act(() => {
         const mouseOverEvent = document.createEvent('MouseEvents');
         mouseOverEvent.initEvent('mouseover', true, true);
         target.current.dispatchEvent(mouseOverEvent);

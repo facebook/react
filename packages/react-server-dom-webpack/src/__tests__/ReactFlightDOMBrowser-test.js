@@ -264,7 +264,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
           <ProfilePage response={response} />
@@ -274,13 +274,13 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
-    await act(async () => {
+    await act(() => {
       resolveFriends();
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
-    await act(async () => {
+    await act(() => {
       resolveName();
     });
     // Advance time enough to trigger a nested fallback.
@@ -296,7 +296,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const theError = new Error('Game over');
     // Let's *fail* loading games.
-    await act(async () => {
+    await act(() => {
       rejectGames(theError);
     });
 
@@ -315,7 +315,7 @@ describe('ReactFlightDOMBrowser', () => {
     reportedErrors = [];
 
     // We can now show the sidebar.
-    await act(async () => {
+    await act(() => {
       resolvePhotos();
     });
     expect(container.innerHTML).toBe(
@@ -326,7 +326,7 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     // Show everything.
-    await act(async () => {
+    await act(() => {
       resolvePosts();
     });
     expect(container.innerHTML).toBe(
@@ -414,7 +414,7 @@ describe('ReactFlightDOMBrowser', () => {
     // Advance time enough to trigger a nested fallback.
     jest.advanceTimersByTime(500);
 
-    await act(async () => {});
+    await act(() => {});
 
     expect(flightResponse).toContain('(loading everything)');
     expect(flightResponse).toContain('(loading sidebar)');
@@ -422,25 +422,25 @@ describe('ReactFlightDOMBrowser', () => {
     expect(flightResponse).not.toContain(':friends:');
     expect(flightResponse).not.toContain(':name:');
 
-    await act(async () => {
+    await act(() => {
       resolveFriends();
     });
 
     expect(flightResponse).toContain(':friends:');
 
-    await act(async () => {
+    await act(() => {
       resolveName();
     });
 
     expect(flightResponse).toContain(':name:');
 
-    await act(async () => {
+    await act(() => {
       resolvePhotos();
     });
 
     expect(flightResponse).toContain(':photos:');
 
-    await act(async () => {
+    await act(() => {
       resolvePosts();
     });
 
@@ -512,7 +512,7 @@ describe('ReactFlightDOMBrowser', () => {
       return use(res);
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary fallback={errorBoundaryFn}>
           <Suspense fallback={<p>(loading)</p>}>
@@ -523,7 +523,7 @@ describe('ReactFlightDOMBrowser', () => {
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
-    await act(async () => {
+    await act(() => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
@@ -553,7 +553,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Client />
@@ -587,7 +587,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       // Client uses a different renderer.
       // We reset _currentRenderer here to not trigger a warning about multiple
       // renderers concurrently using this context
@@ -618,7 +618,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Client />
@@ -676,7 +676,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary>
           <Client />
@@ -712,7 +712,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Client />);
     });
     expect(container.innerHTML).toBe('Hi');
@@ -748,7 +748,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Client />);
     });
     expect(container.innerHTML).toBe('Hi');
@@ -798,7 +798,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     expect(container.innerHTML).toBe('Click Me');
@@ -840,7 +840,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     expect(container.innerHTML).toBe('Click Me');
@@ -890,7 +890,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 

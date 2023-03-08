@@ -197,14 +197,14 @@ describe('ReactConcurrentErrorRecovery', () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A1');
     seedNextTextCache('B1');
-    await act(async () => {
+    await act(() => {
       root.render(<App step={1} />);
     });
     assertLog(['A1', 'B1']);
     expect(root).toMatchRenderedOutput('A1B1');
 
     // Start a refresh transition
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App step={2} />);
       });
@@ -214,7 +214,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     expect(root).toMatchRenderedOutput('A1B1');
 
     // B fails to load.
-    await act(async () => {
+    await act(() => {
       rejectText('B2', new Error('Oops!'));
     });
 
@@ -238,7 +238,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     expect(root).toMatchRenderedOutput('A1B1');
 
     // A finishes loading.
-    await act(async () => {
+    await act(() => {
       resolveText('A2');
     });
     if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
@@ -300,14 +300,14 @@ describe('ReactConcurrentErrorRecovery', () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A1');
     seedNextTextCache('B1');
-    await act(async () => {
+    await act(() => {
       root.render(<App step={1} />);
     });
     assertLog(['A1', 'B1']);
     expect(root).toMatchRenderedOutput('A1B1');
 
     // Start a refresh transition
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App step={2} />);
       });
@@ -317,7 +317,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     expect(root).toMatchRenderedOutput('A1B1');
 
     // A fails to load.
-    await act(async () => {
+    await act(() => {
       rejectText('A2', new Error('Oops!'));
     });
 
@@ -341,7 +341,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     expect(root).toMatchRenderedOutput('A1B1');
 
     // B finishes loading.
-    await act(async () => {
+    await act(() => {
       resolveText('B2');
     });
     if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
@@ -385,7 +385,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     // The initial render suspends without a Suspense boundary. Since it's
     // wrapped in startTransition, it suspends instead of erroring.
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<AsyncText text="Async" />);
       });
@@ -397,7 +397,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     // boundary. (This is only interesting because when a component suspends
     // outside of a transition, we throw an error, which can be captured by
     // an error boundary.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <ErrorBoundary>
@@ -410,7 +410,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     expect(root).toMatchRenderedOutput(null);
 
     // Continues rendering once data resolves
-    await act(async () => {
+    await act(() => {
       resolveText('Async');
     });
     assertLog(['Async']);
@@ -447,7 +447,7 @@ describe('ReactConcurrentErrorRecovery', () => {
 
       // Suspend and throw in the same transition
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           root.render(
             <ErrorBoundary>
@@ -468,7 +468,7 @@ describe('ReactConcurrentErrorRecovery', () => {
       expect(root).toMatchRenderedOutput(null);
 
       // Try the reverse order, too: throw then suspend
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           root.render(
             <ErrorBoundary>

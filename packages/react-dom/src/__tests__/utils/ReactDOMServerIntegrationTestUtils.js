@@ -50,11 +50,11 @@ module.exports = function (initModules) {
   // promisified version of ReactDOM.render()
   async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     if (forceHydrate) {
-      await act(async () => {
+      await act(() => {
         ReactDOM.hydrate(reactElement, domElement);
       });
     } else {
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(reactElement, domElement);
       });
     }

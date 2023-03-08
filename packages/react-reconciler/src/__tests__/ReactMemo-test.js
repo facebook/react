@@ -270,7 +270,7 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="A" />);
         });
         assertLog([
@@ -280,7 +280,7 @@ describe('memo', () => {
         ]);
 
         // Demonstrate what happens when the props change
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
         });
         assertLog([
@@ -294,7 +294,7 @@ describe('memo', () => {
 
         // Demonstrate what happens when the prop object changes but there's a
         // bailout because all the individual props are the same.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
         });
         // Nothing re-renders
@@ -303,7 +303,7 @@ describe('memo', () => {
         // Demonstrate what happens when the prop object changes, it bails out
         // because all the props are the same, but we still render the
         // children because there's a local update in the same batch.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
           setLocalUpdateOnChildren(1);
         });
@@ -316,7 +316,7 @@ describe('memo', () => {
         ]);
 
         // Do the same thing again. We should still reuse the props object.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
           setLocalUpdateOnChildren(2);
         });
@@ -597,12 +597,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await act(async () => {
+        await act(() => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -633,12 +633,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await act(async () => {
+        await act(() => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);

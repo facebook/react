@@ -88,7 +88,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Now try after an update
-    await act(async () => {
+    await act(() => {
       root.render(<App mode="visible" />);
     });
     assertLog(['Normal', 'Deferred']);
@@ -128,7 +128,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createLegacyRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <LegacyHidden mode="hidden">
@@ -151,7 +151,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Test that the children can be updated
-    await act(async () => {
+    await act(() => {
       setState('B');
     });
     assertLog(['B']);
@@ -197,7 +197,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Test that the children can be updated
-    await act(async () => {
+    await act(() => {
       setState('B');
     });
     assertLog(['B']);
@@ -224,7 +224,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Mount hidden tree.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -236,7 +236,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is mounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -260,7 +260,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -271,7 +271,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree. The layout effect is unmounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -282,7 +282,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is re-mounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -313,7 +313,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       // Outer and inner offscreen are hidden.
       root.render(
         <Offscreen mode={'hidden'}>
@@ -327,7 +327,7 @@ describe('ReactOffscreen', () => {
     assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
-    await act(async () => {
+    await act(() => {
       // Inner offscreen is visible.
       root.render(
         <Offscreen mode={'hidden'}>
@@ -341,7 +341,7 @@ describe('ReactOffscreen', () => {
     assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
-    await act(async () => {
+    await act(() => {
       // Inner offscreen is hidden.
       root.render(
         <Offscreen mode={'hidden'}>
@@ -355,7 +355,7 @@ describe('ReactOffscreen', () => {
     assertLog(['child']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
-    await act(async () => {
+    await act(() => {
       // Inner offscreen is visible.
       root.render(
         <Offscreen mode={'hidden'}>
@@ -368,7 +368,7 @@ describe('ReactOffscreen', () => {
 
     Scheduler.unstable_clearLog();
 
-    await act(async () => {
+    await act(() => {
       // Outer offscreen is visible.
       // Inner offscreen is hidden.
       root.render(
@@ -382,7 +382,7 @@ describe('ReactOffscreen', () => {
 
     assertLog(['child']);
 
-    await act(async () => {
+    await act(() => {
       // Outer offscreen is hidden.
       // Inner offscreen is visible.
       root.render(
@@ -410,7 +410,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       // Start the tree hidden. The layout effect is not mounted.
       root.render(
         <Offscreen mode="hidden">
@@ -422,7 +422,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Show the tree. The layout effect is mounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -433,7 +433,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree again. The layout effect is un-mounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -459,7 +459,7 @@ describe('ReactOffscreen', () => {
       return <Text text="Child" />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -470,7 +470,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree. The layout effect is unmounted.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -498,7 +498,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <LegacyHidden mode="visible">
           <Child />
@@ -507,7 +507,7 @@ describe('ReactOffscreen', () => {
     });
     assertLog(['Child', 'Mount layout']);
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <LegacyHidden mode="hidden">
           <Child />
@@ -516,7 +516,7 @@ describe('ReactOffscreen', () => {
     });
     assertLog(['Child']);
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <LegacyHidden mode="visible">
           <Child />
@@ -525,7 +525,7 @@ describe('ReactOffscreen', () => {
     });
     assertLog(['Child']);
 
-    await act(async () => {
+    await act(() => {
       root.render(null);
     });
     assertLog(['Unmount layout']);
@@ -534,7 +534,7 @@ describe('ReactOffscreen', () => {
   // @gate enableOffscreen
   it('hides new insertions into an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <span>Hi</span>
@@ -544,7 +544,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
 
     // Insert a new node into the hidden tree
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <span>Hi</span>
@@ -564,7 +564,7 @@ describe('ReactOffscreen', () => {
   // @gate enableOffscreen
   it('hides updated nodes inside an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <span>Hi</span>
@@ -574,7 +574,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
 
     // Set the `hidden` prop to on an already hidden node
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <span hidden={false}>Hi</span>
@@ -585,7 +585,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
 
     // Unhide the boundary
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <span hidden={true}>Hi</span>
@@ -596,7 +596,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
 
     // Remove the `hidden` prop
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <span>Hi</span>
@@ -670,7 +670,7 @@ describe('ReactOffscreen', () => {
 
     // Render a hidden tree
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
     assertLog(['Outer: 0', 'Inner: 0']);
@@ -751,7 +751,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Offscreen hidden={false} />);
     });
     assertLog([]);
@@ -803,7 +803,7 @@ describe('ReactOffscreen', () => {
     }
 
     // Initial render
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -816,7 +816,7 @@ describe('ReactOffscreen', () => {
     // Schedule an update to a hidden class component. The update will finish
     // rendering in the background, but the callback shouldn't fire yet, because
     // the component isn't visible.
-    await act(async () => {
+    await act(() => {
       child.setState({text: 'B'}, () => {
         Scheduler.log('B update finished');
       });
@@ -827,7 +827,7 @@ describe('ReactOffscreen', () => {
     // Now reveal the hidden component. Simultaneously, schedule another
     // update with a callback to the same component. When the component is
     // revealed, both the B callback and C callback should fire, in that order.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -860,7 +860,7 @@ describe('ReactOffscreen', () => {
 
     // Initial mount
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -870,7 +870,7 @@ describe('ReactOffscreen', () => {
     assertLog(['componentDidMount']);
 
     // Hide the class component
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -881,7 +881,7 @@ describe('ReactOffscreen', () => {
 
     // Reappear the class component. componentDidMount should fire, not
     // componentDidUpdate.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -908,7 +908,7 @@ describe('ReactOffscreen', () => {
 
       // Initial mount
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(
           <Offscreen mode="visible">
             <Child key="B" label="B" />
@@ -918,7 +918,7 @@ describe('ReactOffscreen', () => {
       assertLog(['Mount B']);
 
       // Hide the component
-      await act(async () => {
+      await act(() => {
         root.render(
           <Offscreen mode="hidden">
             <Child key="B" label="B" />
@@ -928,7 +928,7 @@ describe('ReactOffscreen', () => {
       assertLog(['Unmount B']);
 
       // Reappear the component and also add some new siblings.
-      await act(async () => {
+      await act(() => {
         root.render(
           <Offscreen mode="visible">
             <Child key="A" label="A" />
@@ -964,7 +964,7 @@ describe('ReactOffscreen', () => {
       // Initial mount
       const bRef = React.createRef();
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(
           <Offscreen mode="visible">
             <Child key="B" ref={bRef} label="B" />
@@ -978,7 +978,7 @@ describe('ReactOffscreen', () => {
       const setStateB = bRef.current.setState.bind(bRef.current);
 
       // Hide the component
-      await act(async () => {
+      await act(() => {
         root.render(
           <Offscreen mode="hidden">
             <Child key="B" ref={bRef} label="B" />
@@ -988,7 +988,7 @@ describe('ReactOffscreen', () => {
       assertLog(['Unmount B']);
 
       // Reappear the component and also add some new siblings.
-      await act(async () => {
+      await act(() => {
         setStateB(null, () => {
           Scheduler.log('setState callback B');
         });
@@ -1033,7 +1033,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Mount the app without showing the extra content
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} />);
     });
     assertLog([
@@ -1056,7 +1056,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Reveal the prerendered tree
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     assertLog([
@@ -1096,7 +1096,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Mount the app without showing the extra content
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} />);
     });
     assertLog([
@@ -1119,7 +1119,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Reveal the prerendered tree
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     assertLog(['Shell', 'More']);
@@ -1151,21 +1151,21 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} step={1} />);
     });
     assertLog([1, 'Commit mount [1]']);
     expect(root).toMatchRenderedOutput(<span prop={1} />);
 
     // Hide the tree. This will unmount the effect.
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} step={1} />);
     });
     assertLog(['Commit unmount [1]']);
     expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
 
     // Update.
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} step={2} />);
     });
     // The update is prerendered but no effects are fired
@@ -1173,7 +1173,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
 
     // Reveal the tree.
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} step={2} />);
     });
     // The update doesn't render because it was already prerendered, but we do
@@ -1212,23 +1212,23 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} />);
     });
     assertLog(['Mount Child', 'Mount Parent']);
 
     // First demonstrate what happens during a normal deletion
-    await act(async () => {
+    await act(() => {
       root.render(null);
     });
     assertLog(['Unmount Parent', 'Unmount Child']);
 
     // Now redo the same thing but hide instead of deleting
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} />);
     });
     assertLog(['Mount Child', 'Mount Parent']);
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
     // The order is the same as during a deletion: parent before child
@@ -1266,7 +1266,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Mount the app, including the extra content
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} step={1} />);
     });
     assertLog(['Shell 1', 'More 1', 'Mount Shell 1', 'Mount More 1']);
@@ -1278,7 +1278,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Hide the extra content. while also updating one of its props
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} step={2} />);
     });
     assertLog([
@@ -1333,7 +1333,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Prerender the outer contents. No effects should mount.
-    await act(async () => {
+    await act(() => {
       root.render(<App showOuter={false} showInner={false} />);
     });
     assertLog(['Outer']);
@@ -1344,7 +1344,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Prerender the inner contents. No effects should mount.
-    await act(async () => {
+    await act(() => {
       root.render(<App showOuter={false} showInner={true} />);
     });
     assertLog(['Outer', 'Inner']);
@@ -1358,7 +1358,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Reveal the prerendered tree
-    await act(async () => {
+    await act(() => {
       root.render(<App showOuter={true} showInner={true} />);
     });
     // The effects fire, but the tree is not re-rendered because it already
@@ -1409,7 +1409,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Prerender the whole tree.
-    await act(async () => {
+    await act(() => {
       root.render(<App showOuter={false} showInner={false} />);
     });
     assertLog(['Outer', 'Inner']);
@@ -1426,7 +1426,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Reveal the outer contents. The inner tree remains hidden.
-    await act(async () => {
+    await act(() => {
       root.render(<App showOuter={true} showInner={false} />);
     });
     assertLog(['Mount Outer']);
@@ -1460,25 +1460,25 @@ describe('ReactOffscreen', () => {
 
       const root = ReactNoop.createRoot();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App mode={'manual'} />);
       });
 
       expect(offscreenRef.current).not.toBeNull();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App mode={'visible'} />);
       });
 
       expect(offscreenRef.current).toBeNull();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App mode={'hidden'} />);
       });
 
       expect(offscreenRef.current).toBeNull();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App mode={'manual'} />);
       });
 
@@ -1525,7 +1525,7 @@ describe('ReactOffscreen', () => {
 
       const root = ReactNoop.createRoot();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
 
@@ -1552,7 +1552,7 @@ describe('ReactOffscreen', () => {
         );
       });
 
-      await act(async () => {
+      await act(() => {
         offscreenRef.current.detach();
       });
 
@@ -1577,7 +1577,7 @@ describe('ReactOffscreen', () => {
         </>,
       );
 
-      await act(async () => {
+      await act(() => {
         offscreenRef.current.attach();
       });
 
@@ -1650,7 +1650,7 @@ describe('ReactOffscreen', () => {
 
       const root = ReactNoop.createRoot();
 
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
 
@@ -1721,19 +1721,19 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showOffscreen={true} />);
     });
 
     expect(offscreenRef.current).not.toBeNull();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showOffscreen={false} />);
     });
 
     expect(offscreenRef.current).toBeNull();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showOffscreen={true} />);
     });
 
@@ -1757,18 +1757,18 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App mode={'hidden'} />);
     });
 
     expect(offscreenRef.current).toBeNull();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App mode={'visible'} />);
     });
 
     expect(offscreenRef.current).not.toBeNull();
-    await act(async () => {
+    await act(() => {
       root.render(<App mode={'hidden'} />);
     });
 
@@ -1789,7 +1789,7 @@ describe('ReactOffscreen', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <App>
           <div />
@@ -1800,7 +1800,7 @@ describe('ReactOffscreen', () => {
     expect(offscreenRef.current).not.toBeNull();
     const firstFiber = offscreenRef.current._current;
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <App>
           <span />
@@ -1844,7 +1844,7 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 
@@ -1852,7 +1852,7 @@ describe('ReactOffscreen', () => {
     expect(spanRef.current).not.toBeNull();
     assertLog(['Mount Layout Child', 'Mount Child']);
 
-    await act(async () => {
+    await act(() => {
       offscreenRef.detach();
     });
 
@@ -1860,13 +1860,13 @@ describe('ReactOffscreen', () => {
     assertLog(['Unmount Layout Child', 'Unmount Child']);
 
     // Calling attach on already attached Offscreen.
-    await act(async () => {
+    await act(() => {
       offscreenRef.detach();
     });
 
     assertLog([]);
 
-    await act(async () => {
+    await act(() => {
       offscreenRef.attach();
     });
 
@@ -1900,7 +1900,7 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 
@@ -1919,7 +1919,7 @@ describe('ReactOffscreen', () => {
     expect(outerOffscreen).not.toBeNull();
     expect(innerOffscreen).not.toBeNull();
 
-    await act(async () => {
+    await act(() => {
       outerOffscreen.detach();
     });
 
@@ -1932,7 +1932,7 @@ describe('ReactOffscreen', () => {
       'unmount inner',
     ]);
 
-    await act(async () => {
+    await act(() => {
       outerOffscreen.attach();
     });
 
@@ -1943,26 +1943,26 @@ describe('ReactOffscreen', () => {
       'mount middle',
     ]);
 
-    await act(async () => {
+    await act(() => {
       innerOffscreen.detach();
     });
 
     assertLog(['unmount layout inner', 'unmount inner']);
 
     // Calling detach on already detached Offscreen.
-    await act(async () => {
+    await act(() => {
       innerOffscreen.detach();
     });
 
     assertLog([]);
 
-    await act(async () => {
+    await act(() => {
       innerOffscreen.attach();
     });
 
     assertLog(['mount layout inner', 'mount inner']);
 
-    await act(async () => {
+    await act(() => {
       innerOffscreen.detach();
       outerOffscreen.attach();
     });
@@ -1992,13 +1992,13 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
 
     assertLog(['attach child']);
 
-    await act(async () => {
+    await act(() => {
       const instance = offscreen.current;
       // Detach then immediately attach the instance.
       instance.detach();
@@ -2007,14 +2007,14 @@ describe('ReactOffscreen', () => {
 
     assertLog([]);
 
-    await act(async () => {
+    await act(() => {
       const instance = offscreen.current;
       instance.detach();
     });
 
     assertLog(['detach child']);
 
-    await act(async () => {
+    await act(() => {
       const instance = offscreen.current;
       // Attach then immediately detach.
       instance.attach();
@@ -2052,7 +2052,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['attach child']);

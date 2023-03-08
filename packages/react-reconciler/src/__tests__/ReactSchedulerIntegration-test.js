@@ -79,11 +79,11 @@ describe('ReactSchedulerIntegration', () => {
       });
       return null;
     }
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(<CleanupEffect />);
     });
     assertLog([]);
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(<Effects />);
     });
     assertLog([

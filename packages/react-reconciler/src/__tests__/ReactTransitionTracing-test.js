@@ -2208,7 +2208,7 @@ describe('ReactInteractionTracing', () => {
     const root = ReactNoop.createRoot({
       unstable_transitionCallbacks: transitionCallbacks,
     });
-    await act(async () => {
+    await act(() => {
       startTransition(() => root.render(<App />), {name: 'transition'});
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2221,7 +2221,7 @@ describe('ReactInteractionTracing', () => {
       'onTransitionStart(transition, 0)',
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('Text');
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2232,7 +2232,7 @@ describe('ReactInteractionTracing', () => {
       'onTransitionComplete(transition, 0, 2000)',
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('Hidden Text');
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2343,7 +2343,7 @@ describe('ReactInteractionTracing', () => {
       unstable_transitionCallbacks: transitionCallbacks,
     });
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => root.render(<App />), {name: 'transition'});
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2361,7 +2361,7 @@ describe('ReactInteractionTracing', () => {
       'onTransitionProgress(transition, 0, 1000, [two])',
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('Text Two');
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2416,7 +2416,7 @@ describe('ReactInteractionTracing', () => {
       unstable_transitionCallbacks: getTransitionCallbacks('root two'),
     });
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => rootOne.render(<App name="one" />), {
         name: 'transition one',
       });
@@ -2438,7 +2438,7 @@ describe('ReactInteractionTracing', () => {
       'onTransitionProgress(transition two, 0, 1000, [two]) /root two/',
     ]);
 
-    await act(async () => {
+    await act(() => {
       caches[0].resolve('Text one');
       ReactNoop.expire(1000);
       advanceTimers(1000);
@@ -2450,7 +2450,7 @@ describe('ReactInteractionTracing', () => {
       'onTransitionComplete(transition one, 0, 2000) /root one/',
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('Text two');
       ReactNoop.expire(1000);
       advanceTimers(1000);

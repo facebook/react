@@ -185,7 +185,7 @@ describe('ReactCache', () => {
   // @gate enableCacheElement && enableCache
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Cache>Hi</Cache>);
     });
     expect(root).toMatchRenderedOutput('Hi');
@@ -194,7 +194,7 @@ describe('ReactCache', () => {
   // @gate enableCacheElement && enableCache
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Cache>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -206,13 +206,13 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A']);
     expect(root).toMatchRenderedOutput('A');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // no cleanup: cache is still retained at the root
@@ -223,7 +223,7 @@ describe('ReactCache', () => {
   // @gate enableCache
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
@@ -233,13 +233,13 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A']);
     expect(root).toMatchRenderedOutput('A');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // no cleanup: cache is still retained at the root
@@ -267,7 +267,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} />);
     });
 
@@ -276,13 +276,13 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // no cleanup: cache is still retained at the root
@@ -312,13 +312,13 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     // Even though there are two new <Cache /> trees, they should share the same
@@ -326,13 +326,13 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // cleanup occurs for the cache shared by the inner cache boundaries (which
@@ -359,7 +359,7 @@ describe('ReactCache', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
       // Even though there is a nested <Cache /> boundary, it should share the same
@@ -367,13 +367,13 @@ describe('ReactCache', () => {
       assertLog(['Cache miss! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      await act(async () => {
+      await act(() => {
         resolveMostRecentTextCache('A');
       });
       assertLog(['A', 'A']);
       expect(root).toMatchRenderedOutput('AA');
 
-      await act(async () => {
+      await act(() => {
         root.render('Bye');
       });
       // no cleanup: cache is still retained at the root
@@ -400,7 +400,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -408,7 +408,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     assertLog([
@@ -418,7 +418,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // no cleanup: cache is still retained at the root
@@ -448,7 +448,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -456,7 +456,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     assertLog([
@@ -466,7 +466,7 @@ describe('ReactCache', () => {
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]Loading...');
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v2]']);
@@ -475,7 +475,7 @@ describe('ReactCache', () => {
     // Replace all the children: this should retain the root Cache instance,
     // but cleanup the separate cache instance created for the fresh cache
     // boundary
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     // Cleanup occurs for the *second* cache instance: the first is still
@@ -524,13 +524,13 @@ describe('ReactCache', () => {
       return <Text text="Content" />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Cache miss! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog([
@@ -547,7 +547,7 @@ describe('ReactCache', () => {
       </>,
     );
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('B');
     });
     assertLog(['Content']);
@@ -558,7 +558,7 @@ describe('ReactCache', () => {
       </>,
     );
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // no cleanup: cache is still retained at the root
@@ -608,19 +608,19 @@ describe('ReactCache', () => {
       return <Text text="Content" />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={false} />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
     assertLog(['Cache miss! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog([
@@ -637,7 +637,7 @@ describe('ReactCache', () => {
       </>,
     );
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('B');
     });
     assertLog(['Content']);
@@ -648,7 +648,7 @@ describe('ReactCache', () => {
       </>,
     );
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     assertLog(['Cache cleanup: A [v1]', 'Cache cleanup: B [v1]']);
@@ -665,7 +665,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <App />
@@ -675,20 +675,20 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await act(async () => {
+    await act(() => {
       startTransition(() => refresh());
     });
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
@@ -699,7 +699,7 @@ describe('ReactCache', () => {
     }
     expect(root).toMatchRenderedOutput('A [v2]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     expect(root).toMatchRenderedOutput('Bye');
@@ -715,7 +715,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <App />
@@ -725,27 +725,27 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await act(async () => {
+    await act(() => {
       startTransition(() => refresh());
     });
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated, and the previous cache is cleared
     assertLog(['A [v2]', 'Cache cleanup: A [v1]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // the original root cache already cleaned up when the refresh completed
@@ -763,7 +763,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <App />
@@ -773,14 +773,14 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await act(async () => {
+    await act(() => {
       refresh();
     });
     assertLog([
@@ -793,14 +793,14 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated, and the previous cache is cleared
     assertLog(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // the original root cache already cleaned up when the refresh completed
@@ -827,7 +827,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Cache>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -839,14 +839,14 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await act(async () => {
+    await act(() => {
       // Refresh the cache with seeded data, like you would receive from a
       // server mutation.
       // TODO: Seeding multiple typed textCaches. Should work by calling `refresh`
@@ -863,7 +863,7 @@ describe('ReactCache', () => {
     assertLog(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye');
     });
     // the refreshed cache boundary is unmounted and cleans up
@@ -898,7 +898,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -906,7 +906,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await act(async () => {
+    await act(() => {
       seedNextTextCache('A');
       root.render(<App showMore={true} />);
     });
@@ -919,13 +919,13 @@ describe('ReactCache', () => {
 
     // Now refresh the shell. This should also cause the "Show More" contents to
     // refresh, since its cache is nested inside the outer one.
-    await act(async () => {
+    await act(() => {
       startTransition(() => refreshShell());
     });
     assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog([
@@ -937,7 +937,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v3]A [v3]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     // Unmounting children releases the refreshed cache instance only; the root
@@ -980,12 +980,12 @@ describe('ReactCache', () => {
       // treated like sibling providers that happen to share an underlying
       // cache, as opposed to consumers of the root-level cache.
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(<App showMore={false} />);
       });
 
       // Now reveal the boundaries. In a real app  this would be a navigation.
-      await act(async () => {
+      await act(() => {
         root.render(<App showMore={true} />);
       });
 
@@ -994,7 +994,7 @@ describe('ReactCache', () => {
       assertLog(['Cache miss! [A]', 'Loading...', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...Loading...');
 
-      await act(async () => {
+      await act(() => {
         resolveMostRecentTextCache('A');
       });
       assertLog(['A [v1]', 'A [v1]']);
@@ -1007,7 +1007,7 @@ describe('ReactCache', () => {
       });
       assertLog(['Cache miss! [A]', 'Loading...']);
 
-      await act(async () => {
+      await act(() => {
         resolveMostRecentTextCache('A');
       });
       assertLog(['A [v2]']);
@@ -1019,7 +1019,7 @@ describe('ReactCache', () => {
       // a fresh boundary). Therefore this causes cleanup for both the fresh cache
       // instance in the refreshed first boundary and cleanup for the non-refreshed
       // sibling boundary.
-      await act(async () => {
+      await act(() => {
         root.render('Bye!');
       });
       assertLog(['Cache cleanup: A [v2]', 'Cache cleanup: A [v1]']);
@@ -1054,13 +1054,13 @@ describe('ReactCache', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(<App showMore={false} />);
       });
       assertLog(['Cache miss! [A]', 'Cache miss! [B]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      await act(async () => {
+      await act(() => {
         // This will resolve the content in the first cache
         resolveMostRecentTextCache('A');
         resolveMostRecentTextCache('B');
@@ -1079,13 +1079,13 @@ describe('ReactCache', () => {
       expect(root).toMatchRenderedOutput('Loading... A [v1] B [v1]');
 
       // Now resolve the second tree
-      await act(async () => {
+      await act(() => {
         resolveMostRecentTextCache('A');
       });
       assertLog(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2] A [v1] B [v1]');
 
-      await act(async () => {
+      await act(() => {
         root.render('Bye!');
       });
       // Unmounting children releases both cache boundaries, but the original
@@ -1107,7 +1107,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>(empty)</Suspense>,
       );
@@ -1115,7 +1115,7 @@ describe('ReactCache', () => {
     assertLog([]);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -1127,7 +1127,7 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -1144,14 +1144,14 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('(empty)');
 
     // Resolve the request
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]', 'A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
     // Now do another transition
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -1172,7 +1172,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]', 'A [v1]', 'A [v2]']);
@@ -1182,7 +1182,7 @@ describe('ReactCache', () => {
     // commits, so both fresh cache instances are released by their cache boundaries,
     // cleaning up v1 (used for the first two children which render together) and
     // v2 (used for the third boundary added later).
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog(['Cache cleanup: A [v1]', 'Cache cleanup: A [v2]']);
@@ -1225,13 +1225,13 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['0']);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         showMore();
       });
@@ -1239,7 +1239,7 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       updateUnrelated(1);
     });
     assertLog([
@@ -1251,7 +1251,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('1');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
@@ -1261,7 +1261,7 @@ describe('ReactCache', () => {
     // render after calling showMore(). This instance is cleaned up when that boundary
     // is unmounted. Bc root cache instance is never accessed, the inner cache
     // boundary ends up at v1.
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog(['Cache cleanup: A [v1]']);
@@ -1272,7 +1272,7 @@ describe('ReactCache', () => {
   test('cache boundary uses a fresh cache when its key changes', async () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="A">
@@ -1285,7 +1285,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     seedNextTextCache('B');
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="B">
@@ -1300,7 +1300,7 @@ describe('ReactCache', () => {
     // Unmount children: the fresh cache instance for B cleans up since the cache boundary
     // is the only owner, while the original cache instance (for A) is still retained by
     // the root.
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog(['Cache cleanup: B [v2]']);
@@ -1310,7 +1310,7 @@ describe('ReactCache', () => {
   // @gate enableCacheElement && enableCache
   test('overlapping transitions after an initial mount use the same fresh cache', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="A">
@@ -1322,14 +1322,14 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // After a mount, subsequent transitions use a fresh cache
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback="Loading...">
@@ -1346,7 +1346,7 @@ describe('ReactCache', () => {
     // Update to a different text and with a different key for the cache
     // boundary: this should still use the fresh cache instance created
     // for the earlier transition
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback="Loading...">
@@ -1360,7 +1360,7 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [C]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('C');
     });
     assertLog(['C [v2]']);
@@ -1368,7 +1368,7 @@ describe('ReactCache', () => {
 
     // Unmount children: the fresh cache used for the updates is freed, while the
     // original cache (with A) is still retained at the root.
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog(['Cache cleanup: B [v2]', 'Cache cleanup: C [v2]']);
@@ -1378,7 +1378,7 @@ describe('ReactCache', () => {
   // @gate enableCacheElement && enableCache
   test('overlapping updates after an initial mount use the same fresh cache', async () => {
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="A">
@@ -1390,14 +1390,14 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('A');
     });
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // After a mount, subsequent updates use a fresh cache
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="B">
@@ -1411,7 +1411,7 @@ describe('ReactCache', () => {
 
     // A second update uses the same fresh cache: even though this is a new
     // Cache boundary, the render uses the fresh cache from the pending update.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="C">
@@ -1423,7 +1423,7 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [C]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(async () => {
+    await act(() => {
       resolveMostRecentTextCache('C');
     });
     assertLog(['C [v2]']);
@@ -1431,7 +1431,7 @@ describe('ReactCache', () => {
 
     // Unmount children: the fresh cache used for the updates is freed, while the
     // original cache (with A) is still retained at the root.
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog(['Cache cleanup: B [v2]', 'Cache cleanup: C [v2]']);
@@ -1442,7 +1442,7 @@ describe('ReactCache', () => {
   test('cleans up cache only used in an aborted transition', async () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache key="A">
@@ -1456,7 +1456,7 @@ describe('ReactCache', () => {
 
     // Start a transition from A -> B..., which should create a fresh cache
     // for the new cache boundary (bc of the different key)
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback="Loading...">
@@ -1471,7 +1471,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // ...but cancel by transitioning "back" to A (which we never really left)
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback="Loading...">
@@ -1486,7 +1486,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Unmount children: ...
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog([]);
@@ -1502,7 +1502,7 @@ describe('ReactCache', () => {
       return <AsyncText showVersion={true} text={text} />;
     }
     seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Example text="A" />
@@ -1512,7 +1512,7 @@ describe('ReactCache', () => {
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         refresh();
       });
@@ -1520,7 +1520,7 @@ describe('ReactCache', () => {
     assertLog(['Cache miss! [A]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog([
@@ -1544,7 +1544,7 @@ describe('ReactCache', () => {
       return <AsyncText showVersion={true} text={text} />;
     }
     seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback="Loading...">
           <Cache>
@@ -1556,7 +1556,7 @@ describe('ReactCache', () => {
     assertLog(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         refresh();
       });
@@ -1565,7 +1565,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Unmount the boundary before the refresh can complete
-    await act(async () => {
+    await act(() => {
       root.render('Bye!');
     });
     assertLog([
@@ -1594,14 +1594,14 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App prerenderMore={false} />);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput(<div hidden={true} />);
 
     seedNextTextCache('More');
-    await act(async () => {
+    await act(() => {
       root.render(<App prerenderMore={true} />);
     });
     assertLog(['More']);
@@ -1629,7 +1629,7 @@ describe('ReactCache', () => {
     function MoreArgs({a, b}) {
       return (types(a) === types(a, b)).toString() + ' ';
     }
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a="e" b="f" />
@@ -1641,7 +1641,7 @@ describe('ReactCache', () => {
       );
     });
     expect(root).toMatchRenderedOutput('string string true false false false ');
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a="e" b={null} />
@@ -1654,7 +1654,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('string object true false false false ');
     const obj = {};
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a="e" b={obj} />
@@ -1667,7 +1667,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('string object true false false false ');
     const sameObj = {};
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a={sameObj} b={sameObj} />
@@ -1681,7 +1681,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('object object true true false false ');
     const objA = {};
     const objB = {};
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a={objA} b={objB} />
@@ -1694,7 +1694,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('object object true false false false ');
     const sameSymbol = Symbol();
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a={sameSymbol} b={sameSymbol} />
@@ -1707,7 +1707,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('symbol symbol true true false false ');
     const notANumber = +'nan';
-    await act(async () => {
+    await act(() => {
       root.render(
         <>
           <Print a={1} b={notANumber} />
@@ -1749,7 +1749,7 @@ describe('ReactCache', () => {
 
       return 'Blank';
     }
-    await act(async () => {
+    await act(() => {
       root.render(<Test />);
     });
     expect(x).toBe(y);

@@ -33,12 +33,12 @@ describe('ReactClassSetStateCallback', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog([0]);
 
-    await act(async () => {
+    await act(() => {
       if (gate(flags => flags.enableUnifiedSyncLane)) {
         React.startTransition(() => {
           app.setState({step: 1}, () => Scheduler.log('Callback 1'));

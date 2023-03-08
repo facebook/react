@@ -152,7 +152,7 @@ describe('ReactInternalTestUtils', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A', 'B', 'C']);

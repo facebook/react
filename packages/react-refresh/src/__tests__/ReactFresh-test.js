@@ -864,7 +864,7 @@ describe('ReactFresh', () => {
       });
 
       expect(container.textContent).toBe('Loading');
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
       expect(container.textContent).toBe('0');
@@ -1013,7 +1013,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1097,7 +1097,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1182,7 +1182,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1267,7 +1267,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -2482,7 +2482,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild.textContent).toBe('0');
     expect(el.firstChild.style.color).toBe('red');
 
-    await internalAct(async () => {
+    await internalAct(() => {
       el.firstChild.dispatchEvent(
         new MouseEvent('click', {
           bubbles: true,

@@ -454,7 +454,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(0);
 
     // Performing an update should force it to delete the boundary
-    await act(async () => {
+    await act(() => {
       root.render(<App value={true} />);
     });
 
@@ -510,7 +510,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(null);
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -579,7 +579,7 @@ describe('ReactDOMServerPartialHydration', () => {
       expect(ref.current).toBe(null);
 
       shouldSuspend = true;
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />);
       });
 
@@ -636,7 +636,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(null);
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -698,7 +698,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(deleted.length).toBe(0);
 
-    await act(async () => {
+    await act(() => {
       root.render(<App deleted={true} />);
     });
 
@@ -744,7 +744,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we try to hydrate.
     suspend = true;
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOM.hydrate(<App />, container);
       });
     }).toErrorDev(
@@ -829,14 +829,14 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
 
-    await act(async () => {
+    await act(() => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
 
     // In this state, we can still update the siblings.
-    await act(async () => showSibling());
+    await act(() => showSibling());
 
     expect(container.firstChild.firstChild.tagName).toBe('DIV');
     expect(container.firstChild.firstChild.textContent).toBe('First');
@@ -885,14 +885,14 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    await act(async () => {
+    await act(() => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');
 
     // In this state, we can still delete the boundary.
-    await act(async () => hideMiddle());
+    await act(() => hideMiddle());
 
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
@@ -1096,7 +1096,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(null);
 
     // Render an update, but leave it still suspended.
-    await act(async () => {
+    await act(() => {
       root.render(<App text="Hi" className="hi" />);
     });
 
@@ -1177,7 +1177,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Render an update, but leave it still suspended.
     // Flushing now should delete the existing content and show the fallback.
-    await act(async () => {
+    await act(() => {
       root.render(<App text="Hi" className="hi" />);
     });
 
@@ -1253,7 +1253,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Render an update, but leave it still suspended.
     // Flushing now should delete the existing content and show the fallback.
-    await act(async () => {
+    await act(() => {
       root.render(<App text="Hi" className="hi" />);
     });
 
@@ -1570,7 +1570,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Render an update, but leave it still suspended.
     // Flushing now should delete the existing content and show the fallback.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Context.Provider value={{text: 'Hi', className: 'hi'}}>
           <App />
@@ -1880,7 +1880,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('AB');
 
     // Add more rows before we've hydrated the first two.
-    await act(async () => {
+    await act(() => {
       root.render(<App showMore={true} />);
     });
 
@@ -2313,7 +2313,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // The new update doesn't suspend.
     // Since we're still suspended on the original data, we can't hydrate.
     // This will force all expiration times to flush.
-    await act(async () => {
+    await act(() => {
       root.render(
         <ClassName.Provider value={'hi'}>
           <App text="Hi" />
@@ -2395,7 +2395,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Click meHello');
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     expect(clicks).toBe(0);
@@ -2486,7 +2486,7 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     // We should not have invoked the event yet because we're not
@@ -2568,7 +2568,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactDOMClient.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     // This should be delayed.
@@ -2578,7 +2578,7 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     expect(clicks).toBe(0);
@@ -2671,7 +2671,7 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     // We should not have invoked the event yet because we're not
@@ -2752,7 +2752,7 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       span.click();
     });
     expect(clicksOnChild).toBe(0);
@@ -2840,7 +2840,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
 
     // The Suspense boundary is not yet hydrated.
-    await act(async () => {
+    await act(() => {
       a.click();
     });
     expect(clicks).toBe(0);
@@ -3115,7 +3115,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Click meHello');
 
     // We're now partially hydrated.
-    await act(async () => {
+    await act(() => {
       form.dispatchEvent(
         new window.Event('submit', {
           bubbles: true,
@@ -3415,7 +3415,7 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = finalHTML;
 
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
           onRecoverableError(error) {
             Scheduler.log('Log recoverable error: ' + error.message);
@@ -3462,7 +3462,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <DirectTextChild text="good" />,
     );
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
           onRecoverableError(error) {
             Scheduler.log(error.message);
@@ -3503,7 +3503,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <TextChildWithSibling text="good" />,
     );
     await expect(async () => {
-      await act(async () => {
+      await act(() => {
         ReactDOMClient.hydrateRoot(
           container2,
           <TextChildWithSibling text="bad" />,

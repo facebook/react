@@ -145,7 +145,7 @@ describe('ReactSuspenseFuzz', () => {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
-        await act(async () => {
+        await act(() => {
           ReactNoop.batchedUpdates(() => {
             jest.advanceTimersByTime(1000);
           });

@@ -63,7 +63,7 @@ describe('useMemoCache()', () => {
       return 'Ok';
     }
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Component />);
     });
     expect(root).toMatchRenderedOutput('Ok');
@@ -107,7 +107,7 @@ describe('useMemoCache()', () => {
     });
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Component />);
     });
     expect(root).toMatchRenderedOutput('Count 0');
@@ -115,7 +115,7 @@ describe('useMemoCache()', () => {
     const data0 = data;
 
     // Changing x should reset the data object
-    await act(async () => {
+    await act(() => {
       setX(1);
     });
     expect(root).toMatchRenderedOutput('Count 1');
@@ -125,7 +125,7 @@ describe('useMemoCache()', () => {
 
     // Forcing an unrelated update shouldn't recreate the
     // data object.
-    await act(async () => {
+    await act(() => {
       forceUpdate();
     });
     expect(root).toMatchRenderedOutput('Count 1');
@@ -183,7 +183,7 @@ describe('useMemoCache()', () => {
     });
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Component />);
     });
     expect(root).toMatchRenderedOutput('Count 0');
@@ -193,7 +193,7 @@ describe('useMemoCache()', () => {
     // Simultaneously trigger an update to x (should create a new data value)
     // and trigger the setState+early return. The runtime should reset the cache
     // to avoid an inconsistency
-    await act(async () => {
+    await act(() => {
       setX(1);
       setN(1);
     });
@@ -204,7 +204,7 @@ describe('useMemoCache()', () => {
 
     // Forcing an unrelated update shouldn't recreate the
     // data object.
-    await act(async () => {
+    await act(() => {
       setN(3);
     });
     expect(root).toMatchRenderedOutput('Count 1');
@@ -266,7 +266,7 @@ describe('useMemoCache()', () => {
     spyOnDev(console, 'error');
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <ErrorBoundary>
           <Component />
@@ -280,7 +280,7 @@ describe('useMemoCache()', () => {
     // Simultaneously trigger an update to x (should create a new data value)
     // and trigger the setState+early return. The runtime should reset the cache
     // to avoid an inconsistency
-    await act(async () => {
+    await act(() => {
       // this update bumps the count
       setX(1);
       // this triggers a throw.
@@ -293,7 +293,7 @@ describe('useMemoCache()', () => {
 
     // Forcing an unrelated update shouldn't recreate the
     // data object.
-    await act(async () => {
+    await act(() => {
       setN(3);
     });
     expect(root).toMatchRenderedOutput('Count 1');
@@ -352,7 +352,7 @@ describe('useMemoCache()', () => {
     });
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Component />);
     });
     expect(root).toMatchRenderedOutput('count 0');
@@ -360,7 +360,7 @@ describe('useMemoCache()', () => {
     const data0 = data;
 
     // Changing x should reset the data object
-    await act(async () => {
+    await act(() => {
       setX(1);
     });
     expect(root).toMatchRenderedOutput('count 1');
@@ -370,7 +370,7 @@ describe('useMemoCache()', () => {
 
     // Forcing an unrelated update shouldn't recreate the
     // data object.
-    await act(async () => {
+    await act(() => {
       forceUpdate();
     });
     expect(root).toMatchRenderedOutput('count 1');

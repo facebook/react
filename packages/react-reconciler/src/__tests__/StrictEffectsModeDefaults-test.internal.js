@@ -52,7 +52,7 @@ describe('StrictEffectsMode defaults', () => {
       return text;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
@@ -78,7 +78,7 @@ describe('StrictEffectsMode defaults', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
@@ -208,7 +208,7 @@ describe('StrictEffectsMode defaults', () => {
 
         return text;
       }
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -221,7 +221,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -232,7 +232,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 
@@ -254,7 +254,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -267,7 +267,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -278,7 +278,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 
@@ -300,7 +300,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -313,7 +313,7 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -324,7 +324,7 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 
@@ -344,7 +344,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -355,13 +355,13 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
       assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 
@@ -382,7 +382,7 @@ describe('StrictEffectsMode defaults', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -416,7 +416,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App />);
       });
 
@@ -446,7 +446,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -456,13 +456,13 @@ describe('StrictEffectsMode defaults', () => {
         'componentDidMount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
       assertLog(['componentDidUpdate']);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 
@@ -489,7 +489,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -539,7 +539,7 @@ describe('StrictEffectsMode defaults', () => {
         return showChild && <Child />;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App />);
       });
 
@@ -552,7 +552,7 @@ describe('StrictEffectsMode defaults', () => {
         'App useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         _setShowChild(true);
       });
 
@@ -606,7 +606,7 @@ describe('StrictEffectsMode defaults', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -622,7 +622,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -633,7 +633,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      await act(async () => {
+      await act(() => {
         ReactNoop.render(null);
       });
 

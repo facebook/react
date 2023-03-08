@@ -72,11 +72,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(<Foo />);
       });
 
-      await act(async () => {
+      await act(() => {
         container.firstChild.dispatchEvent(
           new MouseEvent('click', {
             bubbles: true,
@@ -146,7 +146,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -229,7 +229,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -247,7 +247,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -315,7 +315,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -384,7 +384,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -405,7 +405,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -456,7 +456,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -525,7 +525,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -546,7 +546,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(
           <ErrorBoundary>
             <Foo />
@@ -597,7 +597,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
@@ -623,11 +623,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<Foo />, container);
       });
 
-      await act(async () => {
+      await act(() => {
         container.firstChild.dispatchEvent(
           new MouseEvent('click', {
             bubbles: true,
@@ -698,7 +698,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -765,7 +765,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -784,7 +784,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         throw Error('Boom');
       }
 
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -837,7 +837,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -907,7 +907,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -929,7 +929,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -982,7 +982,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -1053,7 +1053,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
@@ -1075,7 +1075,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(
           <ErrorBoundary>
             <Foo />
@@ -1128,7 +1128,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       // Check next render doesn't throw.
       windowOnError.mockReset();
       console.error.mockReset();
-      await act(async () => {
+      await act(() => {
         ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');

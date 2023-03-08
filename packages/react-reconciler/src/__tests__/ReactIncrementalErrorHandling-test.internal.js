@@ -1832,7 +1832,7 @@ describe('ReactIncrementalErrorHandling', () => {
       return 'Everything is fine.';
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Oops />);
     });
 
@@ -1890,14 +1890,14 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App shouldThrow={false} />);
     });
     expect(root).toMatchRenderedOutput('All good');
 
     let error;
     try {
-      await act(async () => {
+      await act(() => {
         root.render(<App shouldThrow={true} />);
       });
     } catch (e) {

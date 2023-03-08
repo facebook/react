@@ -26,7 +26,7 @@ describe('internal act()', () => {
     }
 
     const calledLog = [];
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(
         <App
           callback={() => {
@@ -54,7 +54,7 @@ describe('internal act()', () => {
       }, []);
       return ctr;
     }
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(<App />);
     });
     assertLog(['stage 1', 'stage 2']);

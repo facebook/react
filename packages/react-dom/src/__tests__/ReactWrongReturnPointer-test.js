@@ -189,15 +189,15 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   }
 
   const root = ReactNoop.createRoot();
-  await act(async () => {
+  await act(() => {
     root.render(<App />);
   });
   assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
-  await act(async () => {
+  await act(() => {
     resolveText(0);
   });
   assertLog([0, 'Tail']);
-  await act(async () => {
+  await act(() => {
     setAsyncText(x => x + 1);
   });
   assertLog([

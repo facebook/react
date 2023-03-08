@@ -142,12 +142,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
 
     assertLog(['Initial']);
     expect(container.textContent).toEqual('Initial');
 
-    await act(async () => {
+    await act(() => {
       store.set('Updated');
     });
     assertLog(['Updated']);
@@ -164,13 +164,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
 
     assertLog(['Initial']);
     expect(container.textContent).toEqual('Initial');
 
     // Update to the same value
-    await act(async () => {
+    await act(() => {
       store.set('Initial');
     });
     // Should not re-render
@@ -192,19 +192,19 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
 
     assertLog([0]);
     expect(container.textContent).toEqual('0');
 
-    await act(async () => {
+    await act(() => {
       storeA.set(1);
     });
     assertLog([1]);
     expect(container.textContent).toEqual('1');
 
     // Switch stores and update in the same batch
-    await act(async () => {
+    await act(() => {
       ReactDOM.flushSync(() => {
         // This update will be disregarded
         storeA.set(2);
@@ -216,7 +216,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('0');
 
     // Update A
-    await act(async () => {
+    await act(() => {
       storeA.set(3);
     });
     // Nothing happened, because we're no longer subscribed to A
@@ -224,7 +224,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('0');
 
     // Update B
-    await act(async () => {
+    await act(() => {
       storeB.set(1);
     });
     assertLog([1]);
@@ -254,13 +254,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
 
     assertLog(['A0', 'B0']);
     expect(container.textContent).toEqual('A0B0');
 
     // Update b but not a
-    await act(async () => {
+    await act(() => {
       store.set({a: 0, b: 1});
     });
     // Only b re-renders
@@ -268,7 +268,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('A0B1');
 
     // Update a but not b
-    await act(async () => {
+    await act(() => {
       store.set({a: 1, b: 1});
     });
     // Only a re-renders
@@ -295,7 +295,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       const container = document.createElement('div');
       const root = createRoot(container);
-      await act(async () => root.render(<App />));
+      await act(() => root.render(<App />));
       assertLog([0, 'Passive effect: 0']);
 
       // Schedule an update. We'll intentionally not use `act` so that we can
@@ -365,11 +365,11 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
     assertLog(['A1']);
     expect(container.textContent).toEqual('A1');
 
-    await act(async () => {
+    await act(() => {
       // Change getSnapshot and update the store in the same batch
       setStep(1);
     });
@@ -423,13 +423,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
     assertLog(['A1']);
     expect(container.textContent).toEqual('A1');
 
     // This will cause a layout effect, and in the layout effect we'll update
     // the store
-    await act(async () => {
+    await act(() => {
       setStep(1);
     });
     assertLog([
@@ -463,7 +463,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () =>
+    await act(() =>
       root.render(
         <>
           <Child1 />
@@ -474,7 +474,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     assertLog([0, 0]);
     expect(container.textContent).toEqual('00');
 
-    await act(async () => {
+    await act(() => {
       store.set(1);
     });
     assertLog([1, 1, 'Reset back to 0', 0, 0]);
@@ -497,11 +497,11 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
     assertLog([0]);
 
     // Update the store and getSnapshot at the same time
-    await act(async () => {
+    await act(() => {
       ReactDOM.flushSync(() => {
         setGetSnapshot(() => getSnapshotB);
         store.set({a: 1, b: 2});
@@ -546,7 +546,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const errorBoundary = React.createRef(null);
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () =>
+    await act(() =>
       root.render(
         <ErrorBoundary ref={errorBoundary}>
           <App />
@@ -557,7 +557,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('0');
 
     // Update that throws in a getSnapshot. We can catch it with an error boundary.
-    await act(async () => {
+    await act(() => {
       store.set({value: 1, throwInGetSnapshot: true, throwInIsEqual: false});
     });
     if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
@@ -612,15 +612,15 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     // Initial render that reads a snapshot of NaN. This is OK because we use
     // Object.is algorithm to compare values.
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
     expect(container.textContent).toEqual('NaN');
 
     // Update to real number
-    await act(async () => store.set(123));
+    await act(() => store.set(123));
     expect(container.textContent).toEqual('123');
 
     // Update back to NaN
-    await act(async () => store.set('not a number'));
+    await act(() => store.set('not a number'));
     expect(container.textContent).toEqual('NaN');
   });
 
@@ -648,13 +648,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       const container = document.createElement('div');
       const root = createRoot(container);
-      await act(async () => root.render(<App />));
+      await act(() => root.render(<App />));
 
       assertLog(['App', 'Selector', 'A0']);
       expect(container.textContent).toEqual('A0');
 
       // Update the store
-      await act(async () => {
+      await act(() => {
         store.set({a: 1, b: 0});
       });
       assertLog([
@@ -707,13 +707,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       const container = document.createElement('div');
       const root = createRoot(container);
-      await act(async () => root.render(<App />));
+      await act(() => root.render(<App />));
 
       assertLog(['A0', 'B0']);
       expect(container.textContent).toEqual('A0B0');
 
       // Update b but not a
-      await act(async () => {
+      await act(() => {
         store.set({a: 0, b: 1});
       });
       // Only b re-renders
@@ -721,7 +721,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A0B1');
 
       // Update a but not b
-      await act(async () => {
+      await act(() => {
         store.set({a: 1, b: 1});
       });
       // Only a re-renders
@@ -754,7 +754,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const serverRenderedDiv = container.getElementsByTagName('div')[0];
 
       if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
-        await act(async () => {
+        await act(() => {
           ReactDOMClient.hydrateRoot(container, <App />);
         });
         assertLog([
@@ -770,7 +770,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         // currently hydrating, so `getServerSnapshot` is not called on the
         // client. To avoid this server mismatch warning, user must account for
         // this themselves and return the correct value inside `getSnapshot`.
-        await act(async () => {
+        await act(() => {
           expect(() => ReactDOM.hydrate(<App />, container)).toErrorDev(
             'Text content did not match',
           );
@@ -797,12 +797,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => root.render(<App />));
+    await act(() => root.render(<App />));
 
     assertLog(['INITIAL']);
     expect(container.textContent).toEqual('INITIAL');
 
-    await act(async () => {
+    await act(() => {
       store.set('Updated');
     });
     assertLog(['UPDATED']);
@@ -860,12 +860,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     const container = document.createElement('div');
     const root = createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<App step={0} />);
     });
     assertLog(['Inline selector', 'A', 'B', 'C', 'Sibling: 0']);
 
-    await act(async () => {
+    await act(() => {
       root.render(<App step={1} />);
     });
     assertLog([
@@ -920,7 +920,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       const container = document.createElement('div');
       const root = createRoot(container);
-      await act(async () =>
+      await act(() =>
         root.render(
           <ErrorBoundary>
             <App />
@@ -931,7 +931,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A');
 
       await expect(async () => {
-        await act(async () => {
+        await act(() => {
           store.set({});
         });
       }).toWarnDev(
@@ -965,7 +965,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       const container = document.createElement('div');
       const root = createRoot(container);
-      await act(async () =>
+      await act(() =>
         root.render(
           <ErrorBoundary>
             <App />
@@ -976,7 +976,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A');
 
       await expect(async () => {
-        await act(async () => {
+        await act(() => {
           store.set({});
         });
       }).toWarnDev(

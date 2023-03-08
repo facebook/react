@@ -276,7 +276,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     assertLog([]);
 
     // This click target cannot be hydrated yet because it's suspended.
-    await act(async () => {
+    await act(() => {
       const result = dispatchClickEvent(spanD);
       expect(result).toBe(true);
     });
@@ -558,7 +558,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     assertLog([]);
 
     // Continuing rendering will render B next.
-    await act(async () => {
+    await act(() => {
       const target = createEventTarget(spanD);
       target.virtualclick();
     });
@@ -1110,7 +1110,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       dispatchClickEvent(innerDiv);
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
@@ -1181,7 +1181,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       assertLog([]);
 
       // fire scheduled Replay
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
@@ -1210,7 +1210,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       expect(InnerScheduler.unstable_clearLog()).toEqual([]);
 
       // Replay outer event
-      await act(async () => {
+      await act(() => {
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
         InnerScheduler.unstable_flushAllWithoutAsserting();
@@ -1240,7 +1240,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Outer was hydrated earlier
       expect(OuterScheduler.unstable_clearLog()).toEqual([]);
 
-      await act(async () => {
+      await act(() => {
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
         InnerScheduler.unstable_flushAllWithoutAsserting();
@@ -1812,7 +1812,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
     await waitForPaint(['App A']);
 
-    await act(async () => {
+    await act(() => {
       ReactDOM.flushSync(() => {
         root.render(<App text="B" />);
       });
@@ -1848,7 +1848,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
     await waitForPaint(['App A']);
 
-    await act(async () => {
+    await act(() => {
       TODO_scheduleContinuousSchedulerTask(() => {
         root.render(<App text="B" />);
       });
@@ -1883,7 +1883,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const initialSpan = container.getElementsByTagName('span')[0];
     const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
     await waitForPaint(['App A']);
-    await act(async () => {
+    await act(() => {
       root.render(<App text="B" />);
     });
     assertLog(['App B', 'Child A', 'App B', 'Child B']);

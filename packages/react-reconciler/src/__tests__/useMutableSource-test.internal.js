@@ -1060,18 +1060,18 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App getSnapshot={getSnapshotA} />);
     });
     expect(root).toMatchRenderedOutput('initial');
 
-    await act(async () => {
+    await act(() => {
       mutateB('Updated B');
       root.render(<App getSnapshot={getSnapshotB} />);
     });
     expect(root).toMatchRenderedOutput('Updated B');
 
-    await act(async () => {
+    await act(() => {
       mutateB('Another update');
     });
     expect(root).toMatchRenderedOutput('Another update');
@@ -1113,12 +1113,12 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App toggle={false} />);
     });
     expect(root).toMatchRenderedOutput('A: initial');
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.discreteUpdates(() => {
         // Update both A and B to the same value
         mutateA('Update');
@@ -1158,12 +1158,12 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App toggle={false} />);
     });
     expect(root).toMatchRenderedOutput('A: initial');
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.discreteUpdates(() => {
         // Update both A and B to the same value
         sourceA.value = 'Update';
@@ -1227,7 +1227,7 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <App
           getSnapshotFirst={getSnapshotA}
@@ -1238,7 +1238,7 @@ describe('useMutableSource', () => {
     // x and y start out reading from different parts of the store.
     assertLog(['x: foo, y: bar']);
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.discreteUpdates(() => {
         // At high priority, toggle y so that it reads from A instead of B.
         // Simultaneously, mutate A.
@@ -1303,7 +1303,7 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App getSnapshot={getSnapshotA} />);
     });
     assertLog(['Render: foo', 'Commit: foo']);
@@ -1362,7 +1362,7 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <App
           getSnapshotFirst={getSnapshotA}
@@ -1387,7 +1387,7 @@ describe('useMutableSource', () => {
       // Now mutate A. Both hooks should update.
       // This is at high priority so that it doesn't get batched with default
       // priority updates that might fire during the passive effect
-      await act(async () => {
+      await act(() => {
         ReactNoop.discreteUpdates(() => {
           mutateA('a1');
         });
@@ -1444,7 +1444,7 @@ describe('useMutableSource', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         root.render(
           <>
             <Read getSnapshot={getSnapshotA} />
@@ -1590,7 +1590,7 @@ describe('useMutableSource', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App parentConfig={configA} childConfig={configB} />);
     });
     assertLog(['Parent: 1', 'Child: 2', 'Commit: 1, 2']);
@@ -1666,7 +1666,7 @@ describe('useMutableSource', () => {
     }
 
     // Mount ComponentA with data version 1
-    await act(async () => {
+    await act(() => {
       ReactNoop.render(
         <React.Profiler id="root" onRender={onRender}>
           <ComponentA />
@@ -1713,7 +1713,7 @@ describe('useMutableSource', () => {
         const brokenSubscribe = () => {};
 
         await expect(async () => {
-          await act(async () => {
+          await act(() => {
             ReactNoop.render(
               <Component
                 label="only"

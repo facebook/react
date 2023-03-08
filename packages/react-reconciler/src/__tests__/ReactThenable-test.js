@@ -98,7 +98,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -133,7 +133,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -175,7 +175,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Suspend!', 'Loading...']);
@@ -202,7 +202,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -230,7 +230,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -276,7 +276,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -309,7 +309,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -345,7 +345,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -398,7 +398,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -523,7 +523,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });
@@ -546,7 +546,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <Text text="(empty)" />
@@ -556,7 +556,7 @@ describe('ReactThenable', () => {
     assertLog(['(empty)']);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -568,7 +568,7 @@ describe('ReactThenable', () => {
     assertLog(['Async text requested [Async]']);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('Async');
     });
     assertLog(['Async text requested [Async]', 'Async']);
@@ -582,7 +582,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -596,7 +596,7 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Resolve the original data
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('Async');
     });
     // During the retry, a fresh request is initiated. Now we must wait for this
@@ -610,7 +610,7 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Flush the second request.
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('Async');
     });
     // This time it finishes because it was during a retry.
@@ -625,11 +625,11 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Suspense fallback={<Text text="Loading..." />} />);
     });
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -640,7 +640,7 @@ describe('ReactThenable', () => {
     });
     assertLog(['Async text requested [Will never resolve]']);
 
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <Text text="Something different" />
@@ -659,12 +659,12 @@ describe('ReactThenable', () => {
     }
 
     const root1 = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root1.render(<Suspense fallback={<Text text="Loading..." />} />);
     });
 
     // Start a transition on one root. It will suspend.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root1.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -678,7 +678,7 @@ describe('ReactThenable', () => {
     // While we're waiting for the first root's data to resolve, a second
     // root renders.
     const root2 = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root2.render('Do re mi');
     });
     expect(root2).toMatchRenderedOutput('Do re mi');
@@ -698,11 +698,11 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Suspense fallback={<Text text="Loading..." />} />);
     });
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -782,7 +782,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<Parent />);
     });
     assertLog(['childShouldSuspend: false, showChild: true', 'Child']);
@@ -856,7 +856,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<ExcitingText text="Hello" />);
       });
@@ -866,7 +866,7 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput(null);
 
     // The data is received.
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('HELLO!');
     });
     assertLog([
@@ -894,42 +894,42 @@ describe('ReactThenable', () => {
 
     // Initial render.
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<Kitchen />);
       });
     });
     assertLog(['Async text requested [apple]']);
     expect(root).toMatchRenderedOutput(null);
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('apple');
     });
     assertLog(['Async text requested [apple]', 'apple carrot']);
     expect(root).toMatchRenderedOutput('apple carrot');
 
     // Update the state variable after the use().
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         _setVegetable('dill');
       });
     });
     assertLog(['Async text requested [apple]']);
     expect(root).toMatchRenderedOutput('apple carrot');
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('apple');
     });
     assertLog(['Async text requested [apple]', 'apple dill']);
     expect(root).toMatchRenderedOutput('apple dill');
 
     // Update the state variable before the use(). The second state is maintained.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         _setFruit('banana');
       });
     });
     assertLog(['Async text requested [banana]']);
     expect(root).toMatchRenderedOutput('apple dill');
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('banana');
     });
     assertLog(['Async text requested [banana]', 'banana dill']);
@@ -949,28 +949,28 @@ describe('ReactThenable', () => {
 
     // Initial render.
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<Lexicon />);
       });
     });
     assertLog(['Async text requested [aguacate]']);
     expect(root).toMatchRenderedOutput(null);
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('aguacate');
     });
     assertLog(['Async text requested [aguacate]', 'aguacate abogado']);
     expect(root).toMatchRenderedOutput('aguacate abogado');
 
     // Now update the state.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         _setLawyer('avocat');
       });
     });
     assertLog(['Async text requested [aguacate]']);
     expect(root).toMatchRenderedOutput('aguacate abogado');
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('aguacate');
     });
     assertLog(['Async text requested [aguacate]', 'aguacate avocat']);
@@ -989,7 +989,7 @@ describe('ReactThenable', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await act(async () => {
+      await act(() => {
         startTransition(() => {
           root.render(<App text="Hello" />);
         });
@@ -997,7 +997,7 @@ describe('ReactThenable', () => {
       assertLog(['Async text requested [Hello]']);
       expect(root).toMatchRenderedOutput(null);
 
-      await act(async () => {
+      await act(() => {
         resolveTextRequests('Hello');
       });
       assertLog([
@@ -1019,7 +1019,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="(Loading A...)" />}>
           <AsyncText text="A" />
@@ -1042,19 +1042,19 @@ describe('ReactThenable', () => {
     ]);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('A');
     });
     assertLog(['A', '(Loading C...)', '(Loading B...)']);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('B');
     });
     assertLog(['B', '(Loading C...)']);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('C');
     });
     assertLog(['C']);
@@ -1072,7 +1072,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(
         <Suspense fallback={<Text text="(Loading A...)" />}>
           <AsyncText text="A" />
@@ -1095,13 +1095,13 @@ describe('ReactThenable', () => {
     ]);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('A');
     });
     assertLog(['Async text requested [A]']);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('A');
     });
     assertLog([
@@ -1120,13 +1120,13 @@ describe('ReactThenable', () => {
     ]);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('B');
     });
     assertLog(['Async text requested [B]']);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('B');
     });
     assertLog([
@@ -1140,13 +1140,13 @@ describe('ReactThenable', () => {
     ]);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('C');
     });
     assertLog(['Async text requested [C]']);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
-    await act(async () => {
+    await act(() => {
       resolveTextRequests('C');
     });
     assertLog(['Async text requested [C]', 'C']);
@@ -1174,7 +1174,7 @@ describe('ReactThenable', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App />);
       });

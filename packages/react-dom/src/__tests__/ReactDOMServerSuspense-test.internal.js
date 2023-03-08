@@ -161,7 +161,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.tagName).toBe('DIV');
     expect(divB.textContent).toBe('B');
 
-    await act(async () => {
+    await act(() => {
       ReactDOMClient.hydrateRoot(parent, example);
     });
 

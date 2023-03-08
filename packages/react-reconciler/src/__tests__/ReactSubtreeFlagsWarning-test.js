@@ -161,7 +161,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // On initial mount, the suspended component is committed in an incomplete
     // state, without a passive static effect flag.
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Suspend! [Async]']);
@@ -170,7 +170,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // When the promise resolves, a passive static effect flag is added. In the
     // regression, the "missing expected static flag" would fire, because the
     // previous fiber did not have one.
-    await act(async () => {
+    await act(() => {
       resolveText('Async');
     });
     assertLog(['Async', 'Effect']);

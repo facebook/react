@@ -456,7 +456,7 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Sync pri: 0', 'Normal pri: 0']);
@@ -527,7 +527,7 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['Sync pri: 0', 'Idle pri: 0']);
@@ -590,7 +590,7 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A0', 'B0', 'C']);
@@ -682,7 +682,7 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A0', 'B0']);
@@ -723,13 +723,13 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App step={0} />);
     });
     assertLog(['A0', 'B0', 'C0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('A0B0C0');
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(<App step={1} />);
       });

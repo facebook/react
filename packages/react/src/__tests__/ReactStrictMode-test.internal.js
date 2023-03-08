@@ -46,7 +46,7 @@ describe('ReactStrictMode', () => {
     }
 
     it('should default to not strict', async () => {
-      await act(async () => {
+      await act(() => {
         const container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
         root.render(<Component label="A" />);
@@ -61,7 +61,7 @@ describe('ReactStrictMode', () => {
 
     if (__DEV__) {
       it('should support enabling strict mode via createRoot option', async () => {
-        await act(async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container, {
             unstable_strictMode: true,
@@ -82,7 +82,7 @@ describe('ReactStrictMode', () => {
       });
 
       it('should include legacy + strict effects mode', async () => {
-        await act(async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container);
           root.render(
@@ -105,7 +105,7 @@ describe('ReactStrictMode', () => {
       });
 
       it('should allow level to be increased with nesting', async () => {
-        await act(async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container);
           root.render(

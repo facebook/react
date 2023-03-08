@@ -349,7 +349,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(
           <div>
             <div>
@@ -373,7 +373,7 @@ describe('ReactDOMFizzServer', () => {
           <div>Loading...</div>
         </div>,
       );
-      await act(async () => {
+      await act(() => {
         resolveA({default: Text});
       });
       expect(getVisibleChildren(container)).toEqual(
@@ -382,7 +382,7 @@ describe('ReactDOMFizzServer', () => {
           <div>Loading...</div>
         </div>,
       );
-      await act(async () => {
+      await act(() => {
         resolveB({default: TextWithPunctuation});
       });
       expect(getVisibleChildren(container)).toEqual(
@@ -432,7 +432,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Server-side
     const [App, resolve] = makeApp();
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -441,7 +441,7 @@ describe('ReactDOMFizzServer', () => {
         <span>Loading...</span>
       </div>,
     );
-    await act(async () => {
+    await act(() => {
       resolve();
     });
     expect(getVisibleChildren(container)).toEqual(
@@ -453,7 +453,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Client-side
     const [HydrateApp, hydrateResolve] = makeApp();
-    await act(async () => {
+    await act(() => {
       ReactDOMClient.hydrateRoot(container, <HydrateApp />);
     });
 
@@ -464,7 +464,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    await act(async () => {
+    await act(() => {
       hydrateResolve();
     });
     expect(getVisibleChildren(container)).toEqual(
@@ -485,7 +485,7 @@ describe('ReactDOMFizzServer', () => {
         });
       });
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(
           <div>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -497,7 +497,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
       expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
-      await act(async () => {
+      await act(() => {
         resolve({default: Text});
       });
       expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -545,7 +545,7 @@ describe('ReactDOMFizzServer', () => {
     const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App isClient={false} />, {
         bootstrapScriptContent: '__INIT__();',
         onError,
@@ -562,7 +562,7 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    await act(async () => {
+    await act(() => {
       rejectComponent(theError);
     });
 
@@ -604,7 +604,7 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -624,7 +624,7 @@ describe('ReactDOMFizzServer', () => {
         renderOptions.unstable_externalRuntimeSrc,
       ).length,
     ).toBe(1);
-    await act(async () => {
+    await act(() => {
       resolveElement({default: <Text text="Hello" />});
     });
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -658,7 +658,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <App isClient={false} />,
 
@@ -684,7 +684,7 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    await act(async () => {
+    await act(() => {
       rejectElement(theError);
     });
 
@@ -754,7 +754,7 @@ describe('ReactDOMFizzServer', () => {
     const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <App />,
 
@@ -822,7 +822,7 @@ describe('ReactDOMFizzServer', () => {
     const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <App />,
 
@@ -845,7 +845,7 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
-    await act(async () => {
+    await act(() => {
       rejectComponent(theError);
     });
 
@@ -878,7 +878,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   it('should asynchronously load the suspense boundary', async () => {
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -889,7 +889,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
-    await act(async () => {
+    await act(() => {
       resolveText('Hello World');
     });
     expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
@@ -917,7 +917,7 @@ describe('ReactDOMFizzServer', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     };
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />, {
         bootstrapScriptContent: '__INIT__();',
       });
@@ -937,7 +937,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // The server now updates the content in place in the fallback.
-    await act(async () => {
+    await act(() => {
       resolveText('Hello');
     });
 
@@ -991,7 +991,7 @@ describe('ReactDOMFizzServer', () => {
     const loggedErrors = [];
 
     // We originally suspend the boundary and start streaming the loading state.
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <App />,
 
@@ -1017,7 +1017,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     const theError = new Error('Error Message');
-    await act(async () => {
+    await act(() => {
       rejectText('This Errors', theError);
     });
 
@@ -1073,7 +1073,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     // We originally suspend the boundary and start streaming the loading state.
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App showMore={false} />);
       pipe(writable);
     });
@@ -1146,7 +1146,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     let controls;
-    await act(async () => {
+    await act(() => {
       controls = renderToPipeableStream(<App />, {onError});
       controls.pipe(writable);
     });
@@ -1166,7 +1166,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We abort the server response.
-    await act(async () => {
+    await act(() => {
       controls.abort();
     });
 
@@ -1216,7 +1216,7 @@ describe('ReactDOMFizzServer', () => {
       writable.write(chunk, encoding, next);
     };
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         // We use two nested boundaries to flush out coverage of an old reentrancy bug.
         <Suspense fallback="Loading...">
@@ -1240,7 +1240,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <Suspense fallback={<Text text="Loading B..." />}>
           <Text text="This will show B: " />
@@ -1264,7 +1264,7 @@ describe('ReactDOMFizzServer', () => {
       <div id="container-B">Loading B...</div>,
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('B');
     });
 
@@ -1275,7 +1275,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     ]);
 
-    await act(async () => {
+    await act(() => {
       resolveText('A');
     });
 
@@ -1336,7 +1336,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -1347,15 +1347,15 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    await act(async () => {
+    await act(() => {
       resolveText('Hello');
     });
 
-    await act(async () => {
+    await act(() => {
       resolveText('World');
     });
 
-    await act(async () => {
+    await act(() => {
       resolveText('my-path');
       resolveText('my-mi');
     });
@@ -1423,7 +1423,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -1438,15 +1438,15 @@ describe('ReactDOMFizzServer', () => {
       </table>,
     );
 
-    await act(async () => {
+    await act(() => {
       resolveText('A');
     });
 
-    await act(async () => {
+    await act(() => {
       resolveText('B');
     });
 
-    await act(async () => {
+    await act(() => {
       resolveText('C');
     });
 
@@ -1476,7 +1476,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <App />,
 
@@ -1499,7 +1499,7 @@ describe('ReactDOMFizzServer', () => {
       </svg>,
     );
 
-    await act(async () => {
+    await act(() => {
       resolveText('my-path');
     });
 
@@ -1562,7 +1562,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<A />);
         pipe(writable);
       });
@@ -1589,7 +1589,7 @@ describe('ReactDOMFizzServer', () => {
         expect(mockError).not.toHaveBeenCalled();
       }
 
-      await act(async () => {
+      await act(() => {
         resolveText('Hello');
         resolveText('World');
       });
@@ -1660,7 +1660,7 @@ describe('ReactDOMFizzServer', () => {
       }
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <TestProvider ctx="A">
           <div>
@@ -1680,7 +1680,7 @@ describe('ReactDOMFizzServer', () => {
         Loading: <b>A</b>
       </div>,
     );
-    await act(async () => {
+    await act(() => {
       resolveText('Hello: ');
     });
     expect(getVisibleChildren(container)).toEqual(
@@ -1717,7 +1717,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <div>
           <PrintA />
@@ -1741,7 +1741,7 @@ describe('ReactDOMFizzServer', () => {
         A0<div>Loading...</div>A0
       </div>,
     );
-    await act(async () => {
+    await act(() => {
       resolveText('Child:');
     });
     expect(getVisibleChildren(container)).toEqual(
@@ -1778,7 +1778,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     const loggedErrors = [];
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <div>
           <PrintA />
@@ -1846,7 +1846,7 @@ describe('ReactDOMFizzServer', () => {
     loggedErrors.length = 0;
 
     let controls;
-    await act(async () => {
+    await act(() => {
       controls = renderToPipeableStream(
         <App isClient={false} />,
 
@@ -1874,7 +1874,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Error the content, but we don't have a fallback yet.
-    await act(async () => {
+    await act(() => {
       rejectText('Hello', theError);
     });
 
@@ -1885,7 +1885,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Loading root...');
 
     // Unblock the loading state
-    await act(async () => {
+    await act(() => {
       resolveText('Loading...');
     });
 
@@ -1929,7 +1929,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   it('should be able to abort the fallback if the main content finishes first', async () => {
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <Suspense fallback={<Text text="Loading Outer" />}>
           <div>
@@ -1950,7 +1950,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Loading Outer');
     // We should have received a partial segment containing the a partial of the fallback.
     expect(container.innerHTML).toContain('Inner');
-    await act(async () => {
+    await act(() => {
       resolveText('Hello');
     });
     // We should've been able to display the content without waiting for the rest of the fallback.
@@ -2026,7 +2026,7 @@ describe('ReactDOMFizzServer', () => {
 
     await jest.runAllTimers();
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App isClient={false} />);
       pipe(writable);
     });
@@ -2036,7 +2036,7 @@ describe('ReactDOMFizzServer', () => {
     expect(container.innerHTML).not.toContain('Avoided Fallback');
 
     // resolve first suspense component with avoidThisFallback
-    await act(async () => {
+    await act(() => {
       promiseRes[0]();
     });
 
@@ -2050,7 +2050,7 @@ describe('ReactDOMFizzServer', () => {
 
     expect(container.innerHTML).not.toContain('Avoided Fallback2');
 
-    await act(async () => {
+    await act(() => {
       promiseRes[1]();
     });
 
@@ -2136,7 +2136,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     const loggedErrors = [];
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
@@ -2219,7 +2219,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
     const loggedErrors = [];
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
@@ -2306,7 +2306,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -2396,7 +2396,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -2486,7 +2486,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -2539,7 +2539,7 @@ describe('ReactDOMFizzServer', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />, {
         onError(error) {
           Scheduler.log('[s!] ' + error.message);
@@ -2576,7 +2576,7 @@ describe('ReactDOMFizzServer', () => {
     expect(serverFallback).toBe(clientFallback);
 
     // When we're able to fully hydrate, we expect a clean client render.
-    await act(async () => {
+    await act(() => {
       resolveText('Yay!');
     });
     await waitForAll([
@@ -2624,7 +2624,7 @@ describe('ReactDOMFizzServer', () => {
           </div>
         );
       }
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App color="red" />, {
           onError(error) {
             Scheduler.log('[s!] ' + error.message);
@@ -2670,7 +2670,7 @@ describe('ReactDOMFizzServer', () => {
       expect(clientFallback2).toBe(serverFallback);
 
       // When we're able to fully hydrate, we expect a clean client render.
-      await act(async () => {
+      await act(() => {
         resolveText('Yay!');
       });
       await waitForAll([
@@ -2722,7 +2722,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(
           <App fallbackText="Loading..." />,
           {
@@ -2784,7 +2784,7 @@ describe('ReactDOMFizzServer', () => {
       expect(clientFallback2).not.toBe(clientFallback1);
 
       // Verify we can still do a clean content render after.
-      await act(async () => {
+      await act(() => {
         resolveText('Yay!');
       });
       await waitForAll(['Yay!']);
@@ -2851,7 +2851,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -2883,7 +2883,7 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
 
-      await act(async () => {
+      await act(() => {
         resolveText('Yay!');
       });
       await waitForAll(['Yay!']);
@@ -3001,7 +3001,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -3065,7 +3065,7 @@ describe('ReactDOMFizzServer', () => {
       return <span>{context}</span>;
     }
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<Foo />);
       pipe(writable);
     });
@@ -3087,7 +3087,7 @@ describe('ReactDOMFizzServer', () => {
       {name: 'b', value: 'b'},
     ]).map(item => <li key={item.get('value')}>{item.get('name')}</li>);
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<ul>{mappedJSX}</ul>);
       pipe(writable);
     });
@@ -3119,7 +3119,7 @@ describe('ReactDOMFizzServer', () => {
 
     let abort;
     const loggedErrors = [];
-    await act(async () => {
+    await act(() => {
       const {pipe, abort: abortImpl} = renderToPipeableStream(<App />, {
         onError(error) {
           // In this test we contrive erroring with strings so we push the error whereas in most
@@ -3202,7 +3202,7 @@ describe('ReactDOMFizzServer', () => {
 
     let abort;
     const loggedErrors = [];
-    await act(async () => {
+    await act(() => {
       const {pipe, abort: abortImpl} = renderToPipeableStream(<App />, {
         onError(error) {
           loggedErrors.push(error.message);
@@ -3264,7 +3264,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   it('warns in dev if you access digest from errorInfo in onRecoverableError', async () => {
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(
         <div>
           <Suspense fallback={'loading...'}>
@@ -3341,7 +3341,7 @@ describe('ReactDOMFizzServer', () => {
         )}`;
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />, {
           onError,
         });
@@ -3389,7 +3389,7 @@ describe('ReactDOMFizzServer', () => {
         )}`;
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />, {
           onError,
         });
@@ -3429,7 +3429,7 @@ describe('ReactDOMFizzServer', () => {
       const expectedDigest = onError(theError);
       loggedErrors.length = 0;
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />, {
           onError,
         });
@@ -3529,7 +3529,7 @@ describe('ReactDOMFizzServer', () => {
       window.__test_outlet = '';
       const stringWithScriptsInIt =
         'prescription pre<scription pre<Scription pre</scRipTion pre</ScripTion </script><script><!-- <script> -->';
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'window.__test_outlet = "This should have been replaced";var x = "' +
@@ -3550,7 +3550,7 @@ describe('ReactDOMFizzServer', () => {
       const el = document.createElement('p');
       el.textContent = '{"one":1,\u2028\u2029"two":2}';
       const stringWithLSAndPSCharacters = el.textContent;
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'let x = ' +
@@ -3571,7 +3571,7 @@ describe('ReactDOMFizzServer', () => {
       window.__test_outlet = null;
       // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
       const booleanLogicString = '1 < 2 & 3 > 1';
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'let x = ' + booleanLogicString + '; window.__test_outlet = x;',
@@ -3635,7 +3635,7 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
-    await act(async () => {
+    await act(() => {
       resolveText('Hello');
     });
 
@@ -3696,7 +3696,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     const [ServerApp, serverResolve] = makeApp();
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<ServerApp />);
       pipe(writable);
     });
@@ -3770,7 +3770,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     const [ServerApp, serverResolve] = makeApp();
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<ServerApp text="initial" />);
       pipe(writable);
     });
@@ -3845,7 +3845,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App text="initial" />);
         pipe(writable);
       });
@@ -3932,7 +3932,7 @@ describe('ReactDOMFizzServer', () => {
       );
     };
 
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -4022,7 +4022,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -4151,7 +4151,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -4272,7 +4272,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     try {
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -4341,7 +4341,7 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -4387,7 +4387,7 @@ describe('ReactDOMFizzServer', () => {
         </div>
       );
     }
-    await act(async () => {
+    await act(() => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
@@ -4540,7 +4540,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App name="Foo" />);
         pipe(writable);
       });
@@ -4578,7 +4578,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App name="Foo" />);
         pipe(writable);
       });
@@ -4638,7 +4638,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -4831,7 +4831,7 @@ describe('ReactDOMFizzServer', () => {
         '<div id="app-div">start<!--$?--><template id="B:0"></template>[loading first]<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
       );
 
-      await act(async () => {
+      await act(() => {
         resolveText('first suspended');
       });
 
@@ -4858,7 +4858,7 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
 
-      await act(async () => {
+      await act(() => {
         resolveText('second suspended');
       });
 
@@ -4961,7 +4961,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       prepareJSDOMForTitle();
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -4985,7 +4985,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       prepareJSDOMForTitle();
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5010,7 +5010,7 @@ describe('ReactDOMFizzServer', () => {
       prepareJSDOMForTitle();
 
       await expect(async () => {
-        await act(async () => {
+        await act(() => {
           const {pipe} = renderToPipeableStream(<App />);
           pipe(writable);
         });
@@ -5072,7 +5072,7 @@ describe('ReactDOMFizzServer', () => {
 
       if (gate(flags => flags.enableFloat)) {
         await expect(async () => {
-          await act(async () => {
+          await act(() => {
             const {pipe} = renderToPipeableStream(<App />);
             pipe(writable);
           });
@@ -5081,7 +5081,7 @@ describe('ReactDOMFizzServer', () => {
         ]);
       } else {
         await expect(async () => {
-          await act(async () => {
+          await act(() => {
             const {pipe} = renderToPipeableStream(<App />);
             pipe(writable);
           });
@@ -5135,7 +5135,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5195,7 +5195,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5234,7 +5234,7 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5303,7 +5303,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       const reportedServerErrors = [];
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />, {
           onError(error) {
             reportedServerErrors.push(error);
@@ -5364,7 +5364,7 @@ describe('ReactDOMFizzServer', () => {
         return use(thenable);
       }
 
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5395,7 +5395,7 @@ describe('ReactDOMFizzServer', () => {
       }
       // Because the thenable resolves synchronously, we should be able to finish
       // rendering synchronously, with no fallback.
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5418,7 +5418,7 @@ describe('ReactDOMFizzServer', () => {
           </button>
         );
       }
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
@@ -5449,7 +5449,7 @@ describe('ReactDOMFizzServer', () => {
       const reportedServerErrors = [];
       let caughtError;
       try {
-        await act(async () => {
+        await act(() => {
           const {pipe} = renderToPipeableStream(<App />, {
             onError(e) {
               reportedServerErrors.push(e);
@@ -5478,7 +5478,7 @@ describe('ReactDOMFizzServer', () => {
           return <span />;
         }
       }
-      await act(async () => {
+      await act(() => {
         const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });

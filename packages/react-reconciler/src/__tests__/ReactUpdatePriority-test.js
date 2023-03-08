@@ -46,7 +46,7 @@ describe('ReactUpdatePriority', () => {
       return <Text text={state} />;
     }
 
-    await act(async () => {
+    await act(() => {
       ReactNoop.flushSync(() => {
         root.render(<App />);
       });
@@ -116,7 +116,7 @@ describe('ReactUpdatePriority', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
     assertLog(['A1', 'B1', 'C1']);

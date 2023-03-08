@@ -398,7 +398,7 @@ describe('ReactDOMRoot', () => {
       return <div>{value}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo value="a" />);
     });
 
@@ -422,12 +422,12 @@ describe('ReactDOMRoot', () => {
 
   it('unmount is synchronous', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render('Hi');
     });
     expect(container.textContent).toEqual('Hi');
 
-    await act(async () => {
+    await act(() => {
       root.unmount();
       // Should have already unmounted
       expect(container.textContent).toEqual('');
@@ -436,7 +436,7 @@ describe('ReactDOMRoot', () => {
 
   it('throws if an unmounted root is updated', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render('Hi');
     });
     expect(container.textContent).toEqual('Hi');
@@ -463,7 +463,7 @@ describe('ReactDOMRoot', () => {
       return 'Hi';
     }
 
-    await act(async () => {
+    await act(() => {
       root1.render(<App step={1} />);
     });
     expect(container1.textContent).toEqual('Hi');

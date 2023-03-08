@@ -74,7 +74,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Form />);
     });
 
@@ -231,12 +231,12 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       return <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toEqual('not hovered');
 
-    await act(async () => {
+    await act(() => {
       const mouseOverEvent = document.createEvent('MouseEvents');
       mouseOverEvent.initEvent('mouseover', true, true);
       dispatchAndSetCurrentEvent(target.current, mouseOverEvent);
@@ -261,12 +261,12 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       return <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toEqual('not hovered');
 
-    await act(async () => {
+    await act(() => {
       // Note: React does not use native mouseenter/mouseleave events
       // but we should still correctly determine their priority.
       const mouseEnterEvent = document.createEvent('MouseEvents');
@@ -291,7 +291,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       return <div ref={target}>{hoverString}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo hovered={false} />);
     });
     expect(container.textContent).toEqual('not hovered');
@@ -337,7 +337,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       return <div ref={target}>Count: {count}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toEqual('Count: 0');
@@ -378,7 +378,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toEqual('Count: 0');

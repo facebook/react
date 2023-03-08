@@ -423,7 +423,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(<Form />);
       });
 
@@ -474,7 +474,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(<Form />);
       });
 
@@ -484,7 +484,7 @@ describe('ReactDOMFiberAsync', () => {
       // Dispatch a click event on the Disable-button.
       const firstEvent = document.createEvent('Event');
       firstEvent.initEvent('click', true, true);
-      await act(async () => {
+      await act(() => {
         disableButton.dispatchEvent(firstEvent);
       });
 
@@ -498,7 +498,7 @@ describe('ReactDOMFiberAsync', () => {
       const secondEvent = document.createEvent('Event');
       secondEvent.initEvent('click', true, true);
       // This should force the pending update to flush which disables the submit button before the event is invoked.
-      await act(async () => {
+      await act(() => {
         submitButton.dispatchEvent(secondEvent);
       });
 
@@ -533,7 +533,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await act(() => {
         root.render(<Form />);
       });
 
@@ -543,7 +543,7 @@ describe('ReactDOMFiberAsync', () => {
       // Dispatch a click event on the Enable-button.
       const firstEvent = document.createEvent('Event');
       firstEvent.initEvent('click', true, true);
-      await act(async () => {
+      await act(() => {
         enableButton.dispatchEvent(firstEvent);
       });
 
@@ -557,7 +557,7 @@ describe('ReactDOMFiberAsync', () => {
       const secondEvent = document.createEvent('Event');
       secondEvent.initEvent('click', true, true);
       // This should force the pending update to flush which enables the submit button before the event is invoked.
-      await act(async () => {
+      await act(() => {
         submitButton.dispatchEvent(secondEvent);
       });
 
@@ -643,7 +643,7 @@ describe('ReactDOMFiberAsync', () => {
     }
 
     const oldRoot = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       oldRoot.render(<OldApp />);
     });
 
