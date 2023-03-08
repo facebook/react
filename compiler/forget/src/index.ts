@@ -11,7 +11,7 @@ export {
   ErrorSeverity,
 } from "./CompilerError";
 export { compile, CompilerPipelineValue, run } from "./CompilerPipeline";
-export { printHIR } from "./HIR";
+export { Effect, printHIR, ValueKind } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
 declare global {

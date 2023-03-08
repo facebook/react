@@ -10,7 +10,7 @@
 import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
-import { Effect, ValueKind } from "../HIR";
+import { Effect, ValueKind } from "../index";
 import { toggleLogging } from "../Utils/logger";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
