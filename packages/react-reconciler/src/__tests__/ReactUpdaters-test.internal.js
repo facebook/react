@@ -308,7 +308,7 @@ describe('updaters', () => {
     expect(allSchedulerTypes).toEqual([[null], [Suspender]]);
 
     expect(resolver).not.toBeNull();
-    await act(() => {
+    await act(async () => {
       resolver('abc');
       return promise;
     });

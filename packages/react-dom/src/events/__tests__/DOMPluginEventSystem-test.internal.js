@@ -2520,7 +2520,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate www
-          it('beforeblur and afterblur are called after a focused element is suspended', () => {
+          it('beforeblur and afterblur are called after a focused element is suspended', async () => {
             const log = [];
             // We have to persist here because we want to read relatedTarget later.
             const onAfterBlur = jest.fn(e => {
@@ -2575,7 +2575,7 @@ describe('DOMPluginEventSystem', () => {
 
             const root = ReactDOMClient.createRoot(container2);
 
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2587,7 +2587,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onAfterBlur).toHaveBeenCalledTimes(0);
 
             suspend = true;
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2604,7 +2604,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate www
-          it('beforeblur should skip handlers from a deleted subtree after the focused element is suspended', () => {
+          it('beforeblur should skip handlers from a deleted subtree after the focused element is suspended', async () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
@@ -2661,7 +2661,7 @@ describe('DOMPluginEventSystem', () => {
 
             const root = ReactDOMClient.createRoot(container2);
 
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2672,7 +2672,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onBeforeBlur).toHaveBeenCalledTimes(0);
 
             suspend = true;
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2684,17 +2684,17 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate www
-          it('regression: does not fire beforeblur/afterblur if target is already hidden', () => {
+          it('regression: does not fire beforeblur/afterblur if target is already hidden', async () => {
             const Suspense = React.Suspense;
             let suspend = false;
-            const promise = Promise.resolve();
+            const fakePromise = {then() {}};
             const setBeforeBlurHandle =
               ReactDOM.unstable_createEventHandle('beforeblur');
             const innerRef = React.createRef();
 
             function Child() {
               if (suspend) {
-                throw promise;
+                throw fakePromise;
               }
               return <input ref={innerRef} />;
             }
@@ -2726,7 +2726,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.appendChild(container2);
 
             const root = ReactDOMClient.createRoot(container2);
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
 
@@ -2737,7 +2737,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Suspend. This hides the input node, causing it to lose focus.
             suspend = true;
-            act(() => {
+            await act(async () => {
               root.render(<Component />);
             });
 

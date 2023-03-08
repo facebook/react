@@ -88,7 +88,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 1']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -97,7 +97,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -121,7 +121,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 12']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -174,7 +174,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 5']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -183,7 +183,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.multiply);
+    await act(async () => button.current.multiply());
     assertLog(['Increment', 'Count: 25']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -233,7 +233,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.greet);
+    await act(async () => button.current.greet());
     assertLog(['Say hej', 'Greeting: undefined says hej']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -327,7 +327,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -340,7 +340,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -370,7 +370,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -426,7 +426,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -439,7 +439,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -469,7 +469,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -531,7 +531,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Effect should not re-run because the dependency hasn't changed.
@@ -544,7 +544,7 @@ describe('useEffectEvent', () => {
       </>,
     );
 
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog([
       'Increment',
       // Event should use the updated callback function closed over the new value.
@@ -574,7 +574,7 @@ describe('useEffectEvent', () => {
     );
 
     // Event uses the new prop
-    act(button.current.increment);
+    await act(async () => button.current.increment());
     assertLog(['Increment', 'Count: 34']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -849,7 +849,7 @@ describe('useEffectEvent', () => {
       ),
     );
     assertLog(['Add to cart', 'url: /shop/1, numberOfItems: 0']);
-    act(button.current.addToCart);
+    await act(async () => button.current.addToCart());
     assertLog(['Add to cart']);
 
     await act(async () =>

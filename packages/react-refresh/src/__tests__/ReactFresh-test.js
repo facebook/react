@@ -3783,7 +3783,7 @@ describe('ReactFresh', () => {
   }
 
   // This simulates the scenario in https://github.com/facebook/react/issues/17626
-  it('can inject the runtime after the renderer executes', () => {
+  it('can inject the runtime after the renderer executes', async () => {
     if (__DEV__) {
       initFauxDevToolsHook();
 
@@ -3792,7 +3792,8 @@ describe('ReactFresh', () => {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('jest-react').act;
+      act = require('react-dom/test-utils').act;
+      internalAct = require('jest-react').act;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');

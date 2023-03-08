@@ -984,7 +984,7 @@ describe('ReactHooksInspectionIntegration', () => {
       children: ['count: ', '1'],
     });
 
-    act(incrementCount);
+    await act(async () => incrementCount());
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},

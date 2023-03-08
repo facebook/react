@@ -48,21 +48,16 @@ module.exports = function (initModules) {
   // ====================================
 
   // promisified version of ReactDOM.render()
-  function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
-    return new Promise(resolve => {
-      if (forceHydrate) {
-        act(() => {
-          ReactDOM.hydrate(reactElement, domElement);
-        });
-      } else {
-        act(() => {
-          ReactDOM.render(reactElement, domElement);
-        });
-      }
-      // We can't use the callback for resolution because that will not catch
-      // errors. They're thrown.
-      resolve();
-    });
+  async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
+    if (forceHydrate) {
+      await act(async () => {
+        ReactDOM.hydrate(reactElement, domElement);
+      });
+    } else {
+      await act(async () => {
+        ReactDOM.render(reactElement, domElement);
+      });
+    }
   }
   // performs fn asynchronously and expects count errors logged to console.error.
   // will fail the test if the count of errors logged is not equal to count.

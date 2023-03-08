@@ -2086,7 +2086,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // TODO: assert toErrorDev() when the warning is implemented again.
-    act(() => {
+    await act(async () => {
       ReactNoop.flushSync(() => _setShow(true));
     });
   });
@@ -2113,7 +2113,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // TODO: assert toErrorDev() when the warning is implemented again.
-    act(() => {
+    await act(async () => {
       ReactNoop.flushSync(() => show());
     });
   });
@@ -2142,7 +2142,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     assertLog(['Suspend! [A]']);
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
-    act(() => {
+    await act(async () => {
       ReactNoop.flushSync(() => showB());
     });
 
@@ -2173,7 +2173,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       // TODO: assert toErrorDev() when the warning is implemented again.
-      act(() => {
+      await act(async () => {
         ReactNoop.flushSync(() => _setShow(true));
       });
     },

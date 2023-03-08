@@ -346,7 +346,7 @@ describe(`onRender`, () => {
     Scheduler.unstable_advanceTime(20); // 30 -> 50
 
     // Updating a sibling should not report a re-render.
-    act(updateProfilerSibling);
+    await act(async () => updateProfilerSibling());
 
     expect(callback).not.toHaveBeenCalled();
   });

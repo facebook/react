@@ -17,6 +17,7 @@ let caches;
 let seededCache;
 let ErrorBoundary;
 let waitForAll;
+let waitFor;
 let assertLog;
 
 // TODO: These tests don't pass in persistent mode yet. Need to implement.
@@ -35,6 +36,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
 
     caches = [];
@@ -372,7 +374,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount and suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -473,7 +475,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      act(() => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
       assertLog([
@@ -499,7 +501,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -629,46 +631,46 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
+        await waitFor([
+          'App render',
+          'Text:Inside:Before render',
+          'Suspend:Async',
+          'Text:Inside:After render',
+          'Text:Fallback render',
+          'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" />
+            <span prop="Inside:After" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
+          'Text:Inside:Before destroy layout',
+          'Text:Inside:After destroy layout',
+          'Text:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" hidden={true} />
+            <span prop="Inside:After" hidden={true} />
+            <span prop="Fallback" />
+            <span prop="Outside" />
+          </>,
+        );
       });
-      assertLog([
-        'App render',
-        'Text:Inside:Before render',
-        'Suspend:Async',
-        'Text:Inside:After render',
-        'Text:Fallback render',
-        'Text:Outside render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside:Before" />
-          <span prop="Inside:After" />
-          <span prop="Outside" />
-        </>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      assertLog([
-        'Text:Inside:Before destroy layout',
-        'Text:Inside:After destroy layout',
-        'Text:Fallback create layout',
-      ]);
-      await waitForAll(['Text:Fallback create passive']);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside:Before" hidden={true} />
-          <span prop="Inside:After" hidden={true} />
-          <span prop="Fallback" />
-          <span prop="Outside" />
-        </>,
-      );
 
       // Resolving the suspended resource should re-create inner layout effects.
       await act(async () => {
@@ -783,46 +785,47 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
+
+        await waitFor([
+          'App render',
+          'ClassText:Inside:Before render',
+          'Suspend:Async',
+          'ClassText:Inside:After render',
+          'ClassText:Fallback render',
+          'ClassText:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" />
+            <span prop="Inside:After" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
+          'ClassText:Inside:Before componentWillUnmount',
+          'ClassText:Inside:After componentWillUnmount',
+          'ClassText:Fallback componentDidMount',
+          'ClassText:Outside componentDidUpdate',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" hidden={true} />
+            <span prop="Inside:After" hidden={true} />
+            <span prop="Fallback" />
+            <span prop="Outside" />
+          </>,
+        );
       });
-      assertLog([
-        'App render',
-        'ClassText:Inside:Before render',
-        'Suspend:Async',
-        'ClassText:Inside:After render',
-        'ClassText:Fallback render',
-        'ClassText:Outside render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside:Before" />
-          <span prop="Inside:After" />
-          <span prop="Outside" />
-        </>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      assertLog([
-        'ClassText:Inside:Before componentWillUnmount',
-        'ClassText:Inside:After componentWillUnmount',
-        'ClassText:Fallback componentDidMount',
-        'ClassText:Outside componentDidUpdate',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside:Before" hidden={true} />
-          <span prop="Inside:After" hidden={true} />
-          <span prop="Fallback" />
-          <span prop="Outside" />
-        </>,
-      );
 
       // Resolving the suspended resource should re-create inner layout effects.
       await act(async () => {
@@ -908,43 +911,43 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
-      });
-      assertLog([
-        'App render',
-        'Suspend:Async',
-        'Text:Outer render',
-        'Text:Inner render',
-        'Text:Fallback render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <span prop="Outer">
-          <span prop="Inner" />
-        </span>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      assertLog([
-        'Text:Outer destroy layout',
-        'Text:Inner destroy layout',
-        'Text:Fallback create layout',
-      ]);
-      await waitForAll(['Text:Fallback create passive']);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span hidden={true} prop="Outer">
+        await waitFor([
+          'App render',
+          'Suspend:Async',
+          'Text:Outer render',
+          'Text:Inner render',
+          'Text:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <span prop="Outer">
             <span prop="Inner" />
-          </span>
-          <span prop="Fallback" />
-        </>,
-      );
+          </span>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
+          'Text:Outer destroy layout',
+          'Text:Inner destroy layout',
+          'Text:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="Outer">
+              <span prop="Inner" />
+            </span>
+            <span prop="Fallback" />
+          </>,
+        );
+      });
 
       // Resolving the suspended resource should re-create inner layout effects.
       await act(async () => {
@@ -1035,44 +1038,44 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
-      });
-      assertLog([
-        'App render',
-        'Suspend:Async',
-        'Text:Outer render',
-        // Text:MemoizedInner is memoized
-        'Text:Fallback render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <span prop="Outer">
-          <span prop="MemoizedInner" />
-        </span>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      // Even though the innermost layout effects are beneath a hidden HostComponent.
-      assertLog([
-        'Text:Outer destroy layout',
-        'Text:MemoizedInner destroy layout',
-        'Text:Fallback create layout',
-      ]);
-      await waitForAll(['Text:Fallback create passive']);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span hidden={true} prop="Outer">
+        await waitFor([
+          'App render',
+          'Suspend:Async',
+          'Text:Outer render',
+          // Text:MemoizedInner is memoized
+          'Text:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <span prop="Outer">
             <span prop="MemoizedInner" />
-          </span>
-          <span prop="Fallback" />
-        </>,
-      );
+          </span>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        // Even though the innermost layout effects are beneath a hidden HostComponent.
+        assertLog([
+          'Text:Outer destroy layout',
+          'Text:MemoizedInner destroy layout',
+          'Text:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="Outer">
+              <span prop="MemoizedInner" />
+            </span>
+            <span prop="Fallback" />
+          </>,
+        );
+      });
 
       // Resolving the suspended resource should re-create inner layout effects.
       await act(async () => {
@@ -1147,12 +1150,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
         );
       });
-      await advanceTimers(1000);
       assertLog([
         'Text:Outer render',
         'Text:Inner render',
@@ -1160,8 +1162,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:InnerFallback render',
         'Text:Inner destroy layout',
         'Text:InnerFallback create layout',
+        'Text:InnerFallback create passive',
       ]);
-      await waitForAll(['Text:InnerFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" />
@@ -1172,7 +1174,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the outer Suspense subtree (outer effects and inner fallback effects should be destroyed)
       // (This check also ensures we don't destroy effects for mounted inner fallback.)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1191,8 +1193,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Outer destroy layout',
         'Text:InnerFallback destroy layout',
         'Text:OuterFallback create layout',
+        'Text:OuterFallback create passive',
       ]);
-      await waitForAll(['Text:OuterFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1222,7 +1224,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the inner Suspense subtree (no effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1297,7 +1299,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the outer Suspense subtree (all effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_2" ms={1000} />}
@@ -1305,7 +1307,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           />,
         );
       });
-      await advanceTimers(1000);
       assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_2',
@@ -1317,6 +1318,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner destroy layout',
         'AsyncText:InnerAsync_2 destroy layout',
         'Text:OuterFallback create layout',
+        'Text:OuterFallback create passive',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
@@ -1333,7 +1335,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('OuterAsync_2');
       });
       assertLog([
-        'Text:OuterFallback create passive',
         'Text:Outer render',
         'AsyncText:OuterAsync_2 render',
         'Text:Inner render',
@@ -1390,12 +1391,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
         );
       });
-      await advanceTimers(1000);
       assertLog([
         'Text:Outer render',
         'Text:Inner render',
@@ -1403,8 +1403,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:InnerFallback render',
         'Text:Inner destroy layout',
         'Text:InnerFallback create layout',
+        'Text:InnerFallback create passive',
       ]);
-      await waitForAll(['Text:InnerFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" />
@@ -1415,7 +1415,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the outer Suspense subtree (outer effects and inner fallback effects should be destroyed)
       // (This check also ensures we don't destroy effects for mounted inner fallback.)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1423,7 +1423,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           />,
         );
       });
-      await advanceTimers(1000);
       assertLog([
         'Text:Outer render',
         'Suspend:OuterAsync_1',
@@ -1434,8 +1433,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Outer destroy layout',
         'Text:InnerFallback destroy layout',
         'Text:OuterFallback create layout',
+        'Text:OuterFallback create passive',
       ]);
-      await waitForAll(['Text:OuterFallback create passive']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1518,88 +1517,88 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the outer shell
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App outerChildren={<AsyncText text="OutsideAsync" ms={1000} />} />,
         );
-      });
-      assertLog([
-        'Text:Inside render',
-        'Suspend:OutsideAsync',
-        'Text:Fallback:Inside render',
-        'Text:Fallback:Outside render',
-        'Text:Outside render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" />
-          <span prop="Outside" />
-        </>,
-      );
+        await waitFor([
+          'Text:Inside render',
+          'Suspend:OutsideAsync',
+          'Text:Fallback:Inside render',
+          'Text:Fallback:Outside render',
+          'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" />
+            <span prop="Outside" />
+          </>,
+        );
 
-      // Timing out should commit the fallback and destroy inner layout effects.
-      await advanceTimers(1000);
-      assertLog([
-        'Text:Inside destroy layout',
-        'Text:Fallback:Inside create layout',
-        'Text:Fallback:Outside create layout',
-      ]);
-      await waitForAll([
-        'Text:Fallback:Inside create passive',
-        'Text:Fallback:Outside create passive',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" hidden={true} />
-          <span prop="Fallback:Inside" />
-          <span prop="Fallback:Outside" />
-          <span prop="Outside" />
-        </>,
-      );
+        // Timing out should commit the fallback and destroy inner layout effects.
+        await jest.runAllTimers();
+        assertLog([
+          'Text:Inside destroy layout',
+          'Text:Fallback:Inside create layout',
+          'Text:Fallback:Outside create layout',
+        ]);
+        await waitForAll([
+          'Text:Fallback:Inside create passive',
+          'Text:Fallback:Outside create passive',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" hidden={true} />
+            <span prop="Fallback:Inside" />
+            <span prop="Fallback:Outside" />
+            <span prop="Outside" />
+          </>,
+        );
+      });
 
       // Suspend the fallback and verify that it's effects get cleaned up as well
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             fallbackChildren={<AsyncText text="FallbackAsync" ms={1000} />}
             outerChildren={<AsyncText text="OutsideAsync" ms={1000} />}
           />,
         );
-      });
-      assertLog([
-        'Text:Inside render',
-        'Suspend:OutsideAsync',
-        'Text:Fallback:Inside render',
-        'Suspend:FallbackAsync',
-        'Text:Fallback:Fallback render',
-        'Text:Fallback:Outside render',
-        'Text:Outside render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" hidden={true} />
-          <span prop="Fallback:Inside" />
-          <span prop="Fallback:Outside" />
-          <span prop="Outside" />
-        </>,
-      );
+        await waitFor([
+          'Text:Inside render',
+          'Suspend:OutsideAsync',
+          'Text:Fallback:Inside render',
+          'Suspend:FallbackAsync',
+          'Text:Fallback:Fallback render',
+          'Text:Fallback:Outside render',
+          'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" hidden={true} />
+            <span prop="Fallback:Inside" />
+            <span prop="Fallback:Outside" />
+            <span prop="Outside" />
+          </>,
+        );
 
-      // Timing out should commit the inner fallback and destroy outer fallback layout effects.
-      await advanceTimers(1000);
-      assertLog([
-        'Text:Fallback:Inside destroy layout',
-        'Text:Fallback:Fallback create layout',
-      ]);
-      await waitForAll(['Text:Fallback:Fallback create passive']);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" hidden={true} />
-          <span prop="Fallback:Inside" hidden={true} />
-          <span prop="Fallback:Fallback" />
-          <span prop="Fallback:Outside" />
-          <span prop="Outside" />
-        </>,
-      );
+        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
+        await jest.runAllTimers();
+        assertLog([
+          'Text:Fallback:Inside destroy layout',
+          'Text:Fallback:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" hidden={true} />
+            <span prop="Fallback:Inside" hidden={true} />
+            <span prop="Fallback:Fallback" />
+            <span prop="Fallback:Outside" />
+            <span prop="Outside" />
+          </>,
+        );
+      });
 
       // Resolving both resources should cleanup fallback effects and recreate main effects
       await act(async () => {
@@ -1670,7 +1669,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend both the outer boundary and the fallback
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OutsideAsync" ms={1000} />}
@@ -1678,7 +1677,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           />,
         );
       });
-      await advanceTimers(1000);
       assertLog([
         'Text:Inside render',
         'Suspend:OutsideAsync',
@@ -1690,8 +1688,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside destroy layout',
         'Text:Fallback:Fallback create layout',
         'Text:Fallback:Outside create layout',
-      ]);
-      await waitForAll([
         'Text:Fallback:Fallback create passive',
         'Text:Fallback:Outside create passive',
       ]);
@@ -1795,32 +1791,35 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspending a component in the middle of the tree
       // should still properly cleanup effects deeper in the tree
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App shouldSuspend={true} />);
-      });
-      assertLog([
-        'Suspend:Suspend',
-        'Text:Fallback render',
-        'Text:Outside render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" />
-          <span prop="Outside" />
-        </>,
-      );
+        await waitFor([
+          'Suspend:Suspend',
+          'Text:Fallback render',
+          'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" />
+            <span prop="Outside" />
+          </>,
+        );
 
-      // Timing out should commit the inner fallback and destroy outer fallback layout effects.
-      await advanceTimers(1000);
-      assertLog(['Text:Inside destroy layout', 'Text:Fallback create layout']);
-      await waitForAll(['Text:Fallback create passive']);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Inside" hidden={true} />
-          <span prop="Fallback" />
-          <span prop="Outside" />
-        </>,
-      );
+        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
+        await jest.runAllTimers();
+        assertLog([
+          'Text:Inside destroy layout',
+          'Text:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" hidden={true} />
+            <span prop="Fallback" />
+            <span prop="Outside" />
+          </>,
+        );
+      });
 
       // Resolving should cleanup.
       await act(async () => {
@@ -2390,43 +2389,43 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Schedule an update that causes React to suspend.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async_1" ms={1000} />
             <AsyncText text="Async_2" ms={2000} />
           </App>,
         );
+        await waitFor([
+          'Text:Function render',
+          'Suspend:Async_1',
+          'Suspend:Async_2',
+          'ClassText:Class render',
+          'ClassText:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" />
+            <span prop="Class" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
+          'Text:Function destroy layout',
+          'ClassText:Class componentWillUnmount',
+          'ClassText:Fallback componentDidMount',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" hidden={true} />
+            <span prop="Class" hidden={true} />
+            <span prop="Fallback" />
+          </>,
+        );
       });
-      assertLog([
-        'Text:Function render',
-        'Suspend:Async_1',
-        'Suspend:Async_2',
-        'ClassText:Class render',
-        'ClassText:Fallback render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Function" />
-          <span prop="Class" />
-        </>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      assertLog([
-        'Text:Function destroy layout',
-        'ClassText:Class componentWillUnmount',
-        'ClassText:Fallback componentDidMount',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Function" hidden={true} />
-          <span prop="Class" hidden={true} />
-          <span prop="Fallback" />
-        </>,
-      );
 
       // Resolving the suspended resource should re-create inner layout effects.
       await act(async () => {
@@ -2549,40 +2548,40 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Schedule an update that causes React to suspend.
       textToRead = 'A';
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App />);
+        await waitFor([
+          'Text:Function render',
+          'Suspender "A" render',
+          'Suspend:A',
+          'ClassText:Class render',
+          'ClassText:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" />
+            <span prop="Suspender" />
+            <span prop="Class" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
+          'Text:Function destroy layout',
+          'ClassText:Class componentWillUnmount',
+          'ClassText:Fallback componentDidMount',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" hidden={true} />
+            <span prop="Suspender" hidden={true} />
+            <span prop="Class" hidden={true} />
+            <span prop="Fallback" />
+          </>,
+        );
       });
-      assertLog([
-        'Text:Function render',
-        'Suspender "A" render',
-        'Suspend:A',
-        'ClassText:Class render',
-        'ClassText:Fallback render',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Function" />
-          <span prop="Suspender" />
-          <span prop="Class" />
-        </>,
-      );
-
-      await advanceTimers(1000);
-
-      // Timing out should commit the fallback and destroy inner layout effects.
-      assertLog([
-        'Text:Function destroy layout',
-        'ClassText:Class componentWillUnmount',
-        'ClassText:Fallback componentDidMount',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="Function" hidden={true} />
-          <span prop="Suspender" hidden={true} />
-          <span prop="Class" hidden={true} />
-          <span prop="Fallback" />
-        </>,
-      );
 
       // Resolving the suspended resource should re-create inner layout effects.
       textToRead = 'B';
@@ -2712,7 +2711,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
       assertLog([
@@ -2730,7 +2729,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2811,7 +2810,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2829,6 +2828,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'Text:Fallback create layout',
+        'Text:Fallback create passive',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
@@ -2843,7 +2843,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('Async');
       });
       assertLog([
-        'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
         'RefCheckerInner:refObject render',
@@ -2917,7 +2916,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2937,6 +2936,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'Text:Fallback create layout',
+        'Text:Fallback create passive',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Fallback" />);
 
@@ -2945,7 +2945,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('Async');
       });
       assertLog([
-        'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
         'ClassComponent:refObject render',
@@ -3021,7 +3020,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -3041,6 +3040,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'Text:Fallback create layout',
+        'Text:Fallback create passive',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Fallback" />);
 
@@ -3049,7 +3049,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('Async');
       });
       assertLog([
-        'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefCheckerOuter render',
         'FunctionComponent render',
@@ -3130,7 +3129,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -3143,6 +3142,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Fallback render',
         'RefChecker destroy layout ref? true',
         'Text:Fallback create layout',
+        'Text:Fallback create passive',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Fallback" />);
 
@@ -3151,7 +3151,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
         await resolveText('Async');
       });
       assertLog([
-        'Text:Fallback create passive',
         'AsyncText:Async render',
         'RefChecker render',
         'Text:Fallback destroy layout',
