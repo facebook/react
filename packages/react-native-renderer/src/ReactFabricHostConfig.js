@@ -13,7 +13,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethods,
+  INativeMethods,
   ViewConfig,
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
@@ -109,7 +109,7 @@ const noop = () => {};
 /**
  * This is used for refs on host components.
  */
-class ReactFabricHostComponent implements NativeMethods {
+class ReactFabricHostComponent implements INativeMethods {
   _nativeTag: number;
   viewConfig: ViewConfig;
   currentProps: Props;
