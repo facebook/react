@@ -20,6 +20,7 @@ let ReactDOMServer;
 let act;
 let assertLog;
 let waitForAll;
+let waitForThrow;
 
 describe('ReactHooks', () => {
   beforeEach(() => {
@@ -36,6 +37,7 @@ describe('ReactHooks', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
     waitForAll = InternalTestUtils.waitForAll;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   if (__DEV__) {
@@ -90,7 +92,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0, 0');
 
     // Normal update
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(1);
     });
@@ -98,12 +100,12 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 1, 1', 'Child: 1, 1', 'Effect: 1, 1']);
 
     // Update that bails out.
-    act(() => setCounter1(1));
+    await act(async () => setCounter1(1));
     assertLog(['Parent: 1, 1']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(2);
     });
@@ -111,7 +113,7 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 1, 2', 'Child: 1, 2', 'Effect: 1, 2']);
 
     // Lots of updates that eventually resolve to the current values.
-    act(() => {
+    await act(async () => {
       setCounter1(9);
       setCounter2(3);
       setCounter1(4);
@@ -125,7 +127,7 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 1, 2']);
 
     // prepare to check SameValue
-    act(() => {
+    await act(async () => {
       setCounter1(0 / -1);
       setCounter2(NaN);
     });
@@ -133,7 +135,7 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 0, NaN', 'Child: 0, NaN', 'Effect: 0, NaN']);
 
     // check if re-setting to negative 0 / NaN still bails out
-    act(() => {
+    await act(async () => {
       setCounter1(0 / -1);
       setCounter2(NaN);
       setCounter2(Infinity);
@@ -143,7 +145,7 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 0, NaN']);
 
     // check if changing negative 0 to positive 0 does not bail out
-    act(() => {
+    await act(async () => {
       setCounter1(0);
     });
     assertLog(['Parent: 0, NaN', 'Child: 0, NaN', 'Effect: 0, NaN']);
@@ -178,7 +180,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0, 0 (light)');
 
     // Normal update
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(1);
     });
@@ -186,12 +188,12 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 1, 1 (light)', 'Child: 1, 1 (light)']);
 
     // Update that bails out.
-    act(() => setCounter1(1));
+    await act(async () => setCounter1(1));
     assertLog(['Parent: 1, 1 (light)']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(2);
     });
@@ -200,7 +202,7 @@ describe('ReactHooks', () => {
 
     // Updates bail out, but component still renders because props
     // have changed
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(2);
       root.update(<Parent theme="dark" />);
@@ -209,7 +211,7 @@ describe('ReactHooks', () => {
     assertLog(['Parent: 1, 2 (dark)', 'Child: 1, 2 (dark)']);
 
     // Both props and state bail out
-    act(() => {
+    await act(async () => {
       setCounter1(1);
       setCounter2(2);
       root.update(<Parent theme="dark" />);
@@ -235,8 +237,8 @@ describe('ReactHooks', () => {
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
 
-    expect(() => {
-      act(() =>
+    await expect(async () => {
+      await act(async () =>
         setCounter(1, () => {
           throw new Error('Expected to ignore the callback.');
         }),
@@ -269,8 +271,8 @@ describe('ReactHooks', () => {
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
 
-    expect(() => {
-      act(() =>
+    await expect(async () => {
+      await act(async () =>
         dispatch(1, () => {
           throw new Error('Expected to ignore the callback.');
         }),
@@ -321,7 +323,7 @@ describe('ReactHooks', () => {
       return <Child text={text} />;
     }
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
-    act(() => {
+    await act(async () => {
       root.update(
         <ThemeProvider>
           <Parent />
@@ -344,18 +346,18 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0 (light)');
 
     // Normal update
-    act(() => setCounter(1));
+    await act(async () => setCounter(1));
     assertLog(['Parent: 1 (light)', 'Child: 1 (light)', 'Effect: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, so it bails out
-    act(() => setCounter(1));
+    await act(async () => setCounter(1));
     assertLog(['Parent: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, but the context changes, too, so it
     // can't bail out
-    act(() => {
+    await act(async () => {
       setCounter(1);
       setTheme('dark');
     });
@@ -394,7 +396,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0');
 
     // Normal update
-    act(() => setCounter(1));
+    await act(async () => setCounter(1));
     assertLog(['Parent: 1', 'Child: 1', 'Effect: 1']);
     expect(root).toMatchRenderedOutput('1');
 
@@ -402,30 +404,30 @@ describe('ReactHooks', () => {
     // because the alternate fiber has pending update priority, so we have to
     // enter the render phase before we can bail out. But we bail out before
     // rendering the child, and we don't fire any effects.
-    act(() => setCounter(1));
+    await act(async () => setCounter(1));
     assertLog(['Parent: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state again. This times, neither fiber has pending
     // update priority, so we can bail out before even entering the render phase.
-    act(() => setCounter(1));
+    await act(async () => setCounter(1));
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('1');
 
     // This changes the state to something different so it renders normally.
-    act(() => setCounter(2));
+    await act(async () => setCounter(2));
     assertLog(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
 
     // prepare to check SameValue
-    act(() => {
+    await act(async () => {
       setCounter(0);
     });
     assertLog(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to the same state for the first time to flush the queue
-    act(() => {
+    await act(async () => {
       setCounter(0);
     });
 
@@ -433,14 +435,14 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0');
 
     // Update again to the same state. Should bail out.
-    act(() => {
+    await act(async () => {
       setCounter(0);
     });
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to a different state (positive 0 to negative 0)
-    act(() => {
+    await act(async () => {
       setCounter(0 / -1);
     });
     assertLog(['Parent: 0', 'Child: 0', 'Effect: 0']);
@@ -615,7 +617,7 @@ describe('ReactHooks', () => {
     ]);
   });
 
-  it('warns if deps is not an array', () => {
+  it('warns if deps is not an array', async () => {
     const {useEffect, useLayoutEffect, useMemo, useCallback} = React;
 
     function App(props) {
@@ -626,8 +628,8 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactTestRenderer.create(<App deps={'hello'} />);
       });
     }).toErrorDev([
@@ -640,8 +642,8 @@ describe('ReactHooks', () => {
       'Warning: useCallback received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
     ]);
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactTestRenderer.create(<App deps={100500} />);
       });
     }).toErrorDev([
@@ -654,8 +656,8 @@ describe('ReactHooks', () => {
       'Warning: useCallback received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
     ]);
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         ReactTestRenderer.create(<App deps={{}} />);
       });
     }).toErrorDev([
@@ -669,7 +671,7 @@ describe('ReactHooks', () => {
         'When specified, the final argument must be an array.',
     ]);
 
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(<App deps={[]} />);
       ReactTestRenderer.create(<App deps={null} />);
       ReactTestRenderer.create(<App deps={undefined} />);
@@ -695,7 +697,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer.create(<App deps={undefined} />);
   });
 
-  it('does not forget render phase useState updates inside an effect', () => {
+  it('does not forget render phase useState updates inside an effect', async () => {
     const {useState, useEffect} = React;
 
     function Counter() {
@@ -712,13 +714,13 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    act(() => {
+    await act(async () => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
   });
 
-  it('does not forget render phase useReducer updates inside an effect with hoisted reducer', () => {
+  it('does not forget render phase useReducer updates inside an effect with hoisted reducer', async () => {
     const {useReducer, useEffect} = React;
 
     const reducer = x => x + 1;
@@ -736,13 +738,13 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    act(() => {
+    await act(async () => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
   });
 
-  it('does not forget render phase useReducer updates inside an effect with inline reducer', () => {
+  it('does not forget render phase useReducer updates inside an effect with inline reducer', async () => {
     const {useReducer, useEffect} = React;
 
     function Counter() {
@@ -759,7 +761,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    act(() => {
+    await act(async () => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -914,7 +916,7 @@ describe('ReactHooks', () => {
   });
 
   // Throws because there's no runtime cost for being strict here.
-  it('throws when reading context inside useEffect', () => {
+  it('throws when reading context inside useEffect', async () => {
     const {useEffect, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -928,14 +930,11 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    expect(() => {
-      act(() => {
-        ReactTestRenderer.create(<App />);
-      });
-    }).toThrow(
+    await act(async () => {
+      ReactTestRenderer.create(<App />);
       // The exact message doesn't matter, just make sure we don't allow this
-      'Context can only be read while React is rendering',
-    );
+      await waitForThrow('Context can only be read while React is rendering');
+    });
   });
 
   // Throws because there's no runtime cost for being strict here.
@@ -1070,7 +1069,7 @@ describe('ReactHooks', () => {
     );
   });
 
-  it('resets warning internal state when interrupted by an error', () => {
+  it('resets warning internal state when interrupted by an error', async () => {
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .ReactCurrentDispatcher;
@@ -1132,7 +1131,7 @@ describe('ReactHooks', () => {
     }
     // Verify it doesn't think we're still inside a Hook.
     // Should have no warnings.
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(<Valid />);
     });
 
@@ -1473,7 +1472,7 @@ describe('ReactHooks', () => {
         .replace('use', '')
         .replace('Helper', '');
 
-      it(`warns on using differently ordered hooks (${hookNameA}, ${hookNameB}) on subsequent renders`, () => {
+      it(`warns on using differently ordered hooks (${hookNameA}, ${hookNameB}) on subsequent renders`, async () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1489,12 +1488,12 @@ describe('ReactHooks', () => {
           /* eslint-enable no-unused-vars */
         }
         let root;
-        act(() => {
+        await act(async () => {
           root = ReactTestRenderer.create(<App update={false} />);
         });
-        expect(() => {
+        await expect(async () => {
           try {
-            act(() => {
+            await act(async () => {
               root.update(<App update={true} />);
             });
           } catch (error) {
@@ -1515,7 +1514,7 @@ describe('ReactHooks', () => {
 
         // further warnings for this component are silenced
         try {
-          act(() => {
+          await act(async () => {
             root.update(<App update={false} />);
           });
         } catch (error) {
@@ -1525,7 +1524,7 @@ describe('ReactHooks', () => {
         }
       });
 
-      it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
+      it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1538,13 +1537,13 @@ describe('ReactHooks', () => {
           /* eslint-enable no-unused-vars */
         }
         let root;
-        act(() => {
+        await act(async () => {
           root = ReactTestRenderer.create(<App update={false} />);
         });
 
-        expect(() => {
+        await expect(async () => {
           try {
-            act(() => {
+            await act(async () => {
               root.update(<App update={true} />);
             });
           } catch (error) {
@@ -1579,7 +1578,7 @@ describe('ReactHooks', () => {
         .replace('use', '')
         .replace('Helper', '');
 
-      it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
+      it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1592,15 +1591,15 @@ describe('ReactHooks', () => {
           /* eslint-enable no-unused-vars */
         }
         let root;
-        act(() => {
+        await act(async () => {
           root = ReactTestRenderer.create(<App update={false} />);
         });
 
-        expect(() => {
-          act(() => {
+        await act(async () => {
+          expect(() => {
             root.update(<App update={true} />);
-          });
-        }).toThrow('Rendered fewer hooks than expected.');
+          }).toThrow('Rendered fewer hooks than expected. ');
+        });
       });
     });
 
@@ -1726,7 +1725,7 @@ describe('ReactHooks', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/15057
-  it('does not fire a false positive warning when previous effect unmounts the component', () => {
+  it('does not fire a false positive warning when previous effect unmounts the component', async () => {
     const {useState, useEffect} = React;
     let globalListener;
 
@@ -1762,7 +1761,7 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    act(() => {
+    await act(async () => {
       ReactTestRenderer.create(<A />);
     });
 
@@ -1912,7 +1911,7 @@ describe('ReactHooks', () => {
     }
 
     let root;
-    act(() => {
+    await act(async () => {
       root = ReactTestRenderer.create(
         <ErrorBoundary>
           <Thrower />
@@ -1921,7 +1920,7 @@ describe('ReactHooks', () => {
     });
 
     expect(root).toMatchRenderedOutput('Throw!');
-    act(() => setShouldThrow(true));
+    await act(async () => setShouldThrow(true));
     expect(root).toMatchRenderedOutput('Error!');
   });
 });

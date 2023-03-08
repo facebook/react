@@ -294,11 +294,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll(['Count: 0']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
-      act(() => counter.current.updateCount(1));
+      await act(async () => counter.current.updateCount(1));
       assertLog(['Count: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
 
-      act(() => counter.current.updateCount(count => count + 10));
+      await act(async () => counter.current.updateCount(count => count + 10));
       assertLog(['Count: 11']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 11" />);
     });
@@ -318,7 +318,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll(['getInitialState', 'Count: 42']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 42" />);
 
-      act(() => counter.current.updateCount(7));
+      await act(async () => counter.current.updateCount(7));
       assertLog(['Count: 7']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 7" />);
     });
@@ -336,10 +336,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll(['Count: 0']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
-      act(() => counter.current.updateCount(7));
+      await act(async () => counter.current.updateCount(7));
       assertLog(['Count: 7']);
 
-      act(() => counter.current.updateLabel('Total'));
+      await act(async () => counter.current.updateLabel('Total'));
       assertLog(['Total: 7']);
     });
 
@@ -356,13 +356,13 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       const firstUpdater = updater;
 
-      act(() => firstUpdater(1));
+      await act(async () => firstUpdater(1));
       assertLog(['Count: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
 
       const secondUpdater = updater;
 
-      act(() => firstUpdater(count => count + 10));
+      await act(async () => firstUpdater(count => count + 10));
       assertLog(['Count: 11']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 11" />);
 
@@ -381,7 +381,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll([]);
       ReactNoop.render(null);
       await waitForAll([]);
-      act(() => _updateCount(1));
+      await act(async () => _updateCount(1));
     });
 
     it('works with memo', async () => {
@@ -401,7 +401,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll([]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
-      act(() => _updateCount(1));
+      await act(async () => _updateCount(1));
       assertLog(['Count: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
     });
@@ -637,7 +637,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Test that it works on update, too. This time the log is a bit different
       // because we started with reducerB instead of reducerA.
-      act(() => {
+      await act(async () => {
         counter.current.dispatch('reset');
       });
       ReactNoop.render(<Counter ref={counter} />);
@@ -851,10 +851,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll(['Count: 0']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
-      act(() => counter.current.dispatch(INCREMENT));
+      await act(async () => counter.current.dispatch(INCREMENT));
       assertLog(['Count: 1']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-      act(() => {
+      await act(async () => {
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
@@ -893,11 +893,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll(['Init', 'Count: 10']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 10" />);
 
-      act(() => counter.current.dispatch(INCREMENT));
+      await act(async () => counter.current.dispatch(INCREMENT));
       assertLog(['Count: 11']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 11" />);
 
-      act(() => {
+      await act(async () => {
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
@@ -1427,7 +1427,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         return state;
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.renderToRootWithID(<Component />, 'root', () =>
           Scheduler.log('Sync effect'),
         );
@@ -1437,7 +1437,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.unmountRootWithID('root');
       await waitForAll(['passive destroy']);
 
-      act(() => {
+      await act(async () => {
         updaterFunction(true);
       });
     });
@@ -1624,7 +1624,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
       // A flush sync doesn't cause the passive effects to fire.
       // So we haven't added the other update yet.
-      act(() => {
+      await act(async () => {
         ReactNoop.flushSync(() => {
           _updateCount(2);
         });
@@ -2256,7 +2256,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // @gate skipUnmountedBoundaries
       it('should use the nearest still-mounted boundary if there are no unmounted boundaries', async () => {
-        act(() => {
+        await act(async () => {
           ReactNoop.render(
             <LogOnlyErrorBoundary>
               <BrokenUseEffectCleanup />
@@ -2269,7 +2269,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           'BrokenUseEffectCleanup useEffect',
         ]);
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(<LogOnlyErrorBoundary />);
         });
 
@@ -2294,7 +2294,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           }
         }
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(
             <LogOnlyErrorBoundary>
               <Conditional showChildren={true} />
@@ -2308,7 +2308,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           'BrokenUseEffectCleanup useEffect',
         ]);
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(
             <LogOnlyErrorBoundary>
               <Conditional showChildren={false} />
@@ -2333,7 +2333,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           }
         }
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary>
               <Conditional showChildren={true} />
@@ -2346,7 +2346,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           'BrokenUseEffectCleanup useEffect',
         ]);
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary>
               <Conditional showChildren={false} />
@@ -2381,7 +2381,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           }
         }
 
-        act(() => {
+        await act(async () => {
           ReactNoop.render(<Conditional showChildren={true} />);
         });
 
@@ -2390,11 +2390,10 @@ describe('ReactHooksWithNoopRenderer', () => {
           'BrokenUseEffectCleanup useEffect',
         ]);
 
-        expect(() => {
-          act(() => {
-            ReactNoop.render(<Conditional showChildren={false} />);
-          });
-        }).toThrow('Expected error');
+        await act(async () => {
+          ReactNoop.render(<Conditional showChildren={false} />);
+          await waitForThrow('Expected error');
+        });
 
         assertLog(['BrokenUseEffectCleanup useEffect destroy']);
 
@@ -2425,7 +2424,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         prevProps.prop === nextProps.prop;
       const MemoizedChild = React.memo(Child, isEqual);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={1} />
@@ -2435,7 +2434,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['render', 'layout create', 'passive create']);
 
       // Include at least one no-op (memoized) update to trigger original bug.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={1} />
@@ -2444,7 +2443,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
       assertLog([]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={2} />
@@ -2459,7 +2458,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         'passive create',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       assertLog(['layout destroy', 'passive destroy']);
@@ -2492,7 +2491,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         prevProps.prop === nextProps.prop;
       const MemoizedChild = React.memo(Child, isEqual);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={1} />
@@ -2502,7 +2501,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['render', 'layout create', 'passive create']);
 
       // Include at least one no-op (memoized) update to trigger original bug.
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={1} />
@@ -2511,7 +2510,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
       assertLog([]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(
           <Wrapper>
             <MemoizedChild key={2} />
@@ -2526,12 +2525,16 @@ describe('ReactHooksWithNoopRenderer', () => {
         'passive create',
       ]);
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       assertLog(['layout destroy', 'passive destroy']);
     });
 
+    // TODO: This test fails when skipUnmountedBoundaries is disabled. However,
+    // it's also rolled out to open source already and partially to www. So
+    // we should probably just land it.
+    // @gate skipUnmountedBoundaries
     it('assumes passive effect destroy function is either a function or undefined', async () => {
       function App(props) {
         useEffect(() => {
@@ -2541,8 +2544,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
@@ -2551,8 +2554,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root2 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
@@ -2562,8 +2565,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root3 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
@@ -2573,11 +2576,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       // Error on unmount because React assumes the value is a function
-      expect(() =>
-        act(() => {
-          root3.unmount();
-        }),
-      ).toThrow('is not a function');
+      await act(async () => {
+        root3.render(null);
+        await waitForThrow('is not a function');
+      });
     });
   });
 
@@ -2921,8 +2923,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
@@ -2931,8 +2933,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root2 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
@@ -2942,8 +2944,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root3 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
@@ -2953,11 +2955,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       // Error on unmount because React assumes the value is a function
-      expect(() =>
-        act(() => {
-          root3.unmount();
-        }),
-      ).toThrow('is not a function');
+      await act(async () => {
+        root3.render(null);
+        await waitForThrow('is not a function');
+      });
     });
 
     it('warns when setState is called from insertion effect setup', async () => {
@@ -2973,17 +2974,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root.render(<App />);
         });
       }).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
 
-      expect(() => {
-        act(() => {
-          root.render(<App throw={true} />);
-        });
-      }).toThrow('No');
+      await act(async () => {
+        root.render(<App throw={true} />);
+        await waitForThrow('No');
+      });
 
       // Should not warn for regular effects after throw.
       function NotInsertion() {
@@ -2993,7 +2993,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }, []);
         return null;
       }
-      act(() => {
+      await act(async () => {
         root.render(<NotInsertion />);
       });
     });
@@ -3013,20 +3013,19 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root = ReactNoop.createRoot();
-      act(() => {
+      await act(async () => {
         root.render(<App foo="hello" />);
       });
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root.render(<App foo="goodbye" />);
         });
       }).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
 
-      expect(() => {
-        act(() => {
-          root.render(<App throw={true} />);
-        });
-      }).toThrow('No');
+      await act(async () => {
+        root.render(<App throw={true} />);
+        await waitForThrow('No');
+      });
 
       // Should not warn for regular effects after throw.
       function NotInsertion() {
@@ -3036,7 +3035,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }, []);
         return null;
       }
-      act(() => {
+      await act(async () => {
         root.render(<NotInsertion />);
       });
     });
@@ -3204,8 +3203,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
@@ -3214,8 +3213,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root2 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
@@ -3225,8 +3224,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       const root3 = ReactNoop.createRoot();
-      expect(() => {
-        act(() => {
+      await expect(async () => {
+        await act(async () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
@@ -3236,11 +3235,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       // Error on unmount because React assumes the value is a function
-      expect(() =>
-        act(() => {
-          root3.unmount();
-        }),
-      ).toThrow('is not a function');
+      await act(async () => {
+        root3.render(null);
+        await waitForThrow('is not a function');
+      });
     });
   });
 
@@ -3279,7 +3277,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         </>,
       );
 
-      act(button.current.increment);
+      await act(async () => button.current.increment());
       assertLog([
         // Button should not re-render, because its props haven't changed
         // 'Increment',
@@ -3307,7 +3305,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
 
       // Callback should have updated
-      act(button.current.increment);
+      await act(async () => button.current.increment());
       assertLog(['Count: 11']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
@@ -3425,7 +3423,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
       expect(counter.current.count).toBe(0);
 
-      act(() => {
+      await act(async () => {
         counter.current.dispatch(INCREMENT);
       });
       assertLog(['Count: 1']);
@@ -3455,7 +3453,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
       expect(counter.current.count).toBe(0);
 
-      act(() => {
+      await act(async () => {
         counter.current.dispatch(INCREMENT);
       });
       assertLog(['Count: 1']);
@@ -3492,7 +3490,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(counter.current.count).toBe(0);
       expect(totalRefUpdates).toBe(1);
 
-      act(() => {
+      await act(async () => {
         counter.current.dispatch(INCREMENT);
       });
       assertLog(['Count: 1']);
@@ -3591,7 +3589,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
       }
 
-      act(() => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
 
@@ -3689,7 +3687,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         <span prop="A: 0, B: 0, C: [not loaded]" />,
       );
 
-      act(() => {
+      await act(async () => {
         updateA(2);
         updateB(3);
       });
@@ -3751,7 +3749,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<App loadC={true} />);
       await waitForAll(['A: 0, B: 0, C: 0']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="A: 0, B: 0, C: 0" />);
-      act(() => {
+      await act(async () => {
         updateA(2);
         updateB(3);
         updateC(4);
@@ -3857,7 +3855,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput('1');
     });
 
-    act(() => {
+    await act(async () => {
       setCounter(2);
     });
     assertLog(['Render: 1', 'Effect: 2', 'Reducer: 2', 'Render: 2']);
@@ -3892,7 +3890,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     await waitForAll(['Render disabled: true', 'Render count: 0']);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => {
+    await act(async () => {
       // These increments should have no effect, since disabled=true
       increment();
       increment();
@@ -3901,7 +3899,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     assertLog(['Render disabled: true', 'Render count: 0']);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => {
+    await act(async () => {
       // Enabling the updater should *not* replay the previous increment() actions
       setDisabled(false);
     });
@@ -3941,7 +3939,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     await waitForAll(['Render disabled: true', 'Render count: 0']);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => {
+    await act(async () => {
       // These increments should have no effect, since disabled=true
       increment();
       increment();
@@ -3950,7 +3948,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     assertLog(['Render count: 0']);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => {
+    await act(async () => {
       // Enabling the updater should *not* replay the previous increment() actions
       setDisabled(false);
     });
@@ -3990,7 +3988,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     await waitForAll(['Render disabled: true', 'Render count: 0']);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => {
+    await act(async () => {
       // Although the increment happens first (and would seem to do nothing since disabled=true),
       // because these calls are in a batch the parent updates first. This should cause the child
       // to re-render with disabled=false and *then* process the increment action, which now
@@ -4085,7 +4083,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
     expect(ReactNoop).toMatchRenderedOutput('0');
 
-    act(() => dispatch());
+    await act(async () => dispatch());
     assertLog(['Step: 5, Shadow: 5']);
     expect(ReactNoop).toMatchRenderedOutput('5');
   });
@@ -4110,10 +4108,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       return `${a ? 'A' : 'a'}${b ? 'B' : 'b'}${c ? 'C' : 'c'}`;
     }
 
-    act(() => ReactNoop.render(<App />));
+    await act(async () => ReactNoop.render(<App />));
     expect(ReactNoop).toMatchRenderedOutput('abc');
 
-    act(() => {
+    await act(async () => {
       updateA(true);
       // This update should not get dropped.
       updateC(true);
@@ -4282,25 +4280,25 @@ describe('ReactHooksWithNoopRenderer', () => {
       return <Text text={`Render: ${count}`} />;
     }
 
-    act(() => {
+    await act(async () => {
       ReactNoop.render(<Test />);
     });
 
     assertLog(['Render: 0', 'Effect: 0']);
 
-    act(() => {
+    await act(async () => {
       handleClick();
     });
 
     assertLog(['Render: 0']);
 
-    act(() => {
+    await act(async () => {
       handleClick();
     });
 
     assertLog(['Render: 0']);
 
-    act(() => {
+    await act(async () => {
       handleClick();
     });
 

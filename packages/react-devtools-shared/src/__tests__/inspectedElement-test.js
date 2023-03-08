@@ -1069,8 +1069,8 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
           jest.runOnlyPendingTimers();
         });
@@ -1224,8 +1224,8 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
           jest.runOnlyPendingTimers();
         });
@@ -1306,8 +1306,8 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
           jest.runOnlyPendingTimers();
         });
@@ -1375,8 +1375,8 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestRendererAct(() => {
-      TestUtilsAct(() => {
+    await TestRendererAct(async () => {
+      await TestUtilsAct(async () => {
         legacyRender(
           <Example
             nestedObject={{
@@ -1469,8 +1469,8 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
           jest.runOnlyPendingTimers();
         });
@@ -1513,8 +1513,8 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestRendererAct(() => {
-      TestUtilsAct(() => {
+    await TestRendererAct(async () => {
+      await TestUtilsAct(async () => {
         legacyRender(
           <Example
             nestedObject={{
@@ -1596,8 +1596,8 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
           jest.runOnlyPendingTimers();
         });
@@ -1618,7 +1618,7 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestUtilsAct(() => {
+    await TestUtilsAct(async () => {
       legacyRender(
         <Example
           nestedObject={{
@@ -1640,11 +1640,9 @@ describe('InspectedElement', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "nestedObject": {
-          "a": {
-            "b": {
-              "value": 2,
-            },
-            "value": 2,
+          "a": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {b: {…}, value: 2},
           },
           "value": 2,
         },
@@ -2833,7 +2831,7 @@ describe('InspectedElement', () => {
       };
       const toggleError = async forceError => {
         await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
-          await TestUtilsAct(() => {
+          await TestUtilsAct(async () => {
             bridge.send('overrideError', {
               id: targetErrorBoundaryID,
               rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
@@ -2842,7 +2840,7 @@ describe('InspectedElement', () => {
           });
         });
 
-        TestUtilsAct(() => {
+        await TestUtilsAct(async () => {
           jest.runOnlyPendingTimers();
         });
       };

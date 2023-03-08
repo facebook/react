@@ -2,12 +2,9 @@ let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
 let Scheduler;
-let ReactCache;
 let Suspense;
 let act;
-
-let TextResource;
-let textResourceShouldFail;
+let textCache;
 
 let assertLog;
 let waitForPaint;
@@ -24,7 +21,6 @@ describe('ReactSuspense', () => {
     ReactTestRenderer = require('react-test-renderer');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
-    ReactCache = require('react-cache');
 
     Suspense = React.Suspense;
 
@@ -34,71 +30,69 @@ describe('ReactSuspense', () => {
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
 
-    TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        let listeners = null;
-        let status = 'pending';
-        let value = null;
-        return {
-          then(resolve, reject) {
-            switch (status) {
-              case 'pending': {
-                if (listeners === null) {
-                  listeners = [{resolve, reject}];
-                  setTimeout(() => {
-                    if (textResourceShouldFail) {
-                      Scheduler.log(`Promise rejected [${text}]`);
-                      status = 'rejected';
-                      value = new Error('Failed to load: ' + text);
-                      listeners.forEach(listener => listener.reject(value));
-                    } else {
-                      Scheduler.log(`Promise resolved [${text}]`);
-                      status = 'resolved';
-                      value = text;
-                      listeners.forEach(listener => listener.resolve(value));
-                    }
-                  }, ms);
-                } else {
-                  listeners.push({resolve, reject});
-                }
-                break;
-              }
-              case 'resolved': {
-                resolve(value);
-                break;
-              }
-              case 'rejected': {
-                reject(value);
-                break;
-              }
-            }
-          },
-        };
-      },
-      ([text, ms]) => text,
-    );
-    textResourceShouldFail = false;
+    textCache = new Map();
   });
 
-  function Text(props) {
-    Scheduler.log(props.text);
-    return props.text;
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
   }
 
-  function AsyncText(props) {
-    const text = props.text;
-    try {
-      TextResource.read([props.text, props.ms]);
-      Scheduler.log(text);
-      return text;
-    } catch (promise) {
-      if (typeof promise.then === 'function') {
-        Scheduler.log(`Suspend! [${text}]`);
-      } else {
-        Scheduler.log(`Error! [${text}]`);
+  function readText(text) {
+    const record = textCache.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          Scheduler.log(`Suspend! [${text}]`);
+          throw record.value;
+        case 'rejected':
+          throw record.value;
+        case 'resolved':
+          return record.value;
       }
-      throw promise;
+    } else {
+      Scheduler.log(`Suspend! [${text}]`);
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+
+      throw thenable;
     }
+  }
+
+  function Text({text}) {
+    Scheduler.log(text);
+    return text;
+  }
+
+  function AsyncText({text}) {
+    readText(text);
+    Scheduler.log(text);
+    return text;
   }
 
   it('suspends rendering and continues later', async () => {
@@ -146,16 +140,10 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput(null);
 
-    // Flush some of the time
-    jest.advanceTimersByTime(50);
-    // Still nothing...
     await waitForAll([]);
     expect(root).toMatchRenderedOutput(null);
 
-    // Flush the promise completely
-    jest.advanceTimersByTime(50);
-    // Renders successfully
-    assertLog(['Promise resolved [A]']);
+    await resolveText('A');
     await waitForAll(['Foo', 'Bar', 'A', 'B']);
     expect(root).toMatchRenderedOutput('AB');
   });
@@ -184,19 +172,15 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading A...Loading B...');
 
-    // Advance time by enough that the first Suspense's promise resolves and
-    // switches back to the normal view. The second Suspense should still
-    // show the placeholder
-    jest.advanceTimersByTime(5000);
-    // TODO: Should we throw if you forget to call toHaveYielded?
-    assertLog(['Promise resolved [A]']);
+    // Resolve first Suspense's promise and switch back to the normal view. The
+    // second Suspense should still show the placeholder
+    await resolveText('A');
     await waitForAll(['A']);
     expect(root).toMatchRenderedOutput('ALoading B...');
 
-    // Advance time by enough that the second Suspense's promise resolves
-    // and switches back to the normal view
-    jest.advanceTimersByTime(1000);
-    assertLog(['Promise resolved [B]']);
+    // Resolve the second Suspense's promise resolves and switche back to the
+    // normal view
+    await resolveText('B');
     await waitForAll(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
@@ -284,11 +268,6 @@ describe('ReactSuspense', () => {
       );
     }
 
-    // Committing fallbacks should be throttled.
-    // First, advance some time to skip the first threshold.
-    jest.advanceTimersByTime(600);
-    Scheduler.unstable_advanceTime(600);
-
     const root = ReactTestRenderer.create(<Foo />, {
       unstable_isConcurrent: true,
     });
@@ -302,10 +281,7 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    // Resolve A.
-    jest.advanceTimersByTime(200);
-    Scheduler.unstable_advanceTime(200);
-    assertLog(['Promise resolved [A]']);
+    await resolveText('A');
     await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
 
     // By this point, we have enough info to show "A" and "Loading more..."
@@ -313,15 +289,12 @@ describe('ReactSuspense', () => {
     // showing the inner fallback hoping that B will resolve soon enough.
     expect(root).toMatchRenderedOutput('Loading...');
 
-    // Resolve B.
-    jest.advanceTimersByTime(100);
-    Scheduler.unstable_advanceTime(100);
-    assertLog(['Promise resolved [B]']);
-
     // By this point, B has resolved.
     // We're still showing the outer fallback.
+    await resolveText('B');
     expect(root).toMatchRenderedOutput('Loading...');
     await waitForAll(['A', 'B']);
+
     // Then contents of both should pop in together.
     expect(root).toMatchRenderedOutput('AB');
   });
@@ -339,11 +312,6 @@ describe('ReactSuspense', () => {
       );
     }
 
-    // Committing fallbacks should be throttled.
-    // First, advance some time to skip the first threshold.
-    jest.advanceTimersByTime(600);
-    Scheduler.unstable_advanceTime(600);
-
     const root = ReactTestRenderer.create(<Foo />, {
       unstable_isConcurrent: true,
     });
@@ -357,27 +325,20 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    // Resolve A.
-    jest.advanceTimersByTime(200);
-    Scheduler.unstable_advanceTime(200);
-    assertLog(['Promise resolved [A]']);
+    await resolveText('A');
     await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
 
     // By this point, we have enough info to show "A" and "Loading more..."
     // However, we've just shown the outer fallback. So we'll delay
     // showing the inner fallback hoping that B will resolve soon enough.
     expect(root).toMatchRenderedOutput('Loading...');
-
-    // Wait some more. B is still not resolving.
+    // But if we wait a bit longer, eventually we'll give up and show a
+    // fallback. The exact value here isn't important. It's a JND ("Just
+    // Noticeable Difference").
     jest.advanceTimersByTime(500);
-    Scheduler.unstable_advanceTime(500);
-    // Give up and render A with a spinner for B.
     expect(root).toMatchRenderedOutput('ALoading more...');
 
-    // Resolve B.
-    jest.advanceTimersByTime(500);
-    Scheduler.unstable_advanceTime(500);
-    assertLog(['Promise resolved [B]']);
+    await resolveText('B');
     await waitForAll(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
@@ -423,18 +384,7 @@ describe('ReactSuspense', () => {
 
     const MemoizedChild = memo(function MemoizedChild() {
       const text = useContext(ValueContext);
-      try {
-        TextResource.read([text, 1000]);
-        Scheduler.log(text);
-        return text;
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          Scheduler.log(`Suspend! [${text}]`);
-        } else {
-          Scheduler.log(`Error! [${text}]`);
-        }
-        throw promise;
-      }
+      return <Text text={readText(text)} />;
     });
 
     let setValue;
@@ -455,17 +405,15 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
     await waitForAll(['Suspend! [default]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [default]']);
+    await resolveText('default');
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    act(() => setValue('new value'));
+    await act(async () => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [new value]']);
+    await resolveText('new value');
     await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
@@ -478,18 +426,7 @@ describe('ReactSuspense', () => {
     const MemoizedChild = memo(
       function MemoizedChild() {
         const text = useContext(ValueContext);
-        try {
-          TextResource.read([text, 1000]);
-          Scheduler.log(text);
-          return text;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${text}]`);
-          } else {
-            Scheduler.log(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(text)} />;
       },
       function areEqual(prevProps, nextProps) {
         return true;
@@ -514,17 +451,15 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
     await waitForAll(['Suspend! [default]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [default]']);
+    await resolveText('default');
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    act(() => setValue('new value'));
+    await act(async () => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [new value]']);
+    await resolveText('new value');
     await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
@@ -536,18 +471,7 @@ describe('ReactSuspense', () => {
 
     function MemoizedChild() {
       const text = useContext(ValueContext);
-      try {
-        TextResource.read([text, 1000]);
-        Scheduler.log(text);
-        return text;
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          Scheduler.log(`Suspend! [${text}]`);
-        } else {
-          Scheduler.log(`Error! [${text}]`);
-        }
-        throw promise;
-      }
+      return <Text text={readText(text)} />;
     }
 
     let setValue;
@@ -571,17 +495,15 @@ describe('ReactSuspense', () => {
       },
     );
     await waitForAll(['Suspend! [default]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [default]']);
+    await resolveText('default');
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    act(() => setValue('new value'));
+    await act(async () => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [new value]']);
+    await resolveText('new value');
     await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
@@ -593,18 +515,7 @@ describe('ReactSuspense', () => {
 
     const MemoizedChild = forwardRef(() => {
       const text = useContext(ValueContext);
-      try {
-        TextResource.read([text, 1000]);
-        Scheduler.log(text);
-        return text;
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          Scheduler.log(`Suspend! [${text}]`);
-        } else {
-          Scheduler.log(`Error! [${text}]`);
-        }
-        throw promise;
-      }
+      return <Text text={readText(text)} />;
     });
 
     let setValue;
@@ -628,17 +539,15 @@ describe('ReactSuspense', () => {
       },
     );
     await waitForAll(['Suspend! [default]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [default]']);
+    await resolveText('default');
     await waitForAll(['default']);
     expect(root).toMatchRenderedOutput('default');
 
-    act(() => setValue('new value'));
+    await act(async () => setValue('new value'));
     assertLog(['Suspend! [new value]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
 
-    assertLog(['Promise resolved [new value]']);
+    await resolveText('new value');
     await waitForAll(['new value']);
     expect(root).toMatchRenderedOutput('new value');
   });
@@ -674,12 +583,17 @@ describe('ReactSuspense', () => {
     await waitForAll(['Child 1', 'create layout']);
     expect(root).toMatchRenderedOutput('Child 1');
 
-    act(() => {
+    await act(async () => {
       _setShow(true);
     });
-    assertLog(['Child 1', 'Suspend! [Child 2]', 'Loading...']);
-    jest.advanceTimersByTime(1000);
-    assertLog(['destroy layout', 'Promise resolved [Child 2]']);
+    assertLog([
+      'Child 1',
+      'Suspend! [Child 2]',
+      'Loading...',
+      'destroy layout',
+    ]);
+
+    await resolveText('Child 2');
     await waitForAll(['Child 1', 'Child 2', 'create layout']);
     expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
   });
@@ -715,20 +629,8 @@ describe('ReactSuspense', () => {
         }
         render() {
           instance = this;
-          const text = `${this.props.text}:${this.state.step}`;
-          const ms = this.props.ms;
-          try {
-            TextResource.read([text, ms]);
-            Scheduler.log(text);
-            return text;
-          } catch (promise) {
-            if (typeof promise.then === 'function') {
-              Scheduler.log(`Suspend! [${text}]`);
-            } else {
-              Scheduler.log(`Error! [${text}]`);
-            }
-            throw promise;
-          }
+          const text = readText(`${this.props.text}:${this.state.step}`);
+          return <Text text={text} />;
         }
       }
 
@@ -758,9 +660,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      jest.advanceTimersByTime(100);
-
-      assertLog(['Promise resolved [B:1]']);
+      await resolveText('B:1');
       await waitForPaint([
         'B:1',
         'Unmount [Loading...]',
@@ -773,9 +673,7 @@ describe('ReactSuspense', () => {
       assertLog(['Suspend! [B:2]', 'Loading...', 'Mount [Loading...]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      jest.advanceTimersByTime(100);
-
-      assertLog(['Promise resolved [B:2]']);
+      await resolveText('B:2');
       await waitForPaint(['B:2', 'Unmount [Loading...]', 'Update [B:2]']);
       expect(root).toMatchRenderedOutput('AB:2C');
     });
@@ -803,9 +701,7 @@ describe('ReactSuspense', () => {
 
       assertLog(['Stateful: 1', 'Suspend! [A]', 'Loading...']);
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [A]']);
+      await resolveText('A');
       await waitForPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
@@ -817,9 +713,7 @@ describe('ReactSuspense', () => {
       assertLog(['Stateful: 2', 'Suspend! [B]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [B]']);
+      await resolveText('B');
       await waitForPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
@@ -855,9 +749,7 @@ describe('ReactSuspense', () => {
 
       assertLog(['Stateful: 1', 'Suspend! [A]', 'Loading...']);
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [A]']);
+      await resolveText('A');
       await waitForPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
@@ -876,9 +768,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [B]']);
+      await resolveText('B');
       await waitForPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
@@ -889,20 +779,7 @@ describe('ReactSuspense', () => {
           Scheduler.log('will unmount');
         }
         render() {
-          const text = this.props.text;
-          const ms = this.props.ms;
-          try {
-            TextResource.read([text, ms]);
-            Scheduler.log(text);
-            return text;
-          } catch (promise) {
-            if (typeof promise.then === 'function') {
-              Scheduler.log(`Suspend! [${text}]`);
-            } else {
-              Scheduler.log(`Error! [${text}]`);
-            }
-            throw promise;
-          }
+          return <Text text={readText(this.props.text)} />;
         }
       }
 
@@ -932,18 +809,7 @@ describe('ReactSuspense', () => {
           Scheduler.log('Did commit: ' + text);
         }, [text]);
 
-        try {
-          TextResource.read([props.text, props.ms]);
-          Scheduler.log(text);
-          return text;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${text}]`);
-          } else {
-            Scheduler.log(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(text)} />;
       }
 
       function App({text}) {
@@ -956,9 +822,7 @@ describe('ReactSuspense', () => {
 
       ReactTestRenderer.create(<App text="A" />);
       assertLog(['Suspend! [A]', 'Loading...']);
-      jest.advanceTimersByTime(500);
-
-      assertLog(['Promise resolved [A]']);
+      await resolveText('A');
       await waitForPaint(['A', 'Did commit: A']);
     });
 
@@ -986,15 +850,16 @@ describe('ReactSuspense', () => {
 
       // Initial render
       await waitForAll(['Suspend! [Step: 1]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
-      assertLog(['Promise resolved [Step: 1]']);
+
+      await resolveText('Step: 1');
       await waitForAll(['Step: 1']);
       expect(root).toMatchRenderedOutput('Step: 1');
 
       // Update that suspends
-      instance.setState({step: 2});
-      await waitForAll(['Suspend! [Step: 2]', 'Loading...']);
-      jest.advanceTimersByTime(500);
+      await act(async () => {
+        instance.setState({step: 2});
+      });
+      assertLog(['Suspend! [Step: 2]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Update while still suspended
@@ -1002,8 +867,8 @@ describe('ReactSuspense', () => {
       await waitForAll(['Suspend! [Step: 3]']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      jest.advanceTimersByTime(1000);
-      assertLog(['Promise resolved [Step: 2]', 'Promise resolved [Step: 3]']);
+      await resolveText('Step: 2');
+      await resolveText('Step: 3');
       await waitForAll(['Step: 3']);
       expect(root).toMatchRenderedOutput('Step: 3');
     });
@@ -1040,23 +905,17 @@ describe('ReactSuspense', () => {
       ]);
       await waitForAll([]);
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [Child 1]']);
+      await resolveText('Child 1');
       await waitForPaint([
         'Child 1',
         'Suspend! [Child 2]',
         'Suspend! [Child 3]',
       ]);
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [Child 2]']);
+      await resolveText('Child 2');
       await waitForPaint(['Child 2', 'Suspend! [Child 3]']);
 
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [Child 3]']);
+      await resolveText('Child 3');
       await waitForPaint(['Child 3']);
       expect(root).toMatchRenderedOutput(
         ['Child 1', 'Child 2', 'Child 3'].join(''),
@@ -1083,11 +942,12 @@ describe('ReactSuspense', () => {
         'Suspend! [Child 2]',
         'Loading...',
       ]);
-      jest.advanceTimersByTime(1000);
-      assertLog(['Promise resolved [Child 1]']);
+      await resolveText('Child 1');
       await waitForAll(['Child 1', 'Suspend! [Child 2]']);
+
       jest.advanceTimersByTime(6000);
-      assertLog(['Promise resolved [Child 2]']);
+
+      await resolveText('Child 2');
       await waitForAll(['Child 1', 'Child 2']);
       expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
     });
@@ -1111,32 +971,29 @@ describe('ReactSuspense', () => {
       const root = ReactTestRenderer.create(<App />);
       assertLog(['Suspend! [Tab: 0]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [Tab: 0]']);
+      await resolveText('Tab: 0');
       await waitForPaint(['Tab: 0']);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
-      act(() => setTab(1));
+      await act(async () => setTab(1));
       assertLog(['Suspend! [Tab: 1]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [Tab: 1]']);
+      await resolveText('Tab: 1');
       await waitForPaint(['Tab: 1']);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
-      act(() => setTab(2));
+      await act(async () => setTab(2));
       assertLog(['Suspend! [Tab: 2]', ' + sibling', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [Tab: 2]']);
+      await resolveText('Tab: 2');
       await waitForPaint(['Tab: 2']);
       expect(root).toMatchRenderedOutput('Tab: 2 + sibling');
     });
 
-    it('does not warn if an mounted component is pinged', async () => {
+    it('does not warn if a mounted component is pinged', async () => {
       const {useState} = React;
 
       const root = ReactTestRenderer.create(null);
@@ -1146,18 +1003,7 @@ describe('ReactSuspense', () => {
         const [step, _setStep] = useState(0);
         setStep = _setStep;
         const fullText = `${text}:${step}`;
-        try {
-          TextResource.read([fullText, ms]);
-          Scheduler.log(fullText);
-          return fullText;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${fullText}]`);
-          } else {
-            Scheduler.log(`Error! [${fullText}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(fullText)} />;
       }
 
       root.update(
@@ -1167,19 +1013,18 @@ describe('ReactSuspense', () => {
       );
 
       assertLog(['Suspend! [A:0]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [A:0]']);
+      await resolveText('A:0');
       await waitForPaint(['A:0']);
       expect(root).toMatchRenderedOutput('A:0');
 
-      act(() => setStep(1));
+      await act(async () => setStep(1));
       assertLog(['Suspend! [A:1]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      root.update(null);
-      await waitForAll([]);
-      jest.advanceTimersByTime(1000);
+      await act(async () => {
+        root.update(null);
+      });
     });
 
     it('memoizes promise listeners per thread ID to prevent redundant renders', async () => {
@@ -1199,10 +1044,7 @@ describe('ReactSuspense', () => {
 
       assertLog(['Suspend! [A]', 'Suspend! [B]', 'Suspend! [C]', 'Loading...']);
 
-      // Resolve A
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [A]']);
+      await resolveText('A');
       await waitForPaint([
         'A',
         // The promises for B and C have now been thrown twice
@@ -1210,10 +1052,7 @@ describe('ReactSuspense', () => {
         'Suspend! [C]',
       ]);
 
-      // Resolve B
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [B]']);
+      await resolveText('B');
       await waitForPaint([
         // Even though the promise for B was thrown twice, we should only
         // re-render once.
@@ -1222,10 +1061,7 @@ describe('ReactSuspense', () => {
         'Suspend! [C]',
       ]);
 
-      // Resolve C
-      jest.advanceTimersByTime(1000);
-
-      assertLog(['Promise resolved [C]']);
+      await resolveText('C');
       await waitForPaint([
         // Even though the promise for C was thrown three times, we should only
         // re-render once.
@@ -1233,7 +1069,7 @@ describe('ReactSuspense', () => {
       ]);
     });
 
-    it('#14162', () => {
+    it('#14162', async () => {
       const {lazy} = React;
 
       function Hello() {
@@ -1267,8 +1103,9 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(null);
 
-      root.update(<App name="world" />);
-      jest.advanceTimersByTime(1000);
+      await act(async () => {
+        root.update(<App name="world" />);
+      });
     });
 
     it('updates memoized child of suspense component when context updates (simple memo)', async () => {
@@ -1278,18 +1115,7 @@ describe('ReactSuspense', () => {
 
       const MemoizedChild = memo(function MemoizedChild() {
         const text = useContext(ValueContext);
-        try {
-          TextResource.read([text, 1000]);
-          Scheduler.log(text);
-          return text;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${text}]`);
-          } else {
-            Scheduler.log(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(text)} />;
       });
 
       let setValue;
@@ -1308,17 +1134,15 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App />);
       assertLog(['Suspend! [default]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [default]']);
+      await resolveText('default');
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      act(() => setValue('new value'));
+      await act(async () => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [new value]']);
+      await resolveText('new value');
       await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
@@ -1331,18 +1155,7 @@ describe('ReactSuspense', () => {
       const MemoizedChild = memo(
         function MemoizedChild() {
           const text = useContext(ValueContext);
-          try {
-            TextResource.read([text, 1000]);
-            Scheduler.log(text);
-            return text;
-          } catch (promise) {
-            if (typeof promise.then === 'function') {
-              Scheduler.log(`Suspend! [${text}]`);
-            } else {
-              Scheduler.log(`Error! [${text}]`);
-            }
-            throw promise;
-          }
+          return <Text text={readText(text)} />;
         },
         function areEqual(prevProps, nextProps) {
           return true;
@@ -1365,17 +1178,15 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App />);
       assertLog(['Suspend! [default]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [default]']);
+      await resolveText('default');
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      act(() => setValue('new value'));
+      await act(async () => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [new value]']);
+      await resolveText('new value');
       await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
@@ -1387,18 +1198,7 @@ describe('ReactSuspense', () => {
 
       function MemoizedChild() {
         const text = useContext(ValueContext);
-        try {
-          TextResource.read([text, 1000]);
-          Scheduler.log(text);
-          return text;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${text}]`);
-          } else {
-            Scheduler.log(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(text)} />;
       }
 
       let setValue;
@@ -1421,17 +1221,15 @@ describe('ReactSuspense', () => {
         </App>,
       );
       assertLog(['Suspend! [default]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [default]']);
+      await resolveText('default');
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      act(() => setValue('new value'));
+      await act(async () => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [new value]']);
+      await resolveText('new value');
       await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
@@ -1443,18 +1241,7 @@ describe('ReactSuspense', () => {
 
       const MemoizedChild = forwardRef(function MemoizedChild() {
         const text = useContext(ValueContext);
-        try {
-          TextResource.read([text, 1000]);
-          Scheduler.log(text);
-          return text;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.log(`Suspend! [${text}]`);
-          } else {
-            Scheduler.log(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        return <Text text={readText(text)} />;
       });
 
       let setValue;
@@ -1473,22 +1260,20 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App />);
       assertLog(['Suspend! [default]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [default]']);
+      await resolveText('default');
       await waitForPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
-      act(() => setValue('new value'));
+      await act(async () => setValue('new value'));
       assertLog(['Suspend! [new value]', 'Loading...']);
-      jest.advanceTimersByTime(1000);
 
-      assertLog(['Promise resolved [new value]']);
+      await resolveText('new value');
       await waitForPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
-    it('updates context consumer within child of suspended suspense component when context updates', () => {
+    it('updates context consumer within child of suspended suspense component when context updates', async () => {
       const {createContext, useState} = React;
 
       const ValueContext = createContext(null);
@@ -1531,11 +1316,11 @@ describe('ReactSuspense', () => {
       assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
 
-      act(() => setValue('new value'));
+      await act(async () => setValue('new value'));
       assertLog(['Received context value [new value]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      act(() => setValue('default'));
+      await act(async () => setValue('default'));
       assertLog(['Received context value [default]', 'default']);
       expect(root).toMatchRenderedOutput('default');
     });

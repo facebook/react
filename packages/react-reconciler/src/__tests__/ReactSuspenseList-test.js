@@ -2275,7 +2275,7 @@ describe('ReactSuspenseList', () => {
     );
 
     // Update the row adjacent to the list
-    act(() => updateAdjacent('C'));
+    await act(async () => updateAdjacent('C'));
 
     assertLog(['C']);
 
@@ -2332,7 +2332,7 @@ describe('ReactSuspenseList', () => {
     const previousInst = setAsyncB;
 
     // During an update we suspend on B.
-    act(() => setAsyncB(true));
+    await act(async () => setAsyncB(true));
 
     assertLog([
       'Suspend! [B]',
@@ -2350,7 +2350,7 @@ describe('ReactSuspenseList', () => {
 
     // Before we resolve we'll rerender the whole list.
     // This should leave the tree intact.
-    act(() => ReactNoop.render(<Foo updateList={true} />));
+    await act(async () => ReactNoop.render(<Foo updateList={true} />));
 
     assertLog(['A', 'Suspend! [B]', 'Loading B']);
 
@@ -2421,7 +2421,7 @@ describe('ReactSuspenseList', () => {
     const previousInst = setAsyncB;
 
     // During an update we suspend on B.
-    act(() => setAsyncB(true));
+    await act(async () => setAsyncB(true));
 
     assertLog([
       'Suspend! [B]',
@@ -2439,7 +2439,7 @@ describe('ReactSuspenseList', () => {
 
     // Before we resolve we'll rerender the whole list.
     // This should leave the tree intact.
-    act(() => ReactNoop.render(<Foo updateList={true} />));
+    await act(async () => ReactNoop.render(<Foo updateList={true} />));
 
     assertLog(['A', 'Suspend! [B]', 'Loading B']);
 

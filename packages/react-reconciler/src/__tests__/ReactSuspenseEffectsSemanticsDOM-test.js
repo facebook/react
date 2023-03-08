@@ -17,6 +17,7 @@ let act;
 let container;
 let waitForAll;
 let assertLog;
+let fakeModuleCache;
 
 describe('ReactSuspenseEffectsSemanticsDOM', () => {
   beforeEach(() => {
@@ -34,14 +35,53 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     container = document.createElement('div');
     document.body.appendChild(container);
+
+    fakeModuleCache = new Map();
   });
 
   afterEach(() => {
     document.body.removeChild(container);
   });
 
-  async function fakeImport(result) {
-    return {default: result};
+  async function fakeImport(Component) {
+    const record = fakeModuleCache.get(Component);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'pending',
+        value: {default: Component},
+        pings: [],
+        then(ping) {
+          switch (newRecord.status) {
+            case 'pending': {
+              newRecord.pings.push(ping);
+              return;
+            }
+            case 'resolved': {
+              ping(newRecord.value);
+              return;
+            }
+            case 'rejected': {
+              throw newRecord.value;
+            }
+          }
+        },
+      };
+      fakeModuleCache.set(Component, newRecord);
+      return newRecord;
+    }
+    return record;
+  }
+
+  function resolveFakeImport(moduleName) {
+    const record = fakeModuleCache.get(moduleName);
+    if (record === undefined) {
+      throw new Error('Module not found');
+    }
+    if (record.status !== 'pending') {
+      throw new Error('Module already resolved');
+    }
+    record.status = 'resolved';
+    record.pings.forEach(ping => ping(record.value));
   }
 
   function Text(props) {
@@ -49,7 +89,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     return props.text;
   }
 
-  it('should not cause a cycle when combined with a render phase update', () => {
+  it('should not cause a cycle when combined with a render phase update', async () => {
     let scheduleSuspendingUpdate;
 
     function App() {
@@ -79,22 +119,22 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
       return <div ref={setRef} />;
     }
 
-    const promise = Promise.resolve();
+    const neverResolves = {then() {}};
 
     function ComponentThatSuspendsOnUpdate({shouldSuspend}) {
       if (shouldSuspend) {
         // Fake Suspend
-        throw promise;
+        throw neverResolves;
       }
       return null;
     }
 
-    act(() => {
+    await act(async () => {
       const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
     });
 
-    act(() => {
+    await act(async () => {
       scheduleSuspendingUpdate();
     });
   });
@@ -142,12 +182,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
 
-    await LazyChildA;
+    await resolveFakeImport(ChildA);
     await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
@@ -160,7 +200,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
       '<span style="display: none;">A</span>Loading...',
     );
 
-    await LazyChildB;
+    await resolveFakeImport(ChildB);
     await waitForAll(['B', 'Ref mount: B']);
     expect(container.innerHTML).toBe('<span>B</span>');
   });
@@ -202,12 +242,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
 
-    await LazyChildA;
+    await resolveFakeImport(ChildA);
     await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
@@ -218,7 +258,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
-    await LazyChildB;
+    await resolveFakeImport(ChildB);
     await waitForAll(['B', 'Did mount: B']);
     expect(container.innerHTML).toBe('B');
   });
@@ -254,12 +294,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
 
-    await LazyChildA;
+    await resolveFakeImport(ChildA);
     await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
@@ -321,12 +361,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
 
-    await LazyChildA;
+    await resolveFakeImport(ChildA);
     await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
@@ -384,12 +424,12 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<Parent swap={false} />);
     });
     assertLog(['Loading...']);
 
-    await LazyChildA;
+    await resolveFakeImport(ChildA);
     await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
