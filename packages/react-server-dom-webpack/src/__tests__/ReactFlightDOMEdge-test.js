@@ -15,6 +15,10 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Don't wait before processing work on the server.
+// TODO: we can replace this with FlightServer.act().
+global.setTimeout = cb => cb();
+
 let clientExports;
 let webpackMap;
 let webpackModules;
