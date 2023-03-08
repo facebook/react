@@ -95,7 +95,10 @@ export type PartialViewConfig = $ReadOnly<{
   validAttributes?: PartialAttributeConfiguration,
 }>;
 
-export interface NativeMethods {
+/**
+ * Current usages should migrate to this definition
+ */
+export interface INativeMethods {
   blur(): void;
   focus(): void;
   measure(callback: MeasureOnSuccessCallback): void;
@@ -107,6 +110,23 @@ export interface NativeMethods {
   ): void;
   setNativeProps(nativeProps: {...}): void;
 }
+
+export type NativeMethods = $ReadOnly<{|
+  blur(): void,
+  focus(): void,
+  measure(callback: MeasureOnSuccessCallback): void,
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
+  measureLayout(
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+    onFail?: () => void,
+  ): void,
+  setNativeProps(nativeProps: {...}): void,
+|}>;
+
+// This validates that INativeMethods and NativeMethods stay in sync using Flow!
+declare var ensureNativeMethodsAreSynced: NativeMethods;
+(ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 

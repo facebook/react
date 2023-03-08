@@ -68,6 +68,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
     hostInstance = findHostInstance(componentOrHandle);
   }
 
+  // $FlowFixMe[incompatible-exact] we need to fix the definition of `HostComponent` to use NativeMethods as an interface, not as a type.
   return hostInstance;
 }
 
