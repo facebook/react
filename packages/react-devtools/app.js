@@ -27,8 +27,10 @@ app.on('ready', function () {
     frame: false,
     //titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      contextIsolation: true, // protect against prototype pollution
+      enableRemoteModule: false, // turn off remote
+      sandbox: false, // allow preload script to access file system
+      preload: join(__dirname, 'preload.js'), // use a preload script to expose node globals
     },
   });
 
