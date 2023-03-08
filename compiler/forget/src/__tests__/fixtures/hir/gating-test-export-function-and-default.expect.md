@@ -23,7 +23,6 @@ export function Foo(props) {
 
 ```javascript
 import isForgetEnabled from "ReactForgetFeatureFlag"; // @gatingModule @forgetDirective
-export default Bar;
 function Bar_uncompiled(props) {
   "use forget";
   return <div>{props.bar}</div>;
@@ -41,13 +40,13 @@ function Bar_forget(props) {
   }
   return t0;
 }
-var Bar = isForgetEnabled ? Bar_forget : Bar_uncompiled;
+const Bar = isForgetEnabled ? Bar_forget : Bar_uncompiled;
+export default Bar;
 
 function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
 }
 
-export var Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
 function Foo_uncompiled(props) {
   "use forget";
   return <Foo>{props.bar}</Foo>;
@@ -65,6 +64,7 @@ function Foo_forget(props) {
   }
   return t0;
 }
+export const Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
 
 ```
       
