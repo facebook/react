@@ -44,7 +44,8 @@ import {
   processErrorChunkDev,
   processReferenceChunk,
   resolveClientReferenceMetadata,
-  resolveServerReferenceMetadata,
+  getServerReferenceId,
+  getServerReferenceBoundArguments,
   getClientReferenceKey,
   isClientReference,
   isServerReference,
@@ -595,10 +596,18 @@ function serializeServerReference(
   if (existingId !== undefined) {
     return serializeServerReferenceID(existingId);
   }
+
+  const bound: null | Array<any> = getServerReferenceBoundArguments(
+    request.bundlerConfig,
+    serverReference,
+  );
   const serverReferenceMetadata: {
     id: ServerReferenceId,
-    bound: Promise<Array<any>>,
-  } = resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
+    bound: null | Promise<Array<any>>,
+  } = {
+    id: getServerReferenceId(request.bundlerConfig, serverReference),
+    bound: bound ? Promise.resolve(bound) : null,
+  };
   request.pendingChunks++;
   const metadataId = request.nextChunkId++;
   // We assume that this object doesn't suspend.

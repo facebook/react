@@ -73,12 +73,16 @@ export function resolveClientReferenceMetadata<T>(
   }
 }
 
-export function resolveServerReferenceMetadata<T>(
+export function getServerReferenceId<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): {id: ServerReferenceId, bound: Promise<Array<any>>} {
-  return {
-    id: serverReference.$$id,
-    bound: Promise.resolve(serverReference.$$bound),
-  };
+): ServerReferenceId {
+  return serverReference.$$id;
+}
+
+export function getServerReferenceBoundArguments<T>(
+  config: BundlerConfig,
+  serverReference: ServerReference<T>,
+): Array<any> {
+  return serverReference.$$bound;
 }

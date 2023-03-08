@@ -20,5 +20,6 @@ export const isServerReference = $$$hostConfig.isServerReference;
 export const getClientReferenceKey = $$$hostConfig.getClientReferenceKey;
 export const resolveClientReferenceMetadata =
   $$$hostConfig.resolveClientReferenceMetadata;
-export const resolveServerReferenceMetadata =
-  $$$hostConfig.resolveServerReferenceMetadata;
+export const getServerReferenceId = $$$hostConfig.getServerReferenceId;
+export const getServerReferenceBoundArguments =
+  $$$hostConfig.getServerReferenceBoundArguments;
