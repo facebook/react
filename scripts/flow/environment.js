@@ -190,3 +190,10 @@ declare module 'async_hooks' {
     enterWith(store: T): void;
   }
 }
+
+declare module 'node:worker_threads' {
+  declare class MessageChannel {
+    port1: MessagePort;
+    port2: MessagePort;
+  }
+}

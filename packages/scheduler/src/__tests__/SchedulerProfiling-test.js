@@ -498,7 +498,7 @@ Task 1 [Normal]              │                    █████████�
       taskId++;
       const task = scheduleCallback(NormalPriority, () => {});
       cancelCallback(task);
-      await waitForAll([]);
+      Scheduler.unstable_flushAll();
     }
 
     expect(console.error).toHaveBeenCalledTimes(1);
