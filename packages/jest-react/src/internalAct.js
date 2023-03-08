@@ -22,7 +22,7 @@ import enqueueTask from 'shared/enqueueTask';
 
 let actingUpdatesScopeDepth = 0;
 
-export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
+export function act<T>(scope: () => Thenable<T>): Thenable<T> {
   if (Scheduler.unstable_flushUntilNextPaint === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -64,58 +64,45 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     }
   };
 
-  // TODO: This would be way simpler if 1) we required a promise to be
-  // returned and 2) we could use async/await. Since it's only our used in
-  // our test suite, we should be able to.
+  // TODO: This would be way simpler if we could use async/await. Move this
+  // function to the internal-test-utils package.
   try {
     const result = scope();
     if (
-      typeof result === 'object' &&
-      result !== null &&
-      // $FlowFixMe[method-unbinding]
-      typeof result.then === 'function'
+      typeof result !== 'object' ||
+      result === null ||
+      typeof (result: any).then !== 'function'
     ) {
-      const thenableResult: Thenable<T> = (result: any);
-      return {
-        then(resolve: T => mixed, reject: mixed => mixed) {
-          thenableResult.then(
-            returnValue => {
-              flushActWork(
-                () => {
-                  unwind();
-                  resolve(returnValue);
-                },
-                error => {
-                  unwind();
-                  reject(error);
-                },
-              );
-            },
-            error => {
-              unwind();
-              reject(error);
-            },
-          );
-        },
-      };
-    } else {
-      const returnValue: T = (result: any);
-      try {
-        // TODO: Let's not support non-async scopes at all in our tests. Need to
-        // migrate existing tests.
-        let didFlushWork;
-        do {
-          didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-        } while (didFlushWork);
-        return {
-          then(resolve: T => mixed, reject: mixed => mixed) {
-            resolve(returnValue);
-          },
-        };
-      } finally {
-        unwind();
-      }
+      throw new Error(
+        'The internal version of `act` used in the React repo must be passed ' +
+          "an async function, even if doesn't await anything. This is a " +
+          'temporary limitation that will soon be fixed.',
+      );
     }
+    const thenableResult: Thenable<T> = (result: any);
+
+    return {
+      then(resolve: T => mixed, reject: mixed => mixed) {
+        thenableResult.then(
+          returnValue => {
+            flushActWork(
+              () => {
+                unwind();
+                resolve(returnValue);
+              },
+              error => {
+                unwind();
+                reject(error);
+              },
+            );
+          },
+          error => {
+            unwind();
+            reject(error);
+          },
+        );
+      },
+    };
   } catch (error) {
     unwind();
     throw error;
