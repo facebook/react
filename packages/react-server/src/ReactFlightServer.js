@@ -967,7 +967,7 @@ export function resolveModelToJSON(
     if (
       parent[0] === REACT_ELEMENT_TYPE &&
       parent[1] &&
-      parent[1].$$typeof === REACT_PROVIDER_TYPE &&
+      (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
       key === '3'
     ) {
       insideContextProps = value;
