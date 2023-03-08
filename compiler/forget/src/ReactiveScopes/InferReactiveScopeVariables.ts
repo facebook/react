@@ -205,7 +205,9 @@ function mayAllocate(value: InstructionValue): boolean {
     case "BinaryExpression":
     case "LoadLocal":
     case "PropertyLoad":
+    case "PropertyDelete":
     case "ComputedLoad":
+    case "ComputedDelete":
     case "JSXText":
     case "UnaryExpression":
     case "TemplateLiteral":

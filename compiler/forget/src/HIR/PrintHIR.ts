@@ -351,6 +351,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       } = ${printPlace(instrValue.value)}`;
       break;
     }
+    case "PropertyDelete": {
+      value = `PropertyDelete ${printPlace(instrValue.object)}.${
+        instrValue.property
+      }`;
+      break;
+    }
     case "ComputedLoad": {
       value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
         instrValue.property
@@ -361,6 +367,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `ComputedStore ${printPlace(instrValue.object)}[${printPlace(
         instrValue.property
       )}] = ${printPlace(instrValue.value)}`;
+      break;
+    }
+    case "ComputedDelete": {
+      value = `ComputedDelete ${printPlace(instrValue.object)}[${printPlace(
+        instrValue.property
+      )}]`;
       break;
     }
     case "FunctionExpression": {

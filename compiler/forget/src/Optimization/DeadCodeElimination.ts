@@ -175,8 +175,10 @@ function pruneableValue(
       return true;
     }
     case "CallExpression":
+    case "ComputedDelete":
     case "ComputedCall":
     case "ComputedStore":
+    case "PropertyDelete":
     case "PropertyCall":
     case "PropertyStore": {
       // Mutating instructions are not safe to prune.

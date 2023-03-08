@@ -711,6 +711,16 @@ function codegenInstructionValue(
       }
       break;
     }
+    case "PropertyDelete": {
+      value = t.unaryExpression(
+        "delete",
+        t.memberExpression(
+          codegenPlace(cx, instrValue.object),
+          t.identifier(instrValue.property)
+        )
+      );
+      break;
+    }
     case "ComputedStore": {
       value = t.assignmentExpression(
         "=",
@@ -728,6 +738,17 @@ function codegenInstructionValue(
         codegenPlace(cx, instrValue.object),
         codegenPlace(cx, instrValue.property),
         true
+      );
+      break;
+    }
+    case "ComputedDelete": {
+      value = t.unaryExpression(
+        "delete",
+        t.memberExpression(
+          codegenPlace(cx, instrValue.object),
+          codegenPlace(cx, instrValue.property),
+          true
+        )
       );
       break;
     }

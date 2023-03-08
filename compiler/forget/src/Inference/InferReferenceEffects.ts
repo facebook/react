@@ -716,6 +716,12 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         continue;
       }
+      case "PropertyDelete": {
+        // `delete` returns a boolean (immutable) and modifies the object
+        valueKind = ValueKind.Immutable;
+        effectKind = Effect.Mutate;
+        break;
+      }
       case "PropertyLoad": {
         if (!state.isDefined(instrValue.object)) {
           // TODO @josephsavona: improve handling of globals
@@ -747,6 +753,13 @@ function inferBlock(
         const lvalue = instr.lvalue;
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
+        continue;
+      }
+      case "ComputedDelete": {
+        state.reference(instrValue.object, Effect.Mutate);
+        state.reference(instrValue.property, Effect.Read);
+        state.initialize(instrValue, ValueKind.Immutable);
+        state.reference(instr.lvalue, Effect.Mutate);
         continue;
       }
       case "ComputedLoad": {

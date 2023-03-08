@@ -80,12 +80,21 @@ export function* eachInstructionValueOperand(
       yield instrValue.object;
       break;
     }
+    case "PropertyDelete": {
+      yield instrValue.object;
+      break;
+    }
     case "PropertyStore": {
       yield instrValue.object;
       yield instrValue.value;
       break;
     }
     case "ComputedLoad": {
+      yield instrValue.object;
+      yield instrValue.property;
+      break;
+    }
+    case "ComputedDelete": {
       yield instrValue.object;
       yield instrValue.property;
       break;
@@ -254,12 +263,21 @@ export function mapInstructionOperands(
       instrValue.object = fn(instrValue.object);
       break;
     }
+    case "PropertyDelete": {
+      instrValue.object = fn(instrValue.object);
+      break;
+    }
     case "PropertyStore": {
       instrValue.object = fn(instrValue.object);
       instrValue.value = fn(instrValue.value);
       break;
     }
     case "ComputedLoad": {
+      instrValue.object = fn(instrValue.object);
+      instrValue.property = fn(instrValue.property);
+      break;
+    }
+    case "ComputedDelete": {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       break;

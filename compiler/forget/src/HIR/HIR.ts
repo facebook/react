@@ -544,6 +544,13 @@ export type InstructionValue =
       optional: boolean;
       loc: SourceLocation;
     }
+  // `delete object.property`
+  | {
+      kind: "PropertyDelete";
+      object: Place;
+      property: string;
+      loc: SourceLocation;
+    }
 
   // store `object[index] = value` - like PropertyStore but with a dynamic property
   | {
@@ -556,6 +563,13 @@ export type InstructionValue =
   // load `object[index]` - like PropertyLoad but with a dynamic property
   | {
       kind: "ComputedLoad";
+      object: Place;
+      property: Place;
+      loc: SourceLocation;
+    }
+  // `delete object[property]`
+  | {
+      kind: "ComputedDelete";
       object: Place;
       property: Place;
       loc: SourceLocation;

@@ -20,44 +20,56 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const $ = React.unstable_useMemoCache(10);
+  const $ = React.unstable_useMemoCache(14);
   const c_0 = $[0] !== a;
   let t0;
+  let t;
+  let z;
+  let p;
+  let q;
   if (c_0) {
-    t0 = { t: a };
+    t = { t: a };
+    z = +t.t;
+    q = -t.t;
+    p = void t.t;
+    t0 = delete t.t;
     $[0] = a;
     $[1] = t0;
+    $[2] = t;
+    $[3] = z;
+    $[4] = p;
+    $[5] = q;
   } else {
     t0 = $[1];
+    t = $[2];
+    z = $[3];
+    p = $[4];
+    q = $[5];
   }
-  const t = t0;
-  const z = +t.t;
-  const q = -t.t;
-  const p = void t.t;
-  const n = delete t.t;
+  const n = t0;
   const m = !t.t;
   const e = ~t.t;
   const f = typeof t.t;
-  const c_2 = $[2] !== z;
-  const c_3 = $[3] !== p;
-  const c_4 = $[4] !== q;
-  const c_5 = $[5] !== n;
-  const c_6 = $[6] !== m;
-  const c_7 = $[7] !== e;
-  const c_8 = $[8] !== f;
+  const c_6 = $[6] !== z;
+  const c_7 = $[7] !== p;
+  const c_8 = $[8] !== q;
+  const c_9 = $[9] !== n;
+  const c_10 = $[10] !== m;
+  const c_11 = $[11] !== e;
+  const c_12 = $[12] !== f;
   let t1;
-  if (c_2 || c_3 || c_4 || c_5 || c_6 || c_7 || c_8) {
+  if (c_6 || c_7 || c_8 || c_9 || c_10 || c_11 || c_12) {
     t1 = { z, p, q, n, m, e, f };
-    $[2] = z;
-    $[3] = p;
-    $[4] = q;
-    $[5] = n;
-    $[6] = m;
-    $[7] = e;
-    $[8] = f;
-    $[9] = t1;
+    $[6] = z;
+    $[7] = p;
+    $[8] = q;
+    $[9] = n;
+    $[10] = m;
+    $[11] = e;
+    $[12] = f;
+    $[13] = t1;
   } else {
-    t1 = $[9];
+    t1 = $[13];
   }
   return t1;
 }

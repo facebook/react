@@ -1560,12 +1560,41 @@ function lowerExpression(
     }
     case "UnaryExpression": {
       let expr = exprPath as NodePath<t.UnaryExpression>;
-      return {
-        kind: "UnaryExpression",
-        operator: expr.node.operator,
-        value: lowerExpressionToTemporary(builder, expr.get("argument")),
-        loc: exprLoc,
-      };
+      if (expr.node.operator === "delete") {
+        const argument = expr.get("argument");
+        if (argument.isMemberExpression()) {
+          const { object, property } = lowerMemberExpression(builder, argument);
+          if (typeof property === "string") {
+            return {
+              kind: "PropertyDelete",
+              object,
+              property,
+              loc: exprLoc,
+            };
+          } else {
+            return {
+              kind: "ComputedDelete",
+              object,
+              property,
+              loc: exprLoc,
+            };
+          }
+        } else {
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) delete on a non-member expression has no semantic meaning`,
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: expr,
+          });
+          return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
+        }
+      } else {
+        return {
+          kind: "UnaryExpression",
+          operator: expr.node.operator,
+          value: lowerExpressionToTemporary(builder, expr.get("argument")),
+          loc: exprLoc,
+        };
+      }
     }
     case "TypeCastExpression": {
       let expr = exprPath as NodePath<t.TypeCastExpression>;
