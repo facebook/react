@@ -315,7 +315,9 @@ describe('ReactSuspenseFuzz', () => {
 
     const rand = Random.create(SEED);
 
-    const NUMBER_OF_TEST_CASES = 500;
+    // If this is too large the test will time out. We use a scheduled CI
+    // workflow to run these tests with a random seed.
+    const NUMBER_OF_TEST_CASES = 250;
     const ELEMENTS_PER_CASE = 12;
 
     for (let i = 0; i < NUMBER_OF_TEST_CASES; i++) {

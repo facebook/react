@@ -20,9 +20,15 @@ import * as Scheduler from 'scheduler/unstable_mock';
 
 import enqueueTask from './enqueueTask';
 
-let actingUpdatesScopeDepth = 0;
+let actingUpdatesScopeDepth: number = 0;
 
-export function act<T>(scope: () => Thenable<T>): Thenable<T> {
+async function waitForMicrotasks() {
+  return new Promise(resolve => {
+    enqueueTask(() => resolve());
+  });
+}
+
+export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   if (Scheduler.unstable_flushUntilNextPaint === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -46,93 +52,64 @@ export function act<T>(scope: () => Thenable<T>): Thenable<T> {
     global.IS_REACT_ACT_ENVIRONMENT = false;
   }
 
-  const unwind = () => {
-    if (actingUpdatesScopeDepth === 1) {
+  // Create the error object before doing any async work, to get a better
+  // stack trace.
+  const error = new Error();
+  Error.captureStackTrace(error, act);
+
+  // Call the provided scope function after an async gap. This is an extra
+  // precaution to ensure that our tests do not accidentally rely on the act
+  // scope adding work to the queue synchronously. We don't do this in the
+  // public version of `act`, though we maybe should in the future.
+  await waitForMicrotasks();
+
+  try {
+    const result = await scope();
+
+    do {
+      // Wait until end of current task/microtask.
+      await waitForMicrotasks();
+
+      // $FlowFixMe: Flow doesn't know about global Jest object
+      if (jest.isEnvironmentTornDown()) {
+        error.message =
+          'The Jest environment was torn down before `act` completed. This ' +
+          'probably means you forgot to `await` an `act` call.';
+        throw error;
+      }
+
+      if (!Scheduler.unstable_hasPendingWork()) {
+        // $FlowFixMe: Flow doesn't know about global Jest object
+        jest.runOnlyPendingTimers();
+        if (Scheduler.unstable_hasPendingWork()) {
+          // Committing a fallback scheduled additional work. Continue flushing.
+        } else {
+          // There's no pending work, even after both the microtask queue
+          // and the timer queue are empty. Stop flushing.
+          break;
+        }
+      }
+      // flushUntilNextPaint stops when React yields execution. Allow microtasks
+      // queue to flush before continuing.
+      Scheduler.unstable_flushUntilNextPaint();
+    } while (true);
+
+    return result;
+  } finally {
+    const depth = actingUpdatesScopeDepth;
+    if (depth === 1) {
       global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
     }
-    actingUpdatesScopeDepth--;
+    actingUpdatesScopeDepth = depth - 1;
 
-    if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+    if (actingUpdatesScopeDepth !== previousActingUpdatesScopeDepth) {
       // if it's _less than_ previousActingUpdatesScopeDepth, then we can
       // assume the 'other' one has warned
-      throw new Error(
+      Scheduler.unstable_clearLog();
+      error.message =
         'You seem to have overlapping act() calls, this is not supported. ' +
-          'Be sure to await previous act() calls before making a new one. ',
-      );
+        'Be sure to await previous act() calls before making a new one. ';
+      throw error;
     }
-  };
-
-  // TODO: This would be way simpler if we used async/await.
-  try {
-    const result = scope();
-    if (
-      typeof result !== 'object' ||
-      result === null ||
-      typeof (result: any).then !== 'function'
-    ) {
-      throw new Error(
-        'The internal version of `act` used in the React repo must be passed ' +
-          "an async function, even if doesn't await anything. This is a " +
-          'temporary limitation that will soon be fixed.',
-      );
-    }
-    const thenableResult: Thenable<T> = (result: any);
-
-    return {
-      then(resolve: T => mixed, reject: mixed => mixed) {
-        thenableResult.then(
-          returnValue => {
-            flushActWork(
-              () => {
-                unwind();
-                resolve(returnValue);
-              },
-              error => {
-                unwind();
-                reject(error);
-              },
-            );
-          },
-          error => {
-            unwind();
-            reject(error);
-          },
-        );
-      },
-    };
-  } catch (error) {
-    unwind();
-    throw error;
   }
-}
-
-function flushActWork(resolve: () => void, reject: (error: any) => void) {
-  if (Scheduler.unstable_hasPendingWork()) {
-    try {
-      Scheduler.unstable_flushUntilNextPaint();
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    // If Scheduler yields while there's still work, it's so that we can
-    // unblock the main thread (e.g. for paint or for microtasks). Yield to
-    // the main thread and continue in a new task.
-    enqueueTask(() => flushActWork(resolve, reject));
-    return;
-  }
-
-  // Once the scheduler queue is empty, run all the timers. The purpose of this
-  // is to force any pending fallbacks to commit. The public version of act does
-  // this with dev-only React runtime logic, but since our internal act needs to
-  // work production builds of React, we have to cheat.
-  // $FlowFixMe: Flow doesn't know about global Jest object
-  jest.runOnlyPendingTimers();
-  if (Scheduler.unstable_hasPendingWork()) {
-    // Committing a fallback scheduled additional work. Continue flushing.
-    flushActWork(resolve, reject);
-    return;
-  }
-
-  resolve();
 }
