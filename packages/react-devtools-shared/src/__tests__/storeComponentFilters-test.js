@@ -20,7 +20,7 @@ describe('Store component filters', () => {
   let internalAct;
 
   const act = async (callback: Function) => {
-    internalAct(callback);
+    await internalAct(callback);
     jest.runAllTimers(); // Flush Bridge operations
   };
 
@@ -373,7 +373,6 @@ describe('Store component filters', () => {
       legacyRender(<Wrapper shouldSuspend={false} />, container),
     );
     expect(store).toMatchInlineSnapshot(`
-      ✕ 1, ⚠ 0
       [root]
         ▾ <Wrapper>
             <Component>
@@ -383,7 +382,6 @@ describe('Store component filters', () => {
       legacyRender(<Wrapper shouldSuspend={true} />, container),
     );
     expect(store).toMatchInlineSnapshot(`
-      ✕ 2, ⚠ 0
       [root]
         ▾ <Wrapper>
           ▾ <Loading>
