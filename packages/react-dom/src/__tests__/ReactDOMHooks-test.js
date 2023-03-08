@@ -25,7 +25,7 @@ describe('ReactDOMHooks', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);

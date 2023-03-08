@@ -19,7 +19,7 @@ module.exports = function (initModules) {
 
   function resetModules() {
     ({ReactDOM, ReactDOMServer} = initModules());
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   }
 
   function shouldUseDocument(reactElement) {

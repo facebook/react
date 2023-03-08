@@ -43,7 +43,7 @@ describe('ReactInteractionTracing', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;

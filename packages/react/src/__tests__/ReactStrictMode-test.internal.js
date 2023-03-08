@@ -19,7 +19,7 @@ describe('ReactStrictMode', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   });
 
   describe('levels', () => {

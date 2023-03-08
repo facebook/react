@@ -20,7 +20,7 @@ const {
   waitForThrow,
   assertLog,
 } = require('internal-test-utils');
-const act = require('jest-react').act;
+const act = require('internal-test-utils').act;
 const Scheduler = require('scheduler/unstable_mock');
 
 describe('ReactInternalTestUtils', () => {

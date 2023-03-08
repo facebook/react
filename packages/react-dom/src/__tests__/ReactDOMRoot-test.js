@@ -30,7 +30,7 @@ describe('ReactDOMRoot', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useEffect = React.useEffect;
 
     const InternalTestUtils = require('internal-test-utils');

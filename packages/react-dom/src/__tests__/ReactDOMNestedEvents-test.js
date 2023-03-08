@@ -22,7 +22,7 @@ describe('ReactDOMNestedEvents', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useState = React.useState;
 
     const InternalTestUtils = require('internal-test-utils');

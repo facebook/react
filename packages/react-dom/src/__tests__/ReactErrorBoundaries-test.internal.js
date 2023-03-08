@@ -46,7 +46,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.skipUnmountedBoundaries = true;
     ReactDOM = require('react-dom');
     React = require('react');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');

@@ -22,7 +22,7 @@ describe('ReactStartTransition', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useState = React.useState;
     useTransition = React.useTransition;
   });

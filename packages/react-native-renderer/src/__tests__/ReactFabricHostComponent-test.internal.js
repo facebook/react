@@ -35,7 +35,7 @@ async function mockRenderKeys(keyLists) {
   const createReactNativeComponentClass =
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .ReactNativeViewConfigRegistry.register;
-  const {act} = require('jest-react');
+  const act = require('internal-test-utils').act;
 
   const mockContainerTag = 11;
   const MockView = createReactNativeComponentClass('RCTMockView', () => ({

@@ -26,7 +26,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);

@@ -55,9 +55,9 @@ describe('InspectedElement', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
-    TestUtilsAct = require('jest-react').act;
+    TestUtilsAct = require('internal-test-utils').act;
     TestRenderer = utils.requireTestRenderer();
-    TestRendererAct = require('jest-react').act;
+    TestRendererAct = require('internal-test-utils').act;
 
     BridgeContext =
       require('react-devtools-shared/src/devtools/views/context').BridgeContext;

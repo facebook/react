@@ -39,7 +39,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     document.body.appendChild(container);
   });

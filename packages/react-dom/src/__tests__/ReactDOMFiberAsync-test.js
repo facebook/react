@@ -31,7 +31,7 @@ describe('ReactDOMFiberAsync', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');

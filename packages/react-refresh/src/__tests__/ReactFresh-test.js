@@ -35,7 +35,7 @@ describe('ReactFresh', () => {
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
       act = require('react-dom/test-utils').act;
-      internalAct = require('jest-react').act;
+      internalAct = require('internal-test-utils').act;
 
       const InternalTestUtils = require('internal-test-utils');
       waitFor = InternalTestUtils.waitFor;
@@ -3793,7 +3793,7 @@ describe('ReactFresh', () => {
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
       act = require('react-dom/test-utils').act;
-      internalAct = require('jest-react').act;
+      internalAct = require('internal-test-utils').act;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');

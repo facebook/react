@@ -49,7 +49,7 @@ describe('useSyncExternalStore', () => {
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   });
 
   function Text({text}) {

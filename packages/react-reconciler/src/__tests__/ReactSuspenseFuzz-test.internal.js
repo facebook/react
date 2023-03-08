@@ -28,7 +28,7 @@ describe('ReactSuspenseFuzz', () => {
     Suspense = React.Suspense;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Random = require('random-seed');
   });
 

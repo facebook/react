@@ -17,7 +17,7 @@ describe('ReactUpdatePriority', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
     startTransition = React.startTransition;

@@ -12,7 +12,7 @@ describe('ReactOffscreenStrictMode', () => {
     React = require('react');
     Offscreen = React.unstable_Offscreen;
     ReactNoop = require('react-noop-renderer');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   });
 
   function Component({label}) {

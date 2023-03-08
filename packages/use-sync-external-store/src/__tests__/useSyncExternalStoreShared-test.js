@@ -59,7 +59,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
 
-    const internalAct = require('jest-react').act;
+    const internalAct = require('internal-test-utils').act;
 
     // The internal act implementation doesn't batch updates by default, since
     // it's mostly used to test concurrent mode. But since these tests run

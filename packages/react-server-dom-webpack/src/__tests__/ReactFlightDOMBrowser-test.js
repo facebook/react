@@ -30,7 +30,7 @@ let use;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;

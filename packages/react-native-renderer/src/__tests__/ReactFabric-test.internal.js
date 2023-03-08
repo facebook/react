@@ -41,7 +41,7 @@ describe('ReactFabric', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   });
 
   it('should be able to create and render a native component', async () => {

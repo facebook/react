@@ -32,7 +32,7 @@ describe('ReactFlight', () => {
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
@@ -1184,7 +1184,7 @@ describe('ReactFlight', () => {
       ReactNoop = require('react-noop-renderer');
       ReactNoopFlightServer = require('react-noop-renderer/flight-server');
       ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-      act = require('jest-react').act;
+      act = require('internal-test-utils').act;
       Scheduler = require('scheduler');
 
       await act(async () => {

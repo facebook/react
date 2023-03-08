@@ -28,7 +28,7 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     // Stable entrypoints export with "unstable_" prefix.
     createMutableSource =

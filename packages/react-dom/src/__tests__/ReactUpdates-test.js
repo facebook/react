@@ -26,7 +26,7 @@ describe('ReactUpdates', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');

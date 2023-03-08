@@ -80,7 +80,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOMClient = require('react-dom/client');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
-          act = require('jest-react').act;
+          act = require('internal-test-utils').act;
 
           const InternalTestUtils = require('internal-test-utils');
           waitForAll = InternalTestUtils.waitForAll;
@@ -1279,7 +1279,7 @@ describe('DOMPluginEventSystem', () => {
             ReactDOMClient = require('react-dom/client');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
-            act = require('jest-react').act;
+            act = require('internal-test-utils').act;
 
             const InternalTestUtils = require('internal-test-utils');
             waitForAll = InternalTestUtils.waitForAll;
