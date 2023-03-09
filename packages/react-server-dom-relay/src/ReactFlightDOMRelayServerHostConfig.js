@@ -26,7 +26,7 @@ export type ServerReferenceId = {};
 
 import type {
   Destination,
-  BundlerConfig,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -40,7 +40,7 @@ import {
 
 export type {
   Destination,
-  BundlerConfig,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -63,21 +63,21 @@ export function getClientReferenceKey(
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   resource: ClientReference<T>,
 ): ClientReferenceMetadata {
   return resolveClientReferenceMetadataImpl(config, resource);
 }
 
 export function getServerReferenceId<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   resource: ServerReference<T>,
 ): ServerReferenceId {
   throw new Error('Not implemented.');
 }
 
 export function getServerReferenceBoundArguments<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   resource: ServerReference<T>,
 ): Array<ReactClientValue> {
   throw new Error('Not implemented.');

@@ -9,7 +9,7 @@
 
 declare var $$$hostConfig: any;
 
-export opaque type BundlerConfig = mixed;
+export opaque type ClientManifest = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
 export opaque type ServerReference<T> = mixed; // eslint-disable-line no-unused-vars
 export opaque type ClientReferenceMetadata: any = mixed;

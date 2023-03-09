@@ -9,7 +9,7 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
-  BundlerConfig,
+  ClientManifest,
   Destination,
 } from './ReactFlightNativeRelayServerHostConfig';
 
@@ -22,7 +22,7 @@ import {
 function render(
   model: ReactClientValue,
   destination: Destination,
-  config: BundlerConfig,
+  config: ClientManifest,
 ): void {
   const request = createRequest(model, config);
   startWork(request);

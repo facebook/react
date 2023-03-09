@@ -10,7 +10,7 @@
 import type {
   Destination,
   Chunk,
-  BundlerConfig,
+  ClientManifest,
   ClientReferenceMetadata,
   ClientReference,
   ClientReferenceKey,
@@ -142,7 +142,7 @@ export type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: ClientManifest,
   cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
@@ -175,7 +175,7 @@ const CLOSED = 2;
 
 export function createRequest(
   model: ReactClientValue,
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,

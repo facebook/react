@@ -9,7 +9,7 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
-import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
+import type {ClientManifest} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
   createRequest,
@@ -27,7 +27,7 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactClientValue,
-  webpackMap: BundlerConfig,
+  webpackMap: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(

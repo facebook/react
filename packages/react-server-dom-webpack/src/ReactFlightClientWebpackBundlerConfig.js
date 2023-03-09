@@ -13,13 +13,11 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export type WebpackSSRMap = {
+export type SSRManifest = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceMetadata,
   },
 };
-
-export type BundlerConfig = null | WebpackSSRMap;
 
 export opaque type ClientReferenceMetadata = {
   id: string,
@@ -32,7 +30,7 @@ export opaque type ClientReferenceMetadata = {
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 export function resolveClientReference<T>(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {

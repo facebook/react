@@ -9,7 +9,7 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
-  BundlerConfig,
+  ClientManifest,
   Destination,
 } from './ReactFlightDOMRelayServerHostConfig';
 
@@ -27,7 +27,7 @@ type Options = {
 function render(
   model: ReactClientValue,
   destination: Destination,
-  config: BundlerConfig,
+  config: ClientManifest,
   options?: Options,
 ): void {
   const request = createRequest(

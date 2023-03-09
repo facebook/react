@@ -9,11 +9,9 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
-type WebpackMap = {
+export type ClientManifest = {
   [id: string]: ClientReferenceMetadata,
 };
-
-export type BundlerConfig = WebpackMap;
 
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
@@ -57,7 +55,7 @@ export function isServerReference(reference: Object): boolean {
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   const resolvedModuleData = config[clientReference.$$id];
@@ -74,14 +72,14 @@ export function resolveClientReferenceMetadata<T>(
 }
 
 export function getServerReferenceId<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
   return serverReference.$$id;
 }
 
 export function getServerReferenceBoundArguments<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   serverReference: ServerReference<T>,
 ): null | Array<ReactClientValue> {
   return serverReference.$$bound;

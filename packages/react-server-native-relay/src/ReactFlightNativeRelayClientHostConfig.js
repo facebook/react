@@ -31,14 +31,14 @@ import isArray from 'shared/isArray';
 
 export type {ClientReferenceMetadata} from 'ReactFlightNativeRelayClientIntegration';
 
-export type BundlerConfig = null;
+export type SSRManifest = null;
 
 export type UninitializedModel = JSONValue;
 
 export type Response = ResponseBase;
 
 export function resolveClientReference<T>(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   return resolveClientReferenceImpl(metadata);
