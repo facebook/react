@@ -14,7 +14,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(2);
   const [x, setX] = useState(0);
   const c_0 = $[0] !== setX;
   let t0;
@@ -26,18 +26,7 @@ function component() {
     t0 = $[1];
   }
   const handler = t0;
-  const c_2 = $[2] !== handler;
-  const c_3 = $[3] !== x;
-  let t1;
-  if (c_2 || c_3) {
-    t1 = <input onChange={handler} value={x}></input>;
-    $[2] = handler;
-    $[3] = x;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  return t1;
+  return <input onChange={handler} value={x}></input>;
 }
 
 ```

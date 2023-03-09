@@ -24,7 +24,7 @@ function AllocatingPrimitiveAsDepNested(props) {
 // Correctness:
 //   - y depends on either bar(props.b) or bar(props.b) + 1
 function AllocatingPrimitiveAsDepNested(props) {
-  const $ = React.unstable_useMemoCache(11);
+  const $ = React.unstable_useMemoCache(9);
   const c_0 = $[0] !== props.b;
   const c_1 = $[1] !== props.a;
   let x;
@@ -32,26 +32,17 @@ function AllocatingPrimitiveAsDepNested(props) {
   if (c_0 || c_1) {
     x = {};
     mutate(x);
-    const c_4 = $[4] !== props.b;
-    let t0;
+    const t0 = bar(props.b) + 1;
+    const c_4 = $[4] !== t0;
+    let t1;
     if (c_4) {
-      t0 = bar(props.b);
-      $[4] = props.b;
-      $[5] = t0;
+      t1 = foo(t0);
+      $[4] = t0;
+      $[5] = t1;
     } else {
-      t0 = $[5];
+      t1 = $[5];
     }
-    const t1 = t0 + 1;
-    const c_6 = $[6] !== t1;
-    let t2;
-    if (c_6) {
-      t2 = foo(t1);
-      $[6] = t1;
-      $[7] = t2;
-    } else {
-      t2 = $[7];
-    }
-    y = t2;
+    y = t1;
     mutate(x, props.a);
     $[0] = props.b;
     $[1] = props.a;
@@ -61,18 +52,18 @@ function AllocatingPrimitiveAsDepNested(props) {
     x = $[2];
     y = $[3];
   }
-  const c_8 = $[8] !== x;
-  const c_9 = $[9] !== y;
-  let t3;
-  if (c_8 || c_9) {
-    t3 = [x, y];
-    $[8] = x;
-    $[9] = y;
-    $[10] = t3;
+  const c_6 = $[6] !== x;
+  const c_7 = $[7] !== y;
+  let t2;
+  if (c_6 || c_7) {
+    t2 = [x, y];
+    $[6] = x;
+    $[7] = y;
+    $[8] = t2;
   } else {
-    t3 = $[10];
+    t2 = $[8];
   }
-  return t3;
+  return t2;
 }
 
 ```

@@ -27,23 +27,14 @@ function TestConditionalSubpath1(props, other) {
 // deps: {`props.a`, `props.a.b`} can further reduce to just `props.a`
 // ordering of accesses should not matter
 function TestConditionalSubpath1(props, other) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== other;
   let x;
   if (c_0 || c_1) {
     x = {};
     x.b = props.a.b;
-    const c_3 = $[3] !== other;
-    let t0;
-    if (c_3) {
-      t0 = foo(other);
-      $[3] = other;
-      $[4] = t0;
-    } else {
-      t0 = $[4];
-    }
-    if (t0) {
+    if (foo(other)) {
       x.a = props.a;
     }
     $[0] = props.a;

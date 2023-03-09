@@ -20,58 +20,37 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const $ = React.unstable_useMemoCache(14);
-  const c_0 = $[0] !== a;
-  let t0;
-  let t;
-  let z;
-  let p;
-  let q;
-  if (c_0) {
-    t = { t: a };
-    z = +t.t;
-    q = -t.t;
-    p = void t.t;
-    t0 = delete t.t;
-    $[0] = a;
-    $[1] = t0;
-    $[2] = t;
-    $[3] = z;
-    $[4] = p;
-    $[5] = q;
-  } else {
-    t0 = $[1];
-    t = $[2];
-    z = $[3];
-    p = $[4];
-    q = $[5];
-  }
-  const n = t0;
+  const $ = React.unstable_useMemoCache(8);
+  const t = { t: a };
+  const z = +t.t;
+  const q = -t.t;
+  const p = void t.t;
+  const n = delete t.t;
   const m = !t.t;
   const e = ~t.t;
   const f = typeof t.t;
-  const c_6 = $[6] !== z;
-  const c_7 = $[7] !== p;
-  const c_8 = $[8] !== q;
-  const c_9 = $[9] !== n;
-  const c_10 = $[10] !== m;
-  const c_11 = $[11] !== e;
-  const c_12 = $[12] !== f;
-  let t1;
-  if (c_6 || c_7 || c_8 || c_9 || c_10 || c_11 || c_12) {
-    t1 = { z, p, q, n, m, e, f };
-    $[6] = z;
-    $[7] = p;
-    $[8] = q;
-    $[9] = n;
-    $[10] = m;
-    $[11] = e;
-    $[12] = f;
-    $[13] = t1;
+  const c_0 = $[0] !== z;
+  const c_1 = $[1] !== p;
+  const c_2 = $[2] !== q;
+  const c_3 = $[3] !== n;
+  const c_4 = $[4] !== m;
+  const c_5 = $[5] !== e;
+  const c_6 = $[6] !== f;
+  let t0;
+  if (c_0 || c_1 || c_2 || c_3 || c_4 || c_5 || c_6) {
+    t0 = { z, p, q, n, m, e, f };
+    $[0] = z;
+    $[1] = p;
+    $[2] = q;
+    $[3] = n;
+    $[4] = m;
+    $[5] = e;
+    $[6] = f;
+    $[7] = t0;
   } else {
-    t1 = $[13];
+    t0 = $[7];
   }
-  return t1;
+  return t0;
 }
 
 ```

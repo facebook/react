@@ -19,7 +19,7 @@ function component(a, b) {
 
 ```javascript
 function component(a, b) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -30,16 +30,8 @@ function component(a, b) {
     t0 = $[1];
   }
   const z = t0;
-  const c_2 = $[2] !== b;
-  let t1;
-  if (c_2) {
-    t1 = { b };
-    $[2] = b;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const z_0 = t1;
+
+  const z_0 = { b };
   (function () {
     mutate(z);
   })();

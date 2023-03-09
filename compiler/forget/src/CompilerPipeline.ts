@@ -32,6 +32,7 @@ import {
   mergeOverlappingReactiveScopes,
   promoteUsedTemporaries,
   propagateScopeDependencies,
+  pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
   pruneUnusedLabels,
   pruneUnusedLValues,
@@ -142,6 +143,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PropagateScopeDependencies",
+    value: reactiveFunction,
+  });
+
+  pruneNonEscapingScopes(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneNonEscapingDependencies",
     value: reactiveFunction,
   });
 

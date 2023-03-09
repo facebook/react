@@ -23,7 +23,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(6);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== props.p0;
   let x;
   if (c_0) {
@@ -47,18 +47,7 @@ function Component(props) {
   }
 
   y.push(props.p2);
-  const c_3 = $[3] !== x;
-  const c_4 = $[4] !== y;
-  let t1;
-  if (c_3 || c_4) {
-    t1 = <Component x={x} y={y}></Component>;
-    $[3] = x;
-    $[4] = y;
-    $[5] = t1;
-  } else {
-    t1 = $[5];
-  }
-  return t1;
+  return <Component x={x} y={y}></Component>;
 }
 
 ```

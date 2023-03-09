@@ -21,7 +21,7 @@ function Component(props) {
 function Foo() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = React.unstable_useMemoCache(2);
   let a;
   let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -35,14 +35,7 @@ function Component(props) {
     a = $[0];
     b = $[1];
   }
-  let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div a={a} b={b}></div>;
-    $[2] = t0;
-  } else {
-    t0 = $[2];
-  }
-  return t0;
+  return <div a={a} b={b}></div>;
 }
 
 ```

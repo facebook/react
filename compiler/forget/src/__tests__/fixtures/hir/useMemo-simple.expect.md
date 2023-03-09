@@ -13,7 +13,7 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -24,16 +24,7 @@ function component(a) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== x;
-  let t1;
-  if (c_2) {
-    t1 = <Foo x={x}></Foo>;
-    $[2] = x;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  return t1;
+  return <Foo x={x}></Foo>;
 }
 
 ```

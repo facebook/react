@@ -15,7 +15,7 @@ function component() {
 
 ```javascript
 function component() {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(3);
   const [count, setCount] = useState(0);
   const c_0 = $[0] !== setCount;
   const c_1 = $[1] !== count;
@@ -29,16 +29,7 @@ function component() {
     t0 = $[2];
   }
   const increment = t0;
-  const c_3 = $[3] !== increment;
-  let t1;
-  if (c_3) {
-    t1 = <Foo onClick={increment}></Foo>;
-    $[3] = increment;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  return t1;
+  return <Foo onClick={increment}></Foo>;
 }
 
 ```

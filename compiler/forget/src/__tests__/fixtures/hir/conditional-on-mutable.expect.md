@@ -35,7 +35,7 @@ function mayMutate() {}
 
 ```javascript
 function ComponentA(props) {
-  const $ = React.unstable_useMemoCache(6);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== props;
   let a;
   let b;
@@ -55,22 +55,11 @@ function ComponentA(props) {
     a = $[1];
     b = $[2];
   }
-  const c_3 = $[3] !== a;
-  const c_4 = $[4] !== b;
-  let t0;
-  if (c_3 || c_4) {
-    t0 = <Foo a={a} b={b}></Foo>;
-    $[3] = a;
-    $[4] = b;
-    $[5] = t0;
-  } else {
-    t0 = $[5];
-  }
-  return t0;
+  return <Foo a={a} b={b}></Foo>;
 }
 
 function ComponentB(props) {
-  const $ = React.unstable_useMemoCache(6);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== props;
   let a;
   let b;
@@ -90,18 +79,7 @@ function ComponentB(props) {
     a = $[1];
     b = $[2];
   }
-  const c_3 = $[3] !== a;
-  const c_4 = $[4] !== b;
-  let t0;
-  if (c_3 || c_4) {
-    t0 = <Foo a={a} b={b}></Foo>;
-    $[3] = a;
-    $[4] = b;
-    $[5] = t0;
-  } else {
-    t0 = $[5];
-  }
-  return t0;
+  return <Foo a={a} b={b}></Foo>;
 }
 
 function Foo() {}

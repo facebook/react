@@ -21,27 +21,18 @@ function AllocatingPrimitiveAsDep(props) {
 // Correctness:
 //   - y depends on either bar(props.b) or bar(props.b) + 1
 function AllocatingPrimitiveAsDep(props) {
-  const $ = React.unstable_useMemoCache(4);
-  const c_0 = $[0] !== props;
-  let t0;
+  const $ = React.unstable_useMemoCache(2);
+  const t0 = bar(props).b + 1;
+  const c_0 = $[0] !== t0;
+  let t1;
   if (c_0) {
-    t0 = bar(props);
-    $[0] = props;
-    $[1] = t0;
+    t1 = foo(t0);
+    $[0] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  const t1 = t0.b + 1;
-  const c_2 = $[2] !== t1;
-  let t2;
-  if (c_2) {
-    t2 = foo(t1);
-    $[2] = t1;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  const y = t2;
+  const y = t1;
   return y;
 }
 

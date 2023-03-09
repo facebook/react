@@ -32,45 +32,20 @@ function TestCondDepInNestedIfElse(props, other) {
 // paths
 
 function TestCondDepInNestedIfElse(props, other) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== other;
   const c_1 = $[1] !== props.a.b;
   let x;
   if (c_0 || c_1) {
     x = {};
-    const c_3 = $[3] !== other;
-    let t0;
-    if (c_3) {
-      t0 = foo(other);
-      $[3] = other;
-      $[4] = t0;
-    } else {
-      t0 = $[4];
-    }
-    if (t0) {
-      let t1;
-      if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = bar();
-        $[5] = t1;
-      } else {
-        t1 = $[5];
-      }
-      if (t1) {
+    if (foo(other)) {
+      if (bar()) {
         x.a = props.a.b;
       } else {
         x.b = props.a.b;
       }
     } else {
-      const c_6 = $[6] !== other;
-      let t2;
-      if (c_6) {
-        t2 = baz(other);
-        $[6] = other;
-        $[7] = t2;
-      } else {
-        t2 = $[7];
-      }
-      if (t2) {
+      if (baz(other)) {
         x.c = props.a.b;
       } else {
         x.d = props.a.b;

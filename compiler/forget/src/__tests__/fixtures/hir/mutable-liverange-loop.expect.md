@@ -41,17 +41,9 @@ function mutate() {}
 function cond() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(1);
   const a = {};
   const b = {};
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = {};
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const c = t0;
+  const c = {};
   const d = {};
   while (true) {
     mutate(a, b);

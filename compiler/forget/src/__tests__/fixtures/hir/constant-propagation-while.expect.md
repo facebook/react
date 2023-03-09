@@ -17,16 +17,9 @@ function foo() {
 
 ```javascript
 function foo() {
-  const $ = React.unstable_useMemoCache(1);
-  let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    y = 0;
-    while (false) {
-      y = y + 1;
-    }
-    $[0] = y;
-  } else {
-    y = $[0];
+  let y = 0;
+  while (false) {
+    y = y + 1;
   }
   return y;
 }

@@ -16,22 +16,8 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.unstable_useMemoCache(4);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  let x;
-  let y;
-  if (c_0 || c_1) {
-    ({ x, y } = { x: props.a, y: props.b });
-    console.log(x);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = x;
-    $[3] = y;
-  } else {
-    x = $[2];
-    y = $[3];
-  }
+  let { x, y } = { x: props.a, y: props.b };
+  console.log(x);
   x = props.c;
   return x + y;
 }

@@ -16,20 +16,9 @@ function foo(a, b) {
 
 ```javascript
 function foo(a, b) {
-  const $ = React.unstable_useMemoCache(3);
-  const c_0 = $[0] !== a.b.c;
-  const c_1 = $[1] !== b;
-  let x;
-  if (c_0 || c_1) {
-    x = 0;
-    while (a.b.c) {
-      x = x + b;
-    }
-    $[0] = a.b.c;
-    $[1] = b;
-    $[2] = x;
-  } else {
-    x = $[2];
+  let x = 0;
+  while (a.b.c) {
+    x = x + b;
   }
   return x;
 }

@@ -46,7 +46,7 @@ function foo(props) {
 // note: comments are for the ideal scopes, not what is currently
 // emitted
 function foo(props) {
-  const $ = React.unstable_useMemoCache(15);
+  const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {
@@ -57,68 +57,39 @@ function foo(props) {
   } else {
     x = $[1];
   }
+
+  const header = <div>{x}</div>;
   const c_2 = $[2] !== x;
-  let t0;
-  if (c_2) {
-    t0 = <div>{x}</div>;
-    $[2] = x;
-    $[3] = t0;
-  } else {
-    t0 = $[3];
-  }
-  const header = t0;
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== props.b;
-  const c_6 = $[6] !== props.c;
+  const c_3 = $[3] !== props.b;
+  const c_4 = $[4] !== props.c;
   let y;
-  if (c_4 || c_5 || c_6) {
+  if (c_2 || c_3 || c_4) {
     y = [x];
     x = [];
     y.push(props.b);
     x.push(props.c);
-    $[4] = x;
-    $[5] = props.b;
-    $[6] = props.c;
-    $[7] = y;
-    $[8] = x;
+    $[2] = x;
+    $[3] = props.b;
+    $[4] = props.c;
+    $[5] = y;
+    $[6] = x;
   } else {
-    y = $[7];
-    x = $[8];
+    y = $[5];
+    x = $[6];
   }
-  const c_9 = $[9] !== x;
-  const c_10 = $[10] !== y;
-  let t1;
-  if (c_9 || c_10) {
-    t1 = (
-      <div>
-        {x}
-        {y}
-      </div>
-    );
-    $[9] = x;
-    $[10] = y;
-    $[11] = t1;
-  } else {
-    t1 = $[11];
-  }
-  const content = t1;
-  const c_12 = $[12] !== header;
-  const c_13 = $[13] !== content;
-  let t2;
-  if (c_12 || c_13) {
-    t2 = (
-      <>
-        {header}
-        {content}
-      </>
-    );
-    $[12] = header;
-    $[13] = content;
-    $[14] = t2;
-  } else {
-    t2 = $[14];
-  }
-  return t2;
+
+  const content = (
+    <div>
+      {x}
+      {y}
+    </div>
+  );
+  return (
+    <>
+      {header}
+      {content}
+    </>
+  );
 }
 
 ```

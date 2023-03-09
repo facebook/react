@@ -17,7 +17,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(6);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== props.p0;
   let x;
   let child;
@@ -35,18 +35,7 @@ function Component(props) {
     x = $[1];
     child = $[2];
   }
-  const c_3 = $[3] !== x;
-  const c_4 = $[4] !== child;
-  let t0;
-  if (c_3 || c_4) {
-    t0 = <Component data={x}>{child}</Component>;
-    $[3] = x;
-    $[4] = child;
-    $[5] = t0;
-  } else {
-    t0 = $[5];
-  }
-  return t0;
+  return <Component data={x}>{child}</Component>;
 }
 
 ```

@@ -38,7 +38,7 @@ function Foo() {}
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.a;
   let t0;
   if (c_0) {
@@ -59,18 +59,7 @@ function Component(props) {
     t1 = $[3];
   }
   const b = t1;
-  const c_4 = $[4] !== a;
-  const c_5 = $[5] !== b;
-  let t2;
-  if (c_4 || c_5) {
-    t2 = <Foo a={a} b={b}></Foo>;
-    $[4] = a;
-    $[5] = b;
-    $[6] = t2;
-  } else {
-    t2 = $[6];
-  }
-  return t2;
+  return <Foo a={a} b={b}></Foo>;
 }
 
 function compute() {}

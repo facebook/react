@@ -14,17 +14,7 @@ function component(props) {
 
 ```javascript
 function component(props) {
-  const $ = React.unstable_useMemoCache(2);
-  const c_0 = $[0] !== props;
-  let t0;
-  if (c_0) {
-    t0 = isMenuShown ? <Bar> {props.a ? props.b : props.c}</Bar> : null;
-    $[0] = props;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const x = t0;
+  const x = isMenuShown ? <Bar> {props.a ? props.b : props.c}</Bar> : null;
   return x;
 }
 

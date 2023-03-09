@@ -24,22 +24,13 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = React.unstable_useMemoCache(2);
   let x = 0;
   const c_0 = $[0] !== props;
   let values;
   if (c_0) {
     values = [];
-    const c_2 = $[2] !== props;
-    let t0;
-    if (c_2) {
-      t0 = props.a || props.b;
-      $[2] = props;
-      $[3] = t0;
-    } else {
-      t0 = $[3];
-    }
-    const y = t0;
+    const y = props.a || props.b;
     values.push(y);
     if (props.c) {
       x = 1;

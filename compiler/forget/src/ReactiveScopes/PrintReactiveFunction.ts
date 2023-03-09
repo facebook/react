@@ -84,9 +84,7 @@ function printReactiveInstruction(
       const id = `[${instruction.id}]`;
 
       if (instruction.lvalue !== null) {
-        writer.write(
-          `${id} ${printIdentifier(instruction.lvalue.identifier)} = `
-        );
+        writer.write(`${id} ${printPlace(instruction.lvalue)} = `);
         printReactiveValue(writer, instruction.value);
         writer.newline();
       } else {

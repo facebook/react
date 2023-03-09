@@ -19,7 +19,7 @@ function f(a, b) {
 
 ```javascript
 function f(a, b) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(3);
   const c_0 = $[0] !== a.length;
   const c_1 = $[1] !== b;
   let x;
@@ -36,16 +36,7 @@ function f(a, b) {
   } else {
     x = $[2];
   }
-  const c_3 = $[3] !== x;
-  let t0;
-  if (c_3) {
-    t0 = <div>{x}</div>;
-    $[3] = x;
-    $[4] = t0;
-  } else {
-    t0 = $[4];
-  }
-  return t0;
+  return <div>{x}</div>;
 }
 
 ```
