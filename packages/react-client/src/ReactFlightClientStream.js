@@ -13,12 +13,12 @@ import type {SSRManifest} from './ReactFlightClientHostConfig';
 
 import {
   resolveModule,
-  resolveModel,
+  resolveValue,
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
-  parseModelString,
-  parseModelTuple,
+  parseValueString,
+  parseValueTuple,
 } from './ReactFlightClient';
 
 import {
@@ -63,7 +63,7 @@ function processFullRow(response: Response, row: string): void {
     }
     default: {
       // We assume anything else is JSON.
-      resolveModel(response, id, row.substring(colon + 1));
+      resolveValue(response, id, row.substring(colon + 1));
       return;
     }
   }
@@ -111,10 +111,10 @@ function createFromJSONCallback(response: Response) {
   return function (key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, key, value);
+      return parseValueString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
-      return parseModelTuple(response, value);
+      return parseValueTuple(response, value);
     }
     return value;
   };

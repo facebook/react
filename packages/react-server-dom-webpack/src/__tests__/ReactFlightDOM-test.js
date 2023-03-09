@@ -102,10 +102,10 @@ describe('ReactFlightDOM', () => {
     }
 
     function App() {
-      const model = {
+      const value = {
         html: <HTML />,
       };
-      return model;
+      return value;
     }
 
     const {writable, readable} = getTestStream();
@@ -115,8 +115,8 @@ describe('ReactFlightDOM', () => {
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
-    const model = await response;
-    expect(model).toEqual({
+    const value = await response;
+    expect(value).toEqual({
       html: (
         <div>
           <span>hello</span>
@@ -583,7 +583,7 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    const model = {
+    const value = {
       rootContent: <ProfileContent />,
     };
 
@@ -593,7 +593,7 @@ describe('ReactFlightDOM', () => {
 
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      model,
+      value,
       clientManifest,
       {
         onError(x) {

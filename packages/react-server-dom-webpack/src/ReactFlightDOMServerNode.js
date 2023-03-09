@@ -53,12 +53,12 @@ type PipeableStream = {
 };
 
 function renderToPipeableStream(
-  model: ReactClientValue,
+  value: ReactClientValue,
   clientManifest: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
-    model,
+    value,
     clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,

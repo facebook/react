@@ -38,8 +38,8 @@ export const requireModule = $$$hostConfig.requireModule;
 
 export opaque type Source = mixed;
 
-export type UninitializedModel = string;
-export const parseModel = $$$hostConfig.parseModel;
+export type UninitializedValue = string;
+export const parseValue = $$$hostConfig.parseValue;
 
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 

@@ -34,7 +34,7 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const RESOLVED_MODEL = 'resolved_model';
+const RESOLVED_VALUE = 'resolved_value';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
@@ -52,8 +52,8 @@ type BlockedChunk<T> = {
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ResolvedModelChunk<T> = {
-  status: 'resolved_model',
+type ResolvedValueChunk<T> = {
+  status: 'resolved_value',
   value: string,
   reason: null,
   _response: Response,
@@ -76,7 +76,7 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | ResolvedModelChunk<T>
+  | ResolvedValueChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
@@ -99,8 +99,8 @@ Chunk.prototype.then = function <T>(
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_MODEL:
-      initializeModelChunk(chunk);
+    case RESOLVED_VALUE:
+      initializeValueChunk(chunk);
       break;
   }
   // The status might have changed after initialization.
@@ -188,29 +188,29 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   }
 }
 
-function createResolvedModelChunk<T>(
+function createResolvedValueChunk<T>(
   response: Response,
   value: string,
-): ResolvedModelChunk<T> {
+): ResolvedValueChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, null, response);
+  return new Chunk(RESOLVED_VALUE, value, null, response);
 }
 
-function resolveModelChunk<T>(chunk: SomeChunk<T>, value: string): void {
+function resolveValueChunk<T>(chunk: SomeChunk<T>, value: string): void {
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
   const resolveListeners = chunk.value;
   const rejectListeners = chunk.reason;
-  const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
-  resolvedChunk.status = RESOLVED_MODEL;
+  const resolvedChunk: ResolvedValueChunk<T> = (chunk: any);
+  resolvedChunk.status = RESOLVED_VALUE;
   resolvedChunk.value = value;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
-    initializeModelChunk(resolvedChunk);
+    initializeValueChunk(resolvedChunk);
     // The status might have changed after initialization.
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
@@ -250,27 +250,27 @@ function loadServerReference<T>(
     }
   }
   promise.then(
-    createModelResolver(parentChunk, parentObject, key),
-    createModelReject(parentChunk),
+    createValueResolver(parentChunk, parentObject, key),
+    createValueReject(parentChunk),
   );
   // We need a placeholder value that will be replaced later.
   return (null: any);
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
-function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+let initializingChunk: ResolvedValueChunk<any> = (null: any);
+let initializingChunkBlockedValue: null | {deps: number, value: any} = null;
+function initializeValueChunk<T>(chunk: ResolvedValueChunk<T>): void {
   const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
+  const prevBlocked = initializingChunkBlockedValue;
   initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  initializingChunkBlockedValue = null;
   try {
     const value: T = JSON.parse(chunk.value, chunk._response._fromJSON);
     if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
+      initializingChunkBlockedValue !== null &&
+      initializingChunkBlockedValue.deps > 0
     ) {
-      initializingChunkBlockedModel.value = value;
+      initializingChunkBlockedValue.value = value;
       // We discovered new dependencies on modules that are not yet resolved.
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
@@ -288,7 +288,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingChunkBlockedValue = prevBlocked;
   }
 }
 
@@ -315,17 +315,17 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
+function createValueResolver<T>(
   chunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
 ): (value: any) => void {
   let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
+  if (initializingChunkBlockedValue) {
+    blocked = initializingChunkBlockedValue;
     blocked.deps++;
   } else {
-    blocked = initializingChunkBlockedModel = {
+    blocked = initializingChunkBlockedValue = {
       deps: 1,
       value: null,
     };
@@ -348,11 +348,11 @@ function createModelResolver<T>(
   };
 }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
+function createValueReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
-function parseModelString(
+function parseValueString(
   response: Response,
   parentObject: Object,
   key: string,
@@ -378,14 +378,14 @@ function parseModelString(
         // Server Reference
         const id = parseInt(value.substring(2), 16);
         const chunk = getChunk(response, id);
-        if (chunk.status === RESOLVED_MODEL) {
-          initializeModelChunk(chunk);
+        if (chunk.status === RESOLVED_VALUE) {
+          initializeValueChunk(chunk);
         }
         if (chunk.status !== INITIALIZED) {
           // We know that this is emitted earlier so otherwise it's an error.
           throw chunk.reason;
         }
-        // TODO: Just encode this in the reference inline instead of as a model.
+        // TODO: Just encode this in the reference inline instead of as a value.
         const metaData: {id: ServerReferenceId, bound: Thenable<Array<any>>} =
           chunk.value;
         return loadServerReference(
@@ -407,8 +407,8 @@ function parseModelString(
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
+          case RESOLVED_VALUE:
+            initializeValueChunk(chunk);
             break;
         }
         // The status might have changed after initialization.
@@ -419,8 +419,8 @@ function parseModelString(
           case BLOCKED:
             const parentChunk = initializingChunk;
             chunk.then(
-              createModelResolver(parentChunk, parentObject, key),
-              createModelReject(parentChunk),
+              createValueResolver(parentChunk, parentObject, key),
+              createValueReject(parentChunk),
             );
             return null;
           default:
@@ -440,7 +440,7 @@ export function createResponse(serverManifest: ServerManifest): Response {
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {
         // We can't use .bind here because we need the "this" value.
-        return parseModelString(response, this, key, value);
+        return parseValueString(response, this, key, value);
       }
       return value;
     },
@@ -451,14 +451,14 @@ export function createResponse(serverManifest: ServerManifest): Response {
 export function resolveField(
   response: Response,
   id: number,
-  model: string,
+  value: string,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
+    chunks.set(id, createResolvedValueChunk(response, value));
   } else {
-    resolveModelChunk(chunk, model);
+    resolveValueChunk(chunk, value);
   }
 }
 

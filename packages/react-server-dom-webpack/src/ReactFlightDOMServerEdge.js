@@ -35,12 +35,12 @@ type Options = {
 };
 
 function renderToReadableStream(
-  model: ReactClientValue,
+  value: ReactClientValue,
   clientManifest: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
-    model,
+    value,
     clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,

@@ -124,13 +124,13 @@ export function processErrorChunkDev(
   return stringToChunk(row);
 }
 
-export function processModelChunk(
+export function processValueChunk(
   request: Request,
   id: number,
-  model: ReactClientValue,
+  value: ReactClientValue,
 ): Chunk {
   // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, request.toJSON);
+  const json: string = stringify(value, request.toJSON);
   const row = id.toString(16) + ':' + json + '\n';
   return stringToChunk(row);
 }

@@ -30,7 +30,7 @@ import type {
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
-import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
+import {resolveValueToJSON} from 'react-server/src/ReactFlightServer';
 
 import {
   emitRow,
@@ -133,18 +133,18 @@ export function processErrorChunkDev(
   ];
 }
 
-function convertModelToJSON(
+function convertValueToJSON(
   request: Request,
   parent: {+[key: string]: ReactClientValue} | $ReadOnlyArray<ReactClientValue>,
   key: string,
-  model: ReactClientValue,
+  value: ReactClientValue,
 ): JSONValue {
-  const json = resolveModelToJSON(request, parent, key, model);
+  const json = resolveValueToJSON(request, parent, key, value);
   if (typeof json === 'object' && json !== null) {
     if (isArray(json)) {
       const jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
-        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
+        jsonArray[i] = convertValueToJSON(request, json, '' + i, json[i]);
       }
       return jsonArray;
     } else {
@@ -153,7 +153,7 @@ function convertModelToJSON(
       const jsonObj: {[key: string]: JSONValue} = {};
       for (const nextKey in json) {
         if (hasOwnProperty.call(json, nextKey)) {
-          jsonObj[nextKey] = convertModelToJSON(
+          jsonObj[nextKey] = convertValueToJSON(
             request,
             json,
             nextKey,
@@ -167,13 +167,13 @@ function convertModelToJSON(
   return json;
 }
 
-export function processModelChunk(
+export function processValueChunk(
   request: Request,
   id: number,
-  model: ReactClientValue,
+  value: ReactClientValue,
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
-  const json = convertModelToJSON(request, {}, '', model);
+  const json = convertValueToJSON(request, {}, '', value);
   return ['O', id, json];
 }
 

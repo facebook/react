@@ -13,7 +13,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  UninitializedModel,
+  UninitializedValue,
   Response,
   SSRManifest,
 } from './ReactFlightClientHostConfig';
@@ -22,7 +22,7 @@ import {
   resolveClientReference,
   preloadModule,
   requireModule,
-  parseModel,
+  parseValue,
 } from './ReactFlightClientHostConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
@@ -43,7 +43,7 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const RESOLVED_MODEL = 'resolved_model';
+const RESOLVED_VALUE = 'resolved_value';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
@@ -62,9 +62,9 @@ type BlockedChunk<T> = {
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ResolvedModelChunk<T> = {
-  status: 'resolved_model',
-  value: UninitializedModel,
+type ResolvedValueChunk<T> = {
+  status: 'resolved_value',
+  value: UninitializedValue,
   reason: null,
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
@@ -93,7 +93,7 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | ResolvedModelChunk<T>
+  | ResolvedValueChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
@@ -117,8 +117,8 @@ Chunk.prototype.then = function <T>(
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_MODEL:
-      initializeModelChunk(chunk);
+    case RESOLVED_VALUE:
+      initializeValueChunk(chunk);
       break;
     case RESOLVED_MODULE:
       initializeModuleChunk(chunk);
@@ -163,8 +163,8 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_MODEL:
-      initializeModelChunk(chunk);
+    case RESOLVED_VALUE:
+      initializeValueChunk(chunk);
       break;
     case RESOLVED_MODULE:
       initializeModuleChunk(chunk);
@@ -249,12 +249,12 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   }
 }
 
-function createResolvedModelChunk<T>(
+function createResolvedValueChunk<T>(
   response: Response,
-  value: UninitializedModel,
-): ResolvedModelChunk<T> {
+  value: UninitializedValue,
+): ResolvedValueChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, null, response);
+  return new Chunk(RESOLVED_VALUE, value, null, response);
 }
 
 function createResolvedModuleChunk<T>(
@@ -265,9 +265,9 @@ function createResolvedModuleChunk<T>(
   return new Chunk(RESOLVED_MODULE, value, null, response);
 }
 
-function resolveModelChunk<T>(
+function resolveValueChunk<T>(
   chunk: SomeChunk<T>,
-  value: UninitializedModel,
+  value: UninitializedValue,
 ): void {
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
@@ -275,14 +275,14 @@ function resolveModelChunk<T>(
   }
   const resolveListeners = chunk.value;
   const rejectListeners = chunk.reason;
-  const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
-  resolvedChunk.status = RESOLVED_MODEL;
+  const resolvedChunk: ResolvedValueChunk<T> = (chunk: any);
+  resolvedChunk.status = RESOLVED_VALUE;
   resolvedChunk.value = value;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
-    initializeModelChunk(resolvedChunk);
+    initializeValueChunk(resolvedChunk);
     // The status might have changed after initialization.
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
@@ -307,20 +307,20 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
-function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+let initializingChunk: ResolvedValueChunk<any> = (null: any);
+let initializingChunkBlockedValue: null | {deps: number, value: any} = null;
+function initializeValueChunk<T>(chunk: ResolvedValueChunk<T>): void {
   const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
+  const prevBlocked = initializingChunkBlockedValue;
   initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  initializingChunkBlockedValue = null;
   try {
-    const value: T = parseModel(chunk._response, chunk.value);
+    const value: T = parseValue(chunk._response, chunk.value);
     if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
+      initializingChunkBlockedValue !== null &&
+      initializingChunkBlockedValue.deps > 0
     ) {
-      initializingChunkBlockedModel.value = value;
+      initializingChunkBlockedValue.value = value;
       // We discovered new dependencies on modules that are not yet resolved.
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
@@ -338,7 +338,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingChunkBlockedValue = prevBlocked;
   }
 }
 
@@ -436,17 +436,17 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
+function createValueResolver<T>(
   chunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
 ): (value: any) => void {
   let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
+  if (initializingChunkBlockedValue) {
+    blocked = initializingChunkBlockedValue;
     blocked.deps++;
   } else {
-    blocked = initializingChunkBlockedModel = {
+    blocked = initializingChunkBlockedValue = {
       deps: 1,
       value: null,
     };
@@ -469,7 +469,7 @@ function createModelResolver<T>(
   };
 }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
+function createValueReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
@@ -501,7 +501,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
   return proxy;
 }
 
-export function parseModelString(
+export function parseValueString(
   response: Response,
   parentObject: Object,
   key: string,
@@ -544,8 +544,8 @@ export function parseModelString(
         const id = parseInt(value.substring(2), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
+          case RESOLVED_VALUE:
+            initializeValueChunk(chunk);
             break;
         }
         // The status might have changed after initialization.
@@ -569,8 +569,8 @@ export function parseModelString(
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
+          case RESOLVED_VALUE:
+            initializeValueChunk(chunk);
             break;
           case RESOLVED_MODULE:
             initializeModuleChunk(chunk);
@@ -584,8 +584,8 @@ export function parseModelString(
           case BLOCKED:
             const parentChunk = initializingChunk;
             chunk.then(
-              createModelResolver(parentChunk, parentObject, key),
-              createModelReject(parentChunk),
+              createValueResolver(parentChunk, parentObject, key),
+              createValueReject(parentChunk),
             );
             return null;
           default:
@@ -597,7 +597,7 @@ export function parseModelString(
   return value;
 }
 
-export function parseModelTuple(
+export function parseValueTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
@@ -631,30 +631,30 @@ export function createResponse(
   return response;
 }
 
-export function resolveModel(
+export function resolveValue(
   response: Response,
   id: number,
-  model: UninitializedModel,
+  value: UninitializedValue,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
+    chunks.set(id, createResolvedValueChunk(response, value));
   } else {
-    resolveModelChunk(chunk, model);
+    resolveValueChunk(chunk, value);
   }
 }
 
 export function resolveModule(
   response: Response,
   id: number,
-  model: UninitializedModel,
+  value: UninitializedValue,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const clientReferenceMetadata: ClientReferenceMetadata = parseModel(
+  const clientReferenceMetadata: ClientReferenceMetadata = parseValue(
     response,
-    model,
+    value,
   );
   const clientReference = resolveClientReference<$FlowFixMe>(
     response._ssrManifest,

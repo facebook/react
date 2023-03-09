@@ -103,16 +103,16 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     function App() {
-      const model = {
+      const value = {
         html: <HTML />,
       };
-      return model;
+      return value;
     }
 
     const stream = ReactServerDOMServer.renderToReadableStream(<App />);
     const response = ReactServerDOMClient.createFromReadableStream(stream);
-    const model = await response;
-    expect(model).toEqual({
+    const value = await response;
+    expect(value).toEqual({
       html: (
         <div>
           <span>hello</span>
@@ -136,16 +136,16 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     function App() {
-      const model = {
+      const value = {
         html: <HTML />,
       };
-      return model;
+      return value;
     }
 
     const stream = ReactServerDOMServer.renderToReadableStream(<App />);
     const response = ReactServerDOMClient.createFromReadableStream(stream);
-    const model = await response;
-    expect(model).toEqual({
+    const value = await response;
+    expect(value).toEqual({
       html: (
         <div>
           <span>hello</span>
@@ -257,7 +257,7 @@ describe('ReactFlightDOMBrowser', () => {
       );
     }
 
-    const model = {
+    const value = {
       rootContent: <ProfileContent />,
     };
 
@@ -266,7 +266,7 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     const stream = ReactServerDOMServer.renderToReadableStream(
-      model,
+      value,
       clientManifest,
       {
         onError(x) {
@@ -400,12 +400,12 @@ describe('ReactFlightDOMBrowser', () => {
       );
     }
 
-    const model = {
+    const value = {
       rootContent: <ProfileContent />,
     };
 
     const stream = ReactServerDOMServer.renderToReadableStream(
-      model,
+      value,
       clientManifest,
     );
 
@@ -415,13 +415,13 @@ describe('ReactFlightDOMBrowser', () => {
     let flightResponse = '';
     let isDone = false;
 
-    reader.read().then(function progress({done, value}) {
-      if (done) {
+    reader.read().then(function progress(result) {
+      if (result.done) {
         isDone = true;
         return;
       }
 
-      flightResponse += decoder.decode(value);
+      flightResponse += decoder.decode(result.value);
 
       return reader.read().then(progress);
     });

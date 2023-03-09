@@ -20,11 +20,11 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 function render(
-  model: ReactClientValue,
+  value: ReactClientValue,
   destination: Destination,
   clientManifest: ClientManifest,
 ): void {
-  const request = createRequest(model, clientManifest);
+  const request = createRequest(value, clientManifest);
   startWork(request);
   startFlowing(request, destination);
 }

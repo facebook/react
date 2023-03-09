@@ -39,7 +39,7 @@ import {
   flushBuffered,
   close,
   closeWithError,
-  processModelChunk,
+  processValueChunk,
   processImportChunk,
   processErrorChunkProd,
   processErrorChunkDev,
@@ -140,7 +140,7 @@ const ERRORED = 4;
 type Task = {
   id: number,
   status: 0 | 1 | 3 | 4,
-  model: ReactClientValue,
+  value: ReactClientValue,
   ping: () => void,
   context: ContextSnapshot,
   thenableState: ThenableState | null,
@@ -182,7 +182,7 @@ const CLOSING = 1;
 const CLOSED = 2;
 
 export function createRequest(
-  model: ReactClientValue,
+  value: ReactClientValue,
   clientManifest: ClientManifest,
   onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
@@ -221,13 +221,16 @@ export function createRequest(
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     // $FlowFixMe[missing-this-annot]
-    toJSON: function (key: string, value: ReactClientValue): ReactJSONValue {
-      return resolveModelToJSON(request, this, key, value);
+    toJSON: function (
+      key: string,
+      anotherValue: ReactClientValue,
+    ): ReactJSONValue {
+      return resolveValueToJSON(request, this, key, anotherValue);
     },
   };
   request.pendingChunks++;
   const rootContext = createRootContext(context);
-  const rootTask = createTask(request, model, rootContext, abortSet);
+  const rootTask = createTask(request, value, rootContext, abortSet);
   pingedTasks.push(rootTask);
   return request;
 }
@@ -252,7 +255,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
   switch (thenable.status) {
     case 'fulfilled': {
       // We have the resolved value, we can go ahead and schedule it for serialization.
-      newTask.model = thenable.value;
+      newTask.value = thenable.value;
       pingTask(request, newTask);
       return newTask.id;
     }
@@ -298,7 +301,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
 
   thenable.then(
     value => {
-      newTask.model = value;
+      newTask.value = value;
       pingTask(request, newTask);
     },
     reason => {
@@ -508,7 +511,7 @@ function pingTask(request: Request, task: Task): void {
 
 function createTask(
   request: Request,
-  model: ReactClientValue,
+  value: ReactClientValue,
   context: ContextSnapshot,
   abortSet: Set<Task>,
 ): Task {
@@ -516,7 +519,7 @@ function createTask(
   const task: Task = {
     id,
     status: PENDING,
-    model,
+    value,
     context,
     ping: () => pingTask(request, task),
     thenableState: null,
@@ -634,7 +637,7 @@ function serializeServerReference(
   request.pendingChunks++;
   const metadataId = request.nextChunkId++;
   // We assume that this object doesn't suspend.
-  const processedChunk = processModelChunk(
+  const processedChunk = processValueChunk(
     request,
     metadataId,
     serverReferenceMetadata,
@@ -657,7 +660,7 @@ function escapeStringValue(value: string): string {
 let insideContextProps = null;
 let isInsideContextValue = false;
 
-export function resolveModelToJSON(
+export function resolveValueToJSON(
   request: Request,
   parent:
     | {+[key: string | number]: ReactClientValue}
@@ -1061,7 +1064,7 @@ function retryTask(request: Request, task: Task): void {
 
   switchContext(task.context);
   try {
-    let value = task.model;
+    let value = task.value;
     if (
       typeof value === 'object' &&
       value !== null &&
@@ -1077,7 +1080,7 @@ function retryTask(request: Request, task: Task): void {
       // Attempt to render the Server Component.
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
-      task.model = value;
+      task.value = value;
       value = attemptResolveElement(
         request,
         element.type,
@@ -1101,7 +1104,7 @@ function retryTask(request: Request, task: Task): void {
       ) {
         // TODO: Concatenate keys of parents onto children.
         const nextElement: React$Element<any> = (value: any);
-        task.model = value;
+        task.value = value;
         value = attemptResolveElement(
           request,
           nextElement.type,
@@ -1113,7 +1116,7 @@ function retryTask(request: Request, task: Task): void {
       }
     }
 
-    const processedChunk = processModelChunk(request, task.id, value);
+    const processedChunk = processValueChunk(request, task.id, value);
     request.completedJSONChunks.push(processedChunk);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
@@ -1177,7 +1180,7 @@ function performWork(request: Request): void {
 
 function abortTask(task: Task, request: Request, errorId: number): void {
   task.status = ABORTED;
-  // Instead of emitting an error per task.id, we emit a model that only
+  // Instead of emitting an error per task.id, we emit a chunk that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);
   const processedChunk = processReferenceChunk(request, task.id, ref);
@@ -1205,7 +1208,7 @@ function flushCompletedChunks(
       }
     }
     importsChunks.splice(0, i);
-    // Next comes model data.
+    // Next comes value data.
     const jsonChunks = request.completedJSONChunks;
     i = 0;
     for (; i < jsonChunks.length; i++) {

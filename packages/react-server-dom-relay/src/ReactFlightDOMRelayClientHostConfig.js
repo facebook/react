@@ -16,8 +16,8 @@ import type {ClientReferenceMetadata} from 'ReactFlightDOMRelayClientIntegration
 export type ClientReference<T> = JSResourceReference<T>;
 
 import {
-  parseModelString,
-  parseModelTuple,
+  parseValueString,
+  parseValueTuple,
 } from 'react-client/src/ReactFlightClient';
 
 export {
@@ -35,7 +35,7 @@ export type SSRManifest = null;
 export type ServerManifest = null;
 export type ServerReferenceId = string;
 
-export type UninitializedModel = JSONValue;
+export type UninitializedValue = JSONValue;
 
 export type Response = ResponseBase;
 
@@ -53,31 +53,31 @@ export function resolveServerReference<T>(
   throw new Error('Not implemented.');
 }
 
-function parseModelRecursively(
+function parseValueRecursively(
   response: Response,
   parentObj: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
   key: string,
   value: JSONValue,
 ): $FlowFixMe {
   if (typeof value === 'string') {
-    return parseModelString(response, parentObj, key, value);
+    return parseValueString(response, parentObj, key, value);
   }
   if (typeof value === 'object' && value !== null) {
     if (isArray(value)) {
       const parsedValue: Array<$FlowFixMe> = [];
       for (let i = 0; i < value.length; i++) {
-        (parsedValue: any)[i] = parseModelRecursively(
+        (parsedValue: any)[i] = parseValueRecursively(
           response,
           value,
           '' + i,
           value[i],
         );
       }
-      return parseModelTuple(response, parsedValue);
+      return parseValueTuple(response, parsedValue);
     } else {
       const parsedValue = {};
       for (const innerKey in value) {
-        (parsedValue: any)[innerKey] = parseModelRecursively(
+        (parsedValue: any)[innerKey] = parseValueRecursively(
           response,
           value,
           innerKey,
@@ -92,6 +92,6 @@ function parseModelRecursively(
 
 const dummy = {};
 
-export function parseModel<T>(response: Response, json: UninitializedModel): T {
-  return (parseModelRecursively(response, dummy, '', json): any);
+export function parseValue<T>(response: Response, json: UninitializedValue): T {
+  return (parseValueRecursively(response, dummy, '', json): any);
 }

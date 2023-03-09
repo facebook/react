@@ -38,16 +38,16 @@ describe('ReactFlightDOMRelay', () => {
     }
     ReactDOMFlightRelayClient.close(response);
     const promise = ReactDOMFlightRelayClient.getRoot(response);
-    let model;
+    let value;
     let error;
     promise.then(
-      m => (model = m),
+      m => (value = m),
       e => (error = e),
     );
     if (error) {
       throw error;
     }
-    return model;
+    return value;
   }
 
   it('can render a Server Component', () => {
@@ -71,8 +71,8 @@ describe('ReactFlightDOMRelay', () => {
       transport,
     );
 
-    const model = readThrough(transport);
-    expect(model).toEqual({
+    const value = readThrough(transport);
+    expect(value).toEqual({
       foo: {
         bar: (
           <div>
@@ -99,19 +99,19 @@ describe('ReactFlightDOMRelay', () => {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;
     }
 
-    const model = {
+    const value = {
       greeting: <Greeting firstName="Seb" lastName="Smith" />,
     };
 
     const transport = [];
-    ReactDOMFlightRelayServer.render(model, transport);
+    ReactDOMFlightRelayServer.render(value, transport);
 
-    const modelClient = readThrough(transport);
+    const valueClient = readThrough(transport);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(modelClient.greeting);
+      root.render(valueClient.greeting);
     });
 
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
@@ -152,8 +152,8 @@ describe('ReactFlightDOMRelay', () => {
       transport,
     );
 
-    const model = readThrough(transport);
-    expect(model).toEqual({
+    const value = readThrough(transport);
+    expect(value).toEqual({
       foo: {
         bar: (
           <div>
@@ -193,8 +193,8 @@ describe('ReactFlightDOMRelay', () => {
       transport,
     );
 
-    const model = readThrough(transport);
-    expect(model).toEqual({
+    const value = readThrough(transport);
+    expect(value).toEqual({
       foo: {
         bar: 14,
       },
@@ -215,8 +215,8 @@ describe('ReactFlightDOMRelay', () => {
     const transport = [];
     ReactDOMFlightRelayServer.render(<Foo />, transport);
 
-    const model = readThrough(transport);
-    expect(model).toEqual(14);
+    const value = readThrough(transport);
+    expect(value).toEqual(14);
   });
 
   it('should warn in DEV if a class instance polyfill is passed to a host component', () => {

@@ -71,11 +71,11 @@ type Options = {
   identifierPrefix?: string,
 };
 
-function render(model: ReactClientValue, options?: Options): Destination {
+function render(value: ReactClientValue, options?: Options): Destination {
   const destination: Destination = [];
   const clientManifest = undefined;
   const request = ReactNoopFlightServer.createRequest(
-    model,
+    value,
     clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,

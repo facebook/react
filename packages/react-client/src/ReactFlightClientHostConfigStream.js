@@ -16,8 +16,8 @@ export type Response = ResponseBase & {
   _stringDecoder: StringDecoder,
 };
 
-export type UninitializedModel = string;
+export type UninitializedValue = string;
 
-export function parseModel<T>(response: Response, json: UninitializedModel): T {
+export function parseValue<T>(response: Response, json: UninitializedValue): T {
   return JSON.parse(json, response._fromJSON);
 }

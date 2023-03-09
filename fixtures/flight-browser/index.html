@@ -55,12 +55,12 @@
         return 'Title';
       }
 
-      let model = {
+      let value = {
         title: <Title />,
         content: <HTML />,
       };
 
-      let stream = ReactServerDOMServer.renderToReadableStream(model);
+      let stream = ReactServerDOMServer.renderToReadableStream(value);
       let response = new Response(stream, {
         headers: {'Content-Type': 'text/html'},
       });
@@ -83,12 +83,12 @@
       }
 
       function Shell({ data }) {
-        let model = React.use(data);
+        let value = React.use(data);
         return <div>
           <Suspense fallback="...">
-            <h1>{model.title}</h1>
+            <h1>{value.title}</h1>
           </Suspense>
-          {model.content}
+          {value.content}
         </div>;
       }
 

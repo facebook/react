@@ -126,8 +126,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render({
       foo: <Foo />,
     });
-    const model = await ReactNoopFlightClient.read(transport);
-    expect(model).toEqual({
+    const value = await ReactNoopFlightClient.read(transport);
+    expect(value).toEqual({
       foo: {
         bar: (
           <div>
@@ -154,15 +154,15 @@ describe('ReactFlight', () => {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;
     }
 
-    const model = {
+    const value = {
       greeting: <Greeting firstName="Seb" lastName="Smith" />,
     };
 
-    const transport = ReactNoopFlightServer.render(model);
+    const transport = ReactNoopFlightServer.render(value);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      const greeting = rootModel.greeting;
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      const greeting = rootValue.greeting;
       ReactNoop.render(greeting);
     });
 
@@ -186,9 +186,9 @@ describe('ReactFlight', () => {
       return <ItemList items={iterable} />;
     }
 
-    const model = <Items />;
+    const value = <Items />;
 
-    const transport = ReactNoopFlightServer.render(model);
+    const transport = ReactNoopFlightServer.render(value);
 
     await act(async () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport));
@@ -202,9 +202,9 @@ describe('ReactFlight', () => {
       return undefined;
     }
 
-    const model = <Undefined />;
+    const value = <Undefined />;
 
-    const transport = ReactNoopFlightServer.render(model);
+    const transport = ReactNoopFlightServer.render(value);
 
     await act(async () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport));
@@ -218,9 +218,9 @@ describe('ReactFlight', () => {
       return <React.Fragment />;
     }
 
-    const model = <Empty />;
+    const value = <Empty />;
 
-    const transport = ReactNoopFlightServer.render(model);
+    const transport = ReactNoopFlightServer.render(value);
 
     await act(async () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport));
@@ -258,15 +258,15 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
     await load();
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
@@ -303,8 +303,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
     spyOnDevAndProd(console, 'error').mockImplementation(() => {});
@@ -340,15 +340,15 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
     await load();
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
@@ -385,8 +385,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
     spyOnDevAndProd(console, 'error').mockImplementation(() => {});
@@ -423,15 +423,15 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
     await load();
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
+      const rootValue = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootValue);
     });
     expect(ReactNoop).toMatchRenderedOutput(<div>I am client</div>);
   });
@@ -1102,19 +1102,19 @@ describe('ReactFlight', () => {
         );
       }
 
-      const model = {
+      const value = {
         foo: <Foo />,
       };
 
-      const transport = ReactNoopFlightServer.render(model);
+      const transport = ReactNoopFlightServer.render(value);
 
       assertLog([]);
 
       await act(async () => {
         ServerContext._currentRenderer = null;
         ServerContext._currentRenderer2 = null;
-        const flightModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(flightModel.foo);
+        const rootValue = await ReactNoopFlightClient.read(transport);
+        ReactNoop.render(rootValue.foo);
       });
 
       assertLog(['ClientBar']);
@@ -1139,8 +1139,8 @@ describe('ReactFlight', () => {
       });
 
       await act(async () => {
-        const flightModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(flightModel);
+        const rootValue = await ReactNoopFlightClient.read(transport);
+        ReactNoop.render(rootValue);
       });
       expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
     });
@@ -1194,10 +1194,10 @@ describe('ReactFlight', () => {
         );
       }
 
-      function ClientApp({serverModel}) {
+      function ClientApp({rootValue}) {
         return (
           <>
-            {serverModel}
+            {rootValue}
             <ClientBaz />
           </>
         );
@@ -1220,8 +1220,8 @@ describe('ReactFlight', () => {
       Scheduler = require('scheduler');
 
       await act(async () => {
-        const serverModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(<ClientApp serverModel={serverModel} />);
+        const rootValue = await ReactNoopFlightClient.read(transport);
+        ReactNoop.render(<ClientApp rootValue={rootValue} />);
       });
 
       expect(ClientContext).not.toBe(ServerContext);

@@ -50,16 +50,16 @@ describe('ReactFlightNativeRelay', () => {
     }
     ReactNativeFlightRelayClient.close(response);
     const promise = ReactNativeFlightRelayClient.getRoot(response);
-    let model;
+    let value;
     let error;
     promise.then(
-      m => (model = m),
+      m => (value = m),
       e => (error = e),
     );
     if (error) {
       throw error;
     }
-    return model;
+    return value;
   }
 
   it('can render a Server Component', () => {
@@ -83,8 +83,8 @@ describe('ReactFlightNativeRelay', () => {
       transport,
     );
 
-    const model = readThrough(transport);
-    expect(model).toMatchSnapshot();
+    const value = readThrough(transport);
+    expect(value).toMatchSnapshot();
   });
 
   it('can render a Client Component using a module reference and render there', () => {
@@ -101,16 +101,16 @@ describe('ReactFlightNativeRelay', () => {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;
     }
 
-    const model = {
+    const value = {
       greeting: <Greeting firstName="Seb" lastName="Smith" />,
     };
 
     const transport = [];
-    ReactNativeFlightRelayServer.render(model, transport);
+    ReactNativeFlightRelayServer.render(value, transport);
 
-    const modelClient = readThrough(transport);
+    const valueClient = readThrough(transport);
 
-    ReactFabric.render(modelClient.greeting, 1);
+    ReactFabric.render(valueClient.greeting, 1);
     expect(
       nativeFabricUIManager.__dumpHierarchyForJestTestsOnly(),
     ).toMatchSnapshot();
