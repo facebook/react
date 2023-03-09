@@ -117,6 +117,7 @@ export type ReactClientValue =
   | number
   | symbol
   | null
+  | void
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
   | ReactClientObject
@@ -544,6 +545,10 @@ function serializeSymbolReference(name: string): string {
 
 function serializeProviderReference(name: string): string {
   return '$P' + name;
+}
+
+function serializeUndefined(): string {
+  return '$undefined';
 }
 
 function serializeClientReference(
@@ -1134,12 +1139,12 @@ export function resolveModelToJSON(
     return escapeStringValue(value);
   }
 
-  if (
-    typeof value === 'boolean' ||
-    typeof value === 'number' ||
-    typeof value === 'undefined'
-  ) {
+  if (typeof value === 'boolean' || typeof value === 'number') {
     return value;
+  }
+
+  if (typeof value === 'undefined') {
+    return serializeUndefined();
   }
 
   if (typeof value === 'function') {

@@ -197,6 +197,38 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
   });
 
+  it('can render undefined', async () => {
+    function Undefined() {
+      return undefined;
+    }
+
+    const model = <Undefined />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+  });
+
+  it('can render an empty fragment', async () => {
+    function Empty() {
+      return <React.Fragment />;
+    }
+
+    const model = <Empty />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+  });
+
   it('can render a lazy component as a shared component on the server', async () => {
     function SharedComponent({text}) {
       return (

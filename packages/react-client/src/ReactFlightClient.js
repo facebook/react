@@ -556,6 +556,11 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
+      case 'u': {
+        // matches "$undefined"
+        // Special encoding for `undefined` which can't be serialized as JSON otherwise.
+        return undefined;
+      }
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
