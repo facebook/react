@@ -12,15 +12,17 @@
 
 let React;
 let ReactNoopPersistent;
+let act;
 
 describe('ReactPersistentUpdatesMinimalism', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoopPersistent = require('react-noop-renderer/persistent');
+    act = require('internal-test-utils').act;
   });
 
-  it('should render a simple component', () => {
+  it('should render a simple component', async () => {
     function Child() {
       return <div>Hello World</div>;
     }
@@ -29,20 +31,22 @@ describe('ReactPersistentUpdatesMinimalism', () => {
       return <Child />;
     }
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       hostDiffCounter: 1,
       hostCloneCounter: 1,
     });
   });
 
-  it('should not diff referentially equal host elements', () => {
+  it('should not diff referentially equal host elements', async () => {
     function Leaf(props) {
       return (
         <span>
@@ -67,20 +71,22 @@ describe('ReactPersistentUpdatesMinimalism', () => {
       return <Child />;
     }
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
   });
 
-  it('should not diff parents of setState targets', () => {
+  it('should not diff parents of setState targets', async () => {
     let childInst;
 
     function Leaf(props) {
@@ -118,14 +124,16 @@ describe('ReactPersistentUpdatesMinimalism', () => {
       );
     }
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
-    childInst.setState({name: 'Robin'});
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => childInst.setState({name: 'Robin'}));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       // section > div > Child > div
       // section > div > Child > Leaf > span
       // section > div > Child > Leaf > span > b
@@ -138,8 +146,9 @@ describe('ReactPersistentUpdatesMinimalism', () => {
       hostCloneCounter: 5,
     });
 
-    ReactNoopPersistent.render(<Parent />);
-    expect(ReactNoopPersistent.flushWithHostCounters()).toEqual({
+    ReactNoopPersistent.startTrackingHostCounters();
+    await act(() => ReactNoopPersistent.render(<Parent />));
+    expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
       // Parent > section
       // Parent > section > div
       // Parent > section > div > Leaf > span

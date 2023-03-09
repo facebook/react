@@ -983,7 +983,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_clearLog();
     },
 
-    flushWithHostCounters(fn: () => void):
+    startTrackingHostCounters(): void {
+      hostDiffCounter = 0;
+      hostUpdateCounter = 0;
+      hostCloneCounter = 0;
+    },
+
+    stopTrackingHostCounters():
       | {
           hostDiffCounter: number,
           hostUpdateCounter: number,
@@ -992,25 +998,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hostDiffCounter: number,
           hostCloneCounter: number,
         } {
+      const result = useMutation
+        ? {
+            hostDiffCounter,
+            hostUpdateCounter,
+          }
+        : {
+            hostDiffCounter,
+            hostCloneCounter,
+          };
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
-      try {
-        Scheduler.unstable_flushAll();
-        return useMutation
-          ? {
-              hostDiffCounter,
-              hostUpdateCounter,
-            }
-          : {
-              hostDiffCounter,
-              hostCloneCounter,
-            };
-      } finally {
-        hostDiffCounter = 0;
-        hostUpdateCounter = 0;
-        hostCloneCounter = 0;
-      }
+
+      return result;
     },
 
     expire: Scheduler.unstable_advanceTime,

@@ -763,18 +763,22 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // Nothing has been hydrated so far.
     assertLog([]);
-    // Click D
-    dispatchMouseHoverEvent(spanD, null);
-    dispatchClickEvent(spanD);
-    // Hover over B and then C.
-    dispatchMouseHoverEvent(spanB, spanD);
-    dispatchMouseHoverEvent(spanC, spanB);
-    assertLog(['App']);
-    await act(async () => {
+
+    await act(() => {
+      // Click D
+      dispatchMouseHoverEvent(spanD, null);
+      dispatchClickEvent(spanD);
+
+      // Hover over B and then C.
+      dispatchMouseHoverEvent(spanB, spanD);
+      dispatchMouseHoverEvent(spanC, spanB);
+
+      assertLog(['App']);
+
       suspend = false;
       resolve();
-      await promise;
     });
+
     if (
       gate(
         flags =>
@@ -914,19 +918,18 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // Nothing has been hydrated so far.
     assertLog([]);
 
-    // Click D
-    dispatchMouseHoverEvent(spanD, null);
-    dispatchClickEvent(spanD);
-    // Hover over B and then C.
-    dispatchMouseHoverEvent(spanB, spanD);
-    dispatchMouseHoverEvent(spanC, spanB);
-
-    assertLog(['App']);
-
     await act(async () => {
+      // Click D
+      dispatchMouseHoverEvent(spanD, null);
+      dispatchClickEvent(spanD);
+      // Hover over B and then C.
+      dispatchMouseHoverEvent(spanB, spanD);
+      dispatchMouseHoverEvent(spanC, spanB);
+
+      assertLog(['App']);
+
       suspend = false;
       resolve();
-      await promise;
     });
 
     if (
@@ -998,18 +1001,24 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let InnerScheduler;
     let innerDiv;
 
+    let OuterTestUtils;
+    let InnerTestUtils;
+
     beforeEach(async () => {
       document.body.innerHTML = '';
       jest.resetModules();
       let OuterReactDOMClient;
       let InnerReactDOMClient;
+
       jest.isolateModules(() => {
         OuterReactDOMClient = require('react-dom/client');
         OuterScheduler = require('scheduler');
+        OuterTestUtils = require('internal-test-utils');
       });
       jest.isolateModules(() => {
         InnerReactDOMClient = require('react-dom/client');
         InnerScheduler = require('scheduler');
+        InnerTestUtils = require('internal-test-utils');
       });
 
       expect(OuterReactDOMClient).not.toBe(InnerReactDOMClient);
@@ -1092,19 +1101,21 @@ describe('ReactDOMServerSelectiveHydration', () => {
       const innerHTML = ReactDOMServer.renderToString(<InnerApp />);
       innerContainer.innerHTML = innerHTML;
 
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Outer']);
-      expect(InnerScheduler.unstable_clearLog()).toEqual(['Inner']);
+      OuterTestUtils.assertLog(['Outer']);
+      InnerTestUtils.assertLog(['Inner']);
 
       suspendOuter = true;
       suspendInner = true;
 
-      OuterReactDOMClient.hydrateRoot(outerContainer, <OuterApp />);
-      InnerReactDOMClient.hydrateRoot(innerContainer, <InnerApp />);
+      await OuterTestUtils.act(() =>
+        OuterReactDOMClient.hydrateRoot(outerContainer, <OuterApp />),
+      );
+      await InnerTestUtils.act(() =>
+        InnerReactDOMClient.hydrateRoot(innerContainer, <InnerApp />),
+      );
 
-      OuterScheduler.unstable_flushAllWithoutAsserting();
-      InnerScheduler.unstable_flushAllWithoutAsserting();
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Suspend Outer']);
-      expect(InnerScheduler.unstable_clearLog()).toEqual(['Suspend Inner']);
+      OuterTestUtils.assertLog(['Suspend Outer']);
+      InnerTestUtils.assertLog(['Suspend Inner']);
 
       innerDiv = document.querySelector('#inner');
 
@@ -1117,7 +1128,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
         InnerScheduler.unstable_flushAllWithoutAsserting();
       });
 
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Suspend Outer']);
+      OuterTestUtils.assertLog(['Suspend Outer']);
       if (
         gate(
           flags =>
@@ -1126,10 +1137,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       ) {
         // InnerApp doesn't see the event because OuterApp calls stopPropagation in
         // capture phase since the event is blocked on suspended component
-        expect(InnerScheduler.unstable_clearLog()).toEqual([]);
+        InnerTestUtils.assertLog([]);
       } else {
         // no stopPropagation
-        expect(InnerScheduler.unstable_clearLog()).toEqual(['Suspend Inner']);
+        InnerTestUtils.assertLog(['Suspend Inner']);
       }
 
       assertLog([]);
@@ -1142,51 +1153,39 @@ describe('ReactDOMServerSelectiveHydration', () => {
     it('Inner hydrates first then Outer', async () => {
       dispatchMouseHoverEvent(innerDiv);
 
-      await act(async () => {
-        resolveInner();
-        await innerPromise;
-        jest.runAllTimers();
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
+      await InnerTestUtils.act(async () => {
+        await OuterTestUtils.act(() => {
+          resolveInner();
+        });
       });
 
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Suspend Outer']);
+      OuterTestUtils.assertLog(['Suspend Outer']);
       // Inner App renders because it is unblocked
-      expect(InnerScheduler.unstable_clearLog()).toEqual(['Inner']);
+      InnerTestUtils.assertLog(['Inner']);
       // No event is replayed yet
       assertLog([]);
 
       dispatchMouseHoverEvent(innerDiv);
-      expect(OuterScheduler.unstable_clearLog()).toEqual([]);
-      expect(InnerScheduler.unstable_clearLog()).toEqual([]);
+      OuterTestUtils.assertLog([]);
+      InnerTestUtils.assertLog([]);
       // No event is replayed yet
       assertLog([]);
 
-      await act(async () => {
-        resolveOuter();
-        await outerPromise;
-        jest.runAllTimers();
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
+      await InnerTestUtils.act(async () => {
+        await OuterTestUtils.act(() => {
+          resolveOuter();
+
+          // Nothing happens to inner app yet.
+          // Its blocked on the outer app replaying the event
+          InnerTestUtils.assertLog([]);
+          // Outer hydrates and schedules Replay
+          OuterTestUtils.waitFor(['Outer']);
+          // No event is replayed yet
+          assertLog([]);
+        });
       });
-
-      // Nothing happens to inner app yet.
-      // Its blocked on the outer app replaying the event
-      expect(InnerScheduler.unstable_clearLog()).toEqual([]);
-      // Outer hydrates and schedules Replay
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Outer']);
-      // No event is replayed yet
-      assertLog([]);
 
       // fire scheduled Replay
-      await act(() => {
-        jest.runAllTimers();
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
 
       // First Inner Mouse Enter fires then Outer Mouse Enter
       assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
@@ -1205,9 +1204,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       // Outer resolves and scheduled replay
-      expect(OuterScheduler.unstable_clearLog()).toEqual(['Outer']);
+      OuterTestUtils.assertLog(['Outer']);
       // Inner App is still blocked
-      expect(InnerScheduler.unstable_clearLog()).toEqual([]);
+      InnerTestUtils.assertLog([]);
 
       // Replay outer event
       await act(() => {
@@ -1219,12 +1218,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Inner is still blocked so when Outer replays the event in capture phase
       // inner ends up caling stopPropagation
       assertLog([]);
-      expect(OuterScheduler.unstable_clearLog()).toEqual([]);
-      expect(InnerScheduler.unstable_clearLog()).toEqual(['Suspend Inner']);
+      OuterTestUtils.assertLog([]);
+      InnerTestUtils.assertLog(['Suspend Inner']);
 
       dispatchMouseHoverEvent(innerDiv);
-      expect(OuterScheduler.unstable_clearLog()).toEqual([]);
-      expect(InnerScheduler.unstable_clearLog()).toEqual([]);
+      OuterTestUtils.assertLog([]);
+      InnerTestUtils.assertLog([]);
       assertLog([]);
 
       await act(async () => {
@@ -1236,9 +1235,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       // Inner hydrates
-      expect(InnerScheduler.unstable_clearLog()).toEqual(['Inner']);
+      InnerTestUtils.assertLog(['Inner']);
       // Outer was hydrated earlier
-      expect(OuterScheduler.unstable_clearLog()).toEqual([]);
+      OuterTestUtils.assertLog([]);
 
       await act(() => {
         Scheduler.unstable_flushAllWithoutAsserting();
@@ -1297,18 +1296,17 @@ describe('ReactDOMServerSelectiveHydration', () => {
     ReactDOMClient.hydrateRoot(container, <App />);
 
     const childDiv = container.firstElementChild;
-    dispatchMouseHoverEvent(childDiv);
 
-    // Not hydrated so event is saved for replay and stopPropagation is called
-    assertLog([]);
+    await act(async () => {
+      dispatchMouseHoverEvent(childDiv);
 
-    resolve();
-    Scheduler.unstable_flushNumberOfYields(1);
-    assertLog(['Child']);
+      // Not hydrated so event is saved for replay and stopPropagation is called
+      assertLog([]);
 
-    Scheduler.unstable_scheduleCallback(
-      Scheduler.unstable_ImmediatePriority,
-      () => {
+      resolve();
+      await waitFor(['Child']);
+
+      ReactDOM.flushSync(() => {
         container.removeChild(childDiv);
 
         const container2 = document.createElement('div');
@@ -1316,9 +1314,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
           Scheduler.log('container2 mouse over');
         });
         container2.appendChild(childDiv);
-      },
-    );
-    Scheduler.unstable_flushAllWithoutAsserting();
+      });
+    });
 
     // Even though the tree is remove the event is still dispatched with native event handler
     // on the container firing.

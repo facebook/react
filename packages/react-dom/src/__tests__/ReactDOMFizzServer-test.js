@@ -555,7 +555,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
     expect(bootstrapped).toBe(true);
 
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
@@ -677,7 +677,7 @@ describe('ReactDOMFizzServer', () => {
         errors.push({error, errorInfo});
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
@@ -773,7 +773,7 @@ describe('ReactDOMFizzServer', () => {
         errors.push({error, errorInfo});
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
 
@@ -841,7 +841,7 @@ describe('ReactDOMFizzServer', () => {
         errors.push({error, errorInfo});
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
@@ -931,7 +931,7 @@ describe('ReactDOMFizzServer', () => {
     expect(bootstrapped).toBe(true);
 
     // Attempt to hydrate the content.
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
@@ -952,7 +952,7 @@ describe('ReactDOMFizzServer', () => {
     // But it is not yet hydrated.
     expect(ref.current).toBe(null);
 
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // Now it's hydrated.
     expect(ref.current).toBe(h1);
@@ -1011,7 +1011,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
@@ -1029,7 +1029,7 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(null);
 
     // Flush the hydration.
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // Hydrating should've generated an error and replaced the suspense boundary.
     expect(getVisibleChildren(container)).toEqual(<b>Error Message</b>);
@@ -1082,7 +1082,7 @@ describe('ReactDOMFizzServer', () => {
       container,
       <App showMore={false} />,
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're not hydrated yet.
     expect(ref.current).toBe(null);
@@ -1095,7 +1095,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Add more rows before we've hydrated the first two.
     root.render(<App showMore={true} />);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're not hydrated yet.
     expect(ref.current).toBe(null);
@@ -1113,7 +1113,7 @@ describe('ReactDOMFizzServer', () => {
       await resolveText('A');
     });
 
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(getVisibleChildren(container)).toEqual([
       <span>A</span>,
@@ -1160,7 +1160,7 @@ describe('ReactDOMFizzServer', () => {
         errors.push({error, errorInfo});
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
@@ -1192,7 +1192,7 @@ describe('ReactDOMFizzServer', () => {
 
     // We now resolve it on the client.
     resolveText('Hello');
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -1866,7 +1866,7 @@ describe('ReactDOMFizzServer', () => {
         errors.push({error, errorInfo});
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual('Loading root...');
@@ -1881,7 +1881,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([theError]);
 
     // We still can't render it on the client because we haven't unblocked the parent.
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual('Loading root...');
 
     // Unblock the loading state
@@ -2067,7 +2067,7 @@ describe('ReactDOMFizzServer', () => {
     let root;
     await act(async () => {
       root = ReactDOMClient.hydrateRoot(container, <App isClient={false} />);
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       await jest.runAllTimers();
     });
 
@@ -2085,7 +2085,7 @@ describe('ReactDOMFizzServer', () => {
     await act(async () => {
       // Trigger update by changing isClient to true
       root.render(<App isClient={true} />);
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       await jest.runAllTimers();
     });
 
@@ -2664,7 +2664,7 @@ describe('ReactDOMFizzServer', () => {
       React.startTransition(() => {
         root.render(<App color="blue" />);
       });
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       jest.runAllTimers();
       const clientFallback2 = container.getElementsByTagName('p')[0];
       expect(clientFallback2).toBe(serverFallback);
@@ -2767,7 +2767,7 @@ describe('ReactDOMFizzServer', () => {
       // However, an update may have changed the fallback props. In that case we have to
       // actually force it to re-render on the client and throw away the server one.
       root.render(<App fallbackText="More loading..." />);
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       jest.runAllTimers();
       assertLog([
         '[c!] The server could not finish this Suspense boundary, ' +
@@ -3717,7 +3717,7 @@ describe('ReactDOMFizzServer', () => {
         Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -3794,7 +3794,7 @@ describe('ReactDOMFizzServer', () => {
         Scheduler.log('Logged recoverable error: ' + error.message);
       },
     });
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     expect(getVisibleChildren(container)).toEqual(
       <div>

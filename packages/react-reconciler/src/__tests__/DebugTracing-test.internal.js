@@ -13,6 +13,7 @@ describe('DebugTracing', () => {
   let React;
   let ReactTestRenderer;
   let waitForPaint;
+  let waitForAll;
 
   let logs;
 
@@ -29,6 +30,7 @@ describe('DebugTracing', () => {
     ReactTestRenderer = require('react-test-renderer');
     const InternalTestUtils = require('internal-test-utils');
     waitForPaint = InternalTestUtils.waitForPaint;
+    waitForAll = InternalTestUtils.waitForAll;
 
     logs = [];
 
@@ -73,9 +75,20 @@ describe('DebugTracing', () => {
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log sync render with suspense', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
+    let resolveFakeSuspensePromise;
+    let didResolve = false;
+    const fakeSuspensePromise = new Promise(resolve => {
+      resolveFakeSuspensePromise = () => {
+        didResolve = true;
+        resolve();
+      };
+    });
+
     function Example() {
-      throw fakeSuspensePromise;
+      if (!didResolve) {
+        throw fakeSuspensePromise;
+      }
+      return null;
     }
 
     ReactTestRenderer.act(() =>
@@ -96,7 +109,9 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    await fakeSuspensePromise;
+    resolveFakeSuspensePromise();
+    await waitForAll([]);
+
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
@@ -387,7 +402,8 @@ describe('DebugTracing', () => {
       return didMount;
     }
 
-    const fakeSuspensePromise = new Promise(() => {});
+    const fakeSuspensePromise = {then() {}};
+
     function ExampleThatSuspends() {
       throw fakeSuspensePromise;
     }
