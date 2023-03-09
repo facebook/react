@@ -18,7 +18,7 @@ export type BundlerConfig = WebpackMap;
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
-  $$bound: Array<ReactClientValue>,
+  $$bound: null | Array<ReactClientValue>,
 };
 
 export type ServerReferenceId = string;
@@ -83,6 +83,6 @@ export function getServerReferenceId<T>(
 export function getServerReferenceBoundArguments<T>(
   config: BundlerConfig,
   serverReference: ServerReference<T>,
-): Array<ReactClientValue> {
+): null | Array<ReactClientValue> {
   return serverReference.$$bound;
 }
