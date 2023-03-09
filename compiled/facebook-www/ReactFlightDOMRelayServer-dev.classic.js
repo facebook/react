@@ -1637,6 +1637,10 @@ function serializeProviderReference(name) {
   return "$P" + name;
 }
 
+function serializeUndefined() {
+  return "$undefined";
+}
+
 function serializeClientReference(request, parent, key, clientReference) {
   var clientReferenceKey = getClientReferenceKey(clientReference);
   var writtenClientReferences = request.writtenClientReferences;
@@ -2235,12 +2239,12 @@ function resolveModelToJSON(request, parent, key, value) {
     return escapeStringValue(value);
   }
 
-  if (
-    typeof value === "boolean" ||
-    typeof value === "number" ||
-    typeof value === "undefined"
-  ) {
+  if (typeof value === "boolean" || typeof value === "number") {
     return value;
+  }
+
+  if (typeof value === "undefined") {
+    return serializeUndefined();
   }
 
   if (typeof value === "function") {

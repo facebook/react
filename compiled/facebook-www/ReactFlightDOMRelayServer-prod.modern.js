@@ -937,12 +937,8 @@ function resolveModelToJSON(request, parent, key, value) {
   }
   if ("string" === typeof value)
     return (request = "$" === value[0] ? "$" + value : value), request;
-  if (
-    "boolean" === typeof value ||
-    "number" === typeof value ||
-    "undefined" === typeof value
-  )
-    return value;
+  if ("boolean" === typeof value || "number" === typeof value) return value;
+  if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
       return serializeClientReference(request, parent, key, value);

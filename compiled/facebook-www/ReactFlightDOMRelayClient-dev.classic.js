@@ -555,6 +555,12 @@ function parseModelString(response, parentObject, key, value) {
         }
       }
 
+      case "u": {
+        // matches "$undefined"
+        // Special encoding for `undefined` which can't be serialized as JSON otherwise.
+        return undefined;
+      }
+
       default: {
         // We assume that anything else is a reference ID.
         var _id3 = parseInt(value.substring(1), 16);
