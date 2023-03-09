@@ -7,9 +7,12 @@
  * @flow
  */
 
-import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
+import type {
+  Request,
+  ReactClientValue,
+} from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
+import type {ClientManifest} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
@@ -36,8 +39,8 @@ type PipeableStream = {
 };
 
 function renderToPipeableStream(
-  model: ReactModel,
-  webpackMap: BundlerConfig,
+  model: ReactClientValue,
+  webpackMap: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(

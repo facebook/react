@@ -11,7 +11,7 @@ export * from 'react-client/src/ReactFlightClientHostConfigBrowser';
 export * from 'react-client/src/ReactFlightClientHostConfigStream';
 
 export type Response = any;
-export opaque type BundlerConfig = mixed;
+export opaque type SSRManifest = mixed;
 export opaque type ClientReferenceMetadata = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
 export const resolveClientReference: any = null;

@@ -15,7 +15,7 @@ import type {
   ClientReferenceMetadata,
   UninitializedModel,
   Response,
-  BundlerConfig,
+  SSRManifest,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -149,7 +149,7 @@ Chunk.prototype.then = function <T>(
 };
 
 export type ResponseBase = {
-  _bundlerConfig: BundlerConfig,
+  _bundlerConfig: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   ...
@@ -473,13 +473,16 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
   response: Response,
-  metaData: {id: any, bound: Thenable<Array<any>>},
+  metaData: {id: any, bound: null | Thenable<Array<any>>},
 ): (...A) => Promise<T> {
   const callServer = response._callServer;
   const proxy = function (): Promise<T> {
     // $FlowFixMe[method-unbinding]
     const args = Array.prototype.slice.call(arguments);
     const p = metaData.bound;
+    if (!p) {
+      return callServer(metaData.id, args);
+    }
     if (p.status === INITIALIZED) {
       const bound = p.value;
       return callServer(metaData.id, bound.concat(args));
@@ -608,7 +611,7 @@ function missingCall() {
 }
 
 export function createResponse(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   callServer: void | CallServerCallback,
 ): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();

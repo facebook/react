@@ -10,7 +10,7 @@
 import type {
   Destination,
   Chunk,
-  BundlerConfig,
+  ClientManifest,
   ClientReferenceMetadata,
   ClientReference,
   ClientReferenceKey,
@@ -27,6 +27,7 @@ import type {
   PendingThenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactServerContext,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -44,7 +45,8 @@ import {
   processErrorChunkDev,
   processReferenceChunk,
   resolveClientReferenceMetadata,
-  resolveServerReferenceMetadata,
+  getServerReferenceId,
+  getServerReferenceBoundArguments,
   getClientReferenceKey,
   isClientReference,
   isServerReference,
@@ -95,21 +97,32 @@ type ReactJSONValue =
   | number
   | null
   | $ReadOnlyArray<ReactJSONValue>
-  | ReactModelObject;
+  | ReactClientObject;
 
-export type ReactModel =
-  | React$Element<any>
-  | LazyComponent<any, any>
+// Serializable values
+export type ReactClientValue =
+  // Server Elements and Lazy Components are unwrapped on the Server
+  | React$Element<React$AbstractComponent<any, any>>
+  | LazyComponent<ReactClientValue, any>
+  // References are passed by their value
+  | ClientReference<any>
+  | ServerReference<any>
+  // The rest are passed as is. Sub-types can be passed in but lose their
+  // subtype, so the receiver can only accept once of these.
+  | React$Element<string>
+  | React$Element<ClientReference<any> & any>
+  | ReactServerContext<any>
   | string
   | boolean
   | number
   | symbol
   | null
-  | Iterable<ReactModel>
-  | ReactModelObject
-  | Promise<ReactModel>;
+  | Iterable<ReactClientValue>
+  | Array<ReactClientValue>
+  | ReactClientObject
+  | Promise<ReactClientValue>; // Thenable<ReactClientValue>
 
-type ReactModelObject = {+[key: string]: ReactModel};
+type ReactClientObject = {+[key: string]: ReactClientValue};
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -119,7 +132,7 @@ const ERRORED = 4;
 type Task = {
   id: number,
   status: 0 | 1 | 3 | 4,
-  model: ReactModel,
+  model: ReactClientValue,
   ping: () => void,
   context: ContextSnapshot,
   thenableState: ThenableState | null,
@@ -129,7 +142,7 @@ export type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: ClientManifest,
   cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
@@ -145,7 +158,7 @@ export type Request = {
   identifierPrefix: string,
   identifierCount: number,
   onError: (error: mixed) => ?string,
-  toJSON: (key: string, value: ReactModel) => ReactJSONValue,
+  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -161,8 +174,8 @@ const CLOSING = 1;
 const CLOSED = 2;
 
 export function createRequest(
-  model: ReactModel,
-  bundlerConfig: BundlerConfig,
+  model: ReactClientValue,
+  bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
@@ -200,7 +213,7 @@ export function createRequest(
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     // $FlowFixMe[missing-this-annot]
-    toJSON: function (key: string, value: ReactModel): ReactJSONValue {
+    toJSON: function (key: string, value: ReactClientValue): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };
@@ -364,7 +377,7 @@ function attemptResolveElement(
   ref: mixed,
   props: any,
   prevThenableState: ThenableState | null,
-): ReactModel {
+): ReactClientValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
@@ -492,7 +505,7 @@ function pingTask(request: Request, task: Task): void {
 
 function createTask(
   request: Request,
-  model: ReactModel,
+  model: ReactClientValue,
   context: ContextSnapshot,
   abortSet: Set<Task>,
 ): Task {
@@ -535,7 +548,9 @@ function serializeProviderReference(name: string): string {
 
 function serializeClientReference(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
   key: string,
   clientReference: ClientReference<any>,
 ): string {
@@ -586,7 +601,9 @@ function serializeClientReference(
 
 function serializeServerReference(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
   key: string,
   serverReference: ServerReference<any>,
 ): string {
@@ -595,10 +612,18 @@ function serializeServerReference(
   if (existingId !== undefined) {
     return serializeServerReferenceID(existingId);
   }
+
+  const bound: null | Array<any> = getServerReferenceBoundArguments(
+    request.bundlerConfig,
+    serverReference,
+  );
   const serverReferenceMetadata: {
     id: ServerReferenceId,
-    bound: Promise<Array<any>>,
-  } = resolveServerReferenceMetadata(request.bundlerConfig, serverReference);
+    bound: null | Promise<Array<any>>,
+  } = {
+    id: getServerReferenceId(request.bundlerConfig, serverReference),
+    bound: bound ? Promise.resolve(bound) : null,
+  };
   request.pendingChunks++;
   const metadataId = request.nextChunkId++;
   // We assume that this object doesn't suspend.
@@ -683,7 +708,7 @@ function describeKeyForErrorMessage(key: string): string {
   return '"' + key + '"' === encodedKey ? key : encodedKey;
 }
 
-function describeValueForErrorMessage(value: ReactModel): string {
+function describeValueForErrorMessage(value: ReactClientValue): string {
   switch (typeof value) {
     case 'string': {
       return JSON.stringify(
@@ -740,8 +765,8 @@ function describeElementType(type: any): string {
 
 function describeObjectForErrorMessage(
   objectOrArray:
-    | {+[key: string | number]: ReactModel, ...}
-    | $ReadOnlyArray<ReactModel>,
+    | {+[key: string | number]: ReactClientValue, ...}
+    | $ReadOnlyArray<ReactClientValue>,
   expandedName?: string,
 ): string {
   const objKind = objectName(objectOrArray);
@@ -756,7 +781,7 @@ function describeObjectForErrorMessage(
       // Print JSX Children
       const type = jsxChildrenParents.get(objectOrArray);
       str = '<' + describeElementType(type) + '>';
-      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      const array: $ReadOnlyArray<ReactClientValue> = objectOrArray;
       for (let i = 0; i < array.length; i++) {
         const value = array[i];
         let substr;
@@ -782,7 +807,7 @@ function describeObjectForErrorMessage(
     } else {
       // Print Array
       str = '[';
-      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      const array: $ReadOnlyArray<ReactClientValue> = objectOrArray;
       for (let i = 0; i < array.length; i++) {
         if (i > 0) {
           str += ', ';
@@ -814,7 +839,8 @@ function describeObjectForErrorMessage(
       // Print JSX
       const type = jsxPropsParents.get(objectOrArray);
       str = '<' + (describeElementType(type) || '...');
-      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const object: {+[key: string | number]: ReactClientValue, ...} =
+        objectOrArray;
       const names = Object.keys(object);
       for (let i = 0; i < names.length; i++) {
         str += ' ';
@@ -849,7 +875,8 @@ function describeObjectForErrorMessage(
     } else {
       // Print Object
       str = '{';
-      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const object: {+[key: string | number]: ReactClientValue, ...} =
+        objectOrArray;
       const names = Object.keys(object);
       for (let i = 0; i < names.length; i++) {
         if (i > 0) {
@@ -893,9 +920,11 @@ let isInsideContextValue = false;
 
 export function resolveModelToJSON(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
   key: string,
-  value: ReactModel,
+  value: ReactClientValue,
 ): ReactJSONValue {
   if (__DEV__) {
     // $FlowFixMe
@@ -938,7 +967,7 @@ export function resolveModelToJSON(
     if (
       parent[0] === REACT_ELEMENT_TYPE &&
       parent[1] &&
-      parent[1].$$typeof === REACT_PROVIDER_TYPE &&
+      (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
       key === '3'
     ) {
       insideContextProps = value;

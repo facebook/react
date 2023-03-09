@@ -11,7 +11,7 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
 
-import type {BundlerConfig} from './ReactFlightClientWebpackBundlerConfig';
+import type {SSRManifest} from './ReactFlightClientWebpackBundlerConfig';
 
 import {
   createResponse,
@@ -30,7 +30,7 @@ function noServerCall() {
 }
 
 export type Options = {
-  moduleMap?: BundlerConfig,
+  moduleMap?: SSRManifest,
 };
 
 function createResponseFromOptions(options: void | Options) {

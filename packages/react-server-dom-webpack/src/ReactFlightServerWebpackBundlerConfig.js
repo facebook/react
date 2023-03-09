@@ -7,18 +7,16 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
-type WebpackMap = {
+export type ClientManifest = {
   [id: string]: ClientReferenceMetadata,
 };
-
-export type BundlerConfig = WebpackMap;
 
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
-  $$bound: Array<ReactModel>,
+  $$bound: null | Array<ReactClientValue>,
 };
 
 export type ServerReferenceId = string;
@@ -57,7 +55,7 @@ export function isServerReference(reference: Object): boolean {
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   const resolvedModuleData = config[clientReference.$$id];
@@ -73,12 +71,16 @@ export function resolveClientReferenceMetadata<T>(
   }
 }
 
-export function resolveServerReferenceMetadata<T>(
-  config: BundlerConfig,
+export function getServerReferenceId<T>(
+  config: ClientManifest,
   serverReference: ServerReference<T>,
-): {id: ServerReferenceId, bound: Promise<Array<any>>} {
-  return {
-    id: serverReference.$$id,
-    bound: Promise.resolve(serverReference.$$bound),
-  };
+): ServerReferenceId {
+  return serverReference.$$id;
+}
+
+export function getServerReferenceBoundArguments<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): null | Array<ReactClientValue> {
+  return serverReference.$$bound;
 }

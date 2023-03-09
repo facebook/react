@@ -30,7 +30,7 @@ module.exports = function register() {
       const args = Array.prototype.slice.call(arguments, 1);
       newFn.$$typeof = SERVER_REFERENCE;
       newFn.$$id = this.$$id;
-      newFn.$$bound = this.$$bound.concat(args);
+      newFn.$$bound = this.$$bound ? this.$$bound.concat(args) : args;
     }
     return newFn;
   }: any);
@@ -289,7 +289,7 @@ module.exports = function register() {
           $$typeof: {value: SERVER_REFERENCE},
           // Represents the whole Module object instead of a particular import.
           $$id: {value: moduleId},
-          $$bound: {value: []},
+          $$bound: {value: null},
         });
       } else {
         const keys = Object.keys(exports);
@@ -300,7 +300,7 @@ module.exports = function register() {
             Object.defineProperties((value: any), {
               $$typeof: {value: SERVER_REFERENCE},
               $$id: {value: moduleId + '#' + key},
-              $$bound: {value: []},
+              $$bound: {value: null},
             });
           }
         }

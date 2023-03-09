@@ -9,7 +9,10 @@
 
 import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
 
-import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
+import type {
+  Request,
+  ReactClientValue,
+} from 'react-server/src/ReactFlightServer';
 
 import type {JSResourceReference} from 'JSResourceReference';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
@@ -23,7 +26,7 @@ export type ServerReferenceId = {};
 
 import type {
   Destination,
-  BundlerConfig,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -37,7 +40,7 @@ import {
 
 export type {
   Destination,
-  BundlerConfig,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -60,16 +63,23 @@ export function getClientReferenceKey(
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   resource: ClientReference<T>,
 ): ClientReferenceMetadata {
   return resolveClientReferenceMetadataImpl(config, resource);
 }
 
-export function resolveServerReferenceMetadata<T>(
-  config: BundlerConfig,
+export function getServerReferenceId<T>(
+  config: ClientManifest,
   resource: ServerReference<T>,
-): {id: ServerReferenceId, bound: Promise<Array<any>>} {
+): ServerReferenceId {
+  throw new Error('Not implemented.');
+}
+
+export function getServerReferenceBoundArguments<T>(
+  config: ClientManifest,
+  resource: ServerReference<T>,
+): Array<ReactClientValue> {
   throw new Error('Not implemented.');
 }
 
@@ -125,9 +135,9 @@ export function processErrorChunkDev(
 
 function convertModelToJSON(
   request: Request,
-  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent: {+[key: string]: ReactClientValue} | $ReadOnlyArray<ReactClientValue>,
   key: string,
-  model: ReactModel,
+  model: ReactClientValue,
 ): JSONValue {
   const json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
@@ -160,7 +170,7 @@ function convertModelToJSON(
 export function processModelChunk(
   request: Request,
   id: number,
-  model: ReactModel,
+  model: ReactClientValue,
 ): Chunk {
   // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);

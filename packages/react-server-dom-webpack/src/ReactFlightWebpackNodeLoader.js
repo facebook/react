@@ -188,7 +188,7 @@ function transformServerModule(
     newSrc += 'Object.defineProperties(' + local + ',{';
     newSrc += '$$typeof: {value: Symbol.for("react.server.reference")},';
     newSrc += '$$id: {value: ' + JSON.stringify(url + '#' + exported) + '},';
-    newSrc += '$$bound: { value: [] }';
+    newSrc += '$$bound: { value: null }';
     newSrc += '});\n';
   });
   return newSrc;
