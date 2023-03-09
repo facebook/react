@@ -548,7 +548,7 @@ function serializeProviderReference(name: string): string {
 }
 
 function serializeUndefined(): string {
-  return '$U';
+  return '$undefined';
 }
 
 function serializeClientReference(

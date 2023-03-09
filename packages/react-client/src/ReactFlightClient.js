@@ -556,7 +556,8 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
-      case 'U': {
+      case 'u': {
+        // matches "$undefined"
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
