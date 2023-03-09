@@ -2056,25 +2056,28 @@ function pushScript(
     const src = props.src;
     const key = getResourceKey('script', src);
     if (props.async !== true || props.onLoad || props.onError) {
-      // We can't resourcify scripts with load listeners. To avoid ambiguity with
-      // other Resourcified async scripts on the server we omit them from the server
-      // stream and expect them to be inserted during hydration on the client.
-      // We can still preload them however so the client can start fetching the script
-      // as soon as possible
-      let resource = resources.preloadsMap.get(key);
-      if (!resource) {
-        resource = {
-          type: 'preload',
-          chunks: [],
-          state: NoState,
-          props: preloadAsScriptPropsFromProps(props.src, props),
-        };
-        resources.preloadsMap.set(key, resource);
-        if (__DEV__) {
-          markAsImplicitResourceDEV(resource, props, resource.props);
+      // we don't want to preload nomodule scripts
+      if (props.noModule !== true) {
+        // We can't resourcify scripts with load listeners. To avoid ambiguity with
+        // other Resourcified async scripts on the server we omit them from the server
+        // stream and expect them to be inserted during hydration on the client.
+        // We can still preload them however so the client can start fetching the script
+        // as soon as possible
+        let resource = resources.preloadsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'preload',
+            chunks: [],
+            state: NoState,
+            props: preloadAsScriptPropsFromProps(props.src, props),
+          };
+          resources.preloadsMap.set(key, resource);
+          if (__DEV__) {
+            markAsImplicitResourceDEV(resource, props, resource.props);
+          }
+          resources.usedScripts.add(resource);
+          pushLinkImpl(resource.chunks, resource.props);
         }
-        resources.usedScripts.add(resource);
-        pushLinkImpl(resource.chunks, resource.props);
       }
 
       if (props.async !== true) {
