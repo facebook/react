@@ -2639,6 +2639,29 @@ body {
     );
   });
 
+  it('does not preload nomodule scripts', async () => {
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <script src="foo" noModule={true} data-meaningful="" />
+            <script async={true} src="bar" noModule={true} data-meaningful="" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <script async="" src="bar" nomodule="" data-meaningful="" />
+        </head>
+        <body>
+          <script src="foo" nomodule="" data-meaningful="" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
