@@ -11,6 +11,63 @@ import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 export type Flags = number;
 
+export const listFlags = (inputFlag: Flags): string[] => {
+  if (__DEV__) {
+    const list = [];
+    const flags = [
+      [NoFlags, 'NoFlags'],
+      [PerformedWork, 'PerformedWork'],
+      [Placement, 'Placement'],
+      [DidCapture, 'DidCapture'],
+      [Hydrating, 'Hydrating'],
+      [Update, 'Update'],
+      [ChildDeletion, 'ChildDeletion'],
+      [ContentReset, 'ContentReset'],
+      [Callback, 'Callback'],
+      [ForceClientRender, 'ForceClientRender'],
+      [Ref, 'Ref'],
+      [Snapshot, 'Snapshot'],
+      [Passive, 'Passive'],
+      [Visibility, 'Visibility'],
+      [StoreConsistency, 'StoreConsistency'],
+      [HostEffectMask, 'HostEffectMask'],
+      [Incomplete, 'Incomplete'],
+      [ShouldCapture, 'ShouldCapture'],
+      [ForceUpdateForLegacySuspense, 'ForceUpdateForLegacySuspense'],
+      [DidPropagateContext, 'DidPropagateContext'],
+      [NeedsPropagation, 'NeedsPropagation'],
+      [Forked, 'Forked'],
+      [RefStatic, 'RefStatic'],
+      [LayoutStatic, 'LayoutStatic'],
+      [PassiveStatic, 'PassiveStatic'],
+      [PlacementDEV, 'PlacementDEV'],
+      [MountLayoutDev, 'MountLayoutDev'],
+      [MountPassiveDev, 'MountPassiveDev'],
+      [MountInsertionDev, 'MountInsertionDev'],
+    ];
+    flags.forEach(flag => {
+      if (flag[0] & inputFlag) {
+        list.push(flag[1]);
+        inputFlag &= ~flag[0];
+      }
+    });
+    if (inputFlag !== NoFlags) {
+      list.push('Unknown flag: ' + inputFlag);
+    }
+    return list;
+  } else {
+    return [];
+  }
+};
+
+export function prettyFlags(flags: Flags): string {
+  if (__DEV__) {
+    return listFlags(flags).join('\n');
+  } else {
+    return '';
+  }
+}
+
 // Don't change these values. They're used by React Dev Tools.
 export const NoFlags = /*                      */ 0b000000000000000000000000000;
 export const PerformedWork = /*                */ 0b000000000000000000000000001;
@@ -63,6 +120,7 @@ export const PassiveStatic = /*                */ 0b000100000000000000000000000;
 export const PlacementDEV = /*                 */ 0b001000000000000000000000000;
 export const MountLayoutDev = /*               */ 0b010000000000000000000000000;
 export const MountPassiveDev = /*              */ 0b100000000000000000000000000;
+export const MountInsertionDev = /*           */ 0b1000000000000000000000000000;
 
 // Groups of flags that are used in the commit phase to skip over trees that
 // don't contain effects, by checking subtreeFlags.

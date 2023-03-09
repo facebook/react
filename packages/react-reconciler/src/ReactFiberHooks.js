@@ -89,6 +89,7 @@ import {
   StoreConsistency,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
+  MountInsertionDev as MountInsertionDevEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -755,6 +756,7 @@ export function bailoutHooks(
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
       MountLayoutDevEffect |
+      MountInsertionDevEffect |
       PassiveEffect |
       UpdateEffect
     );
@@ -2121,7 +2123,15 @@ function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
+  let fiberFlags: Flags = UpdateEffect;
+  if (
+    __DEV__ &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
+  ) {
+    fiberFlags |= MountInsertionDevEffect;
+  }
+
+  mountEffectImpl(fiberFlags, HookInsertion, create, deps);
 }
 
 function updateInsertionEffect(
@@ -2207,7 +2217,9 @@ function mountImperativeHandle<T>(
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     fiberFlags |= MountLayoutDevEffect;
+    fiberFlags |= MountInsertionDevEffect;
   }
+
   mountEffectImpl(
     fiberFlags,
     HookLayout,

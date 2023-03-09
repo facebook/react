@@ -590,6 +590,7 @@ function commitHookEffectListUnmount(
     do {
       if ((effect.tag & flags) === flags) {
         // Unmount
+
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if (destroy !== undefined) {
@@ -651,6 +652,7 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
             setIsRunningInsertionEffect(true);
           }
         }
+
         effect.destroy = create();
         if (__DEV__) {
           if ((flags & HookInsertion) !== NoHookEffect) {
@@ -4460,6 +4462,34 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
   }
 }
 
+function invokeInsertionEffectMountInDEV(fiber: Fiber): void {
+  if (__DEV__) {
+    // We don't need to re-check StrictEffectsMode here.
+    // This function is only called if that check has already passed.
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        try {
+          commitHookEffectListMount(HookInsertion | HookHasEffect, fiber);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        try {
+          instance.componentDidMount();
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        break;
+      }
+    }
+  }
+}
+
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
@@ -4509,6 +4539,37 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
   }
 }
 
+function invokeInsertionEffectUnmountInDEV(fiber: Fiber): void {
+  if (__DEV__) {
+    // We don't need to re-check StrictEffectsMode here.
+    // This function is only called if that check has already passed.
+
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        try {
+          commitHookEffectListUnmount(
+            HookInsertion | HookHasEffect,
+            fiber,
+            fiber.return,
+          );
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(fiber, fiber.return, instance);
+        }
+        break;
+      }
+    }
+  }
+}
+
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
@@ -4538,4 +4599,6 @@ export {
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectMountInDEV,
   invokePassiveEffectUnmountInDEV,
+  invokeInsertionEffectMountInDEV,
+  invokeInsertionEffectUnmountInDEV,
 };

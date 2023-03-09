@@ -129,6 +129,7 @@ import {
   Visibility,
   MountPassiveDev,
   MountLayoutDev,
+  MountInsertionDev,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -200,6 +201,8 @@ import {
   invokeLayoutEffectMountInDEV,
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
+  invokeInsertionEffectMountInDEV,
+  invokeInsertionEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
@@ -3688,11 +3691,17 @@ function legacyCommitDoubleInvokeEffectsInDEV(
   // Maybe not a big deal since this is DEV only behavior.
 
   setCurrentDebugFiberInDEV(fiber);
+  invokeEffectsInDev(
+    fiber,
+    MountInsertionDev,
+    invokeInsertionEffectUnmountInDEV,
+  );
   invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
   if (hasPassiveEffects) {
     invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectUnmountInDEV);
   }
 
+  invokeEffectsInDev(fiber, MountInsertionDev, invokeInsertionEffectMountInDEV);
   invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV);
   if (hasPassiveEffects) {
     invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV);
@@ -3707,6 +3716,7 @@ function invokeEffectsInDev(
 ) {
   let current: null | Fiber = firstChild;
   let subtreeRoot = null;
+
   while (current != null) {
     const primarySubtreeFlag = current.subtreeFlags & fiberFlags;
     if (

@@ -90,8 +90,10 @@ describe('StrictEffectsMode', () => {
         'useInsertionEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
+        'useInsertionEffect unmount',
         'useLayoutEffect unmount',
         'useEffect unmount',
+        'useInsertionEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
