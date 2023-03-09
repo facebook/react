@@ -231,11 +231,13 @@ function createServerReferenceProxy(response, metaData) {
   return function () {
     var args = Array.prototype.slice.call(arguments),
       p = metaData.bound;
-    return "fulfilled" === p.status
-      ? callServer(metaData.id, p.value.concat(args))
-      : Promise.resolve(p).then(function (bound) {
-          return callServer(metaData.id, bound.concat(args));
-        });
+    return p
+      ? "fulfilled" === p.status
+        ? callServer(metaData.id, p.value.concat(args))
+        : Promise.resolve(p).then(function (bound) {
+            return callServer(metaData.id, bound.concat(args));
+          })
+      : callServer(metaData.id, args);
   };
 }
 function parseModelString(response, parentObject, key, value) {

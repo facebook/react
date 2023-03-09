@@ -472,6 +472,10 @@ function createServerReferenceProxy(response, metaData) {
     var args = Array.prototype.slice.call(arguments);
     var p = metaData.bound;
 
+    if (!p) {
+      return callServer(metaData.id, args);
+    }
+
     if (p.status === INITIALIZED) {
       var bound = p.value;
       return callServer(metaData.id, bound.concat(args));

@@ -1225,6 +1225,8 @@ function getOrCreateServerContext(globalName) {
   return ContextRegistry[globalName];
 }
 
+// Thenable<ReactClientValue>
+
 var PENDING = 0;
 var COMPLETED = 1;
 var ERRORED = 4;
