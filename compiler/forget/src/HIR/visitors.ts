@@ -293,12 +293,10 @@ export function mapInstructionOperands(
       break;
     }
     case "StoreLocal": {
-      instrValue.lvalue.place = fn(instrValue.lvalue.place);
       instrValue.value = fn(instrValue.value);
       break;
     }
     case "Destructure": {
-      mapPatternOperands(instrValue.lvalue.pattern, fn);
       instrValue.value = fn(instrValue.value);
       break;
     }
