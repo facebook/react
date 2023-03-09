@@ -24,8 +24,8 @@ let webpackMap;
 let webpackModules;
 let React;
 let ReactDOMServer;
-let ReactServerDOMWriter;
-let ReactServerDOMReader;
+let ReactServerDOMServer;
+let ReactServerDOMClient;
 let use;
 
 describe('ReactFlightDOMEdge', () => {
@@ -37,8 +37,8 @@ describe('ReactFlightDOMEdge', () => {
     webpackModules = WebpackMock.webpackModules;
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.edge');
-    ReactServerDOMReader = require('react-server-dom-webpack/client.edge');
+    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     use = React.use;
   });
 
@@ -81,11 +81,11 @@ describe('ReactFlightDOMEdge', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMWriter.renderToReadableStream(
+    const stream = ReactServerDOMServer.renderToReadableStream(
       <App />,
       webpackMap,
     );
-    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
       moduleMap: translationMap,
     });
 
