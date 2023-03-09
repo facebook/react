@@ -21,20 +21,23 @@ function foo(props) {
 
 ```javascript
 function foo(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_0) {
     y = 0;
-    $[0] = y;
+    for (
+      let x = 0;
+      x > props.min && x < props.max;
+      x = x + (props.cond ? props.increment : 2), x
+    ) {
+      x = x * 2;
+      y = y + x;
+    }
+    $[0] = props;
+    $[1] = y;
   } else {
-    y = $[0];
-  }
-  for (
-    let x = 0;
-    x > props.min && x < props.max;
-    x = x + (props.cond ? props.increment : 2), x
-  ) {
-    x = x * 2;
+    y = $[1];
   }
   return y;
 }

@@ -57,12 +57,19 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
 
       // Find any redundant phis
       phis: for (const phi of block.phis) {
+        // Remap phis in case operands are from eliminated phis
+        phi.operands = new Map(
+          Array.from(phi.operands).map(([block, id]) => [
+            block,
+            rewrites.get(id) ?? id,
+          ])
+        );
+        // Find if the phi can be eliminated
         let same: Identifier | null = null;
         for (const [_, operand] of phi.operands) {
-          const ident = rewrites.get(operand) ?? operand;
           if (
-            (same !== null && ident.id === same.id) ||
-            ident.id === phi.id.id
+            (same !== null && operand.id === same.id) ||
+            operand.id === phi.id.id
           ) {
             // This operand is the same as the phi or is the same as the
             // previous non-phi operands
@@ -73,7 +80,7 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
             continue phis;
           } else {
             // First non-phi operand
-            same = ident;
+            same = operand;
           }
         }
         invariant(same !== null, "Expected phis to be non-empty");

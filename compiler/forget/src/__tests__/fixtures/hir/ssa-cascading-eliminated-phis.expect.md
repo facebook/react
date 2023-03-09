@@ -25,6 +25,7 @@ function Component(props) {
 ```javascript
 function Component(props) {
   const $ = React.unstable_useMemoCache(4);
+  let x = 0;
   const c_0 = $[0] !== props;
   let values;
   if (c_0) {
@@ -40,12 +41,11 @@ function Component(props) {
     }
     const y = t0;
     values.push(y);
-    let x$0 = x;
     if (props.c) {
       x = 1;
     }
 
-    values.push(x$0);
+    values.push(x);
     if (props.d) {
       x = 2;
     }
