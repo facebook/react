@@ -213,7 +213,7 @@ export default class ReactFlightWebpackPlugin {
           if (clientFileNameFound === false) {
             compilation.warnings.push(
               new WebpackError(
-                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.clientManifestFilename} was not created.`,
+                `Client runtime at ${clientImportName} was not found. React Server Components client manifest file ${_this.clientManifestFilename} was not created.`,
               ),
             );
             return;

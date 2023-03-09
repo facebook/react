@@ -27,12 +27,12 @@ type Options = {
 function render(
   model: ReactClientValue,
   destination: Destination,
-  config: ClientManifest,
+  clientManifest: ClientManifest,
   options?: Options,
 ): void {
   const request = createRequest(
     model,
-    config,
+    clientManifest,
     options ? options.onError : undefined,
     undefined, // not currently set up to supply context overrides
     options ? options.identifierPrefix : undefined,

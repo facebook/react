@@ -40,14 +40,14 @@ export type UninitializedModel = JSONValue;
 export type Response = ResponseBase;
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  ssrManifest: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   return resolveClientReferenceImpl(metadata);
 }
 
 export function resolveServerReference<T>(
-  bundlerConfig: ServerManifest,
+  serverManifest: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
   throw new Error('Not implemented.');

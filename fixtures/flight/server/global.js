@@ -122,8 +122,8 @@ app.all('/', async function (req, res, next) {
         virtualFs = fs;
         buildPath = path.join(__dirname, '../build/');
       }
-      // Read the module map from the virtual file system.
-      const moduleMap = JSON.parse(
+      // Read the SSR manifest from the virtual file system.
+      const ssrManifest = JSON.parse(
         await virtualFs.readFile(
           path.join(buildPath, 'react-ssr-manifest.json'),
           'utf8'
@@ -140,7 +140,7 @@ app.all('/', async function (req, res, next) {
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
-      const root = await createFromNodeStream(rscResponse, moduleMap);
+      const root = await createFromNodeStream(rscResponse, ssrManifest);
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
       const {pipe} = renderToPipeableStream(root, {

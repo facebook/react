@@ -12,8 +12,8 @@ const ReactFlightDOMRelayServerIntegration = {
     destination.push(json);
   },
   close(destination) {},
-  resolveClientReferenceMetadata(config, resource) {
-    return resource._moduleId;
+  resolveClientReferenceMetadata(clientManifest, clientReference) {
+    return clientReference._moduleId;
   },
 };
 

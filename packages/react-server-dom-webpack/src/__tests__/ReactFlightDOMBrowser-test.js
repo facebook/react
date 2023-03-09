@@ -17,7 +17,7 @@ global.TextDecoder = require('util').TextDecoder;
 
 let clientExports;
 let serverExports;
-let webpackMap;
+let clientManifest;
 let webpackServerMap;
 let act;
 let React;
@@ -34,7 +34,7 @@ describe('ReactFlightDOMBrowser', () => {
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
-    webpackMap = WebpackMock.webpackMap;
+    clientManifest = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -267,7 +267,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMServer.renderToReadableStream(
       model,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -406,7 +406,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMServer.renderToReadableStream(
       model,
-      webpackMap,
+      clientManifest,
     );
 
     const reader = stream.getReader();
@@ -508,7 +508,7 @@ describe('ReactFlightDOMBrowser', () => {
       <div>
         <InfiniteSuspend />
       </div>,
-      webpackMap,
+      clientManifest,
       {
         signal: controller.signal,
         onError(x) {
@@ -660,7 +660,7 @@ describe('ReactFlightDOMBrowser', () => {
     const reportedErrors = [];
     const stream = ReactServerDOMServer.renderToReadableStream(
       <Server />,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -797,7 +797,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMServer.renderToReadableStream(
       <ClientRef action={boundFn} />,
-      webpackMap,
+      clientManifest,
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -839,7 +839,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMServer.renderToReadableStream(
       <ClientRef action={greet.bind(null, 'Hello', 'World')} />,
-      webpackMap,
+      clientManifest,
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -883,7 +883,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMServer.renderToReadableStream(
       <ClientRef action={ServerModule.send} />,
-      webpackMap,
+      clientManifest,
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {

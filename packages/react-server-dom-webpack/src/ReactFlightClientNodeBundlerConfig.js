@@ -36,15 +36,15 @@ export opaque type ClientReference<T> = {
 };
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  ssrManifest: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
+  const resolvedModuleData = ssrManifest[metadata.id][metadata.name];
   return resolvedModuleData;
 }
 
 export function resolveServerReference<T>(
-  bundlerConfig: ServerManifest,
+  serverManifest: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
   const idx = id.lastIndexOf('#');

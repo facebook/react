@@ -54,12 +54,12 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactClientValue,
-  webpackMap: ClientManifest,
+  clientManifest: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    webpackMap,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
@@ -86,9 +86,9 @@ function renderToPipeableStream(
 
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  webpackMap: ServerManifest,
+  serverManifest: ServerManifest,
 ): Thenable<T> {
-  const response = createResponse(webpackMap);
+  const response = createResponse(serverManifest);
   busboyStream.on('field', (name, value) => {
     const id = +name;
     resolveField(response, id, value);
@@ -121,9 +121,9 @@ function decodeReplyFromBusboy<T>(
 
 function decodeReply<T>(
   body: string | FormData,
-  webpackMap: ServerManifest,
+  serverManifest: ServerManifest,
 ): Thenable<T> {
-  const response = createResponse(webpackMap);
+  const response = createResponse(serverManifest);
   if (typeof body === 'string') {
     resolveField(response, 0, body);
   } else {

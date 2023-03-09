@@ -36,12 +36,12 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactClientValue,
-  webpackMap: ClientManifest,
+  clientManifest: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    webpackMap,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
@@ -77,9 +77,9 @@ function renderToReadableStream(
 
 function decodeReply<T>(
   body: string | FormData,
-  webpackMap: ServerManifest,
+  serverManifest: ServerManifest,
 ): Thenable<T> {
-  const response = createResponse(webpackMap);
+  const response = createResponse(serverManifest);
   if (typeof body === 'string') {
     resolveField(response, 0, body);
   } else {

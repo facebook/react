@@ -23,7 +23,7 @@ export type ServerReferenceId = {};
 
 import type {
   Destination,
-  BundlerConfig as ClientManifest,
+  ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
@@ -37,7 +37,7 @@ import {
 
 export type {
   Destination,
-  BundlerConfig as ClientManifest,
+  ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
@@ -52,30 +52,30 @@ export function isServerReference(reference: Object): boolean {
 export type ClientReferenceKey = ClientReference<any>;
 
 export function getClientReferenceKey(
-  reference: ClientReference<any>,
+  clientReference: ClientReference<any>,
 ): ClientReferenceKey {
   // We use the reference object itself as the key because we assume the
   // object will be cached by the bundler runtime.
-  return reference;
+  return clientReference;
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: ClientManifest,
-  resource: ClientReference<T>,
+  clientManifest: ClientManifest,
+  clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  return resolveClientReferenceMetadataImpl(config, resource);
+  return resolveClientReferenceMetadataImpl(clientManifest, clientReference);
 }
 
 export function getServerReferenceId<T>(
-  config: ClientManifest,
-  resource: ServerReference<T>,
+  clientManifest: ClientManifest,
+  serverReference: ServerReference<T>,
 ): ServerReferenceId {
   throw new Error('Not implemented.');
 }
 
 export function getServerReferenceBoundArguments<T>(
-  config: ClientManifest,
-  resource: ServerReference<T>,
+  clientManifest: ClientManifest,
+  serverReference: ServerReference<T>,
 ): Array<ReactClientValue> {
   throw new Error('Not implemented.');
 }

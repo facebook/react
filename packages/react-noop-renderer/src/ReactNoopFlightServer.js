@@ -54,14 +54,14 @@ const ReactNoopFlightServer = ReactFlightServer({
   isServerReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.server.reference');
   },
-  getClientReferenceKey(reference: Object): Object {
-    return reference;
+  getClientReferenceKey(clientReference: Object): Object {
+    return clientReference;
   },
   resolveClientReferenceMetadata(
-    config: void,
-    reference: {$$typeof: symbol, value: any},
+    clientManifest: void,
+    clientReference: {$$typeof: symbol, value: any},
   ) {
-    return saveModule(reference.value);
+    return saveModule(clientReference.value);
   },
 });
 
@@ -73,10 +73,10 @@ type Options = {
 
 function render(model: ReactClientValue, options?: Options): Destination {
   const destination: Destination = [];
-  const bundlerConfig = undefined;
+  const clientManifest = undefined;
   const request = ReactNoopFlightServer.createRequest(
     model,
-    bundlerConfig,
+    clientManifest,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,

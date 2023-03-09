@@ -36,11 +36,11 @@ export opaque type ClientReferenceMetadata = {
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  ssrManifest: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  if (bundlerConfig) {
-    const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
+  if (ssrManifest) {
+    const resolvedModuleData = ssrManifest[metadata.id][metadata.name];
     if (metadata.async) {
       return {
         id: resolvedModuleData.id,
@@ -56,11 +56,11 @@ export function resolveClientReference<T>(
 }
 
 export function resolveServerReference<T>(
-  bundlerConfig: ServerManifest,
+  serverManifest: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
   // This needs to return async: true if it's an async module.
-  return bundlerConfig[id];
+  return serverManifest[id];
 }
 
 // The chunk cache contains all the chunks we've preloaded so far.

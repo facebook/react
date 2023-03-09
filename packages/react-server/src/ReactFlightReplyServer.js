@@ -130,7 +130,7 @@ Chunk.prototype.then = function <T>(
 };
 
 export type Response = {
-  _bundlerConfig: ServerManifest,
+  _serverManifest: ServerManifest,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
 };
@@ -229,7 +229,7 @@ function loadServerReference<T>(
   key: string,
 ): T {
   const serverReference: ServerReference<T> =
-    resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
+    resolveServerReference<$FlowFixMe>(response._serverManifest, id);
   // We expect most servers to not really need this because you'd just have all
   // the relevant modules already loaded but it allows for lazy loading of code
   // if needed.
@@ -432,10 +432,10 @@ function parseModelString(
   return value;
 }
 
-export function createResponse(bundlerConfig: ServerManifest): Response {
+export function createResponse(serverManifest: ServerManifest): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
-    _bundlerConfig: bundlerConfig,
+    _serverManifest: serverManifest,
     _chunks: chunks,
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {

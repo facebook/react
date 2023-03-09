@@ -34,9 +34,9 @@ function noServerCall() {
 
 function createFromNodeStream<T>(
   stream: Readable,
-  moduleMap: $NonMaybeType<SSRManifest>,
+  ssrManifest: $NonMaybeType<SSRManifest>,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleMap, noServerCall);
+  const response: Response = createResponse(ssrManifest, noServerCall);
   stream.on('data', chunk => {
     if (typeof chunk === 'string') {
       processStringChunk(response, chunk, 0);

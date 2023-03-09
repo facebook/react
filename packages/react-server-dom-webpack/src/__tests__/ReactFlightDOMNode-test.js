@@ -14,7 +14,7 @@
 global.setImmediate = cb => cb();
 
 let clientExports;
-let webpackMap;
+let clientManifest;
 let webpackModules;
 let React;
 let ReactDOMServer;
@@ -28,7 +28,7 @@ describe('ReactFlightDOMNode', () => {
     jest.resetModules();
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
-    webpackMap = WebpackMock.webpackMap;
+    clientManifest = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
     React = require('react');
     ReactDOMServer = require('react-dom/server.node');
@@ -67,12 +67,12 @@ describe('ReactFlightDOMNode', () => {
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.$$id].id;
+    const clientId = clientManifest[ClientComponentOnTheClient.$$id].id;
     delete webpackModules[clientId];
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetadata = webpackMap[ClientComponentOnTheServer.$$id];
+    const ssrMetadata = clientManifest[ClientComponentOnTheServer.$$id];
     const translationMap = {
       [clientId]: {
         '*': ssrMetadata,
@@ -85,7 +85,7 @@ describe('ReactFlightDOMNode', () => {
 
     const stream = ReactServerDOMServer.renderToPipeableStream(
       <App />,
-      webpackMap,
+      clientManifest,
     );
     const readable = new Stream.PassThrough();
     const response = ReactServerDOMClient.createFromNodeStream(

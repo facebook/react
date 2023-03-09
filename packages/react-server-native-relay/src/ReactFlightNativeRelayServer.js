@@ -22,9 +22,9 @@ import {
 function render(
   model: ReactClientValue,
   destination: Destination,
-  config: ClientManifest,
+  clientManifest: ClientManifest,
 ): void {
-  const request = createRequest(model, config);
+  const request = createRequest(model, clientManifest);
   startWork(request);
   startFlowing(request, destination);
 }

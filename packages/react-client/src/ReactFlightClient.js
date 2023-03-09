@@ -151,7 +151,7 @@ Chunk.prototype.then = function <T>(
 };
 
 export type ResponseBase = {
-  _bundlerConfig: SSRManifest,
+  _ssrManifest: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   ...
@@ -619,12 +619,12 @@ function missingCall() {
 }
 
 export function createResponse(
-  bundlerConfig: SSRManifest,
+  ssrManifest: SSRManifest,
   callServer: void | CallServerCallback,
 ): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response = {
-    _bundlerConfig: bundlerConfig,
+    _ssrManifest: ssrManifest,
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
   };
@@ -657,7 +657,7 @@ export function resolveModule(
     model,
   );
   const clientReference = resolveClientReference<$FlowFixMe>(
-    response._bundlerConfig,
+    response._ssrManifest,
     clientReferenceMetadata,
   );
 

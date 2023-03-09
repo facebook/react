@@ -150,7 +150,7 @@ export type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
-  bundlerConfig: ClientManifest,
+  clientManifest: ClientManifest,
   cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
@@ -183,7 +183,7 @@ const CLOSED = 2;
 
 export function createRequest(
   model: ReactClientValue,
-  bundlerConfig: ClientManifest,
+  clientManifest: ClientManifest,
   onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
@@ -204,7 +204,7 @@ export function createRequest(
     status: OPEN,
     fatalError: null,
     destination: null,
-    bundlerConfig,
+    clientManifest,
     cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
@@ -578,7 +578,7 @@ function serializeClientReference(
   }
   try {
     const clientReferenceMetadata: ClientReferenceMetadata =
-      resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
+      resolveClientReferenceMetadata(request.clientManifest, clientReference);
     request.pendingChunks++;
     const importId = request.nextChunkId++;
     emitImportChunk(request, importId, clientReferenceMetadata);
@@ -621,14 +621,14 @@ function serializeServerReference(
   }
 
   const bound: null | Array<any> = getServerReferenceBoundArguments(
-    request.bundlerConfig,
+    request.clientManifest,
     serverReference,
   );
   const serverReferenceMetadata: {
     id: ServerReferenceId,
     bound: null | Promise<Array<any>>,
   } = {
-    id: getServerReferenceId(request.bundlerConfig, serverReference),
+    id: getServerReferenceId(request.clientManifest, serverReference),
     bound: bound ? Promise.resolve(bound) : null,
   };
   request.pendingChunks++;

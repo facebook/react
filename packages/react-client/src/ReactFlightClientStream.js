@@ -121,13 +121,13 @@ function createFromJSONCallback(response: Response) {
 }
 
 export function createResponse(
-  bundlerConfig: SSRManifest,
+  ssrManifest: SSRManifest,
   callServer: void | CallServerCallback,
 ): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase(bundlerConfig, callServer);
+  const response: any = createResponseBase(ssrManifest, callServer);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;

@@ -41,9 +41,11 @@ const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
 const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
 
 export function getClientReferenceKey(
-  reference: ClientReference<any>,
+  clientReference: ClientReference<any>,
 ): ClientReferenceKey {
-  return reference.$$async ? reference.$$id + '#async' : reference.$$id;
+  return clientReference.$$async
+    ? clientReference.$$id + '#async'
+    : clientReference.$$id;
 }
 
 export function isClientReference(reference: Object): boolean {
@@ -55,10 +57,10 @@ export function isServerReference(reference: Object): boolean {
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: ClientManifest,
+  clientManifest: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const resolvedModuleData = config[clientReference.$$id];
+  const resolvedModuleData = clientManifest[clientReference.$$id];
   if (clientReference.$$async) {
     return {
       id: resolvedModuleData.id,
@@ -72,14 +74,14 @@ export function resolveClientReferenceMetadata<T>(
 }
 
 export function getServerReferenceId<T>(
-  config: ClientManifest,
+  clientManifest: ClientManifest,
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
   return serverReference.$$id;
 }
 
 export function getServerReferenceBoundArguments<T>(
-  config: ClientManifest,
+  clientManifest: ClientManifest,
   serverReference: ServerReference<T>,
 ): null | Array<ReactClientValue> {
   return serverReference.$$bound;

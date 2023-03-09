@@ -52,11 +52,11 @@ app.get('/', async function (req, res) {
   // const m = require('../src/App.js');
   const m = await import('../src/App.js');
 
-  let moduleMap;
+  let clientManifest;
   let mainCSSChunks;
   if (process.env.NODE_ENV === 'development') {
-    // Read the module map from the HMR server in development.
-    moduleMap = await (
+    // Read the client manifest from the HMR server in development.
+    clientManifest = await (
       await fetch('http://localhost:3000/react-client-manifest.json')
     ).json();
     mainCSSChunks = (
@@ -65,8 +65,8 @@ app.get('/', async function (req, res) {
       ).json()
     ).main.css;
   } else {
-    // Read the module map from the static build in production.
-    moduleMap = JSON.parse(
+    // Read the client manifest from the static build in production.
+    clientManifest = JSON.parse(
       await readFile(
         path.resolve(__dirname, `../build/react-client-manifest.json`),
         'utf8'
@@ -91,7 +91,7 @@ app.get('/', async function (req, res) {
     ),
     React.createElement(App),
   ];
-  const {pipe} = renderToPipeableStream(root, moduleMap);
+  const {pipe} = renderToPipeableStream(root, clientManifest);
   pipe(res);
 });
 

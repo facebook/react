@@ -39,7 +39,7 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
   import type {JSResourceReference} from 'JSResourceReference';
 
   declare export opaque type Destination;
-  declare export opaque type BundlerConfig;
+  declare export opaque type ClientManifest;
   declare export function emitRow(
     destination: Destination,
     json: JSONValue,
@@ -48,7 +48,7 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 
   declare export type ClientReferenceMetadata = JSONValue;
   declare export function resolveClientReferenceMetadata<T>(
-    config: BundlerConfig,
+    clientManifest: ClientManifest,
     resourceReference: JSResourceReference<T>,
   ): ClientReferenceMetadata;
 }
@@ -72,7 +72,7 @@ declare module 'ReactFlightNativeRelayServerIntegration' {
   import type {JSResourceReference} from 'JSResourceReference';
 
   declare export opaque type Destination;
-  declare export opaque type BundlerConfig;
+  declare export opaque type ClientManifest;
   declare export function emitRow(
     destination: Destination,
     json: JSONValue,
@@ -81,7 +81,7 @@ declare module 'ReactFlightNativeRelayServerIntegration' {
 
   declare export type ClientReferenceMetadata = JSONValue;
   declare export function resolveClientReferenceMetadata<T>(
-    config: BundlerConfig,
+    clientManifest: ClientManifest,
     resourceReference: JSResourceReference<T>,
   ): ClientReferenceMetadata;
 }

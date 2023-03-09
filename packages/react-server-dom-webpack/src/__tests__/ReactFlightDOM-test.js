@@ -22,7 +22,7 @@ let act;
 let use;
 let clientExports;
 let clientModuleError;
-let webpackMap;
+let clientManifest;
 let Stream;
 let React;
 let ReactDOMClient;
@@ -38,7 +38,7 @@ describe('ReactFlightDOM', () => {
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientModuleError = WebpackMock.clientModuleError;
-    webpackMap = WebpackMock.webpackMap;
+    clientManifest = WebpackMock.webpackMap;
 
     Stream = require('stream');
     React = require('react');
@@ -111,7 +111,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <App />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -161,7 +161,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <RootModel />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -198,7 +198,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <RootModel />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -233,7 +233,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <RootModel />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -283,7 +283,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <Component greeting={hi} />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -321,7 +321,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <Component greeting={'Hello'} />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -362,7 +362,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -401,7 +401,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <ServerComponent />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -439,7 +439,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <ThenRef />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -594,7 +594,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       model,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -717,7 +717,7 @@ describe('ReactFlightDOM', () => {
     const stream1 = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <App color="red" />,
-      webpackMap,
+      clientManifest,
     );
     pipe(stream1.writable);
     const response1 = ReactServerDOMClient.createFromReadableStream(
@@ -745,7 +745,7 @@ describe('ReactFlightDOM', () => {
     const stream2 = getTestStream();
     const {pipe: pipe2} = ReactServerDOMServer.renderToPipeableStream(
       <App color="blue" />,
-      webpackMap,
+      clientManifest,
     );
     pipe2(stream2.writable);
     const response2 = ReactServerDOMClient.createFromReadableStream(
@@ -780,7 +780,7 @@ describe('ReactFlightDOM', () => {
       <div>
         <InfiniteSuspend />
       </div>,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -845,7 +845,7 @@ describe('ReactFlightDOM', () => {
       <div>
         <ClientComponent prop={ClientReference} />
       </div>,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -896,7 +896,7 @@ describe('ReactFlightDOM', () => {
       <div>
         <ClientComponent prop={ClientReference} />
       </div>,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -943,8 +943,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in webpackMap) {
-      Object.defineProperty(webpackMap, id, {
+    for (const id in clientManifest) {
+      Object.defineProperty(clientManifest, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },
@@ -956,7 +956,7 @@ describe('ReactFlightDOM', () => {
       <div>
         <ClientComponent />
       </div>,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x.message);
@@ -1034,7 +1034,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <ServerComponent />,
-      webpackMap,
+      clientManifest,
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1091,7 +1091,7 @@ describe('ReactFlightDOM', () => {
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
       <ServerComponent />,
-      webpackMap,
+      clientManifest,
       {
         onError(x) {
           reportedErrors.push(x);
