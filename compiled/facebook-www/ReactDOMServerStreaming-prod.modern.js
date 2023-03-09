@@ -949,24 +949,25 @@ function pushStartInstance(
         value = "[script]" + props.src;
         if (!0 !== props.async || props.onLoad || props.onError) {
           if (
-            ((propValue = resources.preloadsMap.get(value)),
-            propValue ||
-              ((propValue = {
-                type: "preload",
-                chunks: [],
-                state: 0,
-                props: {
-                  rel: "preload",
-                  as: "script",
-                  href: props.src,
-                  crossOrigin: props.crossOrigin,
-                  integrity: props.integrity,
-                  referrerPolicy: props.referrerPolicy
-                }
-              }),
-              resources.preloadsMap.set(value, propValue),
-              resources.usedScripts.add(propValue),
-              pushLinkImpl(propValue.chunks, propValue.props)),
+            (!0 !== props.noModule &&
+              ((propValue = resources.preloadsMap.get(value)),
+              propValue ||
+                ((propValue = {
+                  type: "preload",
+                  chunks: [],
+                  state: 0,
+                  props: {
+                    rel: "preload",
+                    as: "script",
+                    href: props.src,
+                    crossOrigin: props.crossOrigin,
+                    integrity: props.integrity,
+                    referrerPolicy: props.referrerPolicy
+                  }
+                }),
+                resources.preloadsMap.set(value, propValue),
+                resources.usedScripts.add(propValue),
+                pushLinkImpl(propValue.chunks, propValue.props))),
             !0 !== props.async)
           ) {
             pushScriptImpl(target, props);

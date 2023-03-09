@@ -928,24 +928,25 @@ function pushStartInstance(
         value = "[script]" + props.src;
         if (!0 !== props.async || props.onLoad || props.onError) {
           if (
-            ((propValue = resources.preloadsMap.get(value)),
-            propValue ||
-              ((propValue = {
-                type: "preload",
-                chunks: [],
-                state: 0,
-                props: {
-                  rel: "preload",
-                  as: "script",
-                  href: props.src,
-                  crossOrigin: props.crossOrigin,
-                  integrity: props.integrity,
-                  referrerPolicy: props.referrerPolicy
-                }
-              }),
-              resources.preloadsMap.set(value, propValue),
-              resources.usedScripts.add(propValue),
-              pushLinkImpl(propValue.chunks, propValue.props)),
+            (!0 !== props.noModule &&
+              ((propValue = resources.preloadsMap.get(value)),
+              propValue ||
+                ((propValue = {
+                  type: "preload",
+                  chunks: [],
+                  state: 0,
+                  props: {
+                    rel: "preload",
+                    as: "script",
+                    href: props.src,
+                    crossOrigin: props.crossOrigin,
+                    integrity: props.integrity,
+                    referrerPolicy: props.referrerPolicy
+                  }
+                }),
+                resources.preloadsMap.set(value, propValue),
+                resources.usedScripts.add(propValue),
+                pushLinkImpl(propValue.chunks, propValue.props))),
             !0 !== props.async)
           ) {
             pushScriptImpl(target, props);
@@ -3778,4 +3779,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-2819a804";
+exports.version = "18.3.0-www-classic-b6382309";
