@@ -15,7 +15,11 @@ import {
   Place,
   ReactiveScope,
 } from "../HIR/HIR";
-import { eachInstructionOperand, eachPatternOperand } from "../HIR/visitors";
+import {
+  doesPatternContainSpreadElement,
+  eachInstructionOperand,
+  eachPatternOperand,
+} from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -198,7 +202,9 @@ function isMutable({ id }: Instruction, place: Place): boolean {
 
 function mayAllocate(value: InstructionValue): boolean {
   switch (value.kind) {
-    case "Destructure":
+    case "Destructure": {
+      return doesPatternContainSpreadElement(value.lvalue.pattern);
+    }
     case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":

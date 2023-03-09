@@ -14,7 +14,16 @@ function Foo(props) {
 
 ```javascript
 function Foo(props) {
-  const { unused, ...rest } = props.a;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props.a;
+  let rest;
+  if (c_0) {
+    ({ unused, ...rest } = props.a);
+    $[0] = props.a;
+    $[1] = rest;
+  } else {
+    rest = $[1];
+  }
   return rest;
 }
 

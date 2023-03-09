@@ -185,6 +185,34 @@ export function* eachInstructionValueOperand(
   }
 }
 
+export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      for (const item of pattern.items) {
+        if (item.kind === "Spread") {
+          return true;
+        }
+      }
+      break;
+    }
+    case "ObjectPattern": {
+      for (const property of pattern.properties) {
+        if (property.kind === "Spread") {
+          return true;
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
+    }
+  }
+  return false;
+}
+
 export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
   switch (pattern.kind) {
     case "ArrayPattern": {

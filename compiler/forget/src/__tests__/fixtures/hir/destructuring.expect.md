@@ -28,39 +28,75 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const $ = React.unstable_useMemoCache(8);
-  const [d, t40, ...h] = a;
+  const $ = React.unstable_useMemoCache(18);
+  const c_0 = $[0] !== a;
+  let t0;
+  let d;
+  let h;
+  if (c_0) {
+    [d, t0, ...h] = a;
+    $[0] = a;
+    $[1] = t0;
+    $[2] = d;
+    $[3] = h;
+  } else {
+    t0 = $[1];
+    d = $[2];
+    h = $[3];
+  }
 
-  const [t43] = t40;
-  const { e: t45, ...g } = t43;
-  const { f } = t45;
+  const [t1] = t0;
+  const c_4 = $[4] !== t1;
+  let t2;
+  let g;
+  if (c_4) {
+    ({ e: t2, ...g } = t1);
+    $[4] = t1;
+    $[5] = t2;
+    $[6] = g;
+  } else {
+    t2 = $[5];
+    g = $[6];
+  }
+  const { f } = t2;
 
   const { l: t51, p } = b;
-  const { m: t54 } = t51;
-  const [t56, ...o] = t54;
-  const [n] = t56;
-  const c_0 = $[0] !== d;
-  const c_1 = $[1] !== f;
-  const c_2 = $[2] !== g;
-  const c_3 = $[3] !== h;
-  const c_4 = $[4] !== n;
-  const c_5 = $[5] !== o;
-  const c_6 = $[6] !== p;
-  let t0;
-  if (c_0 || c_1 || c_2 || c_3 || c_4 || c_5 || c_6) {
-    t0 = [d, f, g, h, n, o, p];
-    $[0] = d;
-    $[1] = f;
-    $[2] = g;
-    $[3] = h;
-    $[4] = n;
-    $[5] = o;
-    $[6] = p;
-    $[7] = t0;
+  const { m: t3 } = t51;
+  const c_7 = $[7] !== t3;
+  let t4;
+  let o;
+  if (c_7) {
+    [t4, ...o] = t3;
+    $[7] = t3;
+    $[8] = t4;
+    $[9] = o;
   } else {
-    t0 = $[7];
+    t4 = $[8];
+    o = $[9];
   }
-  return t0;
+  const [n] = t4;
+  const c_10 = $[10] !== d;
+  const c_11 = $[11] !== f;
+  const c_12 = $[12] !== g;
+  const c_13 = $[13] !== h;
+  const c_14 = $[14] !== n;
+  const c_15 = $[15] !== o;
+  const c_16 = $[16] !== p;
+  let t5;
+  if (c_10 || c_11 || c_12 || c_13 || c_14 || c_15 || c_16) {
+    t5 = [d, f, g, h, n, o, p];
+    $[10] = d;
+    $[11] = f;
+    $[12] = g;
+    $[13] = h;
+    $[14] = n;
+    $[15] = o;
+    $[16] = p;
+    $[17] = t5;
+  } else {
+    t5 = $[17];
+  }
+  return t5;
 }
 
 ```

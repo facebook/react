@@ -12,6 +12,7 @@ import {
   Effect,
   IdentifierId,
   InstructionId,
+  Pattern,
   Place,
   ReactiveFunction,
   ReactiveInstruction,
@@ -22,7 +23,6 @@ import {
   ReactiveValue,
   ScopeId,
 } from "../HIR";
-import { eachPatternOperand } from "../HIR/visitors";
 import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
@@ -319,43 +319,48 @@ function computeMemoizationInputs(
   lvalue: Place | null
 ): {
   // can optionally return a custom set of lvalues per instruction
-  lvalues: Array<Place>;
+  lvalues: Array<LValueMemoization>;
   rvalues: Array<Place>;
-  level: MemoizationLevel;
 } {
   switch (value.kind) {
     case "ConditionalExpression": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
+        // Only need to memoize if the rvalues are memoized
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         rvalues: [
           // Conditionals do not alias their test value.
           ...computeMemoizationInputs(value.consequent, null).rvalues,
           ...computeMemoizationInputs(value.alternate, null).rvalues,
         ],
-        // Only need to memoize if the rvalues are memoized
-        level: MemoizationLevel.Conditional,
       };
     }
     case "LogicalExpression": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
+        // Only need to memoize if the rvalues are memoized
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         rvalues: [
           ...computeMemoizationInputs(value.left, null).rvalues,
           ...computeMemoizationInputs(value.right, null).rvalues,
         ],
-        // Only need to memoize if the rvalues are memoized
-        level: MemoizationLevel.Conditional,
       };
     }
     case "SequenceExpression": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
+        // Only need to memoize if the rvalues are memoized
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         // Only the final value of the sequence is a true rvalue:
         // values from the sequence's instructions are evaluated
         // as separate nodes
         rvalues: computeMemoizationInputs(value.value, null).rvalues,
-        // Only memoize if the final value was memoized
-        level: MemoizationLevel.Conditional,
       };
     }
     case "JsxExpression": {
@@ -374,20 +379,24 @@ function computeMemoizationInputs(
         }
       }
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
-        rvalues: operands,
         // JSX elements themselves are not memoized unless forced to
         // avoid breaking downstream memoization
-        level: MemoizationLevel.Unmemoized,
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Unmemoized }]
+            : [],
+        rvalues: operands,
       };
     }
     case "JsxFragment": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
-        rvalues: value.children,
         // JSX elements themselves are not memoized unless forced to
         // avoid breaking downstream memoization
-        level: MemoizationLevel.Unmemoized,
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Unmemoized }]
+            : [],
+        rvalues: value.children,
       };
     }
     case "ComputedDelete":
@@ -399,68 +408,84 @@ function computeMemoizationInputs(
     case "BinaryExpression":
     case "UnaryExpression": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
-        rvalues: [],
         // All of these instructions return a primitive value and never need to be memoized
-        level: MemoizationLevel.Never,
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Never }]
+            : [],
+        rvalues: [],
       };
     }
     case "TypeCastExpression": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
         // Indirection for the inner value, memoized if the value is
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         rvalues: [value.value],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "LoadLocal": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
         // Indirection for the inner value, memoized if the value is
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         rvalues: [value.place],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "StoreLocal": {
+      const lvalues = [
+        { place: value.lvalue.place, level: MemoizationLevel.Conditional },
+      ];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+      }
       return {
-        lvalues:
-          lvalue !== null ? [lvalue, value.lvalue.place] : [value.lvalue.place],
         // Indirection for the inner value, memoized if the value is
+        lvalues,
         rvalues: [value.value],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "Destructure": {
+      // Indirection for the inner value, memoized if the value is
       const lvalues = [];
       if (lvalue !== null) {
-        lvalues.push(lvalue);
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
       }
-      lvalues.push(...eachPatternOperand(value.lvalue.pattern));
+      lvalues.push(...computePatternLValues(value.lvalue.pattern));
       return {
         lvalues: lvalues,
-        // Indirection for the inner value, memoized if the value is
         rvalues: [value.value],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "ComputedLoad":
     case "PropertyLoad": {
       return {
-        lvalues: lvalue !== null ? [lvalue] : [],
         // Indirection for the inner value, memoized if the value is
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
         // Only the object is aliased to the result, and the result only needs to be
         // memoized if the object is
         rvalues: [value.object],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "ComputedStore": {
       // The object being stored to acts as an lvalue (it aliases the value), but
       // the computed key is not aliased
+      const lvalues = [
+        { place: value.object, level: MemoizationLevel.Conditional },
+      ];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+      }
       return {
-        lvalues: lvalue !== null ? [lvalue, value.object] : [value.object],
+        lvalues,
         rvalues: [value.value],
-        level: MemoizationLevel.Conditional,
       };
     }
     case "FunctionExpression":
@@ -475,16 +500,15 @@ function computeMemoizationInputs(
       // All of these instructions may produce new values which must be memoized if
       // reachable from a return value. Any mutable rvalue may alias any other rvalue
       const operands = [...eachReactiveValueOperand(value)];
-      const lvalues = operands.filter((operand) =>
-        isMutableEffect(operand.effect)
-      );
+      const lvalues = operands
+        .filter((operand) => isMutableEffect(operand.effect))
+        .map((place) => ({ place, level: MemoizationLevel.Memoized }));
       if (lvalue !== null) {
-        lvalues.push(lvalue);
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
       }
       return {
         lvalues,
         rvalues: operands,
-        level: MemoizationLevel.Memoized,
       };
     }
     case "UnsupportedNode": {
@@ -494,6 +518,45 @@ function computeMemoizationInputs(
       assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
     }
   }
+}
+
+function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
+  const lvalues: Array<LValueMemoization> = [];
+  switch (pattern.kind) {
+    case "ArrayPattern": {
+      for (const item of pattern.items) {
+        if (item.kind === "Identifier") {
+          lvalues.push({ place: item, level: MemoizationLevel.Conditional });
+        } else {
+          lvalues.push({ place: item.place, level: MemoizationLevel.Memoized });
+        }
+      }
+      break;
+    }
+    case "ObjectPattern": {
+      for (const property of pattern.properties) {
+        if (property.kind === "ObjectProperty") {
+          lvalues.push({
+            place: property.place,
+            level: MemoizationLevel.Conditional,
+          });
+        } else {
+          lvalues.push({
+            place: property.place,
+            level: MemoizationLevel.Memoized,
+          });
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind '${(pattern as any).kind}'`
+      );
+    }
+  }
+  return lvalues;
 }
 
 /**
@@ -521,7 +584,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     }
 
     // Add the operands as dependencies of all lvalues.
-    for (const lvalue of aliasing.lvalues) {
+    for (const { place: lvalue, level } of aliasing.lvalues) {
       const lvalueId =
         state.definitions.get(lvalue.identifier.id) ?? lvalue.identifier.id;
       let node = state.identifiers.get(lvalueId);
@@ -535,7 +598,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         };
         state.identifiers.set(lvalueId, node);
       }
-      node.level = joinAliases(node.level, aliasing.level);
+      node.level = joinAliases(node.level, level);
       // This looks like NxM iterations but in practice all instructions with multiple
       // lvalues have only a single rvalue
       for (const operand of aliasing.rvalues) {
