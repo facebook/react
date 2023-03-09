@@ -11,6 +11,9 @@ const {MessageChannel} = require('node:worker_threads');
 
 export default function enqueueTask(task: () => void): void {
   const channel = new MessageChannel();
-  channel.port1.onmessage = task;
+  channel.port1.onmessage = () => {
+    channel.port1.close();
+    task();
+  };
   channel.port2.postMessage(undefined);
 }
