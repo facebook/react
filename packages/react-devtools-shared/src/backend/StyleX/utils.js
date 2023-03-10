@@ -102,8 +102,7 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     }
 
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
-      // check if the rule is a CSSStyleRule
-      if (!rules[ruleIndex].hasOwnProperty('selectorText')) {
+      if (!rules[ruleIndex] instanceof CSSStyleRule) {
         continue;
       }
       const rule = ((rules[ruleIndex]: any): CSSStyleRule);
