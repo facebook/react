@@ -2866,44 +2866,69 @@ function flushSyncCallbacksOnlyInLegacyMode() {
 function flushSyncCallbacks() {
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrance.
-    isFlushingSyncQueue = true;
-    var i = 0;
+    isFlushingSyncQueue = true; // Set the event priority to discrete
+    // TODO: Is this necessary anymore? The only user code that runs in this
+    // queue is in the render or commit phases, which already set the
+    // event priority. Should be able to remove.
+
     var previousUpdatePriority = getCurrentUpdatePriority();
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    var errors = null;
+    var queue = syncQueue; // $FlowFixMe[incompatible-use] found when upgrading Flow
 
-    try {
-      var isSync = true;
-      var queue = syncQueue; // TODO: Is this necessary anymore? The only user code that runs in this
-      // queue is in the render or commit phases.
+    for (var i = 0; i < queue.length; i++) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      var callback = queue[i];
 
-      setCurrentUpdatePriority(DiscreteEventPriority); // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-      for (; i < queue.length; i++) {
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
-        var callback = queue[i];
-
+      try {
         do {
-          // $FlowFixMe[incompatible-type] we bail out when we get a null
+          var isSync = true; // $FlowFixMe[incompatible-type] we bail out when we get a null
+
           callback = callback(isSync);
         } while (callback !== null);
+      } catch (error) {
+        // Collect errors so we can rethrow them at the end
+        if (errors === null) {
+          errors = [error];
+        } else {
+          errors.push(error);
+        }
       }
+    }
 
-      syncQueue = null;
-      includesLegacySyncCallbacks = false;
-    } catch (error) {
-      // If something throws, leave the remaining callbacks on the queue.
-      if (syncQueue !== null) {
-        syncQueue = syncQueue.slice(i + 1);
-      } // Resume flushing in the next tick
+    syncQueue = null;
+    includesLegacySyncCallbacks = false;
+    setCurrentUpdatePriority(previousUpdatePriority);
+    isFlushingSyncQueue = false;
 
-      scheduleCallback$2(ImmediatePriority, flushSyncCallbacks);
-      throw error;
-    } finally {
-      setCurrentUpdatePriority(previousUpdatePriority);
-      isFlushingSyncQueue = false;
+    if (errors !== null) {
+      if (errors.length > 1) {
+        if (typeof AggregateError === "function") {
+          // eslint-disable-next-line no-undef
+          throw new AggregateError(errors);
+        } else {
+          for (var _i = 1; _i < errors.length; _i++) {
+            scheduleCallback$2(
+              ImmediatePriority,
+              throwError.bind(null, errors[_i])
+            );
+          }
+
+          var firstError = errors[0];
+          throw firstError;
+        }
+      } else {
+        var error = errors[0];
+        throw error;
+      }
     }
   }
 
   return null;
+}
+
+function throwError(error) {
+  throw error;
 }
 
 // This is imported by the event replaying implementation in React DOM. It's
@@ -23769,7 +23794,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-9aa67a4b";
+var ReactVersion = "18.3.0-www-classic-2505f0d2";
 
 // Might add PROFILE later.
 
