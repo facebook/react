@@ -93,20 +93,20 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     const styleSheet = ((document.styleSheets[
       styleSheetIndex
     ]: any): CSSStyleSheet);
-    let rules = [];
+    let rules: CSSRuleList | null = null;
     // this might throw if CORS rules are enforced https://www.w3.org/TR/cssom-1/#the-cssstylesheet-interface
     try {
-      // $FlowFixMe Flow doesn't konw about these properties
-      rules = styleSheet.rules || styleSheet.cssRules;
+      rules = styleSheet.cssRules;
     } catch (_e) {
       return null;
     }
 
-    // $FlowFixMe `rules` is mixed
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
-      // $FlowFixMe `rules` is mixed
-      const rule = rules[ruleIndex];
-      // $FlowFixMe Flow doesn't konw about these properties
+      // check if the rule is a CSSStyleRule
+      if (!rules[ruleIndex].hasOwnProperty('selectorText')) {
+        continue;
+      }
+      const rule = ((rules[ruleIndex]: any): CSSStyleRule);
       const {cssText, selectorText, style} = rule;
 
       if (selectorText != null) {
