@@ -46,6 +46,7 @@ export type ReactServerValue =
   | number
   | symbol
   | null
+  | void
   | Iterable<ReactServerValue>
   | Array<ReactServerValue>
   | ReactServerObject
@@ -67,6 +68,10 @@ function serializeServerReferenceID(id: number): string {
 
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
+}
+
+function serializeUndefined(): string {
+  return '$undefined';
 }
 
 function escapeStringValue(value: string): string {
@@ -208,12 +213,12 @@ export function processReply(
       return escapeStringValue(value);
     }
 
-    if (
-      typeof value === 'boolean' ||
-      typeof value === 'number' ||
-      typeof value === 'undefined'
-    ) {
+    if (typeof value === 'boolean' || typeof value === 'number') {
       return value;
+    }
+
+    if (typeof value === 'undefined') {
+      return serializeUndefined();
     }
 
     if (typeof value === 'function') {
