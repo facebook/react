@@ -43,7 +43,7 @@ class State {
   }
 }
 
-export default function analyseFunctions(func: HIRFunction) {
+export default function analyseFunctions(func: HIRFunction): void {
   const state = new State();
 
   for (const [_, block] of func.body.blocks) {
@@ -73,7 +73,7 @@ export default function analyseFunctions(func: HIRFunction) {
   }
 }
 
-function lower(func: HIRFunction) {
+function lower(func: HIRFunction): void {
   mergeConsecutiveBlocks(func);
   enterSSA(func);
   eliminateRedundantPhi(func);
@@ -85,7 +85,11 @@ function lower(func: HIRFunction) {
   logHIRFunction("AnalyseFunction (inner)", func);
 }
 
-function infer(value: FunctionExpression, state: State, context: Place[]) {
+function infer(
+  value: FunctionExpression,
+  state: State,
+  context: Place[]
+): void {
   const mutations = new Set(
     value.loweredFunc.context
       .filter((dep) => isMutatedOrReassigned(dep.identifier))
@@ -127,7 +131,7 @@ function infer(value: FunctionExpression, state: State, context: Place[]) {
   }
 }
 
-function isMutatedOrReassigned(id: Identifier) {
+function isMutatedOrReassigned(id: Identifier): boolean {
   // This check checks for mutation and reassingnment, so the usual check for
   // mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
   // enough.

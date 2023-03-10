@@ -11,7 +11,7 @@ import {
 } from "../HIR/HIR";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 
-function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
+function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
   switch (op) {
     case "+":
     case "-":
@@ -21,7 +21,6 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
     case "**":
     case "&":
     case "|":
-    case ">>":
     case ">>":
     case "<<":
     case "^":
@@ -36,7 +35,7 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]) {
   }
 }
 
-export default function (func: HIRFunction) {
+export default function (func: HIRFunction): void {
   const unifier = new Unifier();
   for (const e of generate(func)) {
     unifier.unify(e.left, e.right);
@@ -44,7 +43,7 @@ export default function (func: HIRFunction) {
   apply(func, unifier);
 }
 
-function apply(func: HIRFunction, unifier: Unifier) {
+function apply(func: HIRFunction, unifier: Unifier): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       phi.type = unifier.get(phi.type);
@@ -169,7 +168,7 @@ type Substitution = Map<TypeId, Type>;
 class Unifier {
   substitutions: Substitution = new Map();
 
-  unify(tA: Type, tB: Type) {
+  unify(tA: Type, tB: Type): void {
     if (typeEquals(tA, tB)) {
       return;
     }

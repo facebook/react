@@ -20,7 +20,10 @@ export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
   return aliases;
 }
 
-function inferInstr(instr: Instruction, aliases: DisjointSet<Identifier>) {
+function inferInstr(
+  instr: Instruction,
+  aliases: DisjointSet<Identifier>
+): void {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
   switch (instrValue.kind) {

@@ -76,7 +76,7 @@ import { assertExhaustive } from "../Utils/utils";
  * When control flow paths converge the types of values are merged together, with the value
  * types forming a lattice to ensure convergence.
  */
-export default function inferReferenceEffects(fn: HIRFunction) {
+export default function inferReferenceEffects(fn: HIRFunction): void {
   // Initial state contains function params
   // TODO: include module declarations here as well
   const initialState = InferenceState.empty();
@@ -124,7 +124,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
   // so track the list of incoming state for each successor block.
   // These are merged when reaching that block again.
   const queuedStates: Map<BlockId, InferenceState> = new Map();
-  function queue(blockId: BlockId, state: InferenceState) {
+  function queue(blockId: BlockId, state: InferenceState): void {
     let queuedState = queuedStates.get(blockId);
     if (queuedState != null) {
       // merge the queued states for this block
@@ -187,7 +187,7 @@ class InferenceState {
   /**
    * (Re)initializes a @param value with its default @param kind.
    */
-  initialize(value: InstructionValue, kind: ValueKind) {
+  initialize(value: InstructionValue, kind: ValueKind): void {
     invariant(
       value.kind !== "LoadLocal",
       "Expected all top-level identifiers to be defined as variables, not values"
@@ -225,7 +225,7 @@ class InferenceState {
   /**
    * Updates the value at @param place to point to the same value as @param value.
    */
-  alias(place: Place, value: Place) {
+  alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
     invariant(
       values != null,
@@ -238,7 +238,7 @@ class InferenceState {
   /**
    * Defines (initializing or updating) a variable with a specific kind of value.
    */
-  define(place: Place, value: InstructionValue) {
+  define(place: Place, value: InstructionValue): void {
     invariant(
       this.#values.has(value),
       `Expected value to be initialized at '${printSourceLocation(value.loc)}'`
@@ -262,7 +262,7 @@ class InferenceState {
    * Similarly, a freeze reference is converted to readonly if the
    * value is already frozen or is immutable.
    */
-  reference(place: Place, effectKind: Effect) {
+  reference(place: Place, effectKind: Effect): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
       place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
@@ -442,7 +442,7 @@ class InferenceState {
     return result;
   }
 
-  inferPhi(phi: Phi) {
+  inferPhi(phi: Phi): void {
     const values: Set<InstructionValue> = new Set();
     for (const [_, operand] of phi.operands) {
       const operandValues = this.#variables.get(operand.id);
@@ -554,11 +554,10 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
  * recording references on the @param state according to JS semantics.
  */
 function inferBlock(
-  env: Environment,
-
+  _env: Environment,
   state: InferenceState,
   block: BasicBlock
-) {
+): void {
   for (const phi of block.phis) {
     state.inferPhi(phi);
   }
@@ -876,7 +875,7 @@ function inferBlock(
 function hasContextRefOperand(
   state: InferenceState,
   instrValue: InstructionValue
-) {
+): boolean {
   for (const place of eachInstructionValueOperand(instrValue)) {
     if (state.isDefined(place) && state.kind(place) === ValueKind.Context) {
       return true;

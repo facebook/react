@@ -12,7 +12,7 @@ import { inferAliasForStores } from "./InferAliasForStores";
 import { inferMutableLifetimes } from "./InferMutableLifetimes";
 import { inferMutableRangesForAlias } from "./InferMutableRangesForAlias";
 
-export function inferMutableRanges(ir: HIRFunction) {
+export function inferMutableRanges(ir: HIRFunction): void {
   // Infer mutable ranges for non fields
   inferMutableLifetimes(ir, false);
 

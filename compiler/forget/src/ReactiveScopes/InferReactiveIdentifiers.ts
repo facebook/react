@@ -29,7 +29,7 @@ class State {
 }
 
 class Visitor extends ReactiveFunctionVisitor<State> {
-  override visitInstruction(instr: ReactiveInstruction, state: State) {
+  override visitInstruction(instr: ReactiveInstruction, state: State): void {
     this.traverseInstruction(instr, state);
     const lval = instr.lvalue;
     if (lval == null) {

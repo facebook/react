@@ -60,7 +60,7 @@ import { assertExhaustive } from "../Utils/utils";
  * ```
  */
 
-function infer(place: Place, instr: Instruction) {
+function infer(place: Place, instr: Instruction): void {
   place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
 }
 
@@ -68,7 +68,7 @@ function inferPlace(
   place: Place,
   instr: Instruction,
   inferMutableRangeForStores: boolean
-) {
+): void {
   switch (place.effect) {
     case Effect.Unknown: {
       throw new Error(
@@ -98,7 +98,7 @@ function inferPlace(
 export function inferMutableLifetimes(
   func: HIRFunction,
   inferMutableRangeForStores: boolean
-) {
+): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       let start = Number.MAX_SAFE_INTEGER;

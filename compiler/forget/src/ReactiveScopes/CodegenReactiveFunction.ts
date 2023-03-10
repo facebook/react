@@ -498,9 +498,6 @@ function codegenInstruction(
     cx.temp.set(instr.lvalue.identifier.id, value);
     return t.emptyStatement();
   } else {
-    const kind = cx.hasDeclared(instr.lvalue.identifier)
-      ? InstructionKind.Reassign
-      : InstructionKind.Const;
     if (cx.hasDeclared(instr.lvalue.identifier)) {
       return createExpressionStatement(
         instr.loc,

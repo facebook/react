@@ -2,9 +2,9 @@ import { HIRFunction, Identifier, InstructionId } from "../HIR/HIR";
 import DisjointSet from "../Utils/DisjointSet";
 
 export function inferMutableRangesForAlias(
-  fn: HIRFunction,
+  _fn: HIRFunction,
   aliases: DisjointSet<Identifier>
-) {
+): void {
   const aliasSets = aliases.buildSets();
   for (const aliasSet of aliasSets) {
     // Update mutableRange.end only if the identifiers have actually been

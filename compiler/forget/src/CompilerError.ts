@@ -125,7 +125,7 @@ export class CompilerError extends Error {
 
   override set message(_message: string) {}
 
-  override toString() {
+  override toString(): string {
     return this.details.map((detail) => detail.toString()).join("\n\n");
   }
 

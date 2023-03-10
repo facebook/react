@@ -10,7 +10,7 @@ import DisjointSet from "../Utils/DisjointSet";
 export function inferAliasForPhis(
   func: HIRFunction,
   aliases: DisjointSet<Identifier>
-) {
+): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       const isPhiMutatedAfterCreation: boolean =

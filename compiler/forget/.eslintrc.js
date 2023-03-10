@@ -56,6 +56,7 @@ module.exports = {
       "constructor",
     ],
     "@typescript-eslint/array-type": ["off", "generic"],
+    "@typescript-eslint/triple-slash-reference": "off",
   },
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],

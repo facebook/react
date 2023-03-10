@@ -21,5 +21,7 @@ jobs:
         working-directory: forget
       - run: yarn build
         working-directory: forget
+      - run: yarn lint
+        working-directory: forget
       - run: yarn test
         working-directory: forget

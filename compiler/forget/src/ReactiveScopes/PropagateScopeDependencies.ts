@@ -158,7 +158,7 @@ class Context {
    */
   promoteDepsFromExhaustiveConditionals(
     depsInConditionals: Array<ReactiveScopeDependencyTree>
-  ) {
+  ): void {
     this.#dependencies.promoteDepsFromExhaustiveConditionals(
       depsInConditionals
     );
@@ -205,7 +205,7 @@ class Context {
   }
 
   // Checks if identifier is a valid dependency in the current scope
-  #checkValidDependencyId(identifier: Identifier) {
+  #checkValidDependencyId(identifier: Identifier): boolean {
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.
     const currentDeclaration =

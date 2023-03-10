@@ -1,5 +1,5 @@
 import invariant from "invariant";
-import { Identifier, IdentifierId, ReactiveScopeDependency } from "../HIR";
+import { Identifier, ReactiveScopeDependency } from "../HIR";
 import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -46,7 +46,7 @@ export class ReactiveScopeDependencyTree {
     return rootNode;
   }
 
-  add(dep: ReactiveScopeDependencyInfo) {
+  add(dep: ReactiveScopeDependencyInfo): void {
     const path = dep.path ?? [];
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
@@ -102,7 +102,7 @@ export class ReactiveScopeDependencyTree {
     depsFromInnerScope: ReactiveScopeDependencyTree,
     innerScopeInConditionalWithinParent: boolean,
     checkValidDepIdFn: (id: Identifier) => boolean
-  ) {
+  ): void {
     for (const [id, otherRoot] of depsFromInnerScope.#roots) {
       if (!checkValidDepIdFn(id)) {
         continue;
@@ -119,7 +119,7 @@ export class ReactiveScopeDependencyTree {
 
   promoteDepsFromExhaustiveConditionals(
     trees: Array<ReactiveScopeDependencyTree>
-  ) {
+  ): void {
     invariant(
       trees.length > 1,
       "Expected trees to be at least 2 elements long."
@@ -180,13 +180,13 @@ enum PropertyAccessType {
   UnconditionalDependency = "UnconditionalDependency",
 }
 
-function isUnconditional(access: PropertyAccessType) {
+function isUnconditional(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.UnconditionalAccess ||
     access === PropertyAccessType.UnconditionalDependency
   );
 }
-function isDependency(access: PropertyAccessType) {
+function isDependency(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.ConditionalDependency ||
     access === PropertyAccessType.UnconditionalDependency
@@ -318,7 +318,7 @@ function deriveMinimalDependenciesInSubtree(
  * conditional equivalent, mutating subtree in place.
  * @param subtree unconditional node representing a subtree of dependencies
  */
-function demoteSubtreeToConditional(subtree: DependencyNode) {
+function demoteSubtreeToConditional(subtree: DependencyNode): void {
   const stack: Array<DependencyNode> = [subtree];
 
   let node;
@@ -355,7 +355,7 @@ function addSubtree(
   currNode: DependencyNode,
   otherNode: DependencyNode,
   demoteOtherNode: boolean
-) {
+): void {
   let otherType = otherNode.accessType;
   if (demoteOtherNode) {
     otherType = isDependency(otherType)
@@ -405,7 +405,7 @@ function addSubtree(
 function addSubtreeIntersection(
   otherProperties: Array<Map<string, DependencyNode>>,
   currProperties: Map<string, DependencyNode>
-) {
+): void {
   invariant(
     otherProperties.length > 1,
     "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long."

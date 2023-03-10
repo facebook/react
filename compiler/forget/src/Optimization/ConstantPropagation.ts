@@ -119,7 +119,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
         const testValue = read(constants, terminal.test);
         if (testValue !== null) {
           hasChanges = true;
-          const targetBlockId = Boolean(testValue.value)
+          const targetBlockId = testValue.value
             ? terminal.consequent
             : terminal.alternate;
           block.terminal = {

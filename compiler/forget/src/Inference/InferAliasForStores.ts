@@ -20,7 +20,7 @@ import DisjointSet from "../Utils/DisjointSet";
 export function inferAliasForStores(
   func: HIRFunction,
   aliases: DisjointSet<Identifier>
-) {
+): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       const { value, lvalue } = instr;

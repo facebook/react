@@ -27,7 +27,7 @@ import {
  * and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
  * until there are no new rewrites: for a CFG without back-edges it completes in a single pass.
  */
-export function eliminateRedundantPhi(fn: HIRFunction) {
+export function eliminateRedundantPhi(fn: HIRFunction): void {
   const ir = fn.body;
   const rewrites: Map<Identifier, Identifier> = new Map();
 
@@ -111,7 +111,10 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
   } while (rewrites.size > size && hasBackEdge);
 }
 
-function rewritePlace(place: Place, rewrites: Map<Identifier, Identifier>) {
+function rewritePlace(
+  place: Place,
+  rewrites: Map<Identifier, Identifier>
+): void {
   const rewrite = rewrites.get(place.identifier);
   if (rewrite != null) {
     place.identifier = rewrite;

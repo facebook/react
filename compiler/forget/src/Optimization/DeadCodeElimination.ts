@@ -60,7 +60,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
       }
       for (const phi of block.phis) {
         if (used.has(phi.id)) {
-          for (const [pred, operand] of phi.operands) {
+          for (const [_pred, operand] of phi.operands) {
             used.add(operand);
           }
         }
@@ -196,7 +196,6 @@ function pruneableValue(
     case "ArrayExpression":
     case "BinaryExpression":
     case "ComputedLoad":
-    case "ComputedStore":
     case "FunctionExpression":
     case "LoadLocal":
     case "JsxExpression":

@@ -80,7 +80,6 @@ export default class DisjointSet<T> {
   canonicalize(): Map<T, T> {
     const entries = new Map<T, T>();
     for (const item of this.#entries.keys()) {
-      const parent = this.#entries.get(item)!;
       const root = this.find(item)!;
       entries.set(item, root);
     }
