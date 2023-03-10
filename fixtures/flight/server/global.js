@@ -157,7 +157,13 @@ app.all('/', async function (req, res, next) {
       const rscResponse = await promiseForData;
       // For other request, we pass-through the RSC payload.
       res.set('Content-type', 'text/x-component');
-      rscResponse.pipe(res);
+      rscResponse.on('data', data => {
+        res.write(data);
+        res.flush();
+      });
+      rscResponse.on('end', data => {
+        res.end();
+      });
     } catch (e) {
       console.error(`Failed to proxy request: ${e.stack}`);
       res.statusCode = 500;
