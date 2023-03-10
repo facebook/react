@@ -17,14 +17,12 @@ global.TextDecoder = require('util').TextDecoder;
 
 // let serverExports;
 let webpackServerMap;
-let act;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
-    act = require('internal-test-utils').act;
     const WebpackMock = require('./utils/WebpackMock');
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
@@ -56,5 +54,25 @@ describe('ReactFlightDOMReply', () => {
     // These should really be true but our deserialization doesn't currently deal with it.
     expect('3' in object.array).toBe(false);
     expect('prop' in object).toBe(false);
+  });
+
+  it('can pass an iterable as a reply', async () => {
+    const body = await ReactServerDOMClient.encodeReply({
+      [Symbol.iterator]: function* () {
+        yield 'A';
+        yield 'B';
+        yield 'C';
+      },
+    });
+    const iterable = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    const items = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const item of iterable) {
+      items.push(item);
+    }
+    expect(items).toEqual(['A', 'B', 'C']);
   });
 });

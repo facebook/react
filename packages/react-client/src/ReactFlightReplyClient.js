@@ -15,6 +15,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_PROVIDER_TYPE,
+  getIteratorFn,
 } from 'shared/ReactSymbols';
 
 import {
@@ -158,6 +159,12 @@ export function processReply(
           },
         );
         return serializePromiseID(promiseId);
+      }
+      if (!isArray(value)) {
+        const iteratorFn = getIteratorFn(value);
+        if (iteratorFn) {
+          return Array.from((value: any));
+        }
       }
 
       if (__DEV__) {
