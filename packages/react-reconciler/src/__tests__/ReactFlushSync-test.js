@@ -248,4 +248,50 @@ describe('ReactFlushSync', () => {
     // Now the effects have fired.
     assertLog(['Effect']);
   });
+
+  test('completely exhausts synchronous work queue even if something throws', async () => {
+    function Throws({error}) {
+      throw error;
+    }
+
+    const root1 = ReactNoop.createRoot();
+    const root2 = ReactNoop.createRoot();
+    const root3 = ReactNoop.createRoot();
+
+    await act(async () => {
+      root1.render(<Text text="Hi" />);
+      root2.render(<Text text="Andrew" />);
+      root3.render(<Text text="!" />);
+    });
+    assertLog(['Hi', 'Andrew', '!']);
+
+    const aahh = new Error('AAHH!');
+    const nooo = new Error('Noooooooooo!');
+
+    let error;
+    try {
+      ReactNoop.flushSync(() => {
+        root1.render(<Throws error={aahh} />);
+        root2.render(<Throws error={nooo} />);
+        root3.render(<Text text="aww" />);
+      });
+    } catch (e) {
+      error = e;
+    }
+
+    // The update to root 3 should have finished synchronously, even though the
+    // earlier updates errored.
+    assertLog(['aww']);
+    // Roots 1 and 2 were unmounted.
+    expect(root1).toMatchRenderedOutput(null);
+    expect(root2).toMatchRenderedOutput(null);
+    expect(root3).toMatchRenderedOutput('aww');
+
+    // Because there were multiple errors, React threw an AggregateError.
+    // eslint-disable-next-line no-undef
+    expect(error).toBeInstanceOf(AggregateError);
+    expect(error.errors.length).toBe(2);
+    expect(error.errors[0]).toBe(aahh);
+    expect(error.errors[1]).toBe(nooo);
+  });
 });

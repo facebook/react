@@ -1367,17 +1367,14 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     await waitForAll([]);
 
-    expect(() => {
-      expect(() => {
-        ReactNoop.flushSync(() => {
-          inst.setState({fail: true});
-        });
-      }).toThrow('Hello.');
-
-      // The unmount is queued in a microtask. In order to capture the error
-      // that occurs during unmount, we can flush it early with `flushSync`.
-      ReactNoop.flushSync();
-    }).toThrow('One does not simply unmount me.');
+    let aggregateError;
+    try {
+      ReactNoop.flushSync(() => {
+        inst.setState({fail: true});
+      });
+    } catch (e) {
+      aggregateError = e;
+    }
 
     assertLog([
       // Attempt to clean up.
@@ -1387,6 +1384,12 @@ describe('ReactIncrementalErrorHandling', () => {
       'BrokenRenderAndUnmount componentWillUnmount',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // React threw both errors as a single AggregateError
+    const errors = aggregateError.errors;
+    expect(errors.length).toBe(2);
+    expect(errors[0].message).toBe('Hello.');
+    expect(errors[1].message).toBe('One does not simply unmount me.');
   });
 
   it('does not interrupt unmounting if detaching a ref throws', async () => {

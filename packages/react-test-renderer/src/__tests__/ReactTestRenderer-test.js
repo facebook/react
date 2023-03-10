@@ -31,18 +31,23 @@ describe('ReactTestRenderer', () => {
   it('should warn if used to render a ReactDOM portal', () => {
     const container = document.createElement('div');
     expect(() => {
+      let error;
       try {
         ReactTestRenderer.create(ReactDOM.createPortal('foo', container));
       } catch (e) {
-        // TODO: After the update throws, a subsequent render is scheduled to
-        // unmount the whole tree. This update also causes an error, and this
-        // happens in a separate task. Flush this error now and capture it, to
-        // prevent it from firing asynchronously and causing the Jest test
-        // to fail.
-        expect(() => Scheduler.unstable_flushAll()).toThrow(
-          '.children.indexOf is not a function',
-        );
+        error = e;
       }
+      // After the update throws, a subsequent render is scheduled to
+      // unmount the whole tree. This update also causes an error, so React
+      // throws an AggregateError.
+      const errors = error.errors;
+      expect(errors.length).toBe(2);
+      expect(errors[0].message.includes('indexOf is not a function')).toBe(
+        true,
+      );
+      expect(errors[1].message.includes('indexOf is not a function')).toBe(
+        true,
+      );
     }).toErrorDev('An invalid container has been provided.', {
       withoutStack: true,
     });
