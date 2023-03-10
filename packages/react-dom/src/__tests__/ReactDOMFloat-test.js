@@ -17,7 +17,6 @@ import {
 
 let JSDOM;
 let Stream;
-let Scheduler;
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -34,7 +33,7 @@ let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
 let waitForAll;
-let assertLog;
+let waitForThrow;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -57,7 +56,6 @@ describe('ReactDOMFloat', () => {
   beforeEach(() => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
-    Scheduler = require('scheduler');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -67,7 +65,7 @@ describe('ReactDOMFloat', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    assertLog = InternalTestUtils.assertLog;
+    waitForThrow = InternalTestUtils.waitForThrow;
 
     textCache = new Map();
 
@@ -261,23 +259,6 @@ describe('ReactDOMFloat', () => {
     );
   }
 
-  function renderSafelyAndExpect(root, children) {
-    root.render(children);
-    return expect(() => {
-      try {
-        // TODO: Migrate this to waitForAll()
-        Scheduler.unstable_flushAll();
-        assertLog([]);
-      } catch (e) {
-        try {
-          // TODO: Migrate this to waitForAll()
-          Scheduler.unstable_flushAll();
-          assertLog([]);
-        } catch (f) {}
-      }
-    });
-  }
-
   // @gate enableFloat
   it('can render resources before singletons', async () => {
     const root = ReactDOMClient.createRoot(document);
@@ -382,15 +363,24 @@ describe('ReactDOMFloat', () => {
   it('warns if you render resource-like elements above <head> or <body>', async () => {
     const root = ReactDOMClient.createRoot(document);
 
-    renderSafelyAndExpect(
-      root,
-      <>
-        <noscript>foo</noscript>
-        <html>
-          <body>foo</body>
-        </html>
-      </>,
-    ).toErrorDev(
+    await expect(async () => {
+      root.render(
+        <>
+          <noscript>foo</noscript>
+          <html>
+            <body>foo</body>
+          </html>
+        </>,
+      );
+      const aggregateError = await waitForThrow();
+      expect(aggregateError.errors.length).toBe(2);
+      expect(aggregateError.errors[0].message).toContain(
+        'Invalid insertion of NOSCRIPT',
+      );
+      expect(aggregateError.errors[1].message).toContain(
+        'The node to be removed is not a child of this node',
+      );
+    }).toErrorDev(
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
         'Warning: validateDOMNesting(...): <noscript> cannot appear as a child of <#document>.',
@@ -398,37 +388,50 @@ describe('ReactDOMFloat', () => {
       {withoutStack: 1},
     );
 
-    renderSafelyAndExpect(
-      root,
-      <html>
-        <template>foo</template>
-        <body>foo</body>
-      </html>,
-    ).toErrorDev([
+    await expect(async () => {
+      root.render(
+        <html>
+          <template>foo</template>
+          <body>foo</body>
+        </html>,
+      );
+      await waitForAll([]);
+    }).toErrorDev([
       'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
       'Warning: validateDOMNesting(...): <template> cannot appear as a child of <html>.',
     ]);
 
-    renderSafelyAndExpect(
-      root,
-      <html>
-        <body>foo</body>
-        <style>foo</style>
-      </html>,
-    ).toErrorDev([
+    await expect(async () => {
+      root.render(
+        <html>
+          <body>foo</body>
+          <style>foo</style>
+        </html>,
+      );
+      await waitForAll([]);
+    }).toErrorDev([
       'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style> to the <style> tag.',
       'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
     ]);
 
-    renderSafelyAndExpect(
-      root,
-      <>
-        <html>
-          <body>foo</body>
-        </html>
-        <link rel="stylesheet" href="foo" />
-      </>,
-    ).toErrorDev(
+    await expect(async () => {
+      root.render(
+        <>
+          <html>
+            <body>foo</body>
+          </html>
+          <link rel="stylesheet" href="foo" />
+        </>,
+      );
+      const aggregateError = await waitForThrow();
+      expect(aggregateError.errors.length).toBe(2);
+      expect(aggregateError.errors[0].message).toContain(
+        'Invalid insertion of LINK',
+      );
+      expect(aggregateError.errors[1].message).toContain(
+        'The node to be removed is not a child of this node',
+      );
+    }).toErrorDev(
       [
         'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
         'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.',
@@ -436,40 +439,51 @@ describe('ReactDOMFloat', () => {
       {withoutStack: 1},
     );
 
-    renderSafelyAndExpect(
-      root,
-      <>
-        <html>
-          <body>foo</body>
-          <script href="foo" />
-        </html>
-      </>,
-    ).toErrorDev([
+    await expect(async () => {
+      root.render(
+        <>
+          <html>
+            <body>foo</body>
+            <script href="foo" />
+          </html>
+        </>,
+      );
+      await waitForAll([]);
+    }).toErrorDev([
       'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
       'Warning: validateDOMNesting(...): <script> cannot appear as a child of <html>.',
     ]);
 
-    renderSafelyAndExpect(
-      root,
-      <>
+    await expect(async () => {
+      root.render(
         <html>
           <script async={true} onLoad={() => {}} href="bar" />
           <body>foo</body>
-        </html>
-      </>,
-    ).toErrorDev([
+        </html>,
+      );
+      await waitForAll([]);
+    }).toErrorDev([
       'Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
     ]);
 
-    renderSafelyAndExpect(
-      root,
-      <>
-        <link rel="foo" onLoad={() => {}} href="bar" />
-        <html>
-          <body>foo</body>
-        </html>
-      </>,
-    ).toErrorDev(
+    await expect(async () => {
+      root.render(
+        <>
+          <link rel="foo" onLoad={() => {}} href="bar" />
+          <html>
+            <body>foo</body>
+          </html>
+        </>,
+      );
+      const aggregateError = await waitForThrow();
+      expect(aggregateError.errors.length).toBe(2);
+      expect(aggregateError.errors[0].message).toContain(
+        'Invalid insertion of LINK',
+      );
+      expect(aggregateError.errors[1].message).toContain(
+        'The node to be removed is not a child of this node',
+      );
+    }).toErrorDev(
       [
         'Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
       ],
@@ -5638,22 +5652,16 @@ background-color: green;
           },
         },
       );
-      try {
-        await expect(async () => {
-          await waitForAll([]);
-        }).toErrorDev(
-          [
-            'Warning: Text content did not match. Server: "server" Client: "client"',
-            'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-          ],
-          {withoutStack: 1},
-        );
-      } catch (e) {
-        // When gates are false this test fails on a DOMException if you don't clear the scheduler after catching.
-        // When gates are true this branch should not be hit
+
+      await expect(async () => {
         await waitForAll([]);
-        throw e;
-      }
+      }).toErrorDev(
+        [
+          'Warning: Text content did not match. Server: "server" Client: "client"',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+        ],
+        {withoutStack: 1},
+      );
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
