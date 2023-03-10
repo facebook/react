@@ -67,7 +67,10 @@ function crawlObjectProperties(
         // Special case; this key is the name of the style's source/file/module.
         sources.add(key);
       } else {
-        resolvedStyles[key] = getPropertyValueForStyleName(value);
+        const propertyValue = getPropertyValueForStyleName(value);
+        if (propertyValue != null) {
+          resolvedStyles[key] = propertyValue;
+        }
       }
     } else {
       const nestedStyle = {};
@@ -90,8 +93,15 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     const styleSheet = ((document.styleSheets[
       styleSheetIndex
     ]: any): CSSStyleSheet);
-    // $FlowFixMe Flow doesn't konw about these properties
-    const rules = styleSheet.rules || styleSheet.cssRules;
+    let rules = [];
+    // this might throw if CORS rules are enforced https://www.w3.org/TR/cssom-1/#the-cssstylesheet-interface
+    try {
+      // $FlowFixMe Flow doesn't konw about these properties
+      rules = styleSheet.rules || styleSheet.cssRules;
+    } catch (_e) {
+      return null;
+    }
+
     // $FlowFixMe `rules` is mixed
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
       // $FlowFixMe `rules` is mixed
