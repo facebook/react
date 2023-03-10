@@ -98,7 +98,7 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     try {
       rules = styleSheet.cssRules;
     } catch (_e) {
-      return null;
+      continue;
     }
 
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
