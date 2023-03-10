@@ -22,6 +22,7 @@ declare var globalThis: Object;
 
 declare var queueMicrotask: (fn: Function) => void;
 declare var reportError: (error: mixed) => void;
+declare var AggregateError: Class<Error>;
 
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;
