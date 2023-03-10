@@ -104,7 +104,7 @@ ${diff(expectedLog, actualLog)}
   throw error;
 }
 
-export async function waitForThrow(expectedError: mixed) {
+export async function waitForThrow(expectedError: mixed): mixed {
   assertYieldsWereCleared(SchedulerMock);
 
   // Create the error object before doing any async work, to get a better
@@ -123,8 +123,14 @@ export async function waitForThrow(expectedError: mixed) {
     try {
       SchedulerMock.unstable_flushAllWithoutAsserting();
     } catch (x) {
+      if (expectedError === undefined) {
+        // If no expected error was provided, then assume the caller is OK with
+        // any error being thrown. We're returning the error so they can do
+        // their own checks, if they wish.
+        return x;
+      }
       if (equals(x, expectedError)) {
-        return;
+        return x;
       }
       if (
         typeof expectedError === 'string' &&
@@ -133,7 +139,7 @@ export async function waitForThrow(expectedError: mixed) {
         typeof x.message === 'string' &&
         x.message.includes(expectedError)
       ) {
-        return;
+        return x;
       }
       error.message = `
 Expected error was not thrown.
