@@ -15,6 +15,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_PROVIDER_TYPE,
+  getIteratorFn,
 } from 'shared/ReactSymbols';
 
 import {
@@ -46,6 +47,7 @@ export type ReactServerValue =
   | number
   | symbol
   | null
+  | void
   | Iterable<ReactServerValue>
   | Array<ReactServerValue>
   | ReactServerObject
@@ -67,6 +69,10 @@ function serializeServerReferenceID(id: number): string {
 
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
+}
+
+function serializeUndefined(): string {
+  return '$undefined';
 }
 
 function escapeStringValue(value: string): string {
@@ -154,6 +160,12 @@ export function processReply(
         );
         return serializePromiseID(promiseId);
       }
+      if (!isArray(value)) {
+        const iteratorFn = getIteratorFn(value);
+        if (iteratorFn) {
+          return Array.from((value: any));
+        }
+      }
 
       if (__DEV__) {
         if (value !== null && !isArray(value)) {
@@ -208,12 +220,12 @@ export function processReply(
       return escapeStringValue(value);
     }
 
-    if (
-      typeof value === 'boolean' ||
-      typeof value === 'number' ||
-      typeof value === 'undefined'
-    ) {
+    if (typeof value === 'boolean' || typeof value === 'number') {
       return value;
+    }
+
+    if (typeof value === 'undefined') {
+      return serializeUndefined();
     }
 
     if (typeof value === 'function') {
