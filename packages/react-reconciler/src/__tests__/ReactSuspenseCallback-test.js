@@ -11,7 +11,6 @@
 
 let React;
 let ReactNoop;
-let Scheduler;
 let waitForAll;
 
 describe('ReactSuspense', () => {
@@ -20,7 +19,6 @@ describe('ReactSuspense', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -44,32 +42,32 @@ describe('ReactSuspense', () => {
     return {promise, resolve, PromiseComp};
   }
 
-  if (__DEV__) {
-    // @gate www
-    it('check type', () => {
-      const {PromiseComp} = createThenable();
+  // Warning don't fire in production, so this test passes in prod even if
+  // the suspenseCallback feature is not enabled
+  // @gate www || !__DEV__
+  it('check type', async () => {
+    const {PromiseComp} = createThenable();
 
-      const elementBadType = (
-        <React.Suspense suspenseCallback={1} fallback={'Waiting'}>
-          <PromiseComp />
-        </React.Suspense>
-      );
+    const elementBadType = (
+      <React.Suspense suspenseCallback={1} fallback={'Waiting'}>
+        <PromiseComp />
+      </React.Suspense>
+    );
 
-      ReactNoop.render(elementBadType);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-        'Warning: Unexpected type for suspenseCallback.',
-      ]);
+    ReactNoop.render(elementBadType);
+    await expect(async () => await waitForAll([])).toErrorDev([
+      'Warning: Unexpected type for suspenseCallback.',
+    ]);
 
-      const elementMissingCallback = (
-        <React.Suspense fallback={'Waiting'}>
-          <PromiseComp />
-        </React.Suspense>
-      );
+    const elementMissingCallback = (
+      <React.Suspense fallback={'Waiting'}>
+        <PromiseComp />
+      </React.Suspense>
+    );
 
-      ReactNoop.render(elementMissingCallback);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
-    });
-  }
+    ReactNoop.render(elementMissingCallback);
+    await expect(async () => await waitForAll([])).toErrorDev([]);
+  });
 
   // @gate www
   it('1 then 0 suspense callback', async () => {

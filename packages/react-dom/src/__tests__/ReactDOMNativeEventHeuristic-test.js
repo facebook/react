@@ -82,13 +82,13 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(disableButton.tagName).toBe('BUTTON');
 
     // Dispatch a click event on the Disable-button.
-    const firstEvent = document.createEvent('Event');
-    firstEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(disableButton, firstEvent);
-
+    await act(async () => {
+      const firstEvent = document.createEvent('Event');
+      firstEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(disableButton, firstEvent);
+    });
     // Discrete events should be flushed in a microtask.
     // Verify that the second button was removed.
-    await null;
     expect(submitButtonRef.current).toBe(null);
     // We'll assume that the browser won't let the user click it.
   });
@@ -130,9 +130,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    root.render(<Form />);
     // Flush
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<Form />));
 
     const disableButton = disableButtonRef.current;
     expect(disableButton.tagName).toBe('BUTTON');
@@ -140,20 +139,22 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(disableButton, firstEvent);
+    await act(() => {
+      dispatchAndSetCurrentEvent(disableButton, firstEvent);
 
-    // There should now be a pending update to disable the form.
-    // This should not have flushed yet since it's in concurrent mode.
-    const submitButton = submitButtonRef.current;
-    expect(submitButton.tagName).toBe('BUTTON');
+      // There should now be a pending update to disable the form.
+      // This should not have flushed yet since it's in concurrent mode.
+      const submitButton = submitButtonRef.current;
+      expect(submitButton.tagName).toBe('BUTTON');
 
-    // Discrete events should be flushed in a microtask.
-    await null;
+      // Flush the discrete event
+      ReactDOM.flushSync();
 
-    // Now let's dispatch an event on the submit button.
-    const secondEvent = document.createEvent('Event');
-    secondEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(submitButton, secondEvent);
+      // Now let's dispatch an event on the submit button.
+      const secondEvent = document.createEvent('Event');
+      secondEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(submitButton, secondEvent);
+    });
 
     // Therefore the form should never have been submitted.
     expect(formSubmitted).toBe(false);
@@ -190,30 +191,30 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    root.render(<Form />);
-    // Flush
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<Form />));
 
     const enableButton = enableButtonRef.current;
     expect(enableButton.tagName).toBe('BUTTON');
 
     // Dispatch a click event on the Enable-button.
-    const firstEvent = document.createEvent('Event');
-    firstEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(enableButton, firstEvent);
+    await act(() => {
+      const firstEvent = document.createEvent('Event');
+      firstEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(enableButton, firstEvent);
 
-    // There should now be a pending update to enable the form.
-    // This should not have flushed yet since it's in concurrent mode.
-    const submitButton = submitButtonRef.current;
-    expect(submitButton.tagName).toBe('BUTTON');
+      // There should now be a pending update to enable the form.
+      // This should not have flushed yet since it's in concurrent mode.
+      const submitButton = submitButtonRef.current;
+      expect(submitButton.tagName).toBe('BUTTON');
 
-    // Discrete events should be flushed in a microtask.
-    await null;
+      // Flush discrete updates
+      ReactDOM.flushSync();
 
-    // Now let's dispatch an event on the submit button.
-    const secondEvent = document.createEvent('Event');
-    secondEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(submitButton, secondEvent);
+      // Now let's dispatch an event on the submit button.
+      const secondEvent = document.createEvent('Event');
+      secondEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(submitButton, secondEvent);
+    });
 
     // Therefore the form should have been submitted.
     expect(formSubmitted).toBe(true);
@@ -342,12 +343,11 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     });
     expect(container.textContent).toEqual('Count: 0');
 
-    const pressEvent = document.createEvent('Event');
-    pressEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(target.current, pressEvent);
-    // Intentionally not using `act` so we can observe in between the press
-    // event and the microtask, without batching.
-    await null;
+    await act(async () => {
+      const pressEvent = document.createEvent('Event');
+      pressEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(target.current, pressEvent);
+    });
     // If this is 2, that means the `setCount` calls were not batched.
     expect(container.textContent).toEqual('Count: 1');
   });
@@ -383,17 +383,13 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     });
     expect(container.textContent).toEqual('Count: 0');
 
-    const pressEvent = document.createEvent('Event');
-    pressEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(target, pressEvent);
-
-    assertLog(['Count: 0 [after batchedUpdates]']);
-    expect(container.textContent).toEqual('Count: 0');
-
-    // Intentionally not using `act` so we can observe in between the click
-    // event and the microtask, without batching.
-    await null;
-
+    await act(async () => {
+      const pressEvent = document.createEvent('Event');
+      pressEvent.initEvent('click', true, true);
+      dispatchAndSetCurrentEvent(target, pressEvent);
+      assertLog(['Count: 0 [after batchedUpdates]']);
+      expect(container.textContent).toEqual('Count: 0');
+    });
     expect(container.textContent).toEqual('Count: 1');
   });
 });

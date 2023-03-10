@@ -8,6 +8,7 @@ let waitForAll;
 let assertLog;
 let waitForPaint;
 let Suspense;
+let startTransition;
 let getCacheForType;
 
 let caches;
@@ -23,6 +24,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     Suspense = React.Suspense;
+    startTransition = React.startTransition;
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
@@ -3224,9 +3226,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setText('B');
         });
-        // Update to a value that has already resolved
+        startTransition(() => {
+          setText('C');
+        });
+        // Assert that neither update has happened yet. Both the high pri and
+        // low pri updates are in the queue.
+        assertLog([]);
+
+        // Resolve this before starting to render so that C doesn't suspend.
         await resolveText('C');
-        setText('C');
       });
       assertLog([
         // First we attempt the high pri update. It suspends.

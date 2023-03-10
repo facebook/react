@@ -12,7 +12,6 @@
 
 let React;
 let ReactTestRenderer;
-let Scheduler;
 let ReactDebugTools;
 let act;
 
@@ -21,7 +20,6 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
   });
@@ -890,10 +888,8 @@ describe('ReactHooksInspectionIntegration', () => {
       </Suspense>,
     );
 
-    await LazyFoo;
-
-    expect(() => {
-      Scheduler.unstable_flushAll();
+    await expect(async () => {
+      await act(async () => await LazyFoo);
     }).toErrorDev([
       'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);

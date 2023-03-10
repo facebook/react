@@ -108,7 +108,6 @@ describe('ReactTestUtils.act()', () => {
     it('does not warn in concurrent mode', () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
-      Scheduler.unstable_flushAll();
     });
   });
 });

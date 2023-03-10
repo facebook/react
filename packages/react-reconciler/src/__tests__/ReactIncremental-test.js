@@ -79,7 +79,7 @@ describe('ReactIncremental', () => {
       ReactNoop.render(<Foo />, () => Scheduler.log('callback'));
     });
     // Do one step of work.
-    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+    await waitFor(['Foo']);
 
     // Do the rest of the work.
     await waitForAll(['Bar', 'Bar', 'callback']);

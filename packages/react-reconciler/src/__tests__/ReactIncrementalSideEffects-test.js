@@ -15,6 +15,7 @@ let ReactNoop;
 let Scheduler;
 let waitForAll;
 let waitFor;
+let waitForPaint;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
@@ -27,6 +28,7 @@ describe('ReactIncrementalSideEffects', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
+    waitForPaint = InternalTestUtils.waitForPaint;
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -694,25 +696,25 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('can update a completed tree before it has a chance to commit', async () => {
     function Foo(props) {
-      Scheduler.log('Foo');
+      Scheduler.log('Foo ' + props.step);
       return <span prop={props.step} />;
     }
     React.startTransition(() => {
       ReactNoop.render(<Foo step={1} />);
     });
     // This should be just enough to complete the tree without committing it
-    await waitFor(['Foo']);
+    await waitFor(['Foo 1']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
     // To confirm, perform one more unit of work. The tree should now
     // be flushed.
-    ReactNoop.flushNextYield();
+    await waitForPaint([]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
     React.startTransition(() => {
       ReactNoop.render(<Foo step={2} />);
     });
     // This should be just enough to complete the tree without committing it
-    await waitFor(['Foo']);
+    await waitFor(['Foo 2']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
@@ -723,11 +725,11 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.
-    ReactNoop.flushNextYield();
+    await waitForPaint([]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={2} />);
     // If we flush the rest of the work, we should get another commit that
     // renders 3. If it renders 2 again, that means an update was dropped.
-    await waitForAll([]);
+    await waitForAll(['Foo 3']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
