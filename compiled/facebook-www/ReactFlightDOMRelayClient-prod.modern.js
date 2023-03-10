@@ -69,6 +69,7 @@ function parseModelRecursively(response, parentObj, key, value) {
   return value;
 }
 var dummy = {},
+  knownServerReferences = new WeakMap(),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
@@ -227,8 +228,7 @@ function createModelReject(chunk) {
   };
 }
 function createServerReferenceProxy(response, metaData) {
-  var callServer = response._callServer;
-  return function () {
+  function proxy() {
     var args = Array.prototype.slice.call(arguments),
       p = metaData.bound;
     return p
@@ -238,7 +238,10 @@ function createServerReferenceProxy(response, metaData) {
             return callServer(metaData.id, bound.concat(args));
           })
       : callServer(metaData.id, args);
-  };
+  }
+  var callServer = response._callServer;
+  knownServerReferences.set(proxy, metaData);
+  return proxy;
 }
 function parseModelString(response, parentObject, key, value) {
   if ("$" === value[0]) {

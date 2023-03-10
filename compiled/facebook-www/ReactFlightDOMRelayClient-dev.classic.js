@@ -72,6 +72,8 @@ function parseModel(response, json) {
   return parseModelRecursively(response, dummy, "", json);
 }
 
+var knownServerReferences = new WeakMap();
+
 // ATTENTION
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
@@ -487,6 +489,7 @@ function createServerReferenceProxy(response, metaData) {
     });
   };
 
+  knownServerReferences.set(proxy, metaData);
   return proxy;
 }
 
