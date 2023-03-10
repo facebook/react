@@ -13,8 +13,10 @@ import type {
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {ClientManifest} from './ReactFlightServerWebpackBundlerConfig';
+import type {ServerManifest} from 'react-client/src/ReactFlightClientHostConfig';
+import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
@@ -22,6 +24,18 @@ import {
   startFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
+
+import {
+  createResponse,
+  reportGlobalError,
+  close,
+  resolveField,
+  resolveFile,
+  resolveFileInfo,
+  resolveFileChunk,
+  resolveFileComplete,
+  getRoot,
+} from 'react-server/src/ReactFlightReplyServer';
 
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
@@ -70,4 +84,61 @@ function renderToPipeableStream(
   };
 }
 
-export {renderToPipeableStream};
+function decodeReplyFromBusboy<T>(
+  busboyStream: Busboy,
+  webpackMap: ServerManifest,
+): Thenable<T> {
+  const response = createResponse(webpackMap);
+  busboyStream.on('field', (name, value) => {
+    const id = +name;
+    resolveField(response, id, value);
+  });
+  busboyStream.on('file', (name, value, {filename, encoding, mimeType}) => {
+    if (encoding.toLowerCase() === 'base64') {
+      throw new Error(
+        "React doesn't accept base64 encoded file uploads because we don't expect " +
+          "form data passed from a browser to ever encode data that way. If that's " +
+          'the wrong assumption, we can easily fix it.',
+      );
+    }
+    const id = +name;
+    const file = resolveFileInfo(response, id, filename, mimeType);
+    value.on('data', chunk => {
+      resolveFileChunk(response, file, chunk);
+    });
+    value.on('end', () => {
+      resolveFileComplete(response, file);
+    });
+  });
+  busboyStream.on('finish', () => {
+    close(response);
+  });
+  busboyStream.on('error', err => {
+    reportGlobalError(response, err);
+  });
+  return getRoot(response);
+}
+
+function decodeReply<T>(
+  body: string | FormData,
+  webpackMap: ServerManifest,
+): Thenable<T> {
+  const response = createResponse(webpackMap);
+  if (typeof body === 'string') {
+    resolveField(response, 0, body);
+  } else {
+    // $FlowFixMe[prop-missing] Flow doesn't know that forEach exists.
+    body.forEach((value: string | File, key: string) => {
+      const id = +key;
+      if (typeof value === 'string') {
+        resolveField(response, id, value);
+      } else {
+        resolveFile(response, id, value);
+      }
+    });
+  }
+  close(response);
+  return getRoot(response);
+}
+
+export {renderToPipeableStream, decodeReplyFromBusboy, decodeReply};

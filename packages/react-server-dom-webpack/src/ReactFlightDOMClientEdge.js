@@ -30,7 +30,7 @@ function noServerCall() {
 }
 
 export type Options = {
-  moduleMap?: SSRManifest,
+  moduleMap?: $NonMaybeType<SSRManifest>,
 };
 
 function createResponseFromOptions(options: void | Options) {

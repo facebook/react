@@ -453,5 +453,10 @@
   "465": "enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.",
   "466": "Trying to call a function from \"use server\" but the callServer option was not implemented in your router runtime.",
   "467": "Update hook called on initial render. This is likely a bug in React. Please file an issue.",
-  "468": "getNodesForType encountered a type it did not expect: \"%s\". This is a bug in React."
+  "468": "getNodesForType encountered a type it did not expect: \"%s\". This is a bug in React.",
+  "469": "Client Functions cannot be passed directly to Server Functions. Only Functions passed from the Server can be passed back again.",
+  "470": "Only global symbols received from Symbol.for(...) can be passed to Server Functions. The symbol Symbol.for(%s) cannot be found among global symbols.",
+  "471": "BigInt (%s) is not yet supported as an argument to a Server Function.",
+  "472": "Type %s is not supported as an argument to a Server Function.",
+  "473": "React doesn't accept base64 encoded file uploads because we don't except form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it."
 }
