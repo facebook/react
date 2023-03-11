@@ -1381,4 +1381,111 @@ describe('ReactUse', () => {
     assertLog(['B', 'A', 'C']);
     expect(root).toMatchRenderedOutput('BAC');
   });
+
+  test('basic Context as node', async () => {
+    const Context = React.createContext(null);
+
+    function Indirection({children}) {
+      Scheduler.log('Indirection');
+      return children;
+    }
+
+    function ParentOfContextNode() {
+      Scheduler.log('ParentOfContextNode');
+      return Context;
+    }
+
+    function Child({text}) {
+      useEffect(() => {
+        Scheduler.log('Mount');
+        return () => {
+          Scheduler.log('Unmount');
+        };
+      }, []);
+      return <Text text={text} />;
+    }
+
+    function App({contextValue, children}) {
+      const memoizedChildren = useMemo(
+        () => (
+          <Indirection>
+            <ParentOfContextNode />
+          </Indirection>
+        ),
+        [children],
+      );
+      return (
+        <Context.Provider value={contextValue}>
+          {memoizedChildren}
+        </Context.Provider>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App contextValue={<Child text="A" />} />);
+    });
+    assertLog(['Indirection', 'ParentOfContextNode', 'A', 'Mount']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Update the child to a new value
+    await act(async () => {
+      root.render(<App contextValue={<Child text="B" />} />);
+    });
+    assertLog([
+      // Notice that the <Indirection /> did not rerender, because the
+      // update was sent via Context.
+
+      // TODO: We shouldn't have to re-render the parent of the context node.
+      // This happens because we need to reconcile the parent's children again.
+      // However, we should be able to skip directly to reconcilation without
+      // evaluating the component. One way to do this might be to mark the
+      // context dependency with a flag that says it was added
+      // during reconcilation.
+      'ParentOfContextNode',
+
+      // Notice that this was an update, not a remount.
+      'B',
+    ]);
+    expect(root).toMatchRenderedOutput('B');
+
+    // Delete the old child and replace it with a new one, by changing the key
+    await act(async () => {
+      root.render(<App contextValue={<Child key="C" text="C" />} />);
+    });
+    assertLog([
+      'ParentOfContextNode',
+
+      // A new instance is mounted
+      'C',
+      'Unmount',
+      'Mount',
+    ]);
+  });
+
+  test('context as node, at the root', async () => {
+    const Context = React.createContext(<Text text="Hi" />);
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(Context);
+      });
+    });
+    assertLog(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  test('promises that resolves to a context, rendered as a node', async () => {
+    const Context = React.createContext(<Text text="Hi" />);
+    const promise = Promise.resolve(Context);
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(promise);
+      });
+    });
+    assertLog(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
 });

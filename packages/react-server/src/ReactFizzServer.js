@@ -1467,7 +1467,13 @@ function renderNodeDestructiveImpl(
       maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
       maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
     ) {
-      // TODO: Implement Context as child type.
+      const context: ReactContext<ReactNodeList> = (maybeUsable: any);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        readContext(context),
+      );
     }
 
     // $FlowFixMe[method-unbinding]
