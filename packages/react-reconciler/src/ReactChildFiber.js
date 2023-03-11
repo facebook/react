@@ -8,9 +8,10 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactPortal} from 'shared/ReactTypes';
+import type {ReactPortal, Thenable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
+import type {ThenableState} from './ReactFiberThenable';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -25,6 +26,8 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
+  REACT_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
 import isArray from 'shared/isArray';
@@ -41,6 +44,11 @@ import {
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
+import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
+
+// This tracks the thenables that are unwrapped during reconcilation.
+let thenableState: ThenableState | null = null;
+let thenableIndexCounter: number = 0;
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -97,6 +105,15 @@ if (__DEV__) {
 
 function isReactClass(type: any) {
   return type.prototype && type.prototype.isReactComponent;
+}
+
+function unwrapThenable<T>(thenable: Thenable<T>): T {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    thenableState = createThenableState();
+  }
+  return trackUsedThenable(thenableState, thenable, index);
 }
 
 function coerceRef(
@@ -551,6 +568,21 @@ function createChildReconciler(
         return created;
       }
 
+      // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+      if (typeof newChild.then === 'function') {
+        const thenable: Thenable<any> = (newChild: any);
+        return createChild(returnFiber, unwrapThenable(thenable), lanes);
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        // TODO: Implement Context as child type.
+      }
+
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
@@ -570,7 +602,6 @@ function createChildReconciler(
     lanes: Lanes,
   ): Fiber | null {
     // Update the fiber if the keys match, otherwise return null.
-
     const key = oldFiber !== null ? oldFiber.key : null;
 
     if (
@@ -615,6 +646,26 @@ function createChildReconciler(
         }
 
         return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+      }
+
+      // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+      if (typeof newChild.then === 'function') {
+        const thenable: Thenable<any> = (newChild: any);
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          unwrapThenable(thenable),
+          lanes,
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        // TODO: Implement Context as child type.
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -677,6 +728,27 @@ function createChildReconciler(
       if (isArray(newChild) || getIteratorFn(newChild)) {
         const matchedFiber = existingChildren.get(newIdx) || null;
         return updateFragment(returnFiber, matchedFiber, newChild, lanes, null);
+      }
+
+      // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+      if (typeof newChild.then === 'function') {
+        const thenable: Thenable<any> = (newChild: any);
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          unwrapThenable(thenable),
+          lanes,
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        // TODO: Implement Context as child type.
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -1250,7 +1322,7 @@ function createChildReconciler(
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
-  function reconcileChildFibers(
+  function reconcileChildFibersImpl(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChild: any,
@@ -1264,6 +1336,7 @@ function createChildReconciler(
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
+    // TODO: Let's use recursion like we do for Usable nodes?
     const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&
@@ -1324,6 +1397,39 @@ function createChildReconciler(
         );
       }
 
+      // Usables are a valid React node type. When React encounters a Usable in
+      // a child position, it unwraps it using the same algorithm as `use`. For
+      // example, for promises, React will throw an exception to unwind the
+      // stack, then replay the component once the promise resolves.
+      //
+      // A difference from `use` is that React will keep unwrapping the value
+      // until it reaches a non-Usable type.
+      //
+      // e.g. Usable<Usable<Usable<T>>> should resolve to T
+      //
+      // The structure is a bit unfortunate. Ideally, we shouldn't need to
+      // replay the entire begin phase of the parent fiber in order to reconcile
+      // the children again. This would require a somewhat significant refactor,
+      // because reconcilation happens deep within the begin phase, and
+      // depending on the type of work, not always at the end. We should
+      // consider as an future improvement.
+      if (typeof newChild.then === 'function') {
+        const thenable: Thenable<any> = (newChild: any);
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          unwrapThenable(thenable),
+          lanes,
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        // TODO: Implement Context as child type.
+      }
+
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
@@ -1351,12 +1457,39 @@ function createChildReconciler(
     return deleteRemainingChildren(returnFiber, currentFirstChild);
   }
 
+  function reconcileChildFibers(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChild: any,
+    lanes: Lanes,
+  ): Fiber | null {
+    // This indirection only exists so we can reset `thenableState` at the end.
+    // It should get inlined by Closure.
+    thenableIndexCounter = 0;
+    const firstChildFiber = reconcileChildFibersImpl(
+      returnFiber,
+      currentFirstChild,
+      newChild,
+      lanes,
+    );
+    thenableState = null;
+    // Don't bother to reset `thenableIndexCounter` to 0 because it always gets
+    // set at the beginning.
+    return firstChildFiber;
+  }
+
   return reconcileChildFibers;
 }
 
 export const reconcileChildFibers: ChildReconciler =
   createChildReconciler(true);
 export const mountChildFibers: ChildReconciler = createChildReconciler(false);
+
+export function resetChildReconcilerOnUnwind(): void {
+  // On unwind, clear any pending thenables that were used.
+  thenableState = null;
+  thenableIndexCounter = 0;
+}
 
 export function cloneChildFibers(
   current: Fiber | null,

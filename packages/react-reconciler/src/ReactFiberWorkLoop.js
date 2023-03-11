@@ -278,6 +278,7 @@ import {
   getShellBoundary,
 } from './ReactFiberSuspenseContext';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
 
 const ceil = Math.ceil;
 
@@ -1766,6 +1767,7 @@ function resetSuspendedWorkLoopOnUnwind() {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
   resetHooksOnUnwind();
+  resetChildReconcilerOnUnwind();
 }
 
 function handleThrow(root: FiberRoot, thrownValue: any): void {
@@ -2423,14 +2425,14 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       break;
     }
     default: {
-      if (__DEV__) {
-        console.error(
-          'Unexpected type of work: %s, Currently only function ' +
-            'components are replayed after suspending. This is a bug in React.',
-          unitOfWork.tag,
-        );
-      }
-      resetSuspendedWorkLoopOnUnwind();
+      // Other types besides function components are reset completely before
+      // being replayed. Currently this only happens when a Usable type is
+      // reconciled — the reconciler will suspend.
+      //
+      // We reset the fiber back to its original state; however, this isn't
+      // a full "unwind" because we're going to reuse the promises that were
+      // reconciled previously. So it's intentional that we don't call
+      // resetSuspendedWorkLoopOnUnwind here.
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
       unitOfWork = workInProgress = resetWorkInProgress(
         unitOfWork,
