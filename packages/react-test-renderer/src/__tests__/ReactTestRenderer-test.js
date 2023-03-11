@@ -13,7 +13,7 @@ let ReactDOM;
 let React;
 let ReactCache;
 let ReactTestRenderer;
-let Scheduler;
+let waitForAll;
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -25,7 +25,8 @@ describe('ReactTestRenderer', () => {
     React = require('react');
     ReactCache = require('react-cache');
     ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   it('should warn if used to render a ReactDOM portal', () => {
@@ -85,16 +86,14 @@ describe('ReactTestRenderer', () => {
 
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
-      await Promise.resolve();
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       expect(root.toJSON()).toEqual('initial');
 
       root.update(<App text="dynamic" />);
       expect(root.toJSON()).toEqual('fallback');
 
       PendingResources.dynamic('dynamic');
-      await Promise.resolve();
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       expect(root.toJSON()).toEqual('dynamic');
     });
 
@@ -111,16 +110,14 @@ describe('ReactTestRenderer', () => {
 
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
-      await Promise.resolve();
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       expect(root.toJSON().children).toEqual(['initial']);
 
       root.update(<App text="dynamic" />);
       expect(root.toJSON().children).toEqual(['fallback']);
 
       PendingResources.dynamic('dynamic');
-      await Promise.resolve();
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       expect(root.toJSON().children).toEqual(['dynamic']);
     });
   });
