@@ -1159,6 +1159,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildrenAsJSX('f')).toEqual(null);
   });
 
+  // NOTE: When legacy context is removed, it's probably fine to just delete
+  // this test. There's plenty of test coverage of stack unwinding in general
+  // because it's used for new context, suspense, and many other features.
+  // It has to be tested independently for each feature anyway. So although it
+  // doesn't look like it, this test is specific to legacy context.
+  // @gate !disableLegacyContext
   it('unwinds the context stack correctly on error', async () => {
     class Provider extends React.Component {
       static childContextTypes = {message: PropTypes.string};

@@ -302,6 +302,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn on invalid context types', () => {
     class NullContextTypeComponent extends React.Component {
       render() {

@@ -587,6 +587,7 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  // @gate !disableLegacyContext
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
@@ -652,6 +653,7 @@ describe('ReactCompositeComponent', () => {
     expect(childRenders).toBe(1);
   });
 
+  // @gate !disableLegacyContext
   it('should pass context when re-rendered for static child', () => {
     let parentInstance = null;
     let childInstance = null;
@@ -712,6 +714,7 @@ describe('ReactCompositeComponent', () => {
     expect(childInstance.context).toEqual({foo: 'bar', flag: true});
   });
 
+  // @gate !disableLegacyContext
   it('should pass context when re-rendered for static child within a composite component', () => {
     class Parent extends React.Component {
       static childContextTypes = {
@@ -768,6 +771,7 @@ describe('ReactCompositeComponent', () => {
     expect(wrapper.childRef.current.context).toEqual({flag: false});
   });
 
+  // @gate !disableLegacyContext
   it('should pass context transitively', () => {
     let childInstance = null;
     let grandchildInstance = null;
@@ -829,6 +833,7 @@ describe('ReactCompositeComponent', () => {
     expect(grandchildInstance.context).toEqual({foo: 'bar', depth: 1});
   });
 
+  // @gate !disableLegacyContext
   it('should pass context when re-rendered', () => {
     let parentInstance = null;
     let childInstance = null;
@@ -883,6 +888,7 @@ describe('ReactCompositeComponent', () => {
     expect(childInstance.context).toEqual({foo: 'bar', depth: 0});
   });
 
+  // @gate !disableLegacyContext
   it('unmasked context propagates through updates', () => {
     class Leaf extends React.Component {
       static contextTypes = {
@@ -946,6 +952,7 @@ describe('ReactCompositeComponent', () => {
     expect(div.children[0].id).toBe('aliens');
   });
 
+  // @gate !disableLegacyContext
   it('should trigger componentWillReceiveProps for context changes', () => {
     let contextChanges = 0;
     let propChanges = 0;
@@ -1219,6 +1226,7 @@ describe('ReactCompositeComponent', () => {
     expect(a).toBe(b);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('context should be passed down from the parent', () => {
     class Parent extends React.Component {
       static childContextTypes = {

@@ -1683,6 +1683,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(3);
   });
 
+  // @gate !disableLegacyContext
   it('merges and masks context', async () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1830,7 +1831,11 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  // @gate !disableLegacyContext
   it('does not leak own context into context provider', async () => {
+    if (gate(flags => flags.disableLegacyContext)) {
+      throw new Error('This test infinite loops when context is disabled.');
+    }
     class Recurse extends React.Component {
       static contextTypes = {
         n: PropTypes.number,
@@ -1859,49 +1864,50 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('does not leak own context into context provider (factory components)', async () => {
-      function Recurse(props, context) {
-        return {
-          getChildContext() {
-            return {n: (context.n || 3) - 1};
-          },
-          render() {
-            Scheduler.log('Recurse ' + JSON.stringify(context));
-            if (context.n === 0) {
-              return null;
-            }
-            return <Recurse />;
-          },
-        };
-      }
-      Recurse.contextTypes = {
-        n: PropTypes.number,
+  // @gate !disableModulePatternComponents
+  // @gate !disableLegacyContext
+  it('does not leak own context into context provider (factory components)', async () => {
+    function Recurse(props, context) {
+      return {
+        getChildContext() {
+          return {n: (context.n || 3) - 1};
+        },
+        render() {
+          Scheduler.log('Recurse ' + JSON.stringify(context));
+          if (context.n === 0) {
+            return null;
+          }
+          return <Recurse />;
+        },
       };
-      Recurse.childContextTypes = {
-        n: PropTypes.number,
-      };
+    }
+    Recurse.contextTypes = {
+      n: PropTypes.number,
+    };
+    Recurse.childContextTypes = {
+      n: PropTypes.number,
+    };
 
-      ReactNoop.render(<Recurse />);
-      await expect(
-        async () =>
-          await waitForAll([
-            'Recurse {}',
-            'Recurse {"n":2}',
-            'Recurse {"n":1}',
-            'Recurse {"n":0}',
-          ]),
-      ).toErrorDev([
-        'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
-          'Change Recurse to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Recurse.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      ]);
-    });
-  }
+    ReactNoop.render(<Recurse />);
+    await expect(
+      async () =>
+        await waitForAll([
+          'Recurse {}',
+          'Recurse {"n":2}',
+          'Recurse {"n":1}',
+          'Recurse {"n":0}',
+        ]),
+    ).toErrorDev([
+      'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
+        'Change Recurse to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Recurse.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    ]);
+  });
 
   // @gate www
+  // @gate !disableLegacyContext
   it('provides context when reusing work', async () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1955,6 +1961,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  // @gate !disableLegacyContext
   it('reads context when setState is below the provider', async () => {
     let statefulInst;
 
@@ -2041,6 +2048,7 @@ describe('ReactIncremental', () => {
     assertLog([]);
   });
 
+  // @gate !disableLegacyContext
   it('reads context when setState is above the provider', async () => {
     let statefulInst;
 
@@ -2135,6 +2143,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('maintains the correct context when providers bail out due to low priority', async () => {
     class Root extends React.Component {
       render() {
@@ -2178,6 +2187,7 @@ describe('ReactIncremental', () => {
     await waitForAll([]);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('maintains the correct context when unwinding due to an error in render', async () => {
     class Root extends React.Component {
       componentDidCatch(error) {
@@ -2229,6 +2239,7 @@ describe('ReactIncremental', () => {
     );
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should not recreate masked context unless inputs have changed', async () => {
     let scuCounter = 0;
 
@@ -2354,6 +2365,7 @@ describe('ReactIncremental', () => {
     expect(cduNextProps).toEqual([{children: 'B'}]);
   });
 
+  // @gate !disableLegacyContext
   it('updates descendants with new context values', async () => {
     let instance;
 
@@ -2403,6 +2415,7 @@ describe('ReactIncremental', () => {
     await waitForAll(['count:1']);
   });
 
+  // @gate !disableLegacyContext
   it('updates descendants with multiple context-providing ancestors with new context values', async () => {
     let instance;
 
@@ -2458,6 +2471,7 @@ describe('ReactIncremental', () => {
     await waitForAll(['count:1']);
   });
 
+  // @gate !disableLegacyContext
   it('should not update descendants with new context values if shouldComponentUpdate returns false', async () => {
     let instance;
 
@@ -2522,6 +2536,7 @@ describe('ReactIncremental', () => {
     await waitForAll([]);
   });
 
+  // @gate !disableLegacyContext
   it('should update descendants with new context values if setState() is called in the middle of the tree', async () => {
     let middleInstance;
     let topInstance;
@@ -2667,6 +2682,7 @@ describe('ReactIncremental', () => {
   });
 
   // We sometimes use Maps with Fibers as keys.
+  // @gate !disableLegacyContext || !__DEV__
   it('does not break with a bad Map polyfill', async () => {
     const realMapSet = Map.prototype.set;
 

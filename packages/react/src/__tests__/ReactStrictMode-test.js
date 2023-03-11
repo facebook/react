@@ -985,6 +985,7 @@ describe('context legacy', () => {
     jest.restoreAllMocks();
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn if the legacy context API have been used in strict mode', () => {
     class LegacyContextProvider extends React.Component {
       getChildContext() {

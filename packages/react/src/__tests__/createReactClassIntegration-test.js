@@ -291,6 +291,7 @@ describe('create-react-class-integration', () => {
     expect(instance.state.occupation).toEqual('clown');
   });
 
+  // @gate !disableLegacyContext
   it('renders based on context getInitialState', () => {
     const Foo = createReactClass({
       contextTypes: {
