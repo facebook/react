@@ -59,6 +59,7 @@ import {
   getFiberCurrentPropsFromNode,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
+/*
 import {
   setAttemptSynchronousHydration,
   setAttemptDiscreteHydration,
@@ -67,12 +68,15 @@ import {
   setGetCurrentUpdatePriority,
   setAttemptHydrationAtPriority,
 } from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
-import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
+*/
+// import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
+/*
 import {
   setRestoreImplementation,
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
+*/
 import Internals from '../ReactDOMSharedInternals';
 
 export {
@@ -82,12 +86,14 @@ export {
   preinit,
 } from 'react-dom-bindings/src/shared/ReactDOMFloat';
 
+/*
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdatePriority);
 setAttemptHydrationAtPriority(runWithPriority);
+*/
 
 if (__DEV__) {
   if (
@@ -108,12 +114,14 @@ if (__DEV__) {
   }
 }
 
-setRestoreImplementation(restoreControlledState);
+// setRestoreImplementation(restoreControlledState);
+/*
 setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
   flushSyncWithoutWarningIfAlreadyRendering,
 );
+*/
 
 function createPortal(
   children: ReactNodeList,

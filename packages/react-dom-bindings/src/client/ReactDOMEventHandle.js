@@ -14,7 +14,7 @@ import type {
   ReactDOMEventHandleListener,
 } from '../shared/ReactDOMTypes';
 
-import {allNativeEvents} from '../events/EventRegistry';
+// import {allNativeEvents} from '../events/EventRegistry';
 import {
   getEventHandlerListeners,
   setEventHandlerListeners,
@@ -22,7 +22,7 @@ import {
   addEventHandleToTarget,
 } from './ReactDOMComponentTree';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {listenToNativeEventForNonManagedEventTarget} from '../events/DOMPluginEventSystem';
+// import {listenToNativeEventForNonManagedEventTarget} from '../events/DOMPluginEventSystem';
 
 import {
   enableScopeAPI,
@@ -66,11 +66,11 @@ function registerReactDOMEvent(
     const eventTarget = ((target: any): EventTarget);
     // These are valid event targets, but they are also
     // non-managed React nodes.
-    listenToNativeEventForNonManagedEventTarget(
+    /*listenToNativeEventForNonManagedEventTarget(
       domEventName,
       isCapturePhaseListener,
       eventTarget,
-    );
+    );*/
   } else {
     throw new Error(
       'ReactDOM.createEventHandle: setter called on an invalid ' +
@@ -95,11 +95,11 @@ export function createEventHandle(
     // Unfortunately, the downside of this invariant is that *removing* a native
     // event from the list of known events has now become a breaking change for
     // any code relying on the createEventHandle API.
-    if (!allNativeEvents.has(domEventName)) {
+    /*if (!allNativeEvents.has(domEventName)) {
       throw new Error(
         `Cannot call unstable_createEventHandle with "${domEventName}", as it is not an event known to React.`,
       );
-    }
+    }*/
 
     let isCapturePhaseListener = false;
     if (options != null) {

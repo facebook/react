@@ -19,7 +19,7 @@ import {
   HostSingleton,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
+// import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
 import {
   rethrowCaughtError,

@@ -52,11 +52,11 @@ import {
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {validateDOMNesting, updatedAncestorInfoDev} from './validateDOMNesting';
-import {
-  isEnabled as ReactBrowserEventEmitterIsEnabled,
-  setEnabled as ReactBrowserEventEmitterSetEnabled,
-  getEventPriority,
-} from '../events/ReactDOMEventListener';
+// import {
+// isEnabled as ReactBrowserEventEmitterIsEnabled,
+// setEnabled as ReactBrowserEventEmitterSetEnabled,
+// getEventPriority,
+// } from '../events/ReactDOMEventListener';
 import {
   getChildNamespace,
   SVG_NAMESPACE,
@@ -72,7 +72,7 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
-import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+// import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableCreateEventHandleAPI,
@@ -86,7 +86,7 @@ import {
   HostText,
   HostSingleton,
 } from 'react-reconciler/src/ReactWorkTags';
-import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+// import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
@@ -231,7 +231,7 @@ export function getPublicInstance(instance: Instance): Instance {
 }
 
 export function prepareForCommit(containerInfo: Container): Object | null {
-  eventsEnabled = ReactBrowserEventEmitterIsEnabled();
+  // eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   let activeInstance = null;
   if (enableCreateEventHandleAPI) {
@@ -240,32 +240,32 @@ export function prepareForCommit(containerInfo: Container): Object | null {
       activeInstance = getClosestInstanceFromNode(focusedElem);
     }
   }
-  ReactBrowserEventEmitterSetEnabled(false);
+  // ReactBrowserEventEmitterSetEnabled(false);
   return activeInstance;
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object): void {
   if (enableCreateEventHandleAPI) {
-    ReactBrowserEventEmitterSetEnabled(true);
+    // ReactBrowserEventEmitterSetEnabled(true);
     dispatchBeforeDetachedBlur(
       (selectionInformation: any).focusedElem,
       internalInstanceHandle,
     );
-    ReactBrowserEventEmitterSetEnabled(false);
+    // ReactBrowserEventEmitterSetEnabled(false);
   }
 }
 
 export function afterActiveInstanceBlur(): void {
   if (enableCreateEventHandleAPI) {
-    ReactBrowserEventEmitterSetEnabled(true);
+    // ReactBrowserEventEmitterSetEnabled(true);
     dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
-    ReactBrowserEventEmitterSetEnabled(false);
+    // ReactBrowserEventEmitterSetEnabled(false);
   }
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
-  ReactBrowserEventEmitterSetEnabled(eventsEnabled);
+  // ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
   selectionInformation = null;
 }
@@ -430,10 +430,10 @@ export function createTextInstance(
 
 export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
-  if (currentEvent === undefined) {
-    return DefaultEventPriority;
-  }
-  return getEventPriority(currentEvent.type);
+  // if (currentEvent === undefined) {
+  return DefaultEventPriority;
+  // }
+  // return getEventPriority(currentEvent.type);
 }
 
 export const isPrimaryRenderer = true;
@@ -457,7 +457,7 @@ export function getInstanceFromNode(node: HTMLElement): null | Object {
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToAllSupportedEvents(portalInstance);
+  // listenToAllSupportedEvents(portalInstance);
 }
 
 export function prepareScopeUpdate(
@@ -688,7 +688,7 @@ export function clearSuspenseBoundary(
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
-          retryIfBlockedOn(suspenseInstance);
+          // retryIfBlockedOn(suspenseInstance);
           return;
         } else {
           depth--;
@@ -706,7 +706,7 @@ export function clearSuspenseBoundary(
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(suspenseInstance);
+  // retryIfBlockedOn(suspenseInstance);
 }
 
 export function clearSuspenseBoundaryFromContainer(
@@ -721,7 +721,7 @@ export function clearSuspenseBoundaryFromContainer(
     // Document nodes should never contain suspense boundaries.
   }
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(container);
+  // retryIfBlockedOn(container);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -1241,14 +1241,14 @@ export function getParentSuspenseInstance(
 
 export function commitHydratedContainer(container: Container): void {
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(container);
+  // retryIfBlockedOn(container);
 }
 
 export function commitHydratedSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): void {
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(suspenseInstance);
+  // retryIfBlockedOn(suspenseInstance);
 }
 
 // @TODO remove this function once float lands and hydrated tail nodes

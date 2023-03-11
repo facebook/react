@@ -7,10 +7,10 @@
  * @flow
  */
 
-import {
-  registrationNameDependencies,
-  possibleRegistrationNames,
-} from '../events/EventRegistry';
+// import {
+//   registrationNameDependencies,
+//   possibleRegistrationNames,
+// } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -47,7 +47,7 @@ import {
   updateWrapper as ReactDOMTextareaUpdateWrapper,
   restoreControlledState as ReactDOMTextareaRestoreControlledState,
 } from './ReactDOMTextarea';
-import {track} from './inputValueTracking';
+// import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
@@ -75,10 +75,10 @@ import {
   enableClientRenderFallbackOnTextMismatch,
   enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
-import {
+/* import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
-} from '../events/DOMPluginEventSystem';
+} from '../events/DOMPluginEventSystem';*/
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -118,10 +118,10 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function (type: string, props: any) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, {
+    /*validateUnknownProperties(type, props, {
       registrationNameDependencies,
       possibleRegistrationNames,
-    });
+    });*/
   };
 
   // IE 11 parses & normalizes the style attribute as opposed to other
@@ -338,7 +338,7 @@ function setInitialDOMProperties(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } /*else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -347,7 +347,7 @@ function setInitialDOMProperties(
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
-    } else if (nextProp != null) {
+    }*/ else if (nextProp != null) {
       setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
     }
   }
@@ -519,8 +519,8 @@ export function setInitialProperties(
   let props: Object;
   switch (tag) {
     case 'dialog':
-      listenToNonDelegatedEvent('cancel', domElement);
-      listenToNonDelegatedEvent('close', domElement);
+      // listenToNonDelegatedEvent('cancel', domElement);
+      // listenToNonDelegatedEvent('close', domElement);
       props = rawProps;
       break;
     case 'iframe':
@@ -528,22 +528,22 @@ export function setInitialProperties(
     case 'embed':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
-      listenToNonDelegatedEvent('load', domElement);
+      // listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
-      for (let i = 0; i < mediaEventTypes.length; i++) {
-        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
-      }
+      // for (let i = 0; i < mediaEventTypes.length; i++) {
+      //   listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      // }
       props = rawProps;
       break;
     case 'source':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the error event.
-      listenToNonDelegatedEvent('error', domElement);
+      // listenToNonDelegatedEvent('error', domElement);
       props = rawProps;
       break;
     case 'img':
@@ -551,14 +551,14 @@ export function setInitialProperties(
     case 'link':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for error and load events.
-      listenToNonDelegatedEvent('error', domElement);
-      listenToNonDelegatedEvent('load', domElement);
+      // listenToNonDelegatedEvent('error', domElement);
+      // listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'details':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the toggle event.
-      listenToNonDelegatedEvent('toggle', domElement);
+      // listenToNonDelegatedEvent('toggle', domElement);
       props = rawProps;
       break;
     case 'input':
@@ -566,7 +566,7 @@ export function setInitialProperties(
       props = ReactDOMInputGetHostProps(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -577,14 +577,14 @@ export function setInitialProperties(
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
     default:
       props = rawProps;
@@ -598,13 +598,13 @@ export function setInitialProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
+      // track((domElement: any));
       ReactDOMInputPostMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
+      // track((domElement: any));
       ReactDOMTextareaPostMountWrapper(domElement, rawProps);
       break;
     case 'option':
@@ -698,14 +698,14 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } /*else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
       if (!updatePayload) {
         updatePayload = [];
       }
-    } else {
+    }*/ else {
       // For all other deleted properties we add it to the queue. We use
       // the allowed property list in the commit phase instead.
       (updatePayload = updatePayload || []).push(propKey, null);
@@ -784,14 +784,14 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } /*else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
         if (propKey === 'onScroll') {
-          listenToNonDelegatedEvent('scroll', domElement);
+          // listenToNonDelegatedEvent('scroll', domElement);
         }
       }
       if (!updatePayload && lastProp !== nextProp) {
@@ -800,7 +800,7 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
-    } else {
+    }*/ else {
       // For any other property we always add it to the queue and then we
       // filter it out using the allowed property list during the commit.
       (updatePayload = updatePayload || []).push(propKey, nextProp);
@@ -893,48 +893,50 @@ export function diffHydratedProperties(
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
+    /*
     case 'dialog':
-      listenToNonDelegatedEvent('cancel', domElement);
-      listenToNonDelegatedEvent('close', domElement);
+      // listenToNonDelegatedEvent('cancel', domElement);
+      // listenToNonDelegatedEvent('close', domElement);
       break;
     case 'iframe':
     case 'object':
     case 'embed':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
-      listenToNonDelegatedEvent('load', domElement);
+      // listenToNonDelegatedEvent('load', domElement);
       break;
     case 'video':
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
       for (let i = 0; i < mediaEventTypes.length; i++) {
-        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+        // listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
       break;
     case 'source':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the error event.
-      listenToNonDelegatedEvent('error', domElement);
+      // listenToNonDelegatedEvent('error', domElement);
       break;
     case 'img':
     case 'image':
     case 'link':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for error and load events.
-      listenToNonDelegatedEvent('error', domElement);
-      listenToNonDelegatedEvent('load', domElement);
+      // listenToNonDelegatedEvent('error', domElement);
+      // listenToNonDelegatedEvent('load', domElement);
       break;
     case 'details':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the toggle event.
-      listenToNonDelegatedEvent('toggle', domElement);
+      // listenToNonDelegatedEvent('toggle', domElement);
       break;
+    */
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -943,13 +945,13 @@ export function diffHydratedProperties(
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
+      // listenToNonDelegatedEvent('invalid', domElement);
       break;
   }
 
@@ -1018,7 +1020,7 @@ export function diffHydratedProperties(
           updatePayload = [CHILDREN, '' + nextProp];
         }
       }
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } /* else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -1027,7 +1029,7 @@ export function diffHydratedProperties(
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
-    } else if (
+    }*/ else if (
       shouldWarnDev &&
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
@@ -1186,13 +1188,13 @@ export function diffHydratedProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
+      // track((domElement: any));
       ReactDOMInputPostMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
+      // track((domElement: any));
       ReactDOMTextareaPostMountWrapper(domElement, rawProps);
       break;
     case 'select':

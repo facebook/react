@@ -21,7 +21,7 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
+// import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {isValidContainerLegacy} from './ReactDOMRoot';
 import {
   DOCUMENT_NODE,
@@ -149,7 +149,7 @@ function legacyCreateRootFromDOMContainer(
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
     // $FlowFixMe[incompatible-call]
-    listenToAllSupportedEvents(rootContainerElement);
+    // listenToAllSupportedEvents(rootContainerElement);
 
     flushSync();
     return root;
@@ -181,7 +181,7 @@ function legacyCreateRootFromDOMContainer(
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
     // $FlowFixMe[incompatible-call]
-    listenToAllSupportedEvents(rootContainerElement);
+    // listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
     flushSync(() => {

@@ -16,7 +16,7 @@ import type {
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
-import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
+// import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   enableFloat,
@@ -60,7 +60,7 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
+// import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -256,7 +256,7 @@ export function createRoot(
     container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
       : container;
-  listenToAllSupportedEvents(rootContainerElement);
+  // listenToAllSupportedEvents(rootContainerElement);
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMRoot(root);
@@ -268,7 +268,7 @@ function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
 }
 function scheduleHydration(target: Node) {
   if (target) {
-    queueExplicitHydrationTarget(target);
+    //    queueExplicitHydrationTarget(target);
   }
 }
 // $FlowFixMe[prop-missing] found when upgrading Flow
@@ -344,7 +344,7 @@ export function hydrateRoot(
     Dispatcher.current = ReactDOMClientDispatcher;
   }
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
-  listenToAllSupportedEvents(container);
+  // listenToAllSupportedEvents(container);
 
   if (mutableSources) {
     for (let i = 0; i < mutableSources.length; i++) {

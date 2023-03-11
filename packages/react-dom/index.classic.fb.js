@@ -7,16 +7,16 @@
  * @flow
  */
 
-import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
+// import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
 
 import Internals from './src/ReactDOMSharedInternals';
 
 // For classic WWW builds, include a few internals that are already in use.
-Object.assign((Internals: any), {
-  ReactBrowserEventEmitter: {
-    isEnabled,
-  },
-});
+// Object.assign((Internals: any), {
+//   ReactBrowserEventEmitter: {
+//     isEnabled,
+//   },
+// });
 
 export {
   createPortal,
