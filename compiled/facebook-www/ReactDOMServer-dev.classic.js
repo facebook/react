@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-119eea22";
+var ReactVersion = "18.3.0-www-classic-de517acf";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -11167,6 +11167,19 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
         unwrapThenable(thenable)
       );
     }
+
+    if (
+      maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
+      maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      var context = maybeUsable;
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        readContext$1(context)
+      );
+    } // $FlowFixMe[method-unbinding]
 
     var childString = Object.prototype.toString.call(node);
     throw new Error(

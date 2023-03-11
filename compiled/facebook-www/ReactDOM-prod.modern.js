@@ -5933,6 +5933,15 @@ function createChildReconciler(shouldTrackSideEffects) {
         );
       if ("function" === typeof newChild.then)
         return createChild(returnFiber, unwrapThenable(newChild), lanes);
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return createChild(
+          returnFiber,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -5971,6 +5980,16 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           oldFiber,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -6031,6 +6050,17 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           newIdx,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -6361,6 +6391,16 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           currentFirstChild,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -9369,20 +9409,24 @@ function prepareToReadContext(workInProgress, renderLanes) {
         (workInProgress.firstContext = null)));
 }
 function readContext(context) {
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
+function readContextDuringReconcilation(consumer, context, renderLanes) {
+  null === currentlyRenderingFiber &&
+    prepareToReadContext(consumer, renderLanes);
+  return readContextForConsumer(consumer, context);
+}
+function readContextForConsumer(consumer, context) {
   var value = context._currentValue;
   if (lastFullyObservedContext !== context)
     if (
       ((context = { context: context, memoizedValue: value, next: null }),
       null === lastContextDependency)
     ) {
-      if (null === currentlyRenderingFiber)
-        throw Error(formatProdErrorMessage(308));
+      if (null === consumer) throw Error(formatProdErrorMessage(308));
       lastContextDependency = context;
-      currentlyRenderingFiber.dependencies = {
-        lanes: 0,
-        firstContext: context
-      };
-      enableLazyContextPropagation && (currentlyRenderingFiber.flags |= 524288);
+      consumer.dependencies = { lanes: 0, firstContext: context };
+      enableLazyContextPropagation && (consumer.flags |= 524288);
     } else lastContextDependency = lastContextDependency.next = context;
   return value;
 }
@@ -15199,7 +15243,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1720 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-05aee9c9",
+  version: "18.3.0-www-modern-46c135c4",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2120 = {
@@ -15230,7 +15274,7 @@ var internals$jscomp$inline_2120 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-05aee9c9"
+  reconcilerVersion: "18.3.0-www-modern-46c135c4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2121 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15415,4 +15459,4 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-05aee9c9";
+exports.version = "18.3.0-www-modern-46c135c4";

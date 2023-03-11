@@ -1711,6 +1711,15 @@ function createChildReconciler(shouldTrackSideEffects) {
         );
       if ("function" === typeof newChild.then)
         return createChild(returnFiber, unwrapThenable(newChild), lanes);
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return createChild(
+          returnFiber,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -1749,6 +1758,16 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           oldFiber,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -1809,6 +1828,17 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           newIdx,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -2129,6 +2159,16 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           currentFirstChild,
           unwrapThenable(newChild),
+          lanes
+        );
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          readContextDuringReconcilation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -5037,20 +5077,24 @@ function prepareToReadContext(workInProgress, renderLanes) {
         (workInProgress.firstContext = null)));
 }
 function readContext(context) {
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
+function readContextDuringReconcilation(consumer, context, renderLanes) {
+  null === currentlyRenderingFiber &&
+    prepareToReadContext(consumer, renderLanes);
+  return readContextForConsumer(consumer, context);
+}
+function readContextForConsumer(consumer, context) {
   var value = context._currentValue2;
   if (lastFullyObservedContext !== context)
     if (
       ((context = { context: context, memoizedValue: value, next: null }),
       null === lastContextDependency)
     ) {
-      if (null === currentlyRenderingFiber)
-        throw Error(formatProdErrorMessage(308));
+      if (null === consumer) throw Error(formatProdErrorMessage(308));
       lastContextDependency = context;
-      currentlyRenderingFiber.dependencies = {
-        lanes: 0,
-        firstContext: context
-      };
-      enableLazyContextPropagation && (currentlyRenderingFiber.flags |= 524288);
+      consumer.dependencies = { lanes: 0, firstContext: context };
+      enableLazyContextPropagation && (consumer.flags |= 524288);
     } else lastContextDependency = lastContextDependency.next = context;
   return value;
 }
@@ -9846,7 +9890,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-812a2cd2",
+    version: "18.3.0-www-classic-92b5c33e",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1303 = {
@@ -9877,7 +9921,7 @@ var internals$jscomp$inline_1303 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-812a2cd2"
+  reconcilerVersion: "18.3.0-www-classic-92b5c33e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

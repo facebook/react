@@ -10802,6 +10802,19 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
       );
     }
 
+    if (
+      maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
+      maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      var context = maybeUsable;
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        readContext$1(context)
+      );
+    } // $FlowFixMe[method-unbinding]
+
     var childString = Object.prototype.toString.call(node);
     throw new Error(
       "Objects are not valid as a React child (found: " +

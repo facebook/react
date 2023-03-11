@@ -3045,6 +3045,16 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
         null,
         unwrapThenable(node)
       );
+    if (
+      node.$$typeof === REACT_CONTEXT_TYPE ||
+      node.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    )
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        node._currentValue2
+      );
     request = Object.prototype.toString.call(node);
     throw Error(
       formatProdErrorMessage(
@@ -3787,4 +3797,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-fdc4fa79";
+exports.version = "18.3.0-www-classic-0c26a784";

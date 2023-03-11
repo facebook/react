@@ -2911,6 +2911,11 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
         null,
         unwrapThenable(node)
       );
+    if (
+      node.$$typeof === REACT_CONTEXT_TYPE ||
+      node.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    )
+      return renderNodeDestructiveImpl(request, task, null, node._currentValue);
     request = Object.prototype.toString.call(node);
     throw Error(
       "Objects are not valid as a React child (found: " +

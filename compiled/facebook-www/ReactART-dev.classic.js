@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-3bfe2b4e";
+var ReactVersion = "18.3.0-www-classic-e28878a7";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -6088,6 +6088,18 @@ function createChildReconciler(shouldTrackSideEffects) {
         return createChild(returnFiber, unwrapThenable(thenable), lanes);
       }
 
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        var context = newChild;
+        return createChild(
+          returnFiber,
+          readContextDuringReconcilation(returnFiber, context, lanes),
+          lanes
+        );
+      }
+
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
@@ -6159,6 +6171,19 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           oldFiber,
           unwrapThenable(thenable),
+          lanes
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        var context = newChild;
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          readContextDuringReconcilation(returnFiber, context, lanes),
           lanes
         );
       }
@@ -6245,6 +6270,20 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           newIdx,
           unwrapThenable(thenable),
+          lanes
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        var context = newChild;
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          readContextDuringReconcilation(returnFiber, context, lanes),
           lanes
         );
       }
@@ -6933,6 +6972,19 @@ function createChildReconciler(shouldTrackSideEffects) {
           returnFiber,
           currentFirstChild,
           unwrapThenable(thenable),
+          lanes
+        );
+      }
+
+      if (
+        newChild.$$typeof === REACT_CONTEXT_TYPE ||
+        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      ) {
+        var context = newChild;
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          readContextDuringReconcilation(returnFiber, context, lanes),
           lanes
         );
       }
@@ -17000,6 +17052,17 @@ function readContext(context) {
     }
   }
 
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
+function readContextDuringReconcilation(consumer, context, renderLanes) {
+  if (currentlyRenderingFiber === null) {
+    prepareToReadContext(consumer, renderLanes);
+  }
+
+  return readContextForConsumer(consumer, context);
+}
+
+function readContextForConsumer(consumer, context) {
   var value = context._currentValue2;
 
   if (lastFullyObservedContext === context);
@@ -17011,7 +17074,7 @@ function readContext(context) {
     };
 
     if (lastContextDependency === null) {
-      if (currentlyRenderingFiber === null) {
+      if (consumer === null) {
         throw new Error(
           "Context can only be read while React is rendering. " +
             "In classes, you can read it in the render method or getDerivedStateFromProps. " +
@@ -17021,13 +17084,13 @@ function readContext(context) {
       } // This is the first dependency for this component. Create a new list.
 
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies = {
+      consumer.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem
       };
 
       if (enableLazyContextPropagation) {
-        currentlyRenderingFiber.flags |= NeedsPropagation;
+        consumer.flags |= NeedsPropagation;
       }
     } else {
       // Append a new context item.
