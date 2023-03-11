@@ -775,6 +775,7 @@ describe('ReactErrorBoundaries', () => {
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('renders an error state if context provider throws in componentWillMount', () => {
     class BrokenComponentWillMountWithContext extends React.Component {
       static childContextTypes = {foo: PropTypes.number};
@@ -799,45 +800,45 @@ describe('ReactErrorBoundaries', () => {
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('renders an error state if module-style context provider throws in componentWillMount', () => {
-      function BrokenComponentWillMountWithContext() {
-        return {
-          getChildContext() {
-            return {foo: 42};
-          },
-          render() {
-            return <div>{this.props.children}</div>;
-          },
-          UNSAFE_componentWillMount() {
-            throw new Error('Hello');
-          },
-        };
-      }
-      BrokenComponentWillMountWithContext.childContextTypes = {
-        foo: PropTypes.number,
+  // @gate !disableModulePatternComponents
+  // @gate !disableLegacyContext
+  it('renders an error state if module-style context provider throws in componentWillMount', () => {
+    function BrokenComponentWillMountWithContext() {
+      return {
+        getChildContext() {
+          return {foo: 42};
+        },
+        render() {
+          return <div>{this.props.children}</div>;
+        },
+        UNSAFE_componentWillMount() {
+          throw new Error('Hello');
+        },
       };
+    }
+    BrokenComponentWillMountWithContext.childContextTypes = {
+      foo: PropTypes.number,
+    };
 
-      const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(
-          <ErrorBoundary>
-            <BrokenComponentWillMountWithContext />
-          </ErrorBoundary>,
-          container,
-        ),
-      ).toErrorDev(
-        'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
-          'returns a class instance. ' +
-          'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentWillMountWithContext />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toErrorDev(
+      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
+        'returns a class instance. ' +
+        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    );
 
-      expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    });
-  }
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
 
   it('mounts the error message if mounting fails', () => {
     function renderError(error) {

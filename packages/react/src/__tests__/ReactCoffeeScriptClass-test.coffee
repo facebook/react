@@ -11,6 +11,8 @@ ReactDOM = null
 ReactDOMClient = null
 act = null
 
+featureFlags = require 'shared/ReactFeatureFlags'
+
 describe 'ReactCoffeeScriptClass', ->
   container = null
   root = null
@@ -216,36 +218,37 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo, update: false), 'DIV', 'initial'
     test React.createElement(Foo, update: true), 'DIV', 'updated'
 
-  it 'renders based on context in the constructor', ->
-    class Foo extends React.Component
-      @contextTypes:
-        tag: PropTypes.string
-        className: PropTypes.string
+  if !featureFlags.disableLegacyContext
+    it 'renders based on context in the constructor', ->
+      class Foo extends React.Component
+        @contextTypes:
+          tag: PropTypes.string
+          className: PropTypes.string
 
-      constructor: (props, context) ->
-        super props, context
-        @state =
-          tag: context.tag
-          className: @context.className
+        constructor: (props, context) ->
+          super props, context
+          @state =
+            tag: context.tag
+            className: @context.className
 
-      render: ->
-        Tag = @state.tag
-        React.createElement Tag,
-          className: @state.className
+        render: ->
+          Tag = @state.tag
+          React.createElement Tag,
+            className: @state.className
 
-    class Outer extends React.Component
-      @childContextTypes:
-        tag: PropTypes.string
-        className: PropTypes.string
+      class Outer extends React.Component
+        @childContextTypes:
+          tag: PropTypes.string
+          className: PropTypes.string
 
-      getChildContext: ->
-        tag: 'span'
-        className: 'foo'
+        getChildContext: ->
+          tag: 'span'
+          className: 'foo'
 
-      render: ->
-        React.createElement Foo
+        render: ->
+          React.createElement Foo
 
-    test React.createElement(Outer), 'SPAN', 'foo'
+      test React.createElement(Outer), 'SPAN', 'foo'
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -395,40 +398,41 @@ describe 'ReactCoffeeScriptClass', ->
       root.unmount()
     expect(lifeCycles).toEqual ['will-unmount']
 
-  it 'warns when classic properties are defined on the instance,
-      but does not invoke them.', ->
-    getInitialStateWasCalled = false
-    getDefaultPropsWasCalled = false
-    class Foo extends React.Component
-      constructor: ->
-        @contextTypes = {}
-        @contextType = {}
-        @propTypes = {}
+  if !featureFlags.disableLegacyContext
+    it 'warns when classic properties are defined on the instance,
+        but does not invoke them.', ->
+      getInitialStateWasCalled = false
+      getDefaultPropsWasCalled = false
+      class Foo extends React.Component
+        constructor: ->
+          @contextTypes = {}
+          @contextType = {}
+          @propTypes = {}
 
-      getInitialState: ->
-        getInitialStateWasCalled = true
-        {}
+        getInitialState: ->
+          getInitialStateWasCalled = true
+          {}
 
-      getDefaultProps: ->
-        getDefaultPropsWasCalled = true
-        {}
+        getDefaultProps: ->
+          getDefaultPropsWasCalled = true
+          {}
 
-      render: ->
-        React.createElement('span',
-          className: 'foo'
-        )
+        render: ->
+          React.createElement('span',
+            className: 'foo'
+          )
 
-    expect(->
-      test React.createElement(Foo), 'SPAN', 'foo'
-    ).toErrorDev([
-      'getInitialState was defined on Foo, a plain JavaScript class.',
-      'getDefaultProps was defined on Foo, a plain JavaScript class.',
-      'propTypes was defined as an instance property on Foo.',
-      'contextTypes was defined as an instance property on Foo.',
-      'contextType was defined as an instance property on Foo.',
-    ])
-    expect(getInitialStateWasCalled).toBe false
-    expect(getDefaultPropsWasCalled).toBe false
+      expect(->
+        test React.createElement(Foo), 'SPAN', 'foo'
+      ).toErrorDev([
+        'getInitialState was defined on Foo, a plain JavaScript class.',
+        'getDefaultProps was defined on Foo, a plain JavaScript class.',
+        'propTypes was defined as an instance property on Foo.',
+        'contextTypes was defined as an instance property on Foo.',
+        'contextType was defined as an instance property on Foo.',
+      ])
+      expect(getInitialStateWasCalled).toBe false
+      expect(getDefaultPropsWasCalled).toBe false
 
   it 'does not warn about getInitialState() on class components
       if state is also defined.', ->
@@ -515,22 +519,23 @@ describe 'ReactCoffeeScriptClass', ->
       {withoutStack: true}
     )
 
-  it 'supports this.context passed via getChildContext', ->
-    class Bar extends React.Component
-      @contextTypes:
-        bar: PropTypes.string
-      render: ->
-        React.createElement('div', className: @context.bar)
+  if !featureFlags.disableLegacyContext
+    it 'supports this.context passed via getChildContext', ->
+      class Bar extends React.Component
+        @contextTypes:
+          bar: PropTypes.string
+        render: ->
+          React.createElement('div', className: @context.bar)
 
-    class Foo extends React.Component
-      @childContextTypes:
-        bar: PropTypes.string
-      getChildContext: ->
-        bar: 'bar-through-context'
-      render: ->
-        React.createElement Bar
+      class Foo extends React.Component
+        @childContextTypes:
+          bar: PropTypes.string
+        getChildContext: ->
+          bar: 'bar-through-context'
+        render: ->
+          React.createElement Bar
 
-    test React.createElement(Foo), 'DIV', 'bar-through-context'
+      test React.createElement(Foo), 'DIV', 'bar-through-context'
 
   it 'supports string refs', ->
     class Foo extends React.Component

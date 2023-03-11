@@ -44,6 +44,13 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('legacy context', function () {
+    // The `itRenders` test abstraction doesn't work with @gate so we have
+    // to do this instead.
+    if (gate(flags => flags.disableLegacyContext)) {
+      test('empty test to stop Jest from being a complainy complainer', () => {});
+      return;
+    }
+
     let PurpleContext, RedContext;
     beforeEach(() => {
       class Parent extends React.Component {

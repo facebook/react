@@ -984,6 +984,7 @@ describe('ReactNewContext', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
     });
 
+    // @gate !disableLegacyContext
     it('provider does not bail out if legacy context changed above', async () => {
       const Context = React.createContext(0);
 

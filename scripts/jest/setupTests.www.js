@@ -13,7 +13,6 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // TODO: Many tests were written before we started running them against the
   // www configuration. Update those tests so that they work against the www
   // configuration, too. Then remove these overrides.
-  wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
 
   return wwwFlags;

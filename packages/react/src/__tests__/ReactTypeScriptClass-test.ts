@@ -16,6 +16,7 @@ import ReactDOM = require('react-dom');
 import ReactDOMClient = require('react-dom/client');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
+import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // Before Each
 
@@ -511,9 +512,11 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(Foo, {update: true}), 'DIV', 'updated');
   });
 
-  it('renders based on context in the constructor', function() {
-    test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
-  });
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it('renders based on context in the constructor', function() {
+      test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
+    });
+  }
 
   it('renders only once when setting state in componentWillMount', function() {
     renderCount = 0;
@@ -592,27 +595,29 @@ describe('ReactTypeScriptClass', function() {
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
-  it(
-    'warns when classic properties are defined on the instance, ' +
-      'but does not invoke them.',
-    function() {
-      getInitialStateWasCalled = false;
-      getDefaultPropsWasCalled = false;
-      expect(() =>
-        test(React.createElement(ClassicProperties), 'SPAN', 'foo')
-      ).toErrorDev([
-        'getInitialState was defined on ClassicProperties, ' +
-          'a plain JavaScript class.',
-        'getDefaultProps was defined on ClassicProperties, ' +
-          'a plain JavaScript class.',
-        'propTypes was defined as an instance property on ClassicProperties.',
-        'contextTypes was defined as an instance property on ClassicProperties.',
-        'contextType was defined as an instance property on ClassicProperties.',
-      ]);
-      expect(getInitialStateWasCalled).toBe(false);
-      expect(getDefaultPropsWasCalled).toBe(false);
-    }
-  );
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it(
+      'warns when classic properties are defined on the instance, ' +
+        'but does not invoke them.',
+      function() {
+        getInitialStateWasCalled = false;
+        getDefaultPropsWasCalled = false;
+        expect(() =>
+          test(React.createElement(ClassicProperties), 'SPAN', 'foo')
+        ).toErrorDev([
+          'getInitialState was defined on ClassicProperties, ' +
+            'a plain JavaScript class.',
+          'getDefaultProps was defined on ClassicProperties, ' +
+            'a plain JavaScript class.',
+          'propTypes was defined as an instance property on ClassicProperties.',
+          'contextTypes was defined as an instance property on ClassicProperties.',
+          'contextType was defined as an instance property on ClassicProperties.',
+        ]);
+        expect(getInitialStateWasCalled).toBe(false);
+        expect(getDefaultPropsWasCalled).toBe(false);
+      }
+    );
+  }
 
   it(
     'does not warn about getInitialState() on class components ' +
@@ -680,9 +685,11 @@ describe('ReactTypeScriptClass', function() {
     );
   });
 
-  it('supports this.context passed via getChildContext', function() {
-    test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
-  });
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it('supports this.context passed via getChildContext', function() {
+      test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
+    });
+  }
 
   it('supports string refs', function() {
     const ref = React.createRef();

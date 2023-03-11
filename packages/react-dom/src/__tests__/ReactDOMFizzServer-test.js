@@ -1624,6 +1624,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
+  // @gate !disableLegacyContext
   it('should can suspend in a class component with legacy context', async () => {
     class TestProvider extends React.Component {
       static childContextTypes = {

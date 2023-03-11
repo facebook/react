@@ -246,36 +246,38 @@ describe('ReactES6Class', () => {
     test(<Foo update={true} />, 'DIV', 'updated');
   });
 
-  it('renders based on context in the constructor', () => {
-    class Foo extends React.Component {
-      constructor(props, context) {
-        super(props, context);
-        this.state = {tag: context.tag, className: this.context.className};
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('renders based on context in the constructor', () => {
+      class Foo extends React.Component {
+        constructor(props, context) {
+          super(props, context);
+          this.state = {tag: context.tag, className: this.context.className};
+        }
+        render() {
+          const Tag = this.state.tag;
+          return <Tag className={this.state.className} />;
+        }
       }
-      render() {
-        const Tag = this.state.tag;
-        return <Tag className={this.state.className} />;
-      }
-    }
-    Foo.contextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
+      Foo.contextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
 
-    class Outer extends React.Component {
-      getChildContext() {
-        return {tag: 'span', className: 'foo'};
+      class Outer extends React.Component {
+        getChildContext() {
+          return {tag: 'span', className: 'foo'};
+        }
+        render() {
+          return <Foo />;
+        }
       }
-      render() {
-        return <Foo />;
-      }
-    }
-    Outer.childContextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
-    test(<Outer />, 'SPAN', 'foo');
-  });
+      Outer.childContextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
+      test(<Outer />, 'SPAN', 'foo');
+    });
+  }
 
   it('renders only once when setting state in componentWillMount', () => {
     let renderCount = 0;
@@ -439,39 +441,41 @@ describe('ReactES6Class', () => {
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
-  it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
-    let getDefaultPropsWasCalled = false;
-    let getInitialStateWasCalled = false;
-    class Foo extends React.Component {
-      constructor() {
-        super();
-        this.contextTypes = {};
-        this.contextType = {};
-        this.propTypes = {};
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
+      let getDefaultPropsWasCalled = false;
+      let getInitialStateWasCalled = false;
+      class Foo extends React.Component {
+        constructor() {
+          super();
+          this.contextTypes = {};
+          this.contextType = {};
+          this.propTypes = {};
+        }
+        getInitialState() {
+          getInitialStateWasCalled = true;
+          return {};
+        }
+        getDefaultProps() {
+          getDefaultPropsWasCalled = true;
+          return {};
+        }
+        render() {
+          return <span className="foo" />;
+        }
       }
-      getInitialState() {
-        getInitialStateWasCalled = true;
-        return {};
-      }
-      getDefaultProps() {
-        getDefaultPropsWasCalled = true;
-        return {};
-      }
-      render() {
-        return <span className="foo" />;
-      }
-    }
 
-    expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
-      'getInitialState was defined on Foo, a plain JavaScript class.',
-      'getDefaultProps was defined on Foo, a plain JavaScript class.',
-      'propTypes was defined as an instance property on Foo.',
-      'contextType was defined as an instance property on Foo.',
-      'contextTypes was defined as an instance property on Foo.',
-    ]);
-    expect(getInitialStateWasCalled).toBe(false);
-    expect(getDefaultPropsWasCalled).toBe(false);
-  });
+      expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
+        'getInitialState was defined on Foo, a plain JavaScript class.',
+        'getDefaultProps was defined on Foo, a plain JavaScript class.',
+        'propTypes was defined as an instance property on Foo.',
+        'contextType was defined as an instance property on Foo.',
+        'contextTypes was defined as an instance property on Foo.',
+      ]);
+      expect(getInitialStateWasCalled).toBe(false);
+      expect(getDefaultPropsWasCalled).toBe(false);
+    });
+  }
 
   it('does not warn about getInitialState() on class components if state is also defined.', () => {
     class Foo extends React.Component {
@@ -553,24 +557,26 @@ describe('ReactES6Class', () => {
     );
   });
 
-  it('supports this.context passed via getChildContext', () => {
-    class Bar extends React.Component {
-      render() {
-        return <div className={this.context.bar} />;
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('supports this.context passed via getChildContext', () => {
+      class Bar extends React.Component {
+        render() {
+          return <div className={this.context.bar} />;
+        }
       }
-    }
-    Bar.contextTypes = {bar: PropTypes.string};
-    class Foo extends React.Component {
-      getChildContext() {
-        return {bar: 'bar-through-context'};
+      Bar.contextTypes = {bar: PropTypes.string};
+      class Foo extends React.Component {
+        getChildContext() {
+          return {bar: 'bar-through-context'};
+        }
+        render() {
+          return <Bar />;
+        }
       }
-      render() {
-        return <Bar />;
-      }
-    }
-    Foo.childContextTypes = {bar: PropTypes.string};
-    test(<Foo />, 'DIV', 'bar-through-context');
-  });
+      Foo.childContextTypes = {bar: PropTypes.string};
+      test(<Foo />, 'DIV', 'bar-through-context');
+    });
+  }
 
   it('supports string refs', () => {
     class Foo extends React.Component {

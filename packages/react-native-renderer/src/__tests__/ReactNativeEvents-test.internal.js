@@ -197,6 +197,7 @@ it('handles events', () => {
   ]);
 });
 
+// @gate !disableLegacyContext || !__DEV__
 it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
