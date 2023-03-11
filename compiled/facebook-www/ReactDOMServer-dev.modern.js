@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-5ee4e417";
+var ReactVersion = "18.3.0-www-modern-6461d8a7";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9646,16 +9646,8 @@ function use(usable) {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === "function") {
       // This is a thenable.
-      var thenable = usable; // Track the position of the thenable within this fiber.
-
-      var index = thenableIndexCounter;
-      thenableIndexCounter += 1;
-
-      if (thenableState === null) {
-        thenableState = createThenableState();
-      }
-
-      return trackUsedThenable(thenableState, thenable, index);
+      var thenable = usable;
+      return unwrapThenable(thenable);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -9666,6 +9658,17 @@ function use(usable) {
   } // eslint-disable-next-line react-internal/safe-string-coercion
 
   throw new Error("An unsupported type was passed to use(): " + String(usable));
+}
+
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+
+  if (thenableState === null) {
+    thenableState = createThenableState();
+  }
+
+  return trackUsedThenable(thenableState, thenable, index);
 }
 
 function unsupportedRefresh() {
@@ -10891,7 +10894,27 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
 
         return;
       }
-    } // $FlowFixMe[method-unbinding]
+    } // Usables are a valid React node type. When React encounters a Usable in
+    // a child position, it unwraps it using the same algorithm as `use`. For
+    // example, for promises, React will throw an exception to unwind the
+    // stack, then replay the component once the promise resolves.
+    //
+    // A difference from `use` is that React will keep unwrapping the value
+    // until it reaches a non-Usable type.
+    //
+    // e.g. Usable<Usable<Usable<T>>> should resolve to T
+
+    var maybeUsable = node;
+
+    if (typeof maybeUsable.then === "function") {
+      var thenable = maybeUsable;
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        unwrapThenable(thenable)
+      );
+    }
 
     var childString = Object.prototype.toString.call(node);
     throw new Error(

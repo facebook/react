@@ -2334,6 +2334,12 @@ function throwOnUseEffectEventCall() {
 function unsupportedStartTransition() {
   throw Error("startTransition cannot be called during server rendering.");
 }
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  null === thenableState && (thenableState = []);
+  return trackUsedThenable(thenableState, thenable, index);
+}
 function unsupportedRefresh() {
   throw Error("Cache cannot be refreshed during server rendering.");
 }
@@ -2422,12 +2428,7 @@ var HooksDispatcher = {
     },
     use: function (usable) {
       if (null !== usable && "object" === typeof usable) {
-        if ("function" === typeof usable.then) {
-          var index = thenableIndexCounter;
-          thenableIndexCounter += 1;
-          null === thenableState && (thenableState = []);
-          return trackUsedThenable(thenableState, usable, index);
-        }
+        if ("function" === typeof usable.then) return unwrapThenable(usable);
         if (
           usable.$$typeof === REACT_CONTEXT_TYPE ||
           usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -2903,6 +2904,13 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
       }
       return;
     }
+    if ("function" === typeof node.then)
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        unwrapThenable(node)
+      );
     request = Object.prototype.toString.call(node);
     throw Error(
       "Objects are not valid as a React child (found: " +

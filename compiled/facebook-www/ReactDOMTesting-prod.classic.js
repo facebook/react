@@ -2748,6 +2748,62 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+var SuspenseException = Error(formatProdErrorMessage(460));
+function isThenableResolved(thenable) {
+  thenable = thenable.status;
+  return "fulfilled" === thenable || "rejected" === thenable;
+}
+function noop() {}
+function trackUsedThenable(thenableState, thenable, index) {
+  index = thenableState[index];
+  void 0 === index
+    ? thenableState.push(thenable)
+    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+  switch (thenable.status) {
+    case "fulfilled":
+      return thenable.value;
+    case "rejected":
+      throw thenable.reason;
+    default:
+      "string" === typeof thenable.status
+        ? thenable.then(noop, noop)
+        : ((thenableState = thenable),
+          (thenableState.status = "pending"),
+          thenableState.then(
+            function (fulfilledValue) {
+              if ("pending" === thenable.status) {
+                var fulfilledThenable = thenable;
+                fulfilledThenable.status = "fulfilled";
+                fulfilledThenable.value = fulfilledValue;
+              }
+            },
+            function (error) {
+              if ("pending" === thenable.status) {
+                var rejectedThenable = thenable;
+                rejectedThenable.status = "rejected";
+                rejectedThenable.reason = error;
+              }
+            }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
+      suspendedThenable = thenable;
+      throw SuspenseException;
+  }
+}
+var suspendedThenable = null,
+  thenableState$1 = null,
+  thenableIndexCounter$1 = 0;
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter$1;
+  thenableIndexCounter$1 += 1;
+  null === thenableState$1 && (thenableState$1 = []);
+  return trackUsedThenable(thenableState$1, thenable, index);
+}
 function coerceRef(returnFiber, current, element) {
   returnFiber = element.ref;
   if (
@@ -2984,6 +3040,8 @@ function createChildReconciler(shouldTrackSideEffects) {
           (newChild.return = returnFiber),
           newChild
         );
+      if ("function" === typeof newChild.then)
+        return createChild(returnFiber, unwrapThenable(newChild), lanes);
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -3017,6 +3075,13 @@ function createChildReconciler(shouldTrackSideEffects) {
         return null !== key
           ? null
           : updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+      if ("function" === typeof newChild.then)
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          unwrapThenable(newChild),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -3068,6 +3133,14 @@ function createChildReconciler(shouldTrackSideEffects) {
         return (
           (existingChildren = existingChildren.get(newIdx) || null),
           updateFragment(returnFiber, existingChildren, newChild, lanes, null)
+        );
+      if ("function" === typeof newChild.then)
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          unwrapThenable(newChild),
+          lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
@@ -3247,7 +3320,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     isHydrating && pushTreeFork(returnFiber, newIdx);
     return iteratorFn;
   }
-  function reconcileChildFibers(
+  function reconcileChildFibersImpl(
     returnFiber,
     currentFirstChild,
     newChild,
@@ -3392,6 +3465,13 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
+      if ("function" === typeof newChild.then)
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          unwrapThenable(newChild),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
@@ -3412,6 +3492,22 @@ function createChildReconciler(shouldTrackSideEffects) {
             (returnFiber = currentFirstChild)),
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
+  }
+  function reconcileChildFibers(
+    returnFiber,
+    currentFirstChild,
+    newChild,
+    lanes
+  ) {
+    thenableIndexCounter$1 = 0;
+    returnFiber = reconcileChildFibersImpl(
+      returnFiber,
+      currentFirstChild,
+      newChild,
+      lanes
+    );
+    thenableState$1 = null;
+    return returnFiber;
   }
   return reconcileChildFibers;
 }
@@ -3500,55 +3596,7 @@ function resetWorkInProgressVersions() {
     workInProgressSources[i]._workInProgressVersionPrimary = null;
   workInProgressSources.length = 0;
 }
-var SuspenseException = Error(formatProdErrorMessage(460));
-function isThenableResolved(thenable) {
-  thenable = thenable.status;
-  return "fulfilled" === thenable || "rejected" === thenable;
-}
-function noop() {}
-function trackUsedThenable(thenableState, thenable, index) {
-  index = thenableState[index];
-  void 0 === index
-    ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
-  switch (thenable.status) {
-    case "fulfilled":
-      return thenable.value;
-    case "rejected":
-      throw thenable.reason;
-    default:
-      "string" === typeof thenable.status
-        ? thenable.then(noop, noop)
-        : ((thenableState = thenable),
-          (thenableState.status = "pending"),
-          thenableState.then(
-            function (fulfilledValue) {
-              if ("pending" === thenable.status) {
-                var fulfilledThenable = thenable;
-                fulfilledThenable.status = "fulfilled";
-                fulfilledThenable.value = fulfilledValue;
-              }
-            },
-            function (error) {
-              if ("pending" === thenable.status) {
-                var rejectedThenable = thenable;
-                rejectedThenable.status = "rejected";
-                rejectedThenable.reason = error;
-              }
-            }
-          ));
-      switch (thenable.status) {
-        case "fulfilled":
-          return thenable.value;
-        case "rejected":
-          throw thenable.reason;
-      }
-      suspendedThenable = thenable;
-      throw SuspenseException;
-  }
-}
-var suspendedThenable = null,
-  ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
+var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentBatchConfig$3 = ReactSharedInternals.ReactCurrentBatchConfig,
   renderLanes$1 = 0,
   currentlyRenderingFiber$1 = null,
@@ -9498,6 +9546,8 @@ function resetWorkInProgressStack() {
     else
       resetContextDependencies(),
         resetHooksOnUnwind(),
+        (thenableState$1 = null),
+        (thenableIndexCounter$1 = 0),
         (interruptedWork = workInProgress);
     for (; null !== interruptedWork; )
       unwindInterruptedWork(interruptedWork.alternate, interruptedWork),
@@ -9756,9 +9806,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     default:
-      resetContextDependencies(),
-        resetHooksOnUnwind(),
-        unwindInterruptedWork(current, unitOfWork),
+      unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
           resetWorkInProgress(unitOfWork, renderLanes)),
         (current = beginWork(current, unitOfWork, renderLanes));
@@ -9772,6 +9820,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
   resetContextDependencies();
   resetHooksOnUnwind();
+  thenableState$1 = null;
+  thenableIndexCounter$1 = 0;
   var returnFiber = unitOfWork.return;
   if (null === returnFiber || null === workInProgressRoot)
     (workInProgressRootExitStatus = 1),
@@ -11632,17 +11682,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1553 = {
+var devToolsConfig$jscomp$inline_1552 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-600fa423",
+  version: "18.3.0-www-classic-3bfe2b4e",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2105 = {
-  bundleType: devToolsConfig$jscomp$inline_1553.bundleType,
-  version: devToolsConfig$jscomp$inline_1553.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1553.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1553.rendererConfig,
+var internals$jscomp$inline_2106 = {
+  bundleType: devToolsConfig$jscomp$inline_1552.bundleType,
+  version: devToolsConfig$jscomp$inline_1552.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1552.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1552.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11658,26 +11708,26 @@ var internals$jscomp$inline_2105 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1553.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1552.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-600fa423"
+  reconcilerVersion: "18.3.0-www-classic-3bfe2b4e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2106 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2107 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2106.isDisabled &&
-    hook$jscomp$inline_2106.supportsFiber
+    !hook$jscomp$inline_2107.isDisabled &&
+    hook$jscomp$inline_2107.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2106.inject(
-        internals$jscomp$inline_2105
+      (rendererID = hook$jscomp$inline_2107.inject(
+        internals$jscomp$inline_2106
       )),
-        (injectedHook = hook$jscomp$inline_2106);
+        (injectedHook = hook$jscomp$inline_2107);
     } catch (err) {}
 }
 var Dispatcher = Internals.Dispatcher,
@@ -13034,14 +13084,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$296;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1628 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1628) {
-      var element$jscomp$inline_1629 = document.createElement("div");
-      element$jscomp$inline_1629.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1628 =
-        "function" === typeof element$jscomp$inline_1629.oninput;
+    var isSupported$jscomp$inline_1627 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1627) {
+      var element$jscomp$inline_1628 = document.createElement("div");
+      element$jscomp$inline_1628.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1627 =
+        "function" === typeof element$jscomp$inline_1628.oninput;
     }
-    JSCompiler_inline_result$jscomp$296 = isSupported$jscomp$inline_1628;
+    JSCompiler_inline_result$jscomp$296 = isSupported$jscomp$inline_1627;
   } else JSCompiler_inline_result$jscomp$296 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$296 &&
@@ -13182,20 +13232,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1641 = 0;
-  i$jscomp$inline_1641 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1641++
+  var i$jscomp$inline_1640 = 0;
+  i$jscomp$inline_1640 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1640++
 ) {
-  var eventName$jscomp$inline_1642 =
-      simpleEventPluginEvents[i$jscomp$inline_1641],
-    domEventName$jscomp$inline_1643 =
-      eventName$jscomp$inline_1642.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1644 =
-      eventName$jscomp$inline_1642[0].toUpperCase() +
-      eventName$jscomp$inline_1642.slice(1);
+  var eventName$jscomp$inline_1641 =
+      simpleEventPluginEvents[i$jscomp$inline_1640],
+    domEventName$jscomp$inline_1642 =
+      eventName$jscomp$inline_1641.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1643 =
+      eventName$jscomp$inline_1641[0].toUpperCase() +
+      eventName$jscomp$inline_1641.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1643,
-    "on" + capitalizedEvent$jscomp$inline_1644
+    domEventName$jscomp$inline_1642,
+    "on" + capitalizedEvent$jscomp$inline_1643
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14914,4 +14964,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-600fa423";
+exports.version = "18.3.0-www-classic-3bfe2b4e";

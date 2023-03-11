@@ -17995,6 +17995,165 @@ var ReactStrictModeWarnings = {
   };
 }
 
+var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+// detect this is caught by userspace, we'll log a warning in development.
+
+var SuspenseException = new Error(
+  "Suspense Exception: This is not a real error! It's an implementation " +
+    "detail of `use` to interrupt the current render. You must either " +
+    "rethrow it immediately, or move the `use` call outside of the " +
+    "`try/catch` block. Capturing without rethrowing will lead to " +
+    "unexpected behavior.\n\n" +
+    "To handle async errors, wrap your component in an error boundary, or " +
+    "call the promise's `.catch` method and pass the result to `use`"
+);
+function createThenableState() {
+  // The ThenableState is created the first time a component suspends. If it
+  // suspends again, we'll reuse the same state.
+  return [];
+}
+function isThenableResolved(thenable) {
+  var status = thenable.status;
+  return status === "fulfilled" || status === "rejected";
+}
+
+function noop() {}
+
+function trackUsedThenable(thenableState, thenable, index) {
+  if (ReactCurrentActQueue$2.current !== null) {
+    ReactCurrentActQueue$2.didUsePromise = true;
+  }
+
+  var previous = thenableState[index];
+
+  if (previous === undefined) {
+    thenableState.push(thenable);
+  } else {
+    if (previous !== thenable) {
+      // Reuse the previous thenable, and drop the new one. We can assume
+      // they represent the same value, because components are idempotent.
+      // Avoid an unhandled rejection errors for the Promises that we'll
+      // intentionally ignore.
+      thenable.then(noop, noop);
+      thenable = previous;
+    }
+  } // We use an expando to track the status and result of a thenable so that we
+  // can synchronously unwrap the value. Think of this as an extension of the
+  // Promise API, or a custom interface that is a superset of Thenable.
+  //
+  // If the thenable doesn't have a status, set it to "pending" and attach
+  // a listener that will update its status and result when it resolves.
+
+  switch (thenable.status) {
+    case "fulfilled": {
+      var fulfilledValue = thenable.value;
+      return fulfilledValue;
+    }
+
+    case "rejected": {
+      var rejectedError = thenable.reason;
+      throw rejectedError;
+    }
+
+    default: {
+      if (typeof thenable.status === "string") {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
+      } else {
+        var pendingThenable = thenable;
+        pendingThenable.status = "pending";
+        pendingThenable.then(
+          function (fulfilledValue) {
+            if (thenable.status === "pending") {
+              var fulfilledThenable = thenable;
+              fulfilledThenable.status = "fulfilled";
+              fulfilledThenable.value = fulfilledValue;
+            }
+          },
+          function (error) {
+            if (thenable.status === "pending") {
+              var rejectedThenable = thenable;
+              rejectedThenable.status = "rejected";
+              rejectedThenable.reason = error;
+            }
+          }
+        );
+      } // Check one more time in case the thenable resolved synchronously.
+
+      switch (thenable.status) {
+        case "fulfilled": {
+          var fulfilledThenable = thenable;
+          return fulfilledThenable.value;
+        }
+
+        case "rejected": {
+          var rejectedThenable = thenable;
+          throw rejectedThenable.reason;
+        }
+      } // Suspend.
+      //
+      // Throwing here is an implementation detail that allows us to unwind the
+      // call stack. But we shouldn't allow it to leak into userspace. Throw an
+      // opaque placeholder value instead of the actual thenable. If it doesn't
+      // get captured by the work loop, log a warning, because that means
+      // something in userspace must have caught it.
+
+      suspendedThenable = thenable;
+
+      {
+        needsToResetSuspendedThenableDEV = true;
+      }
+
+      throw SuspenseException;
+    }
+  }
+} // This is used to track the actual thenable that suspended so it can be
+// passed to the rest of the Suspense implementation — which, for historical
+// reasons, expects to receive a thenable.
+
+var suspendedThenable = null;
+var needsToResetSuspendedThenableDEV = false;
+function getSuspendedThenable() {
+  // This is called right after `use` suspends by throwing an exception. `use`
+  // throws an opaque value instead of the thenable itself so that it can't be
+  // caught in userspace. Then the work loop accesses the actual thenable using
+  // this function.
+  if (suspendedThenable === null) {
+    throw new Error(
+      "Expected a suspended thenable. This is a bug in React. Please file " +
+        "an issue."
+    );
+  }
+
+  var thenable = suspendedThenable;
+  suspendedThenable = null;
+
+  {
+    needsToResetSuspendedThenableDEV = false;
+  }
+
+  return thenable;
+}
+function checkIfUseWrappedInTryCatch() {
+  {
+    // This was set right before SuspenseException was thrown, and it should
+    // have been cleared when the exception was handled. If it wasn't,
+    // it must have been caught by userspace.
+    if (needsToResetSuspendedThenableDEV) {
+      needsToResetSuspendedThenableDEV = false;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+var thenableState$1 = null;
+var thenableIndexCounter$1 = 0;
 var didWarnAboutMaps;
 var didWarnAboutGenerators;
 var didWarnAboutStringRefs;
@@ -18051,6 +18210,17 @@ var warnForMissingKey = function (child, returnFiber) {};
 
 function isReactClass(type) {
   return type.prototype && type.prototype.isReactComponent;
+}
+
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter$1;
+  thenableIndexCounter$1 += 1;
+
+  if (thenableState$1 === null) {
+    thenableState$1 = createThenableState();
+  }
+
+  return trackUsedThenable(thenableState$1, thenable, index);
 }
 
 function coerceRef(returnFiber, current, element) {
@@ -18472,6 +18642,13 @@ function createChildReconciler(shouldTrackSideEffects) {
 
         _created3.return = returnFiber;
         return _created3;
+      } // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+
+      if (typeof newChild.then === "function") {
+        var thenable = newChild;
+        return createChild(returnFiber, unwrapThenable(thenable), lanes);
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -18535,6 +18712,18 @@ function createChildReconciler(shouldTrackSideEffects) {
         }
 
         return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+      } // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+
+      if (typeof newChild.then === "function") {
+        var thenable = newChild;
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          unwrapThenable(thenable),
+          lanes
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -18607,6 +18796,19 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes,
           null
+        );
+      } // Usable node types
+      //
+      // Unwrap the inner value and recursively call this function again.
+
+      if (typeof newChild.then === "function") {
+        var thenable = newChild;
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          unwrapThenable(thenable),
+          lanes
         );
       }
 
@@ -19227,7 +19429,7 @@ function createChildReconciler(shouldTrackSideEffects) {
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
 
-  function reconcileChildFibers(
+  function reconcileChildFibersImpl(
     returnFiber,
     currentFirstChild,
     newChild,
@@ -19240,6 +19442,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
+    // TODO: Let's use recursion like we do for Usable nodes?
     var isUnkeyedTopLevelFragment =
       typeof newChild === "object" &&
       newChild !== null &&
@@ -19300,6 +19503,31 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
+      } // Usables are a valid React node type. When React encounters a Usable in
+      // a child position, it unwraps it using the same algorithm as `use`. For
+      // example, for promises, React will throw an exception to unwind the
+      // stack, then replay the component once the promise resolves.
+      //
+      // A difference from `use` is that React will keep unwrapping the value
+      // until it reaches a non-Usable type.
+      //
+      // e.g. Usable<Usable<Usable<T>>> should resolve to T
+      //
+      // The structure is a bit unfortunate. Ideally, we shouldn't need to
+      // replay the entire begin phase of the parent fiber in order to reconcile
+      // the children again. This would require a somewhat significant refactor,
+      // because reconcilation happens deep within the begin phase, and
+      // depending on the type of work, not always at the end. We should
+      // consider as an future improvement.
+
+      if (typeof newChild.then === "function") {
+        var thenable = newChild;
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          unwrapThenable(thenable),
+          lanes
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -19328,11 +19556,37 @@ function createChildReconciler(shouldTrackSideEffects) {
     return deleteRemainingChildren(returnFiber, currentFirstChild);
   }
 
+  function reconcileChildFibers(
+    returnFiber,
+    currentFirstChild,
+    newChild,
+    lanes
+  ) {
+    // This indirection only exists so we can reset `thenableState` at the end.
+    // It should get inlined by Closure.
+    thenableIndexCounter$1 = 0;
+    var firstChildFiber = reconcileChildFibersImpl(
+      returnFiber,
+      currentFirstChild,
+      newChild,
+      lanes
+    );
+    thenableState$1 = null; // Don't bother to reset `thenableIndexCounter` to 0 because it always gets
+    // set at the beginning.
+
+    return firstChildFiber;
+  }
+
   return reconcileChildFibers;
 }
 
 var reconcileChildFibers = createChildReconciler(true);
 var mountChildFibers = createChildReconciler(false);
+function resetChildReconcilerOnUnwind() {
+  // On unwind, clear any pending thenables that were used.
+  thenableState$1 = null;
+  thenableIndexCounter$1 = 0;
+}
 function cloneChildFibers(current, workInProgress) {
   if (current !== null && workInProgress.child !== current.child) {
     throw new Error("Resuming work not yet implemented.");
@@ -19681,163 +19935,6 @@ function registerMutableSourceForHydration(root, mutableSource) {
   } else {
     root.mutableSourceEagerHydrationData.push(mutableSource, version);
   }
-}
-
-var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
-// detect this is caught by userspace, we'll log a warning in development.
-
-var SuspenseException = new Error(
-  "Suspense Exception: This is not a real error! It's an implementation " +
-    "detail of `use` to interrupt the current render. You must either " +
-    "rethrow it immediately, or move the `use` call outside of the " +
-    "`try/catch` block. Capturing without rethrowing will lead to " +
-    "unexpected behavior.\n\n" +
-    "To handle async errors, wrap your component in an error boundary, or " +
-    "call the promise's `.catch` method and pass the result to `use`"
-);
-function createThenableState() {
-  // The ThenableState is created the first time a component suspends. If it
-  // suspends again, we'll reuse the same state.
-  return [];
-}
-function isThenableResolved(thenable) {
-  var status = thenable.status;
-  return status === "fulfilled" || status === "rejected";
-}
-
-function noop() {}
-
-function trackUsedThenable(thenableState, thenable, index) {
-  if (ReactCurrentActQueue$2.current !== null) {
-    ReactCurrentActQueue$2.didUsePromise = true;
-  }
-
-  var previous = thenableState[index];
-
-  if (previous === undefined) {
-    thenableState.push(thenable);
-  } else {
-    if (previous !== thenable) {
-      // Reuse the previous thenable, and drop the new one. We can assume
-      // they represent the same value, because components are idempotent.
-      // Avoid an unhandled rejection errors for the Promises that we'll
-      // intentionally ignore.
-      thenable.then(noop, noop);
-      thenable = previous;
-    }
-  } // We use an expando to track the status and result of a thenable so that we
-  // can synchronously unwrap the value. Think of this as an extension of the
-  // Promise API, or a custom interface that is a superset of Thenable.
-  //
-  // If the thenable doesn't have a status, set it to "pending" and attach
-  // a listener that will update its status and result when it resolves.
-
-  switch (thenable.status) {
-    case "fulfilled": {
-      var fulfilledValue = thenable.value;
-      return fulfilledValue;
-    }
-
-    case "rejected": {
-      var rejectedError = thenable.reason;
-      throw rejectedError;
-    }
-
-    default: {
-      if (typeof thenable.status === "string") {
-        // Only instrument the thenable if the status if not defined. If
-        // it's defined, but an unknown value, assume it's been instrumented by
-        // some custom userspace implementation. We treat it as "pending".
-        // Attach a dummy listener, to ensure that any lazy initialization can
-        // happen. Flight lazily parses JSON when the value is actually awaited.
-        thenable.then(noop, noop);
-      } else {
-        var pendingThenable = thenable;
-        pendingThenable.status = "pending";
-        pendingThenable.then(
-          function (fulfilledValue) {
-            if (thenable.status === "pending") {
-              var fulfilledThenable = thenable;
-              fulfilledThenable.status = "fulfilled";
-              fulfilledThenable.value = fulfilledValue;
-            }
-          },
-          function (error) {
-            if (thenable.status === "pending") {
-              var rejectedThenable = thenable;
-              rejectedThenable.status = "rejected";
-              rejectedThenable.reason = error;
-            }
-          }
-        );
-      } // Check one more time in case the thenable resolved synchronously.
-
-      switch (thenable.status) {
-        case "fulfilled": {
-          var fulfilledThenable = thenable;
-          return fulfilledThenable.value;
-        }
-
-        case "rejected": {
-          var rejectedThenable = thenable;
-          throw rejectedThenable.reason;
-        }
-      } // Suspend.
-      //
-      // Throwing here is an implementation detail that allows us to unwind the
-      // call stack. But we shouldn't allow it to leak into userspace. Throw an
-      // opaque placeholder value instead of the actual thenable. If it doesn't
-      // get captured by the work loop, log a warning, because that means
-      // something in userspace must have caught it.
-
-      suspendedThenable = thenable;
-
-      {
-        needsToResetSuspendedThenableDEV = true;
-      }
-
-      throw SuspenseException;
-    }
-  }
-} // This is used to track the actual thenable that suspended so it can be
-// passed to the rest of the Suspense implementation — which, for historical
-// reasons, expects to receive a thenable.
-
-var suspendedThenable = null;
-var needsToResetSuspendedThenableDEV = false;
-function getSuspendedThenable() {
-  // This is called right after `use` suspends by throwing an exception. `use`
-  // throws an opaque value instead of the thenable itself so that it can't be
-  // caught in userspace. Then the work loop accesses the actual thenable using
-  // this function.
-  if (suspendedThenable === null) {
-    throw new Error(
-      "Expected a suspended thenable. This is a bug in React. Please file " +
-        "an issue."
-    );
-  }
-
-  var thenable = suspendedThenable;
-  suspendedThenable = null;
-
-  {
-    needsToResetSuspendedThenableDEV = false;
-  }
-
-  return thenable;
-}
-function checkIfUseWrappedInTryCatch() {
-  {
-    // This was set right before SuspenseException was thrown, and it should
-    // have been cleared when the exception was handled. If it wasn't,
-    // it must have been caught by userspace.
-    if (needsToResetSuspendedThenableDEV) {
-      needsToResetSuspendedThenableDEV = false;
-      return true;
-    }
-  }
-
-  return false;
 }
 
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
@@ -35224,6 +35321,7 @@ function resetSuspendedWorkLoopOnUnwind() {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
   resetHooksOnUnwind();
+  resetChildReconcilerOnUnwind();
 }
 
 function handleThrow(root, thrownValue) {
@@ -35749,15 +35847,14 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     }
 
     default: {
-      {
-        error(
-          "Unexpected type of work: %s, Currently only function " +
-            "components are replayed after suspending. This is a bug in React.",
-          unitOfWork.tag
-        );
-      }
-
-      resetSuspendedWorkLoopOnUnwind();
+      // Other types besides function components are reset completely before
+      // being replayed. Currently this only happens when a Usable type is
+      // reconciled — the reconciler will suspend.
+      //
+      // We reset the fiber back to its original state; however, this isn't
+      // a full "unwind" because we're going to reuse the promises that were
+      // reconciled previously. So it's intentional that we don't call
+      // resetSuspendedWorkLoopOnUnwind here.
       unwindInterruptedWork(current, unitOfWork);
       unitOfWork = workInProgress = resetWorkInProgress(
         unitOfWork,
@@ -38061,7 +38158,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-c92cd6e4";
+var ReactVersion = "18.3.0-www-modern-5abc7f64";
 
 function createPortal$1(
   children,

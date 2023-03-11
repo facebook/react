@@ -2368,6 +2368,12 @@ function throwOnUseEffectEventCall() {
 function unsupportedStartTransition() {
   throw Error(formatProdErrorMessage(394));
 }
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  null === thenableState && (thenableState = []);
+  return trackUsedThenable(thenableState, thenable, index);
+}
 function unsupportedRefresh() {
   throw Error(formatProdErrorMessage(393));
 }
@@ -2451,12 +2457,7 @@ var HooksDispatcher = {
     },
     use: function (usable) {
       if (null !== usable && "object" === typeof usable) {
-        if ("function" === typeof usable.then) {
-          var index = thenableIndexCounter;
-          thenableIndexCounter += 1;
-          null === thenableState && (thenableState = []);
-          return trackUsedThenable(thenableState, usable, index);
-        }
+        if ("function" === typeof usable.then) return unwrapThenable(usable);
         if (
           usable.$$typeof === REACT_CONTEXT_TYPE ||
           usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -3037,6 +3038,13 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
       }
       return;
     }
+    if ("function" === typeof node.then)
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        unwrapThenable(node)
+      );
     request = Object.prototype.toString.call(node);
     throw Error(
       formatProdErrorMessage(
@@ -3779,4 +3787,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-b6382309";
+exports.version = "18.3.0-www-classic-fdc4fa79";

@@ -1223,6 +1223,62 @@ function describeFiber(fiber) {
       return "";
   }
 }
+var SuspenseException = Error(formatProdErrorMessage(460));
+function isThenableResolved(thenable) {
+  thenable = thenable.status;
+  return "fulfilled" === thenable || "rejected" === thenable;
+}
+function noop() {}
+function trackUsedThenable(thenableState, thenable, index) {
+  index = thenableState[index];
+  void 0 === index
+    ? thenableState.push(thenable)
+    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+  switch (thenable.status) {
+    case "fulfilled":
+      return thenable.value;
+    case "rejected":
+      throw thenable.reason;
+    default:
+      "string" === typeof thenable.status
+        ? thenable.then(noop, noop)
+        : ((thenableState = thenable),
+          (thenableState.status = "pending"),
+          thenableState.then(
+            function (fulfilledValue) {
+              if ("pending" === thenable.status) {
+                var fulfilledThenable = thenable;
+                fulfilledThenable.status = "fulfilled";
+                fulfilledThenable.value = fulfilledValue;
+              }
+            },
+            function (error) {
+              if ("pending" === thenable.status) {
+                var rejectedThenable = thenable;
+                rejectedThenable.status = "rejected";
+                rejectedThenable.reason = error;
+              }
+            }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
+      suspendedThenable = thenable;
+      throw SuspenseException;
+  }
+}
+var suspendedThenable = null,
+  thenableState$1 = null,
+  thenableIndexCounter$1 = 0;
+function unwrapThenable(thenable) {
+  var index = thenableIndexCounter$1;
+  thenableIndexCounter$1 += 1;
+  null === thenableState$1 && (thenableState$1 = []);
+  return trackUsedThenable(thenableState$1, thenable, index);
+}
 function coerceRef(returnFiber, current, element) {
   returnFiber = element.ref;
   if (
@@ -1459,6 +1515,8 @@ function createChildReconciler(shouldTrackSideEffects) {
           (newChild.return = returnFiber),
           newChild
         );
+      if ("function" === typeof newChild.then)
+        return createChild(returnFiber, unwrapThenable(newChild), lanes);
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -1492,6 +1550,13 @@ function createChildReconciler(shouldTrackSideEffects) {
         return null !== key
           ? null
           : updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+      if ("function" === typeof newChild.then)
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          unwrapThenable(newChild),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return null;
@@ -1543,6 +1608,14 @@ function createChildReconciler(shouldTrackSideEffects) {
         return (
           (existingChildren = existingChildren.get(newIdx) || null),
           updateFragment(returnFiber, existingChildren, newChild, lanes, null)
+        );
+      if ("function" === typeof newChild.then)
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          unwrapThenable(newChild),
+          lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
@@ -1712,7 +1785,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       });
     return iteratorFn;
   }
-  function reconcileChildFibers(
+  function reconcileChildFibersImpl(
     returnFiber,
     currentFirstChild,
     newChild,
@@ -1857,6 +1930,13 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
+      if ("function" === typeof newChild.then)
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          unwrapThenable(newChild),
+          lanes
+        );
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
@@ -1877,6 +1957,22 @@ function createChildReconciler(shouldTrackSideEffects) {
             (returnFiber = currentFirstChild)),
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
+  }
+  function reconcileChildFibers(
+    returnFiber,
+    currentFirstChild,
+    newChild,
+    lanes
+  ) {
+    thenableIndexCounter$1 = 0;
+    returnFiber = reconcileChildFibersImpl(
+      returnFiber,
+      currentFirstChild,
+      newChild,
+      lanes
+    );
+    thenableState$1 = null;
+    return returnFiber;
   }
   return reconcileChildFibers;
 }
@@ -1961,55 +2057,7 @@ function resetWorkInProgressVersions() {
     workInProgressSources[i]._workInProgressVersionSecondary = null;
   workInProgressSources.length = 0;
 }
-var SuspenseException = Error(formatProdErrorMessage(460));
-function isThenableResolved(thenable) {
-  thenable = thenable.status;
-  return "fulfilled" === thenable || "rejected" === thenable;
-}
-function noop() {}
-function trackUsedThenable(thenableState, thenable, index) {
-  index = thenableState[index];
-  void 0 === index
-    ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
-  switch (thenable.status) {
-    case "fulfilled":
-      return thenable.value;
-    case "rejected":
-      throw thenable.reason;
-    default:
-      "string" === typeof thenable.status
-        ? thenable.then(noop, noop)
-        : ((thenableState = thenable),
-          (thenableState.status = "pending"),
-          thenableState.then(
-            function (fulfilledValue) {
-              if ("pending" === thenable.status) {
-                var fulfilledThenable = thenable;
-                fulfilledThenable.status = "fulfilled";
-                fulfilledThenable.value = fulfilledValue;
-              }
-            },
-            function (error) {
-              if ("pending" === thenable.status) {
-                var rejectedThenable = thenable;
-                rejectedThenable.status = "rejected";
-                rejectedThenable.reason = error;
-              }
-            }
-          ));
-      switch (thenable.status) {
-        case "fulfilled":
-          return thenable.value;
-        case "rejected":
-          throw thenable.reason;
-      }
-      suspendedThenable = thenable;
-      throw SuspenseException;
-  }
-}
-var suspendedThenable = null,
-  ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
+var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
   renderLanes$1 = 0,
   currentlyRenderingFiber$1 = null,
@@ -7812,6 +7860,8 @@ function resetWorkInProgressStack() {
     else
       resetContextDependencies(),
         resetHooksOnUnwind(),
+        (thenableState$1 = null),
+        (thenableIndexCounter$1 = 0),
         (interruptedWork = workInProgress);
     for (; null !== interruptedWork; )
       unwindInterruptedWork(interruptedWork.alternate, interruptedWork),
@@ -8063,9 +8113,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     default:
-      resetContextDependencies(),
-        resetHooksOnUnwind(),
-        unwindInterruptedWork(current, unitOfWork),
+      unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
           resetWorkInProgress(unitOfWork, renderLanes)),
         (current = beginWork(current, unitOfWork, renderLanes));
@@ -8079,6 +8127,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
   resetContextDependencies();
   resetHooksOnUnwind();
+  thenableState$1 = null;
+  thenableIndexCounter$1 = 0;
   var returnFiber = unitOfWork.return;
   if (null === returnFiber || null === workInProgressRoot)
     (workInProgressRootExitStatus = 1),
@@ -9456,19 +9506,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1109 = {
+  devToolsConfig$jscomp$inline_1108 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-b4fc501b",
+    version: "18.3.0-www-modern-a5ab7ceb",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1282 = {
-  bundleType: devToolsConfig$jscomp$inline_1109.bundleType,
-  version: devToolsConfig$jscomp$inline_1109.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1109.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1109.rendererConfig,
+var internals$jscomp$inline_1283 = {
+  bundleType: devToolsConfig$jscomp$inline_1108.bundleType,
+  version: devToolsConfig$jscomp$inline_1108.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1108.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1108.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9485,26 +9535,26 @@ var internals$jscomp$inline_1282 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1109.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1108.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b4fc501b"
+  reconcilerVersion: "18.3.0-www-modern-a5ab7ceb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1283 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1284 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1283.isDisabled &&
-    hook$jscomp$inline_1283.supportsFiber
+    !hook$jscomp$inline_1284.isDisabled &&
+    hook$jscomp$inline_1284.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1283.inject(
-        internals$jscomp$inline_1282
+      (rendererID = hook$jscomp$inline_1284.inject(
+        internals$jscomp$inline_1283
       )),
-        (injectedHook = hook$jscomp$inline_1283);
+        (injectedHook = hook$jscomp$inline_1284);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
