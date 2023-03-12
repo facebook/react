@@ -17,10 +17,9 @@ describe('Store component filters', () => {
   let legacyRender;
   let store: Store;
   let utils;
-  let internalAct;
 
   const act = async (callback: Function) => {
-    await internalAct(callback);
+    await React.unstable_act(callback);
     jest.runAllTimers(); // Flush Bridge operations
   };
 
@@ -34,7 +33,6 @@ describe('Store component filters', () => {
     React = require('react');
     Types = require('react-devtools-shared/src/types');
     utils = require('./utils');
-    internalAct = require('internal-test-utils').act;
 
     legacyRender = utils.legacyRender;
   });
