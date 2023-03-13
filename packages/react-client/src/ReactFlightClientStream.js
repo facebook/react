@@ -13,7 +13,7 @@ import type {SSRManifest} from './ReactFlightClientHostConfig';
 
 import {
   resolveModule,
-  resolveValue,
+  resolveJSONValue,
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
@@ -63,7 +63,7 @@ function processFullRow(response: Response, row: string): void {
     }
     default: {
       // We assume anything else is JSON.
-      resolveValue(response, id, row.substring(colon + 1));
+      resolveJSONValue(response, id, row.substring(colon + 1));
       return;
     }
   }

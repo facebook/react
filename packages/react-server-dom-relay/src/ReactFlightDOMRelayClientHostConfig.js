@@ -53,7 +53,7 @@ export function resolveServerReference<T>(
   throw new Error('Not implemented.');
 }
 
-function parseValueRecursively(
+function parseJSONValueRecursively(
   response: Response,
   parentObj: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
   key: string,
@@ -66,7 +66,7 @@ function parseValueRecursively(
     if (isArray(value)) {
       const parsedValue: Array<$FlowFixMe> = [];
       for (let i = 0; i < value.length; i++) {
-        (parsedValue: any)[i] = parseValueRecursively(
+        (parsedValue: any)[i] = parseJSONValueRecursively(
           response,
           value,
           '' + i,
@@ -77,7 +77,7 @@ function parseValueRecursively(
     } else {
       const parsedValue = {};
       for (const innerKey in value) {
-        (parsedValue: any)[innerKey] = parseValueRecursively(
+        (parsedValue: any)[innerKey] = parseJSONValueRecursively(
           response,
           value,
           innerKey,
@@ -92,6 +92,9 @@ function parseValueRecursively(
 
 const dummy = {};
 
-export function parseValue<T>(response: Response, json: UninitializedValue): T {
-  return (parseValueRecursively(response, dummy, '', json): any);
+export function parseJSONValue<T>(
+  response: Response,
+  value: UninitializedValue,
+): T {
+  return (parseJSONValueRecursively(response, dummy, '', value): any);
 }

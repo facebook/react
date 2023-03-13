@@ -29,8 +29,8 @@ const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
   requireModule(idx: string) {
     return readModule(idx);
   },
-  parseValue(response: Response, json) {
-    return JSON.parse(json, response._fromJSON);
+  parseJSONValue(response: Response, value) {
+    return JSON.parse(value, response._fromJSON);
   },
 });
 

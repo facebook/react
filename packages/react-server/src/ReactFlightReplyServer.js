@@ -34,7 +34,7 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const RESOLVED_VALUE = 'resolved_value';
+const RESOLVED_JSON_VALUE = 'resolved_json_value';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
@@ -52,8 +52,8 @@ type BlockedChunk<T> = {
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ResolvedValueChunk<T> = {
-  status: 'resolved_value',
+type ResolvedJSONValueChunk<T> = {
+  status: 'resolved_json_value',
   value: string,
   reason: null,
   _response: Response,
@@ -76,7 +76,7 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | ResolvedValueChunk<T>
+  | ResolvedJSONValueChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
@@ -99,8 +99,8 @@ Chunk.prototype.then = function <T>(
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_VALUE:
-      initializeValueChunk(chunk);
+    case RESOLVED_JSON_VALUE:
+      initializeJSONValueChunk(chunk);
       break;
   }
   // The status might have changed after initialization.
@@ -188,29 +188,29 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   }
 }
 
-function createResolvedValueChunk<T>(
+function createResolvedJSONValueChunk<T>(
   response: Response,
   value: string,
-): ResolvedValueChunk<T> {
+): ResolvedJSONValueChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_VALUE, value, null, response);
+  return new Chunk(RESOLVED_JSON_VALUE, value, null, response);
 }
 
-function resolveValueChunk<T>(chunk: SomeChunk<T>, value: string): void {
+function resolveJSONValueChunk<T>(chunk: SomeChunk<T>, value: string): void {
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
   const resolveListeners = chunk.value;
   const rejectListeners = chunk.reason;
-  const resolvedChunk: ResolvedValueChunk<T> = (chunk: any);
-  resolvedChunk.status = RESOLVED_VALUE;
+  const resolvedChunk: ResolvedJSONValueChunk<T> = (chunk: any);
+  resolvedChunk.status = RESOLVED_JSON_VALUE;
   resolvedChunk.value = value;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
-    initializeValueChunk(resolvedChunk);
+    initializeJSONValueChunk(resolvedChunk);
     // The status might have changed after initialization.
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
@@ -257,9 +257,9 @@ function loadServerReference<T>(
   return (null: any);
 }
 
-let initializingChunk: ResolvedValueChunk<any> = (null: any);
+let initializingChunk: ResolvedJSONValueChunk<any> = (null: any);
 let initializingChunkBlockedValue: null | {deps: number, value: any} = null;
-function initializeValueChunk<T>(chunk: ResolvedValueChunk<T>): void {
+function initializeJSONValueChunk<T>(chunk: ResolvedJSONValueChunk<T>): void {
   const prevChunk = initializingChunk;
   const prevBlocked = initializingChunkBlockedValue;
   initializingChunk = chunk;
@@ -378,8 +378,8 @@ function parseValueString(
         // Server Reference
         const id = parseInt(value.substring(2), 16);
         const chunk = getChunk(response, id);
-        if (chunk.status === RESOLVED_VALUE) {
-          initializeValueChunk(chunk);
+        if (chunk.status === RESOLVED_JSON_VALUE) {
+          initializeJSONValueChunk(chunk);
         }
         if (chunk.status !== INITIALIZED) {
           // We know that this is emitted earlier so otherwise it's an error.
@@ -407,8 +407,8 @@ function parseValueString(
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_VALUE:
-            initializeValueChunk(chunk);
+          case RESOLVED_JSON_VALUE:
+            initializeJSONValueChunk(chunk);
             break;
         }
         // The status might have changed after initialization.
@@ -456,9 +456,9 @@ export function resolveField(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedValueChunk(response, value));
+    chunks.set(id, createResolvedJSONValueChunk(response, value));
   } else {
-    resolveValueChunk(chunk, value);
+    resolveJSONValueChunk(chunk, value);
   }
 }
 

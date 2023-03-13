@@ -22,7 +22,7 @@ import {
   resolveClientReference,
   preloadModule,
   requireModule,
-  parseValue,
+  parseJSONValue,
 } from './ReactFlightClientHostConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
@@ -43,7 +43,7 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const RESOLVED_VALUE = 'resolved_value';
+const RESOLVED_JSON_VALUE = 'resolved_json_value';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
@@ -62,8 +62,8 @@ type BlockedChunk<T> = {
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ResolvedValueChunk<T> = {
-  status: 'resolved_value',
+type ResolvedJSONValueChunk<T> = {
+  status: 'resolved_json_value',
   value: UninitializedValue,
   reason: null,
   _response: Response,
@@ -93,7 +93,7 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | ResolvedValueChunk<T>
+  | ResolvedJSONValueChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
@@ -117,8 +117,8 @@ Chunk.prototype.then = function <T>(
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_VALUE:
-      initializeValueChunk(chunk);
+    case RESOLVED_JSON_VALUE:
+      initializeJSONValueChunk(chunk);
       break;
     case RESOLVED_MODULE:
       initializeModuleChunk(chunk);
@@ -163,8 +163,8 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
   // If we have resolved content, we try to initialize it first which
   // might put us back into one of the other states.
   switch (chunk.status) {
-    case RESOLVED_VALUE:
-      initializeValueChunk(chunk);
+    case RESOLVED_JSON_VALUE:
+      initializeJSONValueChunk(chunk);
       break;
     case RESOLVED_MODULE:
       initializeModuleChunk(chunk);
@@ -249,12 +249,12 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   }
 }
 
-function createResolvedValueChunk<T>(
+function createResolvedJSONValueChunk<T>(
   response: Response,
   value: UninitializedValue,
-): ResolvedValueChunk<T> {
+): ResolvedJSONValueChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_VALUE, value, null, response);
+  return new Chunk(RESOLVED_JSON_VALUE, value, null, response);
 }
 
 function createResolvedModuleChunk<T>(
@@ -265,7 +265,7 @@ function createResolvedModuleChunk<T>(
   return new Chunk(RESOLVED_MODULE, value, null, response);
 }
 
-function resolveValueChunk<T>(
+function resolveJSONValueChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedValue,
 ): void {
@@ -275,14 +275,14 @@ function resolveValueChunk<T>(
   }
   const resolveListeners = chunk.value;
   const rejectListeners = chunk.reason;
-  const resolvedChunk: ResolvedValueChunk<T> = (chunk: any);
-  resolvedChunk.status = RESOLVED_VALUE;
+  const resolvedChunk: ResolvedJSONValueChunk<T> = (chunk: any);
+  resolvedChunk.status = RESOLVED_JSON_VALUE;
   resolvedChunk.value = value;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
-    initializeValueChunk(resolvedChunk);
+    initializeJSONValueChunk(resolvedChunk);
     // The status might have changed after initialization.
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
@@ -307,15 +307,15 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedValueChunk<any> = (null: any);
+let initializingChunk: ResolvedJSONValueChunk<any> = (null: any);
 let initializingChunkBlockedValue: null | {deps: number, value: any} = null;
-function initializeValueChunk<T>(chunk: ResolvedValueChunk<T>): void {
+function initializeJSONValueChunk<T>(chunk: ResolvedJSONValueChunk<T>): void {
   const prevChunk = initializingChunk;
   const prevBlocked = initializingChunkBlockedValue;
   initializingChunk = chunk;
   initializingChunkBlockedValue = null;
   try {
-    const value: T = parseValue(chunk._response, chunk.value);
+    const value: T = parseJSONValue(chunk._response, chunk.value);
     if (
       initializingChunkBlockedValue !== null &&
       initializingChunkBlockedValue.deps > 0
@@ -544,8 +544,8 @@ export function parseValueString(
         const id = parseInt(value.substring(2), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_VALUE:
-            initializeValueChunk(chunk);
+          case RESOLVED_JSON_VALUE:
+            initializeJSONValueChunk(chunk);
             break;
         }
         // The status might have changed after initialization.
@@ -569,8 +569,8 @@ export function parseValueString(
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
-          case RESOLVED_VALUE:
-            initializeValueChunk(chunk);
+          case RESOLVED_JSON_VALUE:
+            initializeJSONValueChunk(chunk);
             break;
           case RESOLVED_MODULE:
             initializeModuleChunk(chunk);
@@ -631,7 +631,7 @@ export function createResponse(
   return response;
 }
 
-export function resolveValue(
+export function resolveJSONValue(
   response: Response,
   id: number,
   value: UninitializedValue,
@@ -639,9 +639,9 @@ export function resolveValue(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedValueChunk(response, value));
+    chunks.set(id, createResolvedJSONValueChunk(response, value));
   } else {
-    resolveValueChunk(chunk, value);
+    resolveJSONValueChunk(chunk, value);
   }
 }
 
@@ -652,7 +652,7 @@ export function resolveModule(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const clientReferenceMetadata: ClientReferenceMetadata = parseValue(
+  const clientReferenceMetadata: ClientReferenceMetadata = parseJSONValue(
     response,
     value,
   );

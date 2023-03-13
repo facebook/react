@@ -18,6 +18,9 @@ export type Response = ResponseBase & {
 
 export type UninitializedValue = string;
 
-export function parseValue<T>(response: Response, json: UninitializedValue): T {
-  return JSON.parse(json, response._fromJSON);
+export function parseJSONValue<T>(
+  response: Response,
+  value: UninitializedValue,
+): T {
+  return JSON.parse(value, response._fromJSON);
 }

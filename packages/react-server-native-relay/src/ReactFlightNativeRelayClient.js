@@ -13,7 +13,7 @@ import type {Response} from 'react-client/src/ReactFlightClient';
 
 import {
   createResponse,
-  resolveValue,
+  resolveJSONValue,
   resolveModule,
   resolveErrorDev,
   resolveErrorProd,
@@ -26,7 +26,7 @@ export {createResponse, close, getRoot};
 export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'O') {
     // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
-    resolveValue(response, chunk[1], chunk[2]);
+    resolveJSONValue(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'I') {
     // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
     resolveModule(response, chunk[1], chunk[2]);
