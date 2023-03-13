@@ -18,7 +18,7 @@ global.TextDecoder = require('util').TextDecoder;
 let clientExports;
 let serverExports;
 let clientManifest;
-let webpackServerMap;
+let serverManifest;
 let act;
 let React;
 let ReactDOMClient;
@@ -35,7 +35,7 @@ describe('ReactFlightDOMBrowser', () => {
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     clientManifest = WebpackMock.webpackMap;
-    webpackServerMap = WebpackMock.webpackServerMap;
+    serverManifest = WebpackMock.webpackServerMap;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
@@ -75,7 +75,7 @@ describe('ReactFlightDOMBrowser', () => {
   }
 
   function requireServerRef(ref) {
-    const metaData = webpackServerMap[ref];
+    const metaData = serverManifest[ref];
     const mod = __webpack_require__(metaData.id);
     if (metaData.name === '*') {
       return mod;
@@ -85,7 +85,7 @@ describe('ReactFlightDOMBrowser', () => {
 
   async function callServer(actionId, body) {
     const fn = requireServerRef(actionId);
-    const args = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    const args = await ReactServerDOMServer.decodeReply(body, serverManifest);
     return fn.apply(null, args);
   }
 

@@ -15,8 +15,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
-// let serverExports;
-let webpackServerMap;
+let serverManifest;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 
@@ -24,8 +23,7 @@ describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
     const WebpackMock = require('./utils/WebpackMock');
-    // serverExports = WebpackMock.serverExports;
-    webpackServerMap = WebpackMock.webpackServerMap;
+    serverManifest = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
@@ -34,7 +32,7 @@ describe('ReactFlightDOMReply', () => {
     const body = await ReactServerDOMClient.encodeReply(undefined);
     const missing = await ReactServerDOMServer.decodeReply(
       body,
-      webpackServerMap,
+      serverManifest,
     );
     expect(missing).toBe(undefined);
 
@@ -44,7 +42,7 @@ describe('ReactFlightDOMReply', () => {
     });
     const object = await ReactServerDOMServer.decodeReply(
       body2,
-      webpackServerMap,
+      serverManifest,
     );
     expect(object.array.length).toBe(3);
     expect(object.array[0]).toBe(undefined);
@@ -66,7 +64,7 @@ describe('ReactFlightDOMReply', () => {
     });
     const iterable = await ReactServerDOMServer.decodeReply(
       body,
-      webpackServerMap,
+      serverManifest,
     );
     const items = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
