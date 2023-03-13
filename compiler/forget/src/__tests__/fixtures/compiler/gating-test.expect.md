@@ -28,7 +28,17 @@ function Bar_uncompiled(props) {
   return <div>{props.bar}</div>;
 }
 function Bar_forget(props) {
-  return <div>{props.bar}</div>;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props.bar;
+  let t0;
+  if (c_0) {
+    t0 = <div>{props.bar}</div>;
+    $[0] = props.bar;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
 }
 const Bar = isForgetEnabled ? Bar_forget : Bar_uncompiled;
 
@@ -41,7 +51,17 @@ function Foo_uncompiled(props) {
   return <Foo>{props.bar}</Foo>;
 }
 function Foo_forget(props) {
-  return <Foo>{props.bar}</Foo>;
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props.bar;
+  let t0;
+  if (c_0) {
+    t0 = <Foo>{props.bar}</Foo>;
+    $[0] = props.bar;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
 }
 const Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
 

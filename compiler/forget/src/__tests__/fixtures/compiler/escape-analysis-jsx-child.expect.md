@@ -20,7 +20,7 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = React.unstable_useMemoCache(9);
   const c_0 = $[0] !== a;
   const c_1 = $[1] !== b;
   const c_2 = $[2] !== c;
@@ -42,8 +42,16 @@ function foo(a, b, c) {
       } else {
         y = $[6];
       }
-
-      x.push(<div>{y}</div>);
+      const c_7 = $[7] !== y;
+      let t0;
+      if (c_7) {
+        t0 = <div>{y}</div>;
+        $[7] = y;
+        $[8] = t0;
+      } else {
+        t0 = $[8];
+      }
+      x.push(t0);
     }
     $[0] = a;
     $[1] = b;

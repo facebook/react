@@ -20,7 +20,7 @@ function component({ mutator }) {
 
 ```javascript
 function component(t27) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = React.unstable_useMemoCache(7);
   const { mutator } = t27;
   const c_0 = $[0] !== mutator;
   let t0;
@@ -46,7 +46,18 @@ function component(t27) {
     t1 = $[3];
   }
   const hide = t1;
-  return <Foo poke={poke} hide={hide}></Foo>;
+  const c_4 = $[4] !== poke;
+  const c_5 = $[5] !== hide;
+  let t2;
+  if (c_4 || c_5) {
+    t2 = <Foo poke={poke} hide={hide}></Foo>;
+    $[4] = poke;
+    $[5] = hide;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  return t2;
 }
 
 ```

@@ -102,7 +102,10 @@ import {
  *    conditional node with an aliased dep promotes to aliased).
  * 4. Finally we prune scopes whose outputs weren't marked.
  */
-export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
+export function pruneNonEscapingScopes(
+  fn: ReactiveFunction,
+  options: MemoizationOptions
+): void {
   // First build up a map of which instructions are involved in creating which values,
   // and which values are returned.
   const state = new State();
@@ -112,7 +115,7 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   for (const param of fn.params) {
     state.declare(param.identifier.id);
   }
-  visitReactiveFunction(fn, new CollectDependenciesVisitor(), state);
+  visitReactiveFunction(fn, new CollectDependenciesVisitor(options), state);
 
   log(() => prettyFormat(state));
 
@@ -127,6 +130,10 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   // Prune scopes that do not declare/reassign any escaping values
   visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
 }
+
+export type MemoizationOptions = {
+  memoizeJsxElements: boolean;
+};
 
 // Describes how to determine whether a value should be memoized, relative to dependees and dependencies
 enum MemoizationLevel {
@@ -316,7 +323,8 @@ type LValueMemoization = {
  */
 function computeMemoizationInputs(
   value: ReactiveValue,
-  lvalue: Place | null
+  lvalue: Place | null,
+  options: MemoizationOptions
 ): {
   // can optionally return a custom set of lvalues per instruction
   lvalues: Array<LValueMemoization>;
@@ -332,8 +340,8 @@ function computeMemoizationInputs(
             : [],
         rvalues: [
           // Conditionals do not alias their test value.
-          ...computeMemoizationInputs(value.consequent, null).rvalues,
-          ...computeMemoizationInputs(value.alternate, null).rvalues,
+          ...computeMemoizationInputs(value.consequent, null, options).rvalues,
+          ...computeMemoizationInputs(value.alternate, null, options).rvalues,
         ],
       };
     }
@@ -345,8 +353,8 @@ function computeMemoizationInputs(
             ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
             : [],
         rvalues: [
-          ...computeMemoizationInputs(value.left, null).rvalues,
-          ...computeMemoizationInputs(value.right, null).rvalues,
+          ...computeMemoizationInputs(value.left, null, options).rvalues,
+          ...computeMemoizationInputs(value.right, null, options).rvalues,
         ],
       };
     }
@@ -360,7 +368,7 @@ function computeMemoizationInputs(
         // Only the final value of the sequence is a true rvalue:
         // values from the sequence's instructions are evaluated
         // as separate nodes
-        rvalues: computeMemoizationInputs(value.value, null).rvalues,
+        rvalues: computeMemoizationInputs(value.value, null, options).rvalues,
       };
     }
     case "JsxExpression": {
@@ -378,24 +386,24 @@ function computeMemoizationInputs(
           operands.push(child);
         }
       }
+      const level = options.memoizeJsxElements
+        ? MemoizationLevel.Memoized
+        : MemoizationLevel.Unmemoized;
       return {
         // JSX elements themselves are not memoized unless forced to
         // avoid breaking downstream memoization
-        lvalues:
-          lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Unmemoized }]
-            : [],
+        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         rvalues: operands,
       };
     }
     case "JsxFragment": {
+      const level = options.memoizeJsxElements
+        ? MemoizationLevel.Memoized
+        : MemoizationLevel.Unmemoized;
       return {
         // JSX elements themselves are not memoized unless forced to
         // avoid breaking downstream memoization
-        lvalues:
-          lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Unmemoized }]
-            : [],
+        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         rvalues: value.children,
       };
     }
@@ -564,6 +572,13 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
  * identifier's and scope's dependencies.
  */
 class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
+  options: MemoizationOptions;
+
+  constructor(options: MemoizationOptions) {
+    super();
+    this.options = options;
+  }
+
   override visitInstruction(
     instruction: ReactiveInstruction,
     state: State
@@ -573,7 +588,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     // Determe the level of memoization for this value and the lvalues/rvalues
     const aliasing = computeMemoizationInputs(
       instruction.value,
-      instruction.lvalue
+      instruction.lvalue,
+      this.options
     );
 
     // Associate all the rvalues with the instruction's scope if it has one

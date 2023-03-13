@@ -56,7 +56,7 @@ function Foo() {}
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(8);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;
@@ -78,7 +78,18 @@ function Component(props) {
     a = $[3];
     b = $[4];
   }
-  return <Foo a={a} b={b}></Foo>;
+  const c_5 = $[5] !== a;
+  const c_6 = $[6] !== b;
+  let t0;
+  if (c_5 || c_6) {
+    t0 = <Foo a={a} b={b}></Foo>;
+    $[5] = a;
+    $[6] = b;
+    $[7] = t0;
+  } else {
+    t0 = $[7];
+  }
+  return t0;
 }
 
 ```

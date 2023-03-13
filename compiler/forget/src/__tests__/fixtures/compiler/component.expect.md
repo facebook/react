@@ -35,7 +35,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = React.unstable_useMemoCache(8);
   const items = props.items;
   const maxItems = props.maxItems;
   const c_0 = $[0] !== maxItems;
@@ -65,12 +65,32 @@ function Component(props) {
   }
 
   const count = renderedItems.length;
-  return (
-    <div>
-      {<h1>{count} Items</h1>}
-      {renderedItems}
-    </div>
-  );
+  const c_3 = $[3] !== count;
+  let t0;
+  if (c_3) {
+    t0 = <h1>{count} Items</h1>;
+    $[3] = count;
+    $[4] = t0;
+  } else {
+    t0 = $[4];
+  }
+  const c_5 = $[5] !== t0;
+  const c_6 = $[6] !== renderedItems;
+  let t1;
+  if (c_5 || c_6) {
+    t1 = (
+      <div>
+        {t0}
+        {renderedItems}
+      </div>
+    );
+    $[5] = t0;
+    $[6] = renderedItems;
+    $[7] = t1;
+  } else {
+    t1 = $[7];
+  }
+  return t1;
 }
 
 ```

@@ -19,7 +19,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(2);
   const start = performance.now();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -30,11 +30,18 @@ function Component(props) {
   }
   const now = t0;
   const time = performance.now() - start;
-  return (
-    <div>
-      rendering took {time} at {now}
-    </div>
-  );
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (
+      <div>
+        rendering took {time} at {now}
+      </div>
+    );
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
 }
 
 ```

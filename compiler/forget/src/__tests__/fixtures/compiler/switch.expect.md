@@ -27,7 +27,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = React.unstable_useMemoCache(8);
   const c_0 = $[0] !== props;
   let x;
   let y;
@@ -50,10 +50,29 @@ function Component(props) {
     x = $[1];
     y = $[2];
   }
-
-  const child = <Component data={x}></Component>;
+  const c_3 = $[3] !== x;
+  let t0;
+  if (c_3) {
+    t0 = <Component data={x}></Component>;
+    $[3] = x;
+    $[4] = t0;
+  } else {
+    t0 = $[4];
+  }
+  const child = t0;
   y.push(props.p4);
-  return <Component data={y}>{child}</Component>;
+  const c_5 = $[5] !== y;
+  const c_6 = $[6] !== child;
+  let t1;
+  if (c_5 || c_6) {
+    t1 = <Component data={y}>{child}</Component>;
+    $[5] = y;
+    $[6] = child;
+    $[7] = t1;
+  } else {
+    t1 = $[7];
+  }
+  return t1;
 }
 
 ```

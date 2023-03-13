@@ -7,7 +7,6 @@
 
 "use strict";
 
-import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
 import { Effect, ValueKind } from "../index";
@@ -24,13 +23,9 @@ ${s}
 \`\`\``;
 }
 
-wasmFolder(
-  path.join(__dirname, "..", "..", "node_modules", "@hpcc-js", "wasm", "dist")
-);
-
-describe("React Forget", () => {
+describe("React Forget (Disable memoization of JSX elements)", () => {
   generateTestsFromFixtures(
-    path.join(__dirname, "fixtures", "compiler"),
+    path.join(__dirname, "fixtures", "disableMemoizeJsxElements"),
     (input, file, options) => {
       let items: Array<TestOutput> = [];
       let error: Error | null = null;
@@ -43,6 +38,7 @@ describe("React Forget", () => {
             enableOnlyOnUseForgetDirective:
               options.enableOnlyOnUseForgetDirective,
             environment: {
+              memoizeJsxElements: false,
               customHooks: new Map([
                 [
                   "useFreeze",

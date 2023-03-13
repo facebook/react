@@ -146,7 +146,9 @@ export function* run(
     value: reactiveFunction,
   });
 
-  pruneNonEscapingScopes(reactiveFunction);
+  pruneNonEscapingScopes(reactiveFunction, {
+    memoizeJsxElements: options?.memoizeJsxElements ?? true,
+  });
   yield log({
     kind: "reactive",
     name: "PruneNonEscapingDependencies",

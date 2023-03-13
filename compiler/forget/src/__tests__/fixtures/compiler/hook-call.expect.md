@@ -26,7 +26,7 @@ function useFreeze() {}
 function foo() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];
@@ -37,12 +37,21 @@ function Component(props) {
   const x = t0;
   const y = useFreeze(x);
   foo(y, x);
-  return (
-    <Component>
-      {x}
-      {y}
-    </Component>
-  );
+  const c_1 = $[1] !== y;
+  let t1;
+  if (c_1) {
+    t1 = (
+      <Component>
+        {x}
+        {y}
+      </Component>
+    );
+    $[1] = y;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  return t1;
 }
 
 ```

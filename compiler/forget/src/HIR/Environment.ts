@@ -8,11 +8,13 @@ const HOOK_PATTERN = /^_?use/;
 export type EnvironmentOptions = {
   customHooks: Map<string, Hook>;
   globals: Set<string>;
+  memoizeJsxElements: boolean;
 };
 
 const DEFAULT_OPTIONS: EnvironmentOptions = {
   customHooks: new Map(),
   globals: DEFAULT_GLOBALS,
+  memoizeJsxElements: true,
 };
 
 export function mergeOptions(
