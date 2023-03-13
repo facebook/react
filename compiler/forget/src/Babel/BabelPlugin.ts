@@ -8,11 +8,9 @@
 /// <reference path="./plugin-syntax-jsx.d.ts" />
 
 import type * as BabelCore from "@babel/core";
-import generate from "@babel/generator";
 import jsx from "@babel/plugin-syntax-jsx";
 import * as t from "@babel/types";
 import invariant from "invariant";
-import prettier from "prettier";
 import { compile } from "../CompilerPipeline";
 import { parsePluginOptions, PluginOptions } from "./PluginOptions";
 
@@ -59,62 +57,50 @@ export default function ReactForgetBabelPlugin(
       hasForgetCompiledCode = true;
       const ast = compile(fn, pass.opts.environment);
 
-      try {
-        if (pass.opts.gatingModule) {
-          // Rename existing function
-          invariant(fn.node.id, "FunctionDeclaration must have a name");
-          const original = fn.node.id;
-          fn.node.id = addSuffix(fn.node.id, "_uncompiled");
+      if (pass.opts.gatingModule) {
+        // Rename existing function
+        invariant(fn.node.id, "FunctionDeclaration must have a name");
+        const original = fn.node.id;
+        fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
-          // Rename and append compiled function
-          invariant(ast.id, "FunctionDeclaration must produce a name");
-          ast.id = addSuffix(ast.id, "_forget");
-          const compiledFn = fn.insertAfter(ast)[0];
-          compiledFn.skip();
+        // Rename and append compiled function
+        invariant(ast.id, "FunctionDeclaration must produce a name");
+        ast.id = addSuffix(ast.id, "_forget");
+        const compiledFn = fn.insertAfter(ast)[0];
+        compiledFn.skip();
 
-          // Build gating test
-          const test = buildTest({
-            compiled: ast.id,
-            uncompiled: fn.node.id,
-            original,
-          });
+        // Build gating test
+        const test = buildTest({
+          compiled: ast.id,
+          uncompiled: fn.node.id,
+          original,
+        });
 
-          // Re-export new declaration
-          const parent = fn.parentPath;
-          if (t.isExportDefaultDeclaration(parent)) {
-            // Re-add uncompiled function
-            parent.replaceWith(fn)[0].skip();
+        // Re-export new declaration
+        const parent = fn.parentPath;
+        if (t.isExportDefaultDeclaration(parent)) {
+          // Re-add uncompiled function
+          parent.replaceWith(fn)[0].skip();
 
-            // Add test and synthesize new export
-            compiledFn.insertAfter([
-              test,
-              t.exportDefaultDeclaration(original),
-            ]);
-          } else if (t.isExportNamedDeclaration(parent)) {
-            // Re-add uncompiled function
-            parent.replaceWith(fn)[0].skip();
+          // Add test and synthesize new export
+          compiledFn.insertAfter([test, t.exportDefaultDeclaration(original)]);
+        } else if (t.isExportNamedDeclaration(parent)) {
+          // Re-add uncompiled function
+          parent.replaceWith(fn)[0].skip();
 
-            // Add and export test
-            compiledFn.insertAfter(t.exportNamedDeclaration(test));
-          } else {
-            // Just add the test, no need for re-export
-            compiledFn.insertAfter(test);
-          }
+          // Add and export test
+          compiledFn.insertAfter(t.exportNamedDeclaration(test));
         } else {
-          fn.replaceWith(ast);
+          // Just add the test, no need for re-export
+          compiledFn.insertAfter(test);
         }
-
-        // We are generating a new FunctionDeclaration node, so we must skip over it or this
-        // traversal will loop infinitely.
-        fn.skip();
-      } catch (err) {
-        const result = generate(ast);
-        err.message = `${err.message}\n\n${prettier.format(result.code, {
-          semi: true,
-          parser: "babel-ts",
-        })}`;
-        throw err;
+      } else {
+        fn.replaceWith(ast);
       }
+
+      // We are generating a new FunctionDeclaration node, so we must skip over it or this
+      // traversal will loop infinitely.
+      fn.skip();
     },
   };
 
