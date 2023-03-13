@@ -352,7 +352,7 @@ function createValueReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
-function parseValueString(
+function parseJSONValueString(
   response: Response,
   parentObject: Object,
   key: string,
@@ -440,7 +440,7 @@ export function createResponse(serverManifest: ServerManifest): Response {
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {
         // We can't use .bind here because we need the "this" value.
-        return parseValueString(response, this, key, value);
+        return parseJSONValueString(response, this, key, value);
       }
       return value;
     },

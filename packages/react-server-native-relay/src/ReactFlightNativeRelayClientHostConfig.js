@@ -16,8 +16,8 @@ import type {ClientReferenceMetadata} from 'ReactFlightNativeRelayClientIntegrat
 export type ClientReference<T> = JSResourceReference<T>;
 
 import {
-  parseValueString,
-  parseValueTuple,
+  parseJSONValueString,
+  parseJSONValueTuple,
 } from 'react-client/src/ReactFlightClient';
 
 export {
@@ -60,7 +60,7 @@ function parseJSONValueRecursively(
   value: JSONValue,
 ): $FlowFixMe {
   if (typeof value === 'string') {
-    return parseValueString(response, parentObj, key, value);
+    return parseJSONValueString(response, parentObj, key, value);
   }
   if (typeof value === 'object' && value !== null) {
     if (isArray(value)) {
@@ -73,7 +73,7 @@ function parseJSONValueRecursively(
           value[i],
         );
       }
-      return parseValueTuple(response, parsedValue);
+      return parseJSONValueTuple(response, parsedValue);
     } else {
       const parsedValue = {};
       for (const innerKey in value) {

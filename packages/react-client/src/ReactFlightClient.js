@@ -501,7 +501,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
   return proxy;
 }
 
-export function parseValueString(
+export function parseJSONValueString(
   response: Response,
   parentObject: Object,
   key: string,
@@ -597,7 +597,7 @@ export function parseValueString(
   return value;
 }
 
-export function parseValueTuple(
+export function parseJSONValueTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {

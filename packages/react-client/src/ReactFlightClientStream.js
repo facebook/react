@@ -17,8 +17,8 @@ import {
   resolveErrorProd,
   resolveErrorDev,
   createResponse as createResponseBase,
-  parseValueString,
-  parseValueTuple,
+  parseJSONValueString,
+  parseJSONValueTuple,
 } from './ReactFlightClient';
 
 import {
@@ -111,10 +111,10 @@ function createFromJSONCallback(response: Response) {
   return function (key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
-      return parseValueString(response, this, key, value);
+      return parseJSONValueString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
-      return parseValueTuple(response, value);
+      return parseJSONValueTuple(response, value);
     }
     return value;
   };
