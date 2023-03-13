@@ -34,6 +34,7 @@ const files = glob
       "packages/demo-todolist-playground/**",
       "packages/eslint-browser/**",
       "test262/**",
+      "**/__tests__/fixtures/**/*.flow.js",
     ],
   })
   .filter((f) => !onlyChanged || changedFiles.has(f));
