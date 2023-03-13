@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-de517acf";
+var ReactVersion = "18.3.0-www-classic-6c50c84e";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -739,7 +739,18 @@ properties[xlinkHref] = new PropertyInfoRecord(
   true, // sanitizeURL
   false
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+properties[formAction] = new PropertyInfoRecord(
+  "formAction",
+  STRING,
+  false, // mustUseProperty
+  "formaction", // attributeName
+  null, // attributeNamespace
+  true, // sanitizeURL
+  false
+);
+["src", "href", "action"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,

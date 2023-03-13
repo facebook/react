@@ -208,7 +208,16 @@ properties.xlinkHref = new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+properties.formAction = new PropertyInfoRecord(
+  "formAction",
+  1,
+  !1,
+  "formaction",
+  null,
+  !0,
+  !1
+);
+["src", "href", "action"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     1,
@@ -3695,4 +3704,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-b92877ae";
+exports.version = "18.3.0-www-modern-3593be7c";

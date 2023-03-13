@@ -595,7 +595,16 @@ properties.xlinkHref = new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+properties.formAction = new PropertyInfoRecord(
+  "formAction",
+  1,
+  !1,
+  "formaction",
+  null,
+  !0,
+  !1
+);
+["src", "href", "action"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     1,
@@ -15716,7 +15725,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1761 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a5e3f87b",
+  version: "18.3.0-www-classic-90a2338a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2156 = {
@@ -15746,7 +15755,7 @@ var internals$jscomp$inline_2156 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a5e3f87b"
+  reconcilerVersion: "18.3.0-www-classic-90a2338a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2157 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16002,4 +16011,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-a5e3f87b";
+exports.version = "18.3.0-www-classic-90a2338a";

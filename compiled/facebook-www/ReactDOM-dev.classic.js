@@ -1811,7 +1811,18 @@ properties[xlinkHref] = new PropertyInfoRecord(
   true, // sanitizeURL
   false
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+properties[formAction] = new PropertyInfoRecord(
+  "formAction",
+  STRING,
+  false, // mustUseProperty
+  "formaction", // attributeName
+  null, // attributeNamespace
+  true, // sanitizeURL
+  false
+);
+["src", "href", "action"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
@@ -42601,7 +42612,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-bab45118";
+var ReactVersion = "18.3.0-www-classic-e6bf1439";
 
 function createPortal$1(
   children,

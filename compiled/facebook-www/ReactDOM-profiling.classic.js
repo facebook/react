@@ -609,7 +609,16 @@ properties.xlinkHref = new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+properties.formAction = new PropertyInfoRecord(
+  "formAction",
+  1,
+  !1,
+  "formaction",
+  null,
+  !0,
+  !1
+);
+["src", "href", "action"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     1,
@@ -16493,7 +16502,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1841 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-471dc273",
+  version: "18.3.0-www-classic-ac5c9cb7",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16537,7 +16546,7 @@ var devToolsConfig$jscomp$inline_1841 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-471dc273"
+  reconcilerVersion: "18.3.0-www-classic-ac5c9cb7"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16780,7 +16789,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-471dc273";
+exports.version = "18.3.0-www-classic-ac5c9cb7";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

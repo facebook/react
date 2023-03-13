@@ -182,7 +182,8 @@ new PropertyInfoRecord(
   !0,
   !1
 );
-["src", "href", "action", "formAction"].forEach(function (attributeName) {
+new PropertyInfoRecord("formAction", 1, !1, "formaction", null, !0, !1);
+["src", "href", "action"].forEach(function (attributeName) {
   new PropertyInfoRecord(
     attributeName,
     1,
