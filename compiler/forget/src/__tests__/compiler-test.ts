@@ -33,7 +33,7 @@ const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
 
 describe("React Forget (HIR version)", () => {
   generateTestsFromFixtures(
-    path.join(__dirname, "fixtures", "hir"),
+    path.join(__dirname, "fixtures", "compiler"),
     (input, file, options) => {
       const matches = input.matchAll(Pragma_RE);
 
