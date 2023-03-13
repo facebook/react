@@ -26,7 +26,7 @@ export type ServerReferenceId = {};
 
 import type {
   Destination,
-  ClientManifest,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -40,7 +40,7 @@ import {
 
 export type {
   Destination,
-  ClientManifest,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightDOMRelayServerIntegration';
 

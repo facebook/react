@@ -23,7 +23,7 @@ export type ServerReferenceId = {};
 
 import type {
   Destination,
-  ClientManifest,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
@@ -37,7 +37,7 @@ import {
 
 export type {
   Destination,
-  ClientManifest,
+  BundlerConfig as ClientManifest,
   ClientReferenceMetadata,
 } from 'ReactFlightNativeRelayServerIntegration';
 
