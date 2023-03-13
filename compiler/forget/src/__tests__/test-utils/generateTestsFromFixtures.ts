@@ -49,6 +49,7 @@ export default function generateTestsFromFixtures(
       debug: boolean;
       enableOnlyOnUseForgetDirective: boolean;
       gatingModule: string | null;
+      language: "flow" | "typescript";
     }
   ) => string
 ) {
@@ -111,6 +112,7 @@ export default function generateTestsFromFixtures(
               debug,
               enableOnlyOnUseForgetDirective,
               gatingModule,
+              language: parseLanguage(input),
             });
           } else {
             receivedOutput = "<<input deleted>>";
@@ -144,6 +146,15 @@ export default function generateTestsFromFixtures(
       }
     });
   });
+}
+
+const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
+function parseLanguage(source: string): "flow" | "typescript" {
+  let useFlow: boolean = false;
+  for (const flowPragma of FlowPragmas) {
+    useFlow ||= !!source.match(flowPragma);
+  }
+  return useFlow ? "flow" : "typescript";
 }
 
 function determineSnapshotMode() {

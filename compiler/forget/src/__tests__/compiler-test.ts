@@ -28,32 +28,10 @@ wasmFolder(
   path.join(__dirname, "..", "..", "node_modules", "@hpcc-js", "wasm", "dist")
 );
 
-const Pragma_RE = /\/\/\s*@enable\((\w+)\)$/gm;
-const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
-
 describe("React Forget (HIR version)", () => {
   generateTestsFromFixtures(
     path.join(__dirname, "fixtures", "compiler"),
     (input, file, options) => {
-      const matches = input.matchAll(Pragma_RE);
-
-      for (const match of matches) {
-        const [, key, value] = match;
-        switch (key) {
-          case "Pass":
-            // do something with value;
-            break;
-          default:
-            throw new Error(`unknown pragma: ${key}`);
-        }
-      }
-
-      let useFlow: boolean = false;
-      for (const flowPragma of FlowPragmas) {
-        useFlow ||= !!input.match(flowPragma);
-      }
-
-      let language: "flow" | "typescript" = useFlow ? "flow" : "typescript";
       let items: Array<TestOutput> = [];
       let error: Error | null = null;
       if (options.debug) {
@@ -61,7 +39,7 @@ describe("React Forget (HIR version)", () => {
       }
       try {
         items.push({
-          js: runReactForgetBabelPlugin(input, file, language, {
+          js: runReactForgetBabelPlugin(input, file, options.language, {
             enableOnlyOnUseForgetDirective:
               options.enableOnlyOnUseForgetDirective,
             environment: {
