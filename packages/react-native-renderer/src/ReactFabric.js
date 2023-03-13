@@ -38,6 +38,7 @@ import {
   findNodeHandle,
   dispatchCommand,
   sendAccessibilityEvent,
+  getNodeFromInternalInstanceHandle,
 } from './ReactNativePublicCompat';
 
 // $FlowFixMe[missing-local-annot]
@@ -119,6 +120,10 @@ export {
   // This export is typically undefined in production builds.
   // See the "enableGetInspectorDataForInstanceInProduction" flag.
   getInspectorDataForInstance,
+  // The public instance has a reference to the internal instance handle.
+  // This method allows it to acess the most recent shadow node for
+  // the instance (it's only accessible through it).
+  getNodeFromInternalInstanceHandle,
 };
 
 injectIntoDevTools({

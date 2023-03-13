@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostComponent} from './ReactNativeTypes';
+import type {Node, HostComponent} from './ReactNativeTypes';
 import type {ElementRef, ElementType} from 'react';
 
 // Modules provided by RN:
@@ -22,6 +22,11 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
+
+import {
+  getInternalInstanceHandleFromPublicInstance,
+  getNativeTagFromPublicInstance,
+} from './ReactFabricPublicInstanceUtils';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -45,19 +50,24 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
-  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
+
+  // For compatibility with Fabric instances
+  if (componentOrHandle.publicInstance) {
+    // $FlowExpectedError[incompatible-return] Can't refine componentOrHandle as a Fabric instance
+    return componentOrHandle.publicInstance;
+  }
+
+  // For compatibility with legacy renderer instances
   if (componentOrHandle._nativeTag) {
-    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
+    // $FlowFixMe[incompatible-exact] Necessary when running Flow on Fabric
+    // $FlowFixMe[incompatible-return]
     return componentOrHandle;
   }
-  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
-    return componentOrHandle.canonical;
-  }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -68,6 +78,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
     hostInstance = findHostInstance(componentOrHandle);
   }
 
+  // findHostInstance handles legacy vs. Fabric differences correctly
   // $FlowFixMe[incompatible-exact] we need to fix the definition of `HostComponent` to use NativeMethods as an interface, not as a type.
   return hostInstance;
 }
@@ -90,19 +101,32 @@ export function findNodeHandle(componentOrHandle: any): ?number {
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
+
   if (componentOrHandle == null) {
     return null;
   }
+
   if (typeof componentOrHandle === 'number') {
     // Already a node handle
     return componentOrHandle;
   }
+
+  // For compatibility with legacy renderer instances
   if (componentOrHandle._nativeTag) {
     return componentOrHandle._nativeTag;
   }
-  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
-    return componentOrHandle.canonical._nativeTag;
+
+  // For compatibility with Fabric instances
+  if (componentOrHandle.nativeTag != null) {
+    return componentOrHandle.nativeTag;
   }
+
+  // For compatibility with Fabric public instances
+  const nativeTag = getNativeTagFromPublicInstance(componentOrHandle);
+  if (nativeTag) {
+    return nativeTag;
+  }
+
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -117,7 +141,14 @@ export function findNodeHandle(componentOrHandle: any): ?number {
     return hostInstance;
   }
 
-  return hostInstance._nativeTag;
+  // $FlowFixMe[prop-missing] For compatibility with legacy renderer instances
+  if (hostInstance._nativeTag != null) {
+    // $FlowFixMe[incompatible-return]
+    return hostInstance._nativeTag;
+  }
+
+  // $FlowFixMe[incompatible-call] Necessary when running Flow on the legacy renderer
+  return getNativeTagFromPublicInstance(hostInstance);
 }
 
 export function dispatchCommand(
@@ -125,7 +156,11 @@ export function dispatchCommand(
   command: string,
   args: Array<any>,
 ) {
-  if (handle._nativeTag == null) {
+  const nativeTag =
+    handle._nativeTag != null
+      ? handle._nativeTag
+      : getNativeTagFromPublicInstance(handle);
+  if (nativeTag == null) {
     if (__DEV__) {
       console.error(
         "dispatchCommand was called with a ref that isn't a " +
@@ -135,18 +170,25 @@ export function dispatchCommand(
     return;
   }
 
-  if (handle._internalInstanceHandle != null) {
-    const {stateNode} = handle._internalInstanceHandle;
-    if (stateNode != null) {
-      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+  const internalInstanceHandle =
+    getInternalInstanceHandleFromPublicInstance(handle);
+
+  if (internalInstanceHandle != null) {
+    const node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
+    if (node != null) {
+      nativeFabricUIManager.dispatchCommand(node, command, args);
     }
   } else {
-    UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
+    UIManager.dispatchViewManagerCommand(nativeTag, command, args);
   }
 }
 
 export function sendAccessibilityEvent(handle: any, eventType: string) {
-  if (handle._nativeTag == null) {
+  const nativeTag =
+    handle._nativeTag != null
+      ? handle._nativeTag
+      : getNativeTagFromPublicInstance(handle);
+  if (nativeTag == null) {
     if (__DEV__) {
       console.error(
         "sendAccessibilityEvent was called with a ref that isn't a " +
@@ -156,12 +198,27 @@ export function sendAccessibilityEvent(handle: any, eventType: string) {
     return;
   }
 
-  if (handle._internalInstanceHandle != null) {
-    const {stateNode} = handle._internalInstanceHandle;
-    if (stateNode != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+  const internalInstanceHandle =
+    getInternalInstanceHandleFromPublicInstance(handle);
+  if (internalInstanceHandle != null) {
+    const node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
+    if (node != null) {
+      nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
     }
   } else {
-    legacySendAccessibilityEvent(handle._nativeTag, eventType);
+    legacySendAccessibilityEvent(nativeTag, eventType);
   }
+}
+
+export function getNodeFromInternalInstanceHandle(
+  internalInstanceHandle: mixed,
+): ?Node {
+  return (
+    // $FlowExpectedError[incompatible-return] internalInstanceHandle is opaque but we need to make an exception here.
+    internalInstanceHandle &&
+    // $FlowExpectedError[incompatible-return]
+    internalInstanceHandle.stateNode &&
+    // $FlowExpectedError[incompatible-use]
+    internalInstanceHandle.stateNode.node
+  );
 }

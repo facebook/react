@@ -20,6 +20,8 @@ import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
+import {getInternalInstanceHandleFromPublicInstance} from './ReactFabricPublicInstanceUtils';
+import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -46,15 +48,15 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
           props: getHostProps(fiber),
           source: fiber._debugSource,
           measure: callback => {
-            // If this is Fabric, we'll find a ShadowNode and use that to measure.
+            // If this is Fabric, we'll find a shadow node and use that to measure.
             const hostFiber = findCurrentHostFiber(fiber);
-            const shadowNode =
+            const node =
               hostFiber != null &&
               hostFiber.stateNode !== null &&
               hostFiber.stateNode.node;
 
-            if (shadowNode) {
-              nativeFabricUIManager.measure(shadowNode, callback);
+            if (node) {
+              nativeFabricUIManager.measure(node, callback);
             } else {
               return UIManager.measure(
                 getHostNode(fiber, findNodeHandle),
@@ -198,30 +200,40 @@ if (__DEV__) {
   ): void {
     let closestInstance = null;
 
-    if (inspectedView._internalInstanceHandle != null) {
+    const fabricInstanceHandle =
+      getInternalInstanceHandleFromPublicInstance(inspectedView);
+    const fabricNode =
+      fabricInstanceHandle != null
+        ? getNodeFromInternalInstanceHandle(fabricInstanceHandle)
+        : null;
+    if (fabricNode) {
       // For Fabric we can look up the instance handle directly and measure it.
       nativeFabricUIManager.findNodeAtPoint(
-        inspectedView._internalInstanceHandle.stateNode.node,
+        fabricNode,
         locationX,
         locationY,
         internalInstanceHandle => {
-          if (internalInstanceHandle == null) {
+          const node =
+            internalInstanceHandle != null
+              ? getNodeFromInternalInstanceHandle(internalInstanceHandle)
+              : null;
+          if (internalInstanceHandle == null || node == null) {
             callback({
               pointerY: locationY,
               frame: {left: 0, top: 0, width: 0, height: 0},
               ...getInspectorDataForInstance(closestInstance),
             });
+            return;
           }
 
           closestInstance =
-            internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
+            internalInstanceHandle.stateNode.internalInstanceHandle;
 
           // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
-          const nativeViewTag =
-            internalInstanceHandle.stateNode.canonical._nativeTag;
+          const nativeViewTag = internalInstanceHandle.stateNode.nativeTag;
 
           nativeFabricUIManager.measure(
-            internalInstanceHandle.stateNode.node,
+            node,
             (x, y, width, height, pageX, pageY) => {
               const inspectorData =
                 getInspectorDataForInstance(closestInstance);
