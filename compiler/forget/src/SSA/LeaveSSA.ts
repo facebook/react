@@ -9,12 +9,12 @@ import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
+  BlockId,
   Effect,
   GeneratedSource,
   HIRFunction,
   Identifier,
   Instruction,
-  InstructionId,
   InstructionKind,
   LValue,
   LValuePattern,
@@ -108,10 +108,19 @@ export function leaveSSA(fn: HIRFunction): void {
     phi: Phi;
     block: BasicBlock;
   };
-  function pushPhis(arr: Array<PhiState>, block: BasicBlock): void {
+
+  const seen = new Set<BlockId>();
+  const backEdgePhis = new Set<Phi>();
+  for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      arr.push({ phi, block });
+      for (const [pred] of phi.operands) {
+        if (!seen.has(pred)) {
+          backEdgePhis.add(phi);
+          break;
+        }
+      }
     }
+    seen.add(block.id);
   }
 
   for (const [, block] of fn.body.blocks) {
@@ -124,7 +133,10 @@ export function leaveSSA(fn: HIRFunction): void {
           const originalLVal = declarations.get(
             value.lvalue.place.identifier.name
           );
-          if (originalLVal === undefined) {
+          if (
+            originalLVal === undefined ||
+            originalLVal.lvalue === value.lvalue // in case this was pre-declared for the `for` initializer
+          ) {
             declarations.set(value.lvalue.place.identifier.name, {
               lvalue: value.lvalue,
               place: value.lvalue.place,
@@ -134,13 +146,10 @@ export function leaveSSA(fn: HIRFunction): void {
             // This is an instance of the original id, so we need to promote the original declaration
             // to a `let` and the current lval to a `reassign`
             originalLVal.lvalue.kind = InstructionKind.Let;
+            value.lvalue.kind = InstructionKind.Reassign;
           }
         } else if (rewrites.has(value.lvalue.place.identifier)) {
-          value.lvalue.kind =
-            rewrites.get(value.lvalue.place.identifier) ===
-            value.lvalue.place.identifier
-              ? InstructionKind.Let
-              : InstructionKind.Reassign;
+          value.lvalue.kind = InstructionKind.Const;
         }
       } else if (value.kind === "Destructure") {
         let kind: InstructionKind | null = null;
@@ -157,7 +166,10 @@ export function leaveSSA(fn: HIRFunction): void {
             kind = InstructionKind.Const;
           } else {
             const originalLVal = declarations.get(place.identifier.name);
-            if (originalLVal === undefined) {
+            if (
+              originalLVal === undefined ||
+              originalLVal.lvalue === value.lvalue
+            ) {
               declarations.set(place.identifier.name, {
                 lvalue: value.lvalue,
                 place,
@@ -207,6 +219,51 @@ export function leaveSSA(fn: HIRFunction): void {
     // such as for or while (and later if/switch).
     const reassignmentPhis: Array<PhiState> = [];
     const rewritePhis: Array<PhiState> = [];
+    function pushPhis(phiBlock: BasicBlock): void {
+      for (const phi of phiBlock.phis) {
+        if (phi.id.name === null) {
+          rewritePhis.push({ phi, block: phiBlock });
+        } else {
+          reassignmentPhis.push({ phi, block: phiBlock });
+        }
+        const hasBackEdge = backEdgePhis.has(phi);
+        const isPhiMutatedAfterCreation: boolean =
+          phi.id.mutableRange.end >
+          (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
+
+        // Named variables whose phi doesn't have a back-edge can potentially be independenly
+        // memoized, depending on whether the phi is after its creation.
+        if (phi.id.name !== null && !hasBackEdge) {
+          if (!isPhiMutatedAfterCreation) {
+            // Simple case: predecesor-only values flowing into a phi, which is never modified:
+            // adjust the phi's range to clarify that the identifier does not mutate
+            phi.id.mutableRange.start = terminal.id;
+            phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
+          } else {
+            // Predecessor only values flow into a phi, which is modified later:
+            // all operands flow into the phi and can be modified, must extend their ranges
+            for (const [, operand] of phi.operands) {
+              operand.mutableRange.end = phi.id.mutableRange.end;
+            }
+          }
+          return;
+        }
+        // Otherwise this is a temporary phi (logical or ternary) or occurs in a loop. In either
+        // case we can't independently memoize any of the values: unify their ranges to span the
+        // min(start) to max(end) so that we create a single scope for all the computation.
+        let start = block.terminal.id as number;
+        let end = Number.MIN_SAFE_INTEGER;
+        const operands = [phi.id, ...phi.operands.values()];
+        for (const operand of operands) {
+          start = Math.min(start, operand.mutableRange.start);
+          end = Math.max(end, operand.mutableRange.end);
+        }
+        for (const operand of operands) {
+          operand.mutableRange.start = makeInstructionId(start);
+          operand.mutableRange.end = makeInstructionId(end);
+        }
+      }
+    }
     if (
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
@@ -215,36 +272,47 @@ export function leaveSSA(fn: HIRFunction): void {
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      for (const phi of fallthrough.phis) {
-        if (phi.id.name == null) {
-          rewritePhis.push({ phi, block: fallthrough });
-        } else {
-          reassignmentPhis.push({ phi, block: fallthrough });
-        }
-      }
+      pushPhis(fallthrough);
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
       const test = fn.body.blocks.get(terminal.test)!;
-      pushPhis(rewritePhis, test);
-      test.phis.clear();
+      pushPhis(test);
 
       const loop = fn.body.blocks.get(terminal.loop)!;
-      pushPhis(rewritePhis, loop);
-      loop.phis.clear();
+      pushPhis(loop);
     }
     if (terminal.kind === "for") {
       const init = fn.body.blocks.get(terminal.init)!;
-      pushPhis(rewritePhis, init);
-      init.phis.clear();
+      pushPhis(init);
+
+      // To avoid generating a let binding for the initializer prior to the loop,
+      // check to see if the for declares an iterator variable
+      const initIdentifier = init.instructions.at(-1);
+      if (
+        initIdentifier !== undefined &&
+        initIdentifier.value.kind === "StoreLocal"
+      ) {
+        const value = initIdentifier.value;
+        if (value.lvalue.place.identifier.name !== null) {
+          const originalLVal = declarations.get(
+            value.lvalue.place.identifier.name
+          );
+          if (originalLVal === undefined) {
+            declarations.set(value.lvalue.place.identifier.name, {
+              lvalue: value.lvalue,
+              place: value.lvalue.place,
+            });
+            value.lvalue.kind = InstructionKind.Const;
+          }
+        }
+      }
 
       const update = fn.body.blocks.get(terminal.update)!;
-      pushPhis(rewritePhis, update);
-      update.phis.clear();
+      pushPhis(update);
     }
     if (terminal.kind === "logical" || terminal.kind === "ternary") {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      pushPhis(rewritePhis, fallthrough);
-      fallthrough.phis.clear();
+      pushPhis(fallthrough);
     }
 
     for (const { phi, block: phiBlock } of reassignmentPhis) {
@@ -266,12 +334,6 @@ export function leaveSSA(fn: HIRFunction): void {
       const isPhiMutatedAfterCreation: boolean =
         phi.id.mutableRange.end >
         (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
-
-      // If a phi is never mutated after creation, reset its mutable range to be itself
-      if (!isPhiMutatedAfterCreation) {
-        phi.id.mutableRange.start = terminal.id;
-        phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
-      }
 
       // If we never saw a declaration for this phi, it may have been pruned by DCE, so synthesize
       // a new Let binding
@@ -361,9 +423,6 @@ export function leaveSSA(fn: HIRFunction): void {
         block.instructions.push(instr);
         declarations.set(phi.id.name, { lvalue, place: lvalue.place });
         phi.id.mutableRange.start = terminal.id;
-        if (!isPhiMutatedAfterCreation) {
-          phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
-        }
       } else if (isPhiMutatedAfterCreation) {
         // The declaration is not guaranteed to flow into the phi, for example in the case of a variable
         // that is reassigned in all control flow paths to a given phi. The original declaration's range
@@ -389,10 +448,6 @@ export function leaveSSA(fn: HIRFunction): void {
             canonicalId = canonicalOperand;
           }
         }
-        canonicalId.mutableRange.start = Math.min(
-          canonicalId.mutableRange.start,
-          terminal.id
-        ) as InstructionId;
         rewrites.set(phi.id, canonicalId);
 
         if (canonicalId.name !== null) {
@@ -404,17 +459,9 @@ export function leaveSSA(fn: HIRFunction): void {
       }
 
       // all versions of the variable need to be remapped to the canonical id
-      // also extend the mutable range of the canonical id based on the min/max
-      // of the ranges of its operands
-      let start = canonicalId.mutableRange.start as number;
-      let end = canonicalId.mutableRange.end as number;
       for (const [, operand] of phi.operands) {
-        start = Math.min(start, operand.mutableRange.start);
-        end = Math.max(end, operand.mutableRange.end);
         rewrites.set(operand, canonicalId);
       }
-      canonicalId.mutableRange.start = makeInstructionId(start);
-      canonicalId.mutableRange.end = makeInstructionId(end);
     }
   }
 }
@@ -432,20 +479,11 @@ function rewritePlace(
 
   if (nextIdentifier !== undefined) {
     if (nextIdentifier === prevIdentifier) return;
-    nextIdentifier.mutableRange.start = makeInstructionId(
-      Math.min(
-        nextIdentifier.mutableRange.start,
-        prevIdentifier.mutableRange.start
-      )
-    );
-    nextIdentifier.mutableRange.end = makeInstructionId(
-      Math.max(nextIdentifier.mutableRange.end, prevIdentifier.mutableRange.end)
-    );
     place.identifier = nextIdentifier;
   } else if (prevIdentifier.name != null) {
     const declaration = declarations.get(prevIdentifier.name);
-    if (declaration === undefined) return;
     // Only rewrite identifiers that were declared within the function
+    if (declaration === undefined) return;
     const originalIdentifier = declaration.place.identifier;
     prevIdentifier.id = originalIdentifier.id;
   }

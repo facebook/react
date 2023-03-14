@@ -97,8 +97,8 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
           scopeIdentifiers.union([phi.id, phiId]);
         }
       }
-      block.phis.clear();
     }
+    block.phis.clear();
 
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
