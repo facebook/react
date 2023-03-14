@@ -7,94 +7,94 @@
 
 let warnValidStyle = () => {};
 
-if (__DEV__) {
-  // 'msTransform' is correct, but the other prefixes should be capitalized
-  const badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-  const msPattern = /^-ms-/;
-  const hyphenPattern = /-(.)/g;
+// 'msTransform' is correct, but the other prefixes should be capitalized
+const badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+const msPattern = /^-ms-/;
+const hyphenPattern = /-(.)/g;
 
-  // style values shouldn't contain a semicolon
-  const badStyleValueWithSemicolonPattern = /;\s*$/;
+// style values shouldn't contain a semicolon
+const badStyleValueWithSemicolonPattern = /;\s*$/;
 
-  const warnedStyleNames = {};
-  const warnedStyleValues = {};
-  let warnedForNaNValue = false;
-  let warnedForInfinityValue = false;
+const warnedStyleNames = {};
+const warnedStyleValues = {};
+let warnedForNaNValue = false;
+let warnedForInfinityValue = false;
 
-  const camelize = function (string) {
-    return string.replace(hyphenPattern, function (_, character) {
-      return character.toUpperCase();
-    });
-  };
+const camelize = function (string) {
+  return string.replace(hyphenPattern, function (_, character) {
+    return character.toUpperCase();
+  });
+};
 
-  const warnHyphenatedStyleName = function (name) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
+const warnHyphenatedStyleName = function (name) {
+  if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+    return;
+  }
 
-    warnedStyleNames[name] = true;
-    console.error(
-      'Unsupported style property %s. Did you mean %s?',
-      name,
-      // As Andi Smith suggests
-      // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
-      // is converted to lowercase `ms`.
-      camelize(name.replace(msPattern, 'ms-')),
-    );
-  };
+  warnedStyleNames[name] = true;
+  console.error(
+    'Unsupported style property %s. Did you mean %s?',
+    name,
+    // As Andi Smith suggests
+    // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
+    // is converted to lowercase `ms`.
+    camelize(name.replace(msPattern, 'ms-')),
+  );
+};
 
-  const warnBadVendoredStyleName = function (name) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
+const warnBadVendoredStyleName = function (name) {
+  if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+    return;
+  }
 
-    warnedStyleNames[name] = true;
-    console.error(
-      'Unsupported vendor-prefixed style property %s. Did you mean %s?',
-      name,
-      name.charAt(0).toUpperCase() + name.slice(1),
-    );
-  };
+  warnedStyleNames[name] = true;
+  console.error(
+    'Unsupported vendor-prefixed style property %s. Did you mean %s?',
+    name,
+    name.charAt(0).toUpperCase() + name.slice(1),
+  );
+};
 
-  const warnStyleValueWithSemicolon = function (name, value) {
-    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
-      return;
-    }
+const warnStyleValueWithSemicolon = function (name, value) {
+  if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
+    return;
+  }
 
-    warnedStyleValues[value] = true;
-    console.error(
-      "Style property values shouldn't contain a semicolon. " +
-        'Try "%s: %s" instead.',
-      name,
-      value.replace(badStyleValueWithSemicolonPattern, ''),
-    );
-  };
+  warnedStyleValues[value] = true;
+  console.error(
+    "Style property values shouldn't contain a semicolon. " +
+      'Try "%s: %s" instead.',
+    name,
+    value.replace(badStyleValueWithSemicolonPattern, ''),
+  );
+};
 
-  const warnStyleValueIsNaN = function (name, value) {
-    if (warnedForNaNValue) {
-      return;
-    }
+const warnStyleValueIsNaN = function (name, value) {
+  if (warnedForNaNValue) {
+    return;
+  }
 
-    warnedForNaNValue = true;
-    console.error(
-      '`NaN` is an invalid value for the `%s` css style property.',
-      name,
-    );
-  };
+  warnedForNaNValue = true;
+  console.error(
+    '`NaN` is an invalid value for the `%s` css style property.',
+    name,
+  );
+};
 
-  const warnStyleValueIsInfinity = function (name, value) {
-    if (warnedForInfinityValue) {
-      return;
-    }
+const warnStyleValueIsInfinity = function (name, value) {
+  if (warnedForInfinityValue) {
+    return;
+  }
 
-    warnedForInfinityValue = true;
-    console.error(
-      '`Infinity` is an invalid value for the `%s` css style property.',
-      name,
-    );
-  };
+  warnedForInfinityValue = true;
+  console.error(
+    '`Infinity` is an invalid value for the `%s` css style property.',
+    name,
+  );
+};
 
-  warnValidStyle = function (name, value) {
+function warnValidStyle(name, value) {
+  if (__DEV__) {
     if (name.indexOf('-') > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
@@ -110,7 +110,7 @@ if (__DEV__) {
         warnStyleValueIsInfinity(name, value);
       }
     }
-  };
+  }
 }
 
 export default warnValidStyle;
