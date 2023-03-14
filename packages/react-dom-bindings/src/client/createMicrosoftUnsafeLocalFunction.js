@@ -10,7 +10,7 @@
 /**
  * Create a function which has 'unsafe' privileges (required by windows8 apps)
  */
-const createMicrosoftUnsafeLocalFunction = function (func) {
+function createMicrosoftUnsafeLocalFunction(func) {
   if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
     return function (arg0, arg1, arg2, arg3) {
       MSApp.execUnsafeLocalFunction(function () {
@@ -20,6 +20,6 @@ const createMicrosoftUnsafeLocalFunction = function (func) {
   } else {
     return func;
   }
-};
+}
 
 export default createMicrosoftUnsafeLocalFunction;

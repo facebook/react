@@ -392,7 +392,7 @@ function executeDispatchesInOrder(event) {
  * @param {?object} event Synthetic event to be dispatched.
  * @private
  */
-const executeDispatchesAndRelease = function (event /* ReactSyntheticEvent */) {
+function executeDispatchesAndRelease(event /* ReactSyntheticEvent */) {
   if (event) {
     executeDispatchesInOrder(event);
 
@@ -400,7 +400,7 @@ const executeDispatchesAndRelease = function (event /* ReactSyntheticEvent */) {
       event.constructor.release(event);
     }
   }
-};
+}
 
 function isInteractive(tag) {
   return (

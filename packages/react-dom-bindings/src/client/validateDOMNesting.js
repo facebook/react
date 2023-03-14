@@ -7,12 +7,6 @@
  * @flow
  */
 
-type ValidateDOMNesting = (?string, ?string, AncestorInfoDev) => void;
-let validateDOMNesting: ValidateDOMNesting = (() => {}: any);
-
-type UpdatedAncestorInfoDev = (?AncestorInfoDev, string) => AncestorInfoDev;
-let updatedAncestorInfoDev: UpdatedAncestorInfoDev = (() => {}: any);
-
 type Info = {tag: string};
 export type AncestorInfoDev = {
   current: ?Info,
@@ -178,70 +172,74 @@ const emptyAncestorInfoDev: AncestorInfoDev = {
   containerTagInScope: null,
 };
 
-function updatedAncestorInfoDev(oldInfo: ?AncestorInfoDev, tag: string) {
-  const ancestorInfo = {...(oldInfo || emptyAncestorInfoDev)};
-  const info = {tag};
+function updatedAncestorInfoDev(
+  oldInfo: ?AncestorInfoDev,
+  tag: string,
+): AncestorInfoDev {
+  if (__DEV__) {
+    const ancestorInfo = {...(oldInfo || emptyAncestorInfoDev)};
+    const info = {tag};
 
-  if (inScopeTags.indexOf(tag) !== -1) {
-    ancestorInfo.aTagInScope = null;
-    ancestorInfo.buttonTagInScope = null;
-    ancestorInfo.nobrTagInScope = null;
-  }
-  if (buttonScopeTags.indexOf(tag) !== -1) {
-    ancestorInfo.pTagInButtonScope = null;
-  }
+    if (inScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.aTagInScope = null;
+      ancestorInfo.buttonTagInScope = null;
+      ancestorInfo.nobrTagInScope = null;
+    }
+    if (buttonScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.pTagInButtonScope = null;
+    }
 
-  // See rules for 'li', 'dd', 'dt' start tags in
-  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-  if (
-    specialTags.indexOf(tag) !== -1 &&
-    tag !== 'address' &&
-    tag !== 'div' &&
-    tag !== 'p'
-  ) {
-    ancestorInfo.listItemTagAutoclosing = null;
-    ancestorInfo.dlItemTagAutoclosing = null;
-  }
+    // See rules for 'li', 'dd', 'dt' start tags in
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+    if (
+      specialTags.indexOf(tag) !== -1 &&
+      tag !== 'address' &&
+      tag !== 'div' &&
+      tag !== 'p'
+    ) {
+      ancestorInfo.listItemTagAutoclosing = null;
+      ancestorInfo.dlItemTagAutoclosing = null;
+    }
 
-  ancestorInfo.current = info;
+    ancestorInfo.current = info;
 
-  if (tag === 'form') {
-    ancestorInfo.formTag = info;
-  }
-  if (tag === 'a') {
-    ancestorInfo.aTagInScope = info;
-  }
-  if (tag === 'button') {
-    ancestorInfo.buttonTagInScope = info;
-  }
-  if (tag === 'nobr') {
-    ancestorInfo.nobrTagInScope = info;
-  }
-  if (tag === 'p') {
-    ancestorInfo.pTagInButtonScope = info;
-  }
-  if (tag === 'li') {
-    ancestorInfo.listItemTagAutoclosing = info;
-  }
-  if (tag === 'dd' || tag === 'dt') {
-    ancestorInfo.dlItemTagAutoclosing = info;
-  }
-  if (tag === '#document' || tag === 'html') {
-    ancestorInfo.containerTagInScope = null;
-  } else if (!ancestorInfo.containerTagInScope) {
-    ancestorInfo.containerTagInScope = info;
-  }
+    if (tag === 'form') {
+      ancestorInfo.formTag = info;
+    }
+    if (tag === 'a') {
+      ancestorInfo.aTagInScope = info;
+    }
+    if (tag === 'button') {
+      ancestorInfo.buttonTagInScope = info;
+    }
+    if (tag === 'nobr') {
+      ancestorInfo.nobrTagInScope = info;
+    }
+    if (tag === 'p') {
+      ancestorInfo.pTagInButtonScope = info;
+    }
+    if (tag === 'li') {
+      ancestorInfo.listItemTagAutoclosing = info;
+    }
+    if (tag === 'dd' || tag === 'dt') {
+      ancestorInfo.dlItemTagAutoclosing = info;
+    }
+    if (tag === '#document' || tag === 'html') {
+      ancestorInfo.containerTagInScope = null;
+    } else if (!ancestorInfo.containerTagInScope) {
+      ancestorInfo.containerTagInScope = info;
+    }
 
-  return ancestorInfo;
+    return ancestorInfo;
+  } else {
+    return (null: any);
+  }
 }
 
 /**
  * Returns whether
  */
-const isTagValidWithParent = function (
-  tag: string,
-  parentTag: ?string,
-): boolean {
+function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
   // First, let's check if we're in an unusual parsing mode...
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
@@ -361,12 +359,12 @@ const isTagValidWithParent = function (
   }
 
   return true;
-};
+}
 
 /**
  * Returns whether
  */
-const findInvalidAncestorForTag = function (
+function findInvalidAncestorForTag(
   tag: string,
   ancestorInfo: AncestorInfoDev,
 ): ?Info {
@@ -431,7 +429,7 @@ const findInvalidAncestorForTag = function (
   }
 
   return null;
-};
+}
 
 const didWarn: {[string]: boolean} = {};
 
@@ -439,81 +437,84 @@ function validateDOMNesting(
   childTag: ?string,
   childText: ?string,
   ancestorInfo: AncestorInfoDev,
-) {
-  ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
-  const parentInfo = ancestorInfo.current;
-  const parentTag = parentInfo && parentInfo.tag;
+): void {
+  if (__DEV__) {
+    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
+    const parentInfo = ancestorInfo.current;
+    const parentTag = parentInfo && parentInfo.tag;
 
-  if (childText != null) {
-    if (childTag != null) {
+    if (childText != null) {
+      if (childTag != null) {
+        console.error(
+          'validateDOMNesting: when childText is passed, childTag should be null',
+        );
+      }
+      childTag = '#text';
+    } else if (childTag == null) {
       console.error(
-        'validateDOMNesting: when childText is passed, childTag should be null',
+        'validateDOMNesting: when childText or childTag must be provided',
+      );
+      return;
+    }
+
+    const invalidParent = isTagValidWithParent(childTag, parentTag)
+      ? null
+      : parentInfo;
+    const invalidAncestor = invalidParent
+      ? null
+      : findInvalidAncestorForTag(childTag, ancestorInfo);
+    const invalidParentOrAncestor = invalidParent || invalidAncestor;
+    if (!invalidParentOrAncestor) {
+      return;
+    }
+
+    const ancestorTag = invalidParentOrAncestor.tag;
+
+    const warnKey =
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
+    if (didWarn[warnKey]) {
+      return;
+    }
+    didWarn[warnKey] = true;
+
+    let tagDisplayName = childTag;
+    let whitespaceInfo = '';
+    if (childTag === '#text') {
+      if (childText != null && /\S/.test(childText)) {
+        tagDisplayName = 'Text nodes';
+      } else {
+        tagDisplayName = 'Whitespace text nodes';
+        whitespaceInfo =
+          " Make sure you don't have any extra whitespace between tags on " +
+          'each line of your source code.';
+      }
+    } else {
+      tagDisplayName = '<' + childTag + '>';
+    }
+
+    if (invalidParent) {
+      let info = '';
+      if (ancestorTag === 'table' && childTag === 'tr') {
+        info +=
+          ' Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by ' +
+          'the browser.';
+      }
+      console.error(
+        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s',
+        tagDisplayName,
+        ancestorTag,
+        whitespaceInfo,
+        info,
+      );
+    } else {
+      console.error(
+        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
+          '<%s>.',
+        tagDisplayName,
+        ancestorTag,
       );
     }
-    childTag = '#text';
-  } else if (childTag == null) {
-    console.error(
-      'validateDOMNesting: when childText or childTag must be provided',
-    );
-    return;
-  }
-
-  const invalidParent = isTagValidWithParent(childTag, parentTag)
-    ? null
-    : parentInfo;
-  const invalidAncestor = invalidParent
-    ? null
-    : findInvalidAncestorForTag(childTag, ancestorInfo);
-  const invalidParentOrAncestor = invalidParent || invalidAncestor;
-  if (!invalidParentOrAncestor) {
-    return;
-  }
-
-  const ancestorTag = invalidParentOrAncestor.tag;
-
-  const warnKey =
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
-  if (didWarn[warnKey]) {
-    return;
-  }
-  didWarn[warnKey] = true;
-
-  let tagDisplayName = childTag;
-  let whitespaceInfo = '';
-  if (childTag === '#text') {
-    if (childText != null && /\S/.test(childText)) {
-      tagDisplayName = 'Text nodes';
-    } else {
-      tagDisplayName = 'Whitespace text nodes';
-      whitespaceInfo =
-        " Make sure you don't have any extra whitespace between tags on " +
-        'each line of your source code.';
-    }
-  } else {
-    tagDisplayName = '<' + childTag + '>';
-  }
-
-  if (invalidParent) {
-    let info = '';
-    if (ancestorTag === 'table' && childTag === 'tr') {
-      info +=
-        ' Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by ' +
-        'the browser.';
-    }
-    console.error(
-      'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s',
-      tagDisplayName,
-      ancestorTag,
-      whitespaceInfo,
-      info,
-    );
-  } else {
-    console.error(
-      'validateDOMNesting(...): %s cannot appear as a descendant of ' + '<%s>.',
-      tagDisplayName,
-      ancestorTag,
-    );
   }
 }
 
