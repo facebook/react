@@ -27,12 +27,7 @@ let data = createFromFetch(
   }
 );
 
-// TODO: Once not needed once children can be promises.
-function Content() {
-  return React.use(data);
-}
-
 // TODO: This transition shouldn't really be necessary but it is for now.
 React.startTransition(() => {
-  ReactDOM.hydrateRoot(document, <Content />);
+  ReactDOM.hydrateRoot(document, data);
 });
