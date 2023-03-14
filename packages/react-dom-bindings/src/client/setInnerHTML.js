@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {SVG_NAMESPACE} from './DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from './createMicrosoftUnsafeLocalFunction';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 

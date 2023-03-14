@@ -43,7 +43,7 @@ import {
   getEventListenerSet,
   getEventHandlerListeners,
 } from '../client/ReactDOMComponentTree';
-import {COMMENT_NODE, DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {COMMENT_NODE, DOCUMENT_NODE} from '../client/HTMLNodeType';
 import {batchedUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
