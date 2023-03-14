@@ -450,20 +450,16 @@ describe('ReactConcurrentErrorRecovery', () => {
       await act(() => {
         startTransition(() => {
           root.render(
-            <ErrorBoundary>
+            <>
               <AsyncText text="Async" />
-              <Throws />
-            </ErrorBoundary>,
+              <ErrorBoundary>
+                <Throws />
+              </ErrorBoundary>
+            </>,
           );
         });
       });
-      assertLog([
-        'Suspend! [Async]',
-        // TODO: Ideally we would skip this second render pass to render the
-        // error UI, since it's not going to commit anyway. The same goes for
-        // Suspense fallbacks during a refresh transition.
-        'Caught an error: Oops!',
-      ]);
+      assertLog(['Suspend! [Async]']);
       // The render suspended without committing or surfacing the error.
       expect(root).toMatchRenderedOutput(null);
 
@@ -471,14 +467,16 @@ describe('ReactConcurrentErrorRecovery', () => {
       await act(() => {
         startTransition(() => {
           root.render(
-            <ErrorBoundary>
-              <Throws />
+            <>
               <AsyncText text="Async" />
-            </ErrorBoundary>,
+              <ErrorBoundary>
+                <Throws />
+              </ErrorBoundary>
+            </>,
           );
         });
       });
-      assertLog(['Suspend! [Async]', 'Caught an error: Oops!']);
+      assertLog(['Suspend! [Async]']);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {
@@ -494,7 +492,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         'Caught an error: Oops!',
       ]);
 
-      expect(root).toMatchRenderedOutput('Caught an error: Oops!');
+      expect(root).toMatchRenderedOutput('AsyncCaught an error: Oops!');
     },
   );
 });

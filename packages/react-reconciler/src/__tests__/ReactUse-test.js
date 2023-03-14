@@ -352,7 +352,7 @@ describe('ReactUse', () => {
         root.render(<App />);
       });
     });
-    assertLog(['CD', 'Loading...']);
+    assertLog(['Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
@@ -1034,26 +1034,19 @@ describe('ReactUse', () => {
         </Suspense>,
       );
     });
-    assertLog([
-      'Async text requested [A]',
-      'Async text requested [B]',
-      'Async text requested [C]',
-      '(Loading C...)',
-      '(Loading B...)',
-      '(Loading A...)',
-    ]);
+    assertLog(['Async text requested [A]', '(Loading A...)']);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
     await act(() => {
       resolveTextRequests('A');
     });
-    assertLog(['A', '(Loading C...)', '(Loading B...)']);
+    assertLog(['A', 'Async text requested [B]', '(Loading B...)']);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
     await act(() => {
       resolveTextRequests('B');
     });
-    assertLog(['B', '(Loading C...)']);
+    assertLog(['B', 'Async text requested [C]', '(Loading C...)']);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
     await act(() => {
@@ -1087,14 +1080,7 @@ describe('ReactUse', () => {
         </Suspense>,
       );
     });
-    assertLog([
-      'Async text requested [A]',
-      'Async text requested [B]',
-      'Async text requested [C]',
-      '(Loading C...)',
-      '(Loading B...)',
-      '(Loading A...)',
-    ]);
+    assertLog(['Async text requested [A]', '(Loading A...)']);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
     await act(() => {
@@ -1116,8 +1102,6 @@ describe('ReactUse', () => {
       // React does not suspend on the inner requests, because that would
       // block A from appearing. Instead it shows a fallback.
       'Async text requested [B]',
-      'Async text requested [C]',
-      '(Loading C...)',
       '(Loading B...)',
     ]);
     expect(root).toMatchRenderedOutput('A(Loading B...)');

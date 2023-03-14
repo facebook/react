@@ -1057,7 +1057,7 @@ describe('ReactCache', () => {
       await act(() => {
         root.render(<App showMore={false} />);
       });
-      assertLog(['Cache miss! [A]', 'Cache miss! [B]', 'Loading...']);
+      assertLog(['Cache miss! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       await act(() => {

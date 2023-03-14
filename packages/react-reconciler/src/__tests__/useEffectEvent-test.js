@@ -274,10 +274,7 @@ describe('useEffectEvent', () => {
     await waitForThrow(
       "A function wrapped in useEffectEvent can't be called during rendering.",
     );
-
-    // If something throws, we try one more time synchronously in case the error was
-    // caused by a data race. See recoverFromConcurrentError
-    assertLog(['Count: 0', 'Count: 0']);
+    assertLog([]);
   });
 
   // @gate enableUseEffectEventHook

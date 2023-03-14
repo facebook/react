@@ -224,11 +224,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
-      // But we keep rendering the siblings
-      'B',
+      // We immediately unwind and switch to a fallback without
+      // rendering siblings.
       'Loading...',
       'C',
-      // We leave D incomplete.
+      // Yield before rendering D
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -293,8 +293,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
-      // But we keep rendering the siblings
-      'B',
+      // We immediately unwind and switch to a fallback without
+      // rendering siblings.
       'Loading...',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
@@ -367,7 +367,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // A shell is needed. The update cause it to suspend.
     ReactNoop.render(<Suspense fallback={<Text text="Loading..." />} />);
     await waitForAll([]);
-    // B suspends. Continue rendering the remaining siblings.
     React.startTransition(() => {
       ReactNoop.render(
         <Suspense fallback={<Text text="Loading..." />}>
@@ -378,8 +377,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Suspense>,
       );
     });
-    // B suspends. Continue rendering the remaining siblings.
-    await waitForAll(['A', 'Suspend! [B]', 'C', 'D', 'Loading...']);
+    // B suspends. Render a fallback
+    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
     // Did not commit yet.
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -594,7 +593,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<App showA={true} showB={true} />);
     });
-    await waitForAll(['Suspend! [A]', 'B', 'Loading...']);
+    await waitForAll(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     await resolveText('A');
@@ -778,8 +777,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Sync',
       // The async content suspends
       'Suspend! [Outer content]',
-      'Suspend! [Inner content]',
-      'Loading inner...',
       'Loading outer...',
     ]);
     // The outer loading state finishes immediately.
@@ -888,7 +885,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     assertLog([
       'Suspend! [Async]',
       'Suspend! [Loading (inner)...]',
-      'Sync',
       'Loading (outer)...',
     ]);
     // The tree commits synchronously
@@ -1018,7 +1014,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </>,
       );
     });
-    await waitFor(['Suspend! [Async]', 'Sibling']);
+    await waitFor(['Suspend! [Async]']);
 
     await resolveText('Async');
 
@@ -1059,7 +1055,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <AsyncText text="B" />
       </Suspense>,
     );
-    await waitForAll(['Suspend! [A]', 'Suspend! [B]', 'Loading...']);
+    await waitForAll(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
     await resolveText('A');
@@ -1211,7 +1207,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App />);
-    await waitForAll(['Suspend! [A]', 'Suspend! [B]', 'Suspend! [C]']);
+    await waitForAll(['Suspend! [A]']);
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     await resolveText('A');
@@ -1928,9 +1924,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Foo',
       // A suspends
       'Suspend! [A]',
-      // B suspends
-      'Suspend! [B]',
-      'Loading more...',
       'Loading...',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
@@ -1943,7 +1936,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Retry with the new content.
     await waitForAll([
       'A',
-      // B still suspends
+      // B suspends
       'Suspend! [B]',
       'Loading more...',
     ]);
@@ -1989,9 +1982,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Foo',
       // A suspends
       'Suspend! [A]',
-      // B suspends
-      'Suspend! [B]',
-      'Loading more...',
       'Loading...',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
@@ -2001,7 +1991,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Retry with the new content.
     await waitForAll([
       'A',
-      // B still suspends
+      // B suspends
       'Suspend! [B]',
       'Loading more...',
     ]);
@@ -2148,7 +2138,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.flushSync(() => showB());
     });
 
-    assertLog(['Suspend! [A]', 'Suspend! [B]']);
+    assertLog(['Suspend! [A]']);
   });
 
   // TODO: flip to "warns" when this is implemented again.
@@ -2254,7 +2244,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<Foo />);
-    await waitForAll(['Foo', 'Suspend! [A]', 'B', 'Initial load...']);
+    await waitForAll(['Foo', 'Suspend! [A]', 'Initial load...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Initial load..." />);
 
     // Eventually we resolve and show the data.
@@ -3638,7 +3628,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Outer text: B',
         'Outer step: 0',
         'Suspend! [Inner text: B]',
-        'Inner step: 0',
         'Loading...',
       ]);
       // Commit the placeholder
@@ -3667,7 +3656,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Outer text: B',
         'Outer step: 1',
         'Suspend! [Inner text: B]',
-        'Inner step: 1',
         'Loading...',
       ]);
       expect(root).toMatchRenderedOutput(
