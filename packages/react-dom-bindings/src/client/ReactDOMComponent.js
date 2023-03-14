@@ -55,14 +55,14 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
-import assertValidProps from '../shared/assertValidProps';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import assertValidProps from './assertValidProps';
+import {DOCUMENT_NODE} from './HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';

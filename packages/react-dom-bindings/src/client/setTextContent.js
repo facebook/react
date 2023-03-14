@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {TEXT_NODE} from '../shared/HTMLNodeType';
+import {TEXT_NODE} from './HTMLNodeType';
 
 /**
  * Set the textContent property of a node. For text updates, it's faster

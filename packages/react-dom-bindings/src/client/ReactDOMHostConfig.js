@@ -61,7 +61,7 @@ import {
   getChildNamespace,
   SVG_NAMESPACE,
   MATH_NAMESPACE,
-} from '../shared/DOMNamespaces';
+} from './DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -69,8 +69,8 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_TYPE_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
-import dangerousStyleValue from '../shared/dangerousStyleValue';
+} from './HTMLNodeType';
+import dangerousStyleValue from './dangerousStyleValue';
 
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 

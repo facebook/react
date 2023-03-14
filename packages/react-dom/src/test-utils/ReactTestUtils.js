@@ -20,7 +20,7 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
-import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
+import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,

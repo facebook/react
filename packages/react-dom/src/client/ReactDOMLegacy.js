@@ -27,7 +27,7 @@ import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
-} from 'react-dom-bindings/src/shared/HTMLNodeType';
+} from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
   createContainer,

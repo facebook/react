@@ -13,7 +13,7 @@ import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
-} from '../shared/ReactDOMTypes';
+} from './ReactDOMEventHandleTypes';
 import type {
   Container,
   TextInstance,

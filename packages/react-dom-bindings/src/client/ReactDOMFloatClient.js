@@ -16,8 +16,8 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
-import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {DOCUMENT_NODE} from './HTMLNodeType';
+import {SVG_NAMESPACE} from './DOMNamespaces';
 import {
   validatePreloadArguments,
   validatePreinitArguments,
