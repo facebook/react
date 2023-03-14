@@ -13,13 +13,17 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export type WebpackSSRMap = {
+export type SSRManifest = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceMetadata,
   },
 };
 
-export type BundlerConfig = null | WebpackSSRMap;
+export type ServerManifest = {
+  [id: string]: ClientReference<any>,
+};
+
+export type ServerReferenceId = string;
 
 export opaque type ClientReferenceMetadata = {
   id: string,
@@ -32,7 +36,7 @@ export opaque type ClientReferenceMetadata = {
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 export function resolveClientReference<T>(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {
@@ -49,6 +53,14 @@ export function resolveClientReference<T>(
     }
   }
   return metadata;
+}
+
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  // This needs to return async: true if it's an async module.
+  return bundlerConfig[id];
 }
 
 // The chunk cache contains all the chunks we've preloaded so far.

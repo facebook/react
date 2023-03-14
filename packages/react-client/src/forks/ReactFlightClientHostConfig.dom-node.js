@@ -7,6 +7,6 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientHostConfigBrowser';
+export * from 'react-client/src/ReactFlightClientHostConfigNode';
 export * from 'react-client/src/ReactFlightClientHostConfigStream';
-export * from 'react-server-dom-webpack/src/ReactFlightClientWebpackBundlerConfig';
+export * from 'react-server-dom-webpack/src/ReactFlightClientNodeBundlerConfig';

@@ -227,6 +227,8 @@ import {
   resetHydrationState,
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
+  tryToClaimNextHydratableTextInstance,
+  tryToClaimNextHydratableSuspenseInstance,
   warnIfHydrating,
   queueHydrationError,
 } from './ReactFiberHydrationContext';
@@ -1694,7 +1696,7 @@ function updateHostSingleton(
 
 function updateHostText(current: null | Fiber, workInProgress: Fiber) {
   if (current === null) {
-    tryToClaimNextHydratableInstance(workInProgress);
+    tryToClaimNextHydratableTextInstance(workInProgress);
   }
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
@@ -2250,7 +2252,7 @@ function updateSuspenseComponent(
       } else {
         pushFallbackTreeSuspenseHandler(workInProgress);
       }
-      tryToClaimNextHydratableInstance(workInProgress);
+      tryToClaimNextHydratableSuspenseInstance(workInProgress);
       // This could've been a dehydrated suspense component.
       const suspenseState: null | SuspenseState = workInProgress.memoizedState;
       if (suspenseState !== null) {

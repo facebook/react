@@ -39,7 +39,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     document.body.appendChild(container);
   });
@@ -66,7 +66,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
       );
     }
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toBe('1');
@@ -86,11 +86,11 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
       );
     }
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toBe('0');
-    await act(async () => {
+    await act(() => {
       container.firstChild.dispatchEvent(
         new MouseEvent('click', {bubbles: true}),
       );

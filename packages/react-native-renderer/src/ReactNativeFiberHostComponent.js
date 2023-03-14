@@ -13,7 +13,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethods,
+  INativeMethods,
   ViewConfig,
 } from './ReactNativeTypes';
 import type {Instance} from './ReactNativeHostConfig';
@@ -30,7 +30,7 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-class ReactNativeFiberHostComponent {
+class ReactNativeFiberHostComponent implements INativeMethods {
   _children: Array<Instance | number>;
   _nativeTag: number;
   _internalFiberInstanceHandleDEV: Object;
@@ -126,9 +126,5 @@ class ReactNativeFiberHostComponent {
     }
   }
 }
-
-// $FlowFixMe[class-object-subtyping] found when upgrading Flow
-// $FlowFixMe[method-unbinding] found when upgrading Flow
-(ReactNativeFiberHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export default ReactNativeFiberHostComponent;

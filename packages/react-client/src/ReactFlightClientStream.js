@@ -9,7 +9,7 @@
 
 import type {CallServerCallback} from './ReactFlightClient';
 import type {Response} from './ReactFlightClientHostConfigStream';
-import type {BundlerConfig} from './ReactFlightClientHostConfig';
+import type {SSRManifest} from './ReactFlightClientHostConfig';
 
 import {
   resolveModule,
@@ -121,7 +121,7 @@ function createFromJSONCallback(response: Response) {
 }
 
 export function createResponse(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   callServer: void | CallServerCallback,
 ): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.

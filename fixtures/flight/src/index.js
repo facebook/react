@@ -1,31 +1,38 @@
 import * as React from 'react';
 import {Suspense} from 'react';
 import ReactDOM from 'react-dom/client';
-import ReactServerDOMReader from 'react-server-dom-webpack/client';
+import {createFromFetch, encodeReply} from 'react-server-dom-webpack/client';
 
-let data = ReactServerDOMReader.createFromFetch(
-  fetch('http://localhost:3001'),
+// TODO: This should be a dependency of the App but we haven't implemented CSS in Node yet.
+import './style.css';
+
+let data = createFromFetch(
+  fetch('/', {
+    headers: {
+      Accept: 'text/x-component',
+    },
+  }),
   {
-    callServer(id, args) {
-      const response = fetch('http://localhost:3001', {
+    async callServer(id, args) {
+      const response = fetch('/', {
         method: 'POST',
-        cors: 'cors',
         headers: {
-          'rsc-action': JSON.stringify({filepath: id.id, name: id.name}),
+          Accept: 'text/x-component',
+          'rsc-action': id,
         },
-        body: JSON.stringify(args),
+        body: await encodeReply(args),
       });
-      return ReactServerDOMReader.createFromFetch(response);
+      return createFromFetch(response);
     },
   }
 );
 
+// TODO: Once not needed once children can be promises.
 function Content() {
   return React.use(data);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <Suspense fallback={<h1>Loading...</h1>}>
-    <Content />
-  </Suspense>
-);
+// TODO: This transition shouldn't really be necessary but it is for now.
+React.startTransition(() => {
+  ReactDOM.hydrateRoot(document, <Content />);
+});

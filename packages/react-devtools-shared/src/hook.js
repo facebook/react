@@ -21,6 +21,9 @@ import {
   patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
+import {attach} from './backend/renderer';
+import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from './constants';
+import {sessionStorageGetItem} from './storage';
 
 declare var window: any;
 
@@ -365,8 +368,9 @@ export function installHook(target: any): DevToolsHook | null {
 
     // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
     // Otherwise the renderer won't yet exist and we can skip this step.
-    const attach = target.__REACT_DEVTOOLS_ATTACH__;
-    if (typeof attach === 'function') {
+    if (
+      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+    ) {
       const rendererInterface = attach(hook, id, renderer, target);
       hook.rendererInterfaces.set(id, rendererInterface);
     }

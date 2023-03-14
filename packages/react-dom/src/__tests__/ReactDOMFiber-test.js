@@ -718,6 +718,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
+  // @gate !disableLegacyContext
   it('should pass portal context when rendering subtree elsewhere', () => {
     const portalContainer = document.createElement('div');
 
@@ -752,6 +753,7 @@ describe('ReactDOMFiber', () => {
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
 
+  // @gate !disableLegacyContext
   it('should update portal context if it changes due to setState', () => {
     const portalContainer = document.createElement('div');
 
@@ -796,6 +798,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  // @gate !disableLegacyContext
   it('should update portal context if it changes due to re-render', () => {
     const portalContainer = document.createElement('div');
 

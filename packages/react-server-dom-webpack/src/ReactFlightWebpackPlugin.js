@@ -55,7 +55,8 @@ type Options = {
   isServer: boolean,
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
-  manifestFilename?: string,
+  clientManifestFilename?: string,
+  ssrManifestFilename?: string,
 };
 
 const PLUGIN_NAME = 'React Server Plugin';
@@ -63,7 +64,8 @@ const PLUGIN_NAME = 'React Server Plugin';
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;
   chunkName: string;
-  manifestFilename: string;
+  clientManifestFilename: string;
+  ssrManifestFilename: string;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
@@ -99,8 +101,10 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
-    this.manifestFilename =
-      options.manifestFilename || 'react-client-manifest.json';
+    this.clientManifestFilename =
+      options.clientManifestFilename || 'react-client-manifest.json';
+    this.ssrManifestFilename =
+      options.ssrManifestFilename || 'react-ssr-manifest.json';
   }
 
   apply(compiler: any) {
@@ -209,15 +213,18 @@ export default class ReactFlightWebpackPlugin {
           if (clientFileNameFound === false) {
             compilation.warnings.push(
               new WebpackError(
-                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.manifestFilename} was not created.`,
+                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.clientManifestFilename} was not created.`,
               ),
             );
             return;
           }
 
-          const json: {
+          const clientManifest: {
+            [string]: {chunks: $FlowFixMe, id: string, name: string},
+          } = {};
+          const ssrManifest: {
             [string]: {
-              [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
+              [string]: {specifier: string, name: string},
             },
           } = {};
           compilation.chunkGroups.forEach(function (chunkGroup) {
@@ -239,26 +246,47 @@ export default class ReactFlightWebpackPlugin {
                 .getExportsInfo(module)
                 .getProvidedExports();
 
-              const moduleExports: {
-                [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
-              } = {};
-              ['', '*']
-                .concat(
-                  Array.isArray(moduleProvidedExports)
-                    ? moduleProvidedExports
-                    : [],
-                )
-                .forEach(function (name) {
-                  moduleExports[name] = {
-                    id,
-                    chunks: chunkIds,
-                    name: name,
-                  };
-                });
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
-                json[href] = moduleExports;
+                const ssrExports: {
+                  [string]: {specifier: string, name: string},
+                } = {};
+
+                clientManifest[href] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '*',
+                };
+                ssrExports['*'] = {
+                  specifier: href,
+                  name: '*',
+                };
+                clientManifest[href + '#'] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '',
+                };
+                ssrExports[''] = {
+                  specifier: href,
+                  name: '',
+                };
+
+                if (Array.isArray(moduleProvidedExports)) {
+                  moduleProvidedExports.forEach(function (name) {
+                    clientManifest[href + '#' + name] = {
+                      id,
+                      chunks: chunkIds,
+                      name: name,
+                    };
+                    ssrExports[name] = {
+                      specifier: href,
+                      name: name,
+                    };
+                  });
+                }
+
+                ssrManifest[id] = ssrExports;
               }
             }
 
@@ -280,10 +308,15 @@ export default class ReactFlightWebpackPlugin {
             });
           });
 
-          const output = JSON.stringify(json, null, 2);
+          const clientOutput = JSON.stringify(clientManifest, null, 2);
           compilation.emitAsset(
-            _this.manifestFilename,
-            new sources.RawSource(output, false),
+            _this.clientManifestFilename,
+            new sources.RawSource(clientOutput, false),
+          );
+          const ssrOutput = JSON.stringify(ssrManifest, null, 2);
+          compilation.emitAsset(
+            _this.ssrManifestFilename,
+            new sources.RawSource(ssrOutput, false),
           );
         },
       );

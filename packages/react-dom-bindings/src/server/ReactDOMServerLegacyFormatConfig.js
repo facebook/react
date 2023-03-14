@@ -52,6 +52,7 @@ export type ResponseState = {
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
+  stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -88,6 +89,7 @@ export function createResponseState(
     preconnectChunks: responseState.preconnectChunks,
     preloadChunks: responseState.preloadChunks,
     hoistableChunks: responseState.hoistableChunks,
+    stylesToHoist: responseState.stylesToHoist,
 
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
@@ -134,7 +136,6 @@ export {
   writeHoistables,
   writePostamble,
   hoistResources,
-  hoistResourcesToRoot,
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,

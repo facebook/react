@@ -278,6 +278,7 @@ import {
   getShellBoundary,
 } from './ReactFiberSuspenseContext';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
 
 const ceil = Math.ceil;
 
@@ -322,7 +323,7 @@ const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
-const SuspendedAndReadyToUnwind: SuspendedReason = 5;
+const SuspendedAndReadyToContinue: SuspendedReason = 5;
 const SuspendedOnHydration: SuspendedReason = 6;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
@@ -892,6 +893,18 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     return;
   }
 
+  // If this root is currently suspended and waiting for data to resolve, don't
+  // schedule a task to render it. We'll either wait for a ping, or wait to
+  // receive an update.
+  if (
+    workInProgressSuspendedReason === SuspendedOnData &&
+    workInProgressRoot === root
+  ) {
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    return;
+  }
+
   // We use the highest priority lane to represent the priority of the callback.
   const newCallbackPriority = getHighestPriorityLane(nextLanes);
 
@@ -1153,20 +1166,6 @@ function performConcurrentWorkOnRoot(
   if (root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
-    if (
-      workInProgressSuspendedReason === SuspendedOnData &&
-      workInProgressRoot === root
-    ) {
-      // Special case: The work loop is currently suspended and waiting for
-      // data to resolve. Unschedule the current task.
-      //
-      // TODO: The factoring is a little weird. Arguably this should be checked
-      // in ensureRootIsScheduled instead. I went back and forth, not totally
-      // sure yet.
-      root.callbackPriority = NoLane;
-      root.callbackNode = null;
-      return null;
-    }
     return performConcurrentWorkOnRoot.bind(null, root);
   }
   return null;
@@ -1768,6 +1767,7 @@ function resetSuspendedWorkLoopOnUnwind() {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
   resetHooksOnUnwind();
+  resetChildReconcilerOnUnwind();
 }
 
 function handleThrow(root: FiberRoot, thrownValue: any): void {
@@ -1846,19 +1846,34 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
 
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
-    if (workInProgressSuspendedReason !== SuspendedOnError) {
-      const wakeable: Wakeable = (thrownValue: any);
-      markComponentSuspended(
-        erroredWork,
-        wakeable,
-        workInProgressRootRenderLanes,
-      );
-    } else {
-      markComponentErrored(
-        erroredWork,
-        thrownValue,
-        workInProgressRootRenderLanes,
-      );
+    switch (workInProgressSuspendedReason) {
+      case SuspendedOnError: {
+        markComponentErrored(
+          erroredWork,
+          thrownValue,
+          workInProgressRootRenderLanes,
+        );
+        break;
+      }
+      case SuspendedOnData:
+      case SuspendedOnImmediate:
+      case SuspendedOnDeprecatedThrowPromise:
+      case SuspendedAndReadyToContinue: {
+        const wakeable: Wakeable = (thrownValue: any);
+        markComponentSuspended(
+          erroredWork,
+          wakeable,
+          workInProgressRootRenderLanes,
+        );
+        break;
+      }
+      case SuspendedOnHydration: {
+        // This is conceptually like a suspend, but it's not associated with
+        // a particular wakeable. DevTools doesn't seem to care about this case,
+        // currently. It's similar to if the component were interrupted, which
+        // we don't mark with a special function.
+        break;
+      }
     }
   }
 }
@@ -2201,6 +2216,17 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // `status` field, but if the promise already has a status, we won't
             // have added a listener until right here.
             const onResolution = () => {
+              // Check if the root is still suspended on this promise.
+              if (
+                workInProgressSuspendedReason === SuspendedOnData &&
+                workInProgressRoot === root
+              ) {
+                // Mark the root as ready to continue rendering.
+                workInProgressSuspendedReason = SuspendedAndReadyToContinue;
+              }
+              // Ensure the root is scheduled. We should do this even if we're
+              // currently working on a different root, so that we resume
+              // rendering later.
               ensureRootIsScheduled(root, now());
             };
             thenable.then(onResolution, onResolution);
@@ -2210,10 +2236,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // If this fiber just suspended, it's possible the data is already
             // cached. Yield to the main thread to give it a chance to ping. If
             // it does, we can retry immediately without unwinding the stack.
-            workInProgressSuspendedReason = SuspendedAndReadyToUnwind;
+            workInProgressSuspendedReason = SuspendedAndReadyToContinue;
             break outer;
           }
-          case SuspendedAndReadyToUnwind: {
+          case SuspendedAndReadyToContinue: {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
@@ -2253,7 +2279,17 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
           }
         }
       }
-      workLoopConcurrent();
+
+      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+        // `act` special case: If we're inside an `act` scope, don't consult
+        // `shouldYield`. Always keep working until the render is complete.
+        // This is not just an optimization: in a unit test environment, we
+        // can't trust the result of `shouldYield`, because the host I/O is
+        // likely mocked.
+        workLoopSync();
+      } else {
+        workLoopConcurrent();
+      }
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
@@ -2389,14 +2425,14 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       break;
     }
     default: {
-      if (__DEV__) {
-        console.error(
-          'Unexpected type of work: %s, Currently only function ' +
-            'components are replayed after suspending. This is a bug in React.',
-          unitOfWork.tag,
-        );
-      }
-      resetSuspendedWorkLoopOnUnwind();
+      // Other types besides function components are reset completely before
+      // being replayed. Currently this only happens when a Usable type is
+      // reconciled — the reconciler will suspend.
+      //
+      // We reset the fiber back to its original state; however, this isn't
+      // a full "unwind" because we're going to reuse the promises that were
+      // reconciled previously. So it's intentional that we don't call
+      // resetSuspendedWorkLoopOnUnwind here.
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
       unitOfWork = workInProgress = resetWorkInProgress(
         unitOfWork,

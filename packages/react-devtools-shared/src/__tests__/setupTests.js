@@ -177,7 +177,3 @@ afterEach(() => {
   // so that we don't disconnect the ReactCurrentDispatcher ref.
   jest.resetModules();
 });
-
-expect.extend({
-  ...require('../../../../scripts/jest/matchers/schedulerTestMatchers'),
-});

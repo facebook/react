@@ -149,6 +149,13 @@ function runTests(itRenders, itRejectsRendering, expectToReject) {
 }
 
 describe('ReactDOMServerIntegration - Untrusted URLs', () => {
+  // The `itRenders` helpers don't work with the gate pragma, so we have to do
+  // this instead.
+  if (gate(flags => flags.disableJavaScriptURLs)) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   function initModules() {
     jest.resetModules();
     React = require('react');
@@ -181,6 +188,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
 });
 
 describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', () => {
+  // The `itRenders` helpers don't work with the gate pragma, so we have to do
+  // this instead.
+  if (gate(flags => !flags.disableJavaScriptURLs)) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   function initModules() {
     jest.resetModules();
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');

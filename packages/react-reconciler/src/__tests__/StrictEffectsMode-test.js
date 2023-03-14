@@ -13,6 +13,7 @@ let React;
 let ReactTestRenderer;
 let Scheduler;
 let act;
+let assertLog;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
@@ -20,7 +21,10 @@ describe('StrictEffectsMode', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function supportsDoubleInvokeEffects() {
@@ -32,55 +36,52 @@ describe('StrictEffectsMode', () => {
     );
   }
 
-  it('should not double invoke effects in legacy mode', () => {
+  it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect mount');
-        return () => Scheduler.unstable_yieldValue('useEffect unmount');
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
-        return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
       });
 
       return text;
     }
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect mount',
-      'useEffect mount',
-    ]);
+    assertLog(['useLayoutEffect mount', 'useEffect mount']);
   });
 
-  it('double invoking for effects works properly', () => {
+  it('double invoking for effects works properly', async () => {
     function App({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect mount');
-        return () => Scheduler.unstable_yieldValue('useEffect unmount');
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
-        return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
       });
 
       return text;
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
         'useLayoutEffect unmount',
@@ -89,57 +90,51 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount',
-        'useEffect mount',
-      ]);
+      assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect unmount',
       'useLayoutEffect mount',
       'useEffect unmount',
       'useEffect mount',
     ]);
 
-    act(() => {
+    await act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect unmount',
-      'useEffect unmount',
-    ]);
+    assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
   });
 
-  it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
+  it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', async () => {
     function App({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect One mount');
-        return () => Scheduler.unstable_yieldValue('useEffect One unmount');
+        Scheduler.log('useEffect One mount');
+        return () => Scheduler.log('useEffect One unmount');
       });
 
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect Two mount');
-        return () => Scheduler.unstable_yieldValue('useEffect Two unmount');
+        Scheduler.log('useEffect Two mount');
+        return () => Scheduler.log('useEffect Two unmount');
       });
 
       return text;
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useEffect One mount',
         'useEffect Two mount',
         'useEffect One unmount',
@@ -148,59 +143,51 @@ describe('StrictEffectsMode', () => {
         'useEffect Two mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useEffect One mount',
-        'useEffect Two mount',
-      ]);
+      assertLog(['useEffect One mount', 'useEffect Two mount']);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useEffect One unmount',
       'useEffect Two unmount',
       'useEffect One mount',
       'useEffect Two mount',
     ]);
 
-    act(() => {
+    await act(() => {
       renderer.unmount(null);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useEffect One unmount',
-      'useEffect Two unmount',
-    ]);
+    assertLog(['useEffect One unmount', 'useEffect Two unmount']);
   });
 
-  it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', () => {
+  it('multiple layout effects are double invoked in the right order (all mounted, all unmounted, all remounted)', async () => {
     function App({text}) {
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect One mount');
-        return () =>
-          Scheduler.unstable_yieldValue('useLayoutEffect One unmount');
+        Scheduler.log('useLayoutEffect One mount');
+        return () => Scheduler.log('useLayoutEffect One unmount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect Two mount');
-        return () =>
-          Scheduler.unstable_yieldValue('useLayoutEffect Two unmount');
+        Scheduler.log('useLayoutEffect Two mount');
+        return () => Scheduler.log('useLayoutEffect Two unmount');
       });
 
       return text;
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
         'useLayoutEffect One unmount',
@@ -209,100 +196,88 @@ describe('StrictEffectsMode', () => {
         'useLayoutEffect Two mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect One mount',
-        'useLayoutEffect Two mount',
-      ]);
+      assertLog(['useLayoutEffect One mount', 'useLayoutEffect Two mount']);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect One unmount',
       'useLayoutEffect Two unmount',
       'useLayoutEffect One mount',
       'useLayoutEffect Two mount',
     ]);
 
-    act(() => {
+    await act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect One unmount',
-      'useLayoutEffect Two unmount',
-    ]);
+    assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
   });
 
-  it('useEffect and useLayoutEffect is called twice when there is no unmount', () => {
+  it('useEffect and useLayoutEffect is called twice when there is no unmount', async () => {
     function App({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect mount');
+        Scheduler.log('useEffect mount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
+        Scheduler.log('useLayoutEffect mount');
       });
 
       return text;
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount',
-        'useEffect mount',
-      ]);
+      assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
-      'useLayoutEffect mount',
-      'useEffect mount',
-    ]);
+    assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
-    act(() => {
+    await act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
   });
 
-  it('passes the right context to class component lifecycles', () => {
+  it('passes the right context to class component lifecycles', async () => {
     class App extends React.PureComponent {
       test() {}
 
       componentDidMount() {
         this.test();
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
 
       componentDidUpdate() {
         this.test();
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
 
       componentWillUnmount() {
         this.test();
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       render() {
@@ -310,33 +285,33 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'componentWillUnmount',
         'componentDidMount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded(['componentDidMount']);
+      assertLog(['componentDidMount']);
     }
   });
 
-  it('double invoking works for class components', () => {
+  it('double invoking works for class components', async () => {
     class App extends React.PureComponent {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
 
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       render() {
@@ -345,47 +320,47 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'componentWillUnmount',
         'componentDidMount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded(['componentDidMount']);
+      assertLog(['componentDidMount']);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'update'} />);
     });
 
-    expect(Scheduler).toHaveYielded(['componentDidUpdate']);
+    assertLog(['componentDidUpdate']);
 
-    act(() => {
+    await act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded(['componentWillUnmount']);
+    assertLog(['componentWillUnmount']);
   });
 
-  it('should not double invoke class lifecycles in legacy mode', () => {
+  it('should not double invoke class lifecycles in legacy mode', async () => {
     class App extends React.PureComponent {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
 
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
+        Scheduler.log('componentDidUpdate');
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       render() {
@@ -393,41 +368,41 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded(['componentDidMount']);
+    assertLog(['componentDidMount']);
   });
 
-  it('double flushing passive effects only results in one double invoke', () => {
+  it('double flushing passive effects only results in one double invoke', async () => {
     function App({text}) {
       const [state, setState] = React.useState(0);
       React.useEffect(() => {
         if (state !== 1) {
           setState(1);
         }
-        Scheduler.unstable_yieldValue('useEffect mount');
-        return () => Scheduler.unstable_yieldValue('useEffect unmount');
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
       });
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
-        return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
       });
 
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'mount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -442,7 +417,7 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'mount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -455,17 +430,16 @@ describe('StrictEffectsMode', () => {
     }
   });
 
-  it('newly mounted components after initial mount get double invoked', () => {
+  it('newly mounted components after initial mount get double invoked', async () => {
     let _setShowChild;
     function Child() {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('Child useEffect mount');
-        return () => Scheduler.unstable_yieldValue('Child useEffect unmount');
+        Scheduler.log('Child useEffect mount');
+        return () => Scheduler.log('Child useEffect unmount');
       });
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Child useLayoutEffect mount');
-        return () =>
-          Scheduler.unstable_yieldValue('Child useLayoutEffect unmount');
+        Scheduler.log('Child useLayoutEffect mount');
+        return () => Scheduler.log('Child useLayoutEffect unmount');
       });
 
       return null;
@@ -475,24 +449,23 @@ describe('StrictEffectsMode', () => {
       const [showChild, setShowChild] = React.useState(false);
       _setShowChild = setShowChild;
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('App useEffect mount');
-        return () => Scheduler.unstable_yieldValue('App useEffect unmount');
+        Scheduler.log('App useEffect mount');
+        return () => Scheduler.log('App useEffect unmount');
       });
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('App useLayoutEffect mount');
-        return () =>
-          Scheduler.unstable_yieldValue('App useLayoutEffect unmount');
+        Scheduler.log('App useLayoutEffect mount');
+        return () => Scheduler.log('App useLayoutEffect unmount');
       });
 
       return showChild && <Child />;
     }
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect mount',
         'App useEffect mount',
         'App useLayoutEffect unmount',
@@ -501,18 +474,15 @@ describe('StrictEffectsMode', () => {
         'App useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
-        'App useLayoutEffect mount',
-        'App useEffect mount',
-      ]);
+      assertLog(['App useLayoutEffect mount', 'App useEffect mount']);
     }
 
-    act(() => {
+    await act(() => {
       _setShowChild(true);
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
         'App useLayoutEffect mount',
@@ -525,7 +495,7 @@ describe('StrictEffectsMode', () => {
         'Child useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
         'App useLayoutEffect mount',
@@ -536,14 +506,14 @@ describe('StrictEffectsMode', () => {
     }
   });
 
-  it('classes and functions are double invoked together correctly', () => {
+  it('classes and functions are double invoked together correctly', async () => {
     class ClassChild extends React.PureComponent {
       componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
+        Scheduler.log('componentDidMount');
       }
 
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
+        Scheduler.log('componentWillUnmount');
       }
 
       render() {
@@ -553,12 +523,12 @@ describe('StrictEffectsMode', () => {
 
     function FunctionChild({text}) {
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('useEffect mount');
-        return () => Scheduler.unstable_yieldValue('useEffect unmount');
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
       });
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('useLayoutEffect mount');
-        return () => Scheduler.unstable_yieldValue('useLayoutEffect unmount');
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
       });
       return text;
     }
@@ -573,14 +543,14 @@ describe('StrictEffectsMode', () => {
     }
 
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
         unstable_isConcurrent: true,
       });
     });
 
     if (supportsDoubleInvokeEffects()) {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
         'useEffect mount',
@@ -592,29 +562,29 @@ describe('StrictEffectsMode', () => {
         'useEffect mount',
       ]);
     } else {
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
     }
 
-    act(() => {
+    await act(() => {
       renderer.update(<App text={'mount'} />);
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'useLayoutEffect unmount',
       'useLayoutEffect mount',
       'useEffect unmount',
       'useEffect mount',
     ]);
 
-    act(() => {
+    await act(() => {
       renderer.unmount();
     });
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'componentWillUnmount',
       'useLayoutEffect unmount',
       'useEffect unmount',

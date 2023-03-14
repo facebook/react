@@ -157,6 +157,7 @@ import {
   hydrateHoistable,
   mountHoistable,
   unmountHoistable,
+  prepareToCommitHoistables,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -2822,6 +2823,8 @@ function commitMutationEffectsOnFiber(
     }
     case HostRoot: {
       if (enableFloat && supportsResources) {
+        prepareToCommitHoistables();
+
         const previousHoistableRoot = currentHoistableRoot;
         currentHoistableRoot = getHoistableRoot(root.containerInfo);
 

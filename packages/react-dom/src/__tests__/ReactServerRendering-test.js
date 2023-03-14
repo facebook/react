@@ -340,6 +340,7 @@ describe('ReactDOMServer', () => {
       expect(markup).toContain('hello, world');
     });
 
+    // @gate !disableLegacyContext
     it('renders with context when using custom constructor', () => {
       class Component extends React.Component {
         constructor() {

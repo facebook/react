@@ -7,35 +7,25 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
-type WebpackMap = {
-  [filepath: string]: {
-    [name: string]: ClientReferenceMetadata,
-  },
+export type ClientManifest = {
+  [id: string]: ClientReferenceMetadata,
 };
-
-export type BundlerConfig = WebpackMap;
 
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
-  $$filepath: string,
-  $$name: string,
-  $$bound: Array<ReactModel>,
+  $$id: string,
+  $$bound: null | Array<ReactClientValue>,
 };
 
-export type ServerReferenceMetadata = {
-  id: string,
-  name: string,
-  bound: Promise<Array<ReactModel>>,
-};
+export type ServerReferenceId = string;
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
   $$typeof: symbol,
-  filepath: string,
-  name: string,
-  async: boolean,
+  $$id: string,
+  $$async: boolean,
 };
 
 export type ClientReferenceMetadata = {
@@ -53,12 +43,7 @@ const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
-  return (
-    reference.filepath +
-    '#' +
-    reference.name +
-    (reference.async ? '#async' : '')
-  );
+  return reference.$$async ? reference.$$id + '#async' : reference.$$id;
 }
 
 export function isClientReference(reference: Object): boolean {
@@ -70,12 +55,11 @@ export function isServerReference(reference: Object): boolean {
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: BundlerConfig,
+  config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const resolvedModuleData =
-    config[clientReference.filepath][clientReference.name];
-  if (clientReference.async) {
+  const resolvedModuleData = config[clientReference.$$id];
+  if (clientReference.$$async) {
     return {
       id: resolvedModuleData.id,
       chunks: resolvedModuleData.chunks,
@@ -87,13 +71,16 @@ export function resolveClientReferenceMetadata<T>(
   }
 }
 
-export function resolveServerReferenceMetadata<T>(
-  config: BundlerConfig,
+export function getServerReferenceId<T>(
+  config: ClientManifest,
   serverReference: ServerReference<T>,
-): ServerReferenceMetadata {
-  return {
-    id: serverReference.$$filepath,
-    name: serverReference.$$name,
-    bound: Promise.resolve(serverReference.$$bound),
-  };
+): ServerReferenceId {
+  return serverReference.$$id;
+}
+
+export function getServerReferenceBoundArguments<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): null | Array<ReactClientValue> {
+  return serverReference.$$bound;
 }

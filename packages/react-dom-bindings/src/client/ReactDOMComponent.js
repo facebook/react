@@ -375,110 +375,125 @@ function updateDOMProperties(
   }
 }
 
-export function createElement(
+// creates a script element that won't execute
+export function createPotentiallyInlineScriptElement(
+  ownerDocument: Document,
+): Element {
+  // Create the script via .innerHTML so its "parser-inserted" flag is
+  // set to true and it does not execute
+  const div = ownerDocument.createElement('div');
+  if (__DEV__) {
+    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+      console.error(
+        'Encountered a script tag while rendering React component. ' +
+          'Scripts inside React components are never executed when rendering ' +
+          'on the client. Consider using template tag instead ' +
+          '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+      );
+      didWarnScriptTags = true;
+    }
+  }
+  div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
+  // This is guaranteed to yield a script element.
+  const firstChild = ((div.firstChild: any): HTMLScriptElement);
+  const element = div.removeChild(firstChild);
+  return element;
+}
+
+export function createSelectElement(
+  props: Object,
+  ownerDocument: Document,
+): Element {
+  let element;
+  if (typeof props.is === 'string') {
+    element = ownerDocument.createElement('select', {is: props.is});
+  } else {
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement('select');
+  }
+  if (props.multiple) {
+    element.multiple = true;
+  } else if (props.size) {
+    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+    // it is possible that no option is selected.
+    //
+    // This is only necessary when a select in "single selection mode".
+    element.size = props.size;
+  }
+  return element;
+}
+
+// Creates elements in the HTML namesapce
+export function createHTMLElement(
   type: string,
   props: Object,
-  rootContainerElement: Element | Document | DocumentFragment,
-  parentNamespace: string,
+  ownerDocument: Document,
 ): Element {
-  let isCustomComponentTag;
-
-  // We create tags in the namespace of their parent container, except HTML
-  // tags get no namespace.
-  const ownerDocument: Document =
-    getOwnerDocumentFromRootContainer(rootContainerElement);
-  let domElement: Element;
-  let namespaceURI = parentNamespace;
-  if (namespaceURI === HTML_NAMESPACE) {
-    namespaceURI = getIntrinsicNamespace(type);
-  }
-  if (namespaceURI === HTML_NAMESPACE) {
-    if (__DEV__) {
-      isCustomComponentTag = isCustomComponent(type, props);
-      // Should this check be gated by parent namespace? Not sure we want to
-      // allow <SVG> or <mATH>.
-      if (!isCustomComponentTag && type !== type.toLowerCase()) {
+  if (__DEV__) {
+    switch (type) {
+      case 'script':
+      case 'select':
         console.error(
-          '<%s /> is using incorrect casing. ' +
-            'Use PascalCase for React components, ' +
-            'or lowercase for HTML elements.',
+          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
           type,
         );
-      }
+        break;
+      case 'svg':
+      case 'math':
+        console.error(
+          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
+          type,
+        );
     }
+  }
 
-    if (type === 'script') {
-      // Create the script via .innerHTML so its "parser-inserted" flag is
-      // set to true and it does not execute
-      const div = ownerDocument.createElement('div');
-      if (__DEV__) {
-        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-          console.error(
-            'Encountered a script tag while rendering React component. ' +
-              'Scripts inside React components are never executed when rendering ' +
-              'on the client. Consider using template tag instead ' +
-              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
-          );
-          didWarnScriptTags = true;
-        }
-      }
-      div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
-      // This is guaranteed to yield a script element.
-      const firstChild = ((div.firstChild: any): HTMLScriptElement);
-      domElement = div.removeChild(firstChild);
-    } else if (typeof props.is === 'string') {
-      domElement = ownerDocument.createElement(type, {is: props.is});
-    } else {
-      // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-      // See discussion in https://github.com/facebook/react/pull/6896
-      // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-      domElement = ownerDocument.createElement(type);
-      // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
-      // attributes on `select`s needs to be added before `option`s are inserted.
-      // This prevents:
-      // - a bug where the `select` does not scroll to the correct option because singular
-      //  `select` elements automatically pick the first item #13222
-      // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
-      // See https://github.com/facebook/react/issues/13222
-      // and https://github.com/facebook/react/issues/14239
-      if (type === 'select') {
-        const node = ((domElement: any): HTMLSelectElement);
-        if (props.multiple) {
-          node.multiple = true;
-        } else if (props.size) {
-          // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-          // it is possible that no option is selected.
-          //
-          // This is only necessary when a select in "single selection mode".
-          node.size = props.size;
-        }
-      }
+  let isCustomComponentTag;
+
+  let element: Element;
+  if (__DEV__) {
+    isCustomComponentTag = isCustomComponent(type, props);
+    // Should this check be gated by parent namespace? Not sure we want to
+    // allow <SVG> or <mATH>.
+    if (!isCustomComponentTag && type !== type.toLowerCase()) {
+      console.error(
+        '<%s /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+        type,
+      );
     }
+  }
+
+  if (typeof props.is === 'string') {
+    element = ownerDocument.createElement(type, {is: props.is});
   } else {
-    domElement = ownerDocument.createElementNS(namespaceURI, type);
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement(type);
   }
 
   if (__DEV__) {
-    if (namespaceURI === HTML_NAMESPACE) {
-      if (
-        !isCustomComponentTag &&
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(domElement) ===
-          '[object HTMLUnknownElement]' &&
-        !hasOwnProperty.call(warnedUnknownTags, type)
-      ) {
-        warnedUnknownTags[type] = true;
-        console.error(
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
-      }
+    if (
+      !isCustomComponentTag &&
+      // $FlowFixMe[method-unbinding]
+      Object.prototype.toString.call(element) ===
+        '[object HTMLUnknownElement]' &&
+      !hasOwnProperty.call(warnedUnknownTags, type)
+    ) {
+      warnedUnknownTags[type] = true;
+      console.error(
+        'The tag <%s> is unrecognized in this browser. ' +
+          'If you meant to render a React component, start its name with ' +
+          'an uppercase letter.',
+        type,
+      );
     }
   }
 
-  return domElement;
+  return element;
 }
 
 export function createTextNode(
@@ -864,9 +879,9 @@ export function diffHydratedProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  parentNamespace: string,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
+  parentNamespaceDev: string,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -1109,11 +1124,11 @@ export function diffHydratedProperties(
             propertyInfo,
           );
         } else {
-          let ownNamespace = parentNamespace;
-          if (ownNamespace === HTML_NAMESPACE) {
-            ownNamespace = getIntrinsicNamespace(tag);
+          let ownNamespaceDev = parentNamespaceDev;
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            ownNamespaceDev = getIntrinsicNamespace(tag);
           }
-          if (ownNamespace === HTML_NAMESPACE) {
+          if (ownNamespaceDev === HTML_NAMESPACE) {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {

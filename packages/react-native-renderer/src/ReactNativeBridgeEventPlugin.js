@@ -13,15 +13,13 @@ import type {
 } from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
-import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListeners from './ReactNativeGetListeners';
+import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import isArray from 'shared/isArray';
 
 const {customBubblingEventTypes, customDirectEventTypes} =
   ReactNativeViewConfigRegistry;
@@ -30,38 +28,10 @@ const {customBubblingEventTypes, customDirectEventTypes} =
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
 // $FlowFixMe[missing-local-annot]
-function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListeners(inst, registrationName, propagationPhase, true);
-}
-
-// $FlowFixMe[missing-local-annot]
-function accumulateListenersAndInstances(inst, event, listeners) {
-  const listenersLength = listeners
-    ? isArray(listeners)
-      ? listeners.length
-      : 1
-    : 0;
-  if (listenersLength > 0) {
-    event._dispatchListeners = accumulateInto(
-      event._dispatchListeners,
-      listeners,
-    );
-
-    // Avoid allocating additional arrays here
-    if (event._dispatchInstances == null && listenersLength === 1) {
-      event._dispatchInstances = inst;
-    } else {
-      event._dispatchInstances = event._dispatchInstances || [];
-      if (!isArray(event._dispatchInstances)) {
-        event._dispatchInstances = [event._dispatchInstances];
-      }
-      for (let i = 0; i < listenersLength; i++) {
-        event._dispatchInstances.push(inst);
-      }
-    }
-  }
+  return getListener(inst, registrationName);
 }
 
 // $FlowFixMe[missing-local-annot]
@@ -71,8 +41,14 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listeners = listenersAtPhase(inst, event, phase);
-  accumulateListenersAndInstances(inst, event, listeners);
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
 }
 
 // $FlowFixMe[missing-local-annot]
@@ -160,8 +136,14 @@ function accumulateDispatches(
 ): void {
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
-    const listeners = getListeners(inst, registrationName, 'bubbled', false);
-    accumulateListenersAndInstances(inst, event, listeners);
+    const listener = getListener(inst, registrationName);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
   }
 }
 
@@ -181,6 +163,7 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 }
 
 // End of inline
+type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: ({}: EventTypes),

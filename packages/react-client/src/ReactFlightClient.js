@@ -15,7 +15,7 @@ import type {
   ClientReferenceMetadata,
   UninitializedModel,
   Response,
-  BundlerConfig,
+  SSRManifest,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -24,6 +24,8 @@ import {
   requireModule,
   parseModel,
 } from './ReactFlightClientHostConfig';
+
+import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
 
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
@@ -149,7 +151,7 @@ Chunk.prototype.then = function <T>(
 };
 
 export type ResponseBase = {
-  _bundlerConfig: BundlerConfig,
+  _bundlerConfig: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   ...
@@ -473,23 +475,29 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
   response: Response,
-  metaData: any,
+  metaData: {id: any, bound: null | Thenable<Array<any>>},
 ): (...A) => Promise<T> {
   const callServer = response._callServer;
   const proxy = function (): Promise<T> {
     // $FlowFixMe[method-unbinding]
     const args = Array.prototype.slice.call(arguments);
     const p = metaData.bound;
+    if (!p) {
+      return callServer(metaData.id, args);
+    }
     if (p.status === INITIALIZED) {
       const bound = p.value;
-      return callServer(metaData, bound.concat(args));
+      return callServer(metaData.id, bound.concat(args));
     }
     // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
     // TODO: Remove the wrapper once that's fixed.
-    return Promise.resolve(p).then(function (bound) {
-      return callServer(metaData, bound.concat(args));
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(function (
+      bound,
+    ) {
+      return callServer(metaData.id, bound.concat(args));
     });
   };
+  knownServerReferences.set(proxy, metaData);
   return proxy;
 }
 
@@ -551,6 +559,11 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
+      case 'u': {
+        // matches "$undefined"
+        // Special encoding for `undefined` which can't be serialized as JSON otherwise.
+        return undefined;
+      }
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
@@ -606,7 +619,7 @@ function missingCall() {
 }
 
 export function createResponse(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   callServer: void | CallServerCallback,
 ): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();

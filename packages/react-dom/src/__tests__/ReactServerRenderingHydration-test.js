@@ -15,7 +15,8 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let ReactDOMServerBrowser;
-let Scheduler;
+let waitForAll;
+let act;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -27,7 +28,10 @@ describe('ReactDOMServerHydration', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactDOMServerBrowser = require('react-dom/server.browser');
-    Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    act = InternalTestUtils.act;
   });
 
   it('should have the correct mounting behavior (new hydrate API)', () => {
@@ -399,25 +403,22 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM.hydrate(<HelloWorld />, element);
     expect(element.textContent).toBe('Hello loading');
 
-    jest.runAllTimers();
-    await Promise.resolve();
-    Scheduler.unstable_flushAll();
-    await null;
+    // Resolve Lazy component
+    await act(() => jest.runAllTimers());
     expect(element.textContent).toBe('Hello world');
   });
 
-  it('does not re-enter hydration after committing the first one', () => {
+  it('does not re-enter hydration after committing the first one', async () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOMClient.hydrateRoot(container, <div />);
-    Scheduler.unstable_flushAll();
-    root.render(null);
-    Scheduler.unstable_flushAll();
+    const root = await act(() =>
+      ReactDOMClient.hydrateRoot(container, <div />),
+    );
+    await act(() => root.render(null));
     // This should not reenter hydration state and therefore not trigger hydration
     // warnings.
-    root.render(<div />);
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<div />));
   });
 
   it('Suspense + hydration in legacy mode', () => {
@@ -604,7 +605,7 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.obj).toBe(undefined);
   });
 
-  it('refers users to apis that support Suspense when something suspends', () => {
+  it('refers users to apis that support Suspense when something suspends', async () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
       throw theInfinitePromise;
@@ -631,7 +632,7 @@ describe('ReactDOMServerHydration', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(
@@ -649,7 +650,7 @@ describe('ReactDOMServerHydration', () => {
     }
   });
 
-  it('refers users to apis that support Suspense when something suspends (browser)', () => {
+  it('refers users to apis that support Suspense when something suspends (browser)', async () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
       throw theInfinitePromise;
@@ -676,7 +677,7 @@ describe('ReactDOMServerHydration', () => {
       },
     });
 
-    expect(Scheduler).toFlushAndYield([]);
+    await waitForAll([]);
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(

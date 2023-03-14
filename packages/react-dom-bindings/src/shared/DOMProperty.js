@@ -636,7 +636,19 @@ properties[xlinkHref] = new PropertyInfoRecord(
   false, // removeEmptyString
 );
 
-['src', 'href', 'action', 'formAction'].forEach(attributeName => {
+const formAction = 'formAction';
+// $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+properties[formAction] = new PropertyInfoRecord(
+  'formAction',
+  STRING,
+  false, // mustUseProperty
+  'formaction', // attributeName
+  null, // attributeNamespace
+  true, // sanitizeURL
+  false, // removeEmptyString
+);
+
+['src', 'href', 'action'].forEach(attributeName => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,

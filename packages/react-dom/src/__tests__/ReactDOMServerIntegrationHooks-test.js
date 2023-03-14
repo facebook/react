@@ -32,7 +32,7 @@ let useDebugValue;
 let forwardRef;
 let yieldedValues;
 let yieldValue;
-let clearYields;
+let clearLog;
 
 function initModules() {
   // Reset warning cache.
@@ -59,7 +59,7 @@ function initModules() {
   yieldValue = value => {
     yieldedValues.push(value);
   };
-  clearYields = () => {
+  clearLog = () => {
     const ret = yieldedValues;
     yieldedValues = [];
     return ret;
@@ -207,7 +207,7 @@ describe('ReactDOMServerHooks', () => {
 
       const domNode = await render(<Counter />);
 
-      expect(clearYields()).toEqual(['Render: 0', 0]);
+      expect(clearLog()).toEqual(['Render: 0', 0]);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('0');
     });
@@ -224,7 +224,7 @@ describe('ReactDOMServerHooks', () => {
 
       const domNode = await render(<Counter />);
 
-      expect(clearYields()).toEqual(['Render: 1', 1]);
+      expect(clearLog()).toEqual(['Render: 1', 1]);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('1');
     });
@@ -246,7 +246,7 @@ describe('ReactDOMServerHooks', () => {
 
         const domNode = await render(<Counter />);
 
-        expect(clearYields()).toEqual([
+        expect(clearLog()).toEqual([
           'Render: 0',
           'Render: 1',
           'Render: 2',
@@ -299,7 +299,7 @@ describe('ReactDOMServerHooks', () => {
 
         const domNode = await render(<Counter />);
 
-        expect(clearYields()).toEqual([
+        expect(clearLog()).toEqual([
           // The count should increase by alternating amounts of 10 and 1
           // until we reach 21.
           'Render: 0',
@@ -326,7 +326,7 @@ describe('ReactDOMServerHooks', () => {
       }
 
       const domNode = await render(<CapitalizedText text="hello" />);
-      expect(clearYields()).toEqual(["Capitalize 'hello'", 'HELLO']);
+      expect(clearLog()).toEqual(["Capitalize 'hello'", 'HELLO']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('HELLO');
     });
@@ -343,7 +343,7 @@ describe('ReactDOMServerHooks', () => {
       }
 
       const domNode = await render(<LazyCompute compute={computeA} />);
-      expect(clearYields()).toEqual(['compute A', 'A']);
+      expect(clearLog()).toEqual(['compute A', 'A']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('A');
     });
@@ -365,7 +365,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<CapitalizedText text="hello" />);
-        expect(clearYields()).toEqual([
+        expect(clearLog()).toEqual([
           "Capitalize 'hello'",
           "Capitalize 'hello, world.'",
           'HELLO, WORLD.',
@@ -399,7 +399,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<CapitalizedText text="hello" />);
-        expect(clearYields()).toEqual([
+        expect(clearLog()).toEqual([
           "Capitalize 'hello'",
           0,
           1,
@@ -470,7 +470,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<Counter />);
-        expect(clearYields()).toEqual([0, 1, 2, 3]);
+        expect(clearLog()).toEqual([0, 1, 2, 3]);
         expect(domNode.textContent).toEqual('Count: 3');
       },
     );
@@ -500,7 +500,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<Counter />);
-        expect(clearYields()).toEqual([0, 1, 2, 3]);
+        expect(clearLog()).toEqual([0, 1, 2, 3]);
         expect(domNode.textContent).toEqual('Count: 3');
       },
     );
@@ -517,7 +517,7 @@ describe('ReactDOMServerHooks', () => {
       }
 
       const domNode = await render(<Counter count={0} />);
-      yields.push(clearYields());
+      yields.push(clearLog());
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
@@ -542,7 +542,7 @@ describe('ReactDOMServerHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       const domNode = await render(<Counter count={0} />);
-      expect(clearYields()).toEqual(['Count: 0']);
+      expect(clearLog()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
@@ -555,7 +555,7 @@ describe('ReactDOMServerHooks', () => {
         return <Text text={renderCount(3)} />;
       }
       const domNode = await render(<Counter count={2} />);
-      expect(clearYields()).toEqual(['Count: 5']);
+      expect(clearLog()).toEqual(['Count: 5']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 5');
     });
@@ -578,7 +578,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<CapitalizedText text="hello" />);
-        const [first, second, third, fourth, result] = clearYields();
+        const [first, second, third, fourth, result] = clearLog();
         expect(first).toBe(second);
         expect(second).toBe(third);
         expect(third).not.toBe(fourth);
@@ -603,7 +603,7 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
-      expect(clearYields()).toEqual(['Count: 0']);
+      expect(clearLog()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
@@ -618,7 +618,7 @@ describe('ReactDOMServerHooks', () => {
         return <Text text="Count: 0" />;
       }
       const domNode = await serverRender(<Counter />, 1);
-      expect(clearYields()).toEqual(['Count: 0']);
+      expect(clearLog()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
@@ -634,7 +634,7 @@ describe('ReactDOMServerHooks', () => {
         return <Text text="Count: 0" />;
       }
       const domNode = await serverRender(<Counter />, 1);
-      expect(clearYields()).toEqual(['Count: 0']);
+      expect(clearLog()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
@@ -738,7 +738,7 @@ describe('ReactDOMServerHooks', () => {
       }
 
       const domNode = await render(<App foo={1} bar={3} baz={5} />);
-      expect(clearYields()).toEqual(['Foo: 1, Bar: 3', 'Baz: 5']);
+      expect(clearLog()).toEqual(['Foo: 1, Bar: 3', 'Baz: 5']);
       expect(domNode.childNodes.length).toBe(2);
       expect(domNode.firstChild.tagName).toEqual('SPAN');
       expect(domNode.firstChild.textContent).toEqual('Foo: 1, Bar: 3');
@@ -834,7 +834,7 @@ describe('ReactDOMServerHooks', () => {
         }
 
         const domNode = await render(<App foo={1} bar={3} baz={5} />);
-        expect(clearYields()).toEqual(['Foo: 1, Bar: 3', 'Baz: 5']);
+        expect(clearLog()).toEqual(['Foo: 1, Bar: 3', 'Baz: 5']);
         expect(domNode.childNodes.length).toBe(2);
         expect(domNode.firstChild.tagName).toEqual('SPAN');
         expect(domNode.firstChild.textContent).toEqual('Foo: 1, Bar: 3');

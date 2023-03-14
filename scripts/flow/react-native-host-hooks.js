@@ -143,18 +143,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export class CustomEvent {
-    isTrusted: boolean;
-
-    constructor(
-      name: string,
-      {
-        detail: any,
-      },
-    ): void;
-
-    setSyntheticEvent(event: any): void;
-  }
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
@@ -190,19 +178,19 @@ declare var nativeFabricUIManager: {
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
   sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
-  measure: (node: Node, callback: __MeasureOnSuccessCallback) => void,
+  measure: (node: Object, callback: __MeasureOnSuccessCallback) => void,
   measureInWindow: (
-    node: Node,
+    node: Object,
     callback: __MeasureInWindowOnSuccessCallback,
   ) => void,
   measureLayout: (
-    node: Node,
-    relativeNode: Node,
+    node: Object,
+    relativeNode: Object,
     onFail: () => void,
     onSuccess: __MeasureLayoutOnSuccessCallback,
   ) => void,
   getBoundingClientRect: (
-    node: Node,
+    node: Object,
   ) => [
     /* x:*/ number,
     /* y:*/ number,
@@ -210,13 +198,13 @@ declare var nativeFabricUIManager: {
     /* height:*/ number,
   ],
   findNodeAtPoint: (
-    node: Node,
+    node: Object,
     locationX: number,
     locationY: number,
     callback: (Object) => void,
   ) => void,
   setIsJSResponder: (
-    node: Node,
+    node: Object,
     isJsResponder: boolean,
     blockNativeResponder: boolean,
   ) => void,

@@ -14,6 +14,7 @@ let ReactTestUtils;
 let Scheduler;
 let act;
 let container;
+let assertLog;
 
 jest.useRealTimers();
 
@@ -107,7 +108,6 @@ describe('ReactTestUtils.act()', () => {
     it('does not warn in concurrent mode', () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
-      Scheduler.unstable_flushAll();
     });
   });
 });
@@ -122,6 +122,10 @@ function runActTests(label, render, unmount, rerender) {
       ReactTestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
       act = ReactTestUtils.act;
+
+      const InternalTestUtils = require('internal-test-utils');
+      assertLog = InternalTestUtils.assertLog;
+
       container = document.createElement('div');
       document.body.appendChild(container);
     });
@@ -136,7 +140,7 @@ function runActTests(label, render, unmount, rerender) {
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(100);
+            Scheduler.log(100);
           });
           return null;
         }
@@ -145,7 +149,7 @@ function runActTests(label, render, unmount, rerender) {
           render(<App />, container);
         });
 
-        expect(Scheduler).toHaveYielded([100]);
+        assertLog([100]);
       });
 
       // @gate __DEV__
@@ -153,7 +157,7 @@ function runActTests(label, render, unmount, rerender) {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(ctr);
+            Scheduler.log(ctr);
           });
           return (
             <button id="button" onClick={() => setCtr(x => x + 1)}>
@@ -165,7 +169,7 @@ function runActTests(label, render, unmount, rerender) {
         act(() => {
           render(<App />, container);
         });
-        expect(Scheduler).toHaveYielded([0]);
+        assertLog([0]);
         const button = container.querySelector('#button');
         function click() {
           button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
@@ -177,11 +181,11 @@ function runActTests(label, render, unmount, rerender) {
           click();
         });
         // it consolidates the 3 updates, then fires the effect
-        expect(Scheduler).toHaveYielded([3]);
+        assertLog([3]);
         await act(async () => click());
-        expect(Scheduler).toHaveYielded([4]);
+        assertLog([4]);
         await act(async () => click());
-        expect(Scheduler).toHaveYielded([5]);
+        assertLog([5]);
         expect(button.innerHTML).toBe('5');
       });
 
@@ -208,7 +212,7 @@ function runActTests(label, render, unmount, rerender) {
       it('should flush effects only on exiting the outermost act', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(0);
+            Scheduler.log(0);
           });
           return null;
         }
@@ -219,10 +223,10 @@ function runActTests(label, render, unmount, rerender) {
           });
           // the effect wouldn't have yielded yet because
           // we're still inside an act() scope
-          expect(Scheduler).toHaveYielded([]);
+          assertLog([]);
         });
         // but after exiting the last one, effects get flushed
-        expect(Scheduler).toHaveYielded([0]);
+        assertLog([0]);
       });
 
       // @gate __DEV__
@@ -541,7 +545,7 @@ function runActTests(label, render, unmount, rerender) {
             something();
           }, []);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            Scheduler.log(state);
           });
           return state;
         }
@@ -551,7 +555,7 @@ function runActTests(label, render, unmount, rerender) {
         });
         // exiting act() drains effects and microtasks
 
-        expect(Scheduler).toHaveYielded([0, 1]);
+        assertLog([0, 1]);
         expect(container.innerHTML).toBe('1');
       });
 
@@ -566,7 +570,7 @@ function runActTests(label, render, unmount, rerender) {
             setState(x => x + 1);
           }
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            Scheduler.log(state);
             ticker();
           }, [Math.min(state, 4)]);
           return state;
@@ -576,7 +580,7 @@ function runActTests(label, render, unmount, rerender) {
           render(<App />, container);
         });
         // all 5 ticks present and accounted for
-        expect(Scheduler).toHaveYielded([0, 1, 2, 3, 4]);
+        assertLog([0, 1, 2, 3, 4]);
         expect(container.innerHTML).toBe('5');
       });
     });
@@ -639,7 +643,7 @@ function runActTests(label, render, unmount, rerender) {
       it('should cleanup after errors - sync', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('oh yes');
+            Scheduler.log('oh yes');
           });
           return null;
         }
@@ -657,7 +661,7 @@ function runActTests(label, render, unmount, rerender) {
           act(() => {
             render(<App />, container);
           });
-          expect(Scheduler).toHaveYielded(['oh yes']);
+          assertLog(['oh yes']);
         }
       });
 
@@ -666,7 +670,7 @@ function runActTests(label, render, unmount, rerender) {
         function App() {
           async function somethingAsync() {
             await null;
-            Scheduler.unstable_yieldValue('oh yes');
+            Scheduler.log('oh yes');
           }
           React.useEffect(() => {
             somethingAsync();
@@ -688,7 +692,7 @@ function runActTests(label, render, unmount, rerender) {
           await act(async () => {
             render(<App />, container);
           });
-          expect(Scheduler).toHaveYielded(['oh yes']);
+          assertLog(['oh yes']);
         }
       });
     });

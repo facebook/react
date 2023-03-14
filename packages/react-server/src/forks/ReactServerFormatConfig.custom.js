@@ -78,7 +78,6 @@ export const writePreamble = $$$hostConfig.writePreamble;
 export const writeHoistables = $$$hostConfig.writeHoistables;
 export const writePostamble = $$$hostConfig.writePostamble;
 export const hoistResources = $$$hostConfig.hoistResources;
-export const hoistResourcesToRoot = $$$hostConfig.hoistResourcesToRoot;
 export const createResources = $$$hostConfig.createResources;
 export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =

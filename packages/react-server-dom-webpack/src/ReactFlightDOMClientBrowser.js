@@ -11,7 +11,7 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
 
-import type {BundlerConfig} from './ReactFlightClientWebpackBundlerConfig';
+import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import {
   createResponse,
@@ -22,15 +22,20 @@ import {
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-type CallServerCallback = <A, T>(
-  {filepath: string, name: string},
-  args: A,
-) => Promise<T>;
+import {processReply} from 'react-client/src/ReactFlightReplyClient';
+
+type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
-  moduleMap?: BundlerConfig,
   callServer?: CallServerCallback,
 };
+
+function createResponseFromOptions(options: void | Options) {
+  return createResponse(
+    null,
+    options && options.callServer ? options.callServer : undefined,
+  );
+}
 
 function startReadingFromStream(
   response: FlightResponse,
@@ -63,10 +68,7 @@ function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
@@ -75,10 +77,7 @@ function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
       startReadingFromStream(response, (r.body: any));
@@ -94,10 +93,7 @@ function createFromXHR<T>(
   request: XMLHttpRequest,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    options && options.callServer ? options.callServer : undefined,
-  );
+  const response: FlightResponse = createResponseFromOptions(options);
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
     const chunk = request.responseText;
@@ -119,4 +115,14 @@ function createFromXHR<T>(
   return getRoot(response);
 }
 
-export {createFromXHR, createFromFetch, createFromReadableStream};
+function encodeReply(
+  value: ReactServerValue,
+): Promise<
+  string | URLSearchParams | FormData,
+> /* We don't use URLSearchParams yet but maybe */ {
+  return new Promise((resolve, reject) => {
+    processReply(value, resolve, reject);
+  });
+}
+
+export {createFromXHR, createFromFetch, createFromReadableStream, encodeReply};

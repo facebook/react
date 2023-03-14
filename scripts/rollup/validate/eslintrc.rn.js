@@ -33,6 +33,7 @@ module.exports = {
 
     TaskController: 'readonly',
     reportError: 'readonly',
+    AggregateError: 'readonly',
 
     // Temp
     AsyncLocalStorage: 'readonly',
