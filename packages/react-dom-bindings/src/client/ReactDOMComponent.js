@@ -55,14 +55,14 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
-import assertValidProps from '../shared/assertValidProps';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import assertValidProps from './assertValidProps';
+import {DOCUMENT_NODE} from './HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -74,6 +74,7 @@ import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableHostSingletons,
+  disableIEWorkarounds,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -94,14 +95,7 @@ const HTML = '__html';
 let warnedUnknownTags: {
   [key: string]: boolean,
 };
-
-let validatePropertiesInDevelopment;
-let warnForPropDifference;
-let warnForExtraAttributes;
-let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
-
-let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
@@ -115,15 +109,6 @@ if (__DEV__) {
     webview: true,
   };
 
-  validatePropertiesInDevelopment = function (type: string, props: any) {
-    validateARIAProperties(type, props);
-    validateInputProperties(type, props);
-    validateUnknownProperties(type, props, {
-      registrationNameDependencies,
-      possibleRegistrationNames,
-    });
-  };
-
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -132,13 +117,27 @@ if (__DEV__) {
   // normalized. Since it only affects IE, we're skipping style warnings
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
-  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+  canDiffStyleForHydrationWarning =
+    disableIEWorkarounds || (canUseDOM && !document.documentMode);
+}
 
-  warnForPropDifference = function (
-    propName: string,
-    serverValue: mixed,
-    clientValue: mixed,
-  ) {
+function validatePropertiesInDevelopment(type: string, props: any) {
+  if (__DEV__) {
+    validateARIAProperties(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, {
+      registrationNameDependencies,
+      possibleRegistrationNames,
+    });
+  }
+}
+
+function warnForPropDifference(
+  propName: string,
+  serverValue: mixed,
+  clientValue: mixed,
+) {
+  if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -156,9 +155,11 @@ if (__DEV__) {
       JSON.stringify(normalizedServerValue),
       JSON.stringify(normalizedClientValue),
     );
-  };
+  }
+}
 
-  warnForExtraAttributes = function (attributeNames: Set<string>) {
+function warnForExtraAttributes(attributeNames: Set<string>) {
+  if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -168,12 +169,11 @@ if (__DEV__) {
       names.push(name);
     });
     console.error('Extra attributes from the server: %s', names);
-  };
+  }
+}
 
-  warnForInvalidEventListener = function (
-    registrationName: string,
-    listener: any,
-  ) {
+function warnForInvalidEventListener(registrationName: string, listener: any) {
+  if (__DEV__) {
     if (listener === false) {
       console.error(
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
@@ -190,11 +190,13 @@ if (__DEV__) {
         typeof listener,
       );
     }
-  };
+  }
+}
 
-  // Parse the HTML and read it back to normalize the HTML string so that it
-  // can be used for comparison.
-  normalizeHTML = function (parent: Element, html: string) {
+// Parse the HTML and read it back to normalize the HTML string so that it
+// can be used for comparison.
+function normalizeHTML(parent: Element, html: string) {
+  if (__DEV__) {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
@@ -208,7 +210,7 @@ if (__DEV__) {
           );
     testElement.innerHTML = html;
     return testElement.innerHTML;
-  };
+  }
 }
 
 // HTML parsing normalizes CR and CRLF to LF.
@@ -308,7 +310,11 @@ function setInitialDOMProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
-        setInnerHTML(domElement, nextHtml);
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = nextHtml;
+        } else {
+          setInnerHTML(domElement, nextHtml);
+        }
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
@@ -366,7 +372,11 @@ function updateDOMProperties(
     if (propKey === STYLE) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      setInnerHTML(domElement, propValue);
+      if (disableIEWorkarounds) {
+        domElement.innerHTML = propValue;
+      } else {
+        setInnerHTML(domElement, propValue);
+      }
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {

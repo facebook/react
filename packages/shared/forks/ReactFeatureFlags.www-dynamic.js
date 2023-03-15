@@ -14,6 +14,7 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const disableInputAttributeSyncing = __VARIANT__;
+export const disableIEWorkarounds = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;

@@ -195,6 +195,7 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
+  // @gate !disableIEWorkarounds || !__DEV__
   it('should not warn when the style property differs on whitespace or order in IE', () => {
     document.documentMode = 11;
     jest.resetModules();

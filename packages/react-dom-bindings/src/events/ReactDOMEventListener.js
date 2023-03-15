@@ -19,8 +19,8 @@ import {
   hasQueuedDiscreteEvents,
   clearIfContinuousEvent,
   queueIfContinuousEvent,
-  attemptSynchronousHydration,
 } from './ReactDOMEventReplaying';
+import {attemptSynchronousHydration} from 'react-reconciler/src/ReactFiberReconciler';
 import {
   getNearestMountedFiber,
   getContainerFromFiber,

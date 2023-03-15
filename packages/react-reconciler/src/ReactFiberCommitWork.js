@@ -253,10 +253,7 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   }
 }
 
-const callComponentWillUnmountWithTimer = function (
-  current: Fiber,
-  instance: any,
-) {
+function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {
@@ -269,7 +266,7 @@ const callComponentWillUnmountWithTimer = function (
   } else {
     instance.componentWillUnmount();
   }
-};
+}
 
 // Capture errors so they don't interrupt unmounting.
 function safelyCallComponentWillUnmount(

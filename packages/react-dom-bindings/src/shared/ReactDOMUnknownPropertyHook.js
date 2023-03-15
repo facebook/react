@@ -16,16 +16,18 @@ import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
-let validateProperty = () => {};
+const warnedProperties = {};
+const EVENT_NAME_REGEX = /^on./;
+const INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
+const rARIA = __DEV__
+  ? new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$')
+  : null;
+const rARIACamel = __DEV__
+  ? new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$')
+  : null;
 
-if (__DEV__) {
-  const warnedProperties = {};
-  const EVENT_NAME_REGEX = /^on./;
-  const INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
-  const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
-
-  validateProperty = function (tagName, name, value, eventRegistry) {
+function validateProperty(tagName, name, value, eventRegistry) {
+  if (__DEV__) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -234,10 +236,10 @@ if (__DEV__) {
     }
 
     return true;
-  };
+  }
 }
 
-const warnUnknownProperties = function (type, props, eventRegistry) {
+function warnUnknownProperties(type, props, eventRegistry) {
   if (__DEV__) {
     const unknownProps = [];
     for (const key in props) {
@@ -268,7 +270,7 @@ const warnUnknownProperties = function (type, props, eventRegistry) {
       );
     }
   }
-};
+}
 
 export function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {

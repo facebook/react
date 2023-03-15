@@ -7,7 +7,7 @@
 
 import {shorthandToLonghand} from './CSSShorthandProperty';
 
-import dangerousStyleValue from '../shared/dangerousStyleValue';
+import dangerousStyleValue from './dangerousStyleValue';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
 

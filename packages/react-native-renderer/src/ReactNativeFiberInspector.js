@@ -28,49 +28,39 @@ if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
-let createHierarchy;
-let getHostNode;
-let getHostProps;
-let lastNonHostInstance;
-let getInspectorDataForInstance: (
-  closestInstance: Fiber | null,
-) => InspectorData;
-let getOwnerHierarchy;
-let traverseOwnerTreeUp: (hierarchy: Array<$FlowFixMe>, instance: any) => void;
+// $FlowFixMe[missing-local-annot]
+function createHierarchy(fiberHierarchy) {
+  return fiberHierarchy.map(fiber => ({
+    name: getComponentNameFromType(fiber.type),
+    getInspectorData: findNodeHandle => {
+      return {
+        props: getHostProps(fiber),
+        source: fiber._debugSource,
+        measure: callback => {
+          // If this is Fabric, we'll find a shadow node and use that to measure.
+          const hostFiber = findCurrentHostFiber(fiber);
+          const node =
+            hostFiber != null &&
+            hostFiber.stateNode !== null &&
+            hostFiber.stateNode.node;
 
-if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
-  // $FlowFixMe[missing-local-annot]
-  createHierarchy = function (fiberHierarchy) {
-    return fiberHierarchy.map(fiber => ({
-      name: getComponentNameFromType(fiber.type),
-      getInspectorData: findNodeHandle => {
-        return {
-          props: getHostProps(fiber),
-          source: fiber._debugSource,
-          measure: callback => {
-            // If this is Fabric, we'll find a shadow node and use that to measure.
-            const hostFiber = findCurrentHostFiber(fiber);
-            const node =
-              hostFiber != null &&
-              hostFiber.stateNode !== null &&
-              hostFiber.stateNode.node;
+          if (node) {
+            nativeFabricUIManager.measure(node, callback);
+          } else {
+            return UIManager.measure(
+              getHostNode(fiber, findNodeHandle),
+              callback,
+            );
+          }
+        },
+      };
+    },
+  }));
+}
 
-            if (node) {
-              nativeFabricUIManager.measure(node, callback);
-            } else {
-              return UIManager.measure(
-                getHostNode(fiber, findNodeHandle),
-                callback,
-              );
-            }
-          },
-        };
-      },
-    }));
-  };
-
-  // $FlowFixMe[missing-local-annot]
-  getHostNode = function (fiber: Fiber | null, findNodeHandle) {
+// $FlowFixMe[missing-local-annot]
+function getHostNode(fiber: Fiber | null, findNodeHandle) {
+  if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
@@ -84,20 +74,22 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
       fiber = fiber.child;
     }
     return null;
-  };
+  }
+}
 
-  // $FlowFixMe[missing-local-annot]
-  getHostProps = function (fiber) {
-    const host = findCurrentHostFiber(fiber);
-    if (host) {
-      return host.memoizedProps || emptyObject;
-    }
-    return emptyObject;
-  };
+// $FlowFixMe[missing-local-annot]
+function getHostProps(fiber) {
+  const host = findCurrentHostFiber(fiber);
+  if (host) {
+    return host.memoizedProps || emptyObject;
+  }
+  return emptyObject;
+}
 
-  getInspectorDataForInstance = function (
-    closestInstance: Fiber | null,
-  ): InspectorData {
+function getInspectorDataForInstance(
+  closestInstance: Fiber | null,
+): InspectorData {
+  if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     // Handle case where user clicks outside of ReactNative
     if (!closestInstance) {
       return {
@@ -123,46 +115,44 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
       selectedIndex,
       source,
     };
-  };
+  } else {
+    return (null: any);
+  }
+}
 
-  getOwnerHierarchy = function (instance: any) {
-    const hierarchy: Array<$FlowFixMe> = [];
-    traverseOwnerTreeUp(hierarchy, instance);
-    return hierarchy;
-  };
+function getOwnerHierarchy(instance: any) {
+  const hierarchy: Array<$FlowFixMe> = [];
+  traverseOwnerTreeUp(hierarchy, instance);
+  return hierarchy;
+}
 
-  // $FlowFixMe[missing-local-annot]
-  lastNonHostInstance = function (hierarchy) {
-    for (let i = hierarchy.length - 1; i > 1; i--) {
-      const instance = hierarchy[i];
+// $FlowFixMe[missing-local-annot]
+function lastNonHostInstance(hierarchy) {
+  for (let i = hierarchy.length - 1; i > 1; i--) {
+    const instance = hierarchy[i];
 
-      if (instance.tag !== HostComponent) {
-        return instance;
-      }
+    if (instance.tag !== HostComponent) {
+      return instance;
     }
-    return hierarchy[0];
-  };
+  }
+  return hierarchy[0];
+}
 
-  // $FlowFixMe[missing-local-annot]
-  traverseOwnerTreeUp = function (hierarchy, instance: any): void {
+// $FlowFixMe[missing-local-annot]
+function traverseOwnerTreeUp(
+  hierarchy: Array<$FlowFixMe>,
+  instance: any,
+): void {
+  if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);
     }
-  };
+  }
 }
 
-let getInspectorDataForViewTag: (viewTag: number) => Object;
-let getInspectorDataForViewAtPoint: (
-  findNodeHandle: (componentOrHandle: any) => ?number,
-  inspectedView: Object,
-  locationX: number,
-  locationY: number,
-  callback: (viewData: TouchedViewDataAtPoint) => mixed,
-) => void;
-
-if (__DEV__) {
-  getInspectorDataForViewTag = function (viewTag: number): Object {
+function getInspectorDataForViewTag(viewTag: number): Object {
+  if (__DEV__) {
     const closestInstance = getClosestInstanceFromNode(viewTag);
 
     // Handle case where user clicks outside of ReactNative
@@ -189,15 +179,21 @@ if (__DEV__) {
       selectedIndex,
       source,
     };
-  };
+  } else {
+    throw new Error(
+      'getInspectorDataForViewTag() is not available in production',
+    );
+  }
+}
 
-  getInspectorDataForViewAtPoint = function (
-    findNodeHandle: (componentOrHandle: any) => ?number,
-    inspectedView: Object,
-    locationX: number,
-    locationY: number,
-    callback: (viewData: TouchedViewDataAtPoint) => mixed,
-  ): void {
+function getInspectorDataForViewAtPoint(
+  findNodeHandle: (componentOrHandle: any) => ?number,
+  inspectedView: Object,
+  locationX: number,
+  locationY: number,
+  callback: (viewData: TouchedViewDataAtPoint) => mixed,
+): void {
+  if (__DEV__) {
     let closestInstance = null;
 
     const fabricInstanceHandle =
@@ -271,25 +267,11 @@ if (__DEV__) {
 
       return;
     }
-  };
-} else {
-  getInspectorDataForViewTag = () => {
-    throw new Error(
-      'getInspectorDataForViewTag() is not available in production',
-    );
-  };
-
-  getInspectorDataForViewAtPoint = (
-    findNodeHandle: (componentOrHandle: any) => ?number,
-    inspectedView: Object,
-    locationX: number,
-    locationY: number,
-    callback: (viewData: TouchedViewDataAtPoint) => mixed,
-  ): void => {
+  } else {
     throw new Error(
       'getInspectorDataForViewAtPoint() is not available in production.',
     );
-  };
+  }
 }
 
 export {

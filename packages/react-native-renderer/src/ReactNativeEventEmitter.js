@@ -44,13 +44,13 @@ const EMPTY_NATIVE_EVENT = (({}: any): AnyNativeEvent);
  * @return {Array<Touch>} Subsequence of touch objects.
  */
 // $FlowFixMe[missing-local-annot]
-const touchSubsequence = function (touches, indices) {
+function touchSubsequence(touches, indices) {
   const ret = [];
   for (let i = 0; i < indices.length; i++) {
     ret.push(touches[indices[i]]);
   }
   return ret;
-};
+}
 
 /**
  * TODO: Pool all of this.
@@ -63,7 +63,7 @@ const touchSubsequence = function (touches, indices) {
  * @param {Array<number>} indices Indices to remove from `touches`.
  * @return {Array<Touch>} Subsequence of removed touch objects.
  */
-const removeTouchesAtIndices = function (
+function removeTouchesAtIndices(
   touches: Array<Object>,
   indices: Array<number>,
 ): Array<Object> {
@@ -85,7 +85,7 @@ const removeTouchesAtIndices = function (
   }
   temp.length = fillAt;
   return rippedOut;
-};
+}
 
 /**
  * Internal version of `receiveEvent` in terms of normalized (non-tag)
