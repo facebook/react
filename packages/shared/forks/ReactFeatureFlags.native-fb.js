@@ -36,6 +36,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
+export const disableIEWorkarounds = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;

@@ -169,6 +169,9 @@ export const enableTrustedTypesIntegration = false;
 // DOM properties
 export const disableInputAttributeSyncing = false;
 
+// Remove IE and MsApp specific workarounds for innerHTML
+export const disableIEWorkarounds = __EXPERIMENTAL__;
+
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
