@@ -19,7 +19,7 @@ function f(reader) {
 ## Error
 
 ```
-[ReactForget] Todo: (CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare 'value'
+[ReactForget] Invariant: TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE) (6:6)
 ```
           
       

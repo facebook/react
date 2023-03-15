@@ -137,6 +137,12 @@ export function leaveSSA(fn: HIRFunction): void {
             originalLVal === undefined ||
             originalLVal.lvalue === value.lvalue // in case this was pre-declared for the `for` initializer
           ) {
+            if (originalLVal === undefined && block.kind !== "block") {
+              CompilerError.invariant(
+                `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
+                value.lvalue.place.loc
+              );
+            }
             declarations.set(value.lvalue.place.identifier.name, {
               lvalue: value.lvalue,
               place: value.lvalue.place,
@@ -170,6 +176,12 @@ export function leaveSSA(fn: HIRFunction): void {
               originalLVal === undefined ||
               originalLVal.lvalue === value.lvalue
             ) {
+              if (originalLVal === undefined && block.kind !== "block") {
+                CompilerError.invariant(
+                  `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
+                  place.loc
+                );
+              }
               declarations.set(place.identifier.name, {
                 lvalue: value.lvalue,
                 place,
