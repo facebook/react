@@ -315,6 +315,45 @@ function isProfilingBundleType(bundleType) {
   }
 }
 
+function getBundleTypeFlags(bundleType) {
+  const isUMDBundle =
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
+  const isFBWWWBundle =
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING;
+  const isRNBundle =
+    bundleType === RN_OSS_DEV ||
+    bundleType === RN_OSS_PROD ||
+    bundleType === RN_OSS_PROFILING ||
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const isFBRNBundle =
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+
+  const shouldBundleDependencies =
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
+
+  return {
+    isUMDBundle,
+    isFBWWWBundle,
+    isRNBundle,
+    isFBRNBundle,
+    shouldBundleDependencies,
+    shouldStayReadable,
+  };
+}
+
 function forbidFBJSImports() {
   return {
     name: 'forbidFBJSImports',
@@ -345,22 +384,9 @@ function getPlugins(
     const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
-    const isUMDBundle =
-      bundleType === UMD_DEV ||
-      bundleType === UMD_PROD ||
-      bundleType === UMD_PROFILING;
-    const isFBWWWBundle =
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING;
-    const isRNBundle =
-      bundleType === RN_OSS_DEV ||
-      bundleType === RN_OSS_PROD ||
-      bundleType === RN_OSS_PROFILING ||
-      bundleType === RN_FB_DEV ||
-      bundleType === RN_FB_PROD ||
-      bundleType === RN_FB_PROFILING;
-    const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+
+    const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
+
     return [
       // Keep dynamic imports as externals
       dynamicImports(),
@@ -577,25 +603,14 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const isFBWWWBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-
-  const isFBRNBundle =
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
+  const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
+    getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
 
-  const shouldBundleDependencies =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
   if (!shouldBundleDependencies) {
