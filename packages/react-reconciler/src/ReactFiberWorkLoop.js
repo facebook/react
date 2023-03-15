@@ -1665,28 +1665,6 @@ export function isInvalidExecutionContextForEventFunction(): boolean {
   return (executionContext & RenderContext) !== NoContext;
 }
 
-export function flushControlled(fn: () => mixed): void {
-  const prevExecutionContext = executionContext;
-  executionContext |= BatchedContext;
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  const previousPriority = getCurrentUpdatePriority();
-  try {
-    ReactCurrentBatchConfig.transition = null;
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    fn();
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
-
-    executionContext = prevExecutionContext;
-    if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
-      resetRenderTimer();
-      flushSyncCallbacks();
-    }
-  }
-}
-
 // This is called by the HiddenContext module when we enter or leave a
 // hidden subtree. The stack logic is managed there because that's the only
 // place that ever modifies it. Which module it lives in doesn't matter for
