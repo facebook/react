@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -681,10 +682,12 @@ class Driver {
           testBlock.terminal.alternate,
           terminal.loc
         );
-        invariant(
-          leftFinal.place.identifier === right.place.identifier,
-          "Expected the left and right side of a logical expression to store a value to the same place"
-        );
+        if (leftFinal.place.identifier !== right.place.identifier) {
+          CompilerError.todo(
+            "TODO: Support LogicalExpression whose value is unused",
+            leftFinal.place.loc
+          );
+        }
         const value: ReactiveLogicalValue = {
           kind: "LogicalExpression",
           operator: terminal.operator,
@@ -722,10 +725,13 @@ class Driver {
           alternate: alternate.value,
           loc: terminal.loc,
         };
-        invariant(
-          consequent.place.identifier === alternate.place.identifier,
-          "Expected the consequent and alternate of a ternary to store a value to the same place"
-        );
+        if (consequent.place.identifier !== alternate.place.identifier) {
+          CompilerError.todo(
+            "TODO: Support ConditionalExpression whose value is unused",
+            consequent.place.loc
+          );
+        }
+
         return {
           place: { ...consequent.place },
           value,

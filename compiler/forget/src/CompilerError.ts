@@ -115,6 +115,19 @@ export class CompilerError extends Error {
     throw errors;
   }
 
+  static todo(reason: string, loc: SourceLocation): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        codeframe: null,
+        loc: typeof loc === "symbol" ? null : loc,
+        reason,
+        severity: ErrorSeverity.Todo,
+      })
+    );
+    throw errors;
+  }
+
   constructor(...args: any[]) {
     super(...args);
   }
