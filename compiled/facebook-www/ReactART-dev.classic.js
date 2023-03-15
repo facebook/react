@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-5ea6b0b1";
+var ReactVersion = "18.3.0-www-classic-d10ee72f";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -10978,11 +10978,10 @@ var didWarnAboutUninitializedState;
 var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 var didWarnAboutLegacyLifecyclesAndDerivedState;
 var didWarnAboutUndefinedDerivedState;
-var warnOnUndefinedDerivedState;
-var warnOnInvalidCallback;
 var didWarnAboutDirectlyAssigningPropsToState;
 var didWarnAboutContextTypeAndContextTypes;
 var didWarnAboutInvalidateContextType;
+var didWarnOnInvalidCallback;
 
 {
   didWarnAboutStateAssignmentForComponent = new Set();
@@ -10993,42 +10992,7 @@ var didWarnAboutInvalidateContextType;
   didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutContextTypeAndContextTypes = new Set();
   didWarnAboutInvalidateContextType = new Set();
-  var didWarnOnInvalidCallback = new Set();
-
-  warnOnInvalidCallback = function (callback, callerName) {
-    if (callback === null || typeof callback === "function") {
-      return;
-    }
-
-    var key = callerName + "_" + callback;
-
-    if (!didWarnOnInvalidCallback.has(key)) {
-      didWarnOnInvalidCallback.add(key);
-
-      error(
-        "%s(...): Expected the last optional `callback` argument to be a " +
-          "function. Instead received: %s.",
-        callerName,
-        callback
-      );
-    }
-  };
-
-  warnOnUndefinedDerivedState = function (type, partialState) {
-    if (partialState === undefined) {
-      var componentName = getComponentNameFromType(type) || "Component";
-
-      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
-        didWarnAboutUndefinedDerivedState.add(componentName);
-
-        error(
-          "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. " +
-            "You have returned undefined.",
-          componentName
-        );
-      }
-    }
-  }; // This is so gross but it's at least non-critical and can be removed if
+  didWarnOnInvalidCallback = new Set(); // This is so gross but it's at least non-critical and can be removed if
   // it causes problems. This is meant to give a nicer error message for
   // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
   // ...)) which otherwise throws a "_processChildContext is not a function"
@@ -11048,6 +11012,45 @@ var didWarnAboutInvalidateContextType;
     }
   });
   Object.freeze(fakeInternalInstance);
+}
+
+function warnOnInvalidCallback(callback, callerName) {
+  {
+    if (callback === null || typeof callback === "function") {
+      return;
+    }
+
+    var key = callerName + "_" + callback;
+
+    if (!didWarnOnInvalidCallback.has(key)) {
+      didWarnOnInvalidCallback.add(key);
+
+      error(
+        "%s(...): Expected the last optional `callback` argument to be a " +
+          "function. Instead received: %s.",
+        callerName,
+        callback
+      );
+    }
+  }
+}
+
+function warnOnUndefinedDerivedState(type, partialState) {
+  {
+    if (partialState === undefined) {
+      var componentName = getComponentNameFromType(type) || "Component";
+
+      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+        didWarnAboutUndefinedDerivedState.add(componentName);
+
+        error(
+          "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. " +
+            "You have returned undefined.",
+          componentName
+        );
+      }
+    }
+  }
 }
 
 function applyDerivedStateFromProps(
@@ -18854,20 +18857,10 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
   );
 }
 
-var invokeGuardedCallbackImpl = function (
-  name,
-  func,
-  context,
-  a,
-  b,
-  c,
-  d,
-  e,
-  f
-) {
+function invokeGuardedCallbackImpl(name, func, context, a, b, c, d, e, f) {
   // This will call `this.onError(err)` if an error was caught.
   ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
-};
+}
 
 var hasError = false;
 var caughtError = null; // Used by event system to capture/rethrow the first error.
@@ -18949,7 +18942,7 @@ function reportUncaughtErrorInDEV(error) {
   }
 }
 
-var callComponentWillUnmountWithTimer = function (current, instance) {
+function callComponentWillUnmountWithTimer(current, instance) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
 
@@ -18963,7 +18956,7 @@ var callComponentWillUnmountWithTimer = function (current, instance) {
   } else {
     instance.componentWillUnmount();
   }
-}; // Capture errors so they don't interrupt unmounting.
+} // Capture errors so they don't interrupt unmounting.
 
 function safelyCallComponentWillUnmount(
   current,
@@ -26923,10 +26916,10 @@ function FiberNode(tag, pendingProps, key, mode) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 
-var createFiber = function (tag, pendingProps, key, mode) {
+function createFiber(tag, pendingProps, key, mode) {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
-};
+}
 
 function shouldConstruct(Component) {
   var prototype = Component.prototype;

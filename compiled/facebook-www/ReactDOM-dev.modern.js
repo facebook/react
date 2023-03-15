@@ -3254,33 +3254,9 @@ function getChildNamespace(parentNamespace, type) {
   return parentNamespace;
 }
 
-/* globals MSApp */
-
-/**
- * Create a function which has 'unsafe' privileges (required by windows8 apps)
- */
-var createMicrosoftUnsafeLocalFunction = function (func) {
-  if (typeof MSApp !== "undefined" && MSApp.execUnsafeLocalFunction) {
-    return function (arg0, arg1, arg2, arg3) {
-      MSApp.execUnsafeLocalFunction(function () {
-        return func(arg0, arg1, arg2, arg3);
-      });
-    };
-  } else {
-    return func;
-  }
-};
-
 var reusableSVGContainer;
-/**
- * Set the innerHTML property of a node
- *
- * @param {DOMElement} node
- * @param {string} html
- * @internal
- */
 
-var setInnerHTML = createMicrosoftUnsafeLocalFunction(function (node, html) {
+function setInnerHTMLImpl(node, html) {
   if (node.namespaceURI === SVG_NAMESPACE) {
     {
       if (enableTrustedTypesIntegration) {
@@ -3323,7 +3299,23 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function (node, html) {
   }
 
   node.innerHTML = html;
-});
+}
+
+var setInnerHTML = setInnerHTMLImpl; // $FlowFixMe[cannot-resolve-name]
+
+if (typeof MSApp !== "undefined" && MSApp.execUnsafeLocalFunction) {
+  /**
+   * Create a function which has 'unsafe' privileges (required by windows8 apps)
+   */
+  setInnerHTML = function (node, html) {
+    // $FlowFixMe[cannot-resolve-name]
+    return MSApp.execUnsafeLocalFunction(function () {
+      return setInnerHTMLImpl(node, html);
+    });
+  };
+}
+
+var setInnerHTML$1 = setInnerHTML;
 
 /**
  * HTML nodeType values that represent the type of the node
@@ -3345,7 +3337,7 @@ var DOCUMENT_FRAGMENT_NODE = 11;
  * @internal
  */
 
-var setTextContent = function (node, text) {
+function setTextContent(node, text) {
   if (text) {
     var firstChild = node.firstChild;
 
@@ -3360,7 +3352,7 @@ var setTextContent = function (node, text) {
   }
 
   node.textContent = text;
-};
+}
 
 // List derived from Gecko source code:
 // https://github.com/mozilla/gecko-dev/blob/4e638efc71/layout/style/test/property_database.js
@@ -3687,27 +3679,25 @@ function hyphenateStyleName(name) {
     .replace(msPattern$1, "-ms-");
 }
 
-var warnValidStyle = function () {};
+// 'msTransform' is correct, but the other prefixes should be capitalized
+var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+var msPattern = /^-ms-/;
+var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
 
-{
-  // 'msTransform' is correct, but the other prefixes should be capitalized
-  var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-  var msPattern = /^-ms-/;
-  var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
+var badStyleValueWithSemicolonPattern = /;\s*$/;
+var warnedStyleNames = {};
+var warnedStyleValues = {};
+var warnedForNaNValue = false;
+var warnedForInfinityValue = false;
 
-  var badStyleValueWithSemicolonPattern = /;\s*$/;
-  var warnedStyleNames = {};
-  var warnedStyleValues = {};
-  var warnedForNaNValue = false;
-  var warnedForInfinityValue = false;
+function camelize(string) {
+  return string.replace(hyphenPattern, function (_, character) {
+    return character.toUpperCase();
+  });
+}
 
-  var camelize = function (string) {
-    return string.replace(hyphenPattern, function (_, character) {
-      return character.toUpperCase();
-    });
-  };
-
-  var warnHyphenatedStyleName = function (name) {
+function warnHyphenatedStyleName(name) {
+  {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -3721,9 +3711,11 @@ var warnValidStyle = function () {};
       // is converted to lowercase `ms`.
       camelize(name.replace(msPattern, "ms-"))
     );
-  };
+  }
+}
 
-  var warnBadVendoredStyleName = function (name) {
+function warnBadVendoredStyleName(name) {
+  {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -3735,9 +3727,11 @@ var warnValidStyle = function () {};
       name,
       name.charAt(0).toUpperCase() + name.slice(1)
     );
-  };
+  }
+}
 
-  var warnStyleValueWithSemicolon = function (name, value) {
+function warnStyleValueWithSemicolon(name, value) {
+  {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -3750,9 +3744,11 @@ var warnValidStyle = function () {};
       name,
       value.replace(badStyleValueWithSemicolonPattern, "")
     );
-  };
+  }
+}
 
-  var warnStyleValueIsNaN = function (name, value) {
+function warnStyleValueIsNaN(name, value) {
+  {
     if (warnedForNaNValue) {
       return;
     }
@@ -3760,9 +3756,11 @@ var warnValidStyle = function () {};
     warnedForNaNValue = true;
 
     error("`NaN` is an invalid value for the `%s` css style property.", name);
-  };
+  }
+}
 
-  var warnStyleValueIsInfinity = function (name, value) {
+function warnStyleValueIsInfinity(name, value) {
+  {
     if (warnedForInfinityValue) {
       return;
     }
@@ -3773,9 +3771,11 @@ var warnValidStyle = function () {};
       "`Infinity` is an invalid value for the `%s` css style property.",
       name
     );
-  };
+  }
+}
 
-  warnValidStyle = function (name, value) {
+function warnValidStyle(name, value) {
+  {
     if (name.indexOf("-") > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
@@ -3786,15 +3786,13 @@ var warnValidStyle = function () {};
 
     if (typeof value === "number") {
       if (isNaN(value)) {
-        warnStyleValueIsNaN(name, value);
+        warnStyleValueIsNaN(name);
       } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name, value);
+        warnStyleValueIsInfinity(name);
       }
     }
-  };
+  }
 }
-
-var warnValidStyle$1 = warnValidStyle;
 
 /**
  * Operations for dealing with CSS properties.
@@ -3857,7 +3855,7 @@ function setValueForStyles(node, styles) {
 
     {
       if (!isCustomProperty) {
-        warnValidStyle$1(styleName, styles[styleName]);
+        warnValidStyle(styleName, styles[styleName]);
       }
     }
 
@@ -4770,16 +4768,14 @@ function validateProperties$1(type, props) {
   }
 }
 
-var validateProperty = function () {};
+var warnedProperties = {};
+var EVENT_NAME_REGEX = /^on./;
+var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
+var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-{
-  var warnedProperties = {};
-  var EVENT_NAME_REGEX = /^on./;
-  var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-  var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
-
-  validateProperty = function (tagName, name, value, eventRegistry) {
+function validateProperty(tagName, name, value, eventRegistry) {
+  {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -4998,10 +4994,10 @@ var validateProperty = function () {};
     }
 
     return true;
-  };
+  }
 }
 
-var warnUnknownProperties = function (type, props, eventRegistry) {
+function warnUnknownProperties(type, props, eventRegistry) {
   {
     var unknownProps = [];
 
@@ -5037,7 +5033,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
       );
     }
   }
-};
+}
 
 function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {
@@ -5329,20 +5325,10 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
   );
 }
 
-var invokeGuardedCallbackImpl = function (
-  name,
-  func,
-  context,
-  a,
-  b,
-  c,
-  d,
-  e,
-  f
-) {
+function invokeGuardedCallbackImpl(name, func, context, a, b, c, d, e, f) {
   // This will call `this.onError(err)` if an error was caught.
   ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
-};
+}
 
 var hasError = false;
 var caughtError = null; // Used by event system to capture/rethrow the first error.
@@ -12000,12 +11986,7 @@ var CHILDREN = "children";
 var STYLE$1 = "style";
 var HTML = "__html";
 var warnedUnknownTags;
-var validatePropertiesInDevelopment;
-var warnForPropDifference;
-var warnForExtraAttributes;
-var warnForInvalidEventListener;
 var canDiffStyleForHydrationWarning;
-var normalizeHTML;
 
 {
   warnedUnknownTags = {
@@ -12017,15 +11998,6 @@ var normalizeHTML;
     // is often used for testing purposes.
     // @see https://electronjs.org/docs/api/webview-tag
     webview: true
-  };
-
-  validatePropertiesInDevelopment = function (type, props) {
-    validateProperties$2(type, props);
-    validateProperties$1(type, props);
-    validateProperties(type, props, {
-      registrationNameDependencies: registrationNameDependencies,
-      possibleRegistrationNames: possibleRegistrationNames
-    });
   }; // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -12036,8 +12008,21 @@ var normalizeHTML;
   // See https://github.com/facebook/react/issues/11807
 
   canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+}
 
-  warnForPropDifference = function (propName, serverValue, clientValue) {
+function validatePropertiesInDevelopment(type, props) {
+  {
+    validateProperties$2(type, props);
+    validateProperties$1(type, props);
+    validateProperties(type, props, {
+      registrationNameDependencies: registrationNameDependencies,
+      possibleRegistrationNames: possibleRegistrationNames
+    });
+  }
+}
+
+function warnForPropDifference(propName, serverValue, clientValue) {
+  {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -12057,9 +12042,11 @@ var normalizeHTML;
       JSON.stringify(normalizedServerValue),
       JSON.stringify(normalizedClientValue)
     );
-  };
+  }
+}
 
-  warnForExtraAttributes = function (attributeNames) {
+function warnForExtraAttributes(attributeNames) {
+  {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -12071,9 +12058,11 @@ var normalizeHTML;
     });
 
     error("Extra attributes from the server: %s", names);
-  };
+  }
+}
 
-  warnForInvalidEventListener = function (registrationName, listener) {
+function warnForInvalidEventListener(registrationName, listener) {
+  {
     if (listener === false) {
       error(
         "Expected `%s` listener to be a function, instead got `false`.\n\n" +
@@ -12090,10 +12079,12 @@ var normalizeHTML;
         typeof listener
       );
     }
-  }; // Parse the HTML and read it back to normalize the HTML string so that it
-  // can be used for comparison.
+  }
+} // Parse the HTML and read it back to normalize the HTML string so that it
+// can be used for comparison.
 
-  normalizeHTML = function (parent, html) {
+function normalizeHTML(parent, html) {
+  {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
@@ -12107,7 +12098,7 @@ var normalizeHTML;
           );
     testElement.innerHTML = html;
     return testElement.innerHTML;
-  };
+  }
 } // HTML parsing normalizes CR and CRLF to LF.
 // It also can turn \u0000 into \uFFFD inside attributes.
 // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
@@ -12209,7 +12200,7 @@ function setInitialDOMProperties(
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
 
       if (nextHtml != null) {
-        setInnerHTML(domElement, nextHtml);
+        setInnerHTML$1(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === "string") {
@@ -12265,7 +12256,7 @@ function updateDOMProperties(
     if (propKey === STYLE$1) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      setInnerHTML(domElement, propValue);
+      setInnerHTML$1(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {
@@ -13249,150 +13240,137 @@ function restoreControlledState(domElement, tag, props) {
   }
 }
 
-var validateDOMNesting = function () {};
+// This validation code was written based on the HTML5 parsing spec:
+// https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+//
+// Note: this does not catch all invalid nesting, nor does it try to (as it's
+// not clear what practical benefit doing so provides); instead, we warn only
+// for cases where the parser will give a parse tree differing from what React
+// intended. For example, <b><div></div></b> is invalid but we don't warn
+// because it still parses correctly; we do warn for other cases like nested
+// <p> tags where the beginning of the second element implicitly closes the
+// first, causing a confusing mess.
+// https://html.spec.whatwg.org/multipage/syntax.html#special
+var specialTags = [
+  "address",
+  "applet",
+  "area",
+  "article",
+  "aside",
+  "base",
+  "basefont",
+  "bgsound",
+  "blockquote",
+  "body",
+  "br",
+  "button",
+  "caption",
+  "center",
+  "col",
+  "colgroup",
+  "dd",
+  "details",
+  "dir",
+  "div",
+  "dl",
+  "dt",
+  "embed",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "frame",
+  "frameset",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "head",
+  "header",
+  "hgroup",
+  "hr",
+  "html",
+  "iframe",
+  "img",
+  "input",
+  "isindex",
+  "li",
+  "link",
+  "listing",
+  "main",
+  "marquee",
+  "menu",
+  "menuitem",
+  "meta",
+  "nav",
+  "noembed",
+  "noframes",
+  "noscript",
+  "object",
+  "ol",
+  "p",
+  "param",
+  "plaintext",
+  "pre",
+  "script",
+  "section",
+  "select",
+  "source",
+  "style",
+  "summary",
+  "table",
+  "tbody",
+  "td",
+  "template",
+  "textarea",
+  "tfoot",
+  "th",
+  "thead",
+  "title",
+  "tr",
+  "track",
+  "ul",
+  "wbr",
+  "xmp"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
 
-var updatedAncestorInfoDev = function () {};
+var inScopeTags = [
+  "applet",
+  "caption",
+  "html",
+  "table",
+  "td",
+  "th",
+  "marquee",
+  "object",
+  "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
+  // TODO: Distinguish by namespace here -- for <title>, including it here
+  // errs on the side of fewer warnings
+  "foreignObject",
+  "desc",
+  "title"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
 
-{
-  // This validation code was written based on the HTML5 parsing spec:
-  // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-  //
-  // Note: this does not catch all invalid nesting, nor does it try to (as it's
-  // not clear what practical benefit doing so provides); instead, we warn only
-  // for cases where the parser will give a parse tree differing from what React
-  // intended. For example, <b><div></div></b> is invalid but we don't warn
-  // because it still parses correctly; we do warn for other cases like nested
-  // <p> tags where the beginning of the second element implicitly closes the
-  // first, causing a confusing mess.
-  // https://html.spec.whatwg.org/multipage/syntax.html#special
-  var specialTags = [
-    "address",
-    "applet",
-    "area",
-    "article",
-    "aside",
-    "base",
-    "basefont",
-    "bgsound",
-    "blockquote",
-    "body",
-    "br",
-    "button",
-    "caption",
-    "center",
-    "col",
-    "colgroup",
-    "dd",
-    "details",
-    "dir",
-    "div",
-    "dl",
-    "dt",
-    "embed",
-    "fieldset",
-    "figcaption",
-    "figure",
-    "footer",
-    "form",
-    "frame",
-    "frameset",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "head",
-    "header",
-    "hgroup",
-    "hr",
-    "html",
-    "iframe",
-    "img",
-    "input",
-    "isindex",
-    "li",
-    "link",
-    "listing",
-    "main",
-    "marquee",
-    "menu",
-    "menuitem",
-    "meta",
-    "nav",
-    "noembed",
-    "noframes",
-    "noscript",
-    "object",
-    "ol",
-    "p",
-    "param",
-    "plaintext",
-    "pre",
-    "script",
-    "section",
-    "select",
-    "source",
-    "style",
-    "summary",
-    "table",
-    "tbody",
-    "td",
-    "template",
-    "textarea",
-    "tfoot",
-    "th",
-    "thead",
-    "title",
-    "tr",
-    "track",
-    "ul",
-    "wbr",
-    "xmp"
-  ]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
 
-  var inScopeTags = [
-    "applet",
-    "caption",
-    "html",
-    "table",
-    "td",
-    "th",
-    "marquee",
-    "object",
-    "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
-    // TODO: Distinguish by namespace here -- for <title>, including it here
-    // errs on the side of fewer warnings
-    "foreignObject",
-    "desc",
-    "title"
-  ]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
+var impliedEndTags = ["dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"];
+var emptyAncestorInfoDev = {
+  current: null,
+  formTag: null,
+  aTagInScope: null,
+  buttonTagInScope: null,
+  nobrTagInScope: null,
+  pTagInButtonScope: null,
+  listItemTagAutoclosing: null,
+  dlItemTagAutoclosing: null,
+  containerTagInScope: null
+};
 
-  var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
-
-  var impliedEndTags = [
-    "dd",
-    "dt",
-    "li",
-    "option",
-    "optgroup",
-    "p",
-    "rp",
-    "rt"
-  ];
-  var emptyAncestorInfoDev = {
-    current: null,
-    formTag: null,
-    aTagInScope: null,
-    buttonTagInScope: null,
-    nobrTagInScope: null,
-    pTagInButtonScope: null,
-    listItemTagAutoclosing: null,
-    dlItemTagAutoclosing: null,
-    containerTagInScope: null
-  };
-
-  updatedAncestorInfoDev = function (oldInfo, tag) {
+function updatedAncestorInfoDev(oldInfo, tag) {
+  {
     var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev);
 
     var info = {
@@ -13457,211 +13435,213 @@ var updatedAncestorInfoDev = function () {};
     }
 
     return ancestorInfo;
-  };
-  /**
-   * Returns whether
-   */
+  }
+}
+/**
+ * Returns whether
+ */
 
-  var isTagValidWithParent = function (tag, parentTag) {
-    // First, let's check if we're in an unusual parsing mode...
-    switch (parentTag) {
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
-      case "select":
-        return tag === "option" || tag === "optgroup" || tag === "#text";
+function isTagValidWithParent(tag, parentTag) {
+  // First, let's check if we're in an unusual parsing mode...
+  switch (parentTag) {
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
+    case "select":
+      return tag === "option" || tag === "optgroup" || tag === "#text";
 
-      case "optgroup":
-        return tag === "option" || tag === "#text";
-      // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
-      // but
+    case "optgroup":
+      return tag === "option" || tag === "#text";
+    // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
+    // but
 
-      case "option":
-        return tag === "#text";
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
-      // No special behavior since these rules fall back to "in body" mode for
-      // all except special table nodes which cause bad parsing behavior anyway.
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
+    case "option":
+      return tag === "#text";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
+    // No special behavior since these rules fall back to "in body" mode for
+    // all except special table nodes which cause bad parsing behavior anyway.
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
 
-      case "tr":
-        return (
-          tag === "th" ||
-          tag === "td" ||
-          tag === "style" ||
-          tag === "script" ||
-          tag === "template"
-        );
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
+    case "tr":
+      return (
+        tag === "th" ||
+        tag === "td" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
 
-      case "tbody":
-      case "thead":
-      case "tfoot":
-        return (
-          tag === "tr" ||
-          tag === "style" ||
-          tag === "script" ||
-          tag === "template"
-        );
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
+    case "tbody":
+    case "thead":
+    case "tfoot":
+      return (
+        tag === "tr" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
 
-      case "colgroup":
-        return tag === "col" || tag === "template";
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
+    case "colgroup":
+      return tag === "col" || tag === "template";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
 
-      case "table":
-        return (
-          tag === "caption" ||
-          tag === "colgroup" ||
-          tag === "tbody" ||
-          tag === "tfoot" ||
-          tag === "thead" ||
-          tag === "style" ||
-          tag === "script" ||
-          tag === "template"
-        );
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
+    case "table":
+      return (
+        tag === "caption" ||
+        tag === "colgroup" ||
+        tag === "tbody" ||
+        tag === "tfoot" ||
+        tag === "thead" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
 
-      case "head":
-        return (
-          tag === "base" ||
-          tag === "basefont" ||
-          tag === "bgsound" ||
-          tag === "link" ||
-          tag === "meta" ||
-          tag === "title" ||
-          tag === "noscript" ||
-          tag === "noframes" ||
-          tag === "style" ||
-          tag === "script" ||
-          tag === "template"
-        );
-      // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
+    case "head":
+      return (
+        tag === "base" ||
+        tag === "basefont" ||
+        tag === "bgsound" ||
+        tag === "link" ||
+        tag === "meta" ||
+        tag === "title" ||
+        tag === "noscript" ||
+        tag === "noframes" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
 
-      case "html":
-        return tag === "head" || tag === "body" || tag === "frameset";
+    case "html":
+      return tag === "head" || tag === "body" || tag === "frameset";
 
-      case "frameset":
-        return tag === "frame";
+    case "frameset":
+      return tag === "frame";
 
-      case "#document":
-        return tag === "html";
-    } // Probably in the "in body" parsing mode, so we outlaw only tag combos
-    // where the parsing rules cause implicit opens or closes to be added.
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+    case "#document":
+      return tag === "html";
+  } // Probably in the "in body" parsing mode, so we outlaw only tag combos
+  // where the parsing rules cause implicit opens or closes to be added.
+  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
 
-    switch (tag) {
-      case "h1":
-      case "h2":
-      case "h3":
-      case "h4":
-      case "h5":
-      case "h6":
-        return (
-          parentTag !== "h1" &&
-          parentTag !== "h2" &&
-          parentTag !== "h3" &&
-          parentTag !== "h4" &&
-          parentTag !== "h5" &&
-          parentTag !== "h6"
-        );
+  switch (tag) {
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return (
+        parentTag !== "h1" &&
+        parentTag !== "h2" &&
+        parentTag !== "h3" &&
+        parentTag !== "h4" &&
+        parentTag !== "h5" &&
+        parentTag !== "h6"
+      );
 
-      case "rp":
-      case "rt":
-        return impliedEndTags.indexOf(parentTag) === -1;
+    case "rp":
+    case "rt":
+      return impliedEndTags.indexOf(parentTag) === -1;
 
-      case "body":
-      case "caption":
-      case "col":
-      case "colgroup":
-      case "frameset":
-      case "frame":
-      case "head":
-      case "html":
-      case "tbody":
-      case "td":
-      case "tfoot":
-      case "th":
-      case "thead":
-      case "tr":
-        // These tags are only valid with a few parents that have special child
-        // parsing rules -- if we're down here, then none of those matched and
-        // so we allow it only if we don't know what the parent is, as all other
-        // cases are invalid.
-        return parentTag == null;
-    }
+    case "body":
+    case "caption":
+    case "col":
+    case "colgroup":
+    case "frameset":
+    case "frame":
+    case "head":
+    case "html":
+    case "tbody":
+    case "td":
+    case "tfoot":
+    case "th":
+    case "thead":
+    case "tr":
+      // These tags are only valid with a few parents that have special child
+      // parsing rules -- if we're down here, then none of those matched and
+      // so we allow it only if we don't know what the parent is, as all other
+      // cases are invalid.
+      return parentTag == null;
+  }
 
-    return true;
-  };
-  /**
-   * Returns whether
-   */
+  return true;
+}
+/**
+ * Returns whether
+ */
 
-  var findInvalidAncestorForTag = function (tag, ancestorInfo) {
-    switch (tag) {
-      case "address":
-      case "article":
-      case "aside":
-      case "blockquote":
-      case "center":
-      case "details":
-      case "dialog":
-      case "dir":
-      case "div":
-      case "dl":
-      case "fieldset":
-      case "figcaption":
-      case "figure":
-      case "footer":
-      case "header":
-      case "hgroup":
-      case "main":
-      case "menu":
-      case "nav":
-      case "ol":
-      case "p":
-      case "section":
-      case "summary":
-      case "ul":
-      case "pre":
-      case "listing":
-      case "table":
-      case "hr":
-      case "xmp":
-      case "h1":
-      case "h2":
-      case "h3":
-      case "h4":
-      case "h5":
-      case "h6":
-        return ancestorInfo.pTagInButtonScope;
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  switch (tag) {
+    case "address":
+    case "article":
+    case "aside":
+    case "blockquote":
+    case "center":
+    case "details":
+    case "dialog":
+    case "dir":
+    case "div":
+    case "dl":
+    case "fieldset":
+    case "figcaption":
+    case "figure":
+    case "footer":
+    case "header":
+    case "hgroup":
+    case "main":
+    case "menu":
+    case "nav":
+    case "ol":
+    case "p":
+    case "section":
+    case "summary":
+    case "ul":
+    case "pre":
+    case "listing":
+    case "table":
+    case "hr":
+    case "xmp":
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return ancestorInfo.pTagInButtonScope;
 
-      case "form":
-        return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+    case "form":
+      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
 
-      case "li":
-        return ancestorInfo.listItemTagAutoclosing;
+    case "li":
+      return ancestorInfo.listItemTagAutoclosing;
 
-      case "dd":
-      case "dt":
-        return ancestorInfo.dlItemTagAutoclosing;
+    case "dd":
+    case "dt":
+      return ancestorInfo.dlItemTagAutoclosing;
 
-      case "button":
-        return ancestorInfo.buttonTagInScope;
+    case "button":
+      return ancestorInfo.buttonTagInScope;
 
-      case "a":
-        // Spec says something about storing a list of markers, but it sounds
-        // equivalent to this check.
-        return ancestorInfo.aTagInScope;
+    case "a":
+      // Spec says something about storing a list of markers, but it sounds
+      // equivalent to this check.
+      return ancestorInfo.aTagInScope;
 
-      case "nobr":
-        return ancestorInfo.nobrTagInScope;
-    }
+    case "nobr":
+      return ancestorInfo.nobrTagInScope;
+  }
 
-    return null;
-  };
+  return null;
+}
 
-  var didWarn = {};
+var didWarn = {};
 
-  validateDOMNesting = function (childTag, childText, ancestorInfo) {
+function validateDOMNesting(childTag, childText, ancestorInfo) {
+  {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
@@ -13740,7 +13720,7 @@ var updatedAncestorInfoDev = function () {};
         ancestorTag
       );
     }
-  };
+  }
 }
 
 var valueStack = [];
@@ -24695,10 +24675,9 @@ var didWarnAboutUninitializedState;
 var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 var didWarnAboutLegacyLifecyclesAndDerivedState;
 var didWarnAboutUndefinedDerivedState;
-var warnOnUndefinedDerivedState;
-var warnOnInvalidCallback;
 var didWarnAboutDirectlyAssigningPropsToState;
 var didWarnAboutInvalidateContextType;
+var didWarnOnInvalidCallback;
 
 {
   didWarnAboutStateAssignmentForComponent = new Set();
@@ -24708,42 +24687,7 @@ var didWarnAboutInvalidateContextType;
   didWarnAboutDirectlyAssigningPropsToState = new Set();
   didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutInvalidateContextType = new Set();
-  var didWarnOnInvalidCallback = new Set();
-
-  warnOnInvalidCallback = function (callback, callerName) {
-    if (callback === null || typeof callback === "function") {
-      return;
-    }
-
-    var key = callerName + "_" + callback;
-
-    if (!didWarnOnInvalidCallback.has(key)) {
-      didWarnOnInvalidCallback.add(key);
-
-      error(
-        "%s(...): Expected the last optional `callback` argument to be a " +
-          "function. Instead received: %s.",
-        callerName,
-        callback
-      );
-    }
-  };
-
-  warnOnUndefinedDerivedState = function (type, partialState) {
-    if (partialState === undefined) {
-      var componentName = getComponentNameFromType(type) || "Component";
-
-      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
-        didWarnAboutUndefinedDerivedState.add(componentName);
-
-        error(
-          "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. " +
-            "You have returned undefined.",
-          componentName
-        );
-      }
-    }
-  }; // This is so gross but it's at least non-critical and can be removed if
+  didWarnOnInvalidCallback = new Set(); // This is so gross but it's at least non-critical and can be removed if
   // it causes problems. This is meant to give a nicer error message for
   // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
   // ...)) which otherwise throws a "_processChildContext is not a function"
@@ -24763,6 +24707,45 @@ var didWarnAboutInvalidateContextType;
     }
   });
   Object.freeze(fakeInternalInstance);
+}
+
+function warnOnInvalidCallback(callback, callerName) {
+  {
+    if (callback === null || typeof callback === "function") {
+      return;
+    }
+
+    var key = callerName + "_" + callback;
+
+    if (!didWarnOnInvalidCallback.has(key)) {
+      didWarnOnInvalidCallback.add(key);
+
+      error(
+        "%s(...): Expected the last optional `callback` argument to be a " +
+          "function. Instead received: %s.",
+        callerName,
+        callback
+      );
+    }
+  }
+}
+
+function warnOnUndefinedDerivedState(type, partialState) {
+  {
+    if (partialState === undefined) {
+      var componentName = getComponentNameFromType(type) || "Component";
+
+      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+        didWarnAboutUndefinedDerivedState.add(componentName);
+
+        error(
+          "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. " +
+            "You have returned undefined.",
+          componentName
+        );
+      }
+    }
+  }
 }
 
 function applyDerivedStateFromProps(
@@ -32990,7 +32973,7 @@ function reportUncaughtErrorInDEV(error) {
   }
 }
 
-var callComponentWillUnmountWithTimer = function (current, instance) {
+function callComponentWillUnmountWithTimer(current, instance) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
 
@@ -33004,7 +32987,7 @@ var callComponentWillUnmountWithTimer = function (current, instance) {
   } else {
     instance.componentWillUnmount();
   }
-}; // Capture errors so they don't interrupt unmounting.
+} // Capture errors so they don't interrupt unmounting.
 
 function safelyCallComponentWillUnmount(
   current,
@@ -41448,10 +41431,10 @@ function FiberNode(tag, pendingProps, key, mode) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 
-var createFiber = function (tag, pendingProps, key, mode) {
+function createFiber(tag, pendingProps, key, mode) {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
-};
+}
 
 function shouldConstruct(Component) {
   var prototype = Component.prototype;
@@ -42216,7 +42199,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-6722015e";
+var ReactVersion = "18.3.0-www-modern-ce2970c7";
 
 function createPortal$1(
   children,

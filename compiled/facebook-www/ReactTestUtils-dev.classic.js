@@ -916,20 +916,10 @@ if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
   );
 }
 
-var invokeGuardedCallbackImpl = function (
-  name,
-  func,
-  context,
-  a,
-  b,
-  c,
-  d,
-  e,
-  f
-) {
+function invokeGuardedCallbackImpl(name, func, context, a, b, c, d, e, f) {
   // This will call `this.onError(err)` if an error was caught.
   ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
-};
+}
 
 var hasError = false;
 var caughtError = null; // Used by event system to capture/rethrow the first error.
@@ -1420,7 +1410,7 @@ function executeDispatchesInOrder(event) {
  * @private
  */
 
-var executeDispatchesAndRelease = function (
+function executeDispatchesAndRelease(
   event
   /* ReactSyntheticEvent */
 ) {
@@ -1431,7 +1421,7 @@ var executeDispatchesAndRelease = function (
       event.constructor.release(event);
     }
   }
-};
+}
 
 function isInteractive(tag) {
   return (

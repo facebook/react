@@ -1605,16 +1605,14 @@ var possibleStandardNames = {
   zoomandpan: "zoomAndPan"
 };
 
-var validateProperty = function () {};
+var warnedProperties = {};
+var EVENT_NAME_REGEX = /^on./;
+var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
+var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
 
-{
-  var warnedProperties = {};
-  var EVENT_NAME_REGEX = /^on./;
-  var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-  var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
-
-  validateProperty = function (tagName, name, value, eventRegistry) {
+function validateProperty(tagName, name, value, eventRegistry) {
+  {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -1833,10 +1831,10 @@ var validateProperty = function () {};
     }
 
     return true;
-  };
+  }
 }
 
-var warnUnknownProperties = function (type, props, eventRegistry) {
+function warnUnknownProperties(type, props, eventRegistry) {
   {
     var unknownProps = [];
 
@@ -1872,7 +1870,7 @@ var warnUnknownProperties = function (type, props, eventRegistry) {
       );
     }
   }
-};
+}
 
 function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {
@@ -1882,27 +1880,25 @@ function validateProperties(type, props, eventRegistry) {
   warnUnknownProperties(type, props, eventRegistry);
 }
 
-var warnValidStyle = function () {};
+// 'msTransform' is correct, but the other prefixes should be capitalized
+var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+var msPattern$1 = /^-ms-/;
+var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
 
-{
-  // 'msTransform' is correct, but the other prefixes should be capitalized
-  var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-  var msPattern$1 = /^-ms-/;
-  var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
+var badStyleValueWithSemicolonPattern = /;\s*$/;
+var warnedStyleNames = {};
+var warnedStyleValues = {};
+var warnedForNaNValue = false;
+var warnedForInfinityValue = false;
 
-  var badStyleValueWithSemicolonPattern = /;\s*$/;
-  var warnedStyleNames = {};
-  var warnedStyleValues = {};
-  var warnedForNaNValue = false;
-  var warnedForInfinityValue = false;
+function camelize(string) {
+  return string.replace(hyphenPattern, function (_, character) {
+    return character.toUpperCase();
+  });
+}
 
-  var camelize = function (string) {
-    return string.replace(hyphenPattern, function (_, character) {
-      return character.toUpperCase();
-    });
-  };
-
-  var warnHyphenatedStyleName = function (name) {
+function warnHyphenatedStyleName(name) {
+  {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -1916,9 +1912,11 @@ var warnValidStyle = function () {};
       // is converted to lowercase `ms`.
       camelize(name.replace(msPattern$1, "ms-"))
     );
-  };
+  }
+}
 
-  var warnBadVendoredStyleName = function (name) {
+function warnBadVendoredStyleName(name) {
+  {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -1930,9 +1928,11 @@ var warnValidStyle = function () {};
       name,
       name.charAt(0).toUpperCase() + name.slice(1)
     );
-  };
+  }
+}
 
-  var warnStyleValueWithSemicolon = function (name, value) {
+function warnStyleValueWithSemicolon(name, value) {
+  {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -1945,9 +1945,11 @@ var warnValidStyle = function () {};
       name,
       value.replace(badStyleValueWithSemicolonPattern, "")
     );
-  };
+  }
+}
 
-  var warnStyleValueIsNaN = function (name, value) {
+function warnStyleValueIsNaN(name, value) {
+  {
     if (warnedForNaNValue) {
       return;
     }
@@ -1955,9 +1957,11 @@ var warnValidStyle = function () {};
     warnedForNaNValue = true;
 
     error("`NaN` is an invalid value for the `%s` css style property.", name);
-  };
+  }
+}
 
-  var warnStyleValueIsInfinity = function (name, value) {
+function warnStyleValueIsInfinity(name, value) {
+  {
     if (warnedForInfinityValue) {
       return;
     }
@@ -1968,9 +1972,11 @@ var warnValidStyle = function () {};
       "`Infinity` is an invalid value for the `%s` css style property.",
       name
     );
-  };
+  }
+}
 
-  warnValidStyle = function (name, value) {
+function warnValidStyle(name, value) {
+  {
     if (name.indexOf("-") > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
@@ -1981,15 +1987,13 @@ var warnValidStyle = function () {};
 
     if (typeof value === "number") {
       if (isNaN(value)) {
-        warnStyleValueIsNaN(name, value);
+        warnStyleValueIsNaN(name);
       } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name, value);
+        warnStyleValueIsInfinity(name);
       }
     }
-  };
+  }
 }
-
-var warnValidStyle$1 = warnValidStyle;
 
 // code copied and modified from escape-html
 var matchHtmlRegExp = /["'&<>]/;
@@ -3051,7 +3055,7 @@ function pushStyleAttribute(target, style) {
       );
     } else {
       {
-        warnValidStyle$1(styleName, styleValue);
+        warnValidStyle(styleName, styleValue);
       }
 
       nameChunk = processStyleName(styleName);
@@ -8110,10 +8114,9 @@ var didWarnAboutUninitializedState;
 var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 var didWarnAboutLegacyLifecyclesAndDerivedState;
 var didWarnAboutUndefinedDerivedState;
-var warnOnUndefinedDerivedState;
-var warnOnInvalidCallback;
 var didWarnAboutDirectlyAssigningPropsToState;
 var didWarnAboutInvalidateContextType;
+var didWarnOnInvalidCallback;
 
 {
   didWarnAboutUninitializedState = new Set();
@@ -8122,9 +8125,11 @@ var didWarnAboutInvalidateContextType;
   didWarnAboutDirectlyAssigningPropsToState = new Set();
   didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutInvalidateContextType = new Set();
-  var didWarnOnInvalidCallback = new Set();
+  didWarnOnInvalidCallback = new Set();
+}
 
-  warnOnInvalidCallback = function (callback, callerName) {
+function warnOnInvalidCallback(callback, callerName) {
+  {
     if (callback === null || typeof callback === "function") {
       return;
     }
@@ -8141,9 +8146,11 @@ var didWarnAboutInvalidateContextType;
         callback
       );
     }
-  };
+  }
+}
 
-  warnOnUndefinedDerivedState = function (type, partialState) {
+function warnOnUndefinedDerivedState(type, partialState) {
+  {
     if (partialState === undefined) {
       var componentName = getComponentNameFromType(type) || "Component";
 
@@ -8157,7 +8164,7 @@ var didWarnAboutInvalidateContextType;
         );
       }
     }
-  };
+  }
 }
 
 function warnNoop(publicInstance, callerName) {

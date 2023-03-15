@@ -951,31 +951,29 @@ function getChildNamespace(parentNamespace, type) {
         : parentNamespace;
   return parentNamespace;
 }
-var reusableSVGContainer,
-  setInnerHTML = (function (func) {
-    return "undefined" !== typeof MSApp && MSApp.execUnsafeLocalFunction
-      ? function (arg0, arg1, arg2, arg3) {
-          MSApp.execUnsafeLocalFunction(function () {
-            return func(arg0, arg1, arg2, arg3);
-          });
-        }
-      : func;
-  })(function (node, html) {
-    if (
-      "http://www.w3.org/2000/svg" !== node.namespaceURI ||
-      "innerHTML" in node
-    )
-      node.innerHTML = html;
-    else {
-      reusableSVGContainer =
-        reusableSVGContainer || document.createElement("div");
-      reusableSVGContainer.innerHTML =
-        "<svg>" + html.valueOf().toString() + "</svg>";
-      for (html = reusableSVGContainer.firstChild; node.firstChild; )
-        node.removeChild(node.firstChild);
-      for (; html.firstChild; ) node.appendChild(html.firstChild);
-    }
+var reusableSVGContainer;
+function setInnerHTMLImpl(node, html) {
+  if ("http://www.w3.org/2000/svg" !== node.namespaceURI || "innerHTML" in node)
+    node.innerHTML = html;
+  else {
+    reusableSVGContainer =
+      reusableSVGContainer || document.createElement("div");
+    reusableSVGContainer.innerHTML =
+      "<svg>" + html.valueOf().toString() + "</svg>";
+    for (html = reusableSVGContainer.firstChild; node.firstChild; )
+      node.removeChild(node.firstChild);
+    for (; html.firstChild; ) node.appendChild(html.firstChild);
+  }
+}
+var setInnerHTML = setInnerHTMLImpl;
+"undefined" !== typeof MSApp &&
+  MSApp.execUnsafeLocalFunction &&
+  (setInnerHTML = function (node, html) {
+    return MSApp.execUnsafeLocalFunction(function () {
+      return setInnerHTMLImpl(node, html);
+    });
   });
+var setInnerHTML$1 = setInnerHTML;
 function setTextContent(node, text) {
   if (text) {
     var firstChild = node.firstChild;
@@ -4263,7 +4261,7 @@ function setInitialProperties(domElement, tag, rawProps) {
         ? setValueForStyles(domElement, nextProp)
         : "dangerouslySetInnerHTML" === propKey
         ? ((nextProp = nextProp ? nextProp.__html : void 0),
-          null != nextProp && setInnerHTML(domElement, nextProp))
+          null != nextProp && setInnerHTML$1(domElement, nextProp))
         : "children" === propKey
         ? "string" === typeof nextProp
           ? "body" === tag ||
@@ -4336,7 +4334,7 @@ function updateProperties(
     "style" === propKey
       ? setValueForStyles(domElement, propValue)
       : "dangerouslySetInnerHTML" === propKey
-      ? setInnerHTML(domElement, propValue)
+      ? setInnerHTML$1(domElement, propValue)
       : "children" === propKey
       ? setTextContent(domElement, propValue)
       : setValueForProperty(domElement, propKey, propValue, lastRawProps);
@@ -16019,7 +16017,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1800 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0b070620",
+  version: "18.3.0-www-modern-f405ae4d",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16064,7 +16062,7 @@ var devToolsConfig$jscomp$inline_1800 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-0b070620"
+  reconcilerVersion: "18.3.0-www-modern-f405ae4d"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16236,7 +16234,7 @@ exports.unstable_flushControlled = function (fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-0b070620";
+exports.version = "18.3.0-www-modern-f405ae4d";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
