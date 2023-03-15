@@ -317,7 +317,10 @@ class Context {
       this.currentScope != null &&
       place.identifier.scope != null &&
       declaration !== undefined &&
-      declaration.scope !== place.identifier.scope
+      declaration.scope !== place.identifier.scope &&
+      !Array.from(this.currentScope.reassignments).some(
+        (ident) => ident.id === place.identifier.id
+      )
     ) {
       this.currentScope.reassignments.add(place.identifier);
     }

@@ -11,6 +11,7 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ScopeId,
 } from "../HIR";
@@ -98,9 +99,6 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  */
 export function mergeOverlappingReactiveScopes(fn: ReactiveFunction): void {
   const context = new Context();
-  // context.enter(() => {
-  //   visitBlock(context, fn.body);
-  // });
   visitReactiveFunction(fn, new Visitor(), context);
   context.complete();
 }
@@ -119,6 +117,21 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
     state.enter(() => {
       this.traverseBlock(block, state);
     });
+  }
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: Context
+  ): void {
+    if (
+      instruction.value.kind === "ConditionalExpression" ||
+      instruction.value.kind === "LogicalExpression"
+    ) {
+      state.enter(() => {
+        super.visitInstruction(instruction, state);
+      });
+    } else {
+      super.visitInstruction(instruction, state);
+    }
   }
 }
 

@@ -1198,17 +1198,6 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.AssignmentExpression>;
       const operator = expr.node.operator;
 
-      if (builder.currentBlockKind() === "value") {
-        // try lowering the RHS in case it also contains errors
-        lowerExpressionToTemporary(builder, expr.get("right"));
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle AssignmentExpression within a LogicalExpression or ConditionalExpression`,
-          severity: ErrorSeverity.Todo,
-          nodePath: expr.parentPath,
-        });
-        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
-      }
-
       if (operator === "=") {
         const left = expr.get("left");
         return lowerAssignment(

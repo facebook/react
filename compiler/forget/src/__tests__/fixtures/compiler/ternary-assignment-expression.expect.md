@@ -1,0 +1,24 @@
+
+## Input
+
+```javascript
+function ternary(props) {
+  let x = 0;
+  const y = props.a ? (x = 1) : (x = 2);
+  return x + y;
+}
+
+```
+
+## Code
+
+```javascript
+function ternary(props) {
+  let x = undefined;
+
+  const y = props.a ? ((x = 1), 1) : ((x = 2), 2);
+  return x + y;
+}
+
+```
+      

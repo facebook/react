@@ -24,6 +24,10 @@ module.exports = {
     // like invariant.
     "no-fallthrough": "off",
 
+    // Low-value: this fires even for declarations that capture references which wouldn't be as
+    // obvious if the declaration was lifted to the parent root
+    "no-inner-declarations": "off",
+
     "@typescript-eslint/no-empty-function": "off",
 
     // Explicitly casting to/through any is sometimes required, often for error messages to
