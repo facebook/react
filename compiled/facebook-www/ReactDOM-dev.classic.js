@@ -37,6 +37,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
+  disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
@@ -5412,7 +5413,8 @@ var canDiffStyleForHydrationWarning;
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
 
-  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+  canDiffStyleForHydrationWarning =
+    disableIEWorkarounds || (canUseDOM && !document.documentMode);
 }
 
 function validatePropertiesInDevelopment(type, props) {
@@ -5605,7 +5607,11 @@ function setInitialDOMProperties(
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
 
       if (nextHtml != null) {
-        setInnerHTML$1(domElement, nextHtml);
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = nextHtml;
+        } else {
+          setInnerHTML$1(domElement, nextHtml);
+        }
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === "string") {
@@ -5661,7 +5667,11 @@ function updateDOMProperties(
     if (propKey === STYLE$1) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      setInnerHTML$1(domElement, propValue);
+      if (disableIEWorkarounds) {
+        domElement.innerHTML = propValue;
+      } else {
+        setInnerHTML$1(domElement, propValue);
+      }
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {
@@ -9028,7 +9038,7 @@ var ContinuousEventPriority = InputContinuousLane;
 var DefaultEventPriority = DefaultLane;
 var IdleEventPriority = IdleLane;
 var currentUpdatePriority = NoLane;
-function getCurrentUpdatePriority$1() {
+function getCurrentUpdatePriority() {
   return currentUpdatePriority;
 }
 function setCurrentUpdatePriority(newPriority) {
@@ -12057,7 +12067,6 @@ function isOwnedInstance(node) {
   return !!(node[internalHoistableMarker] || node[internalInstanceKey]);
 }
 
-var restoreImpl = null;
 var restoreTarget = null;
 var restoreQueue = null;
 
@@ -12071,24 +12080,18 @@ function restoreStateOfTarget(target) {
     return;
   }
 
-  if (typeof restoreImpl !== "function") {
-    throw new Error(
-      "setRestoreImplementation() needs to be called to handle a target for controlled " +
-        "events. This error is likely caused by a bug in React. Please file an issue."
-    );
-  }
-
   var stateNode = internalInstance.stateNode; // Guard against Fiber being unmounted.
 
   if (stateNode) {
     var props = getFiberCurrentPropsFromNode(stateNode);
-    restoreImpl(internalInstance.stateNode, internalInstance.type, props);
+    restoreControlledState(
+      internalInstance.stateNode,
+      internalInstance.type,
+      props
+    );
   }
 }
 
-function setRestoreImplementation(impl) {
-  restoreImpl = impl;
-}
 function enqueueStateRestore(target) {
   if (restoreTarget) {
     if (restoreQueue) {
@@ -12118,4408 +12121,6 @@ function restoreStateIfNeeded() {
     for (var i = 0; i < queuedTargets.length; i++) {
       restoreStateOfTarget(queuedTargets[i]);
     }
-  }
-}
-
-// the renderer. Such as when we're dispatching events or if third party
-// libraries need to call batchedUpdates. Eventually, this API will go away when
-// everything is batched by default. We'll then have a similar API to opt-out of
-// scheduled work and instead do synchronous work.
-// Defaults
-
-var batchedUpdatesImpl = function (fn, bookkeeping) {
-  return fn(bookkeeping);
-};
-
-var flushSyncImpl = function () {};
-
-var isInsideEventHandler = false;
-
-function finishEventHandler() {
-  // Here we wait until all updates have propagated, which is important
-  // when using controlled components within layers:
-  // https://github.com/facebook/react/issues/1698
-  // Then we restore state of any controlled component.
-  var controlledComponentsHavePendingUpdates = needsStateRestore();
-
-  if (controlledComponentsHavePendingUpdates) {
-    // If a controlled event was fired, we may need to restore the state of
-    // the DOM node back to the controlled value. This is necessary when React
-    // bails out of the update without touching the DOM.
-    // TODO: Restore state in the microtask, after the discrete updates flush,
-    // instead of early flushing them here.
-    flushSyncImpl();
-    restoreStateIfNeeded();
-  }
-}
-
-function batchedUpdates$1(fn, a, b) {
-  if (isInsideEventHandler) {
-    // If we are currently inside another batch, we need to wait until it
-    // fully completes before restoring state.
-    return fn(a, b);
-  }
-
-  isInsideEventHandler = true;
-
-  try {
-    return batchedUpdatesImpl(fn, a, b);
-  } finally {
-    isInsideEventHandler = false;
-    finishEventHandler();
-  }
-} // TODO: Replace with flushSync
-function setBatchingImplementation(
-  _batchedUpdatesImpl,
-  _discreteUpdatesImpl,
-  _flushSyncImpl
-) {
-  batchedUpdatesImpl = _batchedUpdatesImpl;
-  flushSyncImpl = _flushSyncImpl;
-}
-
-function isInteractive(tag) {
-  return (
-    tag === "button" ||
-    tag === "input" ||
-    tag === "select" ||
-    tag === "textarea"
-  );
-}
-
-function shouldPreventMouseEvent(name, type, props) {
-  switch (name) {
-    case "onClick":
-    case "onClickCapture":
-    case "onDoubleClick":
-    case "onDoubleClickCapture":
-    case "onMouseDown":
-    case "onMouseDownCapture":
-    case "onMouseMove":
-    case "onMouseMoveCapture":
-    case "onMouseUp":
-    case "onMouseUpCapture":
-    case "onMouseEnter":
-      return !!(props.disabled && isInteractive(type));
-
-    default:
-      return false;
-  }
-}
-/**
- * @param {object} inst The instance, which is the source of events.
- * @param {string} registrationName Name of listener (e.g. `onClick`).
- * @return {?function} The stored callback.
- */
-
-function getListener(inst, registrationName) {
-  var stateNode = inst.stateNode;
-
-  if (stateNode === null) {
-    // Work in progress (ex: onload events in incremental mode).
-    return null;
-  }
-
-  var props = getFiberCurrentPropsFromNode(stateNode);
-
-  if (props === null) {
-    // Work in progress.
-    return null;
-  }
-
-  var listener = props[registrationName];
-
-  if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
-    return null;
-  }
-
-  if (listener && typeof listener !== "function") {
-    throw new Error(
-      "Expected `" +
-        registrationName +
-        "` listener to be a function, instead got a value of `" +
-        typeof listener +
-        "` type."
-    );
-  }
-
-  return listener;
-}
-
-var passiveBrowserEventsSupported = false; // Check if browser support events with passive listeners
-// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
-
-if (canUseDOM) {
-  try {
-    var options = {};
-    Object.defineProperty(options, "passive", {
-      get: function () {
-        passiveBrowserEventsSupported = true;
-      }
-    });
-    window.addEventListener("test", options, options);
-    window.removeEventListener("test", options, options);
-  } catch (e) {
-    passiveBrowserEventsSupported = false;
-  }
-}
-
-// Provided by www
-var ReactFbErrorUtils = require("ReactFbErrorUtils");
-
-if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
-  throw new Error(
-    "Expected ReactFbErrorUtils.invokeGuardedCallback to be a function."
-  );
-}
-
-function invokeGuardedCallbackImpl(name, func, context, a, b, c, d, e, f) {
-  // This will call `this.onError(err)` if an error was caught.
-  ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
-}
-
-var hasError = false;
-var caughtError = null; // Used by event system to capture/rethrow the first error.
-
-var hasRethrowError = false;
-var rethrowError = null;
-var reporter = {
-  onError: function (error) {
-    hasError = true;
-    caughtError = error;
-  }
-};
-/**
- * Call a function while guarding against errors that happens within it.
- * Returns an error if it throws, otherwise null.
- *
- * In production, this is implemented using a try-catch. The reason we don't
- * use a try-catch directly is so that we can swap out a different
- * implementation in DEV mode.
- *
- * @param {String} name of the guard to use for logging or debugging
- * @param {Function} func The function to invoke
- * @param {*} context The context to use when calling the function
- * @param {...*} args Arguments for function
- */
-
-function invokeGuardedCallback(name, func, context, a, b, c, d, e, f) {
-  hasError = false;
-  caughtError = null;
-  invokeGuardedCallbackImpl.apply(reporter, arguments);
-}
-/**
- * Same as invokeGuardedCallback, but instead of returning an error, it stores
- * it in a global so it can be rethrown by `rethrowCaughtError` later.
- * TODO: See if caughtError and rethrowError can be unified.
- *
- * @param {String} name of the guard to use for logging or debugging
- * @param {Function} func The function to invoke
- * @param {*} context The context to use when calling the function
- * @param {...*} args Arguments for function
- */
-
-function invokeGuardedCallbackAndCatchFirstError(
-  name,
-  func,
-  context,
-  a,
-  b,
-  c,
-  d,
-  e,
-  f
-) {
-  invokeGuardedCallback.apply(this, arguments);
-
-  if (hasError) {
-    var error = clearCaughtError();
-
-    if (!hasRethrowError) {
-      hasRethrowError = true;
-      rethrowError = error;
-    }
-  }
-}
-/**
- * During execution of guarded functions we will capture the first error which
- * we will rethrow to be handled by the top level error handler.
- */
-
-function rethrowCaughtError() {
-  if (hasRethrowError) {
-    var error = rethrowError;
-    hasRethrowError = false;
-    rethrowError = null;
-    throw error;
-  }
-}
-function hasCaughtError() {
-  return hasError;
-}
-function clearCaughtError() {
-  if (hasError) {
-    var error = caughtError;
-    hasError = false;
-    caughtError = null;
-    return error;
-  } else {
-    throw new Error(
-      "clearCaughtError was called but no error was captured. This error " +
-        "is likely caused by a bug in React. Please file an issue."
-    );
-  }
-}
-
-var EventListenerWWW = require("EventListener");
-
-function addEventBubbleListener(target, eventType, listener) {
-  return EventListenerWWW.listen(target, eventType, listener);
-}
-function addEventCaptureListener(target, eventType, listener) {
-  return EventListenerWWW.capture(target, eventType, listener);
-}
-function addEventCaptureListenerWithPassiveFlag(
-  target,
-  eventType,
-  listener,
-  passive
-) {
-  return EventListenerWWW.captureWithPassiveFlag(
-    target,
-    eventType,
-    listener,
-    passive
-  );
-}
-function addEventBubbleListenerWithPassiveFlag(
-  target,
-  eventType,
-  listener,
-  passive
-) {
-  return EventListenerWWW.bubbleWithPassiveFlag(
-    target,
-    eventType,
-    listener,
-    passive
-  );
-}
-function removeEventListener(target, eventType, listener, capture) {
-  listener.remove();
-} // Flow magic to verify the exports of this file match the original version.
-
-/**
- * These variables store information about text content of a target node,
- * allowing comparison of content before and after a given event.
- *
- * Identify the node where selection currently begins, then observe
- * both its text content and its current position in the DOM. Since the
- * browser may natively replace the target node during composition, we can
- * use its position to find its replacement.
- *
- *
- */
-var root = null;
-var startText = null;
-var fallbackText = null;
-function initialize(nativeEventTarget) {
-  root = nativeEventTarget;
-  startText = getText();
-  return true;
-}
-function reset() {
-  root = null;
-  startText = null;
-  fallbackText = null;
-}
-function getData() {
-  if (fallbackText) {
-    return fallbackText;
-  }
-
-  var start;
-  var startValue = startText;
-  var startLength = startValue.length;
-  var end;
-  var endValue = getText();
-  var endLength = endValue.length;
-
-  for (start = 0; start < startLength; start++) {
-    if (startValue[start] !== endValue[start]) {
-      break;
-    }
-  }
-
-  var minEnd = startLength - start;
-
-  for (end = 1; end <= minEnd; end++) {
-    if (startValue[startLength - end] !== endValue[endLength - end]) {
-      break;
-    }
-  }
-
-  var sliceTail = end > 1 ? 1 - end : undefined;
-  fallbackText = endValue.slice(start, sliceTail);
-  return fallbackText;
-}
-function getText() {
-  if ("value" in root) {
-    return root.value;
-  }
-
-  return root.textContent;
-}
-
-/**
- * `charCode` represents the actual "character code" and is safe to use with
- * `String.fromCharCode`. As such, only keys that correspond to printable
- * characters produce a valid `charCode`, the only exception to this is Enter.
- * The Tab-key is considered non-printable and does not have a `charCode`,
- * presumably because it does not produce a tab-character in browsers.
- *
- * @param {object} nativeEvent Native browser event.
- * @return {number} Normalized `charCode` property.
- */
-function getEventCharCode(nativeEvent) {
-  var charCode;
-  var keyCode = nativeEvent.keyCode;
-
-  if ("charCode" in nativeEvent) {
-    charCode = nativeEvent.charCode; // FF does not set `charCode` for the Enter-key, check against `keyCode`.
-
-    if (charCode === 0 && keyCode === 13) {
-      charCode = 13;
-    }
-  } else {
-    // IE8 does not implement `charCode`, but `keyCode` has the correct value.
-    charCode = keyCode;
-  } // IE and Edge (on Windows) and Chrome / Safari (on Windows and Linux)
-  // report Enter as charCode 10 when ctrl is pressed.
-
-  if (charCode === 10) {
-    charCode = 13;
-  } // Some non-printable keys are reported in `charCode`/`keyCode`, discard them.
-  // Must not discard the (non-)printable Enter-key.
-
-  if (charCode >= 32 || charCode === 13) {
-    return charCode;
-  }
-
-  return 0;
-}
-
-function functionThatReturnsTrue() {
-  return true;
-}
-
-function functionThatReturnsFalse() {
-  return false;
-} // This is intentionally a factory so that we have different returned constructors.
-// If we had a single constructor, it would be megamorphic and engines would deopt.
-
-function createSyntheticEvent(Interface) {
-  /**
-   * Synthetic events are dispatched by event plugins, typically in response to a
-   * top-level event delegation handler.
-   *
-   * These systems should generally use pooling to reduce the frequency of garbage
-   * collection. The system should check `isPersistent` to determine whether the
-   * event should be released into the pool after being dispatched. Users that
-   * need a persisted event should invoke `persist`.
-   *
-   * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
-   * normalizing browser quirks. Subclasses do not necessarily have to implement a
-   * DOM interface; custom application-specific events can also subclass this.
-   */
-  // $FlowFixMe[missing-this-annot]
-  function SyntheticBaseEvent(
-    reactName,
-    reactEventType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
-  ) {
-    this._reactName = reactName;
-    this._targetInst = targetInst;
-    this.type = reactEventType;
-    this.nativeEvent = nativeEvent;
-    this.target = nativeEventTarget;
-    this.currentTarget = null;
-
-    for (var propName in Interface) {
-      if (!Interface.hasOwnProperty(propName)) {
-        continue;
-      }
-
-      var normalize = Interface[propName];
-
-      if (normalize) {
-        this[propName] = normalize(nativeEvent);
-      } else {
-        this[propName] = nativeEvent[propName];
-      }
-    }
-
-    var defaultPrevented =
-      nativeEvent.defaultPrevented != null
-        ? nativeEvent.defaultPrevented
-        : nativeEvent.returnValue === false;
-
-    if (defaultPrevented) {
-      this.isDefaultPrevented = functionThatReturnsTrue;
-    } else {
-      this.isDefaultPrevented = functionThatReturnsFalse;
-    }
-
-    this.isPropagationStopped = functionThatReturnsFalse;
-    return this;
-  } // $FlowFixMe[prop-missing] found when upgrading Flow
-
-  assign(SyntheticBaseEvent.prototype, {
-    // $FlowFixMe[missing-this-annot]
-    preventDefault: function () {
-      this.defaultPrevented = true;
-      var event = this.nativeEvent;
-
-      if (!event) {
-        return;
-      }
-
-      if (event.preventDefault) {
-        event.preventDefault(); // $FlowFixMe - flow is not aware of `unknown` in IE
-      } else if (typeof event.returnValue !== "unknown") {
-        event.returnValue = false;
-      }
-
-      this.isDefaultPrevented = functionThatReturnsTrue;
-    },
-    // $FlowFixMe[missing-this-annot]
-    stopPropagation: function () {
-      var event = this.nativeEvent;
-
-      if (!event) {
-        return;
-      }
-
-      if (event.stopPropagation) {
-        event.stopPropagation(); // $FlowFixMe - flow is not aware of `unknown` in IE
-      } else if (typeof event.cancelBubble !== "unknown") {
-        // The ChangeEventPlugin registers a "propertychange" event for
-        // IE. This event does not support bubbling or cancelling, and
-        // any references to cancelBubble throw "Member not found".  A
-        // typeof check of "unknown" circumvents this issue (and is also
-        // IE specific).
-        event.cancelBubble = true;
-      }
-
-      this.isPropagationStopped = functionThatReturnsTrue;
-    },
-
-    /**
-     * We release all dispatched `SyntheticEvent`s after each event loop, adding
-     * them back into the pool. This allows a way to hold onto a reference that
-     * won't be added back into the pool.
-     */
-    persist: function () {
-      // Modern event system doesn't use pooling.
-    },
-
-    /**
-     * Checks if this event should be released back into the pool.
-     *
-     * @return {boolean} True if this should not be released, false otherwise.
-     */
-    isPersistent: functionThatReturnsTrue
-  });
-  return SyntheticBaseEvent;
-}
-/**
- * @interface Event
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var EventInterface = {
-  eventPhase: 0,
-  bubbles: 0,
-  cancelable: 0,
-  timeStamp: function (event) {
-    return event.timeStamp || Date.now();
-  },
-  defaultPrevented: 0,
-  isTrusted: 0
-};
-var SyntheticEvent = createSyntheticEvent(EventInterface);
-
-var UIEventInterface = assign({}, EventInterface, {
-  view: 0,
-  detail: 0
-});
-
-var SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
-var lastMovementX;
-var lastMovementY;
-var lastMouseEvent;
-
-function updateMouseMovementPolyfillState(event) {
-  if (event !== lastMouseEvent) {
-    if (lastMouseEvent && event.type === "mousemove") {
-      // $FlowFixMe assuming this is a number
-      lastMovementX = event.screenX - lastMouseEvent.screenX; // $FlowFixMe assuming this is a number
-
-      lastMovementY = event.screenY - lastMouseEvent.screenY;
-    } else {
-      lastMovementX = 0;
-      lastMovementY = 0;
-    }
-
-    lastMouseEvent = event;
-  }
-}
-/**
- * @interface MouseEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var MouseEventInterface = assign({}, UIEventInterface, {
-  screenX: 0,
-  screenY: 0,
-  clientX: 0,
-  clientY: 0,
-  pageX: 0,
-  pageY: 0,
-  ctrlKey: 0,
-  shiftKey: 0,
-  altKey: 0,
-  metaKey: 0,
-  getModifierState: getEventModifierState,
-  button: 0,
-  buttons: 0,
-  relatedTarget: function (event) {
-    if (event.relatedTarget === undefined)
-      return event.fromElement === event.srcElement
-        ? event.toElement
-        : event.fromElement;
-    return event.relatedTarget;
-  },
-  movementX: function (event) {
-    if ("movementX" in event) {
-      return event.movementX;
-    }
-
-    updateMouseMovementPolyfillState(event);
-    return lastMovementX;
-  },
-  movementY: function (event) {
-    if ("movementY" in event) {
-      return event.movementY;
-    } // Don't need to call updateMouseMovementPolyfillState() here
-    // because it's guaranteed to have already run when movementX
-    // was copied.
-
-    return lastMovementY;
-  }
-});
-
-var SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
-/**
- * @interface DragEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var DragEventInterface = assign({}, MouseEventInterface, {
-  dataTransfer: 0
-});
-
-var SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
-/**
- * @interface FocusEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var FocusEventInterface = assign({}, UIEventInterface, {
-  relatedTarget: 0
-});
-
-var SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
-/**
- * @interface Event
- * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
- * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
- */
-
-var AnimationEventInterface = assign({}, EventInterface, {
-  animationName: 0,
-  elapsedTime: 0,
-  pseudoElement: 0
-});
-
-var SyntheticAnimationEvent = createSyntheticEvent(AnimationEventInterface);
-/**
- * @interface Event
- * @see http://www.w3.org/TR/clipboard-apis/
- */
-
-var ClipboardEventInterface = assign({}, EventInterface, {
-  clipboardData: function (event) {
-    return "clipboardData" in event
-      ? event.clipboardData
-      : window.clipboardData;
-  }
-});
-
-var SyntheticClipboardEvent = createSyntheticEvent(ClipboardEventInterface);
-/**
- * @interface Event
- * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
- */
-
-var CompositionEventInterface = assign({}, EventInterface, {
-  data: 0
-});
-
-var SyntheticCompositionEvent = createSyntheticEvent(CompositionEventInterface);
-/**
- * @interface Event
- * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
- *      /#events-inputevents
- */
-// Happens to share the same list for now.
-
-var SyntheticInputEvent = SyntheticCompositionEvent;
-/**
- * Normalization of deprecated HTML5 `key` values
- * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
- */
-
-var normalizeKey = {
-  Esc: "Escape",
-  Spacebar: " ",
-  Left: "ArrowLeft",
-  Up: "ArrowUp",
-  Right: "ArrowRight",
-  Down: "ArrowDown",
-  Del: "Delete",
-  Win: "OS",
-  Menu: "ContextMenu",
-  Apps: "ContextMenu",
-  Scroll: "ScrollLock",
-  MozPrintableKey: "Unidentified"
-};
-/**
- * Translation from legacy `keyCode` to HTML5 `key`
- * Only special keys supported, all others depend on keyboard layout or browser
- * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
- */
-
-var translateToKey = {
-  "8": "Backspace",
-  "9": "Tab",
-  "12": "Clear",
-  "13": "Enter",
-  "16": "Shift",
-  "17": "Control",
-  "18": "Alt",
-  "19": "Pause",
-  "20": "CapsLock",
-  "27": "Escape",
-  "32": " ",
-  "33": "PageUp",
-  "34": "PageDown",
-  "35": "End",
-  "36": "Home",
-  "37": "ArrowLeft",
-  "38": "ArrowUp",
-  "39": "ArrowRight",
-  "40": "ArrowDown",
-  "45": "Insert",
-  "46": "Delete",
-  "112": "F1",
-  "113": "F2",
-  "114": "F3",
-  "115": "F4",
-  "116": "F5",
-  "117": "F6",
-  "118": "F7",
-  "119": "F8",
-  "120": "F9",
-  "121": "F10",
-  "122": "F11",
-  "123": "F12",
-  "144": "NumLock",
-  "145": "ScrollLock",
-  "224": "Meta"
-};
-/**
- * @param {object} nativeEvent Native browser event.
- * @return {string} Normalized `key` property.
- */
-
-function getEventKey(nativeEvent) {
-  if (nativeEvent.key) {
-    // Normalize inconsistent values reported by browsers due to
-    // implementations of a working draft specification.
-    // FireFox implements `key` but returns `MozPrintableKey` for all
-    // printable characters (normalized to `Unidentified`), ignore it.
-    var key = normalizeKey[nativeEvent.key] || nativeEvent.key; // $FlowFixMe unable to index with a `mixed` value
-
-    if (key !== "Unidentified") {
-      return key;
-    }
-  } // Browser does not implement `key`, polyfill as much of it as we can.
-
-  if (nativeEvent.type === "keypress") {
-    var charCode = getEventCharCode(
-      // $FlowFixMe unable to narrow to `KeyboardEvent`
-      nativeEvent
-    ); // The enter-key is technically both printable and non-printable and can
-    // thus be captured by `keypress`, no other non-printable key should.
-
-    return charCode === 13 ? "Enter" : String.fromCharCode(charCode);
-  }
-
-  if (nativeEvent.type === "keydown" || nativeEvent.type === "keyup") {
-    // While user keyboard layout determines the actual meaning of each
-    // `keyCode` value, almost all function keys have a universal value.
-    // $FlowFixMe unable to index with a `mixed` value
-    return translateToKey[nativeEvent.keyCode] || "Unidentified";
-  }
-
-  return "";
-}
-/**
- * Translation from modifier key to the associated property in the event.
- * @see http://www.w3.org/TR/DOM-Level-3-Events/#keys-Modifiers
- */
-
-var modifierKeyToProp = {
-  Alt: "altKey",
-  Control: "ctrlKey",
-  Meta: "metaKey",
-  Shift: "shiftKey"
-}; // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
-// getModifierState. If getModifierState is not supported, we map it to a set of
-// modifier keys exposed by the event. In this case, Lock-keys are not supported.
-// $FlowFixMe[missing-local-annot]
-// $FlowFixMe[missing-this-annot]
-
-function modifierStateGetter(keyArg) {
-  var syntheticEvent = this;
-  var nativeEvent = syntheticEvent.nativeEvent;
-
-  if (nativeEvent.getModifierState) {
-    return nativeEvent.getModifierState(keyArg);
-  }
-
-  var keyProp = modifierKeyToProp[keyArg];
-  return keyProp ? !!nativeEvent[keyProp] : false;
-}
-
-function getEventModifierState(nativeEvent) {
-  return modifierStateGetter;
-}
-/**
- * @interface KeyboardEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var KeyboardEventInterface = assign({}, UIEventInterface, {
-  key: getEventKey,
-  code: 0,
-  location: 0,
-  ctrlKey: 0,
-  shiftKey: 0,
-  altKey: 0,
-  metaKey: 0,
-  repeat: 0,
-  locale: 0,
-  getModifierState: getEventModifierState,
-  // Legacy Interface
-  charCode: function (event) {
-    // `charCode` is the result of a KeyPress event and represents the value of
-    // the actual printable character.
-    // KeyPress is deprecated, but its replacement is not yet final and not
-    // implemented in any major browser. Only KeyPress has charCode.
-    if (event.type === "keypress") {
-      return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
-        event
-      );
-    }
-
-    return 0;
-  },
-  keyCode: function (event) {
-    // `keyCode` is the result of a KeyDown/Up event and represents the value of
-    // physical keyboard key.
-    // The actual meaning of the value depends on the users' keyboard layout
-    // which cannot be detected. Assuming that it is a US keyboard layout
-    // provides a surprisingly accurate mapping for US and European users.
-    // Due to this, it is left to the user to implement at this time.
-    if (event.type === "keydown" || event.type === "keyup") {
-      return event.keyCode;
-    }
-
-    return 0;
-  },
-  which: function (event) {
-    // `which` is an alias for either `keyCode` or `charCode` depending on the
-    // type of the event.
-    if (event.type === "keypress") {
-      return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
-        event
-      );
-    }
-
-    if (event.type === "keydown" || event.type === "keyup") {
-      return event.keyCode;
-    }
-
-    return 0;
-  }
-});
-
-var SyntheticKeyboardEvent = createSyntheticEvent(KeyboardEventInterface);
-/**
- * @interface PointerEvent
- * @see http://www.w3.org/TR/pointerevents/
- */
-
-var PointerEventInterface = assign({}, MouseEventInterface, {
-  pointerId: 0,
-  width: 0,
-  height: 0,
-  pressure: 0,
-  tangentialPressure: 0,
-  tiltX: 0,
-  tiltY: 0,
-  twist: 0,
-  pointerType: 0,
-  isPrimary: 0
-});
-
-var SyntheticPointerEvent = createSyntheticEvent(PointerEventInterface);
-/**
- * @interface TouchEvent
- * @see http://www.w3.org/TR/touch-events/
- */
-
-var TouchEventInterface = assign({}, UIEventInterface, {
-  touches: 0,
-  targetTouches: 0,
-  changedTouches: 0,
-  altKey: 0,
-  metaKey: 0,
-  ctrlKey: 0,
-  shiftKey: 0,
-  getModifierState: getEventModifierState
-});
-
-var SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
-/**
- * @interface Event
- * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
- * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
- */
-
-var TransitionEventInterface = assign({}, EventInterface, {
-  propertyName: 0,
-  elapsedTime: 0,
-  pseudoElement: 0
-});
-
-var SyntheticTransitionEvent = createSyntheticEvent(TransitionEventInterface);
-/**
- * @interface WheelEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-
-var WheelEventInterface = assign({}, MouseEventInterface, {
-  deltaX: function (event) {
-    return "deltaX" in event
-      ? event.deltaX // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-      : "wheelDeltaX" in event // $FlowFixMe assuming this is a number
-      ? -event.wheelDeltaX
-      : 0;
-  },
-  deltaY: function (event) {
-    return "deltaY" in event
-      ? event.deltaY // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      : "wheelDeltaY" in event // $FlowFixMe assuming this is a number
-      ? -event.wheelDeltaY // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      : "wheelDelta" in event // $FlowFixMe assuming this is a number
-      ? -event.wheelDelta
-      : 0;
-  },
-  deltaZ: 0,
-  // Browsers without "deltaMode" is reporting in raw wheel delta where one
-  // notch on the scroll is always +/- 120, roughly equivalent to pixels.
-  // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
-  // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
-  deltaMode: 0
-});
-
-var SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
-
-var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
-
-var START_KEYCODE = 229;
-var canUseCompositionEvent = canUseDOM && "CompositionEvent" in window;
-var documentMode = null;
-
-if (canUseDOM && "documentMode" in document) {
-  documentMode = document.documentMode;
-} // Webkit offers a very useful `textInput` event that can be used to
-// directly represent `beforeInput`. The IE `textinput` event is not as
-// useful, so we don't use it.
-
-var canUseTextInputEvent = canUseDOM && "TextEvent" in window && !documentMode; // In IE9+, we have access to composition events, but the data supplied
-// by the native compositionend event may be incorrect. Japanese ideographic
-// spaces, for instance (\u3000) are not recorded correctly.
-
-var useFallbackCompositionData =
-  canUseDOM &&
-  (!canUseCompositionEvent ||
-    (documentMode && documentMode > 8 && documentMode <= 11));
-var SPACEBAR_CODE = 32;
-var SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
-
-function registerEvents$3() {
-  registerTwoPhaseEvent("onBeforeInput", [
-    "compositionend",
-    "keypress",
-    "textInput",
-    "paste"
-  ]);
-  registerTwoPhaseEvent("onCompositionEnd", [
-    "compositionend",
-    "focusout",
-    "keydown",
-    "keypress",
-    "keyup",
-    "mousedown"
-  ]);
-  registerTwoPhaseEvent("onCompositionStart", [
-    "compositionstart",
-    "focusout",
-    "keydown",
-    "keypress",
-    "keyup",
-    "mousedown"
-  ]);
-  registerTwoPhaseEvent("onCompositionUpdate", [
-    "compositionupdate",
-    "focusout",
-    "keydown",
-    "keypress",
-    "keyup",
-    "mousedown"
-  ]);
-} // Track whether we've ever handled a keypress on the space key.
-
-var hasSpaceKeypress = false;
-/**
- * Return whether a native keypress event is assumed to be a command.
- * This is required because Firefox fires `keypress` events for key commands
- * (cut, copy, select-all, etc.) even though no character is inserted.
- */
-
-function isKeypressCommand(nativeEvent) {
-  return (
-    (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) && // ctrlKey && altKey is equivalent to AltGr, and is not a command.
-    !(nativeEvent.ctrlKey && nativeEvent.altKey)
-  );
-}
-/**
- * Translate native top level events into event types.
- */
-
-function getCompositionEventType(domEventName) {
-  switch (domEventName) {
-    case "compositionstart":
-      return "onCompositionStart";
-
-    case "compositionend":
-      return "onCompositionEnd";
-
-    case "compositionupdate":
-      return "onCompositionUpdate";
-  }
-}
-/**
- * Does our fallback best-guess model think this event signifies that
- * composition has begun?
- */
-
-function isFallbackCompositionStart(domEventName, nativeEvent) {
-  return domEventName === "keydown" && nativeEvent.keyCode === START_KEYCODE;
-}
-/**
- * Does our fallback mode think that this event is the end of composition?
- */
-
-function isFallbackCompositionEnd(domEventName, nativeEvent) {
-  switch (domEventName) {
-    case "keyup":
-      // Command keys insert or clear IME input.
-      return END_KEYCODES.indexOf(nativeEvent.keyCode) !== -1;
-
-    case "keydown":
-      // Expect IME keyCode on each keydown. If we get any other
-      // code we must have exited earlier.
-      return nativeEvent.keyCode !== START_KEYCODE;
-
-    case "keypress":
-    case "mousedown":
-    case "focusout":
-      // Events are not possible without cancelling IME.
-      return true;
-
-    default:
-      return false;
-  }
-}
-/**
- * Google Input Tools provides composition data via a CustomEvent,
- * with the `data` property populated in the `detail` object. If this
- * is available on the event object, use it. If not, this is a plain
- * composition event and we have nothing special to extract.
- *
- * @param {object} nativeEvent
- * @return {?string}
- */
-
-function getDataFromCustomEvent(nativeEvent) {
-  var detail = nativeEvent.detail;
-
-  if (typeof detail === "object" && "data" in detail) {
-    return detail.data;
-  }
-
-  return null;
-}
-/**
- * Check if a composition event was triggered by Korean IME.
- * Our fallback mode does not work well with IE's Korean IME,
- * so just use native composition events when Korean IME is used.
- * Although CompositionEvent.locale property is deprecated,
- * it is available in IE, where our fallback mode is enabled.
- *
- * @param {object} nativeEvent
- * @return {boolean}
- */
-
-function isUsingKoreanIME(nativeEvent) {
-  return nativeEvent.locale === "ko";
-} // Track the current IME composition status, if any.
-
-var isComposing = false;
-/**
- * @return {?object} A SyntheticCompositionEvent.
- */
-
-function extractCompositionEvent(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget
-) {
-  var eventType;
-  var fallbackData;
-
-  if (canUseCompositionEvent) {
-    eventType = getCompositionEventType(domEventName);
-  } else if (!isComposing) {
-    if (isFallbackCompositionStart(domEventName, nativeEvent)) {
-      eventType = "onCompositionStart";
-    }
-  } else if (isFallbackCompositionEnd(domEventName, nativeEvent)) {
-    eventType = "onCompositionEnd";
-  }
-
-  if (!eventType) {
-    return null;
-  }
-
-  if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
-    // The current composition is stored statically and must not be
-    // overwritten while composition continues.
-    if (!isComposing && eventType === "onCompositionStart") {
-      isComposing = initialize(nativeEventTarget);
-    } else if (eventType === "onCompositionEnd") {
-      if (isComposing) {
-        fallbackData = getData();
-      }
-    }
-  }
-
-  var listeners = accumulateTwoPhaseListeners(targetInst, eventType);
-
-  if (listeners.length > 0) {
-    var event = new SyntheticCompositionEvent(
-      eventType,
-      domEventName,
-      null,
-      nativeEvent,
-      nativeEventTarget
-    );
-    dispatchQueue.push({
-      event: event,
-      listeners: listeners
-    });
-
-    if (fallbackData) {
-      // Inject data generated from fallback path into the synthetic event.
-      // This matches the property of native CompositionEventInterface.
-      // $FlowFixMe[incompatible-use]
-      event.data = fallbackData;
-    } else {
-      var customData = getDataFromCustomEvent(nativeEvent);
-
-      if (customData !== null) {
-        // $FlowFixMe[incompatible-use]
-        event.data = customData;
-      }
-    }
-  }
-}
-
-function getNativeBeforeInputChars(domEventName, nativeEvent) {
-  switch (domEventName) {
-    case "compositionend":
-      return getDataFromCustomEvent(nativeEvent);
-
-    case "keypress":
-      /**
-       * If native `textInput` events are available, our goal is to make
-       * use of them. However, there is a special case: the spacebar key.
-       * In Webkit, preventing default on a spacebar `textInput` event
-       * cancels character insertion, but it *also* causes the browser
-       * to fall back to its default spacebar behavior of scrolling the
-       * page.
-       *
-       * Tracking at:
-       * https://code.google.com/p/chromium/issues/detail?id=355103
-       *
-       * To avoid this issue, use the keypress event as if no `textInput`
-       * event is available.
-       */
-      var which = nativeEvent.which;
-
-      if (which !== SPACEBAR_CODE) {
-        return null;
-      }
-
-      hasSpaceKeypress = true;
-      return SPACEBAR_CHAR;
-
-    case "textInput":
-      // Record the characters to be added to the DOM.
-      var chars = nativeEvent.data; // If it's a spacebar character, assume that we have already handled
-      // it at the keypress level and bail immediately. Android Chrome
-      // doesn't give us keycodes, so we need to ignore it.
-
-      if (chars === SPACEBAR_CHAR && hasSpaceKeypress) {
-        return null;
-      }
-
-      return chars;
-
-    default:
-      // For other native event types, do nothing.
-      return null;
-  }
-}
-/**
- * For browsers that do not provide the `textInput` event, extract the
- * appropriate string to use for SyntheticInputEvent.
- */
-
-function getFallbackBeforeInputChars(domEventName, nativeEvent) {
-  // If we are currently composing (IME) and using a fallback to do so,
-  // try to extract the composed characters from the fallback object.
-  // If composition event is available, we extract a string only at
-  // compositionevent, otherwise extract it at fallback events.
-  if (isComposing) {
-    if (
-      domEventName === "compositionend" ||
-      (!canUseCompositionEvent &&
-        isFallbackCompositionEnd(domEventName, nativeEvent))
-    ) {
-      var chars = getData();
-      reset();
-      isComposing = false;
-      return chars;
-    }
-
-    return null;
-  }
-
-  switch (domEventName) {
-    case "paste":
-      // If a paste event occurs after a keypress, throw out the input
-      // chars. Paste events should not lead to BeforeInput events.
-      return null;
-
-    case "keypress":
-      /**
-       * As of v27, Firefox may fire keypress events even when no character
-       * will be inserted. A few possibilities:
-       *
-       * - `which` is `0`. Arrow keys, Esc key, etc.
-       *
-       * - `which` is the pressed key code, but no char is available.
-       *   Ex: 'AltGr + d` in Polish. There is no modified character for
-       *   this key combination and no character is inserted into the
-       *   document, but FF fires the keypress for char code `100` anyway.
-       *   No `input` event will occur.
-       *
-       * - `which` is the pressed key code, but a command combination is
-       *   being used. Ex: `Cmd+C`. No character is inserted, and no
-       *   `input` event will occur.
-       */
-      if (!isKeypressCommand(nativeEvent)) {
-        // IE fires the `keypress` event when a user types an emoji via
-        // Touch keyboard of Windows.  In such a case, the `char` property
-        // holds an emoji character like `\uD83D\uDE0A`.  Because its length
-        // is 2, the property `which` does not represent an emoji correctly.
-        // In such a case, we directly return the `char` property instead of
-        // using `which`.
-        if (nativeEvent.char && nativeEvent.char.length > 1) {
-          return nativeEvent.char;
-        } else if (nativeEvent.which) {
-          return String.fromCharCode(nativeEvent.which);
-        }
-      }
-
-      return null;
-
-    case "compositionend":
-      return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
-        ? null
-        : nativeEvent.data;
-
-    default:
-      return null;
-  }
-}
-/**
- * Extract a SyntheticInputEvent for `beforeInput`, based on either native
- * `textInput` or fallback behavior.
- *
- * @return {?object} A SyntheticInputEvent.
- */
-
-function extractBeforeInputEvent(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget
-) {
-  var chars;
-
-  if (canUseTextInputEvent) {
-    chars = getNativeBeforeInputChars(domEventName, nativeEvent);
-  } else {
-    chars = getFallbackBeforeInputChars(domEventName, nativeEvent);
-  } // If no characters are being inserted, no BeforeInput event should
-  // be fired.
-
-  if (!chars) {
-    return null;
-  }
-
-  var listeners = accumulateTwoPhaseListeners(targetInst, "onBeforeInput");
-
-  if (listeners.length > 0) {
-    var event = new SyntheticInputEvent(
-      "onBeforeInput",
-      "beforeinput",
-      null,
-      nativeEvent,
-      nativeEventTarget
-    );
-    dispatchQueue.push({
-      event: event,
-      listeners: listeners
-    }); // $FlowFixMe[incompatible-use]
-
-    event.data = chars;
-  }
-}
-/**
- * Create an `onBeforeInput` event to match
- * http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105/#events-inputevents.
- *
- * This event plugin is based on the native `textInput` event
- * available in Chrome, Safari, Opera, and IE. This event fires after
- * `onKeyPress` and `onCompositionEnd`, but before `onInput`.
- *
- * `beforeInput` is spec'd but not implemented in any browsers, and
- * the `input` event does not provide any useful information about what has
- * actually been added, contrary to the spec. Thus, `textInput` is the best
- * available event to identify the characters that have actually been inserted
- * into the target node.
- *
- * This plugin is also responsible for emitting `composition` events, thus
- * allowing us to share composition fallback code for both `beforeInput` and
- * `composition` event types.
- */
-
-function extractEvents$5(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  extractCompositionEvent(
-    dispatchQueue,
-    domEventName,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
-  );
-  extractBeforeInputEvent(
-    dispatchQueue,
-    domEventName,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
-  );
-}
-
-/**
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
- */
-var supportedInputTypes = {
-  color: true,
-  date: true,
-  datetime: true,
-  "datetime-local": true,
-  email: true,
-  month: true,
-  number: true,
-  password: true,
-  range: true,
-  search: true,
-  tel: true,
-  text: true,
-  time: true,
-  url: true,
-  week: true
-};
-
-function isTextInputElement(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-
-  if (nodeName === "input") {
-    return !!supportedInputTypes[elem.type];
-  }
-
-  if (nodeName === "textarea") {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Checks if an event is supported in the current execution environment.
- *
- * NOTE: This will not work correctly for non-generic events such as `change`,
- * `reset`, `load`, `error`, and `select`.
- *
- * Borrows from Modernizr.
- *
- * @param {string} eventNameSuffix Event name, e.g. "click".
- * @return {boolean} True if the event is supported.
- * @internal
- * @license Modernizr 3.0.0pre (Custom Build) | MIT
- */
-
-function isEventSupported(eventNameSuffix) {
-  if (!canUseDOM) {
-    return false;
-  }
-
-  var eventName = "on" + eventNameSuffix;
-  var isSupported = eventName in document;
-
-  if (!isSupported) {
-    var element = document.createElement("div");
-    element.setAttribute(eventName, "return;");
-    isSupported = typeof element[eventName] === "function";
-  }
-
-  return isSupported;
-}
-
-function registerEvents$2() {
-  registerTwoPhaseEvent("onChange", [
-    "change",
-    "click",
-    "focusin",
-    "focusout",
-    "input",
-    "keydown",
-    "keyup",
-    "selectionchange"
-  ]);
-}
-
-function createAndAccumulateChangeEvent(
-  dispatchQueue,
-  inst,
-  nativeEvent,
-  target
-) {
-  // Flag this event loop as needing state restore.
-  enqueueStateRestore(target);
-  var listeners = accumulateTwoPhaseListeners(inst, "onChange");
-
-  if (listeners.length > 0) {
-    var event = new SyntheticEvent(
-      "onChange",
-      "change",
-      null,
-      nativeEvent,
-      target
-    );
-    dispatchQueue.push({
-      event: event,
-      listeners: listeners
-    });
-  }
-}
-/**
- * For IE shims
- */
-
-var activeElement$1 = null;
-var activeElementInst$1 = null;
-/**
- * SECTION: handle `change` event
- */
-
-function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
-  return (
-    nodeName === "select" || (nodeName === "input" && elem.type === "file")
-  );
-}
-
-function manualDispatchChangeEvent(nativeEvent) {
-  var dispatchQueue = [];
-  createAndAccumulateChangeEvent(
-    dispatchQueue,
-    activeElementInst$1,
-    nativeEvent,
-    getEventTarget(nativeEvent)
-  ); // If change and propertychange bubbled, we'd just bind to it like all the
-  // other events and have it go through ReactBrowserEventEmitter. Since it
-  // doesn't, we manually listen for the events and so we have to enqueue and
-  // process the abstract event manually.
-  //
-  // Batching is necessary here in order to ensure that all event handlers run
-  // before the next rerender (including event handlers attached to ancestor
-  // elements instead of directly on the input). Without this, controlled
-  // components don't work properly in conjunction with event bubbling because
-  // the component is rerendered and the value reverted before all the event
-  // handlers can run. See https://github.com/facebook/react/issues/708.
-
-  batchedUpdates$1(runEventInBatch, dispatchQueue);
-}
-
-function runEventInBatch(dispatchQueue) {
-  processDispatchQueue(dispatchQueue, 0);
-}
-
-function getInstIfValueChanged(targetInst) {
-  var targetNode = getNodeFromInstance(targetInst);
-
-  if (updateValueIfChanged(targetNode)) {
-    return targetInst;
-  }
-}
-
-function getTargetInstForChangeEvent(domEventName, targetInst) {
-  if (domEventName === "change") {
-    return targetInst;
-  }
-}
-/**
- * SECTION: handle `input` event
- */
-
-var isInputEventSupported = false;
-
-if (canUseDOM) {
-  // IE9 claims to support the input event but fails to trigger it when
-  // deleting text, so we ignore its input events.
-  isInputEventSupported =
-    isEventSupported("input") &&
-    (!document.documentMode || document.documentMode > 9);
-}
-/**
- * (For IE <=9) Starts tracking propertychange events on the passed-in element
- * and override the value property so that we can distinguish user events from
- * value changes in JS.
- */
-
-function startWatchingForValueChange(target, targetInst) {
-  activeElement$1 = target;
-  activeElementInst$1 = targetInst;
-  activeElement$1.attachEvent("onpropertychange", handlePropertyChange);
-}
-/**
- * (For IE <=9) Removes the event listeners from the currently-tracked element,
- * if any exists.
- */
-
-function stopWatchingForValueChange() {
-  if (!activeElement$1) {
-    return;
-  }
-
-  activeElement$1.detachEvent("onpropertychange", handlePropertyChange);
-  activeElement$1 = null;
-  activeElementInst$1 = null;
-}
-/**
- * (For IE <=9) Handles a propertychange event, sending a `change` event if
- * the value of the active element has changed.
- */
-// $FlowFixMe[missing-local-annot]
-
-function handlePropertyChange(nativeEvent) {
-  if (nativeEvent.propertyName !== "value") {
-    return;
-  }
-
-  if (getInstIfValueChanged(activeElementInst$1)) {
-    manualDispatchChangeEvent(nativeEvent);
-  }
-}
-
-function handleEventsForInputEventPolyfill(domEventName, target, targetInst) {
-  if (domEventName === "focusin") {
-    // In IE9, propertychange fires for most input events but is buggy and
-    // doesn't fire when text is deleted, but conveniently, selectionchange
-    // appears to fire in all of the remaining cases so we catch those and
-    // forward the event if the value has changed
-    // In either case, we don't want to call the event handler if the value
-    // is changed from JS so we redefine a setter for `.value` that updates
-    // our activeElementValue variable, allowing us to ignore those changes
-    //
-    // stopWatching() should be a noop here but we call it just in case we
-    // missed a blur event somehow.
-    stopWatchingForValueChange();
-    startWatchingForValueChange(target, targetInst);
-  } else if (domEventName === "focusout") {
-    stopWatchingForValueChange();
-  }
-} // For IE8 and IE9.
-
-function getTargetInstForInputEventPolyfill(domEventName, targetInst) {
-  if (
-    domEventName === "selectionchange" ||
-    domEventName === "keyup" ||
-    domEventName === "keydown"
-  ) {
-    // On the selectionchange event, the target is just document which isn't
-    // helpful for us so just check activeElement instead.
-    //
-    // 99% of the time, keydown and keyup aren't necessary. IE8 fails to fire
-    // propertychange on the first input event after setting `value` from a
-    // script and fires only keydown, keypress, keyup. Catching keyup usually
-    // gets it and catching keydown lets us fire an event for the first
-    // keystroke if user does a key repeat (it'll be a little delayed: right
-    // before the second keystroke). Other input methods (e.g., paste) seem to
-    // fire selectionchange normally.
-    return getInstIfValueChanged(activeElementInst$1);
-  }
-}
-/**
- * SECTION: handle `click` event
- */
-
-function shouldUseClickEvent(elem) {
-  // Use the `click` event to detect changes to checkbox and radio inputs.
-  // This approach works across all browsers, whereas `change` does not fire
-  // until `blur` in IE8.
-  var nodeName = elem.nodeName;
-  return (
-    nodeName &&
-    nodeName.toLowerCase() === "input" &&
-    (elem.type === "checkbox" || elem.type === "radio")
-  );
-}
-
-function getTargetInstForClickEvent(domEventName, targetInst) {
-  if (domEventName === "click") {
-    return getInstIfValueChanged(targetInst);
-  }
-}
-
-function getTargetInstForInputOrChangeEvent(domEventName, targetInst) {
-  if (domEventName === "input" || domEventName === "change") {
-    return getInstIfValueChanged(targetInst);
-  }
-}
-
-function handleControlledInputBlur(node) {
-  var state = node._wrapperState;
-
-  if (!state || !state.controlled || node.type !== "number") {
-    return;
-  }
-
-  if (!disableInputAttributeSyncing) {
-    // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue(node, "number", node.value);
-  }
-}
-/**
- * This plugin creates an `onChange` event that normalizes change events
- * across form elements. This event fires at a time when it's possible to
- * change the element's value without seeing a flicker.
- *
- * Supported elements are:
- * - input (see `isTextInputElement`)
- * - textarea
- * - select
- */
-
-function extractEvents$4(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
-  var getTargetInstFunc, handleEventFunc;
-
-  if (shouldUseChangeEvent(targetNode)) {
-    getTargetInstFunc = getTargetInstForChangeEvent;
-  } else if (isTextInputElement(targetNode)) {
-    if (isInputEventSupported) {
-      getTargetInstFunc = getTargetInstForInputOrChangeEvent;
-    } else {
-      getTargetInstFunc = getTargetInstForInputEventPolyfill;
-      handleEventFunc = handleEventsForInputEventPolyfill;
-    }
-  } else if (shouldUseClickEvent(targetNode)) {
-    getTargetInstFunc = getTargetInstForClickEvent;
-  } else if (
-    enableCustomElementPropertySupport &&
-    targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
-  ) {
-    getTargetInstFunc = getTargetInstForChangeEvent;
-  }
-
-  if (getTargetInstFunc) {
-    var inst = getTargetInstFunc(domEventName, targetInst);
-
-    if (inst) {
-      createAndAccumulateChangeEvent(
-        dispatchQueue,
-        inst,
-        nativeEvent,
-        nativeEventTarget
-      );
-      return;
-    }
-  }
-
-  if (handleEventFunc) {
-    handleEventFunc(domEventName, targetNode, targetInst);
-  } // When blurring, set the value attribute for number inputs
-
-  if (domEventName === "focusout") {
-    handleControlledInputBlur(targetNode);
-  }
-}
-
-function registerEvents$1() {
-  registerDirectEvent("onMouseEnter", ["mouseout", "mouseover"]);
-  registerDirectEvent("onMouseLeave", ["mouseout", "mouseover"]);
-  registerDirectEvent("onPointerEnter", ["pointerout", "pointerover"]);
-  registerDirectEvent("onPointerLeave", ["pointerout", "pointerover"]);
-}
-/**
- * For almost every interaction we care about, there will be both a top-level
- * `mouseover` and `mouseout` event that occurs. Only use `mouseout` so that
- * we do not extract duplicate events. However, moving the mouse into the
- * browser from outside will not fire a `mouseout` event. In this case, we use
- * the `mouseover` top-level event.
- */
-
-function extractEvents$3(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  var isOverEvent =
-    domEventName === "mouseover" || domEventName === "pointerover";
-  var isOutEvent = domEventName === "mouseout" || domEventName === "pointerout";
-
-  if (isOverEvent && !isReplayingEvent(nativeEvent)) {
-    // If this is an over event with a target, we might have already dispatched
-    // the event in the out event of the other target. If this is replayed,
-    // then it's because we couldn't dispatch against this target previously
-    // so we have to do it now instead.
-    var related = nativeEvent.relatedTarget || nativeEvent.fromElement;
-
-    if (related) {
-      // If the related node is managed by React, we can assume that we have
-      // already dispatched the corresponding events during its mouseout.
-      if (
-        getClosestInstanceFromNode(related) ||
-        isContainerMarkedAsRoot(related)
-      ) {
-        return;
-      }
-    }
-  }
-
-  if (!isOutEvent && !isOverEvent) {
-    // Must not be a mouse or pointer in or out - ignoring.
-    return;
-  }
-
-  var win; // TODO: why is this nullable in the types but we read from it?
-
-  if (nativeEventTarget.window === nativeEventTarget) {
-    // `nativeEventTarget` is probably a window object.
-    win = nativeEventTarget;
-  } else {
-    // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-    var doc = nativeEventTarget.ownerDocument;
-
-    if (doc) {
-      win = doc.defaultView || doc.parentWindow;
-    } else {
-      win = window;
-    }
-  }
-
-  var from;
-  var to;
-
-  if (isOutEvent) {
-    var _related = nativeEvent.relatedTarget || nativeEvent.toElement;
-
-    from = targetInst;
-    to = _related ? getClosestInstanceFromNode(_related) : null;
-
-    if (to !== null) {
-      var nearestMounted = getNearestMountedFiber(to);
-      var tag = to.tag;
-
-      if (
-        to !== nearestMounted ||
-        (tag !== HostComponent && tag !== HostSingleton && tag !== HostText)
-      ) {
-        to = null;
-      }
-    }
-  } else {
-    // Moving to a node from outside the window.
-    from = null;
-    to = targetInst;
-  }
-
-  if (from === to) {
-    // Nothing pertains to our managed components.
-    return;
-  }
-
-  var SyntheticEventCtor = SyntheticMouseEvent;
-  var leaveEventType = "onMouseLeave";
-  var enterEventType = "onMouseEnter";
-  var eventTypePrefix = "mouse";
-
-  if (domEventName === "pointerout" || domEventName === "pointerover") {
-    SyntheticEventCtor = SyntheticPointerEvent;
-    leaveEventType = "onPointerLeave";
-    enterEventType = "onPointerEnter";
-    eventTypePrefix = "pointer";
-  }
-
-  var fromNode = from == null ? win : getNodeFromInstance(from);
-  var toNode = to == null ? win : getNodeFromInstance(to);
-  var leave = new SyntheticEventCtor(
-    leaveEventType,
-    eventTypePrefix + "leave",
-    from,
-    nativeEvent,
-    nativeEventTarget
-  );
-  leave.target = fromNode;
-  leave.relatedTarget = toNode;
-  var enter = null; // We should only process this nativeEvent if we are processing
-  // the first ancestor. Next time, we will ignore the event.
-
-  var nativeTargetInst = getClosestInstanceFromNode(nativeEventTarget);
-
-  if (nativeTargetInst === targetInst) {
-    var enterEvent = new SyntheticEventCtor(
-      enterEventType,
-      eventTypePrefix + "enter",
-      to,
-      nativeEvent,
-      nativeEventTarget
-    );
-    enterEvent.target = toNode;
-    enterEvent.relatedTarget = fromNode;
-    enter = enterEvent;
-  }
-
-  accumulateEnterLeaveTwoPhaseListeners(dispatchQueue, leave, enter, from, to);
-}
-
-/**
- * inlined Object.is polyfill to avoid requiring consumers ship their own
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
- */
-function is(x, y) {
-  return (
-    (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y) // eslint-disable-line no-self-compare
-  );
-}
-
-var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
-
-/**
- * Performs equality by iterating through keys on an object and returning false
- * when any key has values which are not strictly equal between the arguments.
- * Returns true when the values of all keys are strictly equal.
- */
-
-function shallowEqual(objA, objB) {
-  if (objectIs(objA, objB)) {
-    return true;
-  }
-
-  if (
-    typeof objA !== "object" ||
-    objA === null ||
-    typeof objB !== "object" ||
-    objB === null
-  ) {
-    return false;
-  }
-
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  } // Test for A's keys different from B.
-
-  for (var i = 0; i < keysA.length; i++) {
-    var currentKey = keysA[i];
-
-    if (
-      !hasOwnProperty.call(objB, currentKey) ||
-      !objectIs(objA[currentKey], objB[currentKey])
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-var skipSelectionChangeEvent =
-  canUseDOM && "documentMode" in document && document.documentMode <= 11;
-
-function registerEvents() {
-  registerTwoPhaseEvent("onSelect", [
-    "focusout",
-    "contextmenu",
-    "dragend",
-    "focusin",
-    "keydown",
-    "keyup",
-    "mousedown",
-    "mouseup",
-    "selectionchange"
-  ]);
-}
-
-var activeElement = null;
-var activeElementInst = null;
-var lastSelection = null;
-var mouseDown = false;
-/**
- * Get an object which is a unique representation of the current selection.
- *
- * The return value will not be consistent across nodes or browsers, but
- * two identical selections on the same node will return identical objects.
- */
-
-function getSelection(node) {
-  if ("selectionStart" in node && hasSelectionCapabilities(node)) {
-    return {
-      start: node.selectionStart,
-      end: node.selectionEnd
-    };
-  } else {
-    var win = (node.ownerDocument && node.ownerDocument.defaultView) || window;
-    var selection = win.getSelection();
-    return {
-      anchorNode: selection.anchorNode,
-      anchorOffset: selection.anchorOffset,
-      focusNode: selection.focusNode,
-      focusOffset: selection.focusOffset
-    };
-  }
-}
-/**
- * Get document associated with the event target.
- */
-
-function getEventTargetDocument(eventTarget) {
-  return eventTarget.window === eventTarget
-    ? eventTarget.document
-    : eventTarget.nodeType === DOCUMENT_NODE
-    ? eventTarget
-    : eventTarget.ownerDocument;
-}
-/**
- * Poll selection to see whether it's changed.
- *
- * @param {object} nativeEvent
- * @param {object} nativeEventTarget
- * @return {?SyntheticEvent}
- */
-
-function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
-  // Ensure we have the right element, and that the user is not dragging a
-  // selection (this matches native `select` event behavior). In HTML5, select
-  // fires only on input and textarea thus if there's no focused element we
-  // won't dispatch.
-  var doc = getEventTargetDocument(nativeEventTarget);
-
-  if (
-    mouseDown ||
-    activeElement == null ||
-    activeElement !== getActiveElement(doc)
-  ) {
-    return;
-  } // Only fire when selection has actually changed.
-
-  var currentSelection = getSelection(activeElement);
-
-  if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
-    lastSelection = currentSelection;
-    var listeners = accumulateTwoPhaseListeners(activeElementInst, "onSelect");
-
-    if (listeners.length > 0) {
-      var event = new SyntheticEvent(
-        "onSelect",
-        "select",
-        null,
-        nativeEvent,
-        nativeEventTarget
-      );
-      dispatchQueue.push({
-        event: event,
-        listeners: listeners
-      });
-      event.target = activeElement;
-    }
-  }
-}
-/**
- * This plugin creates an `onSelect` event that normalizes select events
- * across form elements.
- *
- * Supported elements are:
- * - input (see `isTextInputElement`)
- * - textarea
- * - contentEditable
- *
- * This differs from native browser implementations in the following ways:
- * - Fires on contentEditable fields as well as inputs.
- * - Fires for collapsed selection.
- * - Fires after user input.
- */
-
-function extractEvents$2(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
-
-  switch (domEventName) {
-    // Track the input node that has focus.
-    case "focusin":
-      if (
-        isTextInputElement(targetNode) ||
-        targetNode.contentEditable === "true"
-      ) {
-        activeElement = targetNode;
-        activeElementInst = targetInst;
-        lastSelection = null;
-      }
-
-      break;
-
-    case "focusout":
-      activeElement = null;
-      activeElementInst = null;
-      lastSelection = null;
-      break;
-    // Don't fire the event while the user is dragging. This matches the
-    // semantics of the native select event.
-
-    case "mousedown":
-      mouseDown = true;
-      break;
-
-    case "contextmenu":
-    case "mouseup":
-    case "dragend":
-      mouseDown = false;
-      constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
-      break;
-    // Chrome and IE fire non-standard event when selection is changed (and
-    // sometimes when it hasn't). IE's event fires out of order with respect
-    // to key and input events on deletion, so we discard it.
-    //
-    // Firefox doesn't support selectionchange, so check selection status
-    // after each key entry. The selection changes after keydown and before
-    // keyup, but we check on keydown as well in the case of holding down a
-    // key, when multiple keydown events are fired but only one keyup is.
-    // This is also our approach for IE handling, for the reason above.
-
-    case "selectionchange":
-      if (skipSelectionChangeEvent) {
-        break;
-      }
-
-    // falls through
-
-    case "keydown":
-    case "keyup":
-      constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
-  }
-}
-
-/**
- * Generate a mapping of standard vendor prefixes using the defined style property and event name.
- *
- * @param {string} styleProp
- * @param {string} eventName
- * @returns {object}
- */
-
-function makePrefixMap(styleProp, eventName) {
-  var prefixes = {};
-  prefixes[styleProp.toLowerCase()] = eventName.toLowerCase();
-  prefixes["Webkit" + styleProp] = "webkit" + eventName;
-  prefixes["Moz" + styleProp] = "moz" + eventName;
-  return prefixes;
-}
-/**
- * A list of event names to a configurable list of vendor prefixes.
- */
-
-var vendorPrefixes = {
-  animationend: makePrefixMap("Animation", "AnimationEnd"),
-  animationiteration: makePrefixMap("Animation", "AnimationIteration"),
-  animationstart: makePrefixMap("Animation", "AnimationStart"),
-  transitionend: makePrefixMap("Transition", "TransitionEnd")
-};
-/**
- * Event names that have already been detected and prefixed (if applicable).
- */
-
-var prefixedEventNames = {};
-/**
- * Element to check for prefixes on.
- */
-
-var style = {};
-/**
- * Bootstrap if a DOM exists.
- */
-
-if (canUseDOM) {
-  style = document.createElement("div").style; // On some platforms, in particular some releases of Android 4.x,
-  // the un-prefixed "animation" and "transition" properties are defined on the
-  // style object but the events that fire will still be prefixed, so we need
-  // to check if the un-prefixed events are usable, and if not remove them from the map.
-
-  if (!("AnimationEvent" in window)) {
-    delete vendorPrefixes.animationend.animation;
-    delete vendorPrefixes.animationiteration.animation;
-    delete vendorPrefixes.animationstart.animation;
-  } // Same as above
-
-  if (!("TransitionEvent" in window)) {
-    delete vendorPrefixes.transitionend.transition;
-  }
-}
-/**
- * Attempts to determine the correct vendor prefixed event name.
- *
- * @param {string} eventName
- * @returns {string}
- */
-
-function getVendorPrefixedEventName(eventName) {
-  if (prefixedEventNames[eventName]) {
-    return prefixedEventNames[eventName];
-  } else if (!vendorPrefixes[eventName]) {
-    return eventName;
-  }
-
-  var prefixMap = vendorPrefixes[eventName];
-
-  for (var styleProp in prefixMap) {
-    if (prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
-      return (prefixedEventNames[eventName] = prefixMap[styleProp]);
-    }
-  }
-
-  return eventName;
-}
-
-var ANIMATION_END = getVendorPrefixedEventName("animationend");
-var ANIMATION_ITERATION = getVendorPrefixedEventName("animationiteration");
-var ANIMATION_START = getVendorPrefixedEventName("animationstart");
-var TRANSITION_END = getVendorPrefixedEventName("transitionend");
-
-var topLevelEventsToReactNames = new Map(); // NOTE: Capitalization is important in this list!
-//
-// E.g. it needs "pointerDown", not "pointerdown".
-// This is because we derive both React name ("onPointerDown")
-// and DOM name ("pointerdown") from the same list.
-//
-// Exceptions that don't match this convention are listed separately.
-//
-// prettier-ignore
-
-var simpleEventPluginEvents = ['abort', 'auxClick', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'toggle', 'touchMove', 'waiting', 'wheel'];
-
-{
-  // Special case: these two events don't have on* React handler
-  // and are only accessible via the createEventHandle API.
-  topLevelEventsToReactNames.set("beforeblur", null);
-  topLevelEventsToReactNames.set("afterblur", null);
-}
-
-function registerSimpleEvent(domEventName, reactName) {
-  topLevelEventsToReactNames.set(domEventName, reactName);
-  registerTwoPhaseEvent(reactName, [domEventName]);
-}
-
-function registerSimpleEvents() {
-  for (var i = 0; i < simpleEventPluginEvents.length; i++) {
-    var eventName = simpleEventPluginEvents[i];
-    var domEventName = eventName.toLowerCase();
-    var capitalizedEvent = eventName[0].toUpperCase() + eventName.slice(1);
-    registerSimpleEvent(domEventName, "on" + capitalizedEvent);
-  } // Special cases where event names don't match.
-
-  registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
-  registerSimpleEvent(ANIMATION_ITERATION, "onAnimationIteration");
-  registerSimpleEvent(ANIMATION_START, "onAnimationStart");
-  registerSimpleEvent("dblclick", "onDoubleClick");
-  registerSimpleEvent("focusin", "onFocus");
-  registerSimpleEvent("focusout", "onBlur");
-  registerSimpleEvent(TRANSITION_END, "onTransitionEnd");
-}
-
-function extractEvents$1(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  var reactName = topLevelEventsToReactNames.get(domEventName);
-
-  if (reactName === undefined) {
-    return;
-  }
-
-  var SyntheticEventCtor = SyntheticEvent;
-  var reactEventType = domEventName;
-
-  switch (domEventName) {
-    case "keypress":
-      // Firefox creates a keypress event for function keys too. This removes
-      // the unwanted keypress events. Enter is however both printable and
-      // non-printable. One would expect Tab to be as well (but it isn't).
-      if (getEventCharCode(nativeEvent) === 0) {
-        return;
-      }
-
-    /* falls through */
-
-    case "keydown":
-    case "keyup":
-      SyntheticEventCtor = SyntheticKeyboardEvent;
-      break;
-
-    case "focusin":
-      reactEventType = "focus";
-      SyntheticEventCtor = SyntheticFocusEvent;
-      break;
-
-    case "focusout":
-      reactEventType = "blur";
-      SyntheticEventCtor = SyntheticFocusEvent;
-      break;
-
-    case "beforeblur":
-    case "afterblur":
-      SyntheticEventCtor = SyntheticFocusEvent;
-      break;
-
-    case "click":
-      // Firefox creates a click event on right mouse clicks. This removes the
-      // unwanted click events.
-      if (nativeEvent.button === 2) {
-        return;
-      }
-
-    /* falls through */
-
-    case "auxclick":
-    case "dblclick":
-    case "mousedown":
-    case "mousemove":
-    case "mouseup": // TODO: Disabled elements should not respond to mouse events
-
-    /* falls through */
-
-    case "mouseout":
-    case "mouseover":
-    case "contextmenu":
-      SyntheticEventCtor = SyntheticMouseEvent;
-      break;
-
-    case "drag":
-    case "dragend":
-    case "dragenter":
-    case "dragexit":
-    case "dragleave":
-    case "dragover":
-    case "dragstart":
-    case "drop":
-      SyntheticEventCtor = SyntheticDragEvent;
-      break;
-
-    case "touchcancel":
-    case "touchend":
-    case "touchmove":
-    case "touchstart":
-      SyntheticEventCtor = SyntheticTouchEvent;
-      break;
-
-    case ANIMATION_END:
-    case ANIMATION_ITERATION:
-    case ANIMATION_START:
-      SyntheticEventCtor = SyntheticAnimationEvent;
-      break;
-
-    case TRANSITION_END:
-      SyntheticEventCtor = SyntheticTransitionEvent;
-      break;
-
-    case "scroll":
-      SyntheticEventCtor = SyntheticUIEvent;
-      break;
-
-    case "wheel":
-      SyntheticEventCtor = SyntheticWheelEvent;
-      break;
-
-    case "copy":
-    case "cut":
-    case "paste":
-      SyntheticEventCtor = SyntheticClipboardEvent;
-      break;
-
-    case "gotpointercapture":
-    case "lostpointercapture":
-    case "pointercancel":
-    case "pointerdown":
-    case "pointermove":
-    case "pointerout":
-    case "pointerover":
-    case "pointerup":
-      SyntheticEventCtor = SyntheticPointerEvent;
-      break;
-  }
-
-  var inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-
-  if (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) {
-    var listeners = accumulateEventHandleNonManagedNodeListeners(
-      // TODO: this cast may not make sense for events like
-      // "focus" where React listens to e.g. "focusin".
-      reactEventType,
-      targetContainer,
-      inCapturePhase
-    );
-
-    if (listeners.length > 0) {
-      // Intentionally create event lazily.
-      var event = new SyntheticEventCtor(
-        reactName,
-        reactEventType,
-        null,
-        nativeEvent,
-        nativeEventTarget
-      );
-      dispatchQueue.push({
-        event: event,
-        listeners: listeners
-      });
-    }
-  } else {
-    // Some events don't bubble in the browser.
-    // In the past, React has always bubbled them, but this can be surprising.
-    // We're going to try aligning closer to the browser behavior by not bubbling
-    // them in React either. We'll start by not bubbling onScroll, and then expand.
-    var accumulateTargetOnly =
-      !inCapturePhase && // TODO: ideally, we'd eventually add all events from
-      // nonDelegatedEvents list in DOMPluginEventSystem.
-      // Then we can remove this special list.
-      // This is a breaking change that can wait until React 18.
-      domEventName === "scroll";
-
-    var _listeners = accumulateSinglePhaseListeners(
-      targetInst,
-      reactName,
-      nativeEvent.type,
-      inCapturePhase,
-      accumulateTargetOnly,
-      nativeEvent
-    );
-
-    if (_listeners.length > 0) {
-      // Intentionally create event lazily.
-      var _event = new SyntheticEventCtor(
-        reactName,
-        reactEventType,
-        null,
-        nativeEvent,
-        nativeEventTarget
-      );
-
-      dispatchQueue.push({
-        event: _event,
-        listeners: _listeners
-      });
-    }
-  }
-}
-
-registerSimpleEvents();
-registerEvents$1();
-registerEvents$2();
-registerEvents();
-registerEvents$3();
-
-function extractEvents(
-  dispatchQueue,
-  domEventName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer
-) {
-  // TODO: we should remove the concept of a "SimpleEventPlugin".
-  // This is the basic functionality of the event system. All
-  // the other plugins are essentially polyfills. So the plugin
-  // should probably be inlined somewhere and have its logic
-  // be core the to event system. This would potentially allow
-  // us to ship builds of React without the polyfilled plugins below.
-  extractEvents$1(
-    dispatchQueue,
-    domEventName,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer
-  );
-  var shouldProcessPolyfillPlugins =
-    (eventSystemFlags & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS) === 0; // We don't process these events unless we are in the
-  // event's native "bubble" phase, which means that we're
-  // not in the capture phase. That's because we emulate
-  // the capture phase here still. This is a trade-off,
-  // because in an ideal world we would not emulate and use
-  // the phases properly, like we do with the SimpleEvent
-  // plugin. However, the plugins below either expect
-  // emulation (EnterLeave) or use state localized to that
-  // plugin (BeforeInput, Change, Select). The state in
-  // these modules complicates things, as you'll essentially
-  // get the case where the capture phase event might change
-  // state, only for the following bubble event to come in
-  // later and not trigger anything as the state now
-  // invalidates the heuristics of the event plugin. We
-  // could alter all these plugins to work in such ways, but
-  // that might cause other unknown side-effects that we
-  // can't foresee right now.
-
-  if (shouldProcessPolyfillPlugins) {
-    extractEvents$3(
-      dispatchQueue,
-      domEventName,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget
-    );
-    extractEvents$4(
-      dispatchQueue,
-      domEventName,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget
-    );
-    extractEvents$2(
-      dispatchQueue,
-      domEventName,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget
-    );
-    extractEvents$5(
-      dispatchQueue,
-      domEventName,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget
-    );
-  }
-} // List of events that need to be individually attached to media elements.
-
-var mediaEventTypes = [
-  "abort",
-  "canplay",
-  "canplaythrough",
-  "durationchange",
-  "emptied",
-  "encrypted",
-  "ended",
-  "error",
-  "loadeddata",
-  "loadedmetadata",
-  "loadstart",
-  "pause",
-  "play",
-  "playing",
-  "progress",
-  "ratechange",
-  "resize",
-  "seeked",
-  "seeking",
-  "stalled",
-  "suspend",
-  "timeupdate",
-  "volumechange",
-  "waiting"
-]; // We should not delegate these events to the container, but rather
-// set them on the actual target element itself. This is primarily
-// because these events do not consistently bubble in the DOM.
-
-var nonDelegatedEvents = new Set(
-  ["cancel", "close", "invalid", "load", "scroll", "toggle"].concat(
-    mediaEventTypes
-  )
-);
-
-function executeDispatch(event, listener, currentTarget) {
-  var type = event.type || "unknown-event";
-  event.currentTarget = currentTarget;
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
-  event.currentTarget = null;
-}
-
-function processDispatchQueueItemsInOrder(
-  event,
-  dispatchListeners,
-  inCapturePhase
-) {
-  var previousInstance;
-
-  if (inCapturePhase) {
-    for (var i = dispatchListeners.length - 1; i >= 0; i--) {
-      var _dispatchListeners$i = dispatchListeners[i],
-        instance = _dispatchListeners$i.instance,
-        currentTarget = _dispatchListeners$i.currentTarget,
-        listener = _dispatchListeners$i.listener;
-
-      if (instance !== previousInstance && event.isPropagationStopped()) {
-        return;
-      }
-
-      executeDispatch(event, listener, currentTarget);
-      previousInstance = instance;
-    }
-  } else {
-    for (var _i = 0; _i < dispatchListeners.length; _i++) {
-      var _dispatchListeners$_i = dispatchListeners[_i],
-        _instance = _dispatchListeners$_i.instance,
-        _currentTarget = _dispatchListeners$_i.currentTarget,
-        _listener = _dispatchListeners$_i.listener;
-
-      if (_instance !== previousInstance && event.isPropagationStopped()) {
-        return;
-      }
-
-      executeDispatch(event, _listener, _currentTarget);
-      previousInstance = _instance;
-    }
-  }
-}
-
-function processDispatchQueue(dispatchQueue, eventSystemFlags) {
-  var inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-
-  for (var i = 0; i < dispatchQueue.length; i++) {
-    var _dispatchQueue$i = dispatchQueue[i],
-      event = _dispatchQueue$i.event,
-      listeners = _dispatchQueue$i.listeners;
-    processDispatchQueueItemsInOrder(event, listeners, inCapturePhase); //  event system doesn't use pooling.
-  } // This would be a good time to rethrow if any of the event handlers threw.
-
-  rethrowCaughtError();
-}
-
-function dispatchEventsForPlugins(
-  domEventName,
-  eventSystemFlags,
-  nativeEvent,
-  targetInst,
-  targetContainer
-) {
-  var nativeEventTarget = getEventTarget(nativeEvent);
-  var dispatchQueue = [];
-  extractEvents(
-    dispatchQueue,
-    domEventName,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer
-  );
-  processDispatchQueue(dispatchQueue, eventSystemFlags);
-}
-
-function listenToNonDelegatedEvent(domEventName, targetElement) {
-  {
-    if (!nonDelegatedEvents.has(domEventName)) {
-      error(
-        'Did not expect a listenToNonDelegatedEvent() call for "%s". ' +
-          "This is a bug in React. Please file an issue.",
-        domEventName
-      );
-    }
-  }
-
-  var isCapturePhaseListener = false;
-  var listenerSet = getEventListenerSet(targetElement);
-  var listenerSetKey = getListenerSetKey(domEventName, isCapturePhaseListener);
-
-  if (!listenerSet.has(listenerSetKey)) {
-    addTrappedEventListener(
-      targetElement,
-      domEventName,
-      IS_NON_DELEGATED,
-      isCapturePhaseListener
-    );
-    listenerSet.add(listenerSetKey);
-  }
-}
-function listenToNativeEvent(domEventName, isCapturePhaseListener, target) {
-  {
-    if (nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener) {
-      error(
-        'Did not expect a listenToNativeEvent() call for "%s" in the bubble phase. ' +
-          "This is a bug in React. Please file an issue.",
-        domEventName
-      );
-    }
-  }
-
-  var eventSystemFlags = 0;
-
-  if (isCapturePhaseListener) {
-    eventSystemFlags |= IS_CAPTURE_PHASE;
-  }
-
-  addTrappedEventListener(
-    target,
-    domEventName,
-    eventSystemFlags,
-    isCapturePhaseListener
-  );
-} // This is only used by createEventHandle when the
-// target is not a DOM element. E.g. window.
-
-function listenToNativeEventForNonManagedEventTarget(
-  domEventName,
-  isCapturePhaseListener,
-  target
-) {
-  var eventSystemFlags = IS_EVENT_HANDLE_NON_MANAGED_NODE;
-  var listenerSet = getEventListenerSet(target);
-  var listenerSetKey = getListenerSetKey(domEventName, isCapturePhaseListener);
-
-  if (!listenerSet.has(listenerSetKey)) {
-    if (isCapturePhaseListener) {
-      eventSystemFlags |= IS_CAPTURE_PHASE;
-    }
-
-    addTrappedEventListener(
-      target,
-      domEventName,
-      eventSystemFlags,
-      isCapturePhaseListener
-    );
-    listenerSet.add(listenerSetKey);
-  }
-}
-var listeningMarker = "_reactListening" + Math.random().toString(36).slice(2);
-function listenToAllSupportedEvents(rootContainerElement) {
-  if (!rootContainerElement[listeningMarker]) {
-    rootContainerElement[listeningMarker] = true;
-    allNativeEvents.forEach(function (domEventName) {
-      // We handle selectionchange separately because it
-      // doesn't bubble and needs to be on the document.
-      if (domEventName !== "selectionchange") {
-        if (!nonDelegatedEvents.has(domEventName)) {
-          listenToNativeEvent(domEventName, false, rootContainerElement);
-        }
-
-        listenToNativeEvent(domEventName, true, rootContainerElement);
-      }
-    });
-    var ownerDocument =
-      rootContainerElement.nodeType === DOCUMENT_NODE
-        ? rootContainerElement
-        : rootContainerElement.ownerDocument;
-
-    if (ownerDocument !== null) {
-      // The selectionchange event also needs deduplication
-      // but it is attached to the document.
-      if (!ownerDocument[listeningMarker]) {
-        ownerDocument[listeningMarker] = true;
-        listenToNativeEvent("selectionchange", false, ownerDocument);
-      }
-    }
-  }
-}
-
-function addTrappedEventListener(
-  targetContainer,
-  domEventName,
-  eventSystemFlags,
-  isCapturePhaseListener,
-  isDeferredListenerForLegacyFBSupport
-) {
-  var listener = createEventListenerWrapperWithPriority(
-    targetContainer,
-    domEventName,
-    eventSystemFlags
-  ); // If passive option is not supported, then the event will be
-  // active and not passive.
-
-  var isPassiveListener = undefined;
-
-  if (passiveBrowserEventsSupported) {
-    // Browsers introduced an intervention, making these events
-    // passive by default on document. React doesn't bind them
-    // to document anymore, but changing this now would undo
-    // the performance wins from the change. So we emulate
-    // the existing behavior manually on the roots now.
-    // https://github.com/facebook/react/issues/19651
-    if (
-      domEventName === "touchstart" ||
-      domEventName === "touchmove" ||
-      domEventName === "wheel"
-    ) {
-      isPassiveListener = true;
-    }
-  }
-
-  targetContainer =
-    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? targetContainer.ownerDocument
-      : targetContainer;
-  var unsubscribeListener; // When legacyFBSupport is enabled, it's for when we
-  // want to add a one time event listener to a container.
-  // This should only be used with enableLegacyFBSupport
-  // due to requirement to provide compatibility with
-  // internal FB www event tooling. This works by removing
-  // the event listener as soon as it is invoked. We could
-  // also attempt to use the {once: true} param on
-  // addEventListener, but that requires support and some
-  // browsers do not support this today, and given this is
-  // to support legacy code patterns, it's likely they'll
-  // need support for such browsers.
-
-  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
-    var originalListener = listener; // $FlowFixMe[missing-this-annot]
-    // $FlowFixMe[definition-cycle]
-
-    listener = function () {
-      removeEventListener(targetContainer, domEventName, unsubscribeListener);
-
-      for (
-        var _len = arguments.length, p = new Array(_len), _key = 0;
-        _key < _len;
-        _key++
-      ) {
-        p[_key] = arguments[_key];
-      }
-
-      return originalListener.apply(this, p);
-    };
-  } // TODO: There are too many combinations here. Consolidate them.
-
-  if (isCapturePhaseListener) {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener
-      );
-    } else {
-      unsubscribeListener = addEventCaptureListener(
-        targetContainer,
-        domEventName,
-        listener
-      );
-    }
-  } else {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener
-      );
-    } else {
-      unsubscribeListener = addEventBubbleListener(
-        targetContainer,
-        domEventName,
-        listener
-      );
-    }
-  }
-}
-
-function deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer) {
-  // We defer all click events with legacy FB support mode on.
-  // This means we add a one time event listener to trigger
-  // after the FB delegated listeners fire.
-  var isDeferredListenerForLegacyFBSupport = true;
-  addTrappedEventListener(
-    targetContainer,
-    domEventName,
-    IS_LEGACY_FB_SUPPORT_MODE,
-    false,
-    isDeferredListenerForLegacyFBSupport
-  );
-}
-
-function isMatchingRootContainer(grandContainer, targetContainer) {
-  return (
-    grandContainer === targetContainer ||
-    (grandContainer.nodeType === COMMENT_NODE &&
-      grandContainer.parentNode === targetContainer)
-  );
-}
-
-function dispatchEventForPluginEventSystem(
-  domEventName,
-  eventSystemFlags,
-  nativeEvent,
-  targetInst,
-  targetContainer
-) {
-  var ancestorInst = targetInst;
-
-  if (
-    (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) === 0 &&
-    (eventSystemFlags & IS_NON_DELEGATED) === 0
-  ) {
-    var targetContainerNode = targetContainer; // If we are using the legacy FB support flag, we
-    // defer the event to the null with a one
-    // time event listener so we can defer the event.
-
-    if (
-      enableLegacyFBSupport && // If our event flags match the required flags for entering
-      // FB legacy mode and we are processing the "click" event,
-      // then we can defer the event to the "document", to allow
-      // for legacy FB support, where the expected behavior was to
-      // match React < 16 behavior of delegated clicks to the doc.
-      domEventName === "click" &&
-      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0 &&
-      !isReplayingEvent(nativeEvent)
-    ) {
-      deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer);
-      return;
-    }
-
-    if (targetInst !== null) {
-      // The below logic attempts to work out if we need to change
-      // the target fiber to a different ancestor. We had similar logic
-      // in the legacy event system, except the big difference between
-      // systems is that the modern event system now has an event listener
-      // attached to each React Root and React Portal Root. Together,
-      // the DOM nodes representing these roots are the "rootContainer".
-      // To figure out which ancestor instance we should use, we traverse
-      // up the fiber tree from the target instance and attempt to find
-      // root boundaries that match that of our current "rootContainer".
-      // If we find that "rootContainer", we find the parent fiber
-      // sub-tree for that root and make that our ancestor instance.
-      var node = targetInst;
-
-      mainLoop: while (true) {
-        if (node === null) {
-          return;
-        }
-
-        var nodeTag = node.tag;
-
-        if (nodeTag === HostRoot || nodeTag === HostPortal) {
-          var container = node.stateNode.containerInfo;
-
-          if (isMatchingRootContainer(container, targetContainerNode)) {
-            break;
-          }
-
-          if (nodeTag === HostPortal) {
-            // The target is a portal, but it's not the rootContainer we're looking for.
-            // Normally portals handle their own events all the way down to the root.
-            // So we should be able to stop now. However, we don't know if this portal
-            // was part of *our* root.
-            var grandNode = node.return;
-
-            while (grandNode !== null) {
-              var grandTag = grandNode.tag;
-
-              if (grandTag === HostRoot || grandTag === HostPortal) {
-                var grandContainer = grandNode.stateNode.containerInfo;
-
-                if (
-                  isMatchingRootContainer(grandContainer, targetContainerNode)
-                ) {
-                  // This is the rootContainer we're looking for and we found it as
-                  // a parent of the Portal. That means we can ignore it because the
-                  // Portal will bubble through to us.
-                  return;
-                }
-              }
-
-              grandNode = grandNode.return;
-            }
-          } // Now we need to find it's corresponding host fiber in the other
-          // tree. To do this we can use getClosestInstanceFromNode, but we
-          // need to validate that the fiber is a host instance, otherwise
-          // we need to traverse up through the DOM till we find the correct
-          // node that is from the other tree.
-
-          while (container !== null) {
-            var parentNode = getClosestInstanceFromNode(container);
-
-            if (parentNode === null) {
-              return;
-            }
-
-            var parentTag = parentNode.tag;
-
-            if (
-              parentTag === HostComponent ||
-              parentTag === HostText ||
-              parentTag === HostHoistable ||
-              parentTag === HostSingleton
-            ) {
-              node = ancestorInst = parentNode;
-              continue mainLoop;
-            }
-
-            container = container.parentNode;
-          }
-        }
-
-        node = node.return;
-      }
-    }
-  }
-
-  batchedUpdates$1(function () {
-    return dispatchEventsForPlugins(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      ancestorInst,
-      targetContainer
-    );
-  });
-}
-
-function createDispatchListener(instance, listener, currentTarget) {
-  return {
-    instance: instance,
-    listener: listener,
-    currentTarget: currentTarget
-  };
-}
-
-function accumulateSinglePhaseListeners(
-  targetFiber,
-  reactName,
-  nativeEventType,
-  inCapturePhase,
-  accumulateTargetOnly,
-  nativeEvent
-) {
-  var captureName = reactName !== null ? reactName + "Capture" : null;
-  var reactEventName = inCapturePhase ? captureName : reactName;
-  var listeners = [];
-  var instance = targetFiber;
-  var lastHostComponent = null; // Accumulate all instances and listeners via the target -> root path.
-
-  while (instance !== null) {
-    var _instance2 = instance,
-      stateNode = _instance2.stateNode,
-      tag = _instance2.tag; // Handle listeners that are on HostComponents (i.e. <div>)
-
-    if (
-      (tag === HostComponent ||
-        tag === HostHoistable ||
-        tag === HostSingleton) &&
-      stateNode !== null
-    ) {
-      lastHostComponent = stateNode; // createEventHandle listeners
-
-      {
-        var eventHandlerListeners = getEventHandlerListeners(lastHostComponent);
-
-        if (eventHandlerListeners !== null) {
-          eventHandlerListeners.forEach(function (entry) {
-            if (
-              entry.type === nativeEventType &&
-              entry.capture === inCapturePhase
-            ) {
-              listeners.push(
-                createDispatchListener(
-                  instance,
-                  entry.callback,
-                  lastHostComponent
-                )
-              );
-            }
-          });
-        }
-      } // Standard React on* listeners, i.e. onClick or onClickCapture
-
-      if (reactEventName !== null) {
-        var listener = getListener(instance, reactEventName);
-
-        if (listener != null) {
-          listeners.push(
-            createDispatchListener(instance, listener, lastHostComponent)
-          );
-        }
-      }
-    } else if (
-      tag === ScopeComponent &&
-      lastHostComponent !== null &&
-      stateNode !== null
-    ) {
-      // Scopes
-      var reactScopeInstance = stateNode;
-
-      var _eventHandlerListeners = getEventHandlerListeners(reactScopeInstance);
-
-      if (_eventHandlerListeners !== null) {
-        _eventHandlerListeners.forEach(function (entry) {
-          if (
-            entry.type === nativeEventType &&
-            entry.capture === inCapturePhase
-          ) {
-            listeners.push(
-              createDispatchListener(
-                instance,
-                entry.callback,
-                lastHostComponent
-              )
-            );
-          }
-        });
-      }
-    } // If we are only accumulating events for the target, then we don't
-    // continue to propagate through the React fiber tree to find other
-    // listeners.
-
-    if (accumulateTargetOnly) {
-      break;
-    } // If we are processing the onBeforeBlur event, then we need to take
-    // into consideration that part of the React tree might have been hidden
-    // or deleted (as we're invoking this event during commit). We can find
-    // this out by checking if intercept fiber set on the event matches the
-    // current instance fiber. In which case, we should clear all existing
-    // listeners.
-
-    if (nativeEvent.type === "beforeblur") {
-      // $FlowFixMe[prop-missing] internal field
-      var detachedInterceptFiber = nativeEvent._detachedInterceptFiber;
-
-      if (
-        detachedInterceptFiber !== null &&
-        (detachedInterceptFiber === instance ||
-          detachedInterceptFiber === instance.alternate)
-      ) {
-        listeners = [];
-      }
-    }
-
-    instance = instance.return;
-  }
-
-  return listeners;
-} // We should only use this function for:
-// - BeforeInputEventPlugin
-// - ChangeEventPlugin
-// - SelectEventPlugin
-// This is because we only process these plugins
-// in the bubble phase, so we need to accumulate two
-// phase event listeners (via emulation).
-
-function accumulateTwoPhaseListeners(targetFiber, reactName) {
-  var captureName = reactName + "Capture";
-  var listeners = [];
-  var instance = targetFiber; // Accumulate all instances and listeners via the target -> root path.
-
-  while (instance !== null) {
-    var _instance3 = instance,
-      stateNode = _instance3.stateNode,
-      tag = _instance3.tag; // Handle listeners that are on HostComponents (i.e. <div>)
-
-    if (
-      (tag === HostComponent ||
-        tag === HostHoistable ||
-        tag === HostSingleton) &&
-      stateNode !== null
-    ) {
-      var currentTarget = stateNode;
-      var captureListener = getListener(instance, captureName);
-
-      if (captureListener != null) {
-        listeners.unshift(
-          createDispatchListener(instance, captureListener, currentTarget)
-        );
-      }
-
-      var bubbleListener = getListener(instance, reactName);
-
-      if (bubbleListener != null) {
-        listeners.push(
-          createDispatchListener(instance, bubbleListener, currentTarget)
-        );
-      }
-    }
-
-    instance = instance.return;
-  }
-
-  return listeners;
-}
-
-function getParent(inst) {
-  if (inst === null) {
-    return null;
-  }
-
-  do {
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
-    inst = inst.return; // TODO: If this is a HostRoot we might want to bail out.
-    // That is depending on if we want nested subtrees (layers) to bubble
-    // events to their parent. We could also go through parentNode on the
-    // host node but that wouldn't work for React Native and doesn't let us
-    // do the portal feature.
-  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
-
-  if (inst) {
-    return inst;
-  }
-
-  return null;
-}
-/**
- * Return the lowest common ancestor of A and B, or null if they are in
- * different trees.
- */
-
-function getLowestCommonAncestor(instA, instB) {
-  var nodeA = instA;
-  var nodeB = instB;
-  var depthA = 0;
-
-  for (var tempA = nodeA; tempA; tempA = getParent(tempA)) {
-    depthA++;
-  }
-
-  var depthB = 0;
-
-  for (var tempB = nodeB; tempB; tempB = getParent(tempB)) {
-    depthB++;
-  } // If A is deeper, crawl up.
-
-  while (depthA - depthB > 0) {
-    nodeA = getParent(nodeA);
-    depthA--;
-  } // If B is deeper, crawl up.
-
-  while (depthB - depthA > 0) {
-    nodeB = getParent(nodeB);
-    depthB--;
-  } // Walk in lockstep until we find a match.
-
-  var depth = depthA;
-
-  while (depth--) {
-    if (nodeA === nodeB || (nodeB !== null && nodeA === nodeB.alternate)) {
-      return nodeA;
-    }
-
-    nodeA = getParent(nodeA);
-    nodeB = getParent(nodeB);
-  }
-
-  return null;
-}
-
-function accumulateEnterLeaveListenersForEvent(
-  dispatchQueue,
-  event,
-  target,
-  common,
-  inCapturePhase
-) {
-  var registrationName = event._reactName;
-  var listeners = [];
-  var instance = target;
-
-  while (instance !== null) {
-    if (instance === common) {
-      break;
-    }
-
-    var _instance4 = instance,
-      alternate = _instance4.alternate,
-      stateNode = _instance4.stateNode,
-      tag = _instance4.tag;
-
-    if (alternate !== null && alternate === common) {
-      break;
-    }
-
-    if (
-      (tag === HostComponent ||
-        tag === HostHoistable ||
-        tag === HostSingleton) &&
-      stateNode !== null
-    ) {
-      var currentTarget = stateNode;
-
-      if (inCapturePhase) {
-        var captureListener = getListener(instance, registrationName);
-
-        if (captureListener != null) {
-          listeners.unshift(
-            createDispatchListener(instance, captureListener, currentTarget)
-          );
-        }
-      } else if (!inCapturePhase) {
-        var bubbleListener = getListener(instance, registrationName);
-
-        if (bubbleListener != null) {
-          listeners.push(
-            createDispatchListener(instance, bubbleListener, currentTarget)
-          );
-        }
-      }
-    }
-
-    instance = instance.return;
-  }
-
-  if (listeners.length !== 0) {
-    dispatchQueue.push({
-      event: event,
-      listeners: listeners
-    });
-  }
-} // We should only use this function for:
-// - EnterLeaveEventPlugin
-// This is because we only process this plugin
-// in the bubble phase, so we need to accumulate two
-// phase event listeners.
-
-function accumulateEnterLeaveTwoPhaseListeners(
-  dispatchQueue,
-  leaveEvent,
-  enterEvent,
-  from,
-  to
-) {
-  var common = from && to ? getLowestCommonAncestor(from, to) : null;
-
-  if (from !== null) {
-    accumulateEnterLeaveListenersForEvent(
-      dispatchQueue,
-      leaveEvent,
-      from,
-      common,
-      false
-    );
-  }
-
-  if (to !== null && enterEvent !== null) {
-    accumulateEnterLeaveListenersForEvent(
-      dispatchQueue,
-      enterEvent,
-      to,
-      common,
-      true
-    );
-  }
-}
-function accumulateEventHandleNonManagedNodeListeners(
-  reactEventType,
-  currentTarget,
-  inCapturePhase
-) {
-  var listeners = [];
-  var eventListeners = getEventHandlerListeners(currentTarget);
-
-  if (eventListeners !== null) {
-    eventListeners.forEach(function (entry) {
-      if (entry.type === reactEventType && entry.capture === inCapturePhase) {
-        listeners.push(
-          createDispatchListener(null, entry.callback, currentTarget)
-        );
-      }
-    });
-  }
-
-  return listeners;
-}
-function getListenerSetKey(domEventName, capture) {
-  return domEventName + "__" + (capture ? "capture" : "bubble");
-}
-
-// This is imported by the event replaying implementation in React DOM. It's
-// in a separate file to break a circular dependency between the renderer and
-// the reconciler.
-function isRootDehydrated(root) {
-  var currentState = root.current.memoizedState;
-  return currentState.isDehydrated;
-}
-
-var _attemptSynchronousHydration;
-
-function setAttemptSynchronousHydration(fn) {
-  _attemptSynchronousHydration = fn;
-}
-function attemptSynchronousHydration$1(fiber) {
-  _attemptSynchronousHydration(fiber);
-}
-var attemptDiscreteHydration$1;
-function setAttemptDiscreteHydration(fn) {
-  attemptDiscreteHydration$1 = fn;
-}
-var attemptContinuousHydration$1;
-function setAttemptContinuousHydration(fn) {
-  attemptContinuousHydration$1 = fn;
-}
-var attemptHydrationAtCurrentPriority$1;
-function setAttemptHydrationAtCurrentPriority(fn) {
-  attemptHydrationAtCurrentPriority$1 = fn;
-}
-var getCurrentUpdatePriority;
-function setGetCurrentUpdatePriority(fn) {
-  getCurrentUpdatePriority = fn;
-}
-var attemptHydrationAtPriority;
-function setAttemptHydrationAtPriority(fn) {
-  attemptHydrationAtPriority = fn;
-} // TODO: Upgrade this definition once we're on a newer version of Flow that
-// has this definition built-in.
-
-var hasScheduledReplayAttempt = false; // The queue of discrete events to be replayed.
-
-var queuedDiscreteEvents = []; // Indicates if any continuous event targets are non-null for early bailout.
-// if the last target was dehydrated.
-
-var queuedFocus = null;
-var queuedDrag = null;
-var queuedMouse = null; // For pointer events there can be one latest event per pointerId.
-
-var queuedPointers = new Map();
-var queuedPointerCaptures = new Map(); // We could consider replaying selectionchange and touchmoves too.
-
-var queuedExplicitHydrationTargets = [];
-function hasQueuedDiscreteEvents() {
-  return queuedDiscreteEvents.length > 0;
-}
-var discreteReplayableEvents = [
-  "mousedown",
-  "mouseup",
-  "touchcancel",
-  "touchend",
-  "touchstart",
-  "auxclick",
-  "dblclick",
-  "pointercancel",
-  "pointerdown",
-  "pointerup",
-  "dragend",
-  "dragstart",
-  "drop",
-  "compositionend",
-  "compositionstart",
-  "keydown",
-  "keypress",
-  "keyup",
-  "input",
-  "textInput", // Intentionally camelCase
-  "copy",
-  "cut",
-  "paste",
-  "click",
-  "change",
-  "contextmenu",
-  "reset",
-  "submit"
-];
-function isDiscreteEventThatRequiresHydration(eventType) {
-  return discreteReplayableEvents.indexOf(eventType) > -1;
-}
-
-function createQueuedReplayableEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  return {
-    blockedOn: blockedOn,
-    domEventName: domEventName,
-    eventSystemFlags: eventSystemFlags,
-    nativeEvent: nativeEvent,
-    targetContainers: [targetContainer]
-  };
-}
-
-function queueDiscreteEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    return;
-  }
-
-  var queuedEvent = createQueuedReplayableEvent(
-    blockedOn,
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
-  queuedDiscreteEvents.push(queuedEvent);
-
-  if (queuedDiscreteEvents.length === 1) {
-    // If this was the first discrete event, we might be able to
-    // synchronously unblock it so that preventDefault still works.
-    while (queuedEvent.blockedOn !== null) {
-      var fiber = getInstanceFromNode(queuedEvent.blockedOn);
-
-      if (fiber === null) {
-        break;
-      }
-
-      attemptSynchronousHydration$1(fiber);
-
-      if (queuedEvent.blockedOn === null) {
-        // We got unblocked by hydration. Let's try again.
-        replayUnblockedEvents(); // If we're reblocked, on an inner boundary, we might need
-        // to attempt hydrating that one.
-
-        continue;
-      } else {
-        // We're still blocked from hydration, we have to give up
-        // and replay later.
-        break;
-      }
-    }
-  }
-} // Resets the replaying for this type of continuous event to no event.
-
-function clearIfContinuousEvent(domEventName, nativeEvent) {
-  switch (domEventName) {
-    case "focusin":
-    case "focusout":
-      queuedFocus = null;
-      break;
-
-    case "dragenter":
-    case "dragleave":
-      queuedDrag = null;
-      break;
-
-    case "mouseover":
-    case "mouseout":
-      queuedMouse = null;
-      break;
-
-    case "pointerover":
-    case "pointerout": {
-      var pointerId = nativeEvent.pointerId;
-      queuedPointers.delete(pointerId);
-      break;
-    }
-
-    case "gotpointercapture":
-    case "lostpointercapture": {
-      var _pointerId = nativeEvent.pointerId;
-      queuedPointerCaptures.delete(_pointerId);
-      break;
-    }
-  }
-}
-
-function accumulateOrCreateContinuousQueuedReplayableEvent(
-  existingQueuedEvent,
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  if (
-    existingQueuedEvent === null ||
-    existingQueuedEvent.nativeEvent !== nativeEvent
-  ) {
-    var queuedEvent = createQueuedReplayableEvent(
-      blockedOn,
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-
-    if (blockedOn !== null) {
-      var fiber = getInstanceFromNode(blockedOn);
-
-      if (fiber !== null) {
-        // Attempt to increase the priority of this target.
-        attemptContinuousHydration$1(fiber);
-      }
-    }
-
-    return queuedEvent;
-  } // If we have already queued this exact event, then it's because
-  // the different event systems have different DOM event listeners.
-  // We can accumulate the flags, and the targetContainers, and
-  // store a single event to be replayed.
-
-  existingQueuedEvent.eventSystemFlags |= eventSystemFlags;
-  var targetContainers = existingQueuedEvent.targetContainers;
-
-  if (
-    targetContainer !== null &&
-    targetContainers.indexOf(targetContainer) === -1
-  ) {
-    targetContainers.push(targetContainer);
-  }
-
-  return existingQueuedEvent;
-}
-
-function queueIfContinuousEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  // These set relatedTarget to null because the replayed event will be treated as if we
-  // moved from outside the window (no target) onto the target once it hydrates.
-  // Instead of mutating we could clone the event.
-  switch (domEventName) {
-    case "focusin": {
-      var focusEvent = nativeEvent;
-      queuedFocus = accumulateOrCreateContinuousQueuedReplayableEvent(
-        queuedFocus,
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        focusEvent
-      );
-      return true;
-    }
-
-    case "dragenter": {
-      var dragEvent = nativeEvent;
-      queuedDrag = accumulateOrCreateContinuousQueuedReplayableEvent(
-        queuedDrag,
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        dragEvent
-      );
-      return true;
-    }
-
-    case "mouseover": {
-      var mouseEvent = nativeEvent;
-      queuedMouse = accumulateOrCreateContinuousQueuedReplayableEvent(
-        queuedMouse,
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        mouseEvent
-      );
-      return true;
-    }
-
-    case "pointerover": {
-      var pointerEvent = nativeEvent;
-      var pointerId = pointerEvent.pointerId;
-      queuedPointers.set(
-        pointerId,
-        accumulateOrCreateContinuousQueuedReplayableEvent(
-          queuedPointers.get(pointerId) || null,
-          blockedOn,
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          pointerEvent
-        )
-      );
-      return true;
-    }
-
-    case "gotpointercapture": {
-      var _pointerEvent = nativeEvent;
-      var _pointerId2 = _pointerEvent.pointerId;
-      queuedPointerCaptures.set(
-        _pointerId2,
-        accumulateOrCreateContinuousQueuedReplayableEvent(
-          queuedPointerCaptures.get(_pointerId2) || null,
-          blockedOn,
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          _pointerEvent
-        )
-      );
-      return true;
-    }
-  }
-
-  return false;
-} // Check if this target is unblocked. Returns true if it's unblocked.
-
-function attemptExplicitHydrationTarget(queuedTarget) {
-  // TODO: This function shares a lot of logic with findInstanceBlockingEvent.
-  // Try to unify them. It's a bit tricky since it would require two return
-  // values.
-  var targetInst = getClosestInstanceFromNode(queuedTarget.target);
-
-  if (targetInst !== null) {
-    var nearestMounted = getNearestMountedFiber(targetInst);
-
-    if (nearestMounted !== null) {
-      var tag = nearestMounted.tag;
-
-      if (tag === SuspenseComponent) {
-        var instance = getSuspenseInstanceFromFiber(nearestMounted);
-
-        if (instance !== null) {
-          // We're blocked on hydrating this boundary.
-          // Increase its priority.
-          queuedTarget.blockedOn = instance;
-          attemptHydrationAtPriority(queuedTarget.priority, function () {
-            attemptHydrationAtCurrentPriority$1(nearestMounted);
-          });
-          return;
-        }
-      } else if (tag === HostRoot) {
-        var root = nearestMounted.stateNode;
-
-        if (isRootDehydrated(root)) {
-          queuedTarget.blockedOn = getContainerFromFiber(nearestMounted); // We don't currently have a way to increase the priority of
-          // a root other than sync.
-
-          return;
-        }
-      }
-    }
-  }
-
-  queuedTarget.blockedOn = null;
-}
-
-function queueExplicitHydrationTarget(target) {
-  // TODO: This will read the priority if it's dispatched by the React
-  // event system but not native events. Should read window.event.type, like
-  // we do for updates (getCurrentEventPriority).
-  var updatePriority = getCurrentUpdatePriority();
-  var queuedTarget = {
-    blockedOn: null,
-    target: target,
-    priority: updatePriority
-  };
-  var i = 0;
-
-  for (; i < queuedExplicitHydrationTargets.length; i++) {
-    // Stop once we hit the first target with lower priority than
-    if (
-      !isHigherEventPriority(
-        updatePriority,
-        queuedExplicitHydrationTargets[i].priority
-      )
-    ) {
-      break;
-    }
-  }
-
-  queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
-
-  if (i === 0) {
-    attemptExplicitHydrationTarget(queuedTarget);
-  }
-}
-
-function attemptReplayContinuousQueuedEvent(queuedEvent) {
-  if (queuedEvent.blockedOn !== null) {
-    return false;
-  }
-
-  var targetContainers = queuedEvent.targetContainers;
-
-  while (targetContainers.length > 0) {
-    var targetContainer = targetContainers[0];
-    var nextBlockedOn = findInstanceBlockingEvent(
-      queuedEvent.domEventName,
-      queuedEvent.eventSystemFlags,
-      targetContainer,
-      queuedEvent.nativeEvent
-    );
-
-    if (nextBlockedOn === null) {
-      if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-        var nativeEvent = queuedEvent.nativeEvent;
-        var nativeEventClone = new nativeEvent.constructor(
-          nativeEvent.type,
-          nativeEvent
-        );
-        setReplayingEvent(nativeEventClone);
-        nativeEvent.target.dispatchEvent(nativeEventClone);
-        resetReplayingEvent();
-      } else {
-        setReplayingEvent(queuedEvent.nativeEvent);
-        dispatchEventForPluginEventSystem(
-          queuedEvent.domEventName,
-          queuedEvent.eventSystemFlags,
-          queuedEvent.nativeEvent,
-          return_targetInst,
-          targetContainer
-        );
-        resetReplayingEvent();
-      }
-    } else {
-      // We're still blocked. Try again later.
-      var fiber = getInstanceFromNode(nextBlockedOn);
-
-      if (fiber !== null) {
-        attemptContinuousHydration$1(fiber);
-      }
-
-      queuedEvent.blockedOn = nextBlockedOn;
-      return false;
-    } // This target container was successfully dispatched. Try the next.
-
-    targetContainers.shift();
-  }
-
-  return true;
-}
-
-function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
-  if (attemptReplayContinuousQueuedEvent(queuedEvent)) {
-    map.delete(key);
-  }
-}
-
-function replayUnblockedEvents() {
-  hasScheduledReplayAttempt = false;
-
-  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    // First replay discrete events.
-    while (queuedDiscreteEvents.length > 0) {
-      var nextDiscreteEvent = queuedDiscreteEvents[0];
-
-      if (nextDiscreteEvent.blockedOn !== null) {
-        // We're still blocked.
-        // Increase the priority of this boundary to unblock
-        // the next discrete event.
-        var fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
-
-        if (fiber !== null) {
-          attemptDiscreteHydration$1(fiber);
-        }
-
-        break;
-      }
-
-      var targetContainers = nextDiscreteEvent.targetContainers;
-
-      while (targetContainers.length > 0) {
-        var targetContainer = targetContainers[0];
-        var nextBlockedOn = findInstanceBlockingEvent(
-          nextDiscreteEvent.domEventName,
-          nextDiscreteEvent.eventSystemFlags,
-          targetContainer,
-          nextDiscreteEvent.nativeEvent
-        );
-
-        if (nextBlockedOn === null) {
-          // This whole function is in !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-          // so we don't need the new replay behavior code branch.
-          setReplayingEvent(nextDiscreteEvent.nativeEvent);
-          dispatchEventForPluginEventSystem(
-            nextDiscreteEvent.domEventName,
-            nextDiscreteEvent.eventSystemFlags,
-            nextDiscreteEvent.nativeEvent,
-            return_targetInst,
-            targetContainer
-          );
-          resetReplayingEvent();
-        } else {
-          // We're still blocked. Try again later.
-          nextDiscreteEvent.blockedOn = nextBlockedOn;
-          break;
-        } // This target container was successfully dispatched. Try the next.
-
-        targetContainers.shift();
-      }
-
-      if (nextDiscreteEvent.blockedOn === null) {
-        // We've successfully replayed the first event. Let's try the next one.
-        queuedDiscreteEvents.shift();
-      }
-    }
-  } // Next replay any continuous events.
-
-  if (queuedFocus !== null && attemptReplayContinuousQueuedEvent(queuedFocus)) {
-    queuedFocus = null;
-  }
-
-  if (queuedDrag !== null && attemptReplayContinuousQueuedEvent(queuedDrag)) {
-    queuedDrag = null;
-  }
-
-  if (queuedMouse !== null && attemptReplayContinuousQueuedEvent(queuedMouse)) {
-    queuedMouse = null;
-  }
-
-  queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
-  queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
-}
-
-function scheduleCallbackIfUnblocked(queuedEvent, unblocked) {
-  if (queuedEvent.blockedOn === unblocked) {
-    queuedEvent.blockedOn = null;
-
-    if (!hasScheduledReplayAttempt) {
-      hasScheduledReplayAttempt = true; // Schedule a callback to attempt replaying as many events as are
-      // now unblocked. This first might not actually be unblocked yet.
-      // We could check it early to avoid scheduling an unnecessary callback.
-
-      Scheduler.unstable_scheduleCallback(
-        Scheduler.unstable_NormalPriority,
-        replayUnblockedEvents
-      );
-    }
-  }
-}
-
-function retryIfBlockedOn(unblocked) {
-  // Mark anything that was blocked on this as no longer blocked
-  // and eligible for a replay.
-  if (queuedDiscreteEvents.length > 0) {
-    scheduleCallbackIfUnblocked(queuedDiscreteEvents[0], unblocked); // This is a exponential search for each boundary that commits. I think it's
-    // worth it because we expect very few discrete events to queue up and once
-    // we are actually fully unblocked it will be fast to replay them.
-
-    for (var i = 1; i < queuedDiscreteEvents.length; i++) {
-      var queuedEvent = queuedDiscreteEvents[i];
-
-      if (queuedEvent.blockedOn === unblocked) {
-        queuedEvent.blockedOn = null;
-      }
-    }
-  }
-
-  if (queuedFocus !== null) {
-    scheduleCallbackIfUnblocked(queuedFocus, unblocked);
-  }
-
-  if (queuedDrag !== null) {
-    scheduleCallbackIfUnblocked(queuedDrag, unblocked);
-  }
-
-  if (queuedMouse !== null) {
-    scheduleCallbackIfUnblocked(queuedMouse, unblocked);
-  }
-
-  var unblock = function (queuedEvent) {
-    return scheduleCallbackIfUnblocked(queuedEvent, unblocked);
-  };
-
-  queuedPointers.forEach(unblock);
-  queuedPointerCaptures.forEach(unblock);
-
-  for (var _i = 0; _i < queuedExplicitHydrationTargets.length; _i++) {
-    var queuedTarget = queuedExplicitHydrationTargets[_i];
-
-    if (queuedTarget.blockedOn === unblocked) {
-      queuedTarget.blockedOn = null;
-    }
-  }
-
-  while (queuedExplicitHydrationTargets.length > 0) {
-    var nextExplicitTarget = queuedExplicitHydrationTargets[0];
-
-    if (nextExplicitTarget.blockedOn !== null) {
-      // We're still blocked.
-      break;
-    } else {
-      attemptExplicitHydrationTarget(nextExplicitTarget);
-
-      if (nextExplicitTarget.blockedOn === null) {
-        // We're unblocked.
-        queuedExplicitHydrationTargets.shift();
-      }
-    }
-  }
-}
-
-var ReactCurrentBatchConfig$3 = ReactSharedInternals.ReactCurrentBatchConfig; // TODO: can we stop exporting these?
-
-var _enabled = true; // This is exported in FB builds for use by legacy FB layer infra.
-// We'd like to remove this but it's not clear if this is safe.
-
-function setEnabled(enabled) {
-  _enabled = !!enabled;
-}
-function isEnabled() {
-  return _enabled;
-}
-function createEventListenerWrapperWithPriority(
-  targetContainer,
-  domEventName,
-  eventSystemFlags
-) {
-  var eventPriority = getEventPriority(domEventName);
-  var listenerWrapper;
-
-  switch (eventPriority) {
-    case DiscreteEventPriority:
-      listenerWrapper = dispatchDiscreteEvent;
-      break;
-
-    case ContinuousEventPriority:
-      listenerWrapper = dispatchContinuousEvent;
-      break;
-
-    case DefaultEventPriority:
-    default:
-      listenerWrapper = dispatchEvent;
-      break;
-  }
-
-  return listenerWrapper.bind(
-    null,
-    domEventName,
-    eventSystemFlags,
-    targetContainer
-  );
-}
-
-function dispatchDiscreteEvent(
-  domEventName,
-  eventSystemFlags,
-  container,
-  nativeEvent
-) {
-  var previousPriority = getCurrentUpdatePriority$1();
-  var prevTransition = ReactCurrentBatchConfig$3.transition;
-  ReactCurrentBatchConfig$3.transition = null;
-
-  try {
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig$3.transition = prevTransition;
-  }
-}
-
-function dispatchContinuousEvent(
-  domEventName,
-  eventSystemFlags,
-  container,
-  nativeEvent
-) {
-  var previousPriority = getCurrentUpdatePriority$1();
-  var prevTransition = ReactCurrentBatchConfig$3.transition;
-  ReactCurrentBatchConfig$3.transition = null;
-
-  try {
-    setCurrentUpdatePriority(ContinuousEventPriority);
-    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig$3.transition = prevTransition;
-  }
-}
-
-function dispatchEvent(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  if (!_enabled) {
-    return;
-  }
-
-  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-  } else {
-    dispatchEventOriginal(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-  }
-}
-
-function dispatchEventOriginal(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  // TODO: replaying capture phase events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // In eager mode, we attach capture listeners early, so we need
-  // to filter them out until we fix the logic to handle them correctly.
-  var allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
-
-  if (
-    allowReplay &&
-    hasQueuedDiscreteEvents() &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    // If we already have a queue of discrete events, and this is another discrete
-    // event, then we can't dispatch it regardless of its target, since they
-    // need to dispatch in order.
-    queueDiscreteEvent(
-      null, // Flags that we're not actually blocked on anything as far as we know.
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-    return;
-  }
-
-  var blockedOn = findInstanceBlockingEvent(
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
-
-  if (blockedOn === null) {
-    dispatchEventForPluginEventSystem(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      return_targetInst,
-      targetContainer
-    );
-
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
-
-    return;
-  }
-
-  if (allowReplay) {
-    if (isDiscreteEventThatRequiresHydration(domEventName)) {
-      // This to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      );
-      return;
-    }
-
-    if (
-      queueIfContinuousEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      )
-    ) {
-      return;
-    } // We need to clear only if we didn't queue because
-    // queueing is accumulative.
-
-    clearIfContinuousEvent(domEventName, nativeEvent);
-  } // This is not replayable so we'll invoke it but without a target,
-  // in case the event system needs to trace it.
-
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    null,
-    targetContainer
-  );
-}
-
-function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  var blockedOn = findInstanceBlockingEvent(
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
-
-  if (blockedOn === null) {
-    dispatchEventForPluginEventSystem(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      return_targetInst,
-      targetContainer
-    );
-    clearIfContinuousEvent(domEventName, nativeEvent);
-    return;
-  }
-
-  if (
-    queueIfContinuousEvent(
-      blockedOn,
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    )
-  ) {
-    nativeEvent.stopPropagation();
-    return;
-  } // We need to clear only if we didn't queue because
-  // queueing is accumulative.
-
-  clearIfContinuousEvent(domEventName, nativeEvent);
-
-  if (
-    eventSystemFlags & IS_CAPTURE_PHASE &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    while (blockedOn !== null) {
-      var fiber = getInstanceFromNode(blockedOn);
-
-      if (fiber !== null) {
-        attemptSynchronousHydration$1(fiber);
-      }
-
-      var nextBlockedOn = findInstanceBlockingEvent(
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      );
-
-      if (nextBlockedOn === null) {
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          return_targetInst,
-          targetContainer
-        );
-      }
-
-      if (nextBlockedOn === blockedOn) {
-        break;
-      }
-
-      blockedOn = nextBlockedOn;
-    }
-
-    if (blockedOn !== null) {
-      nativeEvent.stopPropagation();
-    }
-
-    return;
-  } // This is not replayable so we'll invoke it but without a target,
-  // in case the event system needs to trace it.
-
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    null,
-    targetContainer
-  );
-}
-
-var return_targetInst = null; // Returns a SuspenseInstance or Container if it's blocked.
-// The return_targetInst field above is conceptually part of the return value.
-
-function findInstanceBlockingEvent(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  // TODO: Warn if _enabled is false.
-  return_targetInst = null;
-  var nativeEventTarget = getEventTarget(nativeEvent);
-  var targetInst = getClosestInstanceFromNode(nativeEventTarget);
-
-  if (targetInst !== null) {
-    var nearestMounted = getNearestMountedFiber(targetInst);
-
-    if (nearestMounted === null) {
-      // This tree has been unmounted already. Dispatch without a target.
-      targetInst = null;
-    } else {
-      var tag = nearestMounted.tag;
-
-      if (tag === SuspenseComponent) {
-        var instance = getSuspenseInstanceFromFiber(nearestMounted);
-
-        if (instance !== null) {
-          // Queue the event to be replayed later. Abort dispatching since we
-          // don't want this event dispatched twice through the event system.
-          // TODO: If this is the first discrete event in the queue. Schedule an increased
-          // priority for this boundary.
-          return instance;
-        } // This shouldn't happen, something went wrong but to avoid blocking
-        // the whole system, dispatch the event without a target.
-        // TODO: Warn.
-
-        targetInst = null;
-      } else if (tag === HostRoot) {
-        var root = nearestMounted.stateNode;
-
-        if (isRootDehydrated(root)) {
-          // If this happens during a replay something went wrong and it might block
-          // the whole system.
-          return getContainerFromFiber(nearestMounted);
-        }
-
-        targetInst = null;
-      } else if (nearestMounted !== targetInst) {
-        // If we get an event (ex: img onload) before committing that
-        // component's mount, ignore it for now (that is, treat it as if it was an
-        // event on a non-React tree). We might also consider queueing events and
-        // dispatching them after the mount.
-        targetInst = null;
-      }
-    }
-  }
-
-  return_targetInst = targetInst; // We're not blocked on anything.
-
-  return null;
-}
-function getEventPriority(domEventName) {
-  switch (domEventName) {
-    // Used by SimpleEventPlugin:
-    case "cancel":
-    case "click":
-    case "close":
-    case "contextmenu":
-    case "copy":
-    case "cut":
-    case "auxclick":
-    case "dblclick":
-    case "dragend":
-    case "dragstart":
-    case "drop":
-    case "focusin":
-    case "focusout":
-    case "input":
-    case "invalid":
-    case "keydown":
-    case "keypress":
-    case "keyup":
-    case "mousedown":
-    case "mouseup":
-    case "paste":
-    case "pause":
-    case "play":
-    case "pointercancel":
-    case "pointerdown":
-    case "pointerup":
-    case "ratechange":
-    case "reset":
-    case "resize":
-    case "seeked":
-    case "submit":
-    case "touchcancel":
-    case "touchend":
-    case "touchstart":
-    case "volumechange": // Used by polyfills:
-    // eslint-disable-next-line no-fallthrough
-
-    case "change":
-    case "selectionchange":
-    case "textInput":
-    case "compositionstart":
-    case "compositionend":
-    case "compositionupdate": // Only enableCreateEventHandleAPI:
-    // eslint-disable-next-line no-fallthrough
-
-    case "beforeblur":
-    case "afterblur": // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
-
-    case "beforeinput":
-    case "blur":
-    case "fullscreenchange":
-    case "focus":
-    case "hashchange":
-    case "popstate":
-    case "select":
-    case "selectstart":
-      return DiscreteEventPriority;
-
-    case "drag":
-    case "dragenter":
-    case "dragexit":
-    case "dragleave":
-    case "dragover":
-    case "mousemove":
-    case "mouseout":
-    case "mouseover":
-    case "pointermove":
-    case "pointerout":
-    case "pointerover":
-    case "scroll":
-    case "toggle":
-    case "touchmove":
-    case "wheel": // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
-
-    case "mouseenter":
-    case "mouseleave":
-    case "pointerenter":
-    case "pointerleave":
-      return ContinuousEventPriority;
-
-    case "message": {
-      // We might be in the Scheduler callback.
-      // Eventually this mechanism will be replaced by a check
-      // of the current priority on the native scheduler.
-      var schedulerPriority = getCurrentPriorityLevel();
-
-      switch (schedulerPriority) {
-        case ImmediatePriority:
-          return DiscreteEventPriority;
-
-        case UserBlockingPriority:
-          return ContinuousEventPriority;
-
-        case NormalPriority$1:
-        case LowPriority:
-          // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
-          return DefaultEventPriority;
-
-        case IdlePriority:
-          return IdleEventPriority;
-
-        default:
-          return DefaultEventPriority;
-      }
-    }
-
-    default:
-      return DefaultEventPriority;
   }
 }
 
@@ -16915,6 +12516,18 @@ function isOffscreenManual(offscreenFiber) {
   );
 }
 
+/**
+ * inlined Object.is polyfill to avoid requiring consumers ship their own
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+ */
+function is(x, y) {
+  return (
+    (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y) // eslint-disable-line no-self-compare
+  );
+}
+
+var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
+
 var syncQueue = null;
 var includesLegacySyncCallbacks = false;
 var isFlushingSyncQueue = false;
@@ -16951,7 +12564,7 @@ function flushSyncCallbacks() {
     // queue is in the render or commit phases, which already set the
     // event priority. Should be able to remove.
 
-    var previousUpdatePriority = getCurrentUpdatePriority$1();
+    var previousUpdatePriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
     var errors = null;
     var queue = syncQueue; // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -17226,6 +12839,14 @@ function logStateUpdateScheduled(componentName, lane, payloadOrAction) {
       );
     }
   }
+}
+
+// This is imported by the event replaying implementation in React DOM. It's
+// in a separate file to break a circular dependency between the renderer and
+// the reconciler.
+function isRootDehydrated(root) {
+  var currentState = root.current.memoizedState;
+  return currentState.isDehydrated;
 }
 
 // Intentionally not using it yet to derisk the initial implementation, because
@@ -18986,6 +14607,47 @@ function commitCallbacks(updateQueue, context) {
       callCallback(callback, context);
     }
   }
+}
+
+/**
+ * Performs equality by iterating through keys on an object and returning false
+ * when any key has values which are not strictly equal between the arguments.
+ * Returns true when the values of all keys are strictly equal.
+ */
+
+function shallowEqual(objA, objB) {
+  if (objectIs(objA, objB)) {
+    return true;
+  }
+
+  if (
+    typeof objA !== "object" ||
+    objA === null ||
+    typeof objB !== "object" ||
+    objB === null
+  ) {
+    return false;
+  }
+
+  var keysA = Object.keys(objA);
+  var keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  } // Test for A's keys different from B.
+
+  for (var i = 0; i < keysA.length; i++) {
+    var currentKey = keysA[i];
+
+    if (
+      !hasOwnProperty.call(objB, currentKey) ||
+      !objectIs(objA[currentKey], objB[currentKey])
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 var ReactStrictModeWarnings = {
@@ -21331,7 +16993,7 @@ function registerMutableSourceForHydration(root, mutableSource) {
 }
 
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
+  ReactCurrentBatchConfig$3 = ReactSharedInternals.ReactCurrentBatchConfig;
 var didWarnAboutMismatchedHooksForComponent;
 var didWarnUncachedGetSnapshot;
 var didWarnAboutUseWrappedInTryCatch;
@@ -23336,24 +18998,24 @@ function updateDeferredValueImpl(hook, prevValue, value) {
 }
 
 function startTransition(setPending, callback, options) {
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   setPending(true);
-  var prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = {};
-  var currentTransition = ReactCurrentBatchConfig$2.transition;
+  var prevTransition = ReactCurrentBatchConfig$3.transition;
+  ReactCurrentBatchConfig$3.transition = {};
+  var currentTransition = ReactCurrentBatchConfig$3.transition;
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
-      ReactCurrentBatchConfig$2.transition.name = options.name;
-      ReactCurrentBatchConfig$2.transition.startTime = now$1();
+      ReactCurrentBatchConfig$3.transition.name = options.name;
+      ReactCurrentBatchConfig$3.transition.startTime = now$1();
     }
   }
 
   {
-    ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
+    ReactCurrentBatchConfig$3.transition._updatedFibers = new Set();
   }
 
   try {
@@ -23361,7 +19023,7 @@ function startTransition(setPending, callback, options) {
     callback();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig$2.transition = prevTransition;
+    ReactCurrentBatchConfig$3.transition = prevTransition;
 
     {
       if (prevTransition === null && currentTransition._updatedFibers) {
@@ -31522,10 +27184,10 @@ function popCacheProvider(workInProgress, cache) {
   popProvider(CacheContext, workInProgress);
 }
 
-var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
+var ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
 var NoTransition = null;
 function requestCurrentTransition() {
-  return ReactCurrentBatchConfig$1.transition;
+  return ReactCurrentBatchConfig$2.transition;
 } // When retrying a Suspense/Offscreen boundary, we restore the cache that was
 // used during the previous render by placing it here, on the stack.
 
@@ -33330,6 +28992,113 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
       }
 
       break;
+  }
+}
+
+// Provided by www
+var ReactFbErrorUtils = require("ReactFbErrorUtils");
+
+if (typeof ReactFbErrorUtils.invokeGuardedCallback !== "function") {
+  throw new Error(
+    "Expected ReactFbErrorUtils.invokeGuardedCallback to be a function."
+  );
+}
+
+function invokeGuardedCallbackImpl(name, func, context, a, b, c, d, e, f) {
+  // This will call `this.onError(err)` if an error was caught.
+  ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
+}
+
+var hasError = false;
+var caughtError = null; // Used by event system to capture/rethrow the first error.
+
+var hasRethrowError = false;
+var rethrowError = null;
+var reporter = {
+  onError: function (error) {
+    hasError = true;
+    caughtError = error;
+  }
+};
+/**
+ * Call a function while guarding against errors that happens within it.
+ * Returns an error if it throws, otherwise null.
+ *
+ * In production, this is implemented using a try-catch. The reason we don't
+ * use a try-catch directly is so that we can swap out a different
+ * implementation in DEV mode.
+ *
+ * @param {String} name of the guard to use for logging or debugging
+ * @param {Function} func The function to invoke
+ * @param {*} context The context to use when calling the function
+ * @param {...*} args Arguments for function
+ */
+
+function invokeGuardedCallback(name, func, context, a, b, c, d, e, f) {
+  hasError = false;
+  caughtError = null;
+  invokeGuardedCallbackImpl.apply(reporter, arguments);
+}
+/**
+ * Same as invokeGuardedCallback, but instead of returning an error, it stores
+ * it in a global so it can be rethrown by `rethrowCaughtError` later.
+ * TODO: See if caughtError and rethrowError can be unified.
+ *
+ * @param {String} name of the guard to use for logging or debugging
+ * @param {Function} func The function to invoke
+ * @param {*} context The context to use when calling the function
+ * @param {...*} args Arguments for function
+ */
+
+function invokeGuardedCallbackAndCatchFirstError(
+  name,
+  func,
+  context,
+  a,
+  b,
+  c,
+  d,
+  e,
+  f
+) {
+  invokeGuardedCallback.apply(this, arguments);
+
+  if (hasError) {
+    var error = clearCaughtError();
+
+    if (!hasRethrowError) {
+      hasRethrowError = true;
+      rethrowError = error;
+    }
+  }
+}
+/**
+ * During execution of guarded functions we will capture the first error which
+ * we will rethrow to be handled by the top level error handler.
+ */
+
+function rethrowCaughtError() {
+  if (hasRethrowError) {
+    var error = rethrowError;
+    hasRethrowError = false;
+    rethrowError = null;
+    throw error;
+  }
+}
+function hasCaughtError() {
+  return hasError;
+}
+function clearCaughtError() {
+  if (hasError) {
+    var error = caughtError;
+    hasError = false;
+    caughtError = null;
+    return error;
+  } else {
+    throw new Error(
+      "clearCaughtError was called but no error was captured. This error " +
+        "is likely caused by a bug in React. Please file an issue."
+    );
   }
 }
 
@@ -37754,7 +33523,7 @@ var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
   ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-  ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
+  ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig,
   ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
 var NoContext =
   /*             */
@@ -38065,8 +33834,8 @@ function requestUpdateLane(fiber) {
   var isTransition = requestCurrentTransition() !== NoTransition;
 
   if (isTransition) {
-    if (ReactCurrentBatchConfig.transition !== null) {
-      var transition = ReactCurrentBatchConfig.transition;
+    if (ReactCurrentBatchConfig$1.transition !== null) {
+      var transition = ReactCurrentBatchConfig$1.transition;
 
       if (!transition._updatedFibers) {
         transition._updatedFibers = new Set();
@@ -38094,7 +33863,7 @@ function requestUpdateLane(fiber) {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
 
-  var updateLane = getCurrentUpdatePriority$1();
+  var updateLane = getCurrentUpdatePriority();
 
   if (updateLane !== NoLane) {
     return updateLane;
@@ -38197,7 +33966,7 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
     }
 
     if (enableTransitionTracing) {
-      var transition = ReactCurrentBatchConfig.transition;
+      var transition = ReactCurrentBatchConfig$1.transition;
 
       if (transition !== null && transition.name != null) {
         if (transition.startTime === -1) {
@@ -38958,7 +34727,7 @@ function flushRoot(root, lanes) {
 function getExecutionContext() {
   return executionContext;
 }
-function batchedUpdates(fn, a) {
+function batchedUpdates$1(fn, a) {
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
@@ -38977,23 +34746,6 @@ function batchedUpdates(fn, a) {
     }
   }
 }
-function discreteUpdates(fn, a, b, c, d) {
-  var previousPriority = getCurrentUpdatePriority$1();
-  var prevTransition = ReactCurrentBatchConfig.transition;
-
-  try {
-    ReactCurrentBatchConfig.transition = null;
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    return fn(a, b, c, d);
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
-
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-    }
-  }
-} // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
 // eslint-disable-next-line no-redeclare
@@ -39012,11 +34764,11 @@ function flushSync$1(fn) {
 
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  var previousPriority = getCurrentUpdatePriority$1();
+  var prevTransition = ReactCurrentBatchConfig$1.transition;
+  var previousPriority = getCurrentUpdatePriority();
 
   try {
-    ReactCurrentBatchConfig.transition = null;
+    ReactCurrentBatchConfig$1.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
 
     if (fn) {
@@ -39026,7 +34778,7 @@ function flushSync$1(fn) {
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig$1.transition = prevTransition;
     executionContext = prevExecutionContext; // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
@@ -39048,16 +34800,16 @@ function isInvalidExecutionContextForEventFunction() {
 function flushControlled(fn) {
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  var previousPriority = getCurrentUpdatePriority$1();
+  var prevTransition = ReactCurrentBatchConfig$1.transition;
+  var previousPriority = getCurrentUpdatePriority();
 
   try {
-    ReactCurrentBatchConfig.transition = null;
+    ReactCurrentBatchConfig$1.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig$1.transition = prevTransition;
     executionContext = prevExecutionContext;
 
     if (executionContext === NoContext) {
@@ -39974,11 +35726,11 @@ function completeUnitOfWork(unitOfWork) {
 function commitRoot(root, recoverableErrors, transitions) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
-  var previousUpdateLanePriority = getCurrentUpdatePriority$1();
-  var prevTransition = ReactCurrentBatchConfig.transition;
+  var previousUpdateLanePriority = getCurrentUpdatePriority();
+  var prevTransition = ReactCurrentBatchConfig$1.transition;
 
   try {
-    ReactCurrentBatchConfig.transition = null;
+    ReactCurrentBatchConfig$1.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     commitRootImpl(
       root,
@@ -39987,7 +35739,7 @@ function commitRoot(root, recoverableErrors, transitions) {
       previousUpdateLanePriority
     );
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig$1.transition = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
 
@@ -40123,9 +35875,9 @@ function commitRootImpl(
     NoFlags$1;
 
   if (subtreeHasEffects || rootHasEffect) {
-    var prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = null;
-    var previousPriority = getCurrentUpdatePriority$1();
+    var prevTransition = ReactCurrentBatchConfig$1.transition;
+    ReactCurrentBatchConfig$1.transition = null;
+    var previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
     var prevExecutionContext = executionContext;
     executionContext |= CommitContext; // Reset this to null before calling lifecycles
@@ -40202,7 +35954,7 @@ function commitRootImpl(
     executionContext = prevExecutionContext; // Reset the priority to the previous non-sync value.
 
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig$1.transition = prevTransition;
   } else {
     // No effects.
     root.current = finishedWork; // Measure these anyway so the flamegraph explicitly shows that there were
@@ -40427,16 +36179,16 @@ function flushPassiveEffects() {
     pendingPassiveEffectsRemainingLanes = NoLanes;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     var priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-    var prevTransition = ReactCurrentBatchConfig.transition;
-    var previousPriority = getCurrentUpdatePriority$1();
+    var prevTransition = ReactCurrentBatchConfig$1.transition;
+    var previousPriority = getCurrentUpdatePriority();
 
     try {
-      ReactCurrentBatchConfig.transition = null;
+      ReactCurrentBatchConfig$1.transition = null;
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
-      ReactCurrentBatchConfig.transition = prevTransition; // Once passive effects have run for the tree - giving components a
+      ReactCurrentBatchConfig$1.transition = prevTransition; // Once passive effects have run for the tree - giving components a
       // chance to retain cache instances they use - release the pooled
       // cache at the root (if there is one)
 
@@ -42595,7 +38347,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ef5e99b7";
+var ReactVersion = "18.3.0-www-classic-036f93df";
 
 function createPortal$1(
   children,
@@ -43283,6 +39035,4197 @@ function injectIntoDevTools(devToolsConfig) {
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion
   });
+}
+
+// the renderer. Such as when we're dispatching events or if third party
+// libraries need to call batchedUpdates. Eventually, this API will go away when
+// everything is batched by default. We'll then have a similar API to opt-out of
+// scheduled work and instead do synchronous work.
+
+var isInsideEventHandler = false;
+
+function finishEventHandler() {
+  // Here we wait until all updates have propagated, which is important
+  // when using controlled components within layers:
+  // https://github.com/facebook/react/issues/1698
+  // Then we restore state of any controlled component.
+  var controlledComponentsHavePendingUpdates = needsStateRestore();
+
+  if (controlledComponentsHavePendingUpdates) {
+    // If a controlled event was fired, we may need to restore the state of
+    // the DOM node back to the controlled value. This is necessary when React
+    // bails out of the update without touching the DOM.
+    // TODO: Restore state in the microtask, after the discrete updates flush,
+    // instead of early flushing them here.
+    flushSync$1();
+    restoreStateIfNeeded();
+  }
+}
+
+function batchedUpdates(fn, a, b) {
+  if (isInsideEventHandler) {
+    // If we are currently inside another batch, we need to wait until it
+    // fully completes before restoring state.
+    return fn(a, b);
+  }
+
+  isInsideEventHandler = true;
+
+  try {
+    return batchedUpdates$1(fn, a, b);
+  } finally {
+    isInsideEventHandler = false;
+    finishEventHandler();
+  }
+} // TODO: Replace with flushSync
+
+function isInteractive(tag) {
+  return (
+    tag === "button" ||
+    tag === "input" ||
+    tag === "select" ||
+    tag === "textarea"
+  );
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case "onClick":
+    case "onClickCapture":
+    case "onDoubleClick":
+    case "onDoubleClickCapture":
+    case "onMouseDown":
+    case "onMouseDownCapture":
+    case "onMouseMove":
+    case "onMouseMoveCapture":
+    case "onMouseUp":
+    case "onMouseUpCapture":
+    case "onMouseEnter":
+      return !!(props.disabled && isInteractive(type));
+
+    default:
+      return false;
+  }
+}
+/**
+ * @param {object} inst The instance, which is the source of events.
+ * @param {string} registrationName Name of listener (e.g. `onClick`).
+ * @return {?function} The stored callback.
+ */
+
+function getListener(inst, registrationName) {
+  var stateNode = inst.stateNode;
+
+  if (stateNode === null) {
+    // Work in progress (ex: onload events in incremental mode).
+    return null;
+  }
+
+  var props = getFiberCurrentPropsFromNode(stateNode);
+
+  if (props === null) {
+    // Work in progress.
+    return null;
+  }
+
+  var listener = props[registrationName];
+
+  if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+    return null;
+  }
+
+  if (listener && typeof listener !== "function") {
+    throw new Error(
+      "Expected `" +
+        registrationName +
+        "` listener to be a function, instead got a value of `" +
+        typeof listener +
+        "` type."
+    );
+  }
+
+  return listener;
+}
+
+var passiveBrowserEventsSupported = false; // Check if browser support events with passive listeners
+// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
+
+if (canUseDOM) {
+  try {
+    var options = {};
+    Object.defineProperty(options, "passive", {
+      get: function () {
+        passiveBrowserEventsSupported = true;
+      }
+    });
+    window.addEventListener("test", options, options);
+    window.removeEventListener("test", options, options);
+  } catch (e) {
+    passiveBrowserEventsSupported = false;
+  }
+}
+
+var EventListenerWWW = require("EventListener");
+
+function addEventBubbleListener(target, eventType, listener) {
+  return EventListenerWWW.listen(target, eventType, listener);
+}
+function addEventCaptureListener(target, eventType, listener) {
+  return EventListenerWWW.capture(target, eventType, listener);
+}
+function addEventCaptureListenerWithPassiveFlag(
+  target,
+  eventType,
+  listener,
+  passive
+) {
+  return EventListenerWWW.captureWithPassiveFlag(
+    target,
+    eventType,
+    listener,
+    passive
+  );
+}
+function addEventBubbleListenerWithPassiveFlag(
+  target,
+  eventType,
+  listener,
+  passive
+) {
+  return EventListenerWWW.bubbleWithPassiveFlag(
+    target,
+    eventType,
+    listener,
+    passive
+  );
+}
+function removeEventListener(target, eventType, listener, capture) {
+  listener.remove();
+} // Flow magic to verify the exports of this file match the original version.
+
+/**
+ * These variables store information about text content of a target node,
+ * allowing comparison of content before and after a given event.
+ *
+ * Identify the node where selection currently begins, then observe
+ * both its text content and its current position in the DOM. Since the
+ * browser may natively replace the target node during composition, we can
+ * use its position to find its replacement.
+ *
+ *
+ */
+var root = null;
+var startText = null;
+var fallbackText = null;
+function initialize(nativeEventTarget) {
+  root = nativeEventTarget;
+  startText = getText();
+  return true;
+}
+function reset() {
+  root = null;
+  startText = null;
+  fallbackText = null;
+}
+function getData() {
+  if (fallbackText) {
+    return fallbackText;
+  }
+
+  var start;
+  var startValue = startText;
+  var startLength = startValue.length;
+  var end;
+  var endValue = getText();
+  var endLength = endValue.length;
+
+  for (start = 0; start < startLength; start++) {
+    if (startValue[start] !== endValue[start]) {
+      break;
+    }
+  }
+
+  var minEnd = startLength - start;
+
+  for (end = 1; end <= minEnd; end++) {
+    if (startValue[startLength - end] !== endValue[endLength - end]) {
+      break;
+    }
+  }
+
+  var sliceTail = end > 1 ? 1 - end : undefined;
+  fallbackText = endValue.slice(start, sliceTail);
+  return fallbackText;
+}
+function getText() {
+  if ("value" in root) {
+    return root.value;
+  }
+
+  return root.textContent;
+}
+
+/**
+ * `charCode` represents the actual "character code" and is safe to use with
+ * `String.fromCharCode`. As such, only keys that correspond to printable
+ * characters produce a valid `charCode`, the only exception to this is Enter.
+ * The Tab-key is considered non-printable and does not have a `charCode`,
+ * presumably because it does not produce a tab-character in browsers.
+ *
+ * @param {object} nativeEvent Native browser event.
+ * @return {number} Normalized `charCode` property.
+ */
+function getEventCharCode(nativeEvent) {
+  var charCode;
+  var keyCode = nativeEvent.keyCode;
+
+  if ("charCode" in nativeEvent) {
+    charCode = nativeEvent.charCode; // FF does not set `charCode` for the Enter-key, check against `keyCode`.
+
+    if (charCode === 0 && keyCode === 13) {
+      charCode = 13;
+    }
+  } else {
+    // IE8 does not implement `charCode`, but `keyCode` has the correct value.
+    charCode = keyCode;
+  } // IE and Edge (on Windows) and Chrome / Safari (on Windows and Linux)
+  // report Enter as charCode 10 when ctrl is pressed.
+
+  if (charCode === 10) {
+    charCode = 13;
+  } // Some non-printable keys are reported in `charCode`/`keyCode`, discard them.
+  // Must not discard the (non-)printable Enter-key.
+
+  if (charCode >= 32 || charCode === 13) {
+    return charCode;
+  }
+
+  return 0;
+}
+
+function functionThatReturnsTrue() {
+  return true;
+}
+
+function functionThatReturnsFalse() {
+  return false;
+} // This is intentionally a factory so that we have different returned constructors.
+// If we had a single constructor, it would be megamorphic and engines would deopt.
+
+function createSyntheticEvent(Interface) {
+  /**
+   * Synthetic events are dispatched by event plugins, typically in response to a
+   * top-level event delegation handler.
+   *
+   * These systems should generally use pooling to reduce the frequency of garbage
+   * collection. The system should check `isPersistent` to determine whether the
+   * event should be released into the pool after being dispatched. Users that
+   * need a persisted event should invoke `persist`.
+   *
+   * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
+   * normalizing browser quirks. Subclasses do not necessarily have to implement a
+   * DOM interface; custom application-specific events can also subclass this.
+   */
+  // $FlowFixMe[missing-this-annot]
+  function SyntheticBaseEvent(
+    reactName,
+    reactEventType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
+    this._reactName = reactName;
+    this._targetInst = targetInst;
+    this.type = reactEventType;
+    this.nativeEvent = nativeEvent;
+    this.target = nativeEventTarget;
+    this.currentTarget = null;
+
+    for (var propName in Interface) {
+      if (!Interface.hasOwnProperty(propName)) {
+        continue;
+      }
+
+      var normalize = Interface[propName];
+
+      if (normalize) {
+        this[propName] = normalize(nativeEvent);
+      } else {
+        this[propName] = nativeEvent[propName];
+      }
+    }
+
+    var defaultPrevented =
+      nativeEvent.defaultPrevented != null
+        ? nativeEvent.defaultPrevented
+        : nativeEvent.returnValue === false;
+
+    if (defaultPrevented) {
+      this.isDefaultPrevented = functionThatReturnsTrue;
+    } else {
+      this.isDefaultPrevented = functionThatReturnsFalse;
+    }
+
+    this.isPropagationStopped = functionThatReturnsFalse;
+    return this;
+  } // $FlowFixMe[prop-missing] found when upgrading Flow
+
+  assign(SyntheticBaseEvent.prototype, {
+    // $FlowFixMe[missing-this-annot]
+    preventDefault: function () {
+      this.defaultPrevented = true;
+      var event = this.nativeEvent;
+
+      if (!event) {
+        return;
+      }
+
+      if (event.preventDefault) {
+        event.preventDefault(); // $FlowFixMe - flow is not aware of `unknown` in IE
+      } else if (typeof event.returnValue !== "unknown") {
+        event.returnValue = false;
+      }
+
+      this.isDefaultPrevented = functionThatReturnsTrue;
+    },
+    // $FlowFixMe[missing-this-annot]
+    stopPropagation: function () {
+      var event = this.nativeEvent;
+
+      if (!event) {
+        return;
+      }
+
+      if (event.stopPropagation) {
+        event.stopPropagation(); // $FlowFixMe - flow is not aware of `unknown` in IE
+      } else if (typeof event.cancelBubble !== "unknown") {
+        // The ChangeEventPlugin registers a "propertychange" event for
+        // IE. This event does not support bubbling or cancelling, and
+        // any references to cancelBubble throw "Member not found".  A
+        // typeof check of "unknown" circumvents this issue (and is also
+        // IE specific).
+        event.cancelBubble = true;
+      }
+
+      this.isPropagationStopped = functionThatReturnsTrue;
+    },
+
+    /**
+     * We release all dispatched `SyntheticEvent`s after each event loop, adding
+     * them back into the pool. This allows a way to hold onto a reference that
+     * won't be added back into the pool.
+     */
+    persist: function () {
+      // Modern event system doesn't use pooling.
+    },
+
+    /**
+     * Checks if this event should be released back into the pool.
+     *
+     * @return {boolean} True if this should not be released, false otherwise.
+     */
+    isPersistent: functionThatReturnsTrue
+  });
+  return SyntheticBaseEvent;
+}
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var EventInterface = {
+  eventPhase: 0,
+  bubbles: 0,
+  cancelable: 0,
+  timeStamp: function (event) {
+    return event.timeStamp || Date.now();
+  },
+  defaultPrevented: 0,
+  isTrusted: 0
+};
+var SyntheticEvent = createSyntheticEvent(EventInterface);
+
+var UIEventInterface = assign({}, EventInterface, {
+  view: 0,
+  detail: 0
+});
+
+var SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
+var lastMovementX;
+var lastMovementY;
+var lastMouseEvent;
+
+function updateMouseMovementPolyfillState(event) {
+  if (event !== lastMouseEvent) {
+    if (lastMouseEvent && event.type === "mousemove") {
+      // $FlowFixMe assuming this is a number
+      lastMovementX = event.screenX - lastMouseEvent.screenX; // $FlowFixMe assuming this is a number
+
+      lastMovementY = event.screenY - lastMouseEvent.screenY;
+    } else {
+      lastMovementX = 0;
+      lastMovementY = 0;
+    }
+
+    lastMouseEvent = event;
+  }
+}
+/**
+ * @interface MouseEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var MouseEventInterface = assign({}, UIEventInterface, {
+  screenX: 0,
+  screenY: 0,
+  clientX: 0,
+  clientY: 0,
+  pageX: 0,
+  pageY: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
+  altKey: 0,
+  metaKey: 0,
+  getModifierState: getEventModifierState,
+  button: 0,
+  buttons: 0,
+  relatedTarget: function (event) {
+    if (event.relatedTarget === undefined)
+      return event.fromElement === event.srcElement
+        ? event.toElement
+        : event.fromElement;
+    return event.relatedTarget;
+  },
+  movementX: function (event) {
+    if ("movementX" in event) {
+      return event.movementX;
+    }
+
+    updateMouseMovementPolyfillState(event);
+    return lastMovementX;
+  },
+  movementY: function (event) {
+    if ("movementY" in event) {
+      return event.movementY;
+    } // Don't need to call updateMouseMovementPolyfillState() here
+    // because it's guaranteed to have already run when movementX
+    // was copied.
+
+    return lastMovementY;
+  }
+});
+
+var SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
+/**
+ * @interface DragEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var DragEventInterface = assign({}, MouseEventInterface, {
+  dataTransfer: 0
+});
+
+var SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
+/**
+ * @interface FocusEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var FocusEventInterface = assign({}, UIEventInterface, {
+  relatedTarget: 0
+});
+
+var SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
+ */
+
+var AnimationEventInterface = assign({}, EventInterface, {
+  animationName: 0,
+  elapsedTime: 0,
+  pseudoElement: 0
+});
+
+var SyntheticAnimationEvent = createSyntheticEvent(AnimationEventInterface);
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/clipboard-apis/
+ */
+
+var ClipboardEventInterface = assign({}, EventInterface, {
+  clipboardData: function (event) {
+    return "clipboardData" in event
+      ? event.clipboardData
+      : window.clipboardData;
+  }
+});
+
+var SyntheticClipboardEvent = createSyntheticEvent(ClipboardEventInterface);
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
+ */
+
+var CompositionEventInterface = assign({}, EventInterface, {
+  data: 0
+});
+
+var SyntheticCompositionEvent = createSyntheticEvent(CompositionEventInterface);
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
+ *      /#events-inputevents
+ */
+// Happens to share the same list for now.
+
+var SyntheticInputEvent = SyntheticCompositionEvent;
+/**
+ * Normalization of deprecated HTML5 `key` values
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
+ */
+
+var normalizeKey = {
+  Esc: "Escape",
+  Spacebar: " ",
+  Left: "ArrowLeft",
+  Up: "ArrowUp",
+  Right: "ArrowRight",
+  Down: "ArrowDown",
+  Del: "Delete",
+  Win: "OS",
+  Menu: "ContextMenu",
+  Apps: "ContextMenu",
+  Scroll: "ScrollLock",
+  MozPrintableKey: "Unidentified"
+};
+/**
+ * Translation from legacy `keyCode` to HTML5 `key`
+ * Only special keys supported, all others depend on keyboard layout or browser
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
+ */
+
+var translateToKey = {
+  "8": "Backspace",
+  "9": "Tab",
+  "12": "Clear",
+  "13": "Enter",
+  "16": "Shift",
+  "17": "Control",
+  "18": "Alt",
+  "19": "Pause",
+  "20": "CapsLock",
+  "27": "Escape",
+  "32": " ",
+  "33": "PageUp",
+  "34": "PageDown",
+  "35": "End",
+  "36": "Home",
+  "37": "ArrowLeft",
+  "38": "ArrowUp",
+  "39": "ArrowRight",
+  "40": "ArrowDown",
+  "45": "Insert",
+  "46": "Delete",
+  "112": "F1",
+  "113": "F2",
+  "114": "F3",
+  "115": "F4",
+  "116": "F5",
+  "117": "F6",
+  "118": "F7",
+  "119": "F8",
+  "120": "F9",
+  "121": "F10",
+  "122": "F11",
+  "123": "F12",
+  "144": "NumLock",
+  "145": "ScrollLock",
+  "224": "Meta"
+};
+/**
+ * @param {object} nativeEvent Native browser event.
+ * @return {string} Normalized `key` property.
+ */
+
+function getEventKey(nativeEvent) {
+  if (nativeEvent.key) {
+    // Normalize inconsistent values reported by browsers due to
+    // implementations of a working draft specification.
+    // FireFox implements `key` but returns `MozPrintableKey` for all
+    // printable characters (normalized to `Unidentified`), ignore it.
+    var key = normalizeKey[nativeEvent.key] || nativeEvent.key; // $FlowFixMe unable to index with a `mixed` value
+
+    if (key !== "Unidentified") {
+      return key;
+    }
+  } // Browser does not implement `key`, polyfill as much of it as we can.
+
+  if (nativeEvent.type === "keypress") {
+    var charCode = getEventCharCode(
+      // $FlowFixMe unable to narrow to `KeyboardEvent`
+      nativeEvent
+    ); // The enter-key is technically both printable and non-printable and can
+    // thus be captured by `keypress`, no other non-printable key should.
+
+    return charCode === 13 ? "Enter" : String.fromCharCode(charCode);
+  }
+
+  if (nativeEvent.type === "keydown" || nativeEvent.type === "keyup") {
+    // While user keyboard layout determines the actual meaning of each
+    // `keyCode` value, almost all function keys have a universal value.
+    // $FlowFixMe unable to index with a `mixed` value
+    return translateToKey[nativeEvent.keyCode] || "Unidentified";
+  }
+
+  return "";
+}
+/**
+ * Translation from modifier key to the associated property in the event.
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/#keys-Modifiers
+ */
+
+var modifierKeyToProp = {
+  Alt: "altKey",
+  Control: "ctrlKey",
+  Meta: "metaKey",
+  Shift: "shiftKey"
+}; // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
+// getModifierState. If getModifierState is not supported, we map it to a set of
+// modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
+// $FlowFixMe[missing-this-annot]
+
+function modifierStateGetter(keyArg) {
+  var syntheticEvent = this;
+  var nativeEvent = syntheticEvent.nativeEvent;
+
+  if (nativeEvent.getModifierState) {
+    return nativeEvent.getModifierState(keyArg);
+  }
+
+  var keyProp = modifierKeyToProp[keyArg];
+  return keyProp ? !!nativeEvent[keyProp] : false;
+}
+
+function getEventModifierState(nativeEvent) {
+  return modifierStateGetter;
+}
+/**
+ * @interface KeyboardEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var KeyboardEventInterface = assign({}, UIEventInterface, {
+  key: getEventKey,
+  code: 0,
+  location: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
+  altKey: 0,
+  metaKey: 0,
+  repeat: 0,
+  locale: 0,
+  getModifierState: getEventModifierState,
+  // Legacy Interface
+  charCode: function (event) {
+    // `charCode` is the result of a KeyPress event and represents the value of
+    // the actual printable character.
+    // KeyPress is deprecated, but its replacement is not yet final and not
+    // implemented in any major browser. Only KeyPress has charCode.
+    if (event.type === "keypress") {
+      return getEventCharCode(
+        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        event
+      );
+    }
+
+    return 0;
+  },
+  keyCode: function (event) {
+    // `keyCode` is the result of a KeyDown/Up event and represents the value of
+    // physical keyboard key.
+    // The actual meaning of the value depends on the users' keyboard layout
+    // which cannot be detected. Assuming that it is a US keyboard layout
+    // provides a surprisingly accurate mapping for US and European users.
+    // Due to this, it is left to the user to implement at this time.
+    if (event.type === "keydown" || event.type === "keyup") {
+      return event.keyCode;
+    }
+
+    return 0;
+  },
+  which: function (event) {
+    // `which` is an alias for either `keyCode` or `charCode` depending on the
+    // type of the event.
+    if (event.type === "keypress") {
+      return getEventCharCode(
+        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        event
+      );
+    }
+
+    if (event.type === "keydown" || event.type === "keyup") {
+      return event.keyCode;
+    }
+
+    return 0;
+  }
+});
+
+var SyntheticKeyboardEvent = createSyntheticEvent(KeyboardEventInterface);
+/**
+ * @interface PointerEvent
+ * @see http://www.w3.org/TR/pointerevents/
+ */
+
+var PointerEventInterface = assign({}, MouseEventInterface, {
+  pointerId: 0,
+  width: 0,
+  height: 0,
+  pressure: 0,
+  tangentialPressure: 0,
+  tiltX: 0,
+  tiltY: 0,
+  twist: 0,
+  pointerType: 0,
+  isPrimary: 0
+});
+
+var SyntheticPointerEvent = createSyntheticEvent(PointerEventInterface);
+/**
+ * @interface TouchEvent
+ * @see http://www.w3.org/TR/touch-events/
+ */
+
+var TouchEventInterface = assign({}, UIEventInterface, {
+  touches: 0,
+  targetTouches: 0,
+  changedTouches: 0,
+  altKey: 0,
+  metaKey: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
+  getModifierState: getEventModifierState
+});
+
+var SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
+ */
+
+var TransitionEventInterface = assign({}, EventInterface, {
+  propertyName: 0,
+  elapsedTime: 0,
+  pseudoElement: 0
+});
+
+var SyntheticTransitionEvent = createSyntheticEvent(TransitionEventInterface);
+/**
+ * @interface WheelEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+
+var WheelEventInterface = assign({}, MouseEventInterface, {
+  deltaX: function (event) {
+    return "deltaX" in event
+      ? event.deltaX // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
+      : "wheelDeltaX" in event // $FlowFixMe assuming this is a number
+      ? -event.wheelDeltaX
+      : 0;
+  },
+  deltaY: function (event) {
+    return "deltaY" in event
+      ? event.deltaY // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
+      : "wheelDeltaY" in event // $FlowFixMe assuming this is a number
+      ? -event.wheelDeltaY // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
+      : "wheelDelta" in event // $FlowFixMe assuming this is a number
+      ? -event.wheelDelta
+      : 0;
+  },
+  deltaZ: 0,
+  // Browsers without "deltaMode" is reporting in raw wheel delta where one
+  // notch on the scroll is always +/- 120, roughly equivalent to pixels.
+  // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
+  // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
+  deltaMode: 0
+});
+
+var SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
+
+var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
+
+var START_KEYCODE = 229;
+var canUseCompositionEvent = canUseDOM && "CompositionEvent" in window;
+var documentMode = null;
+
+if (canUseDOM && "documentMode" in document) {
+  documentMode = document.documentMode;
+} // Webkit offers a very useful `textInput` event that can be used to
+// directly represent `beforeInput`. The IE `textinput` event is not as
+// useful, so we don't use it.
+
+var canUseTextInputEvent = canUseDOM && "TextEvent" in window && !documentMode; // In IE9+, we have access to composition events, but the data supplied
+// by the native compositionend event may be incorrect. Japanese ideographic
+// spaces, for instance (\u3000) are not recorded correctly.
+
+var useFallbackCompositionData =
+  canUseDOM &&
+  (!canUseCompositionEvent ||
+    (documentMode && documentMode > 8 && documentMode <= 11));
+var SPACEBAR_CODE = 32;
+var SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
+
+function registerEvents$3() {
+  registerTwoPhaseEvent("onBeforeInput", [
+    "compositionend",
+    "keypress",
+    "textInput",
+    "paste"
+  ]);
+  registerTwoPhaseEvent("onCompositionEnd", [
+    "compositionend",
+    "focusout",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown"
+  ]);
+  registerTwoPhaseEvent("onCompositionStart", [
+    "compositionstart",
+    "focusout",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown"
+  ]);
+  registerTwoPhaseEvent("onCompositionUpdate", [
+    "compositionupdate",
+    "focusout",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown"
+  ]);
+} // Track whether we've ever handled a keypress on the space key.
+
+var hasSpaceKeypress = false;
+/**
+ * Return whether a native keypress event is assumed to be a command.
+ * This is required because Firefox fires `keypress` events for key commands
+ * (cut, copy, select-all, etc.) even though no character is inserted.
+ */
+
+function isKeypressCommand(nativeEvent) {
+  return (
+    (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) && // ctrlKey && altKey is equivalent to AltGr, and is not a command.
+    !(nativeEvent.ctrlKey && nativeEvent.altKey)
+  );
+}
+/**
+ * Translate native top level events into event types.
+ */
+
+function getCompositionEventType(domEventName) {
+  switch (domEventName) {
+    case "compositionstart":
+      return "onCompositionStart";
+
+    case "compositionend":
+      return "onCompositionEnd";
+
+    case "compositionupdate":
+      return "onCompositionUpdate";
+  }
+}
+/**
+ * Does our fallback best-guess model think this event signifies that
+ * composition has begun?
+ */
+
+function isFallbackCompositionStart(domEventName, nativeEvent) {
+  return domEventName === "keydown" && nativeEvent.keyCode === START_KEYCODE;
+}
+/**
+ * Does our fallback mode think that this event is the end of composition?
+ */
+
+function isFallbackCompositionEnd(domEventName, nativeEvent) {
+  switch (domEventName) {
+    case "keyup":
+      // Command keys insert or clear IME input.
+      return END_KEYCODES.indexOf(nativeEvent.keyCode) !== -1;
+
+    case "keydown":
+      // Expect IME keyCode on each keydown. If we get any other
+      // code we must have exited earlier.
+      return nativeEvent.keyCode !== START_KEYCODE;
+
+    case "keypress":
+    case "mousedown":
+    case "focusout":
+      // Events are not possible without cancelling IME.
+      return true;
+
+    default:
+      return false;
+  }
+}
+/**
+ * Google Input Tools provides composition data via a CustomEvent,
+ * with the `data` property populated in the `detail` object. If this
+ * is available on the event object, use it. If not, this is a plain
+ * composition event and we have nothing special to extract.
+ *
+ * @param {object} nativeEvent
+ * @return {?string}
+ */
+
+function getDataFromCustomEvent(nativeEvent) {
+  var detail = nativeEvent.detail;
+
+  if (typeof detail === "object" && "data" in detail) {
+    return detail.data;
+  }
+
+  return null;
+}
+/**
+ * Check if a composition event was triggered by Korean IME.
+ * Our fallback mode does not work well with IE's Korean IME,
+ * so just use native composition events when Korean IME is used.
+ * Although CompositionEvent.locale property is deprecated,
+ * it is available in IE, where our fallback mode is enabled.
+ *
+ * @param {object} nativeEvent
+ * @return {boolean}
+ */
+
+function isUsingKoreanIME(nativeEvent) {
+  return nativeEvent.locale === "ko";
+} // Track the current IME composition status, if any.
+
+var isComposing = false;
+/**
+ * @return {?object} A SyntheticCompositionEvent.
+ */
+
+function extractCompositionEvent(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget
+) {
+  var eventType;
+  var fallbackData;
+
+  if (canUseCompositionEvent) {
+    eventType = getCompositionEventType(domEventName);
+  } else if (!isComposing) {
+    if (isFallbackCompositionStart(domEventName, nativeEvent)) {
+      eventType = "onCompositionStart";
+    }
+  } else if (isFallbackCompositionEnd(domEventName, nativeEvent)) {
+    eventType = "onCompositionEnd";
+  }
+
+  if (!eventType) {
+    return null;
+  }
+
+  if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
+    // The current composition is stored statically and must not be
+    // overwritten while composition continues.
+    if (!isComposing && eventType === "onCompositionStart") {
+      isComposing = initialize(nativeEventTarget);
+    } else if (eventType === "onCompositionEnd") {
+      if (isComposing) {
+        fallbackData = getData();
+      }
+    }
+  }
+
+  var listeners = accumulateTwoPhaseListeners(targetInst, eventType);
+
+  if (listeners.length > 0) {
+    var event = new SyntheticCompositionEvent(
+      eventType,
+      domEventName,
+      null,
+      nativeEvent,
+      nativeEventTarget
+    );
+    dispatchQueue.push({
+      event: event,
+      listeners: listeners
+    });
+
+    if (fallbackData) {
+      // Inject data generated from fallback path into the synthetic event.
+      // This matches the property of native CompositionEventInterface.
+      // $FlowFixMe[incompatible-use]
+      event.data = fallbackData;
+    } else {
+      var customData = getDataFromCustomEvent(nativeEvent);
+
+      if (customData !== null) {
+        // $FlowFixMe[incompatible-use]
+        event.data = customData;
+      }
+    }
+  }
+}
+
+function getNativeBeforeInputChars(domEventName, nativeEvent) {
+  switch (domEventName) {
+    case "compositionend":
+      return getDataFromCustomEvent(nativeEvent);
+
+    case "keypress":
+      /**
+       * If native `textInput` events are available, our goal is to make
+       * use of them. However, there is a special case: the spacebar key.
+       * In Webkit, preventing default on a spacebar `textInput` event
+       * cancels character insertion, but it *also* causes the browser
+       * to fall back to its default spacebar behavior of scrolling the
+       * page.
+       *
+       * Tracking at:
+       * https://code.google.com/p/chromium/issues/detail?id=355103
+       *
+       * To avoid this issue, use the keypress event as if no `textInput`
+       * event is available.
+       */
+      var which = nativeEvent.which;
+
+      if (which !== SPACEBAR_CODE) {
+        return null;
+      }
+
+      hasSpaceKeypress = true;
+      return SPACEBAR_CHAR;
+
+    case "textInput":
+      // Record the characters to be added to the DOM.
+      var chars = nativeEvent.data; // If it's a spacebar character, assume that we have already handled
+      // it at the keypress level and bail immediately. Android Chrome
+      // doesn't give us keycodes, so we need to ignore it.
+
+      if (chars === SPACEBAR_CHAR && hasSpaceKeypress) {
+        return null;
+      }
+
+      return chars;
+
+    default:
+      // For other native event types, do nothing.
+      return null;
+  }
+}
+/**
+ * For browsers that do not provide the `textInput` event, extract the
+ * appropriate string to use for SyntheticInputEvent.
+ */
+
+function getFallbackBeforeInputChars(domEventName, nativeEvent) {
+  // If we are currently composing (IME) and using a fallback to do so,
+  // try to extract the composed characters from the fallback object.
+  // If composition event is available, we extract a string only at
+  // compositionevent, otherwise extract it at fallback events.
+  if (isComposing) {
+    if (
+      domEventName === "compositionend" ||
+      (!canUseCompositionEvent &&
+        isFallbackCompositionEnd(domEventName, nativeEvent))
+    ) {
+      var chars = getData();
+      reset();
+      isComposing = false;
+      return chars;
+    }
+
+    return null;
+  }
+
+  switch (domEventName) {
+    case "paste":
+      // If a paste event occurs after a keypress, throw out the input
+      // chars. Paste events should not lead to BeforeInput events.
+      return null;
+
+    case "keypress":
+      /**
+       * As of v27, Firefox may fire keypress events even when no character
+       * will be inserted. A few possibilities:
+       *
+       * - `which` is `0`. Arrow keys, Esc key, etc.
+       *
+       * - `which` is the pressed key code, but no char is available.
+       *   Ex: 'AltGr + d` in Polish. There is no modified character for
+       *   this key combination and no character is inserted into the
+       *   document, but FF fires the keypress for char code `100` anyway.
+       *   No `input` event will occur.
+       *
+       * - `which` is the pressed key code, but a command combination is
+       *   being used. Ex: `Cmd+C`. No character is inserted, and no
+       *   `input` event will occur.
+       */
+      if (!isKeypressCommand(nativeEvent)) {
+        // IE fires the `keypress` event when a user types an emoji via
+        // Touch keyboard of Windows.  In such a case, the `char` property
+        // holds an emoji character like `\uD83D\uDE0A`.  Because its length
+        // is 2, the property `which` does not represent an emoji correctly.
+        // In such a case, we directly return the `char` property instead of
+        // using `which`.
+        if (nativeEvent.char && nativeEvent.char.length > 1) {
+          return nativeEvent.char;
+        } else if (nativeEvent.which) {
+          return String.fromCharCode(nativeEvent.which);
+        }
+      }
+
+      return null;
+
+    case "compositionend":
+      return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
+        ? null
+        : nativeEvent.data;
+
+    default:
+      return null;
+  }
+}
+/**
+ * Extract a SyntheticInputEvent for `beforeInput`, based on either native
+ * `textInput` or fallback behavior.
+ *
+ * @return {?object} A SyntheticInputEvent.
+ */
+
+function extractBeforeInputEvent(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget
+) {
+  var chars;
+
+  if (canUseTextInputEvent) {
+    chars = getNativeBeforeInputChars(domEventName, nativeEvent);
+  } else {
+    chars = getFallbackBeforeInputChars(domEventName, nativeEvent);
+  } // If no characters are being inserted, no BeforeInput event should
+  // be fired.
+
+  if (!chars) {
+    return null;
+  }
+
+  var listeners = accumulateTwoPhaseListeners(targetInst, "onBeforeInput");
+
+  if (listeners.length > 0) {
+    var event = new SyntheticInputEvent(
+      "onBeforeInput",
+      "beforeinput",
+      null,
+      nativeEvent,
+      nativeEventTarget
+    );
+    dispatchQueue.push({
+      event: event,
+      listeners: listeners
+    }); // $FlowFixMe[incompatible-use]
+
+    event.data = chars;
+  }
+}
+/**
+ * Create an `onBeforeInput` event to match
+ * http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105/#events-inputevents.
+ *
+ * This event plugin is based on the native `textInput` event
+ * available in Chrome, Safari, Opera, and IE. This event fires after
+ * `onKeyPress` and `onCompositionEnd`, but before `onInput`.
+ *
+ * `beforeInput` is spec'd but not implemented in any browsers, and
+ * the `input` event does not provide any useful information about what has
+ * actually been added, contrary to the spec. Thus, `textInput` is the best
+ * available event to identify the characters that have actually been inserted
+ * into the target node.
+ *
+ * This plugin is also responsible for emitting `composition` events, thus
+ * allowing us to share composition fallback code for both `beforeInput` and
+ * `composition` event types.
+ */
+
+function extractEvents$5(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  extractCompositionEvent(
+    dispatchQueue,
+    domEventName,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  );
+  extractBeforeInputEvent(
+    dispatchQueue,
+    domEventName,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  );
+}
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
+ */
+var supportedInputTypes = {
+  color: true,
+  date: true,
+  datetime: true,
+  "datetime-local": true,
+  email: true,
+  month: true,
+  number: true,
+  password: true,
+  range: true,
+  search: true,
+  tel: true,
+  text: true,
+  time: true,
+  url: true,
+  week: true
+};
+
+function isTextInputElement(elem) {
+  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+
+  if (nodeName === "input") {
+    return !!supportedInputTypes[elem.type];
+  }
+
+  if (nodeName === "textarea") {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks if an event is supported in the current execution environment.
+ *
+ * NOTE: This will not work correctly for non-generic events such as `change`,
+ * `reset`, `load`, `error`, and `select`.
+ *
+ * Borrows from Modernizr.
+ *
+ * @param {string} eventNameSuffix Event name, e.g. "click".
+ * @return {boolean} True if the event is supported.
+ * @internal
+ * @license Modernizr 3.0.0pre (Custom Build) | MIT
+ */
+
+function isEventSupported(eventNameSuffix) {
+  if (!canUseDOM) {
+    return false;
+  }
+
+  var eventName = "on" + eventNameSuffix;
+  var isSupported = eventName in document;
+
+  if (!isSupported) {
+    var element = document.createElement("div");
+    element.setAttribute(eventName, "return;");
+    isSupported = typeof element[eventName] === "function";
+  }
+
+  return isSupported;
+}
+
+function registerEvents$2() {
+  registerTwoPhaseEvent("onChange", [
+    "change",
+    "click",
+    "focusin",
+    "focusout",
+    "input",
+    "keydown",
+    "keyup",
+    "selectionchange"
+  ]);
+}
+
+function createAndAccumulateChangeEvent(
+  dispatchQueue,
+  inst,
+  nativeEvent,
+  target
+) {
+  // Flag this event loop as needing state restore.
+  enqueueStateRestore(target);
+  var listeners = accumulateTwoPhaseListeners(inst, "onChange");
+
+  if (listeners.length > 0) {
+    var event = new SyntheticEvent(
+      "onChange",
+      "change",
+      null,
+      nativeEvent,
+      target
+    );
+    dispatchQueue.push({
+      event: event,
+      listeners: listeners
+    });
+  }
+}
+/**
+ * For IE shims
+ */
+
+var activeElement$1 = null;
+var activeElementInst$1 = null;
+/**
+ * SECTION: handle `change` event
+ */
+
+function shouldUseChangeEvent(elem) {
+  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  return (
+    nodeName === "select" || (nodeName === "input" && elem.type === "file")
+  );
+}
+
+function manualDispatchChangeEvent(nativeEvent) {
+  var dispatchQueue = [];
+  createAndAccumulateChangeEvent(
+    dispatchQueue,
+    activeElementInst$1,
+    nativeEvent,
+    getEventTarget(nativeEvent)
+  ); // If change and propertychange bubbled, we'd just bind to it like all the
+  // other events and have it go through ReactBrowserEventEmitter. Since it
+  // doesn't, we manually listen for the events and so we have to enqueue and
+  // process the abstract event manually.
+  //
+  // Batching is necessary here in order to ensure that all event handlers run
+  // before the next rerender (including event handlers attached to ancestor
+  // elements instead of directly on the input). Without this, controlled
+  // components don't work properly in conjunction with event bubbling because
+  // the component is rerendered and the value reverted before all the event
+  // handlers can run. See https://github.com/facebook/react/issues/708.
+
+  batchedUpdates(runEventInBatch, dispatchQueue);
+}
+
+function runEventInBatch(dispatchQueue) {
+  processDispatchQueue(dispatchQueue, 0);
+}
+
+function getInstIfValueChanged(targetInst) {
+  var targetNode = getNodeFromInstance(targetInst);
+
+  if (updateValueIfChanged(targetNode)) {
+    return targetInst;
+  }
+}
+
+function getTargetInstForChangeEvent(domEventName, targetInst) {
+  if (domEventName === "change") {
+    return targetInst;
+  }
+}
+/**
+ * SECTION: handle `input` event
+ */
+
+var isInputEventSupported = false;
+
+if (canUseDOM) {
+  // IE9 claims to support the input event but fails to trigger it when
+  // deleting text, so we ignore its input events.
+  isInputEventSupported =
+    isEventSupported("input") &&
+    (!document.documentMode || document.documentMode > 9);
+}
+/**
+ * (For IE <=9) Starts tracking propertychange events on the passed-in element
+ * and override the value property so that we can distinguish user events from
+ * value changes in JS.
+ */
+
+function startWatchingForValueChange(target, targetInst) {
+  activeElement$1 = target;
+  activeElementInst$1 = targetInst;
+  activeElement$1.attachEvent("onpropertychange", handlePropertyChange);
+}
+/**
+ * (For IE <=9) Removes the event listeners from the currently-tracked element,
+ * if any exists.
+ */
+
+function stopWatchingForValueChange() {
+  if (!activeElement$1) {
+    return;
+  }
+
+  activeElement$1.detachEvent("onpropertychange", handlePropertyChange);
+  activeElement$1 = null;
+  activeElementInst$1 = null;
+}
+/**
+ * (For IE <=9) Handles a propertychange event, sending a `change` event if
+ * the value of the active element has changed.
+ */
+// $FlowFixMe[missing-local-annot]
+
+function handlePropertyChange(nativeEvent) {
+  if (nativeEvent.propertyName !== "value") {
+    return;
+  }
+
+  if (getInstIfValueChanged(activeElementInst$1)) {
+    manualDispatchChangeEvent(nativeEvent);
+  }
+}
+
+function handleEventsForInputEventPolyfill(domEventName, target, targetInst) {
+  if (domEventName === "focusin") {
+    // In IE9, propertychange fires for most input events but is buggy and
+    // doesn't fire when text is deleted, but conveniently, selectionchange
+    // appears to fire in all of the remaining cases so we catch those and
+    // forward the event if the value has changed
+    // In either case, we don't want to call the event handler if the value
+    // is changed from JS so we redefine a setter for `.value` that updates
+    // our activeElementValue variable, allowing us to ignore those changes
+    //
+    // stopWatching() should be a noop here but we call it just in case we
+    // missed a blur event somehow.
+    stopWatchingForValueChange();
+    startWatchingForValueChange(target, targetInst);
+  } else if (domEventName === "focusout") {
+    stopWatchingForValueChange();
+  }
+} // For IE8 and IE9.
+
+function getTargetInstForInputEventPolyfill(domEventName, targetInst) {
+  if (
+    domEventName === "selectionchange" ||
+    domEventName === "keyup" ||
+    domEventName === "keydown"
+  ) {
+    // On the selectionchange event, the target is just document which isn't
+    // helpful for us so just check activeElement instead.
+    //
+    // 99% of the time, keydown and keyup aren't necessary. IE8 fails to fire
+    // propertychange on the first input event after setting `value` from a
+    // script and fires only keydown, keypress, keyup. Catching keyup usually
+    // gets it and catching keydown lets us fire an event for the first
+    // keystroke if user does a key repeat (it'll be a little delayed: right
+    // before the second keystroke). Other input methods (e.g., paste) seem to
+    // fire selectionchange normally.
+    return getInstIfValueChanged(activeElementInst$1);
+  }
+}
+/**
+ * SECTION: handle `click` event
+ */
+
+function shouldUseClickEvent(elem) {
+  // Use the `click` event to detect changes to checkbox and radio inputs.
+  // This approach works across all browsers, whereas `change` does not fire
+  // until `blur` in IE8.
+  var nodeName = elem.nodeName;
+  return (
+    nodeName &&
+    nodeName.toLowerCase() === "input" &&
+    (elem.type === "checkbox" || elem.type === "radio")
+  );
+}
+
+function getTargetInstForClickEvent(domEventName, targetInst) {
+  if (domEventName === "click") {
+    return getInstIfValueChanged(targetInst);
+  }
+}
+
+function getTargetInstForInputOrChangeEvent(domEventName, targetInst) {
+  if (domEventName === "input" || domEventName === "change") {
+    return getInstIfValueChanged(targetInst);
+  }
+}
+
+function handleControlledInputBlur(node) {
+  var state = node._wrapperState;
+
+  if (!state || !state.controlled || node.type !== "number") {
+    return;
+  }
+
+  if (!disableInputAttributeSyncing) {
+    // If controlled, assign the value attribute to the current value on blur
+    setDefaultValue(node, "number", node.value);
+  }
+}
+/**
+ * This plugin creates an `onChange` event that normalizes change events
+ * across form elements. This event fires at a time when it's possible to
+ * change the element's value without seeing a flicker.
+ *
+ * Supported elements are:
+ * - input (see `isTextInputElement`)
+ * - textarea
+ * - select
+ */
+
+function extractEvents$4(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+  var getTargetInstFunc, handleEventFunc;
+
+  if (shouldUseChangeEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
+  } else if (isTextInputElement(targetNode)) {
+    if (isInputEventSupported) {
+      getTargetInstFunc = getTargetInstForInputOrChangeEvent;
+    } else {
+      getTargetInstFunc = getTargetInstForInputEventPolyfill;
+      handleEventFunc = handleEventsForInputEventPolyfill;
+    }
+  } else if (shouldUseClickEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForClickEvent;
+  } else if (
+    enableCustomElementPropertySupport &&
+    targetInst &&
+    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+  ) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
+  }
+
+  if (getTargetInstFunc) {
+    var inst = getTargetInstFunc(domEventName, targetInst);
+
+    if (inst) {
+      createAndAccumulateChangeEvent(
+        dispatchQueue,
+        inst,
+        nativeEvent,
+        nativeEventTarget
+      );
+      return;
+    }
+  }
+
+  if (handleEventFunc) {
+    handleEventFunc(domEventName, targetNode, targetInst);
+  } // When blurring, set the value attribute for number inputs
+
+  if (domEventName === "focusout") {
+    handleControlledInputBlur(targetNode);
+  }
+}
+
+function registerEvents$1() {
+  registerDirectEvent("onMouseEnter", ["mouseout", "mouseover"]);
+  registerDirectEvent("onMouseLeave", ["mouseout", "mouseover"]);
+  registerDirectEvent("onPointerEnter", ["pointerout", "pointerover"]);
+  registerDirectEvent("onPointerLeave", ["pointerout", "pointerover"]);
+}
+/**
+ * For almost every interaction we care about, there will be both a top-level
+ * `mouseover` and `mouseout` event that occurs. Only use `mouseout` so that
+ * we do not extract duplicate events. However, moving the mouse into the
+ * browser from outside will not fire a `mouseout` event. In this case, we use
+ * the `mouseover` top-level event.
+ */
+
+function extractEvents$3(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  var isOverEvent =
+    domEventName === "mouseover" || domEventName === "pointerover";
+  var isOutEvent = domEventName === "mouseout" || domEventName === "pointerout";
+
+  if (isOverEvent && !isReplayingEvent(nativeEvent)) {
+    // If this is an over event with a target, we might have already dispatched
+    // the event in the out event of the other target. If this is replayed,
+    // then it's because we couldn't dispatch against this target previously
+    // so we have to do it now instead.
+    var related = nativeEvent.relatedTarget || nativeEvent.fromElement;
+
+    if (related) {
+      // If the related node is managed by React, we can assume that we have
+      // already dispatched the corresponding events during its mouseout.
+      if (
+        getClosestInstanceFromNode(related) ||
+        isContainerMarkedAsRoot(related)
+      ) {
+        return;
+      }
+    }
+  }
+
+  if (!isOutEvent && !isOverEvent) {
+    // Must not be a mouse or pointer in or out - ignoring.
+    return;
+  }
+
+  var win; // TODO: why is this nullable in the types but we read from it?
+
+  if (nativeEventTarget.window === nativeEventTarget) {
+    // `nativeEventTarget` is probably a window object.
+    win = nativeEventTarget;
+  } else {
+    // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
+    var doc = nativeEventTarget.ownerDocument;
+
+    if (doc) {
+      win = doc.defaultView || doc.parentWindow;
+    } else {
+      win = window;
+    }
+  }
+
+  var from;
+  var to;
+
+  if (isOutEvent) {
+    var _related = nativeEvent.relatedTarget || nativeEvent.toElement;
+
+    from = targetInst;
+    to = _related ? getClosestInstanceFromNode(_related) : null;
+
+    if (to !== null) {
+      var nearestMounted = getNearestMountedFiber(to);
+      var tag = to.tag;
+
+      if (
+        to !== nearestMounted ||
+        (tag !== HostComponent && tag !== HostSingleton && tag !== HostText)
+      ) {
+        to = null;
+      }
+    }
+  } else {
+    // Moving to a node from outside the window.
+    from = null;
+    to = targetInst;
+  }
+
+  if (from === to) {
+    // Nothing pertains to our managed components.
+    return;
+  }
+
+  var SyntheticEventCtor = SyntheticMouseEvent;
+  var leaveEventType = "onMouseLeave";
+  var enterEventType = "onMouseEnter";
+  var eventTypePrefix = "mouse";
+
+  if (domEventName === "pointerout" || domEventName === "pointerover") {
+    SyntheticEventCtor = SyntheticPointerEvent;
+    leaveEventType = "onPointerLeave";
+    enterEventType = "onPointerEnter";
+    eventTypePrefix = "pointer";
+  }
+
+  var fromNode = from == null ? win : getNodeFromInstance(from);
+  var toNode = to == null ? win : getNodeFromInstance(to);
+  var leave = new SyntheticEventCtor(
+    leaveEventType,
+    eventTypePrefix + "leave",
+    from,
+    nativeEvent,
+    nativeEventTarget
+  );
+  leave.target = fromNode;
+  leave.relatedTarget = toNode;
+  var enter = null; // We should only process this nativeEvent if we are processing
+  // the first ancestor. Next time, we will ignore the event.
+
+  var nativeTargetInst = getClosestInstanceFromNode(nativeEventTarget);
+
+  if (nativeTargetInst === targetInst) {
+    var enterEvent = new SyntheticEventCtor(
+      enterEventType,
+      eventTypePrefix + "enter",
+      to,
+      nativeEvent,
+      nativeEventTarget
+    );
+    enterEvent.target = toNode;
+    enterEvent.relatedTarget = fromNode;
+    enter = enterEvent;
+  }
+
+  accumulateEnterLeaveTwoPhaseListeners(dispatchQueue, leave, enter, from, to);
+}
+
+var skipSelectionChangeEvent =
+  canUseDOM && "documentMode" in document && document.documentMode <= 11;
+
+function registerEvents() {
+  registerTwoPhaseEvent("onSelect", [
+    "focusout",
+    "contextmenu",
+    "dragend",
+    "focusin",
+    "keydown",
+    "keyup",
+    "mousedown",
+    "mouseup",
+    "selectionchange"
+  ]);
+}
+
+var activeElement = null;
+var activeElementInst = null;
+var lastSelection = null;
+var mouseDown = false;
+/**
+ * Get an object which is a unique representation of the current selection.
+ *
+ * The return value will not be consistent across nodes or browsers, but
+ * two identical selections on the same node will return identical objects.
+ */
+
+function getSelection(node) {
+  if ("selectionStart" in node && hasSelectionCapabilities(node)) {
+    return {
+      start: node.selectionStart,
+      end: node.selectionEnd
+    };
+  } else {
+    var win = (node.ownerDocument && node.ownerDocument.defaultView) || window;
+    var selection = win.getSelection();
+    return {
+      anchorNode: selection.anchorNode,
+      anchorOffset: selection.anchorOffset,
+      focusNode: selection.focusNode,
+      focusOffset: selection.focusOffset
+    };
+  }
+}
+/**
+ * Get document associated with the event target.
+ */
+
+function getEventTargetDocument(eventTarget) {
+  return eventTarget.window === eventTarget
+    ? eventTarget.document
+    : eventTarget.nodeType === DOCUMENT_NODE
+    ? eventTarget
+    : eventTarget.ownerDocument;
+}
+/**
+ * Poll selection to see whether it's changed.
+ *
+ * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
+ * @return {?SyntheticEvent}
+ */
+
+function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
+  // Ensure we have the right element, and that the user is not dragging a
+  // selection (this matches native `select` event behavior). In HTML5, select
+  // fires only on input and textarea thus if there's no focused element we
+  // won't dispatch.
+  var doc = getEventTargetDocument(nativeEventTarget);
+
+  if (
+    mouseDown ||
+    activeElement == null ||
+    activeElement !== getActiveElement(doc)
+  ) {
+    return;
+  } // Only fire when selection has actually changed.
+
+  var currentSelection = getSelection(activeElement);
+
+  if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
+    lastSelection = currentSelection;
+    var listeners = accumulateTwoPhaseListeners(activeElementInst, "onSelect");
+
+    if (listeners.length > 0) {
+      var event = new SyntheticEvent(
+        "onSelect",
+        "select",
+        null,
+        nativeEvent,
+        nativeEventTarget
+      );
+      dispatchQueue.push({
+        event: event,
+        listeners: listeners
+      });
+      event.target = activeElement;
+    }
+  }
+}
+/**
+ * This plugin creates an `onSelect` event that normalizes select events
+ * across form elements.
+ *
+ * Supported elements are:
+ * - input (see `isTextInputElement`)
+ * - textarea
+ * - contentEditable
+ *
+ * This differs from native browser implementations in the following ways:
+ * - Fires on contentEditable fields as well as inputs.
+ * - Fires for collapsed selection.
+ * - Fires after user input.
+ */
+
+function extractEvents$2(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+
+  switch (domEventName) {
+    // Track the input node that has focus.
+    case "focusin":
+      if (
+        isTextInputElement(targetNode) ||
+        targetNode.contentEditable === "true"
+      ) {
+        activeElement = targetNode;
+        activeElementInst = targetInst;
+        lastSelection = null;
+      }
+
+      break;
+
+    case "focusout":
+      activeElement = null;
+      activeElementInst = null;
+      lastSelection = null;
+      break;
+    // Don't fire the event while the user is dragging. This matches the
+    // semantics of the native select event.
+
+    case "mousedown":
+      mouseDown = true;
+      break;
+
+    case "contextmenu":
+    case "mouseup":
+    case "dragend":
+      mouseDown = false;
+      constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
+      break;
+    // Chrome and IE fire non-standard event when selection is changed (and
+    // sometimes when it hasn't). IE's event fires out of order with respect
+    // to key and input events on deletion, so we discard it.
+    //
+    // Firefox doesn't support selectionchange, so check selection status
+    // after each key entry. The selection changes after keydown and before
+    // keyup, but we check on keydown as well in the case of holding down a
+    // key, when multiple keydown events are fired but only one keyup is.
+    // This is also our approach for IE handling, for the reason above.
+
+    case "selectionchange":
+      if (skipSelectionChangeEvent) {
+        break;
+      }
+
+    // falls through
+
+    case "keydown":
+    case "keyup":
+      constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
+  }
+}
+
+/**
+ * Generate a mapping of standard vendor prefixes using the defined style property and event name.
+ *
+ * @param {string} styleProp
+ * @param {string} eventName
+ * @returns {object}
+ */
+
+function makePrefixMap(styleProp, eventName) {
+  var prefixes = {};
+  prefixes[styleProp.toLowerCase()] = eventName.toLowerCase();
+  prefixes["Webkit" + styleProp] = "webkit" + eventName;
+  prefixes["Moz" + styleProp] = "moz" + eventName;
+  return prefixes;
+}
+/**
+ * A list of event names to a configurable list of vendor prefixes.
+ */
+
+var vendorPrefixes = {
+  animationend: makePrefixMap("Animation", "AnimationEnd"),
+  animationiteration: makePrefixMap("Animation", "AnimationIteration"),
+  animationstart: makePrefixMap("Animation", "AnimationStart"),
+  transitionend: makePrefixMap("Transition", "TransitionEnd")
+};
+/**
+ * Event names that have already been detected and prefixed (if applicable).
+ */
+
+var prefixedEventNames = {};
+/**
+ * Element to check for prefixes on.
+ */
+
+var style = {};
+/**
+ * Bootstrap if a DOM exists.
+ */
+
+if (canUseDOM) {
+  style = document.createElement("div").style; // On some platforms, in particular some releases of Android 4.x,
+  // the un-prefixed "animation" and "transition" properties are defined on the
+  // style object but the events that fire will still be prefixed, so we need
+  // to check if the un-prefixed events are usable, and if not remove them from the map.
+
+  if (!("AnimationEvent" in window)) {
+    delete vendorPrefixes.animationend.animation;
+    delete vendorPrefixes.animationiteration.animation;
+    delete vendorPrefixes.animationstart.animation;
+  } // Same as above
+
+  if (!("TransitionEvent" in window)) {
+    delete vendorPrefixes.transitionend.transition;
+  }
+}
+/**
+ * Attempts to determine the correct vendor prefixed event name.
+ *
+ * @param {string} eventName
+ * @returns {string}
+ */
+
+function getVendorPrefixedEventName(eventName) {
+  if (prefixedEventNames[eventName]) {
+    return prefixedEventNames[eventName];
+  } else if (!vendorPrefixes[eventName]) {
+    return eventName;
+  }
+
+  var prefixMap = vendorPrefixes[eventName];
+
+  for (var styleProp in prefixMap) {
+    if (prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
+      return (prefixedEventNames[eventName] = prefixMap[styleProp]);
+    }
+  }
+
+  return eventName;
+}
+
+var ANIMATION_END = getVendorPrefixedEventName("animationend");
+var ANIMATION_ITERATION = getVendorPrefixedEventName("animationiteration");
+var ANIMATION_START = getVendorPrefixedEventName("animationstart");
+var TRANSITION_END = getVendorPrefixedEventName("transitionend");
+
+var topLevelEventsToReactNames = new Map(); // NOTE: Capitalization is important in this list!
+//
+// E.g. it needs "pointerDown", not "pointerdown".
+// This is because we derive both React name ("onPointerDown")
+// and DOM name ("pointerdown") from the same list.
+//
+// Exceptions that don't match this convention are listed separately.
+//
+// prettier-ignore
+
+var simpleEventPluginEvents = ['abort', 'auxClick', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'toggle', 'touchMove', 'waiting', 'wheel'];
+
+{
+  // Special case: these two events don't have on* React handler
+  // and are only accessible via the createEventHandle API.
+  topLevelEventsToReactNames.set("beforeblur", null);
+  topLevelEventsToReactNames.set("afterblur", null);
+}
+
+function registerSimpleEvent(domEventName, reactName) {
+  topLevelEventsToReactNames.set(domEventName, reactName);
+  registerTwoPhaseEvent(reactName, [domEventName]);
+}
+
+function registerSimpleEvents() {
+  for (var i = 0; i < simpleEventPluginEvents.length; i++) {
+    var eventName = simpleEventPluginEvents[i];
+    var domEventName = eventName.toLowerCase();
+    var capitalizedEvent = eventName[0].toUpperCase() + eventName.slice(1);
+    registerSimpleEvent(domEventName, "on" + capitalizedEvent);
+  } // Special cases where event names don't match.
+
+  registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
+  registerSimpleEvent(ANIMATION_ITERATION, "onAnimationIteration");
+  registerSimpleEvent(ANIMATION_START, "onAnimationStart");
+  registerSimpleEvent("dblclick", "onDoubleClick");
+  registerSimpleEvent("focusin", "onFocus");
+  registerSimpleEvent("focusout", "onBlur");
+  registerSimpleEvent(TRANSITION_END, "onTransitionEnd");
+}
+
+function extractEvents$1(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  var reactName = topLevelEventsToReactNames.get(domEventName);
+
+  if (reactName === undefined) {
+    return;
+  }
+
+  var SyntheticEventCtor = SyntheticEvent;
+  var reactEventType = domEventName;
+
+  switch (domEventName) {
+    case "keypress":
+      // Firefox creates a keypress event for function keys too. This removes
+      // the unwanted keypress events. Enter is however both printable and
+      // non-printable. One would expect Tab to be as well (but it isn't).
+      if (getEventCharCode(nativeEvent) === 0) {
+        return;
+      }
+
+    /* falls through */
+
+    case "keydown":
+    case "keyup":
+      SyntheticEventCtor = SyntheticKeyboardEvent;
+      break;
+
+    case "focusin":
+      reactEventType = "focus";
+      SyntheticEventCtor = SyntheticFocusEvent;
+      break;
+
+    case "focusout":
+      reactEventType = "blur";
+      SyntheticEventCtor = SyntheticFocusEvent;
+      break;
+
+    case "beforeblur":
+    case "afterblur":
+      SyntheticEventCtor = SyntheticFocusEvent;
+      break;
+
+    case "click":
+      // Firefox creates a click event on right mouse clicks. This removes the
+      // unwanted click events.
+      if (nativeEvent.button === 2) {
+        return;
+      }
+
+    /* falls through */
+
+    case "auxclick":
+    case "dblclick":
+    case "mousedown":
+    case "mousemove":
+    case "mouseup": // TODO: Disabled elements should not respond to mouse events
+
+    /* falls through */
+
+    case "mouseout":
+    case "mouseover":
+    case "contextmenu":
+      SyntheticEventCtor = SyntheticMouseEvent;
+      break;
+
+    case "drag":
+    case "dragend":
+    case "dragenter":
+    case "dragexit":
+    case "dragleave":
+    case "dragover":
+    case "dragstart":
+    case "drop":
+      SyntheticEventCtor = SyntheticDragEvent;
+      break;
+
+    case "touchcancel":
+    case "touchend":
+    case "touchmove":
+    case "touchstart":
+      SyntheticEventCtor = SyntheticTouchEvent;
+      break;
+
+    case ANIMATION_END:
+    case ANIMATION_ITERATION:
+    case ANIMATION_START:
+      SyntheticEventCtor = SyntheticAnimationEvent;
+      break;
+
+    case TRANSITION_END:
+      SyntheticEventCtor = SyntheticTransitionEvent;
+      break;
+
+    case "scroll":
+      SyntheticEventCtor = SyntheticUIEvent;
+      break;
+
+    case "wheel":
+      SyntheticEventCtor = SyntheticWheelEvent;
+      break;
+
+    case "copy":
+    case "cut":
+    case "paste":
+      SyntheticEventCtor = SyntheticClipboardEvent;
+      break;
+
+    case "gotpointercapture":
+    case "lostpointercapture":
+    case "pointercancel":
+    case "pointerdown":
+    case "pointermove":
+    case "pointerout":
+    case "pointerover":
+    case "pointerup":
+      SyntheticEventCtor = SyntheticPointerEvent;
+      break;
+  }
+
+  var inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
+
+  if (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) {
+    var listeners = accumulateEventHandleNonManagedNodeListeners(
+      // TODO: this cast may not make sense for events like
+      // "focus" where React listens to e.g. "focusin".
+      reactEventType,
+      targetContainer,
+      inCapturePhase
+    );
+
+    if (listeners.length > 0) {
+      // Intentionally create event lazily.
+      var event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget
+      );
+      dispatchQueue.push({
+        event: event,
+        listeners: listeners
+      });
+    }
+  } else {
+    // Some events don't bubble in the browser.
+    // In the past, React has always bubbled them, but this can be surprising.
+    // We're going to try aligning closer to the browser behavior by not bubbling
+    // them in React either. We'll start by not bubbling onScroll, and then expand.
+    var accumulateTargetOnly =
+      !inCapturePhase && // TODO: ideally, we'd eventually add all events from
+      // nonDelegatedEvents list in DOMPluginEventSystem.
+      // Then we can remove this special list.
+      // This is a breaking change that can wait until React 18.
+      domEventName === "scroll";
+
+    var _listeners = accumulateSinglePhaseListeners(
+      targetInst,
+      reactName,
+      nativeEvent.type,
+      inCapturePhase,
+      accumulateTargetOnly,
+      nativeEvent
+    );
+
+    if (_listeners.length > 0) {
+      // Intentionally create event lazily.
+      var _event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget
+      );
+
+      dispatchQueue.push({
+        event: _event,
+        listeners: _listeners
+      });
+    }
+  }
+}
+
+registerSimpleEvents();
+registerEvents$1();
+registerEvents$2();
+registerEvents();
+registerEvents$3();
+
+function extractEvents(
+  dispatchQueue,
+  domEventName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer
+) {
+  // TODO: we should remove the concept of a "SimpleEventPlugin".
+  // This is the basic functionality of the event system. All
+  // the other plugins are essentially polyfills. So the plugin
+  // should probably be inlined somewhere and have its logic
+  // be core the to event system. This would potentially allow
+  // us to ship builds of React without the polyfilled plugins below.
+  extractEvents$1(
+    dispatchQueue,
+    domEventName,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer
+  );
+  var shouldProcessPolyfillPlugins =
+    (eventSystemFlags & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS) === 0; // We don't process these events unless we are in the
+  // event's native "bubble" phase, which means that we're
+  // not in the capture phase. That's because we emulate
+  // the capture phase here still. This is a trade-off,
+  // because in an ideal world we would not emulate and use
+  // the phases properly, like we do with the SimpleEvent
+  // plugin. However, the plugins below either expect
+  // emulation (EnterLeave) or use state localized to that
+  // plugin (BeforeInput, Change, Select). The state in
+  // these modules complicates things, as you'll essentially
+  // get the case where the capture phase event might change
+  // state, only for the following bubble event to come in
+  // later and not trigger anything as the state now
+  // invalidates the heuristics of the event plugin. We
+  // could alter all these plugins to work in such ways, but
+  // that might cause other unknown side-effects that we
+  // can't foresee right now.
+
+  if (shouldProcessPolyfillPlugins) {
+    extractEvents$3(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+    extractEvents$4(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+    extractEvents$2(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+    extractEvents$5(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+  }
+} // List of events that need to be individually attached to media elements.
+
+var mediaEventTypes = [
+  "abort",
+  "canplay",
+  "canplaythrough",
+  "durationchange",
+  "emptied",
+  "encrypted",
+  "ended",
+  "error",
+  "loadeddata",
+  "loadedmetadata",
+  "loadstart",
+  "pause",
+  "play",
+  "playing",
+  "progress",
+  "ratechange",
+  "resize",
+  "seeked",
+  "seeking",
+  "stalled",
+  "suspend",
+  "timeupdate",
+  "volumechange",
+  "waiting"
+]; // We should not delegate these events to the container, but rather
+// set them on the actual target element itself. This is primarily
+// because these events do not consistently bubble in the DOM.
+
+var nonDelegatedEvents = new Set(
+  ["cancel", "close", "invalid", "load", "scroll", "toggle"].concat(
+    mediaEventTypes
+  )
+);
+
+function executeDispatch(event, listener, currentTarget) {
+  var type = event.type || "unknown-event";
+  event.currentTarget = currentTarget;
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  event.currentTarget = null;
+}
+
+function processDispatchQueueItemsInOrder(
+  event,
+  dispatchListeners,
+  inCapturePhase
+) {
+  var previousInstance;
+
+  if (inCapturePhase) {
+    for (var i = dispatchListeners.length - 1; i >= 0; i--) {
+      var _dispatchListeners$i = dispatchListeners[i],
+        instance = _dispatchListeners$i.instance,
+        currentTarget = _dispatchListeners$i.currentTarget,
+        listener = _dispatchListeners$i.listener;
+
+      if (instance !== previousInstance && event.isPropagationStopped()) {
+        return;
+      }
+
+      executeDispatch(event, listener, currentTarget);
+      previousInstance = instance;
+    }
+  } else {
+    for (var _i = 0; _i < dispatchListeners.length; _i++) {
+      var _dispatchListeners$_i = dispatchListeners[_i],
+        _instance = _dispatchListeners$_i.instance,
+        _currentTarget = _dispatchListeners$_i.currentTarget,
+        _listener = _dispatchListeners$_i.listener;
+
+      if (_instance !== previousInstance && event.isPropagationStopped()) {
+        return;
+      }
+
+      executeDispatch(event, _listener, _currentTarget);
+      previousInstance = _instance;
+    }
+  }
+}
+
+function processDispatchQueue(dispatchQueue, eventSystemFlags) {
+  var inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
+
+  for (var i = 0; i < dispatchQueue.length; i++) {
+    var _dispatchQueue$i = dispatchQueue[i],
+      event = _dispatchQueue$i.event,
+      listeners = _dispatchQueue$i.listeners;
+    processDispatchQueueItemsInOrder(event, listeners, inCapturePhase); //  event system doesn't use pooling.
+  } // This would be a good time to rethrow if any of the event handlers threw.
+
+  rethrowCaughtError();
+}
+
+function dispatchEventsForPlugins(
+  domEventName,
+  eventSystemFlags,
+  nativeEvent,
+  targetInst,
+  targetContainer
+) {
+  var nativeEventTarget = getEventTarget(nativeEvent);
+  var dispatchQueue = [];
+  extractEvents(
+    dispatchQueue,
+    domEventName,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer
+  );
+  processDispatchQueue(dispatchQueue, eventSystemFlags);
+}
+
+function listenToNonDelegatedEvent(domEventName, targetElement) {
+  {
+    if (!nonDelegatedEvents.has(domEventName)) {
+      error(
+        'Did not expect a listenToNonDelegatedEvent() call for "%s". ' +
+          "This is a bug in React. Please file an issue.",
+        domEventName
+      );
+    }
+  }
+
+  var isCapturePhaseListener = false;
+  var listenerSet = getEventListenerSet(targetElement);
+  var listenerSetKey = getListenerSetKey(domEventName, isCapturePhaseListener);
+
+  if (!listenerSet.has(listenerSetKey)) {
+    addTrappedEventListener(
+      targetElement,
+      domEventName,
+      IS_NON_DELEGATED,
+      isCapturePhaseListener
+    );
+    listenerSet.add(listenerSetKey);
+  }
+}
+function listenToNativeEvent(domEventName, isCapturePhaseListener, target) {
+  {
+    if (nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener) {
+      error(
+        'Did not expect a listenToNativeEvent() call for "%s" in the bubble phase. ' +
+          "This is a bug in React. Please file an issue.",
+        domEventName
+      );
+    }
+  }
+
+  var eventSystemFlags = 0;
+
+  if (isCapturePhaseListener) {
+    eventSystemFlags |= IS_CAPTURE_PHASE;
+  }
+
+  addTrappedEventListener(
+    target,
+    domEventName,
+    eventSystemFlags,
+    isCapturePhaseListener
+  );
+} // This is only used by createEventHandle when the
+// target is not a DOM element. E.g. window.
+
+function listenToNativeEventForNonManagedEventTarget(
+  domEventName,
+  isCapturePhaseListener,
+  target
+) {
+  var eventSystemFlags = IS_EVENT_HANDLE_NON_MANAGED_NODE;
+  var listenerSet = getEventListenerSet(target);
+  var listenerSetKey = getListenerSetKey(domEventName, isCapturePhaseListener);
+
+  if (!listenerSet.has(listenerSetKey)) {
+    if (isCapturePhaseListener) {
+      eventSystemFlags |= IS_CAPTURE_PHASE;
+    }
+
+    addTrappedEventListener(
+      target,
+      domEventName,
+      eventSystemFlags,
+      isCapturePhaseListener
+    );
+    listenerSet.add(listenerSetKey);
+  }
+}
+var listeningMarker = "_reactListening" + Math.random().toString(36).slice(2);
+function listenToAllSupportedEvents(rootContainerElement) {
+  if (!rootContainerElement[listeningMarker]) {
+    rootContainerElement[listeningMarker] = true;
+    allNativeEvents.forEach(function (domEventName) {
+      // We handle selectionchange separately because it
+      // doesn't bubble and needs to be on the document.
+      if (domEventName !== "selectionchange") {
+        if (!nonDelegatedEvents.has(domEventName)) {
+          listenToNativeEvent(domEventName, false, rootContainerElement);
+        }
+
+        listenToNativeEvent(domEventName, true, rootContainerElement);
+      }
+    });
+    var ownerDocument =
+      rootContainerElement.nodeType === DOCUMENT_NODE
+        ? rootContainerElement
+        : rootContainerElement.ownerDocument;
+
+    if (ownerDocument !== null) {
+      // The selectionchange event also needs deduplication
+      // but it is attached to the document.
+      if (!ownerDocument[listeningMarker]) {
+        ownerDocument[listeningMarker] = true;
+        listenToNativeEvent("selectionchange", false, ownerDocument);
+      }
+    }
+  }
+}
+
+function addTrappedEventListener(
+  targetContainer,
+  domEventName,
+  eventSystemFlags,
+  isCapturePhaseListener,
+  isDeferredListenerForLegacyFBSupport
+) {
+  var listener = createEventListenerWrapperWithPriority(
+    targetContainer,
+    domEventName,
+    eventSystemFlags
+  ); // If passive option is not supported, then the event will be
+  // active and not passive.
+
+  var isPassiveListener = undefined;
+
+  if (passiveBrowserEventsSupported) {
+    // Browsers introduced an intervention, making these events
+    // passive by default on document. React doesn't bind them
+    // to document anymore, but changing this now would undo
+    // the performance wins from the change. So we emulate
+    // the existing behavior manually on the roots now.
+    // https://github.com/facebook/react/issues/19651
+    if (
+      domEventName === "touchstart" ||
+      domEventName === "touchmove" ||
+      domEventName === "wheel"
+    ) {
+      isPassiveListener = true;
+    }
+  }
+
+  targetContainer =
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
+      ? targetContainer.ownerDocument
+      : targetContainer;
+  var unsubscribeListener; // When legacyFBSupport is enabled, it's for when we
+  // want to add a one time event listener to a container.
+  // This should only be used with enableLegacyFBSupport
+  // due to requirement to provide compatibility with
+  // internal FB www event tooling. This works by removing
+  // the event listener as soon as it is invoked. We could
+  // also attempt to use the {once: true} param on
+  // addEventListener, but that requires support and some
+  // browsers do not support this today, and given this is
+  // to support legacy code patterns, it's likely they'll
+  // need support for such browsers.
+
+  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
+    var originalListener = listener; // $FlowFixMe[missing-this-annot]
+    // $FlowFixMe[definition-cycle]
+
+    listener = function () {
+      removeEventListener(targetContainer, domEventName, unsubscribeListener);
+
+      for (
+        var _len = arguments.length, p = new Array(_len), _key = 0;
+        _key < _len;
+        _key++
+      ) {
+        p[_key] = arguments[_key];
+      }
+
+      return originalListener.apply(this, p);
+    };
+  } // TODO: There are too many combinations here. Consolidate them.
+
+  if (isCapturePhaseListener) {
+    if (isPassiveListener !== undefined) {
+      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
+        targetContainer,
+        domEventName,
+        listener,
+        isPassiveListener
+      );
+    } else {
+      unsubscribeListener = addEventCaptureListener(
+        targetContainer,
+        domEventName,
+        listener
+      );
+    }
+  } else {
+    if (isPassiveListener !== undefined) {
+      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
+        targetContainer,
+        domEventName,
+        listener,
+        isPassiveListener
+      );
+    } else {
+      unsubscribeListener = addEventBubbleListener(
+        targetContainer,
+        domEventName,
+        listener
+      );
+    }
+  }
+}
+
+function deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer) {
+  // We defer all click events with legacy FB support mode on.
+  // This means we add a one time event listener to trigger
+  // after the FB delegated listeners fire.
+  var isDeferredListenerForLegacyFBSupport = true;
+  addTrappedEventListener(
+    targetContainer,
+    domEventName,
+    IS_LEGACY_FB_SUPPORT_MODE,
+    false,
+    isDeferredListenerForLegacyFBSupport
+  );
+}
+
+function isMatchingRootContainer(grandContainer, targetContainer) {
+  return (
+    grandContainer === targetContainer ||
+    (grandContainer.nodeType === COMMENT_NODE &&
+      grandContainer.parentNode === targetContainer)
+  );
+}
+
+function dispatchEventForPluginEventSystem(
+  domEventName,
+  eventSystemFlags,
+  nativeEvent,
+  targetInst,
+  targetContainer
+) {
+  var ancestorInst = targetInst;
+
+  if (
+    (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) === 0 &&
+    (eventSystemFlags & IS_NON_DELEGATED) === 0
+  ) {
+    var targetContainerNode = targetContainer; // If we are using the legacy FB support flag, we
+    // defer the event to the null with a one
+    // time event listener so we can defer the event.
+
+    if (
+      enableLegacyFBSupport && // If our event flags match the required flags for entering
+      // FB legacy mode and we are processing the "click" event,
+      // then we can defer the event to the "document", to allow
+      // for legacy FB support, where the expected behavior was to
+      // match React < 16 behavior of delegated clicks to the doc.
+      domEventName === "click" &&
+      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0 &&
+      !isReplayingEvent(nativeEvent)
+    ) {
+      deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer);
+      return;
+    }
+
+    if (targetInst !== null) {
+      // The below logic attempts to work out if we need to change
+      // the target fiber to a different ancestor. We had similar logic
+      // in the legacy event system, except the big difference between
+      // systems is that the modern event system now has an event listener
+      // attached to each React Root and React Portal Root. Together,
+      // the DOM nodes representing these roots are the "rootContainer".
+      // To figure out which ancestor instance we should use, we traverse
+      // up the fiber tree from the target instance and attempt to find
+      // root boundaries that match that of our current "rootContainer".
+      // If we find that "rootContainer", we find the parent fiber
+      // sub-tree for that root and make that our ancestor instance.
+      var node = targetInst;
+
+      mainLoop: while (true) {
+        if (node === null) {
+          return;
+        }
+
+        var nodeTag = node.tag;
+
+        if (nodeTag === HostRoot || nodeTag === HostPortal) {
+          var container = node.stateNode.containerInfo;
+
+          if (isMatchingRootContainer(container, targetContainerNode)) {
+            break;
+          }
+
+          if (nodeTag === HostPortal) {
+            // The target is a portal, but it's not the rootContainer we're looking for.
+            // Normally portals handle their own events all the way down to the root.
+            // So we should be able to stop now. However, we don't know if this portal
+            // was part of *our* root.
+            var grandNode = node.return;
+
+            while (grandNode !== null) {
+              var grandTag = grandNode.tag;
+
+              if (grandTag === HostRoot || grandTag === HostPortal) {
+                var grandContainer = grandNode.stateNode.containerInfo;
+
+                if (
+                  isMatchingRootContainer(grandContainer, targetContainerNode)
+                ) {
+                  // This is the rootContainer we're looking for and we found it as
+                  // a parent of the Portal. That means we can ignore it because the
+                  // Portal will bubble through to us.
+                  return;
+                }
+              }
+
+              grandNode = grandNode.return;
+            }
+          } // Now we need to find it's corresponding host fiber in the other
+          // tree. To do this we can use getClosestInstanceFromNode, but we
+          // need to validate that the fiber is a host instance, otherwise
+          // we need to traverse up through the DOM till we find the correct
+          // node that is from the other tree.
+
+          while (container !== null) {
+            var parentNode = getClosestInstanceFromNode(container);
+
+            if (parentNode === null) {
+              return;
+            }
+
+            var parentTag = parentNode.tag;
+
+            if (
+              parentTag === HostComponent ||
+              parentTag === HostText ||
+              parentTag === HostHoistable ||
+              parentTag === HostSingleton
+            ) {
+              node = ancestorInst = parentNode;
+              continue mainLoop;
+            }
+
+            container = container.parentNode;
+          }
+        }
+
+        node = node.return;
+      }
+    }
+  }
+
+  batchedUpdates(function () {
+    return dispatchEventsForPlugins(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      ancestorInst,
+      targetContainer
+    );
+  });
+}
+
+function createDispatchListener(instance, listener, currentTarget) {
+  return {
+    instance: instance,
+    listener: listener,
+    currentTarget: currentTarget
+  };
+}
+
+function accumulateSinglePhaseListeners(
+  targetFiber,
+  reactName,
+  nativeEventType,
+  inCapturePhase,
+  accumulateTargetOnly,
+  nativeEvent
+) {
+  var captureName = reactName !== null ? reactName + "Capture" : null;
+  var reactEventName = inCapturePhase ? captureName : reactName;
+  var listeners = [];
+  var instance = targetFiber;
+  var lastHostComponent = null; // Accumulate all instances and listeners via the target -> root path.
+
+  while (instance !== null) {
+    var _instance2 = instance,
+      stateNode = _instance2.stateNode,
+      tag = _instance2.tag; // Handle listeners that are on HostComponents (i.e. <div>)
+
+    if (
+      (tag === HostComponent ||
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
+      stateNode !== null
+    ) {
+      lastHostComponent = stateNode; // createEventHandle listeners
+
+      {
+        var eventHandlerListeners = getEventHandlerListeners(lastHostComponent);
+
+        if (eventHandlerListeners !== null) {
+          eventHandlerListeners.forEach(function (entry) {
+            if (
+              entry.type === nativeEventType &&
+              entry.capture === inCapturePhase
+            ) {
+              listeners.push(
+                createDispatchListener(
+                  instance,
+                  entry.callback,
+                  lastHostComponent
+                )
+              );
+            }
+          });
+        }
+      } // Standard React on* listeners, i.e. onClick or onClickCapture
+
+      if (reactEventName !== null) {
+        var listener = getListener(instance, reactEventName);
+
+        if (listener != null) {
+          listeners.push(
+            createDispatchListener(instance, listener, lastHostComponent)
+          );
+        }
+      }
+    } else if (
+      tag === ScopeComponent &&
+      lastHostComponent !== null &&
+      stateNode !== null
+    ) {
+      // Scopes
+      var reactScopeInstance = stateNode;
+
+      var _eventHandlerListeners = getEventHandlerListeners(reactScopeInstance);
+
+      if (_eventHandlerListeners !== null) {
+        _eventHandlerListeners.forEach(function (entry) {
+          if (
+            entry.type === nativeEventType &&
+            entry.capture === inCapturePhase
+          ) {
+            listeners.push(
+              createDispatchListener(
+                instance,
+                entry.callback,
+                lastHostComponent
+              )
+            );
+          }
+        });
+      }
+    } // If we are only accumulating events for the target, then we don't
+    // continue to propagate through the React fiber tree to find other
+    // listeners.
+
+    if (accumulateTargetOnly) {
+      break;
+    } // If we are processing the onBeforeBlur event, then we need to take
+    // into consideration that part of the React tree might have been hidden
+    // or deleted (as we're invoking this event during commit). We can find
+    // this out by checking if intercept fiber set on the event matches the
+    // current instance fiber. In which case, we should clear all existing
+    // listeners.
+
+    if (nativeEvent.type === "beforeblur") {
+      // $FlowFixMe[prop-missing] internal field
+      var detachedInterceptFiber = nativeEvent._detachedInterceptFiber;
+
+      if (
+        detachedInterceptFiber !== null &&
+        (detachedInterceptFiber === instance ||
+          detachedInterceptFiber === instance.alternate)
+      ) {
+        listeners = [];
+      }
+    }
+
+    instance = instance.return;
+  }
+
+  return listeners;
+} // We should only use this function for:
+// - BeforeInputEventPlugin
+// - ChangeEventPlugin
+// - SelectEventPlugin
+// This is because we only process these plugins
+// in the bubble phase, so we need to accumulate two
+// phase event listeners (via emulation).
+
+function accumulateTwoPhaseListeners(targetFiber, reactName) {
+  var captureName = reactName + "Capture";
+  var listeners = [];
+  var instance = targetFiber; // Accumulate all instances and listeners via the target -> root path.
+
+  while (instance !== null) {
+    var _instance3 = instance,
+      stateNode = _instance3.stateNode,
+      tag = _instance3.tag; // Handle listeners that are on HostComponents (i.e. <div>)
+
+    if (
+      (tag === HostComponent ||
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
+      stateNode !== null
+    ) {
+      var currentTarget = stateNode;
+      var captureListener = getListener(instance, captureName);
+
+      if (captureListener != null) {
+        listeners.unshift(
+          createDispatchListener(instance, captureListener, currentTarget)
+        );
+      }
+
+      var bubbleListener = getListener(instance, reactName);
+
+      if (bubbleListener != null) {
+        listeners.push(
+          createDispatchListener(instance, bubbleListener, currentTarget)
+        );
+      }
+    }
+
+    instance = instance.return;
+  }
+
+  return listeners;
+}
+
+function getParent(inst) {
+  if (inst === null) {
+    return null;
+  }
+
+  do {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
+    inst = inst.return; // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
+
+  if (inst) {
+    return inst;
+  }
+
+  return null;
+}
+/**
+ * Return the lowest common ancestor of A and B, or null if they are in
+ * different trees.
+ */
+
+function getLowestCommonAncestor(instA, instB) {
+  var nodeA = instA;
+  var nodeB = instB;
+  var depthA = 0;
+
+  for (var tempA = nodeA; tempA; tempA = getParent(tempA)) {
+    depthA++;
+  }
+
+  var depthB = 0;
+
+  for (var tempB = nodeB; tempB; tempB = getParent(tempB)) {
+    depthB++;
+  } // If A is deeper, crawl up.
+
+  while (depthA - depthB > 0) {
+    nodeA = getParent(nodeA);
+    depthA--;
+  } // If B is deeper, crawl up.
+
+  while (depthB - depthA > 0) {
+    nodeB = getParent(nodeB);
+    depthB--;
+  } // Walk in lockstep until we find a match.
+
+  var depth = depthA;
+
+  while (depth--) {
+    if (nodeA === nodeB || (nodeB !== null && nodeA === nodeB.alternate)) {
+      return nodeA;
+    }
+
+    nodeA = getParent(nodeA);
+    nodeB = getParent(nodeB);
+  }
+
+  return null;
+}
+
+function accumulateEnterLeaveListenersForEvent(
+  dispatchQueue,
+  event,
+  target,
+  common,
+  inCapturePhase
+) {
+  var registrationName = event._reactName;
+  var listeners = [];
+  var instance = target;
+
+  while (instance !== null) {
+    if (instance === common) {
+      break;
+    }
+
+    var _instance4 = instance,
+      alternate = _instance4.alternate,
+      stateNode = _instance4.stateNode,
+      tag = _instance4.tag;
+
+    if (alternate !== null && alternate === common) {
+      break;
+    }
+
+    if (
+      (tag === HostComponent ||
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
+      stateNode !== null
+    ) {
+      var currentTarget = stateNode;
+
+      if (inCapturePhase) {
+        var captureListener = getListener(instance, registrationName);
+
+        if (captureListener != null) {
+          listeners.unshift(
+            createDispatchListener(instance, captureListener, currentTarget)
+          );
+        }
+      } else if (!inCapturePhase) {
+        var bubbleListener = getListener(instance, registrationName);
+
+        if (bubbleListener != null) {
+          listeners.push(
+            createDispatchListener(instance, bubbleListener, currentTarget)
+          );
+        }
+      }
+    }
+
+    instance = instance.return;
+  }
+
+  if (listeners.length !== 0) {
+    dispatchQueue.push({
+      event: event,
+      listeners: listeners
+    });
+  }
+} // We should only use this function for:
+// - EnterLeaveEventPlugin
+// This is because we only process this plugin
+// in the bubble phase, so we need to accumulate two
+// phase event listeners.
+
+function accumulateEnterLeaveTwoPhaseListeners(
+  dispatchQueue,
+  leaveEvent,
+  enterEvent,
+  from,
+  to
+) {
+  var common = from && to ? getLowestCommonAncestor(from, to) : null;
+
+  if (from !== null) {
+    accumulateEnterLeaveListenersForEvent(
+      dispatchQueue,
+      leaveEvent,
+      from,
+      common,
+      false
+    );
+  }
+
+  if (to !== null && enterEvent !== null) {
+    accumulateEnterLeaveListenersForEvent(
+      dispatchQueue,
+      enterEvent,
+      to,
+      common,
+      true
+    );
+  }
+}
+function accumulateEventHandleNonManagedNodeListeners(
+  reactEventType,
+  currentTarget,
+  inCapturePhase
+) {
+  var listeners = [];
+  var eventListeners = getEventHandlerListeners(currentTarget);
+
+  if (eventListeners !== null) {
+    eventListeners.forEach(function (entry) {
+      if (entry.type === reactEventType && entry.capture === inCapturePhase) {
+        listeners.push(
+          createDispatchListener(null, entry.callback, currentTarget)
+        );
+      }
+    });
+  }
+
+  return listeners;
+}
+function getListenerSetKey(domEventName, capture) {
+  return domEventName + "__" + (capture ? "capture" : "bubble");
+}
+
+// has this definition built-in.
+
+var hasScheduledReplayAttempt = false; // The queue of discrete events to be replayed.
+
+var queuedDiscreteEvents = []; // Indicates if any continuous event targets are non-null for early bailout.
+// if the last target was dehydrated.
+
+var queuedFocus = null;
+var queuedDrag = null;
+var queuedMouse = null; // For pointer events there can be one latest event per pointerId.
+
+var queuedPointers = new Map();
+var queuedPointerCaptures = new Map(); // We could consider replaying selectionchange and touchmoves too.
+
+var queuedExplicitHydrationTargets = [];
+function hasQueuedDiscreteEvents() {
+  return queuedDiscreteEvents.length > 0;
+}
+var discreteReplayableEvents = [
+  "mousedown",
+  "mouseup",
+  "touchcancel",
+  "touchend",
+  "touchstart",
+  "auxclick",
+  "dblclick",
+  "pointercancel",
+  "pointerdown",
+  "pointerup",
+  "dragend",
+  "dragstart",
+  "drop",
+  "compositionend",
+  "compositionstart",
+  "keydown",
+  "keypress",
+  "keyup",
+  "input",
+  "textInput", // Intentionally camelCase
+  "copy",
+  "cut",
+  "paste",
+  "click",
+  "change",
+  "contextmenu",
+  "reset",
+  "submit"
+];
+function isDiscreteEventThatRequiresHydration(eventType) {
+  return discreteReplayableEvents.indexOf(eventType) > -1;
+}
+
+function createQueuedReplayableEvent(
+  blockedOn,
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  return {
+    blockedOn: blockedOn,
+    domEventName: domEventName,
+    eventSystemFlags: eventSystemFlags,
+    nativeEvent: nativeEvent,
+    targetContainers: [targetContainer]
+  };
+}
+
+function queueDiscreteEvent(
+  blockedOn,
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    return;
+  }
+
+  var queuedEvent = createQueuedReplayableEvent(
+    blockedOn,
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent
+  );
+  queuedDiscreteEvents.push(queuedEvent);
+
+  if (queuedDiscreteEvents.length === 1) {
+    // If this was the first discrete event, we might be able to
+    // synchronously unblock it so that preventDefault still works.
+    while (queuedEvent.blockedOn !== null) {
+      var fiber = getInstanceFromNode(queuedEvent.blockedOn);
+
+      if (fiber === null) {
+        break;
+      }
+
+      attemptSynchronousHydration(fiber);
+
+      if (queuedEvent.blockedOn === null) {
+        // We got unblocked by hydration. Let's try again.
+        replayUnblockedEvents(); // If we're reblocked, on an inner boundary, we might need
+        // to attempt hydrating that one.
+
+        continue;
+      } else {
+        // We're still blocked from hydration, we have to give up
+        // and replay later.
+        break;
+      }
+    }
+  }
+} // Resets the replaying for this type of continuous event to no event.
+
+function clearIfContinuousEvent(domEventName, nativeEvent) {
+  switch (domEventName) {
+    case "focusin":
+    case "focusout":
+      queuedFocus = null;
+      break;
+
+    case "dragenter":
+    case "dragleave":
+      queuedDrag = null;
+      break;
+
+    case "mouseover":
+    case "mouseout":
+      queuedMouse = null;
+      break;
+
+    case "pointerover":
+    case "pointerout": {
+      var pointerId = nativeEvent.pointerId;
+      queuedPointers.delete(pointerId);
+      break;
+    }
+
+    case "gotpointercapture":
+    case "lostpointercapture": {
+      var _pointerId = nativeEvent.pointerId;
+      queuedPointerCaptures.delete(_pointerId);
+      break;
+    }
+  }
+}
+
+function accumulateOrCreateContinuousQueuedReplayableEvent(
+  existingQueuedEvent,
+  blockedOn,
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  if (
+    existingQueuedEvent === null ||
+    existingQueuedEvent.nativeEvent !== nativeEvent
+  ) {
+    var queuedEvent = createQueuedReplayableEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    );
+
+    if (blockedOn !== null) {
+      var fiber = getInstanceFromNode(blockedOn);
+
+      if (fiber !== null) {
+        // Attempt to increase the priority of this target.
+        attemptContinuousHydration(fiber);
+      }
+    }
+
+    return queuedEvent;
+  } // If we have already queued this exact event, then it's because
+  // the different event systems have different DOM event listeners.
+  // We can accumulate the flags, and the targetContainers, and
+  // store a single event to be replayed.
+
+  existingQueuedEvent.eventSystemFlags |= eventSystemFlags;
+  var targetContainers = existingQueuedEvent.targetContainers;
+
+  if (
+    targetContainer !== null &&
+    targetContainers.indexOf(targetContainer) === -1
+  ) {
+    targetContainers.push(targetContainer);
+  }
+
+  return existingQueuedEvent;
+}
+
+function queueIfContinuousEvent(
+  blockedOn,
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  // These set relatedTarget to null because the replayed event will be treated as if we
+  // moved from outside the window (no target) onto the target once it hydrates.
+  // Instead of mutating we could clone the event.
+  switch (domEventName) {
+    case "focusin": {
+      var focusEvent = nativeEvent;
+      queuedFocus = accumulateOrCreateContinuousQueuedReplayableEvent(
+        queuedFocus,
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        focusEvent
+      );
+      return true;
+    }
+
+    case "dragenter": {
+      var dragEvent = nativeEvent;
+      queuedDrag = accumulateOrCreateContinuousQueuedReplayableEvent(
+        queuedDrag,
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        dragEvent
+      );
+      return true;
+    }
+
+    case "mouseover": {
+      var mouseEvent = nativeEvent;
+      queuedMouse = accumulateOrCreateContinuousQueuedReplayableEvent(
+        queuedMouse,
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        mouseEvent
+      );
+      return true;
+    }
+
+    case "pointerover": {
+      var pointerEvent = nativeEvent;
+      var pointerId = pointerEvent.pointerId;
+      queuedPointers.set(
+        pointerId,
+        accumulateOrCreateContinuousQueuedReplayableEvent(
+          queuedPointers.get(pointerId) || null,
+          blockedOn,
+          domEventName,
+          eventSystemFlags,
+          targetContainer,
+          pointerEvent
+        )
+      );
+      return true;
+    }
+
+    case "gotpointercapture": {
+      var _pointerEvent = nativeEvent;
+      var _pointerId2 = _pointerEvent.pointerId;
+      queuedPointerCaptures.set(
+        _pointerId2,
+        accumulateOrCreateContinuousQueuedReplayableEvent(
+          queuedPointerCaptures.get(_pointerId2) || null,
+          blockedOn,
+          domEventName,
+          eventSystemFlags,
+          targetContainer,
+          _pointerEvent
+        )
+      );
+      return true;
+    }
+  }
+
+  return false;
+} // Check if this target is unblocked. Returns true if it's unblocked.
+
+function attemptExplicitHydrationTarget(queuedTarget) {
+  // TODO: This function shares a lot of logic with findInstanceBlockingEvent.
+  // Try to unify them. It's a bit tricky since it would require two return
+  // values.
+  var targetInst = getClosestInstanceFromNode(queuedTarget.target);
+
+  if (targetInst !== null) {
+    var nearestMounted = getNearestMountedFiber(targetInst);
+
+    if (nearestMounted !== null) {
+      var tag = nearestMounted.tag;
+
+      if (tag === SuspenseComponent) {
+        var instance = getSuspenseInstanceFromFiber(nearestMounted);
+
+        if (instance !== null) {
+          // We're blocked on hydrating this boundary.
+          // Increase its priority.
+          queuedTarget.blockedOn = instance;
+          runWithPriority(queuedTarget.priority, function () {
+            attemptHydrationAtCurrentPriority(nearestMounted);
+          });
+          return;
+        }
+      } else if (tag === HostRoot) {
+        var root = nearestMounted.stateNode;
+
+        if (isRootDehydrated(root)) {
+          queuedTarget.blockedOn = getContainerFromFiber(nearestMounted); // We don't currently have a way to increase the priority of
+          // a root other than sync.
+
+          return;
+        }
+      }
+    }
+  }
+
+  queuedTarget.blockedOn = null;
+}
+
+function queueExplicitHydrationTarget(target) {
+  // TODO: This will read the priority if it's dispatched by the React
+  // event system but not native events. Should read window.event.type, like
+  // we do for updates (getCurrentEventPriority).
+  var updatePriority = getCurrentUpdatePriority();
+  var queuedTarget = {
+    blockedOn: null,
+    target: target,
+    priority: updatePriority
+  };
+  var i = 0;
+
+  for (; i < queuedExplicitHydrationTargets.length; i++) {
+    // Stop once we hit the first target with lower priority than
+    if (
+      !isHigherEventPriority(
+        updatePriority,
+        queuedExplicitHydrationTargets[i].priority
+      )
+    ) {
+      break;
+    }
+  }
+
+  queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
+
+  if (i === 0) {
+    attemptExplicitHydrationTarget(queuedTarget);
+  }
+}
+
+function attemptReplayContinuousQueuedEvent(queuedEvent) {
+  if (queuedEvent.blockedOn !== null) {
+    return false;
+  }
+
+  var targetContainers = queuedEvent.targetContainers;
+
+  while (targetContainers.length > 0) {
+    var targetContainer = targetContainers[0];
+    var nextBlockedOn = findInstanceBlockingEvent(
+      queuedEvent.domEventName,
+      queuedEvent.eventSystemFlags,
+      targetContainer,
+      queuedEvent.nativeEvent
+    );
+
+    if (nextBlockedOn === null) {
+      if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+        var nativeEvent = queuedEvent.nativeEvent;
+        var nativeEventClone = new nativeEvent.constructor(
+          nativeEvent.type,
+          nativeEvent
+        );
+        setReplayingEvent(nativeEventClone);
+        nativeEvent.target.dispatchEvent(nativeEventClone);
+        resetReplayingEvent();
+      } else {
+        setReplayingEvent(queuedEvent.nativeEvent);
+        dispatchEventForPluginEventSystem(
+          queuedEvent.domEventName,
+          queuedEvent.eventSystemFlags,
+          queuedEvent.nativeEvent,
+          return_targetInst,
+          targetContainer
+        );
+        resetReplayingEvent();
+      }
+    } else {
+      // We're still blocked. Try again later.
+      var fiber = getInstanceFromNode(nextBlockedOn);
+
+      if (fiber !== null) {
+        attemptContinuousHydration(fiber);
+      }
+
+      queuedEvent.blockedOn = nextBlockedOn;
+      return false;
+    } // This target container was successfully dispatched. Try the next.
+
+    targetContainers.shift();
+  }
+
+  return true;
+}
+
+function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
+  if (attemptReplayContinuousQueuedEvent(queuedEvent)) {
+    map.delete(key);
+  }
+}
+
+function replayUnblockedEvents() {
+  hasScheduledReplayAttempt = false;
+
+  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    // First replay discrete events.
+    while (queuedDiscreteEvents.length > 0) {
+      var nextDiscreteEvent = queuedDiscreteEvents[0];
+
+      if (nextDiscreteEvent.blockedOn !== null) {
+        // We're still blocked.
+        // Increase the priority of this boundary to unblock
+        // the next discrete event.
+        var fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
+
+        if (fiber !== null) {
+          attemptDiscreteHydration(fiber);
+        }
+
+        break;
+      }
+
+      var targetContainers = nextDiscreteEvent.targetContainers;
+
+      while (targetContainers.length > 0) {
+        var targetContainer = targetContainers[0];
+        var nextBlockedOn = findInstanceBlockingEvent(
+          nextDiscreteEvent.domEventName,
+          nextDiscreteEvent.eventSystemFlags,
+          targetContainer,
+          nextDiscreteEvent.nativeEvent
+        );
+
+        if (nextBlockedOn === null) {
+          // This whole function is in !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+          // so we don't need the new replay behavior code branch.
+          setReplayingEvent(nextDiscreteEvent.nativeEvent);
+          dispatchEventForPluginEventSystem(
+            nextDiscreteEvent.domEventName,
+            nextDiscreteEvent.eventSystemFlags,
+            nextDiscreteEvent.nativeEvent,
+            return_targetInst,
+            targetContainer
+          );
+          resetReplayingEvent();
+        } else {
+          // We're still blocked. Try again later.
+          nextDiscreteEvent.blockedOn = nextBlockedOn;
+          break;
+        } // This target container was successfully dispatched. Try the next.
+
+        targetContainers.shift();
+      }
+
+      if (nextDiscreteEvent.blockedOn === null) {
+        // We've successfully replayed the first event. Let's try the next one.
+        queuedDiscreteEvents.shift();
+      }
+    }
+  } // Next replay any continuous events.
+
+  if (queuedFocus !== null && attemptReplayContinuousQueuedEvent(queuedFocus)) {
+    queuedFocus = null;
+  }
+
+  if (queuedDrag !== null && attemptReplayContinuousQueuedEvent(queuedDrag)) {
+    queuedDrag = null;
+  }
+
+  if (queuedMouse !== null && attemptReplayContinuousQueuedEvent(queuedMouse)) {
+    queuedMouse = null;
+  }
+
+  queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
+  queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
+}
+
+function scheduleCallbackIfUnblocked(queuedEvent, unblocked) {
+  if (queuedEvent.blockedOn === unblocked) {
+    queuedEvent.blockedOn = null;
+
+    if (!hasScheduledReplayAttempt) {
+      hasScheduledReplayAttempt = true; // Schedule a callback to attempt replaying as many events as are
+      // now unblocked. This first might not actually be unblocked yet.
+      // We could check it early to avoid scheduling an unnecessary callback.
+
+      Scheduler.unstable_scheduleCallback(
+        Scheduler.unstable_NormalPriority,
+        replayUnblockedEvents
+      );
+    }
+  }
+}
+
+function retryIfBlockedOn(unblocked) {
+  // Mark anything that was blocked on this as no longer blocked
+  // and eligible for a replay.
+  if (queuedDiscreteEvents.length > 0) {
+    scheduleCallbackIfUnblocked(queuedDiscreteEvents[0], unblocked); // This is a exponential search for each boundary that commits. I think it's
+    // worth it because we expect very few discrete events to queue up and once
+    // we are actually fully unblocked it will be fast to replay them.
+
+    for (var i = 1; i < queuedDiscreteEvents.length; i++) {
+      var queuedEvent = queuedDiscreteEvents[i];
+
+      if (queuedEvent.blockedOn === unblocked) {
+        queuedEvent.blockedOn = null;
+      }
+    }
+  }
+
+  if (queuedFocus !== null) {
+    scheduleCallbackIfUnblocked(queuedFocus, unblocked);
+  }
+
+  if (queuedDrag !== null) {
+    scheduleCallbackIfUnblocked(queuedDrag, unblocked);
+  }
+
+  if (queuedMouse !== null) {
+    scheduleCallbackIfUnblocked(queuedMouse, unblocked);
+  }
+
+  var unblock = function (queuedEvent) {
+    return scheduleCallbackIfUnblocked(queuedEvent, unblocked);
+  };
+
+  queuedPointers.forEach(unblock);
+  queuedPointerCaptures.forEach(unblock);
+
+  for (var _i = 0; _i < queuedExplicitHydrationTargets.length; _i++) {
+    var queuedTarget = queuedExplicitHydrationTargets[_i];
+
+    if (queuedTarget.blockedOn === unblocked) {
+      queuedTarget.blockedOn = null;
+    }
+  }
+
+  while (queuedExplicitHydrationTargets.length > 0) {
+    var nextExplicitTarget = queuedExplicitHydrationTargets[0];
+
+    if (nextExplicitTarget.blockedOn !== null) {
+      // We're still blocked.
+      break;
+    } else {
+      attemptExplicitHydrationTarget(nextExplicitTarget);
+
+      if (nextExplicitTarget.blockedOn === null) {
+        // We're unblocked.
+        queuedExplicitHydrationTargets.shift();
+      }
+    }
+  }
+}
+
+var ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig; // TODO: can we stop exporting these?
+
+var _enabled = true; // This is exported in FB builds for use by legacy FB layer infra.
+// We'd like to remove this but it's not clear if this is safe.
+
+function setEnabled(enabled) {
+  _enabled = !!enabled;
+}
+function isEnabled() {
+  return _enabled;
+}
+function createEventListenerWrapperWithPriority(
+  targetContainer,
+  domEventName,
+  eventSystemFlags
+) {
+  var eventPriority = getEventPriority(domEventName);
+  var listenerWrapper;
+
+  switch (eventPriority) {
+    case DiscreteEventPriority:
+      listenerWrapper = dispatchDiscreteEvent;
+      break;
+
+    case ContinuousEventPriority:
+      listenerWrapper = dispatchContinuousEvent;
+      break;
+
+    case DefaultEventPriority:
+    default:
+      listenerWrapper = dispatchEvent;
+      break;
+  }
+
+  return listenerWrapper.bind(
+    null,
+    domEventName,
+    eventSystemFlags,
+    targetContainer
+  );
+}
+
+function dispatchDiscreteEvent(
+  domEventName,
+  eventSystemFlags,
+  container,
+  nativeEvent
+) {
+  var previousPriority = getCurrentUpdatePriority();
+  var prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = null;
+
+  try {
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
+}
+
+function dispatchContinuousEvent(
+  domEventName,
+  eventSystemFlags,
+  container,
+  nativeEvent
+) {
+  var previousPriority = getCurrentUpdatePriority();
+  var prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = null;
+
+  try {
+    setCurrentUpdatePriority(ContinuousEventPriority);
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
+}
+
+function dispatchEvent(
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  if (!_enabled) {
+    return;
+  }
+
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    );
+  } else {
+    dispatchEventOriginal(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    );
+  }
+}
+
+function dispatchEventOriginal(
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  // TODO: replaying capture phase events is currently broken
+  // because we used to do it during top-level native bubble handlers
+  // but now we use different bubble and capture handlers.
+  // In eager mode, we attach capture listeners early, so we need
+  // to filter them out until we fix the logic to handle them correctly.
+  var allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+
+  if (
+    allowReplay &&
+    hasQueuedDiscreteEvents() &&
+    isDiscreteEventThatRequiresHydration(domEventName)
+  ) {
+    // If we already have a queue of discrete events, and this is another discrete
+    // event, then we can't dispatch it regardless of its target, since they
+    // need to dispatch in order.
+    queueDiscreteEvent(
+      null, // Flags that we're not actually blocked on anything as far as we know.
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    );
+    return;
+  }
+
+  var blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent
+  );
+
+  if (blockedOn === null) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer
+    );
+
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
+
+    return;
+  }
+
+  if (allowReplay) {
+    if (isDiscreteEventThatRequiresHydration(domEventName)) {
+      // This to be replayed later once the target is available.
+      queueDiscreteEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent
+      );
+      return;
+    }
+
+    if (
+      queueIfContinuousEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent
+      )
+    ) {
+      return;
+    } // We need to clear only if we didn't queue because
+    // queueing is accumulative.
+
+    clearIfContinuousEvent(domEventName, nativeEvent);
+  } // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer
+  );
+}
+
+function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  var blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent
+  );
+
+  if (blockedOn === null) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer
+    );
+    clearIfContinuousEvent(domEventName, nativeEvent);
+    return;
+  }
+
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    )
+  ) {
+    nativeEvent.stopPropagation();
+    return;
+  } // We need to clear only if we didn't queue because
+  // queueing is accumulative.
+
+  clearIfContinuousEvent(domEventName, nativeEvent);
+
+  if (
+    eventSystemFlags & IS_CAPTURE_PHASE &&
+    isDiscreteEventThatRequiresHydration(domEventName)
+  ) {
+    while (blockedOn !== null) {
+      var fiber = getInstanceFromNode(blockedOn);
+
+      if (fiber !== null) {
+        attemptSynchronousHydration(fiber);
+      }
+
+      var nextBlockedOn = findInstanceBlockingEvent(
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent
+      );
+
+      if (nextBlockedOn === null) {
+        dispatchEventForPluginEventSystem(
+          domEventName,
+          eventSystemFlags,
+          nativeEvent,
+          return_targetInst,
+          targetContainer
+        );
+      }
+
+      if (nextBlockedOn === blockedOn) {
+        break;
+      }
+
+      blockedOn = nextBlockedOn;
+    }
+
+    if (blockedOn !== null) {
+      nativeEvent.stopPropagation();
+    }
+
+    return;
+  } // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer
+  );
+}
+
+var return_targetInst = null; // Returns a SuspenseInstance or Container if it's blocked.
+// The return_targetInst field above is conceptually part of the return value.
+
+function findInstanceBlockingEvent(
+  domEventName,
+  eventSystemFlags,
+  targetContainer,
+  nativeEvent
+) {
+  // TODO: Warn if _enabled is false.
+  return_targetInst = null;
+  var nativeEventTarget = getEventTarget(nativeEvent);
+  var targetInst = getClosestInstanceFromNode(nativeEventTarget);
+
+  if (targetInst !== null) {
+    var nearestMounted = getNearestMountedFiber(targetInst);
+
+    if (nearestMounted === null) {
+      // This tree has been unmounted already. Dispatch without a target.
+      targetInst = null;
+    } else {
+      var tag = nearestMounted.tag;
+
+      if (tag === SuspenseComponent) {
+        var instance = getSuspenseInstanceFromFiber(nearestMounted);
+
+        if (instance !== null) {
+          // Queue the event to be replayed later. Abort dispatching since we
+          // don't want this event dispatched twice through the event system.
+          // TODO: If this is the first discrete event in the queue. Schedule an increased
+          // priority for this boundary.
+          return instance;
+        } // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+
+        targetInst = null;
+      } else if (tag === HostRoot) {
+        var root = nearestMounted.stateNode;
+
+        if (isRootDehydrated(root)) {
+          // If this happens during a replay something went wrong and it might block
+          // the whole system.
+          return getContainerFromFiber(nearestMounted);
+        }
+
+        targetInst = null;
+      } else if (nearestMounted !== targetInst) {
+        // If we get an event (ex: img onload) before committing that
+        // component's mount, ignore it for now (that is, treat it as if it was an
+        // event on a non-React tree). We might also consider queueing events and
+        // dispatching them after the mount.
+        targetInst = null;
+      }
+    }
+  }
+
+  return_targetInst = targetInst; // We're not blocked on anything.
+
+  return null;
+}
+function getEventPriority(domEventName) {
+  switch (domEventName) {
+    // Used by SimpleEventPlugin:
+    case "cancel":
+    case "click":
+    case "close":
+    case "contextmenu":
+    case "copy":
+    case "cut":
+    case "auxclick":
+    case "dblclick":
+    case "dragend":
+    case "dragstart":
+    case "drop":
+    case "focusin":
+    case "focusout":
+    case "input":
+    case "invalid":
+    case "keydown":
+    case "keypress":
+    case "keyup":
+    case "mousedown":
+    case "mouseup":
+    case "paste":
+    case "pause":
+    case "play":
+    case "pointercancel":
+    case "pointerdown":
+    case "pointerup":
+    case "ratechange":
+    case "reset":
+    case "resize":
+    case "seeked":
+    case "submit":
+    case "touchcancel":
+    case "touchend":
+    case "touchstart":
+    case "volumechange": // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
+
+    case "change":
+    case "selectionchange":
+    case "textInput":
+    case "compositionstart":
+    case "compositionend":
+    case "compositionupdate": // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
+
+    case "beforeblur":
+    case "afterblur": // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+
+    case "beforeinput":
+    case "blur":
+    case "fullscreenchange":
+    case "focus":
+    case "hashchange":
+    case "popstate":
+    case "select":
+    case "selectstart":
+      return DiscreteEventPriority;
+
+    case "drag":
+    case "dragenter":
+    case "dragexit":
+    case "dragleave":
+    case "dragover":
+    case "mousemove":
+    case "mouseout":
+    case "mouseover":
+    case "pointermove":
+    case "pointerout":
+    case "pointerover":
+    case "scroll":
+    case "toggle":
+    case "touchmove":
+    case "wheel": // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+
+    case "mouseenter":
+    case "mouseleave":
+    case "pointerenter":
+    case "pointerleave":
+      return ContinuousEventPriority;
+
+    case "message": {
+      // We might be in the Scheduler callback.
+      // Eventually this mechanism will be replaced by a check
+      // of the current priority on the native scheduler.
+      var schedulerPriority = getCurrentPriorityLevel();
+
+      switch (schedulerPriority) {
+        case ImmediatePriority:
+          return DiscreteEventPriority;
+
+        case UserBlockingPriority:
+          return ContinuousEventPriority;
+
+        case NormalPriority$1:
+        case LowPriority:
+          // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+          return DefaultEventPriority;
+
+        case IdlePriority:
+          return IdleEventPriority;
+
+        default:
+          return DefaultEventPriority;
+      }
+    }
+
+    default:
+      return DefaultEventPriority;
+  }
 }
 
 var Dispatcher = Internals.Dispatcher;
@@ -44116,13 +44059,6 @@ function preinit() {
   // so we favor silent bailout over warning or erroring.
 }
 
-setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptDiscreteHydration(attemptDiscreteHydration);
-setAttemptContinuousHydration(attemptContinuousHydration);
-setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
-setGetCurrentUpdatePriority(getCurrentUpdatePriority$1);
-setAttemptHydrationAtPriority(runWithPriority);
-
 {
   if (
     typeof Map !== "function" || // $FlowFixMe Flow incorrectly thinks Map has no prototype
@@ -44139,9 +44075,6 @@ setAttemptHydrationAtPriority(runWithPriority);
     );
   }
 }
-
-setRestoreImplementation(restoreControlledState);
-setBatchingImplementation(batchedUpdates, discreteUpdates, flushSync$1);
 
 function createPortal(children, container) {
   var key =
@@ -44219,7 +44152,7 @@ Internals.Events = [
   getFiberCurrentPropsFromNode,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  batchedUpdates
+  batchedUpdates$1
 ];
 var foundDevTools = injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
@@ -44274,7 +44207,7 @@ exports.preinit = preinit;
 exports.preload = preload;
 exports.render = render;
 exports.unmountComponentAtNode = unmountComponentAtNode;
-exports.unstable_batchedUpdates = batchedUpdates;
+exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;
 exports.unstable_flushControlled = flushControlled;
 exports.unstable_renderSubtreeIntoContainer = renderSubtreeIntoContainer;

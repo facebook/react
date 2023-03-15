@@ -26,6 +26,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
+  disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
@@ -5546,7 +5547,8 @@ var canDiffStyleForHydrationWarning;
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
 
-  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+  canDiffStyleForHydrationWarning =
+    disableIEWorkarounds || (canUseDOM && !document.documentMode);
 }
 
 function validatePropertiesInDevelopment(type, props) {
@@ -5739,7 +5741,11 @@ function setInitialDOMProperties(
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
 
       if (nextHtml != null) {
-        setInnerHTML$1(domElement, nextHtml);
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = nextHtml;
+        } else {
+          setInnerHTML$1(domElement, nextHtml);
+        }
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === "string") {
@@ -5795,7 +5801,11 @@ function updateDOMProperties(
     if (propKey === STYLE$1) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      setInnerHTML$1(domElement, propValue);
+      if (disableIEWorkarounds) {
+        domElement.innerHTML = propValue;
+      } else {
+        setInnerHTML$1(domElement, propValue);
+      }
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {
@@ -9162,7 +9172,7 @@ var ContinuousEventPriority = InputContinuousLane;
 var DefaultEventPriority = DefaultLane;
 var IdleEventPriority = IdleLane;
 var currentUpdatePriority = NoLane;
-function getCurrentUpdatePriority$1() {
+function getCurrentUpdatePriority() {
   return currentUpdatePriority;
 }
 function setCurrentUpdatePriority(newPriority) {
@@ -9784,7 +9794,7 @@ function flushSyncCallbacks() {
     // queue is in the render or commit phases, which already set the
     // event priority. Should be able to remove.
 
-    var previousUpdatePriority = getCurrentUpdatePriority$1();
+    var previousUpdatePriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
     var errors = null;
     var queue = syncQueue; // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -16218,7 +16228,7 @@ function updateDeferredValueImpl(hook, prevValue, value) {
 }
 
 function startTransition(setPending, callback, options) {
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
@@ -31568,7 +31578,7 @@ function requestUpdateLane(fiber) {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
 
-  var updateLane = getCurrentUpdatePriority$1();
+  var updateLane = getCurrentUpdatePriority();
 
   if (updateLane !== NoLane) {
     return updateLane;
@@ -32451,23 +32461,6 @@ function batchedUpdates$1(fn, a) {
     }
   }
 }
-function discreteUpdates(fn, a, b, c, d) {
-  var previousPriority = getCurrentUpdatePriority$1();
-  var prevTransition = ReactCurrentBatchConfig$1.transition;
-
-  try {
-    ReactCurrentBatchConfig$1.transition = null;
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    return fn(a, b, c, d);
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig$1.transition = prevTransition;
-
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-    }
-  }
-} // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
 // eslint-disable-next-line no-redeclare
@@ -32487,7 +32480,7 @@ function flushSync$1(fn) {
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   var prevTransition = ReactCurrentBatchConfig$1.transition;
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
 
   try {
     ReactCurrentBatchConfig$1.transition = null;
@@ -32523,7 +32516,7 @@ function flushControlled(fn) {
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   var prevTransition = ReactCurrentBatchConfig$1.transition;
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
 
   try {
     ReactCurrentBatchConfig$1.transition = null;
@@ -33448,7 +33441,7 @@ function completeUnitOfWork(unitOfWork) {
 function commitRoot(root, recoverableErrors, transitions) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
-  var previousUpdateLanePriority = getCurrentUpdatePriority$1();
+  var previousUpdateLanePriority = getCurrentUpdatePriority();
   var prevTransition = ReactCurrentBatchConfig$1.transition;
 
   try {
@@ -33599,7 +33592,7 @@ function commitRootImpl(
   if (subtreeHasEffects || rootHasEffect) {
     var prevTransition = ReactCurrentBatchConfig$1.transition;
     ReactCurrentBatchConfig$1.transition = null;
-    var previousPriority = getCurrentUpdatePriority$1();
+    var previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
     var prevExecutionContext = executionContext;
     executionContext |= CommitContext; // Reset this to null before calling lifecycles
@@ -33902,7 +33895,7 @@ function flushPassiveEffects() {
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     var priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     var prevTransition = ReactCurrentBatchConfig$1.transition;
-    var previousPriority = getCurrentUpdatePriority$1();
+    var previousPriority = getCurrentUpdatePriority();
 
     try {
       ReactCurrentBatchConfig$1.transition = null;
@@ -36069,7 +36062,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-31d2202b";
+var ReactVersion = "18.3.0-www-classic-7b9fdab9";
 
 function createPortal$1(
   children,
@@ -36342,7 +36335,7 @@ function getPublicRootInstance(container) {
       return containerFiber.child.stateNode;
   }
 }
-function attemptSynchronousHydration$1(fiber) {
+function attemptSynchronousHydration(fiber) {
   switch (fiber.tag) {
     case HostRoot: {
       var root = fiber.stateNode;
@@ -36395,7 +36388,7 @@ function markRetryLaneIfNotHydrated(fiber, retryLane) {
   }
 }
 
-function attemptDiscreteHydration$1(fiber) {
+function attemptDiscreteHydration(fiber) {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
@@ -36414,7 +36407,7 @@ function attemptDiscreteHydration$1(fiber) {
 
   markRetryLaneIfNotHydrated(fiber, lane);
 }
-function attemptContinuousHydration$1(fiber) {
+function attemptContinuousHydration(fiber) {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
@@ -36433,7 +36426,7 @@ function attemptContinuousHydration$1(fiber) {
 
   markRetryLaneIfNotHydrated(fiber, lane);
 }
-function attemptHydrationAtCurrentPriority$1(fiber) {
+function attemptHydrationAtCurrentPriority(fiber) {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority other than synchronously flush it.
@@ -37553,7 +37546,6 @@ function createEventHandle(type, options) {
   }
 }
 
-var restoreImpl = null;
 var restoreTarget = null;
 var restoreQueue = null;
 
@@ -37567,24 +37559,18 @@ function restoreStateOfTarget(target) {
     return;
   }
 
-  if (typeof restoreImpl !== "function") {
-    throw new Error(
-      "setRestoreImplementation() needs to be called to handle a target for controlled " +
-        "events. This error is likely caused by a bug in React. Please file an issue."
-    );
-  }
-
   var stateNode = internalInstance.stateNode; // Guard against Fiber being unmounted.
 
   if (stateNode) {
     var props = getFiberCurrentPropsFromNode(stateNode);
-    restoreImpl(internalInstance.stateNode, internalInstance.type, props);
+    restoreControlledState(
+      internalInstance.stateNode,
+      internalInstance.type,
+      props
+    );
   }
 }
 
-function setRestoreImplementation(impl) {
-  restoreImpl = impl;
-}
 function enqueueStateRestore(target) {
   if (restoreTarget) {
     if (restoreQueue) {
@@ -37615,63 +37601,6 @@ function restoreStateIfNeeded() {
       restoreStateOfTarget(queuedTargets[i]);
     }
   }
-}
-
-// the renderer. Such as when we're dispatching events or if third party
-// libraries need to call batchedUpdates. Eventually, this API will go away when
-// everything is batched by default. We'll then have a similar API to opt-out of
-// scheduled work and instead do synchronous work.
-// Defaults
-
-var batchedUpdatesImpl = function (fn, bookkeeping) {
-  return fn(bookkeeping);
-};
-
-var flushSyncImpl = function () {};
-
-var isInsideEventHandler = false;
-
-function finishEventHandler() {
-  // Here we wait until all updates have propagated, which is important
-  // when using controlled components within layers:
-  // https://github.com/facebook/react/issues/1698
-  // Then we restore state of any controlled component.
-  var controlledComponentsHavePendingUpdates = needsStateRestore();
-
-  if (controlledComponentsHavePendingUpdates) {
-    // If a controlled event was fired, we may need to restore the state of
-    // the DOM node back to the controlled value. This is necessary when React
-    // bails out of the update without touching the DOM.
-    // TODO: Restore state in the microtask, after the discrete updates flush,
-    // instead of early flushing them here.
-    flushSyncImpl();
-    restoreStateIfNeeded();
-  }
-}
-
-function batchedUpdates(fn, a, b) {
-  if (isInsideEventHandler) {
-    // If we are currently inside another batch, we need to wait until it
-    // fully completes before restoring state.
-    return fn(a, b);
-  }
-
-  isInsideEventHandler = true;
-
-  try {
-    return batchedUpdatesImpl(fn, a, b);
-  } finally {
-    isInsideEventHandler = false;
-    finishEventHandler();
-  }
-} // TODO: Replace with flushSync
-function setBatchingImplementation(
-  _batchedUpdatesImpl,
-  _discreteUpdatesImpl,
-  _flushSyncImpl
-) {
-  batchedUpdatesImpl = _batchedUpdatesImpl;
-  flushSyncImpl = _flushSyncImpl;
 }
 
 function prefetchDNS$1() {
@@ -37711,13 +37640,6 @@ function preinit$1() {
   // so we favor silent bailout over warning or erroring.
 }
 
-setAttemptSynchronousHydration(attemptSynchronousHydration$1);
-setAttemptDiscreteHydration(attemptDiscreteHydration$1);
-setAttemptContinuousHydration(attemptContinuousHydration$1);
-setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority$1);
-setGetCurrentUpdatePriority(getCurrentUpdatePriority$1);
-setAttemptHydrationAtPriority(runWithPriority);
-
 {
   if (
     typeof Map !== "function" || // $FlowFixMe Flow incorrectly thinks Map has no prototype
@@ -37734,9 +37656,6 @@ setAttemptHydrationAtPriority(runWithPriority);
     );
   }
 }
-
-setRestoreImplementation(restoreControlledState);
-setBatchingImplementation(batchedUpdates$1, discreteUpdates, flushSync$1);
 
 function createPortal(children, container) {
   var key =
@@ -40831,6 +40750,48 @@ function markNodeAsHoistable(node) {
 function isOwnedInstance(node) {
   return !!(node[internalHoistableMarker] || node[internalInstanceKey]);
 }
+
+// the renderer. Such as when we're dispatching events or if third party
+// libraries need to call batchedUpdates. Eventually, this API will go away when
+// everything is batched by default. We'll then have a similar API to opt-out of
+// scheduled work and instead do synchronous work.
+
+var isInsideEventHandler = false;
+
+function finishEventHandler() {
+  // Here we wait until all updates have propagated, which is important
+  // when using controlled components within layers:
+  // https://github.com/facebook/react/issues/1698
+  // Then we restore state of any controlled component.
+  var controlledComponentsHavePendingUpdates = needsStateRestore();
+
+  if (controlledComponentsHavePendingUpdates) {
+    // If a controlled event was fired, we may need to restore the state of
+    // the DOM node back to the controlled value. This is necessary when React
+    // bails out of the update without touching the DOM.
+    // TODO: Restore state in the microtask, after the discrete updates flush,
+    // instead of early flushing them here.
+    flushSync$1();
+    restoreStateIfNeeded();
+  }
+}
+
+function batchedUpdates(fn, a, b) {
+  if (isInsideEventHandler) {
+    // If we are currently inside another batch, we need to wait until it
+    // fully completes before restoring state.
+    return fn(a, b);
+  }
+
+  isInsideEventHandler = true;
+
+  try {
+    return batchedUpdates$1(fn, a, b);
+  } finally {
+    isInsideEventHandler = false;
+    finishEventHandler();
+  }
+} // TODO: Replace with flushSync
 
 function isInteractive(tag) {
   return (
@@ -43941,34 +43902,6 @@ function getListenerSetKey(domEventName, capture) {
   return domEventName + "__" + (capture ? "capture" : "bubble");
 }
 
-var _attemptSynchronousHydration;
-
-function setAttemptSynchronousHydration(fn) {
-  _attemptSynchronousHydration = fn;
-}
-function attemptSynchronousHydration(fiber) {
-  _attemptSynchronousHydration(fiber);
-}
-var attemptDiscreteHydration;
-function setAttemptDiscreteHydration(fn) {
-  attemptDiscreteHydration = fn;
-}
-var attemptContinuousHydration;
-function setAttemptContinuousHydration(fn) {
-  attemptContinuousHydration = fn;
-}
-var attemptHydrationAtCurrentPriority;
-function setAttemptHydrationAtCurrentPriority(fn) {
-  attemptHydrationAtCurrentPriority = fn;
-}
-var getCurrentUpdatePriority;
-function setGetCurrentUpdatePriority(fn) {
-  getCurrentUpdatePriority = fn;
-}
-var attemptHydrationAtPriority;
-function setAttemptHydrationAtPriority(fn) {
-  attemptHydrationAtPriority = fn;
-} // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
 
 var hasScheduledReplayAttempt = false; // The queue of discrete events to be replayed.
@@ -44272,7 +44205,7 @@ function attemptExplicitHydrationTarget(queuedTarget) {
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          attemptHydrationAtPriority(queuedTarget.priority, function () {
+          runWithPriority(queuedTarget.priority, function () {
             attemptHydrationAtCurrentPriority(nearestMounted);
           });
           return;
@@ -44587,7 +44520,7 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent
 ) {
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
 
@@ -44606,7 +44539,7 @@ function dispatchContinuousEvent(
   container,
   nativeEvent
 ) {
-  var previousPriority = getCurrentUpdatePriority$1();
+  var previousPriority = getCurrentUpdatePriority();
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
 
