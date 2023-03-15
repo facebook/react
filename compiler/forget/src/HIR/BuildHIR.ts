@@ -573,26 +573,6 @@ function lowerStatement(
       );
       return;
     }
-    case "TryStatement": {
-      const stmt = stmtPath as NodePath<t.TryStatement>;
-      /**
-       * NOTE: Accurately modeling control flow within a try statement would require treating
-       * effectively every expression as a possible branch point (since almost any expression can throw).
-       * Instead, we model the try statement as an atomic unit from a control-flow perspective,
-       * and rely on other passes to handle codegen for try statements
-       */
-      lowerStatement(builder, stmt.get("block"));
-      const handler = stmt.get("handler");
-      if (handler.node != null) {
-        //  TODO: consider whether we need to track the param
-        lowerStatement(builder, handler.get("body") as NodePath<t.Statement>);
-      }
-      const finalizer = stmt.get("finalizer");
-      if (finalizer.node != null) {
-        lowerStatement(builder, finalizer as NodePath<t.Statement>);
-      }
-      return;
-    }
     case "VariableDeclaration": {
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
       const nodeKind: t.VariableDeclaration["kind"] = stmt.node.kind;
@@ -720,6 +700,7 @@ function lowerStatement(
     case "ImportDeclaration":
     case "InterfaceDeclaration":
     case "OpaqueType":
+    case "TryStatement":
     case "TypeAlias":
     case "TSDeclareFunction":
     case "TSEnumDeclaration":
