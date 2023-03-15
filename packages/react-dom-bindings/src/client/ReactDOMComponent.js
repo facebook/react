@@ -74,6 +74,7 @@ import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableHostSingletons,
+  disableIEWorkarounds,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -116,7 +117,8 @@ if (__DEV__) {
   // normalized. Since it only affects IE, we're skipping style warnings
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
-  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+  canDiffStyleForHydrationWarning =
+    disableIEWorkarounds || (canUseDOM && !document.documentMode);
 }
 
 function validatePropertiesInDevelopment(type: string, props: any) {
@@ -308,7 +310,11 @@ function setInitialDOMProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
-        setInnerHTML(domElement, nextHtml);
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = nextHtml;
+        } else {
+          setInnerHTML(domElement, nextHtml);
+        }
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
@@ -366,7 +372,11 @@ function updateDOMProperties(
     if (propKey === STYLE) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      setInnerHTML(domElement, propValue);
+      if (disableIEWorkarounds) {
+        domElement.innerHTML = propValue;
+      } else {
+        setInnerHTML(domElement, propValue);
+      }
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {

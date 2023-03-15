@@ -26,6 +26,7 @@ export const enableFetchInstrumentation = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
+export const disableIEWorkarounds = true;
 export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
