@@ -34796,28 +34796,6 @@ function isAlreadyRendering() {
 function isInvalidExecutionContextForEventFunction() {
   // Used to throw if certain APIs are called from the wrong context.
   return (executionContext & RenderContext) !== NoContext;
-}
-function flushControlled(fn) {
-  var prevExecutionContext = executionContext;
-  executionContext |= BatchedContext;
-  var prevTransition = ReactCurrentBatchConfig$1.transition;
-  var previousPriority = getCurrentUpdatePriority();
-
-  try {
-    ReactCurrentBatchConfig$1.transition = null;
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    fn();
-  } finally {
-    setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig$1.transition = prevTransition;
-    executionContext = prevExecutionContext;
-
-    if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
-      resetRenderTimer();
-      flushSyncCallbacks();
-    }
-  }
 } // This is called by the HiddenContext module when we enter or leave a
 // hidden subtree. The stack logic is managed there because that's the only
 // place that ever modifies it. Which module it lives in doesn't matter for
@@ -38347,7 +38325,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-036f93df";
+var ReactVersion = "18.3.0-www-classic-da9cec21";
 
 function createPortal$1(
   children,
@@ -44209,7 +44187,6 @@ exports.render = render;
 exports.unmountComponentAtNode = unmountComponentAtNode;
 exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;
-exports.unstable_flushControlled = flushControlled;
 exports.unstable_renderSubtreeIntoContainer = renderSubtreeIntoContainer;
 exports.unstable_runWithPriority = runWithPriority;
 exports.version = ReactVersion;

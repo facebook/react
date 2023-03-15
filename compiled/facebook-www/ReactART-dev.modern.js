@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-ee471100";
+var ReactVersion = "18.3.0-www-modern-80930f5c";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -23868,7 +23868,7 @@ function flushSync(fn) {
 function isInvalidExecutionContextForEventFunction() {
   // Used to throw if certain APIs are called from the wrong context.
   return (executionContext & RenderContext) !== NoContext;
-}
+} // This is called by the HiddenContext module when we enter or leave a
 // hidden subtree. The stack logic is managed there because that's the only
 // place that ever modifies it. Which module it lives in doesn't matter for
 // performance because this function will get inlined regardless
