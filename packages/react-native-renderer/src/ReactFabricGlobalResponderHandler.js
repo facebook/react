@@ -9,7 +9,7 @@
 
 const ReactFabricGlobalResponderHandler = {
   onChange: function (from: any, to: any, blockNativeResponder: boolean) {
-    if (from) {
+    if (from && from.stateNode) {
       // equivalent to clearJSResponder
       nativeFabricUIManager.setIsJSResponder(
         from.stateNode.node,
@@ -18,7 +18,7 @@ const ReactFabricGlobalResponderHandler = {
       );
     }
 
-    if (to) {
+    if (to && to.stateNode) {
       // equivalent to setJSResponder
       nativeFabricUIManager.setIsJSResponder(
         to.stateNode.node,
