@@ -83,13 +83,6 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] TodoError: (BuildHIR::lower) Handle ArrayPattern params
-> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-    |              ^^^^^^
-  2 |   let i = 0;
-  3 |   var x = [];
-  4 |
-
 [ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                              ^^^^^^^
@@ -191,15 +184,6 @@ let moduleLocal = false;
   21 |
   22 |   const j = function bar([quz, qux], ...args) {};
   23 |
-
-[ReactForget] TodoError: (BuildHIR::lower) Handle ArrayPattern params
-  20 |   <DesignSystem.Button />;
-  21 |
-> 22 |   const j = function bar([quz, qux], ...args) {};
-     |                          ^^^^^^^^^^
-  23 |
-  24 |   for (; i < 3; i += 1) {
-  25 |     x.push(i);
 
 [ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
   20 |   <DesignSystem.Button />;
