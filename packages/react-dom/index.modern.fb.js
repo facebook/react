@@ -15,7 +15,6 @@ export {
   flushSync,
   unstable_batchedUpdates,
   unstable_createEventHandle,
-  unstable_flushControlled,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   prefetchDNS,
   preconnect,
