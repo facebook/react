@@ -1856,7 +1856,7 @@ function isAncestorNodeOf(a, b) {
 
 function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEffectEvent';
+    return node.type === 'Identifier' && (node.name === 'useEffectEvent' || node.name === 'experimental_useEffectEvent') ;
   }
   return false;
 }
