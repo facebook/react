@@ -27,62 +27,78 @@ import { assertExhaustive, retainWhere } from "../Utils/utils";
  * Note that unreachable blocks are already pruned during HIR construction.
  */
 export function deadCodeElimination(fn: HIRFunction): void {
-  const used = new Set<Identifier>();
+  const state = new State();
 
   // If there are no back-edges the algorithm can terminate after a single iteration
   // of the blocks
   const hasLoop = hasBackEdge(fn);
 
-  let size = used.size;
+  let size = state.count;
   do {
-    size = used.size;
+    size = state.count;
 
     // Iterate blocks in postorder (successors before predecessors, excepting loops)
     // to find usages before declarations
     const reversedBlocks = [...fn.body.blocks.values()].reverse();
     for (const block of reversedBlocks) {
       for (const operand of eachTerminalOperand(block.terminal)) {
-        used.add(operand.identifier);
+        state.reference(operand.identifier);
       }
 
       for (let i = block.instructions.length - 1; i >= 0; i--) {
         const instr = block.instructions[i]!;
         if (
-          !used.has(instr.lvalue.identifier) &&
-          pruneableValue(instr.value, used) &&
+          !state.used(instr.lvalue.identifier) &&
+          pruneableValue(instr.value, state) &&
           // Can't prune the last value of a value block, that's its value!
           !(block.kind !== "block" && i === block.instructions.length - 1)
         ) {
           continue;
         }
-        used.add(instr.lvalue.identifier);
-        visitInstruction(instr, used);
+        state.reference(instr.lvalue.identifier);
+        visitInstruction(instr, state);
       }
       for (const phi of block.phis) {
-        if (used.has(phi.id)) {
+        if (state.used(phi.id)) {
           for (const [_pred, operand] of phi.operands) {
-            used.add(operand);
+            state.reference(operand);
           }
         }
       }
     }
-  } while (used.size > size && hasLoop);
+  } while (state.count > size && hasLoop);
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      if (!used.has(phi.id)) {
+      if (!state.used(phi.id)) {
         block.phis.delete(phi);
       }
     }
     retainWhere(block.instructions, (instr) =>
-      used.has(instr.lvalue.identifier)
+      state.used(instr.lvalue.identifier)
     );
   }
 }
 
-function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
+class State {
+  identifiers: Set<Identifier> = new Set();
+
+  reference(identifier: Identifier): void {
+    this.identifiers.add(identifier);
+  }
+
+  used(identifier: Identifier): boolean {
+    return this.identifiers.has(identifier);
+  }
+
+  get count(): number {
+    return this.identifiers.size;
+  }
+}
+
+function visitInstruction(instr: Instruction, state: State): void {
   if (instr.value.kind === "Destructure") {
     // Mark the value as used, not the lvalues
-    used.add(instr.value.value.identifier);
+    state.reference(instr.value.value.identifier);
     // Remove unused lvalues
     switch (instr.value.lvalue.pattern.kind) {
       case "ArrayPattern": {
@@ -94,12 +110,12 @@ function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
         for (let i = originalItems.length - 1; i >= 0; i--) {
           const item = originalItems[i];
           if (item.kind === "Identifier") {
-            if (used.has(item.identifier)) {
+            if (state.used(item.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
           } else {
-            if (used.has(item.place.identifier)) {
+            if (state.used(item.place.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
@@ -119,12 +135,12 @@ function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
         let nextProperties: ObjectPattern["properties"] | null = null;
         for (const property of instr.value.lvalue.pattern.properties) {
           if (property.kind === "ObjectProperty") {
-            if (used.has(property.place.identifier)) {
+            if (state.used(property.place.identifier)) {
               nextProperties ??= [];
               nextProperties.push(property);
             }
           } else {
-            if (used.has(property.place.identifier)) {
+            if (state.used(property.place.identifier)) {
               nextProperties = null;
               break;
             }
@@ -146,7 +162,7 @@ function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
     }
   } else {
     for (const operand of eachInstructionValueOperand(instr.value)) {
-      used.add(operand.identifier);
+      state.reference(operand.identifier);
     }
   }
 }
@@ -155,23 +171,20 @@ function visitInstruction(instr: Instruction, used: Set<Identifier>): void {
  * Returns true if it is safe to prune an instruction with the given value.
  * Functions which may have side-
  */
-function pruneableValue(
-  value: InstructionValue,
-  used: Set<Identifier>
-): boolean {
+function pruneableValue(value: InstructionValue, state: State): boolean {
   switch (value.kind) {
     case "DeclareLocal": {
-      return !used.has(value.lvalue.place.identifier);
+      return !state.used(value.lvalue.place.identifier);
     }
     case "StoreLocal": {
       // Stores are pruneable only if the identifier being stored to is never read later
-      return !used.has(value.lvalue.place.identifier);
+      return !state.used(value.lvalue.place.identifier);
     }
     case "Destructure": {
       // Destructure is pruneable only if none of the identifiers are read from later
       // TODO: as an optimization, prune unused properties where safe
       for (const place of eachPatternOperand(value.lvalue.pattern)) {
-        if (used.has(place.identifier)) {
+        if (state.used(place.identifier)) {
           return false;
         }
       }
