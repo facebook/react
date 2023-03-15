@@ -21,7 +21,7 @@ function useBar(props) {
 ```javascript
 function useBar(props) {
   const $ = React.unstable_useMemoCache(1);
-  let z = undefined;
+  let z;
   if (props.a) {
     if (props.b) {
       let t0;

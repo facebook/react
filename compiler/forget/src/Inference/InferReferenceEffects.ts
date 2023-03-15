@@ -815,6 +815,18 @@ function inferBlock(
         state.alias(lvalue, instrValue.place);
         continue;
       }
+      case "DeclareLocal": {
+        const value: InstructionValue = {
+          kind: "Primitive",
+          loc: instrValue.loc,
+          value: undefined,
+        };
+        state.initialize(value, ValueKind.Immutable);
+        state.define(instrValue.lvalue.place, value);
+        state.alias(instr.lvalue, instrValue.lvalue.place);
+        instr.lvalue.effect = Effect.Mutate;
+        continue;
+      }
       case "StoreLocal": {
         const effect =
           state.isDefined(instrValue.lvalue.place) &&

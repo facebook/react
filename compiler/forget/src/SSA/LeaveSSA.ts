@@ -128,7 +128,21 @@ export function leaveSSA(fn: HIRFunction): void {
       // Iterate the instructions and perform any rewrites as well as promoting SSA variables to
       // `let` or `reassign` where possible.
       const { lvalue, value } = instr;
-      if (value.kind === "StoreLocal") {
+      if (value.kind === "DeclareLocal") {
+        const name = value.lvalue.place.identifier.name;
+        if (name !== null) {
+          if (declarations.has(name)) {
+            CompilerError.invariant(
+              `Unexpected duplicate declaration of '${name}'`,
+              value.lvalue.place.loc
+            );
+          }
+          declarations.set(name, {
+            lvalue: value.lvalue,
+            place: value.lvalue.place,
+          });
+        }
+      } else if (value.kind === "StoreLocal") {
         if (value.lvalue.place.identifier.name != null) {
           const originalLVal = declarations.get(
             value.lvalue.place.identifier.name

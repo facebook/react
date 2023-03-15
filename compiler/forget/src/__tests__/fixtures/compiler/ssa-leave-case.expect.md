@@ -29,7 +29,6 @@ function Component(props) {
   let y;
   if (c_0) {
     x = [];
-    y = undefined;
     if (props.p0) {
       x.push(props.p1);
       y = x;

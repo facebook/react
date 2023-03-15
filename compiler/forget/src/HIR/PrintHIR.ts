@@ -327,6 +327,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `LoadLocal ${printPlace(instrValue.place)}`;
       break;
     }
+    case "DeclareLocal": {
+      value = `DeclareLocal ${instrValue.lvalue.kind} ${printPlace(
+        instrValue.lvalue.place
+      )}`;
+      break;
+    }
     case "StoreLocal": {
       value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
         instrValue.lvalue.place

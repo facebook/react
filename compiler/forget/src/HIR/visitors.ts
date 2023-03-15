@@ -25,6 +25,7 @@ export function* eachInstructionLValue(
     yield instr.lvalue;
   }
   switch (instr.value.kind) {
+    case "DeclareLocal":
     case "StoreLocal": {
       yield instr.value.lvalue.place;
       break;
@@ -63,6 +64,9 @@ export function* eachInstructionValueOperand(
       yield instrValue.receiver;
       yield instrValue.property;
       yield* eachCallArgument(instrValue.args);
+      break;
+    }
+    case "DeclareLocal": {
       break;
     }
     case "LoadLocal": {
@@ -274,6 +278,7 @@ export function mapInstructionLValues(
   fn: (place: Place) => Place
 ): void {
   switch (instr.value.kind) {
+    case "DeclareLocal":
     case "StoreLocal": {
       const lvalue = instr.value.lvalue;
       lvalue.place = fn(lvalue.place);
@@ -327,6 +332,9 @@ export function mapInstructionOperands(
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "DeclareLocal": {
       break;
     }
     case "LoadLocal": {

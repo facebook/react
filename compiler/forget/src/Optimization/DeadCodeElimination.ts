@@ -160,6 +160,9 @@ function pruneableValue(
   used: Set<Identifier>
 ): boolean {
   switch (value.kind) {
+    case "DeclareLocal": {
+      return !used.has(value.lvalue.place.identifier);
+    }
     case "StoreLocal": {
       // Stores are pruneable only if the identifier being stored to is never read later
       return !used.has(value.lvalue.place.identifier);

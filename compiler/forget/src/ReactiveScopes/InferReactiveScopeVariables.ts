@@ -205,6 +205,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "Destructure": {
       return doesPatternContainSpreadElement(value.lvalue.pattern);
     }
+    case "DeclareLocal":
     case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":

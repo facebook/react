@@ -33,7 +33,6 @@ function Component(props) {
   let y;
   if (c_0) {
     x = [];
-    y = undefined;
     switch (props.p0) {
       case true: {
         x.push(props.p2);

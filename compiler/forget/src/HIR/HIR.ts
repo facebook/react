@@ -447,6 +447,11 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
+      kind: "DeclareLocal";
+      lvalue: LValue;
+      loc: SourceLocation;
+    }
+  | {
       kind: "StoreLocal";
       lvalue: LValue;
       value: Place;

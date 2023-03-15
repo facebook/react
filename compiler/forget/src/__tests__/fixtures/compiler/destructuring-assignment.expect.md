@@ -29,16 +29,16 @@ function foo(a, b, c) {
 function foo(a, b, c) {
   const $ = React.unstable_useMemoCache(5);
 
-  const [d, t54] = a;
+  const [d, t46] = a;
 
-  const [t56] = t54;
-  const { e: t58 } = t56;
-  const { f: g } = t58;
+  const [t48] = t46;
+  const { e: t50 } = t48;
+  const { f: g } = t50;
 
-  const { l: t63, o } = b;
-  const { m: t66 } = t63;
-  const [t68] = t66;
-  const [n] = t68;
+  const { l: t55, o } = b;
+  const { m: t58 } = t55;
+  const [t60] = t58;
+  const [n] = t60;
   const c_0 = $[0] !== d;
   const c_1 = $[1] !== g;
   const c_2 = $[2] !== n;

@@ -589,32 +589,54 @@ function lowerStatement(
       for (const declaration of stmt.get("declarations")) {
         const id = declaration.get("id");
         const init = declaration.get("init");
-        let value: Place;
         if (init.node != null) {
-          value = lowerExpressionToTemporary(
+          const value = lowerExpressionToTemporary(
             builder,
             init as NodePath<t.Expression>
           );
+          lowerAssignment(
+            builder,
+            stmt.node.loc ?? GeneratedSource,
+            kind,
+            id,
+            value
+          );
+        } else if (id.isIdentifier()) {
+          const loc = stmt.node.loc ?? GeneratedSource;
+          const identifier = builder.resolveIdentifier(id);
+          if (identifier == null) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
+              severity: ErrorSeverity.Invariant,
+              nodePath: id,
+            });
+          } else {
+            builder.push({
+              id: makeInstructionId(0),
+              lvalue: buildTemporaryPlace(builder, loc),
+              value: {
+                kind: "DeclareLocal",
+                lvalue: {
+                  kind,
+                  place: {
+                    effect: Effect.Unknown,
+                    identifier,
+                    kind: "Identifier",
+                    loc: id.node.loc ?? GeneratedSource,
+                  },
+                },
+                loc: id.node.loc ?? GeneratedSource,
+              },
+              loc,
+            });
+          }
         } else {
-          value = buildTemporaryPlace(builder, id.node.loc ?? GeneratedSource);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: { ...value },
-            value: {
-              kind: "Primitive",
-              value: undefined,
-              loc: id.node.loc ?? GeneratedSource,
-            },
-            loc: value.loc,
+          builder.errors.push({
+            reason: `(BuildHIR::lowerStatement) Expected variable declaration to be an identifier if no initializer was provided.`,
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: stmt,
           });
         }
-        lowerAssignment(
-          builder,
-          stmt.node.loc ?? GeneratedSource,
-          kind,
-          id,
-          value
-        );
       }
       return;
     }

@@ -38,7 +38,6 @@ function Component(props) {
   let y;
   if (c_0) {
     x = [];
-    y = undefined;
     bb1: switch (props.p0) {
       case 1: {
         break bb1;

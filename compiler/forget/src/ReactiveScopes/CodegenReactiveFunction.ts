@@ -360,14 +360,27 @@ function codegenInstructionNullable(
   instr: ReactiveInstruction
 ): t.Statement | null {
   let statement;
-  if (instr.value.kind === "StoreLocal" || instr.value.kind === "Destructure") {
+  if (
+    instr.value.kind === "StoreLocal" ||
+    instr.value.kind === "Destructure" ||
+    instr.value.kind === "DeclareLocal"
+  ) {
     let kind: InstructionKind = instr.value.lvalue.kind;
     let lvalue;
+    let value: t.Expression | null;
     if (instr.value.kind === "StoreLocal") {
       kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
         ? InstructionKind.Reassign
         : kind;
       lvalue = instr.value.lvalue.place;
+      value = codegenPlace(cx, instr.value.value);
+    } else if (instr.value.kind === "DeclareLocal") {
+      if (cx.hasDeclared(instr.value.lvalue.place.identifier)) {
+        return null;
+      }
+      kind = instr.value.lvalue.kind;
+      lvalue = instr.value.lvalue.place;
+      value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
       for (const place of eachPatternOperand(lvalue)) {
@@ -376,8 +389,8 @@ function codegenInstructionNullable(
           break;
         }
       }
+      value = codegenPlace(cx, instr.value.value);
     }
-    const value = codegenPlace(cx, instr.value.value);
     switch (kind) {
       case InstructionKind.Const: {
         return createVariableDeclaration(instr.loc, "const", [
@@ -390,6 +403,7 @@ function codegenInstructionNullable(
         ]);
       }
       case InstructionKind.Reassign: {
+        invariant(value !== null, "Expected a value for reassignment");
         return createExpressionStatement(
           instr.loc,
           t.assignmentExpression("=", codegenLValue(lvalue), value)
@@ -844,10 +858,11 @@ function codegenInstructionValue(
       value = t.identifier(instrValue.name);
       break;
     }
+    case "DeclareLocal":
     case "Destructure":
     case "StoreLocal": {
       CompilerError.invariant(
-        `Unexpected StoreLocal in codegenInstructionValue`,
+        `Unexpected ${instrValue.kind} in codegenInstructionValue`,
         instrValue.loc
       );
     }
