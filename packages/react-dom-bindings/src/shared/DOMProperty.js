@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableFilterEmptyStringAttributesDOM,
-  enableCustomElementPropertySupport,
-} from 'shared/ReactFeatureFlags';
+import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -87,124 +84,6 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   illegalAttributeNameCache[attributeName] = true;
   if (__DEV__) {
     console.error('Invalid attribute name: `%s`', attributeName);
-  }
-  return false;
-}
-
-export function shouldIgnoreAttribute(
-  name: string,
-  propertyInfo: PropertyInfo | null,
-  isCustomComponentTag: boolean,
-): boolean {
-  if (propertyInfo !== null) {
-    return propertyInfo.type === RESERVED;
-  }
-  if (isCustomComponentTag) {
-    return false;
-  }
-  if (
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
-    return true;
-  }
-  return false;
-}
-
-export function shouldRemoveAttributeWithWarning(
-  name: string,
-  value: mixed,
-  propertyInfo: PropertyInfo | null,
-  isCustomComponentTag: boolean,
-): boolean {
-  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
-    return false;
-  }
-  switch (typeof value) {
-    case 'function':
-    case 'symbol': // eslint-disable-line
-      return true;
-    case 'boolean': {
-      if (isCustomComponentTag) {
-        return false;
-      }
-      if (propertyInfo !== null) {
-        return !propertyInfo.acceptsBooleans;
-      } else {
-        const prefix = name.toLowerCase().slice(0, 5);
-        return prefix !== 'data-' && prefix !== 'aria-';
-      }
-    }
-    default:
-      return false;
-  }
-}
-
-export function shouldRemoveAttribute(
-  name: string,
-  value: mixed,
-  propertyInfo: PropertyInfo | null,
-  isCustomComponentTag: boolean,
-): boolean {
-  if (value === null || typeof value === 'undefined') {
-    return true;
-  }
-  if (
-    shouldRemoveAttributeWithWarning(
-      name,
-      value,
-      propertyInfo,
-      isCustomComponentTag,
-    )
-  ) {
-    return true;
-  }
-  if (isCustomComponentTag) {
-    if (enableCustomElementPropertySupport) {
-      if (value === false) {
-        return true;
-      }
-    }
-    return false;
-  }
-  if (propertyInfo !== null) {
-    if (enableFilterEmptyStringAttributesDOM) {
-      if (propertyInfo.removeEmptyString && value === '') {
-        if (__DEV__) {
-          if (name === 'src') {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'This may cause the browser to download the whole page again over the network. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          } else {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          }
-        }
-        return true;
-      }
-    }
-
-    switch (propertyInfo.type) {
-      case BOOLEAN:
-        return !value;
-      case OVERLOADED_BOOLEAN:
-        return value === false;
-      case NUMERIC:
-        return isNaN(value);
-      case POSITIVE_NUMERIC:
-        return isNaN(value) || (value: any) < 1;
-    }
   }
   return false;
 }
