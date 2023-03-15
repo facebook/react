@@ -10,11 +10,7 @@
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {RootState} from './ReactFiberRoot';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {
-  ReactScopeInstance,
-  ReactContext,
-  Wakeable,
-} from 'shared/ReactTypes';
+import type {ReactScopeInstance, ReactContext} from 'shared/ReactTypes';
 import type {
   Instance,
   Type,
@@ -25,7 +21,9 @@ import type {
 import type {
   SuspenseState,
   SuspenseListRenderState,
+  RetryQueue,
 } from './ReactFiberSuspenseComponent';
+import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -502,6 +500,19 @@ function updateHostComponent(
     }
   }
 }
+
+function scheduleRetryEffect(
+  workInProgress: Fiber,
+  retryQueue: RetryQueue | null,
+) {
+  const wakeables = retryQueue;
+  if (wakeables !== null) {
+    // Schedule an effect to attach a retry listener to the promise.
+    // TODO: Move to passive phase
+    workInProgress.flags |= Update;
+  }
+}
+
 function updateHostText(
   current: Fiber,
   workInProgress: Fiber,
@@ -1227,12 +1238,8 @@ function completeWork(
         }
       }
 
-      const wakeables: Set<Wakeable> | null = (workInProgress.updateQueue: any);
-      if (wakeables !== null) {
-        // Schedule an effect to attach a retry listener to the promise.
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
-      }
+      const retryQueue: RetryQueue | null = (workInProgress.updateQueue: any);
+      scheduleRetryEffect(workInProgress, retryQueue);
 
       if (
         enableSuspenseCallback &&
@@ -1337,11 +1344,10 @@ function completeWork(
                 // We might bail out of the loop before finding any but that
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
-                const newThenables = suspended.updateQueue;
-                if (newThenables !== null) {
-                  workInProgress.updateQueue = newThenables;
-                  workInProgress.flags |= Update;
-                }
+                const retryQueue: RetryQueue | null =
+                  (suspended.updateQueue: any);
+                workInProgress.updateQueue = retryQueue;
+                scheduleRetryEffect(workInProgress, retryQueue);
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
@@ -1399,11 +1405,9 @@ function completeWork(
 
             // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
-            const newThenables = suspended.updateQueue;
-            if (newThenables !== null) {
-              workInProgress.updateQueue = newThenables;
-              workInProgress.flags |= Update;
-            }
+            const retryQueue: RetryQueue | null = (suspended.updateQueue: any);
+            workInProgress.updateQueue = retryQueue;
+            scheduleRetryEffect(workInProgress, retryQueue);
 
             cutOffTailIfNeeded(renderState, true);
             // This might have been modified.
@@ -1566,10 +1570,11 @@ function completeWork(
         }
       }
 
-      if (workInProgress.updateQueue !== null) {
-        // Schedule an effect to attach Suspense retry listeners
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
+      const offscreenQueue: OffscreenQueue | null =
+        (workInProgress.updateQueue: any);
+      if (offscreenQueue !== null) {
+        const retryQueue = offscreenQueue.retryQueue;
+        scheduleRetryEffect(workInProgress, retryQueue);
       }
 
       if (enableCache) {

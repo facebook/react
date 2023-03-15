@@ -13,6 +13,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
+import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -412,12 +413,12 @@ function throwException(
           //
           // When the wakeable resolves, we'll attempt to render the boundary
           // again ("retry").
-          const wakeables: Set<Wakeable> | null =
+          const retryQueue: RetryQueue | null =
             (suspenseBoundary.updateQueue: any);
-          if (wakeables === null) {
+          if (retryQueue === null) {
             suspenseBoundary.updateQueue = new Set([wakeable]);
           } else {
-            wakeables.add(wakeable);
+            retryQueue.add(wakeable);
           }
           break;
         }
@@ -430,15 +431,15 @@ function throwException(
               const newOffscreenQueue: OffscreenQueue = {
                 transitions: null,
                 markerInstances: null,
-                wakeables: new Set([wakeable]),
+                retryQueue: new Set([wakeable]),
               };
               suspenseBoundary.updateQueue = newOffscreenQueue;
             } else {
-              const wakeables = offscreenQueue.wakeables;
-              if (wakeables === null) {
-                offscreenQueue.wakeables = new Set([wakeable]);
+              const retryQueue = offscreenQueue.retryQueue;
+              if (retryQueue === null) {
+                offscreenQueue.retryQueue = new Set([wakeable]);
               } else {
-                wakeables.add(wakeable);
+                retryQueue.add(wakeable);
               }
             }
             break;

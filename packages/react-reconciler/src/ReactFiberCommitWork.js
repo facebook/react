@@ -19,7 +19,7 @@ import type {
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import {NoTimestamp, SyncLane} from './ReactFiberLane';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -2310,9 +2310,9 @@ function commitSuspenseCallback(finishedWork: Fiber) {
   if (enableSuspenseCallback && newState !== null) {
     const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
     if (typeof suspenseCallback === 'function') {
-      const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
-      if (wakeables !== null) {
-        suspenseCallback(new Set(wakeables));
+      const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
+      if (retryQueue !== null) {
+        suspenseCallback(new Set(retryQueue));
       }
     } else if (__DEV__) {
       if (suspenseCallback !== undefined) {
@@ -2431,7 +2431,7 @@ export function attachOffscreenInstance(instance: OffscreenInstance): void {
 
 function attachSuspenseRetryListeners(
   finishedWork: Fiber,
-  wakeables: Set<Wakeable>,
+  wakeables: RetryQueue,
 ) {
   // If this boundary just timed out, then it will have a set of wakeables.
   // For each wakeable, attach a listener so that when it resolves, React
@@ -2917,10 +2917,10 @@ function commitMutationEffectsOnFiber(
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
-        if (wakeables !== null) {
+        const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
+        if (retryQueue !== null) {
           finishedWork.updateQueue = null;
-          attachSuspenseRetryListeners(finishedWork, wakeables);
+          attachSuspenseRetryListeners(finishedWork, retryQueue);
         }
       }
       return;
@@ -3006,10 +3006,10 @@ function commitMutationEffectsOnFiber(
         const offscreenQueue: OffscreenQueue | null =
           (finishedWork.updateQueue: any);
         if (offscreenQueue !== null) {
-          const wakeables = offscreenQueue.wakeables;
-          if (wakeables !== null) {
-            offscreenQueue.wakeables = null;
-            attachSuspenseRetryListeners(finishedWork, wakeables);
+          const retryQueue = offscreenQueue.retryQueue;
+          if (retryQueue !== null) {
+            offscreenQueue.retryQueue = null;
+            attachSuspenseRetryListeners(finishedWork, retryQueue);
           }
         }
       }
@@ -3020,10 +3020,11 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
-        const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
-        if (wakeables !== null) {
+        const retryQueue: Set<Wakeable> | null =
+          (finishedWork.updateQueue: any);
+        if (retryQueue !== null) {
           finishedWork.updateQueue = null;
-          attachSuspenseRetryListeners(finishedWork, wakeables);
+          attachSuspenseRetryListeners(finishedWork, retryQueue);
         }
       }
       return;
