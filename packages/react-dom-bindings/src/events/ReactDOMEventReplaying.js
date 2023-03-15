@@ -38,49 +38,16 @@ import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 
-let _attemptSynchronousHydration: (fiber: Object) => void;
-
-export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
-  _attemptSynchronousHydration = fn;
-}
-
-export function attemptSynchronousHydration(fiber: Object) {
-  _attemptSynchronousHydration(fiber);
-}
-
-let attemptDiscreteHydration: (fiber: Object) => void;
-
-export function setAttemptDiscreteHydration(fn: (fiber: Object) => void) {
-  attemptDiscreteHydration = fn;
-}
-
-let attemptContinuousHydration: (fiber: Object) => void;
-
-export function setAttemptContinuousHydration(fn: (fiber: Object) => void) {
-  attemptContinuousHydration = fn;
-}
-
-let attemptHydrationAtCurrentPriority: (fiber: Object) => void;
-
-export function setAttemptHydrationAtCurrentPriority(
-  fn: (fiber: Object) => void,
-) {
-  attemptHydrationAtCurrentPriority = fn;
-}
-
-let getCurrentUpdatePriority: () => EventPriority;
-
-export function setGetCurrentUpdatePriority(fn: () => EventPriority) {
-  getCurrentUpdatePriority = fn;
-}
-
-let attemptHydrationAtPriority: <T>(priority: EventPriority, fn: () => T) => T;
-
-export function setAttemptHydrationAtPriority(
-  fn: <T>(priority: EventPriority, fn: () => T) => T,
-) {
-  attemptHydrationAtPriority = fn;
-}
+import {
+  attemptSynchronousHydration,
+  attemptDiscreteHydration,
+  attemptContinuousHydration,
+  attemptHydrationAtCurrentPriority,
+} from 'react-reconciler/src/ReactFiberReconciler';
+import {
+  runWithPriority as attemptHydrationAtPriority,
+  getCurrentUpdatePriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
