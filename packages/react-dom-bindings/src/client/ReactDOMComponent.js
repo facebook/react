@@ -94,14 +94,7 @@ const HTML = '__html';
 let warnedUnknownTags: {
   [key: string]: boolean,
 };
-
-let validatePropertiesInDevelopment;
-let warnForPropDifference;
-let warnForExtraAttributes;
-let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
-
-let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
@@ -115,15 +108,6 @@ if (__DEV__) {
     webview: true,
   };
 
-  validatePropertiesInDevelopment = function (type: string, props: any) {
-    validateARIAProperties(type, props);
-    validateInputProperties(type, props);
-    validateUnknownProperties(type, props, {
-      registrationNameDependencies,
-      possibleRegistrationNames,
-    });
-  };
-
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -133,12 +117,25 @@ if (__DEV__) {
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
   canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
+}
 
-  warnForPropDifference = function (
-    propName: string,
-    serverValue: mixed,
-    clientValue: mixed,
-  ) {
+function validatePropertiesInDevelopment(type: string, props: any) {
+  if (__DEV__) {
+    validateARIAProperties(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, {
+      registrationNameDependencies,
+      possibleRegistrationNames,
+    });
+  }
+}
+
+function warnForPropDifference(
+  propName: string,
+  serverValue: mixed,
+  clientValue: mixed,
+) {
+  if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -156,9 +153,11 @@ if (__DEV__) {
       JSON.stringify(normalizedServerValue),
       JSON.stringify(normalizedClientValue),
     );
-  };
+  }
+}
 
-  warnForExtraAttributes = function (attributeNames: Set<string>) {
+function warnForExtraAttributes(attributeNames: Set<string>) {
+  if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -168,12 +167,11 @@ if (__DEV__) {
       names.push(name);
     });
     console.error('Extra attributes from the server: %s', names);
-  };
+  }
+}
 
-  warnForInvalidEventListener = function (
-    registrationName: string,
-    listener: any,
-  ) {
+function warnForInvalidEventListener(registrationName: string, listener: any) {
+  if (__DEV__) {
     if (listener === false) {
       console.error(
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
@@ -190,11 +188,13 @@ if (__DEV__) {
         typeof listener,
       );
     }
-  };
+  }
+}
 
-  // Parse the HTML and read it back to normalize the HTML string so that it
-  // can be used for comparison.
-  normalizeHTML = function (parent: Element, html: string) {
+// Parse the HTML and read it back to normalize the HTML string so that it
+// can be used for comparison.
+function normalizeHTML(parent: Element, html: string) {
+  if (__DEV__) {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
@@ -208,7 +208,7 @@ if (__DEV__) {
           );
     testElement.innerHTML = html;
     return testElement.innerHTML;
-  };
+  }
 }
 
 // HTML parsing normalizes CR and CRLF to LF.

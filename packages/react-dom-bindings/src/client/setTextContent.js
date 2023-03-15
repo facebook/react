@@ -18,7 +18,7 @@ import {TEXT_NODE} from './HTMLNodeType';
  * @param {string} text
  * @internal
  */
-const setTextContent = function (node: Element, text: string): void {
+function setTextContent(node: Element, text: string): void {
   if (text) {
     const firstChild = node.firstChild;
 
@@ -32,6 +32,6 @@ const setTextContent = function (node: Element, text: string): void {
     }
   }
   node.textContent = text;
-};
+}
 
 export default setTextContent;

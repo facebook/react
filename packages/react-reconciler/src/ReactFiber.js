@@ -224,7 +224,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-const createFiber = function (
+function createFiber(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -232,7 +232,7 @@ const createFiber = function (
 ): Fiber {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
-};
+}
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;

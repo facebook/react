@@ -7,24 +7,15 @@
  * @flow
  */
 
+/* globals MSApp */
+
 import {SVG_NAMESPACE} from './DOMNamespaces';
-import createMicrosoftUnsafeLocalFunction from './createMicrosoftUnsafeLocalFunction';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
 // SVG temp container for IE lacking innerHTML
 let reusableSVGContainer: HTMLElement;
 
-/**
- * Set the innerHTML property of a node
- *
- * @param {DOMElement} node
- * @param {string} html
- * @internal
- */
-const setInnerHTML: (
-  node: Element,
-  html: {valueOf(): {toString(): string, ...}, ...},
-) => void = createMicrosoftUnsafeLocalFunction(function (
+function setInnerHTMLImpl(
   node: Element,
   html: {valueOf(): {toString(): string, ...}, ...},
 ): void {
@@ -66,6 +57,26 @@ const setInnerHTML: (
     }
   }
   node.innerHTML = (html: any);
-});
+}
+
+let setInnerHTML: (
+  node: Element,
+  html: {valueOf(): {toString(): string, ...}, ...},
+) => void = setInnerHTMLImpl;
+// $FlowFixMe[cannot-resolve-name]
+if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
+  /**
+   * Create a function which has 'unsafe' privileges (required by windows8 apps)
+   */
+  setInnerHTML = function (
+    node: Element,
+    html: {valueOf(): {toString(): string, ...}, ...},
+  ): void {
+    // $FlowFixMe[cannot-resolve-name]
+    return MSApp.execUnsafeLocalFunction(function () {
+      return setInnerHTMLImpl(node, html);
+    });
+  };
+}
 
 export default setInnerHTML;
