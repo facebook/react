@@ -21,14 +21,16 @@ export default function (func: HIRFunction): void {
               //
               // after:
               //   foo = Call $9()
-              instr.value = {
-                kind: "CallExpression",
-                callee: fn,
-                // Drop the args, including the deps array which DCE will remove
-                // later.
-                args: [],
-                loc: instr.value.loc,
-              };
+              if (fn.kind === "Identifier") {
+                instr.value = {
+                  kind: "CallExpression",
+                  callee: fn,
+                  // Drop the args, including the deps array which DCE will remove
+                  // later.
+                  args: [],
+                  loc: instr.value.loc,
+                };
+              }
             } else if (name === "useCallback") {
               const [fn] = instr.value.args;
 
@@ -39,16 +41,18 @@ export default function (func: HIRFunction): void {
               //
               // after:
               //   foo = $19
-              instr.value = {
-                kind: "LoadLocal",
-                place: {
-                  kind: "Identifier",
-                  identifier: fn.identifier,
-                  effect: Effect.Unknown,
+              if (fn.kind === "Identifier") {
+                instr.value = {
+                  kind: "LoadLocal",
+                  place: {
+                    kind: "Identifier",
+                    identifier: fn.identifier,
+                    effect: Effect.Unknown,
+                    loc: instr.value.loc,
+                  },
                   loc: instr.value.loc,
-                },
-                loc: instr.value.loc,
-              };
+                };
+              }
             }
           }
         }

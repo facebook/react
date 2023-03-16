@@ -14,6 +14,7 @@ import {
   Pattern,
   Place,
   ReactiveInstruction,
+  SpreadPattern,
   Terminal,
 } from "./HIR";
 
@@ -45,7 +46,7 @@ export function* eachInstructionValueOperand(
     case "NewExpression":
     case "CallExpression": {
       yield instrValue.callee;
-      yield* instrValue.args;
+      yield* eachCallArgument(instrValue.args);
       break;
     }
     case "BinaryExpression": {
@@ -55,13 +56,13 @@ export function* eachInstructionValueOperand(
     }
     case "PropertyCall": {
       yield instrValue.receiver;
-      yield* instrValue.args;
+      yield* eachCallArgument(instrValue.args);
       break;
     }
     case "ComputedCall": {
       yield instrValue.receiver;
       yield instrValue.property;
-      yield* instrValue.args;
+      yield* eachCallArgument(instrValue.args);
       break;
     }
     case "LoadLocal": {
@@ -181,6 +182,18 @@ export function* eachInstructionValueOperand(
         instrValue,
         `Unexpected instruction kind '${(instrValue as any).kind}'`
       );
+    }
+  }
+}
+
+export function* eachCallArgument(
+  args: Array<Place | SpreadPattern>
+): Iterable<Place> {
+  for (const arg of args) {
+    if (arg.kind === "Identifier") {
+      yield arg;
+    } else {
+      yield arg.place;
     }
   }
 }
@@ -331,18 +344,18 @@ export function mapInstructionOperands(
     case "NewExpression":
     case "CallExpression": {
       instrValue.callee = fn(instrValue.callee);
-      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }
     case "PropertyCall": {
       instrValue.receiver = fn(instrValue.receiver);
-      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }
     case "ComputedCall": {
       instrValue.receiver = fn(instrValue.receiver);
       instrValue.property = fn(instrValue.property);
-      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }
     case "UnaryExpression": {
@@ -421,6 +434,20 @@ export function mapInstructionOperands(
       assertExhaustive(instrValue, "Unexpected instruction kind");
     }
   }
+}
+
+export function mapCallArguments(
+  args: Array<Place | SpreadPattern>,
+  fn: (place: Place) => Place
+): Array<Place | SpreadPattern> {
+  return args.map((arg) => {
+    if (arg.kind === "Identifier") {
+      return fn(arg);
+    } else {
+      arg.place = fn(arg.place);
+      return arg;
+    }
+  });
 }
 
 export function mapPatternOperands(

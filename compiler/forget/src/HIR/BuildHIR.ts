@@ -916,17 +916,25 @@ function lowerExpression(
       }
       if (calleePath.isMemberExpression()) {
         const { object, property } = lowerMemberExpression(builder, calleePath);
-        let args: Place[] = [];
+        let args: Array<Place | SpreadPattern> = [];
         for (const argPath of expr.get("arguments")) {
-          if (!argPath.isExpression()) {
+          if (argPath.isSpreadElement()) {
+            args.push({
+              kind: "Spread",
+              place: lowerExpressionToTemporary(
+                builder,
+                argPath.get("argument")
+              ),
+            });
+          } else if (argPath.isExpression()) {
+            args.push(lowerExpressionToTemporary(builder, argPath));
+          } else {
             builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
               nodePath: argPath,
             });
-            continue;
           }
-          args.push(lowerExpressionToTemporary(builder, argPath));
         }
         if (typeof property === "string") {
           return {
@@ -947,9 +955,19 @@ function lowerExpression(
         }
       } else {
         const callee = lowerExpressionToTemporary(builder, calleePath);
-        let args: Place[] = [];
+        let args: Array<Place | SpreadPattern> = [];
         for (const argPath of expr.get("arguments")) {
-          if (!argPath.isExpression()) {
+          if (argPath.isSpreadElement()) {
+            args.push({
+              kind: "Spread",
+              place: lowerExpressionToTemporary(
+                builder,
+                argPath.get("argument")
+              ),
+            });
+          } else if (argPath.isExpression()) {
+            args.push(lowerExpressionToTemporary(builder, argPath));
+          } else {
             builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
               severity: ErrorSeverity.Todo,
@@ -957,7 +975,6 @@ function lowerExpression(
             });
             continue;
           }
-          args.push(lowerExpressionToTemporary(builder, argPath));
         }
         return {
           kind: "CallExpression",

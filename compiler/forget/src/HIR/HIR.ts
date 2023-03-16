@@ -480,21 +480,21 @@ export type InstructionValue =
   | {
       kind: "CallExpression";
       callee: Place;
-      args: Array<Place>;
+      args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
   | {
       kind: "PropertyCall";
       receiver: Place;
       property: string;
-      args: Array<Place>;
+      args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
   | {
       kind: "ComputedCall";
       receiver: Place;
       property: Place;
-      args: Array<Place>;
+      args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
   | {

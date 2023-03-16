@@ -673,7 +673,11 @@ function inferBlock(
 
         state.reference(instrValue.receiver, Effect.Mutate);
         for (const arg of instrValue.args) {
-          state.reference(arg, Effect.Mutate);
+          if (arg.kind === "Identifier") {
+            state.reference(arg, Effect.Mutate);
+          } else {
+            state.reference(arg.place, Effect.Mutate);
+          }
         }
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);
@@ -695,7 +699,11 @@ function inferBlock(
         state.reference(instrValue.receiver, Effect.Mutate);
         state.reference(instrValue.property, Effect.Read);
         for (const arg of instrValue.args) {
-          state.reference(arg, Effect.Mutate);
+          if (arg.kind === "Identifier") {
+            state.reference(arg, Effect.Mutate);
+          } else {
+            state.reference(arg.place, Effect.Mutate);
+          }
         }
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);

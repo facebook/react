@@ -11,7 +11,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 
   const g = { b() {}, c: () => {} };
   new c(...args);
-  c(...args);
   const { z, aa = "aa" } = useCustom();
 
   <Button xlink:href="localhost:3000"></Button>;

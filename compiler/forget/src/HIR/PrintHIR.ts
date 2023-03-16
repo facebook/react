@@ -258,20 +258,20 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "CallExpression": {
       value = `Call ${printPlace(instrValue.callee)}(${instrValue.args
-        .map((arg) => printPlace(arg))
+        .map((arg) => printPattern(arg))
         .join(", ")})`;
       break;
     }
     case "PropertyCall": {
       value = `PropertyCall ${printPlace(instrValue.receiver)}.${
         instrValue.property
-      }(${instrValue.args.map((arg) => printPlace(arg)).join(", ")})`;
+      }(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
       break;
     }
     case "ComputedCall": {
       value = `ComputedCall ${printPlace(instrValue.receiver)}[${printPlace(
         instrValue.property
-      )}](${instrValue.args.map((arg) => printPlace(arg)).join(", ")})`;
+      )}](${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
       break;
     }
     case "JSXText":

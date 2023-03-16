@@ -556,7 +556,7 @@ function codegenInstructionValue(
     }
     case "CallExpression": {
       const callee = codegenPlace(cx, instrValue.callee);
-      const args = instrValue.args.map((arg) => codegenPlace(cx, arg));
+      const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
@@ -566,7 +566,7 @@ function codegenInstructionValue(
         receiver,
         t.identifier(instrValue.property)
       );
-      const args = instrValue.args.map((arg) => codegenPlace(cx, arg));
+      const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
@@ -574,7 +574,7 @@ function codegenInstructionValue(
       const receiver = codegenPlace(cx, instrValue.receiver);
       const property = codegenPlace(cx, instrValue.property);
       const callee = t.memberExpression(receiver, property, true);
-      const args = instrValue.args.map((arg) => codegenPlace(cx, arg));
+      const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
@@ -937,6 +937,17 @@ function codegenValue(
     return t.identifier("undefined");
   } else {
     assertExhaustive(value, "Unexpected primitive value kind");
+  }
+}
+
+function codegenArgument(
+  cx: Context,
+  arg: Place | SpreadPattern
+): t.Expression | t.SpreadElement {
+  if (arg.kind === "Identifier") {
+    return codegenPlace(cx, arg);
+  } else {
+    return t.spreadElement(codegenPlace(cx, arg.place));
   }
 }
 
