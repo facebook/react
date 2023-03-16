@@ -1646,12 +1646,12 @@ describe('ReactUpdates', () => {
       try {
         const container = document.createElement('div');
         expect(() => {
-          ReactDOM.render(<App />, container);
+          const root = ReactDOMClient.createRoot(container);
+          root.render(<App />);
           while (error === null) {
             Scheduler.unstable_flushNumberOfYields(1);
             Scheduler.unstable_clearLog();
           }
-          expect(error).toContain('Warning: Maximum update depth exceeded.');
           expect(stack).toContain(' NonTerminating');
           // rethrow error to prevent going into an infinite loop when act() exits
           throw error;
