@@ -218,8 +218,8 @@ export function getChildHostContext(
 
 export function getPublicInstance(instance: Instance): * {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
-  if (instance.canonical) {
-    return instance.canonical;
+  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    return instance.canonical.publicInstance;
   }
 
   return instance;

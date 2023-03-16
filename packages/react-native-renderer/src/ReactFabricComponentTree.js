@@ -20,6 +20,15 @@ import {getPublicInstance} from './ReactFabricHostConfig';
 // This is ok in DOM because they types are interchangeable, but in React Native
 // they aren't.
 function getInstanceFromNode(node: Instance | TextInstance): Fiber | null {
+  const instance: Instance = (node: $FlowFixMe); // In React Native, node is never a text instance
+
+  if (
+    instance.canonical != null &&
+    instance.canonical.internalInstanceHandle != null
+  ) {
+    return instance.canonical.internalInstanceHandle;
+  }
+
   // $FlowFixMe[incompatible-return] DevTools incorrectly passes a fiber in React Native.
   return node;
 }
