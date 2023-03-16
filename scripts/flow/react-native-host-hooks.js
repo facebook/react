@@ -178,19 +178,19 @@ declare var nativeFabricUIManager: {
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
   sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
-  measure: (node: Object, callback: __MeasureOnSuccessCallback) => void,
+  measure: (node: Node, callback: __MeasureOnSuccessCallback) => void,
   measureInWindow: (
-    node: Object,
+    node: Node,
     callback: __MeasureInWindowOnSuccessCallback,
   ) => void,
   measureLayout: (
-    node: Object,
-    relativeNode: Object,
+    node: Node,
+    relativeNode: Node,
     onFail: () => void,
     onSuccess: __MeasureLayoutOnSuccessCallback,
   ) => void,
   getBoundingClientRect: (
-    node: Object,
+    node: Node,
   ) => [
     /* x:*/ number,
     /* y:*/ number,
@@ -198,13 +198,13 @@ declare var nativeFabricUIManager: {
     /* height:*/ number,
   ],
   findNodeAtPoint: (
-    node: Object,
+    node: Node,
     locationX: number,
     locationY: number,
     callback: (Object) => void,
   ) => void,
   setIsJSResponder: (
-    node: Object,
+    node: Node,
     isJsResponder: boolean,
     blockNativeResponder: boolean,
   ) => void,
