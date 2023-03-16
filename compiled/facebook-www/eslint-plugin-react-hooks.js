@@ -91,8 +91,9 @@ function _createForOfIteratorHelper(o, allowArrayLike) {
 /* global BigInt */
 
 function isHookName(s) {
-
-  return /^use[A-Z0-9]/.test(s);
+  {
+    return s === 'use' || /^use[A-Z0-9]/.test(s);
+  }
 }
 /**
  * We consider hooks to be a hook name identifier or a member expression
@@ -164,13 +165,15 @@ function isInsideComponentOrHook(node) {
 }
 
 function isUseEffectEventIdentifier$1(node) {
-
-  return false;
+  {
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
+  }
 }
 
 function isUseIdentifier(node) {
-
-  return false;
+  {
+    return node.type === 'Identifier' && node.name === 'use';
+  }
 }
 
 var RulesOfHooks = {
@@ -707,7 +710,7 @@ var RulesOfHooks = {
         // another useEffectEvent
 
 
-        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEffectEventIdentifier$1()) && node.arguments.length > 0) {
+        if (node.callee.type === 'Identifier' && (node.callee.name === 'useEffect' || isUseEffectEventIdentifier$1(node.callee)) && node.arguments.length > 0) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
           // comparison later when we exit
           lastEffect = node;
@@ -995,7 +998,7 @@ var ExhaustiveDeps = {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (isUseEffectEventIdentifier() && id.type === 'Identifier') {
+        } else if (isUseEffectEventIdentifier(callee) && id.type === 'Identifier') {
           var _iterator = _createForOfIteratorHelper(resolved.references),
               _step;
 
@@ -2558,8 +2561,9 @@ function isAncestorNodeOf(a, b) {
 }
 
 function isUseEffectEventIdentifier(node) {
-
-  return false;
+  {
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
+  }
 }
 
 var configs = {
