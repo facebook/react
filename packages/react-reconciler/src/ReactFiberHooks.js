@@ -2389,11 +2389,11 @@ function startTransition(
     higherEventPriority(previousPriority, ContinuousEventPriority),
   );
 
-  setPending(true);
-
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
-  const currentTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = null;
+  setPending(true);
+  const currentTransition = (ReactCurrentBatchConfig.transition =
+    ({}: BatchConfigTransition));
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
