@@ -96,8 +96,8 @@ jobs:
       - name: Strip @license from eslint plugin and react-refresh
         run: |
           sed -i -e 's/ @license React*//' \
-            build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
-            build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js
+            build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Move relevant files into compiled
         run: |
           mkdir -p ./compiled
@@ -111,7 +111,7 @@ jobs:
           mv build/WARNINGS ./compiled/facebook-www/WARNINGS
 
           # Copy eslint-plugin-react-hooks into facebook-www
-          mv build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+          mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/facebook-www/eslint-plugin-react-hooks.js
 
           # Copy unstable_server-external-runtime.js into facebook-www
@@ -119,7 +119,7 @@ jobs:
             ./compiled/facebook-www/unstable_server-external-runtime.js
 
           # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
-          mv build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js \
+          mv build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js \
             ./compiled/babel-plugin-react-refresh/index.js
 
           ls -R ./compiled
