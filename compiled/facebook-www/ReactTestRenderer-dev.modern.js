@@ -8087,10 +8087,10 @@ function startTransition(setPending, callback, options) {
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
-  setPending(true);
   var prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = {};
-  var currentTransition = ReactCurrentBatchConfig$2.transition;
+  ReactCurrentBatchConfig$2.transition = null;
+  setPending(true);
+  var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   {
     ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
@@ -23947,7 +23947,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-269fc792";
+var ReactVersion = "18.3.0-www-modern-3b134919";
 
 // Might add PROFILE later.
 

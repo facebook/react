@@ -4039,8 +4039,9 @@ function startTransition(setPending, callback, options) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  setPending(!0);
   var prevTransition = ReactCurrentBatchConfig$3.transition;
+  ReactCurrentBatchConfig$3.transition = null;
+  setPending(!0);
   ReactCurrentBatchConfig$3.transition = {};
   enableTransitionTracing &&
     void 0 !== options &&
@@ -15996,7 +15997,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1785 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-4965a577",
+  version: "18.3.0-www-modern-6ba2fda0",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16041,7 +16042,7 @@ var devToolsConfig$jscomp$inline_1785 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-4965a577"
+  reconcilerVersion: "18.3.0-www-modern-6ba2fda0"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16197,7 +16198,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-4965a577";
+exports.version = "18.3.0-www-modern-6ba2fda0";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

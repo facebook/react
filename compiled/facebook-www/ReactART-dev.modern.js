@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-80930f5c";
+var ReactVersion = "18.3.0-www-modern-2aeb9097";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -9113,10 +9113,10 @@ function startTransition(setPending, callback, options) {
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
-  setPending(true);
   var prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = {};
-  var currentTransition = ReactCurrentBatchConfig$2.transition;
+  ReactCurrentBatchConfig$2.transition = null;
+  setPending(true);
+  var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {

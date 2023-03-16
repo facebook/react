@@ -5304,8 +5304,9 @@ function startTransition(setPending, callback, options) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  setPending(!0);
   var prevTransition = ReactCurrentBatchConfig$3.transition;
+  ReactCurrentBatchConfig$3.transition = null;
+  setPending(!0);
   ReactCurrentBatchConfig$3.transition = {};
   enableTransitionTracing &&
     void 0 !== options &&
@@ -16479,7 +16480,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1815 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-b1120432",
+  version: "18.3.0-www-classic-9f687ef2",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16523,7 +16524,7 @@ var devToolsConfig$jscomp$inline_1815 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b1120432"
+  reconcilerVersion: "18.3.0-www-classic-9f687ef2"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16750,7 +16751,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-b1120432";
+exports.version = "18.3.0-www-classic-9f687ef2";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

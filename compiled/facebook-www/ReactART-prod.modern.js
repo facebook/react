@@ -2720,8 +2720,9 @@ function startTransition(setPending, callback, options) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  setPending(!0);
   var prevTransition = ReactCurrentBatchConfig$2.transition;
+  ReactCurrentBatchConfig$2.transition = null;
+  setPending(!0);
   ReactCurrentBatchConfig$2.transition = {};
   enableTransitionTracing &&
     void 0 !== options &&
@@ -9555,7 +9556,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-d2d40a82",
+    version: "18.3.0-www-modern-01e5635a",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1283 = {
@@ -9586,7 +9587,7 @@ var internals$jscomp$inline_1283 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-d2d40a82"
+  reconcilerVersion: "18.3.0-www-modern-01e5635a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1284 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

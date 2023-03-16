@@ -19002,10 +19002,10 @@ function startTransition(setPending, callback, options) {
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
-  setPending(true);
   var prevTransition = ReactCurrentBatchConfig$3.transition;
-  ReactCurrentBatchConfig$3.transition = {};
-  var currentTransition = ReactCurrentBatchConfig$3.transition;
+  ReactCurrentBatchConfig$3.transition = null;
+  setPending(true);
+  var currentTransition = (ReactCurrentBatchConfig$3.transition = {});
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
@@ -38325,7 +38325,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-da9cec21";
+var ReactVersion = "18.3.0-www-classic-063e851c";
 
 function createPortal$1(
   children,
