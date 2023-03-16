@@ -10,7 +10,7 @@
 // Renderers that don't support mutation
 // can re-export everything from this module.
 
-function shim(...args: any) {
+function shim(...args: any): any {
   throw new Error(
     'The current renderer does not support Singletons. ' +
       'This error is likely caused by a bug in React. ' +

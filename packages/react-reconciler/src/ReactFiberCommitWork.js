@@ -94,6 +94,7 @@ import {
   LayoutMask,
   PassiveMask,
   Visibility,
+  SuspenseyCommit,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -158,6 +159,7 @@ import {
   mountHoistable,
   unmountHoistable,
   prepareToCommitHoistables,
+  suspendInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -4060,6 +4062,27 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
   setCurrentDebugFiberInDEV(finishedWork);
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentDebugFiberInDEV();
+}
+
+export function recursivelyAccumulateSuspenseyCommit(parentFiber: Fiber): void {
+  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      recursivelyAccumulateSuspenseyCommit(child);
+      switch (child.tag) {
+        case HostComponent:
+        case HostHoistable: {
+          if (child.flags & SuspenseyCommit) {
+            const type = child.type;
+            const props = child.memoizedProps;
+            suspendInstance(type, props);
+          }
+          break;
+        }
+      }
+      child = child.sibling;
+    }
+  }
 }
 
 function detachAlternateSiblings(parentFiber: Fiber) {

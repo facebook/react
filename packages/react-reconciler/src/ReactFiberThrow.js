@@ -34,6 +34,7 @@ import {
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
   ForceClientRender,
+  ScheduleRetry,
 } from './ReactFiberFlags';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -80,6 +81,7 @@ import {
   queueHydrationError,
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
+import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -413,33 +415,52 @@ function throwException(
           //
           // When the wakeable resolves, we'll attempt to render the boundary
           // again ("retry").
-          const retryQueue: RetryQueue | null =
-            (suspenseBoundary.updateQueue: any);
-          if (retryQueue === null) {
-            suspenseBoundary.updateQueue = new Set([wakeable]);
+
+          // Check if this is a Suspensey resource. We do not attach retry
+          // listeners to these, because we don't actually need them for
+          // rendering. Only for committing. Instead, if a fallback commits
+          // and the only thing that suspended was a Suspensey resource, we
+          // retry immediately.
+          // TODO: Refactor throwException so that we don't have to do this type
+          // check. The caller already knows what the cause was.
+          const isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
+          if (isSuspenseyResource) {
+            suspenseBoundary.flags |= ScheduleRetry;
           } else {
-            retryQueue.add(wakeable);
+            const retryQueue: RetryQueue | null =
+              (suspenseBoundary.updateQueue: any);
+            if (retryQueue === null) {
+              suspenseBoundary.updateQueue = new Set([wakeable]);
+            } else {
+              retryQueue.add(wakeable);
+            }
           }
           break;
         }
         case OffscreenComponent: {
           if (suspenseBoundary.mode & ConcurrentMode) {
             suspenseBoundary.flags |= ShouldCapture;
-            const offscreenQueue: OffscreenQueue | null =
-              (suspenseBoundary.updateQueue: any);
-            if (offscreenQueue === null) {
-              const newOffscreenQueue: OffscreenQueue = {
-                transitions: null,
-                markerInstances: null,
-                retryQueue: new Set([wakeable]),
-              };
-              suspenseBoundary.updateQueue = newOffscreenQueue;
+            const isSuspenseyResource =
+              wakeable === noopSuspenseyCommitThenable;
+            if (isSuspenseyResource) {
+              suspenseBoundary.flags |= ScheduleRetry;
             } else {
-              const retryQueue = offscreenQueue.retryQueue;
-              if (retryQueue === null) {
-                offscreenQueue.retryQueue = new Set([wakeable]);
+              const offscreenQueue: OffscreenQueue | null =
+                (suspenseBoundary.updateQueue: any);
+              if (offscreenQueue === null) {
+                const newOffscreenQueue: OffscreenQueue = {
+                  transitions: null,
+                  markerInstances: null,
+                  retryQueue: new Set([wakeable]),
+                };
+                suspenseBoundary.updateQueue = newOffscreenQueue;
               } else {
-                retryQueue.add(wakeable);
+                const retryQueue = offscreenQueue.retryQueue;
+                if (retryQueue === null) {
+                  offscreenQueue.retryQueue = new Set([wakeable]);
+                } else {
+                  retryQueue.add(wakeable);
+                }
               }
             }
             break;
