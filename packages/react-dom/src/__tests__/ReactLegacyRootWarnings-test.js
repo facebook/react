@@ -26,6 +26,7 @@ describe('ReactDOMRoot', () => {
     }
   });
 
+  // @gate !www || experimental
   test('deprecation warning for ReactDOM.hydrate', () => {
     spyOnDev(console, 'error');
 

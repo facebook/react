@@ -294,8 +294,12 @@ module.exports = function (initModules) {
   function itClientRenders(desc, testFn) {
     it(`renders ${desc} with clean client render`, () =>
       testFn(clientCleanRender));
+
+    // @gate !www || experimental
     it(`renders ${desc} with client render on top of good server markup`, () =>
       testFn(clientRenderOnServerString));
+
+    // @gate !www || experimental
     it(`renders ${desc} with client render on top of bad server markup`, async () => {
       try {
         await testFn(clientRenderOnBadMarkup);
