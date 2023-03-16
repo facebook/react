@@ -121,6 +121,7 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
+  // @gate !www || experimental
   it('does not warn if mounting into left padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
@@ -129,6 +130,7 @@ describe('ReactMount', () => {
     ReactDOM.hydrate(<div />, container);
   });
 
+  // @gate !www || experimental
   it('should warn if mounting into right padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
@@ -162,6 +164,7 @@ describe('ReactMount', () => {
     }
   });
 
+  // @gate !www || experimental
   it('should account for escaping on a checksum mismatch', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(

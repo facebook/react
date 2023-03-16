@@ -729,6 +729,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A1B1');
     });
 
+    // @gate !www || experimental
     test('basic server hydration', async () => {
       const store = createExternalStore('client');
 
