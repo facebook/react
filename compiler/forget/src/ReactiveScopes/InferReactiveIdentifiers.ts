@@ -105,6 +105,14 @@ class Visitor extends ReactiveFunctionVisitor<State> {
           instr.lvalue.identifier.id,
           instr.value.place.identifier.id
         );
+      } else if (
+        instr.value.kind === "PropertyLoad" ||
+        instr.value.kind === "ComputedLoad"
+      ) {
+        const resolvedId =
+          state.temporaries.get(instr.value.object.identifier.id) ??
+          instr.value.object.identifier.id;
+        state.temporaries.set(instr.lvalue.identifier.id, resolvedId);
       }
     }
   }
