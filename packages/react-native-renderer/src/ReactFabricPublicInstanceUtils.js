@@ -22,8 +22,18 @@ export function getNativeTagFromPublicInstance(
   return publicInstance.__nativeTag;
 }
 
-export function getInternalInstanceHandleFromPublicInstance(
+export function getNodeFromPublicInstance(
   publicInstance: ReactFabricHostComponent,
 ): mixed {
-  return publicInstance.__internalInstanceHandle;
+  if (publicInstance.__internalInstanceHandle == null) {
+    return null;
+  }
+
+  // Force this to be lazy to avoid initializing ReactFabric if `publicInstance`
+  // is not a public instance from Fabric.
+  const ReactFabric = require('./ReactFabric');
+
+  return ReactFabric.getNodeFromInternalInstanceHandle(
+    publicInstance.__internalInstanceHandle,
+  );
 }
