@@ -1479,14 +1479,20 @@ describe('ReactUse', () => {
     const promiseC = Promise.resolve('C');
 
     const Async = React.forwardRef((props, ref) => {
+      React.useImperativeHandle(ref, () => ({}));
       const text = use(promiseA) + use(promiseB) + use(promiseC);
       return <Text text={text} />;
     });
 
+    let _ref;
     function App() {
+      const ref = arg => {
+        _ref = arg;
+      };
+
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <Async />
+          <Async ref={ref} />
         </Suspense>
       );
     }
@@ -1499,5 +1505,6 @@ describe('ReactUse', () => {
     });
     assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
+    expect(_ref).toBeDefined();
   });
 });
