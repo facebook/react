@@ -43,6 +43,7 @@ jobs:
                 repo: 'react', // context.repo.repo,
                 ref: 'ef8bdbecb6dbb9743b895c2e867e5a5264dd6651' // context.sha
               });
+              console.log(res.data);
               for (const status of res.data) {
                 if (/process_artifacts_combined/.test(status.context)) {
                   switch (status.state) {
