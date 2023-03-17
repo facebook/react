@@ -2386,7 +2386,10 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       // TODO: Consider moving this switch statement into that module. Also,
       // could maybe use this as an opportunity to say `use` doesn't work with
       // `defaultProps` :)
-      const Component = unitOfWork.type;
+      const Component =
+        unitOfWork.tag === FunctionComponent
+          ? unitOfWork.type
+          : unitOfWork.type.render;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
         unitOfWork.elementType === Component
