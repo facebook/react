@@ -1,4 +1,4 @@
-name: Commit Artifacts for Facebook WWW
+name: Commit Artifacts for Facebook WWW and fbsource
 
 # on:
 #   push:
@@ -41,7 +41,7 @@ jobs:
               const res = await github.rest.repos.listCommitStatusesForRef({
                 owner: 'facebook', // context.repo.owner,
                 repo: 'react', // context.repo.repo,
-                ref: '55308554edb7a7d0c091c2ee4973ba5f4b06dfe8' // context.sha
+                ref: '8fa41ffa275cae4895b650b0c3b5e8acdbb5055d' // context.sha
               });
               for (const status of res.data) {
                 if (/process_artifacts_combined/.test(status.context)) {
