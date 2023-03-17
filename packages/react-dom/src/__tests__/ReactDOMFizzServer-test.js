@@ -3813,7 +3813,7 @@ describe('ReactDOMFizzServer', () => {
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
     }).toErrorDev(
-      'Warning: Prop `name` did not match. Server: "initial" Client: "replaced"',
+      'Warning: Text content did not match. Server: "initial" Client: "replaced',
     );
     expect(getVisibleChildren(container)).toEqual(
       <div>
