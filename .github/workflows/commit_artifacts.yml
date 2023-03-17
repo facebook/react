@@ -33,56 +33,9 @@ jobs:
               });
             }
 
-            let artifactsUrl = null;
-            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-            // workflow to notify this GitHub action. Sorry!
-            let iter = 0;
-            spinloop: while (iter < 15) {
-              const res = await github.rest.repos.listCommitStatusesForRef({
-                owner: 'facebook', // context.repo.owner,
-                repo: 'react', // context.repo.repo,
-                ref: 'ef8bdbecb6dbb9743b895c2e867e5a5264dd6651' // context.sha
-              });
-              for (const status of res.data) {
-                if (/process_artifacts_combined/.test(status.context)) {
-                  switch (status.state) {
-                    case 'pending': {
-                      console.log(`${status.context} is still pending`);
-                      break;
-                    }
-                    case 'failure':
-                    case 'error': {
-                      throw new Error(`${status.context} has failed or errored`);
-                    }
-                    case 'success': {
-                      // The status does not include a build ID, but we can extract it
-                      // from the URL. I couldn't find a better way to do this.
-                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-                        status.target_url,
-                      )[1];
-                      console.log(`CircleCI build id found: ${ciBuildId}`);
-                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-                        artifactsUrl =
-                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-                        break spinloop;
-                      } else {
-                        throw new Error(`${ciBuildId} isn't a number`);
-                      }
-                      break;
-                    }
-                    default: {
-                      throw new Error(`Unhandled status state: ${status.state}`);
-                      break;
-                    }
-                  }
-                }
-              }
-              iter++;
-              console.log("Sleeping for 60s...");
-              await sleep(60_000);
-            }
+            let artifactsUrl = 'https://circleci.com/api/v1.1/project/github/facebook/react/645534/artifacts';
             if (artifactsUrl != null) {
-              const res = await fetch(artifactsUrl);
+              const res = await fetch();
               const data = await res.json();
               console.log(data);
               for (const artifact of data) {
