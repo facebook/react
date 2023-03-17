@@ -68,6 +68,10 @@ export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
 export const requestPostPaintCallback = $$$hostConfig.requestPostPaintCallback;
+export const shouldSuspendCommit = $$$hostConfig.shouldSuspendCommit;
+export const startSuspendingCommit = $$$hostConfig.startSuspendingCommit;
+export const suspendInstance = $$$hostConfig.suspendInstance;
+export const waitForCommitToBeReady = $$$hostConfig.waitForCommitToBeReady;
 export const prepareRendererToRender = $$$hostConfig.prepareRendererToRender;
 export const resetRendererAfterRender = $$$hostConfig.resetRendererAfterRender;
 
