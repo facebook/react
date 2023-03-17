@@ -189,7 +189,6 @@ jobs:
           commit_user_name: ${{ github.actor }}
           commit_user_email: ${{ github.actor }}@users.noreply.github.com
           create_branch: true
-          file_pattern: 'compiled/facebook-www/'
 
   commit_fbsource_artifacts:
     needs: download_artifacts
@@ -199,7 +198,7 @@ jobs:
         with:
           ref: main
           repository: facebook/react-fbsource-import
-          token: ${{secrets.PUSH_TOKEN}}
+          token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
       - name: Ensure clean directory
         run: rm -rf compiled-rn
       - uses: actions/download-artifact@v3
