@@ -19,7 +19,7 @@ function Component(props) {
   const $ = React.unstable_useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Foo.Bar.Baz></Foo.Bar.Baz>;
+    t0 = <Foo.Bar.Baz />;
     $[0] = t0;
   } else {
     t0 = $[0];

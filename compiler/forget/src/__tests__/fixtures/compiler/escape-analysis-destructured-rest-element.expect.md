@@ -39,7 +39,7 @@ function Component(props) {
   const c_5 = $[5] !== d;
   let t0;
   if (c_4 || c_5) {
-    t0 = <div b={b} d={d}></div>;
+    t0 = <div b={b} d={d} />;
     $[4] = b;
     $[5] = d;
     $[6] = t0;

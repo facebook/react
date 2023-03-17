@@ -1439,7 +1439,7 @@ function lowerExpression(
         kind: "JsxExpression",
         tag,
         props,
-        children,
+        children: children.length === 0 ? null : children,
         loc: exprLoc,
       };
     }

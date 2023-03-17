@@ -82,7 +82,7 @@ function Component(props) {
   const c_6 = $[6] !== b;
   let t0;
   if (c_5 || c_6) {
-    t0 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b} />;
     $[5] = a;
     $[6] = b;
     $[7] = t0;

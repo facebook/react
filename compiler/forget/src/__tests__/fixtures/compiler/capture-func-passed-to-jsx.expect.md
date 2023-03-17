@@ -59,7 +59,7 @@ function component(a, b) {
   const c_7 = $[7] !== x;
   let t3;
   if (c_7) {
-    t3 = <Foo x={x}></Foo>;
+    t3 = <Foo x={x} />;
     $[7] = x;
     $[8] = t3;
   } else {

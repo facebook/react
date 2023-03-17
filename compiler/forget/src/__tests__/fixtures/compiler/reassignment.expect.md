@@ -52,7 +52,7 @@ function Component(props) {
   const c_6 = $[6] !== y;
   let t1;
   if (c_5 || c_6) {
-    t1 = <Component x={x} y={y}></Component>;
+    t1 = <Component x={x} y={y} />;
     $[5] = x;
     $[6] = y;
     $[7] = t1;

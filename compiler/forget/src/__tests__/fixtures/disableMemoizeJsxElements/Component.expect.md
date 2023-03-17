@@ -34,7 +34,7 @@ function Component(props) {
     t0 = $[1];
   }
   const onChange = t0;
-  return <form>{<input onChange={onChange} value={name}></input>}</form>;
+  return <form>{<input onChange={onChange} value={name} />}</form>;
 }
 
 ```

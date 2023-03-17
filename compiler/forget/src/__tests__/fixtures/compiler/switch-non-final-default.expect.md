@@ -71,7 +71,7 @@ function Component(props) {
   const c_4 = $[4] !== x;
   let t1;
   if (c_4) {
-    t1 = <Component data={x}></Component>;
+    t1 = <Component data={x} />;
     $[4] = x;
     $[5] = t1;
   } else {

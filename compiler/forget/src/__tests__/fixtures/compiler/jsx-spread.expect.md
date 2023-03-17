@@ -30,7 +30,7 @@ function Component(props) {
   const c_3 = $[3] !== t1;
   let t2;
   if (c_2 || c_3) {
-    t2 = <Component {...props} {...t1}></Component>;
+    t2 = <Component {...props} {...t1} />;
     $[2] = props;
     $[3] = t1;
     $[4] = t2;

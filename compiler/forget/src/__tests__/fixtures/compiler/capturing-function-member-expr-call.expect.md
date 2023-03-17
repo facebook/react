@@ -50,7 +50,7 @@ function component(t27) {
   const c_5 = $[5] !== hide;
   let t2;
   if (c_4 || c_5) {
-    t2 = <Foo poke={poke} hide={hide}></Foo>;
+    t2 = <Foo poke={poke} hide={hide} />;
     $[4] = poke;
     $[5] = hide;
     $[6] = t2;

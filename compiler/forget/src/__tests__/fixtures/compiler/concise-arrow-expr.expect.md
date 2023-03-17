@@ -29,7 +29,7 @@ function component() {
   const c_2 = $[2] !== handler;
   let t1;
   if (c_2) {
-    t1 = <Foo handler={handler}></Foo>;
+    t1 = <Foo handler={handler} />;
     $[2] = handler;
     $[3] = t1;
   } else {

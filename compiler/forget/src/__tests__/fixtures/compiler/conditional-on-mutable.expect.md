@@ -59,7 +59,7 @@ function ComponentA(props) {
   const c_4 = $[4] !== b;
   let t0;
   if (c_3 || c_4) {
-    t0 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b} />;
     $[3] = a;
     $[4] = b;
     $[5] = t0;
@@ -94,7 +94,7 @@ function ComponentB(props) {
   const c_4 = $[4] !== b;
   let t0;
   if (c_3 || c_4) {
-    t0 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b} />;
     $[3] = a;
     $[4] = b;
     $[5] = t0;

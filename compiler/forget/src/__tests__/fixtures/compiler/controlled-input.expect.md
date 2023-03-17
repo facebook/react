@@ -30,7 +30,7 @@ function component() {
   const c_3 = $[3] !== x;
   let t1;
   if (c_2 || c_3) {
-    t1 = <input onChange={handler} value={x}></input>;
+    t1 = <input onChange={handler} value={x} />;
     $[2] = handler;
     $[3] = x;
     $[4] = t1;

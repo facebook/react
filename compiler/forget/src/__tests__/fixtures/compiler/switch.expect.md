@@ -52,7 +52,7 @@ function Component(props) {
   const c_3 = $[3] !== x;
   let t0;
   if (c_3) {
-    t0 = <Component data={x}></Component>;
+    t0 = <Component data={x} />;
     $[3] = x;
     $[4] = t0;
   } else {

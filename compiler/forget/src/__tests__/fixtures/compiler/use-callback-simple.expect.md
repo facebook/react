@@ -32,7 +32,7 @@ function component() {
   const c_3 = $[3] !== increment;
   let t1;
   if (c_3) {
-    t1 = <Foo onClick={increment}></Foo>;
+    t1 = <Foo onClick={increment} />;
     $[3] = increment;
     $[4] = t1;
   } else {

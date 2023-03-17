@@ -58,7 +58,7 @@ function Component(props) {
   const c_5 = $[5] !== b;
   let t0;
   if (c_4 || c_5) {
-    t0 = <Foo a={a} b={b}></Foo>;
+    t0 = <Foo a={a} b={b} />;
     $[4] = a;
     $[5] = b;
     $[6] = t0;

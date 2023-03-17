@@ -27,7 +27,7 @@ function component(a) {
   const c_2 = $[2] !== x;
   let t1;
   if (c_2) {
-    t1 = <Foo x={x}></Foo>;
+    t1 = <Foo x={x} />;
     $[2] = x;
     $[3] = t1;
   } else {

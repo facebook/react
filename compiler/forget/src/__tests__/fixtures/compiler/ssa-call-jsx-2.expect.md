@@ -44,7 +44,7 @@ function Component(props) {
   }
   let t0;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div a={a} b={b}></div>;
+    t0 = <div a={a} b={b} />;
     $[2] = t0;
   } else {
     t0 = $[2];

@@ -51,7 +51,7 @@ function Component(props) {
   const c_4 = $[4] !== y;
   let t1;
   if (c_3 || c_4) {
-    t1 = <Component x={x} y={y}></Component>;
+    t1 = <Component x={x} y={y} />;
     $[3] = x;
     $[4] = y;
     $[5] = t1;
