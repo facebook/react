@@ -37,7 +37,6 @@ jobs:
             await execHelper(
               `curl -L ${url} | tar -xvz`
             );
-
       - name: Strip @license from eslint plugin and react-refresh
         run: |
           sed -i -e 's/ @license React*//' \
