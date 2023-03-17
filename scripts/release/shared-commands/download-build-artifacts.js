@@ -22,9 +22,15 @@ const run = async ({build, cwd, releaseChannel}) => {
   }
 
   // Download and extract artifact
+  const {CIRCLE_CI_API_TOKEN} = process.env;
+  if (CIRCLE_CI_API_TOKEN == null) {
+    throw new Error(
+      `Expected a CircleCI token to download artifacts, got ${CIRCLE_CI_API_TOKEN}`
+    );
+  }
   await exec(`rm -rf ./build`, {cwd});
   await exec(
-    `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} | tar -xvz`,
+    `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} -H "Circle-Token: ${CIRCLE_CI_API_TOKEN}" | tar -xvz`,
     {
       cwd,
     }
