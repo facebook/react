@@ -35,7 +35,7 @@ jobs:
 
             let artifactsUrl = 'https://circleci.com/api/v1.1/project/github/facebook/react/645534/artifacts';
             if (artifactsUrl != null) {
-              console.log('about to fetch');
+              console.log('about to fetch', artifactsUrl);
               const res = await fetch(artifactsUrl);
               const data = await res.json();
               console.log(data);
