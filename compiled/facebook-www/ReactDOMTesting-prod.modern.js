@@ -43,8 +43,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
@@ -322,12 +320,7 @@ function shouldRemoveAttribute(
   if (isCustomComponentTag)
     return enableCustomElementPropertySupport && !1 === value ? !0 : !1;
   if (null !== propertyInfo) {
-    if (
-      enableFilterEmptyStringAttributesDOM &&
-      propertyInfo.removeEmptyString &&
-      "" === value
-    )
-      return !0;
+    if (propertyInfo.removeEmptyString && "" === value) return !0;
     switch (propertyInfo.type) {
       case 3:
         return !value;
@@ -15634,7 +15627,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1743 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-619d6df2",
+  version: "18.3.0-www-modern-2016a392",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2147 = {
@@ -15665,7 +15658,7 @@ var internals$jscomp$inline_2147 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-619d6df2"
+  reconcilerVersion: "18.3.0-www-modern-2016a392"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2148 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15985,4 +15978,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-619d6df2";
+exports.version = "18.3.0-www-modern-2016a392";

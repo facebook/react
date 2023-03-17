@@ -23,8 +23,6 @@ var Scheduler = require("scheduler"),
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
@@ -422,12 +420,7 @@ function shouldRemoveAttribute(
   if (isCustomComponentTag)
     return enableCustomElementPropertySupport && !1 === value ? !0 : !1;
   if (null !== propertyInfo) {
-    if (
-      enableFilterEmptyStringAttributesDOM &&
-      propertyInfo.removeEmptyString &&
-      "" === value
-    )
-      return !0;
+    if (propertyInfo.removeEmptyString && "" === value) return !0;
     switch (propertyInfo.type) {
       case 3:
         return !value;
@@ -15727,7 +15720,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1744 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-d5c1faea",
+  version: "18.3.0-www-classic-2b28e581",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2125 = {
@@ -15757,7 +15750,7 @@ var internals$jscomp$inline_2125 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-d5c1faea"
+  reconcilerVersion: "18.3.0-www-classic-2b28e581"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2126 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15997,4 +15990,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-d5c1faea";
+exports.version = "18.3.0-www-classic-2b28e581";

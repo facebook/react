@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-b9bd08bd";
+var ReactVersion = "18.3.0-www-classic-d3bd4cdf";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -232,9 +232,7 @@ function checkHtmlStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  disableNativeComponentFrames =
+var disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -3138,7 +3136,7 @@ function pushAttribute(target, name, value) {
       }
     }
 
-    if (enableFilterEmptyStringAttributesDOM) {
+    {
       if (propertyInfo.removeEmptyString && value === "") {
         {
           if (name === "src") {

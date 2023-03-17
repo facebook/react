@@ -33,11 +33,8 @@ function writeChunk(destination, chunk) {
   destination.push(chunk);
 }
 var assign = Object.assign,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport,
+    require("ReactFeatureFlags").enableCustomElementPropertySupport,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -449,11 +446,7 @@ function pushAttribute(target, name, value) {
         case "boolean":
           if (!JSCompiler_inline_result.acceptsBooleans) return;
       }
-      if (
-        !enableFilterEmptyStringAttributesDOM ||
-        !JSCompiler_inline_result.removeEmptyString ||
-        "" !== value
-      )
+      if (!JSCompiler_inline_result.removeEmptyString || "" !== value)
         switch (
           ((name = JSCompiler_inline_result.attributeName),
           JSCompiler_inline_result.type)
@@ -3704,4 +3697,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-3593be7c";
+exports.version = "18.3.0-www-modern-d517bb17";

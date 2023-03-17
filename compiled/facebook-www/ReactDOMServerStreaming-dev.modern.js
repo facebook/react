@@ -229,9 +229,7 @@ function checkHtmlStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
-  disableNativeComponentFrames =
+var disableNativeComponentFrames =
     dynamicFeatureFlags.disableNativeComponentFrames,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -3145,7 +3143,7 @@ function pushAttribute(target, name, value) {
       }
     }
 
-    if (enableFilterEmptyStringAttributesDOM) {
+    {
       if (propertyInfo.removeEmptyString && value === "") {
         {
           if (name === "src") {

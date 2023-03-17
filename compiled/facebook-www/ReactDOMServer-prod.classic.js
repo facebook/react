@@ -34,8 +34,6 @@ function writeChunk(destination, chunk) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
@@ -450,11 +448,7 @@ function pushAttribute(target, name, value) {
         case "boolean":
           if (!JSCompiler_inline_result.acceptsBooleans) return;
       }
-      if (
-        !enableFilterEmptyStringAttributesDOM ||
-        !JSCompiler_inline_result.removeEmptyString ||
-        "" !== value
-      )
+      if (!JSCompiler_inline_result.removeEmptyString || "" !== value)
         switch (
           ((name = JSCompiler_inline_result.attributeName),
           JSCompiler_inline_result.type)
@@ -3806,4 +3800,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-c710ea2f";
+exports.version = "18.3.0-www-classic-b4fad789";

@@ -146,8 +146,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
     dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM =
-    dynamicFeatureFlags.enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
@@ -172,7 +170,7 @@ var enableProfilerNestedUpdatePhase = true;
 var enableProfilerNestedUpdateScheduledHook =
   dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 var createRootStrictEffectsByDefault = false;
-var enableClientRenderFallbackOnTextMismatch = false; // Logs additional User Timing API marks for use with an experimental profiling tool.
+var enableClientRenderFallbackOnTextMismatch = false;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var enableSuspenseCallback = true;
@@ -763,7 +761,7 @@ function shouldRemoveAttribute(
   }
 
   if (propertyInfo !== null) {
-    if (enableFilterEmptyStringAttributesDOM) {
+    {
       if (propertyInfo.removeEmptyString && value === "") {
         {
           if (name === "src") {
@@ -33125,7 +33123,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-7676418b";
+var ReactVersion = "18.3.0-www-modern-b63362a3";
 
 function createPortal$1(
   children,
