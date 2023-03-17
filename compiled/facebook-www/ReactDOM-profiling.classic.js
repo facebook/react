@@ -636,34 +636,46 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
   var JSCompiler_inline_result = properties.hasOwnProperty(name)
     ? properties[name]
     : null;
-  if (
+  var JSCompiler_inline_result$jscomp$0 =
     null !== JSCompiler_inline_result
-      ? 0 !== JSCompiler_inline_result.type
-      : isCustomComponentTag ||
-        !(2 < name.length) ||
+      ? 0 === JSCompiler_inline_result.type
+      : isCustomComponentTag
+      ? !1
+      : !(2 < name.length) ||
         ("o" !== name[0] && "O" !== name[0]) ||
         ("n" !== name[1] && "N" !== name[1])
-  ) {
+      ? !1
+      : !0;
+  if (!JSCompiler_inline_result$jscomp$0) {
     if (
       enableCustomElementPropertySupport &&
       isCustomComponentTag &&
       "o" === name[0] &&
       "n" === name[1]
     ) {
-      var eventName = name.replace(/Capture$/, ""),
-        useCapture = name !== eventName;
-      eventName = eventName.slice(2);
+      JSCompiler_inline_result$jscomp$0 = name.replace(/Capture$/, "");
+      var useCapture = name !== JSCompiler_inline_result$jscomp$0;
+      JSCompiler_inline_result$jscomp$0 =
+        JSCompiler_inline_result$jscomp$0.slice(2);
       var prevProps = getFiberCurrentPropsFromNode(node);
       prevProps = null != prevProps ? prevProps[name] : null;
       "function" === typeof prevProps &&
-        node.removeEventListener(eventName, prevProps, useCapture);
+        node.removeEventListener(
+          JSCompiler_inline_result$jscomp$0,
+          prevProps,
+          useCapture
+        );
       if ("function" === typeof value) {
         "function" !== typeof prevProps &&
           null !== prevProps &&
           (name in node
             ? (node[name] = null)
             : node.hasAttribute(name) && node.removeAttribute(name));
-        node.addEventListener(eventName, value, useCapture);
+        node.addEventListener(
+          JSCompiler_inline_result$jscomp$0,
+          value,
+          useCapture
+        );
         return;
       }
     }
@@ -707,8 +719,12 @@ function setValueForProperty(node, name, value, isCustomComponentTag) {
     )
       node.removeAttribute(name);
     else {
-      eventName = JSCompiler_inline_result.type;
-      if (3 === eventName || (4 === eventName && !0 === value)) value = "";
+      JSCompiler_inline_result$jscomp$0 = JSCompiler_inline_result.type;
+      if (
+        3 === JSCompiler_inline_result$jscomp$0 ||
+        (4 === JSCompiler_inline_result$jscomp$0 && !0 === value)
+      )
+        value = "";
       else if (
         ((value = enableTrustedTypesIntegration ? value : "" + value),
         JSCompiler_inline_result.sanitizeURL &&
@@ -1095,7 +1111,7 @@ function getChildNamespace(parentNamespace, type) {
   if (
     null == parentNamespace ||
     "http://www.w3.org/1999/xhtml" === parentNamespace
-  )
+  ) {
     a: switch (type) {
       case "svg":
         parentNamespace = "http://www.w3.org/2000/svg";
@@ -1106,13 +1122,12 @@ function getChildNamespace(parentNamespace, type) {
       default:
         parentNamespace = "http://www.w3.org/1999/xhtml";
     }
-  else
-    parentNamespace =
-      "http://www.w3.org/2000/svg" === parentNamespace &&
-      "foreignObject" === type
-        ? "http://www.w3.org/1999/xhtml"
-        : parentNamespace;
-  return parentNamespace;
+    return parentNamespace;
+  }
+  return "http://www.w3.org/2000/svg" === parentNamespace &&
+    "foreignObject" === type
+    ? "http://www.w3.org/1999/xhtml"
+    : parentNamespace;
 }
 var reusableSVGContainer;
 function setInnerHTMLImpl(node, html) {
@@ -3294,6 +3309,7 @@ function prepareToHydrateHostInstance(fiber) {
     props = fiber.memoizedProps;
   instance[internalInstanceKey] = fiber;
   instance[internalPropsKey] = props;
+  var isConcurrentMode = 0 !== (fiber.mode & 1);
   switch (type) {
     case "dialog":
       listenToNonDelegatedEvent("cancel", instance);
@@ -3333,31 +3349,22 @@ function prepareToHydrateHostInstance(fiber) {
       initWrapperState(instance, props),
         listenToNonDelegatedEvent("invalid", instance);
   }
+  props.hasOwnProperty("onScroll") &&
+    listenToNonDelegatedEvent("scroll", instance);
   assertValidProps(type, props);
-  var updatePayload = null,
-    propKey;
-  for (propKey in props)
-    props.hasOwnProperty(propKey) &&
-      ((i = props[propKey]),
-      "children" === propKey
-        ? "string" === typeof i
-          ? instance.textContent !== i &&
-            (!0 !== props.suppressHydrationWarning &&
-              ((updatePayload = instance.textContent),
-              normalizeMarkupForTextOrAttribute(i),
-              normalizeMarkupForTextOrAttribute(updatePayload)),
-            (updatePayload = ["children", i]))
-          : "number" === typeof i &&
-            instance.textContent !== "" + i &&
-            (!0 !== props.suppressHydrationWarning &&
-              ((updatePayload = instance.textContent),
-              normalizeMarkupForTextOrAttribute(i),
-              normalizeMarkupForTextOrAttribute(updatePayload)),
-            (updatePayload = ["children", "" + i]))
-        : registrationNameDependencies.hasOwnProperty(propKey) &&
-          null != i &&
-          "onScroll" === propKey &&
-          listenToNonDelegatedEvent("scroll", instance));
+  i = null;
+  var children = props.children;
+  if (
+    ("string" === typeof children || "number" === typeof children) &&
+    instance.textContent !== "" + children
+  ) {
+    if (!0 !== props.suppressHydrationWarning) {
+      var serverText = instance.textContent;
+      normalizeMarkupForTextOrAttribute(children);
+      normalizeMarkupForTextOrAttribute(serverText);
+    }
+    isConcurrentMode || (i = ["children", children]);
+  }
   switch (type) {
     case "input":
       track(instance);
@@ -3373,7 +3380,7 @@ function prepareToHydrateHostInstance(fiber) {
     default:
       "function" === typeof props.onClick && (instance.onclick = noop$1);
   }
-  instance = updatePayload;
+  instance = i;
   fiber.updateQueue = instance;
   return null !== instance ? !0 : !1;
 }
@@ -8331,25 +8338,43 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          newProps = workInProgress.stateNode;
-          current = workInProgress.memoizedProps;
-          newProps[internalInstanceKey] = workInProgress;
-          if ((renderLanes = newProps.nodeValue !== current))
-            if (((type = hydrationParentFiber), null !== type))
-              switch (type.tag) {
-                case 3:
-                  newProps = newProps.nodeValue;
-                  normalizeMarkupForTextOrAttribute(current);
-                  normalizeMarkupForTextOrAttribute(newProps);
-                  break;
-                case 27:
-                case 5:
-                  !0 !== type.memoizedProps.suppressHydrationWarning &&
-                    ((newProps = newProps.nodeValue),
-                    normalizeMarkupForTextOrAttribute(current),
-                    normalizeMarkupForTextOrAttribute(newProps));
-              }
-          renderLanes && markUpdate(workInProgress);
+          a: {
+            newProps = workInProgress.stateNode;
+            current = workInProgress.memoizedProps;
+            newProps[internalInstanceKey] = workInProgress;
+            if ((renderLanes = newProps.nodeValue !== current)) {
+              var returnFiber = hydrationParentFiber;
+              if (null !== returnFiber)
+                switch (returnFiber.tag) {
+                  case 3:
+                    type = 0 !== (returnFiber.mode & 1);
+                    newProps = newProps.nodeValue;
+                    normalizeMarkupForTextOrAttribute(current);
+                    normalizeMarkupForTextOrAttribute(newProps);
+                    if (type) {
+                      current = !1;
+                      break a;
+                    }
+                    break;
+                  case 27:
+                  case 5:
+                    if (
+                      ((type = 0 !== (returnFiber.mode & 1)),
+                      !0 !==
+                        returnFiber.memoizedProps.suppressHydrationWarning &&
+                        ((newProps = newProps.nodeValue),
+                        normalizeMarkupForTextOrAttribute(current),
+                        normalizeMarkupForTextOrAttribute(newProps)),
+                      type)
+                    ) {
+                      current = !1;
+                      break a;
+                    }
+                }
+            }
+            current = renderLanes;
+          }
+          current && markUpdate(workInProgress);
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -8421,19 +8446,18 @@ function completeWork(current, workInProgress, renderLanes) {
         );
       renderLanes = null !== newProps;
       current = null !== current && null !== current.memoizedState;
-      if (renderLanes) {
-        newProps = workInProgress.child;
-        type = null;
+      renderLanes &&
+        ((newProps = workInProgress.child),
+        (type = null),
         null !== newProps.alternate &&
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
-          (type = newProps.alternate.memoizedState.cachePool.pool);
-        var cache$149 = null;
+          (type = newProps.alternate.memoizedState.cachePool.pool),
+        (returnFiber = null),
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
-          (cache$149 = newProps.memoizedState.cachePool.pool);
-        cache$149 !== type && (newProps.flags |= 2048);
-      }
+          (returnFiber = newProps.memoizedState.cachePool.pool),
+        returnFiber !== type && (newProps.flags |= 2048));
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
         renderLanes && (workInProgress.child.flags |= 8192));
@@ -8473,8 +8497,8 @@ function completeWork(current, workInProgress, renderLanes) {
       type = workInProgress.memoizedState;
       if (null === type) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      cache$149 = type.rendering;
-      if (null === cache$149)
+      returnFiber = type.rendering;
+      if (null === returnFiber)
         if (newProps) cutOffTailIfNeeded(type, !1);
         else {
           if (
@@ -8482,11 +8506,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              cache$149 = findFirstSuspended(current);
-              if (null !== cache$149) {
+              returnFiber = findFirstSuspended(current);
+              if (null !== returnFiber) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(type, !1);
-                current = cache$149.updateQueue;
+                current = returnFiber.updateQueue;
                 null !== current &&
                   ((workInProgress.updateQueue = current),
                   (workInProgress.flags |= 4));
@@ -8512,7 +8536,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(cache$149)), null !== current)) {
+          if (((current = findFirstSuspended(returnFiber)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -8523,7 +8547,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !0),
               null === type.tail &&
                 "hidden" === type.tailMode &&
-                !cache$149.alternate &&
+                !returnFiber.alternate &&
                 !isHydrating)
             )
               return bubbleProperties(workInProgress), null;
@@ -8536,13 +8560,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !1),
               (workInProgress.lanes = 8388608));
         type.isBackwards
-          ? ((cache$149.sibling = workInProgress.child),
-            (workInProgress.child = cache$149))
+          ? ((returnFiber.sibling = workInProgress.child),
+            (workInProgress.child = returnFiber))
           : ((current = type.last),
             null !== current
-              ? (current.sibling = cache$149)
-              : (workInProgress.child = cache$149),
-            (type.last = cache$149));
+              ? (current.sibling = returnFiber)
+              : (workInProgress.child = returnFiber),
+            (type.last = returnFiber));
       }
       if (null !== type.tail)
         return (
@@ -14624,19 +14648,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$330;
+  var JSCompiler_inline_result$jscomp$333;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1646 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1646) {
-      var element$jscomp$inline_1647 = document.createElement("div");
-      element$jscomp$inline_1647.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1646 =
-        "function" === typeof element$jscomp$inline_1647.oninput;
+    var isSupported$jscomp$inline_1655 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1655) {
+      var element$jscomp$inline_1656 = document.createElement("div");
+      element$jscomp$inline_1656.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1655 =
+        "function" === typeof element$jscomp$inline_1656.oninput;
     }
-    JSCompiler_inline_result$jscomp$330 = isSupported$jscomp$inline_1646;
-  } else JSCompiler_inline_result$jscomp$330 = !1;
+    JSCompiler_inline_result$jscomp$333 = isSupported$jscomp$inline_1655;
+  } else JSCompiler_inline_result$jscomp$333 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$330 &&
+    JSCompiler_inline_result$jscomp$333 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14774,20 +14798,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1659 = 0;
-  i$jscomp$inline_1659 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1659++
+  var i$jscomp$inline_1668 = 0;
+  i$jscomp$inline_1668 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1668++
 ) {
-  var eventName$jscomp$inline_1660 =
-      simpleEventPluginEvents[i$jscomp$inline_1659],
-    domEventName$jscomp$inline_1661 =
-      eventName$jscomp$inline_1660.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1662 =
-      eventName$jscomp$inline_1660[0].toUpperCase() +
-      eventName$jscomp$inline_1660.slice(1);
+  var eventName$jscomp$inline_1669 =
+      simpleEventPluginEvents[i$jscomp$inline_1668],
+    domEventName$jscomp$inline_1670 =
+      eventName$jscomp$inline_1669.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1671 =
+      eventName$jscomp$inline_1669[0].toUpperCase() +
+      eventName$jscomp$inline_1669.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1661,
-    "on" + capitalizedEvent$jscomp$inline_1662
+    domEventName$jscomp$inline_1670,
+    "on" + capitalizedEvent$jscomp$inline_1671
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16477,10 +16501,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1815 = {
+var devToolsConfig$jscomp$inline_1824 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-9f687ef2",
+  version: "18.3.0-www-classic-930e3b98",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16498,10 +16522,10 @@ var devToolsConfig$jscomp$inline_1815 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1815.bundleType,
-  version: devToolsConfig$jscomp$inline_1815.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1815.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1815.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1824.bundleType,
+  version: devToolsConfig$jscomp$inline_1824.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1824.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1824.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16517,14 +16541,14 @@ var devToolsConfig$jscomp$inline_1815 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1815.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1824.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-9f687ef2"
+  reconcilerVersion: "18.3.0-www-classic-930e3b98"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16751,7 +16775,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-9f687ef2";
+exports.version = "18.3.0-www-classic-930e3b98";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

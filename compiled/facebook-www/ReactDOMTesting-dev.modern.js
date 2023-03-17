@@ -8660,6 +8660,13 @@ function prepareToHydrateHostTextInstance(fiber) {
             isConcurrentMode,
             shouldWarnIfMismatchDev
           );
+
+          if (isConcurrentMode) {
+            // In concurrent mode we never update the mismatched text,
+            // even if the error was ignored.
+            return false;
+          }
+
           break;
         }
 
@@ -8681,6 +8688,13 @@ function prepareToHydrateHostTextInstance(fiber) {
             _isConcurrentMode2,
             shouldWarnIfMismatchDev
           );
+
+          if (_isConcurrentMode2) {
+            // In concurrent mode we never update the mismatched text,
+            // even if the error was ignored.
+            return false;
+          }
+
           break;
         }
       }
@@ -33728,7 +33742,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1e527549";
+var ReactVersion = "18.3.0-www-modern-e85b345b";
 
 function createPortal$1(
   children,
@@ -39790,11 +39804,9 @@ function diffHydratedProperties(
   shouldWarnDev,
   parentNamespaceDev
 ) {
-  var isCustomComponentTag;
   var extraAttributeNames;
 
   {
-    isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
   } // TODO: Make sure that we check isMounted before firing any of these events.
 
@@ -39869,6 +39881,10 @@ function diffHydratedProperties(
       break;
   }
 
+  if (rawProps.hasOwnProperty("onScroll")) {
+    listenToNonDelegatedEvent("scroll", domElement);
+  }
+
   assertValidProps(tag, rawProps);
 
   {
@@ -39899,220 +39915,205 @@ function diffHydratedProperties(
   }
 
   var updatePayload = null;
+  var children = rawProps.children; // For text content children we compare against textContent. This
+  // might match additional HTML that is hidden when we read it using
+  // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
+  // satisfies our requirement. Our requirement is not to produce perfect
+  // HTML and attributes. Ideally we should preserve structure but it's
+  // ok not to if the visible content is still enough to indicate what
+  // even listeners these nodes might be wired up to.
+  // TODO: Warn if there is more than a single textNode as a child.
+  // TODO: Should we use domElement.firstChild.nodeValue to compare?
 
-  for (var propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
-      continue;
-    }
-
-    var nextProp = rawProps[propKey];
-
-    if (propKey === CHILDREN) {
-      // For text content children we compare against textContent. This
-      // might match additional HTML that is hidden when we read it using
-      // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
-      // satisfies our requirement. Our requirement is not to produce perfect
-      // HTML and attributes. Ideally we should preserve structure but it's
-      // ok not to if the visible content is still enough to indicate what
-      // even listeners these nodes might be wired up to.
-      // TODO: Warn if there is more than a single textNode as a child.
-      // TODO: Should we use domElement.firstChild.nodeValue to compare?
-      if (typeof nextProp === "string") {
-        if (domElement.textContent !== nextProp) {
-          if (rawProps[SUPPRESS_HYDRATION_WARNING$1] !== true) {
-            checkForUnmatchedText(
-              domElement.textContent,
-              nextProp,
-              isConcurrentMode,
-              shouldWarnDev
-            );
-          }
-
-          updatePayload = [CHILDREN, nextProp];
-        }
-      } else if (typeof nextProp === "number") {
-        if (domElement.textContent !== "" + nextProp) {
-          if (rawProps[SUPPRESS_HYDRATION_WARNING$1] !== true) {
-            checkForUnmatchedText(
-              domElement.textContent,
-              nextProp,
-              isConcurrentMode,
-              shouldWarnDev
-            );
-          }
-
-          updatePayload = [CHILDREN, "" + nextProp];
-        }
-      }
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (nextProp != null) {
-        if (typeof nextProp !== "function") {
-          warnForInvalidEventListener(propKey, nextProp);
-        }
-
-        if (propKey === "onScroll") {
-          listenToNonDelegatedEvent("scroll", domElement);
-        }
-      }
-    } else if (
-      shouldWarnDev &&
-      true && // Convince Flow we've calculated it (it's DEV-only in this method.)
-      typeof isCustomComponentTag === "boolean"
-    ) {
-      // Validate that the properties correspond to their expected values.
-      var serverValue = void 0;
-      var propertyInfo =
-        isCustomComponentTag && enableCustomElementPropertySupport
-          ? null
-          : getPropertyInfo(propKey);
-
-      if (rawProps[SUPPRESS_HYDRATION_WARNING$1] === true);
-      else if (
-        propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-        propKey === SUPPRESS_HYDRATION_WARNING$1 || // Controlled attributes are not validated
-        // TODO: Only ignore them on controlled tags.
-        propKey === "value" ||
-        propKey === "checked" ||
-        propKey === "selected"
-      );
-      else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        var serverHTML = domElement.innerHTML;
-        var nextHtml = nextProp ? nextProp[HTML] : undefined;
-
-        if (nextHtml != null) {
-          var expectedHTML = normalizeHTML(domElement, nextHtml);
-
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
-        }
-      } else if (propKey === STYLE$1) {
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.delete(propKey);
-
-        if (canDiffStyleForHydrationWarning) {
-          var expectedStyle = createDangerousStringForStyles(nextProp);
-          serverValue = domElement.getAttribute("style");
-
-          if (expectedStyle !== serverValue) {
-            warnForPropDifference(propKey, serverValue, expectedStyle);
-          }
-        }
-      } else if (
-        enableCustomElementPropertySupport &&
-        isCustomComponentTag &&
-        (propKey === "offsetParent" ||
-          propKey === "offsetTop" ||
-          propKey === "offsetLeft" ||
-          propKey === "offsetWidth" ||
-          propKey === "offsetHeight" ||
-          propKey === "isContentEditable" ||
-          propKey === "outerText" ||
-          propKey === "outerHTML")
-      ) {
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.delete(propKey.toLowerCase());
-
-        {
-          error(
-            "Assignment to read-only property will result in a no-op: `%s`",
-            propKey
-          );
-        }
-      } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.delete(propKey.toLowerCase());
-        serverValue = getValueForAttribute(
-          domElement,
-          propKey,
-          nextProp,
-          isCustomComponentTag
+  if (typeof children === "string" || typeof children === "number") {
+    if (domElement.textContent !== "" + children) {
+      if (rawProps[SUPPRESS_HYDRATION_WARNING$1] !== true) {
+        checkForUnmatchedText(
+          domElement.textContent,
+          children,
+          isConcurrentMode,
+          shouldWarnDev
         );
+      }
 
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+      if (!isConcurrentMode) {
+        updatePayload = [CHILDREN, children];
+      }
+    }
+  }
+
+  if (shouldWarnDev) {
+    var isCustomComponentTag = isCustomComponent(tag, rawProps);
+
+    for (var propKey in rawProps) {
+      if (!rawProps.hasOwnProperty(propKey)) {
+        continue;
+      }
+
+      var nextProp = rawProps[propKey];
+
+      if (propKey === CHILDREN);
+      else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+        if (nextProp != null) {
+          if (typeof nextProp !== "function") {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
         }
-      } else if (
-        !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
-        !shouldRemoveAttribute(
-          propKey,
-          nextProp,
-          propertyInfo,
-          isCustomComponentTag
-        )
-      ) {
-        var isMismatchDueToBadCasing = false;
+      } else {
+        // Validate that the properties correspond to their expected values.
+        var serverValue = void 0;
+        var propertyInfo =
+          isCustomComponentTag && enableCustomElementPropertySupport
+            ? null
+            : getPropertyInfo(propKey);
 
-        if (propertyInfo !== null) {
+        if (rawProps[SUPPRESS_HYDRATION_WARNING$1] === true);
+        else if (
+          propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+          propKey === SUPPRESS_HYDRATION_WARNING$1 || // Controlled attributes are not validated
+          // TODO: Only ignore them on controlled tags.
+          propKey === "value" ||
+          propKey === "checked" ||
+          propKey === "selected"
+        );
+        else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+          var serverHTML = domElement.innerHTML;
+          var nextHtml = nextProp ? nextProp[HTML] : undefined;
+
+          if (nextHtml != null) {
+            var expectedHTML = normalizeHTML(domElement, nextHtml);
+
+            if (expectedHTML !== serverHTML) {
+              warnForPropDifference(propKey, serverHTML, expectedHTML);
+            }
+          }
+        } else if (propKey === STYLE$1) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-            propertyInfo
-          );
-        } else {
-          var ownNamespaceDev = parentNamespaceDev;
+          extraAttributeNames.delete(propKey);
 
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            ownNamespaceDev = getIntrinsicNamespace(tag);
+          if (canDiffStyleForHydrationWarning) {
+            var expectedStyle = createDangerousStringForStyles(nextProp);
+            serverValue = domElement.getAttribute("style");
+
+            if (expectedStyle !== serverValue) {
+              warnForPropDifference(propKey, serverValue, expectedStyle);
+            }
           }
+        } else if (
+          enableCustomElementPropertySupport &&
+          isCustomComponentTag &&
+          (propKey === "offsetParent" ||
+            propKey === "offsetTop" ||
+            propKey === "offsetLeft" ||
+            propKey === "offsetWidth" ||
+            propKey === "offsetHeight" ||
+            propKey === "isContentEditable" ||
+            propKey === "outerText" ||
+            propKey === "outerHTML")
+        ) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
 
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propKey.toLowerCase());
-          } else {
-            var standardName = getPossibleStandardName(propKey);
-
-            if (standardName !== null && standardName !== propKey) {
-              // If an SVG prop is supplied with bad casing, it will
-              // be successfully parsed from HTML, but will produce a mismatch
-              // (and would be incorrectly rendered on the client).
-              // However, we already warn about bad casing elsewhere.
-              // So we'll skip the misleading extra mismatch warning in this case.
-              isMismatchDueToBadCasing = true; // $FlowFixMe - Should be inferred as not undefined.
-
-              extraAttributeNames.delete(standardName);
-            } // $FlowFixMe - Should be inferred as not undefined.
-
-            extraAttributeNames.delete(propKey);
+          {
+            error(
+              "Assignment to read-only property will result in a no-op: `%s`",
+              propKey
+            );
           }
-
+        } else if (
+          isCustomComponentTag &&
+          !enableCustomElementPropertySupport
+        ) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = getValueForAttribute(
             domElement,
             propKey,
             nextProp,
             isCustomComponentTag
           );
-        }
 
-        var dontWarnCustomElement =
-          enableCustomElementPropertySupport &&
-          isCustomComponentTag &&
-          (typeof nextProp === "function" || typeof nextProp === "object");
-
-        if (
-          !dontWarnCustomElement &&
-          nextProp !== serverValue &&
-          !isMismatchDueToBadCasing
+          if (nextProp !== serverValue) {
+            warnForPropDifference(propKey, serverValue, nextProp);
+          }
+        } else if (
+          !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
+          !shouldRemoveAttribute(
+            propKey,
+            nextProp,
+            propertyInfo,
+            isCustomComponentTag
+          )
         ) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+          var isMismatchDueToBadCasing = false;
+
+          if (propertyInfo !== null) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propertyInfo.attributeName);
+            serverValue = getValueForProperty(
+              domElement,
+              propKey,
+              nextProp,
+              propertyInfo
+            );
+          } else {
+            var ownNamespaceDev = parentNamespaceDev;
+
+            if (ownNamespaceDev === HTML_NAMESPACE) {
+              ownNamespaceDev = getIntrinsicNamespace(tag);
+            }
+
+            if (ownNamespaceDev === HTML_NAMESPACE) {
+              // $FlowFixMe - Should be inferred as not undefined.
+              extraAttributeNames.delete(propKey.toLowerCase());
+            } else {
+              var standardName = getPossibleStandardName(propKey);
+
+              if (standardName !== null && standardName !== propKey) {
+                // If an SVG prop is supplied with bad casing, it will
+                // be successfully parsed from HTML, but will produce a mismatch
+                // (and would be incorrectly rendered on the client).
+                // However, we already warn about bad casing elsewhere.
+                // So we'll skip the misleading extra mismatch warning in this case.
+                isMismatchDueToBadCasing = true; // $FlowFixMe - Should be inferred as not undefined.
+
+                extraAttributeNames.delete(standardName);
+              } // $FlowFixMe - Should be inferred as not undefined.
+
+              extraAttributeNames.delete(propKey);
+            }
+
+            serverValue = getValueForAttribute(
+              domElement,
+              propKey,
+              nextProp,
+              isCustomComponentTag
+            );
+          }
+
+          var dontWarnCustomElement =
+            enableCustomElementPropertySupport &&
+            isCustomComponentTag &&
+            (typeof nextProp === "function" || typeof nextProp === "object");
+
+          if (
+            !dontWarnCustomElement &&
+            nextProp !== serverValue &&
+            !isMismatchDueToBadCasing
+          ) {
+            warnForPropDifference(propKey, serverValue, nextProp);
+          }
         }
       }
     }
-  }
 
-  {
-    if (shouldWarnDev) {
-      if (
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.size > 0 &&
-        rawProps[SUPPRESS_HYDRATION_WARNING$1] !== true
-      ) {
-        // $FlowFixMe - Should be inferred as not undefined.
-        warnForExtraAttributes(extraAttributeNames);
-      }
+    if (
+      // $FlowFixMe - Should be inferred as not undefined.
+      extraAttributeNames.size > 0 &&
+      rawProps[SUPPRESS_HYDRATION_WARNING$1] !== true
+    ) {
+      // $FlowFixMe - Should be inferred as not undefined.
+      warnForExtraAttributes(extraAttributeNames);
     }
   }
 
