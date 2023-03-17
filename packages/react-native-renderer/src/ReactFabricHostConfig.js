@@ -55,13 +55,15 @@ export type Props = Object;
 export type Instance = {
   // Reference to the shadow node.
   node: Node,
-  nativeTag: number,
-  viewConfig: ViewConfig,
-  currentProps: Props,
-  // Reference to the React handle (the fiber)
-  internalInstanceHandle: Object,
-  // Exposed through refs.
-  publicInstance: ReactFabricHostComponent,
+  canonical: {
+    nativeTag: number,
+    viewConfig: ViewConfig,
+    currentProps: Props,
+    // Reference to the React handle (the fiber)
+    internalInstanceHandle: Object,
+    // Exposed through refs.
+    publicInstance: ReactFabricHostComponent,
+  },
 };
 export type TextInstance = {node: Node, ...};
 export type HydratableInstance = Instance | TextInstance;
@@ -148,11 +150,13 @@ export function createInstance(
 
   return {
     node: node,
-    nativeTag: tag,
-    viewConfig,
-    currentProps: props,
-    internalInstanceHandle,
-    publicInstance: component,
+    canonical: {
+      nativeTag: tag,
+      viewConfig,
+      currentProps: props,
+      internalInstanceHandle,
+      publicInstance: component,
+    },
   };
 }
 
@@ -222,8 +226,8 @@ export function getChildHostContext(
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
-  if (instance.publicInstance != null) {
-    return instance.publicInstance;
+  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    return instance.canonical.publicInstance;
   }
 
   // For compatibility with the legacy renderer, in case it's used with Fabric
@@ -249,12 +253,12 @@ export function prepareUpdate(
   newProps: Props,
   hostContext: HostContext,
 ): null | Object {
-  const viewConfig = instance.viewConfig;
+  const viewConfig = instance.canonical.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
   // TODO: If the event handlers have changed, we need to update the current props
   // in the commit phase but there is no host config hook to do it yet.
   // So instead we hack it by updating it in the render phase.
-  instance.currentProps = newProps;
+  instance.canonical.currentProps = newProps;
   return updatePayload;
 }
 
@@ -333,11 +337,7 @@ export function cloneInstance(
   }
   return {
     node: clone,
-    nativeTag: instance.nativeTag,
-    viewConfig: instance.viewConfig,
-    currentProps: instance.currentProps,
-    internalInstanceHandle: instance.internalInstanceHandle,
-    publicInstance: instance.publicInstance,
+    canonical: instance.canonical,
   };
 }
 
@@ -347,7 +347,7 @@ export function cloneHiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  const viewConfig = instance.viewConfig;
+  const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
   const updatePayload = create(
     {style: {display: 'none'}},
@@ -355,11 +355,7 @@ export function cloneHiddenInstance(
   );
   return {
     node: cloneNodeWithNewProps(node, updatePayload),
-    nativeTag: instance.nativeTag,
-    viewConfig: instance.viewConfig,
-    currentProps: instance.currentProps,
-    internalInstanceHandle: instance.internalInstanceHandle,
-    publicInstance: instance.publicInstance,
+    canonical: instance.canonical,
   };
 }
 
