@@ -39,9 +39,9 @@ jobs:
             let iter = 0;
             spinloop: while (iter < 15) {
               const res = await github.rest.repos.listCommitStatusesForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.sha
+                owner: 'facebook', // context.repo.owner,
+                repo: 'react', // context.repo.repo,
+                ref: '55308554edb7a7d0c091c2ee4973ba5f4b06dfe8' // context.sha
               });
               for (const status of res.data) {
                 if (/process_artifacts_combined/.test(status.context)) {
