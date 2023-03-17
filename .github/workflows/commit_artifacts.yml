@@ -41,7 +41,7 @@ jobs:
               const res = await github.rest.repos.listCommitStatusesForRef({
                 owner: 'facebook', // context.repo.owner,
                 repo: 'react', // context.repo.repo,
-                ref: '8fa41ffa275cae4895b650b0c3b5e8acdbb5055d' // context.sha
+                ref: 'ef8bdbecb6dbb9743b895c2e867e5a5264dd6651' // context.sha
               });
               for (const status of res.data) {
                 if (/process_artifacts_combined/.test(status.context)) {
