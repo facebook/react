@@ -166,15 +166,6 @@ let moduleLocal = false;
   20 |
   21 |   const j = function bar([quz, qux], ...args) {};
 
-[ReactForget] TodoError: (BuildHIR::lowerJsxElementName) Handle JSXMemberExpression tags
-  17 |   <Button haha={1}></Button>;
-  18 |   <Button>{/** empty */}</Button>;
-> 19 |   <DesignSystem.Button />;
-     |    ^^^^^^^^^^^^^^^^^^^
-  20 |
-  21 |   const j = function bar([quz, qux], ...args) {};
-  22 |
-
 [ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
   19 |   <DesignSystem.Button />;
   20 |

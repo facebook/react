@@ -651,29 +651,26 @@ function codegenInstructionValue(
         }
       }
       let tagValue = codegenPlace(cx, instrValue.tag);
-      let tag: string;
+      let tag: t.JSXIdentifier | t.JSXMemberExpression;
       if (tagValue.type === "Identifier") {
-        tag = tagValue.name;
+        tag = t.jsxIdentifier(tagValue.name);
+      } else if (tagValue.type === "MemberExpression") {
+        tag = convertMemberExpressionToJsx(tagValue);
       } else {
         invariant(
           tagValue.type === "StringLiteral",
-          "Expected JSX tag to be an identifier or string"
+          "Expected JSX tag to be an identifier or string, got '%s'",
+          tagValue.type
         );
-        tag = tagValue.value;
+        tag = t.jsxIdentifier(tagValue.value);
       }
       const children =
         instrValue.children !== null
           ? instrValue.children.map((child) => codegenJsxElement(cx, child))
           : [];
       value = t.jsxElement(
-        t.jsxOpeningElement(
-          t.jsxIdentifier(tag),
-          attributes,
-          instrValue.children === null
-        ),
-        instrValue.children !== null
-          ? t.jsxClosingElement(t.jsxIdentifier(tag))
-          : null,
+        t.jsxOpeningElement(tag, attributes, instrValue.children === null),
+        instrValue.children !== null ? t.jsxClosingElement(tag) : null,
         children,
         instrValue.children === null
       );
@@ -893,6 +890,26 @@ function codegenJsxElement(
     default: {
       return t.jsxExpressionContainer(value);
     }
+  }
+}
+
+function convertMemberExpressionToJsx(
+  expr: t.MemberExpression
+): t.JSXMemberExpression {
+  invariant(
+    expr.property.type === "Identifier",
+    "Expected JSX member expression property to be a string"
+  );
+  const property = t.jsxIdentifier(expr.property.name);
+  if (expr.object.type === "Identifier") {
+    return t.jsxMemberExpression(t.jsxIdentifier(expr.object.name), property);
+  } else {
+    invariant(
+      expr.object.type === "MemberExpression",
+      "Expected JSX member expression to be an identifier or nested member expression"
+    );
+    const object = convertMemberExpressionToJsx(expr.object);
+    return t.jsxMemberExpression(object, property);
   }
 }
 

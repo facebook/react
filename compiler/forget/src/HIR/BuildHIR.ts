@@ -1760,7 +1760,27 @@ function lowerJsxElementName(
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  if (!exprPath.isJSXIdentifier()) {
+  if (exprPath.isJSXIdentifier()) {
+    const tag: string = exprPath.node.name;
+    if (tag.match(/^[A-Z]/)) {
+      return lowerIdentifier(builder, exprPath);
+    } else {
+      const place: Place = buildTemporaryPlace(builder, exprLoc);
+      builder.push({
+        id: makeInstructionId(0),
+        value: {
+          kind: "Primitive",
+          value: tag,
+          loc: exprLoc,
+        },
+        loc: exprLoc,
+        lvalue: { ...place },
+      });
+      return place;
+    }
+  } else if (exprPath.isJSXMemberExpression()) {
+    return lowerJsxMemberExpression(builder, exprPath);
+  } else {
     builder.errors.push({
       reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
       severity: ErrorSeverity.Todo,
@@ -1779,23 +1799,40 @@ function lowerJsxElementName(
     });
     return { ...place };
   }
-  const tag: string = exprPath.node.name;
-  if (tag.match(/^[A-Z]/)) {
-    return lowerIdentifier(builder, exprPath);
+}
+
+function lowerJsxMemberExpression(
+  builder: HIRBuilder,
+  exprPath: NodePath<t.JSXMemberExpression>
+): Place {
+  const loc = exprPath.node.loc ?? GeneratedSource;
+  const object = exprPath.get("object");
+  let objectPlace: Place;
+  if (object.isJSXMemberExpression()) {
+    objectPlace = lowerJsxMemberExpression(builder, object);
   } else {
-    const place: Place = buildTemporaryPlace(builder, exprLoc);
-    builder.push({
-      id: makeInstructionId(0),
-      value: {
-        kind: "Primitive",
-        value: tag,
-        loc: exprLoc,
-      },
-      loc: exprLoc,
-      lvalue: { ...place },
-    });
-    return place;
+    invariant(
+      object.isJSXIdentifier(),
+      "TypeScript refinement fail: expected 'JsxIdentifier', got '%s'",
+      object.node.type
+    );
+    objectPlace = lowerIdentifier(builder, object);
   }
+  const place = buildTemporaryPlace(builder, loc);
+  const property = exprPath.get("property").node.name;
+  builder.push({
+    id: makeInstructionId(0),
+    lvalue: { ...place },
+    value: {
+      kind: "PropertyLoad",
+      object: objectPlace,
+      property,
+      optional: false,
+      loc,
+    },
+    loc,
+  });
+  return place;
 }
 
 function lowerJsxElement(
