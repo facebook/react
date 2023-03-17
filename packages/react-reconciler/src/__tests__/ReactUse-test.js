@@ -1472,4 +1472,32 @@ describe('ReactUse', () => {
     assertLog(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
+
+  it('basic use(promise) with forwardRefs', async () => {
+    const promiseA = Promise.resolve('A');
+    const promiseB = Promise.resolve('B');
+    const promiseC = Promise.resolve('C');
+
+    const Async = React.forwardRef((props, ref) => {
+      const text = use(promiseA) + use(promiseB) + use(promiseC);
+      return <Text text={text} />;
+    });
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    assertLog(['ABC']);
+    expect(root).toMatchRenderedOutput('ABC');
+  });
 });
