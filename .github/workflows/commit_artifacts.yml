@@ -1,8 +1,10 @@
 name: Commit Artifacts for Facebook WWW
 
-on:
-  push:
-    branches: [main]
+# on:
+#   push:
+#     branches: [main]
+
+on: [push]
 
 jobs:
   download_artifacts:
