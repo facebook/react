@@ -197,11 +197,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: builds/facebook-fbsource
+          ref: main
           repository: facebook/react-fbsource-import
           token: ${{secrets.PUSH_TOKEN}}
       - name: Ensure clean directory
-        run: rm -rf compiled
+        run: rm -rf compiled-rn
       - uses: actions/download-artifact@v3
         with:
           name: compiled-rn
