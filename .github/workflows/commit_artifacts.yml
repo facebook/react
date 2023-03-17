@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Download and unzip artifacts
         uses: actions/github-script@v6
+        env:
+          CIRCLECI_TOKEN: ${{secrets.CIRCLECI_TOKEN_DIFFTRAIN}}
         with:
           script: |
             const cp = require('child_process');
@@ -58,10 +60,10 @@ jobs:
                       const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
                         status.target_url,
                       )[1];
-                      console.log(`CircleCI build id found: ${ciBuildId}`);
                       if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
                         artifactsUrl =
                           `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                        console.log(`Found artifactsUrl: ${artifactsUrl}`);
                         break spinloop;
                       } else {
                         throw new Error(`${ciBuildId} isn't a number`);
@@ -80,13 +82,21 @@ jobs:
               await sleep(60_000);
             }
             if (artifactsUrl != null) {
-              const res = await fetch(artifactsUrl);
+              const {CIRCLECI_TOKEN} = process.env;
+              const res = await fetch(artifactsUrl, {
+                headers: {
+                  'Circle-Token': CIRCLECI_TOKEN
+                }
+              });
               const data = await res.json();
+              if (!Array.isArray(data) && data.message != null) {
+                throw `CircleCI returned: ${data.message}`;
+              }
               for (const artifact of data) {
                 if (artifact.path === 'build.tgz') {
                   console.log(`Downloading and unzipping ${artifact.url}`);
                   await execHelper(
-                    `curl -L ${artifact.url} | tar -xvz`
+                    `curl -L ${artifact.url} -H "Circle-Token: ${CIRCLECI_TOKEN}" | tar -xvz`
                   );
                 }
               }
