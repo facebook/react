@@ -18,3 +18,32 @@ export const HasEffect = /* */ 0b0001;
 export const Insertion = /* */ 0b0010;
 export const Layout = /*    */ 0b0100;
 export const Passive = /*   */ 0b1000;
+
+export const listFlags = (inputFlag: HookFlags): string[] => {
+  if (__DEV__) {
+    const list = [];
+    const flags = [
+      [NoFlags, 'NoFlags'],
+      [HasEffect, 'HasEffect'],
+      [Insertion, 'Insertion'],
+      [Layout, 'Layout'],
+      [Passive, 'Passive'],
+    ];
+    flags.forEach(flag => {
+      if (flag[0] & inputFlag) {
+        list.push(flag[1]);
+      }
+    });
+    return list;
+  } else {
+    return [];
+  }
+};
+
+export function prettyFlags(flags: HookFlags): string {
+  if (__DEV__) {
+    return listFlags(flags).join('\n');
+  } else {
+    return '';
+  }
+}

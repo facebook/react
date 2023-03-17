@@ -70,6 +70,11 @@ describe('StrictEffectsMode', () => {
         return () => Scheduler.log('useLayoutEffect unmount');
       });
 
+      React.useInsertionEffect(() => {
+        Scheduler.log('useInsertionEffect mount');
+        return () => Scheduler.log('useInsertionEffect unmount');
+      });
+
       return text;
     }
 
@@ -82,15 +87,22 @@ describe('StrictEffectsMode', () => {
 
     if (supportsDoubleInvokeEffects()) {
       assertLog([
+        'useInsertionEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
+        'useInsertionEffect unmount',
         'useLayoutEffect unmount',
         'useEffect unmount',
+        'useInsertionEffect mount',
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
     } else {
-      assertLog(['useLayoutEffect mount', 'useEffect mount']);
+      assertLog([
+        'useInsertionEffect mount',
+        'useLayoutEffect mount',
+        'useEffect mount',
+      ]);
     }
 
     await act(() => {
@@ -98,6 +110,8 @@ describe('StrictEffectsMode', () => {
     });
 
     assertLog([
+      'useInsertionEffect unmount',
+      'useInsertionEffect mount',
       'useLayoutEffect unmount',
       'useLayoutEffect mount',
       'useEffect unmount',
@@ -108,7 +122,11 @@ describe('StrictEffectsMode', () => {
       renderer.unmount();
     });
 
-    assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
+    assertLog([
+      'useLayoutEffect unmount',
+      'useInsertionEffect unmount',
+      'useEffect unmount',
+    ]);
   });
 
   it('multiple effects are double invoked in the right order (all mounted, all unmounted, all remounted)', async () => {
