@@ -511,7 +511,7 @@ describe('ReactFlight', () => {
       startTransition(() => {
         ReactNoop.render(
           <>
-            <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
+            <ErrorBoundary expectedMessage="Event handlers cannot be passed to Server Component props.">
               <Render promise={ReactNoopFlightClient.read(event)} />
             </ErrorBoundary>
             <ErrorBoundary
@@ -526,7 +526,7 @@ describe('ReactFlight', () => {
             <ErrorBoundary expectedMessage="Refs cannot be used in Server Components, nor passed to Client Components.">
               <Render promise={ReactNoopFlightClient.read(refs)} />
             </ErrorBoundary>
-            <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
+            <ErrorBoundary expectedMessage="Event handlers cannot be passed to Server Component props.">
               <Render promise={ReactNoopFlightClient.read(eventClient)} />
             </ErrorBoundary>
             <ErrorBoundary

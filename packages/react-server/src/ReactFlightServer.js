@@ -890,7 +890,7 @@ export function resolveModelToJSON(
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
-        'Event handlers cannot be passed to Client Component props.' +
+        'Event handlers cannot be passed to Server Component props.' +
           describeObjectForErrorMessage(parent, key) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
