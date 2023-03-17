@@ -33,23 +33,10 @@ jobs:
               });
             }
 
-            let artifactsUrl = 'https://circleci.com/api/v1.1/project/github/facebook/react/645534/artifacts';
-            if (artifactsUrl != null) {
-              console.log('about to fetch', artifactsUrl);
-              const res = await fetch(artifactsUrl);
-              const data = await res.json();
-              console.log(data);
-              for (const artifact of data) {
-                if (artifact.path === 'build.tgz') {
-                  console.log(`Downloading and unzipping ${artifact.url}`);
-                  await execHelper(
-                    `curl -L ${artifact.url} | tar -xvz`
-                  );
-                }
-              }
-            } else {
-              process.exitCode = 1;
-            }
+            let url = 'https://output.circle-artifacts.com/output/job/f2eb575f-7cf7-43ab-9b04-1178285adde6/artifacts/0/build.tgz';
+            await execHelper(
+              `curl -L ${url} | tar -xvz`
+            );
       - name: Strip @license from eslint plugin and react-refresh
         run: |
           sed -i -e 's/ @license React*//' \
