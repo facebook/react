@@ -5334,7 +5334,7 @@ var Hydrating =
 var Update =
   /*                       */
   4;
-/* Skipped value:                                 0b000000000000000000000001000; */
+/* Skipped value:                                 0b0000000000000000000000001000; */
 
 var ChildDeletion =
   /*                */
@@ -5345,7 +5345,7 @@ var ContentReset =
 var Callback =
   /*                     */
   64;
-/* Used by DidCapture:                            0b000000000000000000010000000; */
+/* Used by DidCapture:                            0b0000000000000000000010000000; */
 
 var ForceClientRender =
   /*            */
@@ -5359,20 +5359,24 @@ var Snapshot =
 var Passive$1 =
   /*                      */
   2048;
-/* Used by Hydrating:                             0b000000000000001000000000000; */
+/* Used by Hydrating:                             0b0000000000000001000000000000; */
 
 var Visibility =
   /*                   */
   8192;
 var StoreConsistency =
   /*             */
-  16384;
+  16384; // It's OK to reuse this bit because these flags are mutually exclusive for
+// different fiber types. We should really be doing this for as many flags as
+// possible, because we're about to run out of bits.
+
+var ScheduleRetry = StoreConsistency;
 var LifecycleEffectMask =
   Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
 var HostEffectMask =
   /*               */
-  16383; // These are not really side effects, but we still reuse this field.
+  32767; // These are not really side effects, but we still reuse this field.
 
 var Incomplete =
   /*                   */
@@ -5405,17 +5409,20 @@ var LayoutStatic =
   4194304;
 var PassiveStatic =
   /*                */
-  8388608; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
+  8388608;
+var SuspenseyCommit =
+  /*              */
+  16777216; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 
 var PlacementDEV =
   /*                 */
-  16777216;
+  33554432;
 var MountLayoutDev =
   /*               */
-  33554432;
+  67108864;
 var MountPassiveDev =
   /*              */
-  67108864; // Groups of flags that are used in the commit phase to skip over trees that
+  134217728; // Groups of flags that are used in the commit phase to skip over trees that
 // don't contain effects, by checking subtreeFlags.
 
 var BeforeMutationMask = // TODO: Remove Update flag from before mutation phase by re-landing Visibility
@@ -5440,7 +5447,7 @@ var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that 
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 
-var StaticMask = LayoutStatic | PassiveStatic | RefStatic;
+var StaticMask = LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
 
 var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
 function getNearestMountedFiber(fiber) {
@@ -10035,7 +10042,14 @@ var SuspenseException = new Error(
     "unexpected behavior.\n\n" +
     "To handle async errors, wrap your component in an error boundary, or " +
     "call the promise's `.catch` method and pass the result to `use`"
-);
+); // This is a noop thenable that we use to trigger a fallback in throwException.
+// TODO: It would be better to refactor throwException into multiple functions
+// so we can trigger a fallback directly without having to check the type. But
+// for now this will do.
+
+var noopSuspenseyCommitThenable = {
+  then: function () {}
+};
 function createThenableState() {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
@@ -10140,7 +10154,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw SuspenseException;
     }
   }
-} // This is used to track the actual thenable that suspended so it can be
+}
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -17248,13 +17262,26 @@ function throwException(
           //
           // When the wakeable resolves, we'll attempt to render the boundary
           // again ("retry").
+          // Check if this is a Suspensey resource. We do not attach retry
+          // listeners to these, because we don't actually need them for
+          // rendering. Only for committing. Instead, if a fallback commits
+          // and the only thing that suspended was a Suspensey resource, we
+          // retry immediately.
+          // TODO: Refactor throwException so that we don't have to do this type
+          // check. The caller already knows what the cause was.
 
-          var wakeables = suspenseBoundary.updateQueue;
+          var isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
 
-          if (wakeables === null) {
-            suspenseBoundary.updateQueue = new Set([wakeable]);
+          if (isSuspenseyResource) {
+            suspenseBoundary.flags |= ScheduleRetry;
           } else {
-            wakeables.add(wakeable);
+            var retryQueue = suspenseBoundary.updateQueue;
+
+            if (retryQueue === null) {
+              suspenseBoundary.updateQueue = new Set([wakeable]);
+            } else {
+              retryQueue.add(wakeable);
+            }
           }
 
           break;
@@ -17263,22 +17290,29 @@ function throwException(
         case OffscreenComponent: {
           if (suspenseBoundary.mode & ConcurrentMode) {
             suspenseBoundary.flags |= ShouldCapture;
-            var offscreenQueue = suspenseBoundary.updateQueue;
 
-            if (offscreenQueue === null) {
-              var newOffscreenQueue = {
-                transitions: null,
-                markerInstances: null,
-                wakeables: new Set([wakeable])
-              };
-              suspenseBoundary.updateQueue = newOffscreenQueue;
+            var _isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
+
+            if (_isSuspenseyResource) {
+              suspenseBoundary.flags |= ScheduleRetry;
             } else {
-              var _wakeables = offscreenQueue.wakeables;
+              var offscreenQueue = suspenseBoundary.updateQueue;
 
-              if (_wakeables === null) {
-                offscreenQueue.wakeables = new Set([wakeable]);
+              if (offscreenQueue === null) {
+                var newOffscreenQueue = {
+                  transitions: null,
+                  markerInstances: null,
+                  retryQueue: new Set([wakeable])
+                };
+                suspenseBoundary.updateQueue = newOffscreenQueue;
               } else {
-                _wakeables.add(wakeable);
+                var _retryQueue = offscreenQueue.retryQueue;
+
+                if (_retryQueue === null) {
+                  offscreenQueue.retryQueue = new Set([wakeable]);
+                } else {
+                  _retryQueue.add(wakeable);
+                }
               }
             }
 
@@ -19476,7 +19510,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             var newOffscreenQueue = {
               transitions: currentTransitions,
               markerInstances: parentMarkerInstances,
-              wakeables: null
+              retryQueue: null
             };
             primaryChildFragment.updateQueue = newOffscreenQueue;
           } else {
@@ -19571,7 +19605,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             var _newOffscreenQueue = {
               transitions: _currentTransitions,
               markerInstances: _parentMarkerInstances,
-              wakeables: null
+              retryQueue: null
             };
             _primaryChildFragment2.updateQueue = _newOffscreenQueue;
           } else if (_offscreenQueue === currentOffscreenQueue) {
@@ -19580,9 +19614,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             var _newOffscreenQueue2 = {
               transitions: _currentTransitions,
               markerInstances: _parentMarkerInstances,
-              wakeables:
+              retryQueue:
                 currentOffscreenQueue !== null
-                  ? currentOffscreenQueue.wakeables
+                  ? currentOffscreenQueue.retryQueue
                   : null
             };
             _primaryChildFragment2.updateQueue = _newOffscreenQueue2;
@@ -22532,7 +22566,13 @@ function appendAllChildren(
   }
 } // An unfortunate fork of appendAllChildren because we have two different parent types.
 
-function updateHostComponent(current, workInProgress, type, newProps) {
+function updateHostComponent(
+  current,
+  workInProgress,
+  type,
+  newProps,
+  renderLanes
+) {
   {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
@@ -22548,6 +22588,7 @@ function updateHostComponent(current, workInProgress, type, newProps) {
     // Even better would be if children weren't special cased at all tho.
 
     var instance = workInProgress.stateNode;
+    suspendHostCommitIfNeeded(workInProgress);
     var currentHostContext = getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
     // component is hitting the resume path. Figure out why. Possibly
     // related to `hidden`.
@@ -22565,6 +22606,50 @@ function updateHostComponent(current, workInProgress, type, newProps) {
 
     if (updatePayload) {
       markUpdate(workInProgress);
+    }
+  }
+} // TODO: This should ideally move to begin phase, but currently the instance is
+// not created until the complete phase. For our existing use cases, host nodes
+// that suspend don't have children, so it doesn't matter. But that might not
+// always be true in the future.
+
+function suspendHostCommitIfNeeded(workInProgress, type, props, renderLanes) {
+  // Ask the renderer if this instance should suspend the commit.
+  {
+    // If this flag was set previously, we can remove it. The flag represents
+    // whether this particular set of props might ever need to suspend. The
+    // safest thing to do is for shouldSuspendCommit to always return true, but
+    // if the renderer is reasonably confident that the underlying resource
+    // won't be evicted, it can return false as a performance optimization.
+    workInProgress.flags &= ~SuspenseyCommit;
+    return;
+  } // Mark this fiber with a flag. We use this right before the commit phase to
+}
+
+function scheduleRetryEffect(workInProgress, retryQueue) {
+  var wakeables = retryQueue;
+
+  if (wakeables !== null) {
+    // Schedule an effect to attach a retry listener to the promise.
+    // TODO: Move to passive phase
+    workInProgress.flags |= Update;
+  } else {
+    // This boundary suspended, but no wakeables were added to the retry
+    // queue. Check if the renderer suspended commit. If so, this means
+    // that once the fallback is committed, we can immediately retry
+    // rendering again, because rendering wasn't actually blocked. Only
+    // the commit phase.
+    // TODO: Consider a model where we always schedule an immediate retry, even
+    // for normal Suspense. That way the retry can partially render up to the
+    // first thing that suspends.
+    if (workInProgress.flags & ScheduleRetry) {
+      var retryLane = // TODO: This check should probably be moved into claimNextRetryLane
+        // I also suspect that we need some further consolidation of offscreen
+        // and retry lanes.
+        workInProgress.tag !== OffscreenComponent
+          ? claimNextRetryLane()
+          : OffscreenLane;
+      workInProgress.lanes = mergeLanes(workInProgress.lanes, retryLane);
     }
   }
 }
@@ -23042,19 +23127,23 @@ function completeWork(current, workInProgress, renderLanes) {
 
           var _wasHydrated = popHydrationState(workInProgress);
 
+          var instance;
+
           if (_wasHydrated) {
             // We ignore the boolean indicating there is an updateQueue because
             // it is used only to set text children and HostSingletons do not
             // use them.
             prepareToHydrateHostInstance(workInProgress, currentHostContext);
+            instance = workInProgress.stateNode;
           } else {
-            workInProgress.stateNode = resolveSingletonInstance(
+            instance = resolveSingletonInstance(
               type,
               newProps,
               rootContainerInstance,
               currentHostContext,
               true
             );
+            workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
 
@@ -23113,22 +23202,25 @@ function completeWork(current, workInProgress, renderLanes) {
         } else {
           var _rootContainerInstance = getRootHostContainer();
 
-          var instance = createInstance(
+          var _instance3 = createInstance(
             _type,
             newProps,
             _rootContainerInstance,
             _currentHostContext2,
             workInProgress
           );
-          appendAllChildren(instance, workInProgress);
-          workInProgress.stateNode = instance; // Certain renderers require commit-time effects for initial mount.
+
+          appendAllChildren(_instance3, workInProgress);
+          workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
 
-          if (finalizeInitialChildren(instance, _type, newProps)) {
+          if (finalizeInitialChildren(_instance3, _type, newProps)) {
             markUpdate(workInProgress);
           }
         }
+
+        suspendHostCommitIfNeeded(workInProgress);
 
         if (workInProgress.ref !== null) {
           // If there is a ref on a host node we need to schedule a callback
@@ -23280,13 +23372,8 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       }
 
-      var wakeables = workInProgress.updateQueue;
-
-      if (wakeables !== null) {
-        // Schedule an effect to attach a retry listener to the promise.
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
-      }
+      var retryQueue = workInProgress.updateQueue;
+      scheduleRetryEffect(workInProgress, retryQueue);
 
       if (
         workInProgress.updateQueue !== null &&
@@ -23391,12 +23478,9 @@ function completeWork(current, workInProgress, renderLanes) {
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
 
-                var newThenables = suspended.updateQueue;
-
-                if (newThenables !== null) {
-                  workInProgress.updateQueue = newThenables;
-                  workInProgress.flags |= Update;
-                } // Rerender the whole list, but this time, we'll force fallbacks
+                var _retryQueue = suspended.updateQueue;
+                workInProgress.updateQueue = _retryQueue;
+                scheduleRetryEffect(workInProgress, _retryQueue); // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the effect flags before doing the second pass since that's now invalid.
                 // Reset the child fibers to their original state.
@@ -23450,13 +23534,9 @@ function completeWork(current, workInProgress, renderLanes) {
             didSuspendAlready = true; // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
 
-            var _newThenables = _suspended.updateQueue;
-
-            if (_newThenables !== null) {
-              workInProgress.updateQueue = _newThenables;
-              workInProgress.flags |= Update;
-            }
-
+            var _retryQueue2 = _suspended.updateQueue;
+            workInProgress.updateQueue = _retryQueue2;
+            scheduleRetryEffect(workInProgress, _retryQueue2);
             cutOffTailIfNeeded(renderState, true); // This might have been modified.
 
             if (
@@ -23622,10 +23702,11 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       }
 
-      if (workInProgress.updateQueue !== null) {
-        // Schedule an effect to attach Suspense retry listeners
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
+      var offscreenQueue = workInProgress.updateQueue;
+
+      if (offscreenQueue !== null) {
+        var _retryQueue3 = offscreenQueue.retryQueue;
+        scheduleRetryEffect(workInProgress, _retryQueue3);
       }
 
       {
@@ -23682,9 +23763,9 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        var _instance3 = workInProgress.stateNode;
+        var _instance4 = workInProgress.stateNode;
 
-        if (_instance3 !== null) {
+        if (_instance4 !== null) {
           popMarkerInstance(workInProgress);
         }
 
@@ -26117,10 +26198,10 @@ function commitSuspenseCallback(finishedWork) {
     var suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
 
     if (typeof suspenseCallback === "function") {
-      var wakeables = finishedWork.updateQueue;
+      var retryQueue = finishedWork.updateQueue;
 
-      if (wakeables !== null) {
-        suspenseCallback(new Set(wakeables));
+      if (retryQueue !== null) {
+        suspenseCallback(new Set(retryQueue));
       }
     } else {
       if (suspenseCallback !== undefined) {
@@ -26708,11 +26789,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
 
-        var wakeables = finishedWork.updateQueue;
+        var retryQueue = finishedWork.updateQueue;
 
-        if (wakeables !== null) {
+        if (retryQueue !== null) {
           finishedWork.updateQueue = null;
-          attachSuspenseRetryListeners(finishedWork, wakeables);
+          attachSuspenseRetryListeners(finishedWork, retryQueue);
         }
       }
 
@@ -26793,11 +26874,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         var offscreenQueue = finishedWork.updateQueue;
 
         if (offscreenQueue !== null) {
-          var _wakeables = offscreenQueue.wakeables;
+          var _retryQueue = offscreenQueue.retryQueue;
 
-          if (_wakeables !== null) {
-            offscreenQueue.wakeables = null;
-            attachSuspenseRetryListeners(finishedWork, _wakeables);
+          if (_retryQueue !== null) {
+            offscreenQueue.retryQueue = null;
+            attachSuspenseRetryListeners(finishedWork, _retryQueue);
           }
         }
       }
@@ -26810,11 +26891,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
-        var _wakeables2 = finishedWork.updateQueue;
+        var _retryQueue2 = finishedWork.updateQueue;
 
-        if (_wakeables2 !== null) {
+        if (_retryQueue2 !== null) {
           finishedWork.updateQueue = null;
-          attachSuspenseRetryListeners(finishedWork, _wakeables2);
+          attachSuspenseRetryListeners(finishedWork, _retryQueue2);
         }
       }
 
@@ -29499,6 +29580,19 @@ function ensureRootIsScheduled(root, currentTime) {
     root.callbackPriority = NoLane;
     root.callbackNode = null;
     return;
+  }
+
+  var cancelPendingCommit = root.cancelPendingCommit;
+
+  if (cancelPendingCommit !== null) {
+    // We should only interrupt a pending commit if the new update
+    // is urgent.
+    if (includesOnlyNonUrgentLanes(nextLanes)) {
+      // The new update is not urgent. Don't interrupt the pending commit.
+      root.callbackPriority = NoLane;
+      root.callbackNode = null;
+      return;
+    }
   } // We use the highest priority lane to represent the priority of the callback.
 
   var newCallbackPriority = getHighestPriorityLane(nextLanes); // Check if there's an existing task. We may be able to reuse it.
@@ -29750,7 +29844,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
       root.finishedWork = finishedWork;
       root.finishedLanes = lanes;
-      finishConcurrentRender(root, exitStatus, lanes);
+      finishConcurrentRender(root, exitStatus, finishedWork, lanes);
     }
   }
 
@@ -29851,7 +29945,7 @@ function queueRecoverableErrors(errors) {
   }
 }
 
-function finishConcurrentRender(root, exitStatus, lanes) {
+function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
   switch (exitStatus) {
     case RootInProgress:
     case RootFatalErrored: {
@@ -29864,10 +29958,12 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
-      commitRoot(
+      commitRootWhenReady(
         root,
+        finishedWork,
         workInProgressRootRecoverableErrors,
-        workInProgressTransitions
+        workInProgressTransitions,
+        lanes
       );
       break;
     }
@@ -29896,11 +29992,13 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // immediately, wait for more data to arrive.
 
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(
+            commitRootWhenReady.bind(
               null,
               root,
+              finishedWork,
               workInProgressRootRecoverableErrors,
-              workInProgressTransitions
+              workInProgressTransitions,
+              lanes
             ),
             msUntilTimeout
           );
@@ -29908,10 +30006,12 @@ function finishConcurrentRender(root, exitStatus, lanes) {
         }
       } // The work expired. Commit immediately.
 
-      commitRoot(
+      commitRootWhenReady(
         root,
+        finishedWork,
         workInProgressRootRecoverableErrors,
-        workInProgressTransitions
+        workInProgressTransitions,
+        lanes
       );
       break;
     }
@@ -29943,11 +30043,13 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // Instead of committing the fallback immediately, wait for more data
           // to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(
+            commitRootWhenReady.bind(
               null,
               root,
+              finishedWork,
               workInProgressRootRecoverableErrors,
-              workInProgressTransitions
+              workInProgressTransitions,
+              lanes
             ),
             _msUntilTimeout
           );
@@ -29955,20 +30057,24 @@ function finishConcurrentRender(root, exitStatus, lanes) {
         }
       } // Commit the placeholder.
 
-      commitRoot(
+      commitRootWhenReady(
         root,
+        finishedWork,
         workInProgressRootRecoverableErrors,
-        workInProgressTransitions
+        workInProgressTransitions,
+        lanes
       );
       break;
     }
 
     case RootCompleted: {
-      // The work completed. Ready to commit.
-      commitRoot(
+      // The work completed.
+      commitRootWhenReady(
         root,
+        finishedWork,
         workInProgressRootRecoverableErrors,
-        workInProgressTransitions
+        workInProgressTransitions,
+        lanes
       );
       break;
     }
@@ -29977,6 +30083,45 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       throw new Error("Unknown root exit status.");
     }
   }
+}
+
+function commitRootWhenReady(
+  root,
+  finishedWork,
+  recoverableErrors,
+  transitions,
+  lanes
+) {
+  if (includesOnlyNonUrgentLanes(lanes)) {
+    // suspend. If it's not ready, it will return a callback to subscribe to
+    // a ready event.
+
+    var schedulePendingCommit = waitForCommitToBeReady();
+
+    if (schedulePendingCommit !== null) {
+      // NOTE: waitForCommitToBeReady returns a subscribe function so that we
+      // only allocate a function if the commit isn't ready yet. The other
+      // pattern would be to always pass a callback to waitForCommitToBeReady.
+      // Not yet ready to commit. Delay the commit until the renderer notifies
+      // us that it's ready. This will be canceled if we start work on the
+      // root again.
+      root.cancelPendingCommit = schedulePendingCommit(
+        commitRoot.bind(
+          null,
+          root,
+          workInProgressRootRecoverableErrors,
+          workInProgressTransitions
+        )
+      );
+      return;
+    }
+  } // Otherwise, commit immediately.
+
+  commitRoot(
+    root,
+    workInProgressRootRecoverableErrors,
+    workInProgressTransitions
+  );
 }
 
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -30260,6 +30405,13 @@ function prepareFreshStack(root, lanes) {
     cancelTimeout(timeoutHandle);
   }
 
+  var cancelPendingCommit = root.cancelPendingCommit;
+
+  if (cancelPendingCommit !== null) {
+    root.cancelPendingCommit = null;
+    cancelPendingCommit();
+  }
+
   resetWorkInProgressStack();
   workInProgressRoot = root;
   var rootWorkInProgress = createWorkInProgress(root.current, null);
@@ -30317,9 +30469,18 @@ function handleThrow(root, thrownValue) {
     // API for suspending. This implementation detail can change later, once we
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
-    workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
-      ? SuspendedOnData
-      : SuspendedOnImmediate;
+    workInProgressSuspendedReason =
+      shouldRemainOnPreviousScreen() && // Check if there are other pending updates that might possibly unblock this
+      // component from suspending. This mirrors the check in
+      // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
+      // TODO: Consider unwinding immediately, using the
+      // SuspendedOnHydration mechanism.
+      !includesNonIdleWork(workInProgressRootSkippedLanes) &&
+      !includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes) // Suspend work loop until data resolves
+        ? SuspendedOnData // Don't suspend work loop, except to check if the data has
+        : // immediately resolved (i.e. in a microtask). Otherwise, trigger the
+          // nearest Suspense fallback.
+          SuspendedOnImmediate;
   } else if (thrownValue === SelectiveHydrationException) {
     // An update flowed into a dehydrated boundary. Before we can apply the
     // update, we need to finish hydrating. Interrupt the work-in-progress
@@ -30390,27 +30551,27 @@ function handleThrow(root, thrownValue) {
   }
 }
 
-function shouldAttemptToSuspendUntilDataResolves() {
-  // Check if there are other pending updates that might possibly unblock this
-  // component from suspending. This mirrors the check in
-  // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
-  // TODO: Consider unwinding immediately, using the
-  // SuspendedOnHydration mechanism.
-  if (
-    includesNonIdleWork(workInProgressRootSkippedLanes) ||
-    includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
-  ) {
-    // Suspend normally. renderDidSuspendDelayIfPossible will handle
-    // interrupting the work loop.
-    return false;
-  } // TODO: We should be able to remove the equivalent check in
-  // finishConcurrentRender, and rely just on this one.
-
+function shouldRemainOnPreviousScreen() {
+  // This is asking whether it's better to suspend the transition and remain
+  // on the previous screen, versus showing a fallback as soon as possible. It
+  // takes into account both the priority of render and also whether showing a
+  // fallback would produce a desirable user experience.
+  // TODO: Once `use` has fully replaced the `throw promise` pattern, we should
+  // be able to remove the equivalent check in finishConcurrentRender, and rely
+  // just on this one.
   if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
-    // If we're rendering inside the "shell" of the app, it's better to suspend
-    // rendering and wait for the data to resolve. Otherwise, we should switch
-    // to a fallback and continue rendering.
-    return getShellBoundary() === null;
+    if (getShellBoundary() === null) {
+      // We're rendering inside the "shell" of the app. Activating the nearest
+      // fallback would cause visible content to disappear. It's better to
+      // suspend the transition and remain on the previous screen.
+      return true;
+    } else {
+      // We're rendering content that wasn't part of the previous screen.
+      // Rather than block the transition, it's better to show a fallback as
+      // soon as possible. The appearance of any nested fallbacks will be
+      // throttled to avoid jank.
+      return false;
+    }
   }
 
   var handler = getSuspenseHandler();
@@ -31209,7 +31370,8 @@ function commitRootImpl(
   // So we can clear these now to allow a new callback to be scheduled.
 
   root.callbackNode = null;
-  root.callbackPriority = NoLane; // Check which lanes no longer have any work scheduled on them, and mark
+  root.callbackPriority = NoLane;
+  root.cancelPendingCommit = null; // Check which lanes no longer have any work scheduled on them, and mark
   // those as finished.
 
   var remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes); // Make sure to account for lanes that were updated by a concurrent event
@@ -33605,6 +33767,7 @@ function FiberRootNode(
   this.pingCache = null;
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
+  this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
   this.callbackNode = null;
@@ -33740,7 +33903,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-6306c09c";
+var ReactVersion = "18.3.0-www-modern-afcf4d74";
 
 function createPortal$1(
   children,
@@ -43118,6 +43281,9 @@ function requestPostPaintCallback(callback) {
       return callback(time);
     });
   });
+}
+function waitForCommitToBeReady() {
+  return null;
 } // -------------------
 function isHostHoistableType(type, props, hostContext) {
   var outsideHostContainerContext;
