@@ -116,7 +116,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
           'You passed a container to the second argument of root.render(...). ' +
             "You don't need to pass it again since you already passed it to create the root.",
         );
-      } else if (typeof arguments[1] !== 'undefined') {
+      } else if (arguments.length >= 2) {
         console.error(
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
