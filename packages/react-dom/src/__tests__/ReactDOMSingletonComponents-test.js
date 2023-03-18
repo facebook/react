@@ -631,7 +631,7 @@ describe('ReactDOM HostSingleton', () => {
     );
     await waitForAll([]);
 
-    // We construct and insert some artificial stylesheets mimicing what a 3rd party script might do
+    // We construct and insert some artificial stylesheets mimicking what a 3rd party script might do
     // In the future we could hydrate with these already in the document but the rules are restrictive
     // still so it would fail and fall back to client rendering
     const [a, b, c, d, e, f, g, h] = 'abcdefgh'.split('').map(letter => {

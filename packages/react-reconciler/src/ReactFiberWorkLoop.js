@@ -2441,7 +2441,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
-  // This is a fork of performUnitOfWork specifcally for replaying a fiber that
+  // This is a fork of performUnitOfWork specifically for replaying a fiber that
   // just suspended.
   //
   const current = unitOfWork.alternate;
@@ -2533,7 +2533,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
-  // This is a fork of performUnitOfWork specifcally for unwinding a fiber
+  // This is a fork of performUnitOfWork specifically for unwinding a fiber
   // that threw an exception.
   //
   // Return to the normal work loop. This will unwind the stack, and potentially

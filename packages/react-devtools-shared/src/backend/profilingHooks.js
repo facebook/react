@@ -216,7 +216,7 @@ export function createProfilingHooks({
     type: ReactMeasureType,
     lanes: Lanes,
   ): void {
-    // Decide what depth thi work should be rendered at, based on what's on the top of the stack.
+    // Decide what depth this work should be rendered at, based on what's on the top of the stack.
     // It's okay to render over top of "idle" work but everything else should be on its own row.
     let depth = 0;
     if (currentReactMeasuresStack.length > 0) {
@@ -304,7 +304,7 @@ export function createProfilingHooks({
       // Some metadata only needs to be logged once per session,
       // but if profiling information is being recorded via the Performance tab,
       // DevTools has no way of knowing when the recording starts.
-      // Because of that, we log thie type of data periodically (once per commit).
+      // Because of that, we log this type of data periodically (once per commit).
       markMetadata();
     }
   }

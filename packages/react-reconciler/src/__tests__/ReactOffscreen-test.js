@@ -1539,7 +1539,7 @@ describe('ReactOffscreen', () => {
 
       expect(offscreenRef.current).not.toBeNull();
 
-      // Offscreen is attached by default. State updates from offscreen are **not defered**.
+      // Offscreen is attached by default. State updates from offscreen are **not deferred**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1556,7 +1556,7 @@ describe('ReactOffscreen', () => {
         offscreenRef.current.detach();
       });
 
-      // Offscreen is detached. State updates from offscreen are **defered**.
+      // Offscreen is detached. State updates from offscreen are **deferred**.
       await act(async () => {
         updateChildState(2);
         updateHighPriorityComponentState(2);
@@ -1581,7 +1581,7 @@ describe('ReactOffscreen', () => {
         offscreenRef.current.attach();
       });
 
-      // Offscreen is attached. State updates from offscreen are **not defered**.
+      // Offscreen is attached. State updates from offscreen are **not deferred**.
       await act(async () => {
         updateChildState(3);
         updateHighPriorityComponentState(3);
@@ -1659,7 +1659,7 @@ describe('ReactOffscreen', () => {
       nextRenderTriggerDetach = true;
 
       // Offscreen is attached and gets detached inside useLayoutEffect.
-      // State updates from offscreen are **defered**.
+      // State updates from offscreen are **deferred**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1686,7 +1686,7 @@ describe('ReactOffscreen', () => {
 
       nextRenderTriggerAttach = true;
 
-      // Offscreen is detached. State updates from offscreen are **defered**.
+      // Offscreen is detached. State updates from offscreen are **deferred**.
       // Offscreen is attached inside useLayoutEffect;
       await act(async () => {
         updateChildState(3);

@@ -444,7 +444,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the legacy profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
@@ -461,7 +461,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the Timeline profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsTimeline(): boolean {
     return this._supportsTimeline;
   }

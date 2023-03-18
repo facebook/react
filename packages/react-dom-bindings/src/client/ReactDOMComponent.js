@@ -435,7 +435,7 @@ export function createSelectElement(
   return element;
 }
 
-// Creates elements in the HTML namesapce
+// Creates elements in the HTML namespace
 export function createHTMLElement(
   type: string,
   props: Object,

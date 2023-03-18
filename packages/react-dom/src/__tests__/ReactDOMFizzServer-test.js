@@ -3567,7 +3567,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     it('does not escape <, >, or & characters', async () => {
-      // these characters valid javascript and may be necessary in scripts and won't be interpretted properly
+      // these characters valid javascript and may be necessary in scripts and won't be interpreted properly
       // escaped outside of a string context within javascript
       window.__test_outlet = null;
       // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
@@ -3900,7 +3900,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
+  it('suppresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
     let shouldThrow = true;
 

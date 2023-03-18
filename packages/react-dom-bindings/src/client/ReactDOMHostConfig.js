@@ -808,7 +808,7 @@ function clearContainerSparingly(container: Node) {
         const element: Element = (node: any);
         clearContainerSparingly(element);
         // If these singleton instances had previously been rendered with React they
-        // may still hold on to references to the previous fiber tree. We detatch them
+        // may still hold on to references to the previous fiber tree. We detach them
         // prospectively to reset them to a baseline starting state since we cannot create
         // new instances.
         detachDeletedInstance(element);
@@ -942,7 +942,7 @@ export function shouldSkipHydratableForInstance(
         // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
         // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
         // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
-        // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+        // Falling back to client rendering if this happens should be seamless though so we will try this heuristic and revisit later
         // if we learn it is problematic
         const srcAttr = element.getAttribute('src');
         if (
@@ -966,7 +966,7 @@ export function shouldSkipHydratableForInstance(
       }
     }
     // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
-    // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+    // and browser extension inserted tags. While it is possible this is not the right match it is a decent heuristic
     // that should work in the vast majority of cases.
     return false;
   }

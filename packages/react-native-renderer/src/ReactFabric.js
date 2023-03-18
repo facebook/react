@@ -121,7 +121,7 @@ export {
   // See the "enableGetInspectorDataForInstanceInProduction" flag.
   getInspectorDataForInstance,
   // The public instance has a reference to the internal instance handle.
-  // This method allows it to acess the most recent shadow node for
+  // This method allows it to access the most recent shadow node for
   // the instance (it's only accessible through it).
   getNodeFromInternalInstanceHandle,
 };

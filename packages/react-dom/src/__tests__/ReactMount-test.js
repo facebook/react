@@ -150,7 +150,7 @@ describe('ReactMount', () => {
     document.body.appendChild(iFrame);
 
     if (gate(flags => flags.enableHostSingletons)) {
-      // HostSingletons make the warning for document.body unecessary
+      // HostSingletons make the warning for document.body unnecessary
       ReactDOM.render(<div />, iFrame.contentDocument.body);
     } else {
       expect(() =>
