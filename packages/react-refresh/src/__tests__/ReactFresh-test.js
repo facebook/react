@@ -2310,7 +2310,7 @@ describe('ReactFresh', () => {
       render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
-          const tranformed = React.useMemo(() => val * 2, [val]);
+          const transformed = React.useMemo(() => val * 2, [val]);
           const handleClick = React.useCallback(() => setVal(v => v + 1), []);
 
           React.useEffect(() => {
@@ -2319,7 +2319,7 @@ describe('ReactFresh', () => {
 
           return (
             <p style={{color: 'blue'}} onClick={handleClick}>
-              {tranformed}
+              {transformed}
             </p>
           );
         }
@@ -2343,7 +2343,7 @@ describe('ReactFresh', () => {
         patch(() => {
           function Hello() {
             const [val, setVal] = React.useState(0);
-            const tranformed = React.useMemo(() => val * 10, [val]);
+            const transformed = React.useMemo(() => val * 10, [val]);
             const handleClick = React.useCallback(() => setVal(v => v - 1), []);
 
             React.useEffect(() => {
@@ -2352,7 +2352,7 @@ describe('ReactFresh', () => {
 
             return (
               <p style={{color: 'red'}} onClick={handleClick}>
-                {tranformed}
+                {transformed}
               </p>
             );
           }
