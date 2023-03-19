@@ -86,6 +86,7 @@ import {
   resetRendererAfterRender,
   startSuspendingCommit,
   waitForCommitToBeReady,
+  preloadInstance,
 } from './ReactFiberHostConfig';
 
 import {
@@ -114,6 +115,9 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   Profiler,
+  HostComponent,
+  HostHoistable,
+  HostSingleton,
 } from './ReactWorkTags';
 import {ConcurrentRoot, LegacyRoot} from './ReactRootTags';
 import type {Flags} from './ReactFiberFlags';
@@ -273,6 +277,7 @@ import {
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent';
 import {
   SuspenseException,
+  SuspenseyCommitException,
   getSuspendedThenable,
   isThenableResolved,
 } from './ReactFiberThenable';
@@ -321,14 +326,16 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
-const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
-const SuspendedAndReadyToContinue: SuspendedReason = 5;
-const SuspendedOnHydration: SuspendedReason = 6;
+const SuspendedOnInstance: SuspendedReason = 4;
+const SuspendedOnInstanceAndReadyToContinue: SuspendedReason = 5;
+const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 6;
+const SuspendedAndReadyToContinue: SuspendedReason = 7;
+const SuspendedOnHydration: SuspendedReason = 8;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -1871,6 +1878,9 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
           // immediately resolved (i.e. in a microtask). Otherwise, trigger the
           // nearest Suspense fallback.
           SuspendedOnImmediate;
+  } else if (thrownValue === SuspenseyCommitException) {
+    thrownValue = getSuspendedThenable();
+    workInProgressSuspendedReason = SuspendedOnInstance;
   } else if (thrownValue === SelectiveHydrationException) {
     // An update flowed into a dehydrated boundary. Before we can apply the
     // update, we need to finish hydrating. Interrupt the work-in-progress
@@ -1936,6 +1946,13 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
           wakeable,
           workInProgressRootRenderLanes,
         );
+        break;
+      }
+      case SuspendedOnInstance: {
+        // This is conceptually like a suspend, but it's not associated with
+        // a particular wakeable. It's associated with a host resource (e.g.
+        // a CSS file or an image) that hasn't loaded yet. DevTools doesn't
+        // handle this currently.
         break;
       }
       case SuspendedOnHydration: {
@@ -2263,7 +2280,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         // replay the suspended component.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
-        switch (workInProgressSuspendedReason) {
+        resumeOrUnwind: switch (workInProgressSuspendedReason) {
           case SuspendedOnError: {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
@@ -2310,6 +2327,11 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             workInProgressSuspendedReason = SuspendedAndReadyToContinue;
             break outer;
           }
+          case SuspendedOnInstance: {
+            workInProgressSuspendedReason =
+              SuspendedOnInstanceAndReadyToContinue;
+            break outer;
+          }
           case SuspendedAndReadyToContinue: {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
@@ -2323,6 +2345,62 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               workInProgressThrownValue = null;
               unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             }
+            break;
+          }
+          case SuspendedOnInstanceAndReadyToContinue: {
+            switch (workInProgress.tag) {
+              case HostComponent:
+              case HostHoistable:
+              case HostSingleton: {
+                // Before unwinding the stack, check one more time if the
+                // instance is ready. It may have loaded when React yielded to
+                // the main thread.
+
+                // Assigning this to a constant so Flow knows the binding won't
+                // be mutated by `preloadInstance`.
+                const hostFiber = workInProgress;
+                const type = hostFiber.type;
+                const props = hostFiber.pendingProps;
+                const isReady = preloadInstance(type, props);
+                if (isReady) {
+                  // The data resolved. Resume the work loop as if nothing
+                  // suspended. Unlike when a user component suspends, we don't
+                  // have to replay anything because the host fiber
+                  // already completed.
+                  workInProgressSuspendedReason = NotSuspended;
+                  workInProgressThrownValue = null;
+                  const sibling = hostFiber.sibling;
+                  if (sibling !== null) {
+                    workInProgress = sibling;
+                  } else {
+                    const returnFiber = hostFiber.return;
+                    if (returnFiber !== null) {
+                      workInProgress = returnFiber;
+                      completeUnitOfWork(returnFiber);
+                    } else {
+                      workInProgress = null;
+                    }
+                  }
+                  break resumeOrUnwind;
+                }
+                break;
+              }
+              default: {
+                // This will fail gracefully but it's not correct, so log a
+                // warning in dev.
+                if (__DEV__) {
+                  console.error(
+                    'Unexpected type of fiber triggered a suspensey commit. ' +
+                      'This is a bug in React.',
+                  );
+                }
+                break;
+              }
+            }
+            // Otherwise, unwind then continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnDeprecatedThrowPromise: {

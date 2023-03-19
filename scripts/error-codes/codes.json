@@ -458,5 +458,6 @@
   "470": "Only global symbols received from Symbol.for(...) can be passed to Server Functions. The symbol Symbol.for(%s) cannot be found among global symbols.",
   "471": "BigInt (%s) is not yet supported as an argument to a Server Function.",
   "472": "Type %s is not supported as an argument to a Server Function.",
-  "473": "React doesn't accept base64 encoded file uploads because we don't except form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it."
+  "473": "React doesn't accept base64 encoded file uploads because we don't except form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it.",
+  "474": "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
 }
