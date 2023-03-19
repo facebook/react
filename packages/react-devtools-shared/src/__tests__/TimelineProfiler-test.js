@@ -1324,7 +1324,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark render yields', async () => {
         function Bar() {
           Scheduler.log('Bar');
@@ -1409,7 +1409,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark sync render with suspense that rejects', async () => {
         let rejectFn;
         let rejected = false;
@@ -1467,7 +1467,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark concurrent render with suspense that resolves', async () => {
         let resolveFn;
         let resolved = false;
@@ -1525,7 +1525,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark concurrent render with suspense that rejects', async () => {
         let rejectFn;
         let rejected = false;

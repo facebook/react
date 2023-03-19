@@ -223,10 +223,11 @@ function getInspectorDataForViewAtPoint(
           }
 
           closestInstance =
-            internalInstanceHandle.stateNode.internalInstanceHandle;
+            internalInstanceHandle.stateNode.canonical.internalInstanceHandle;
 
           // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
-          const nativeViewTag = internalInstanceHandle.stateNode.nativeTag;
+          const nativeViewTag =
+            internalInstanceHandle.stateNode.canonical.nativeTag;
 
           nativeFabricUIManager.measure(
             node,

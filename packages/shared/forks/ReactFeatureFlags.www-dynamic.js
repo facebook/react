@@ -15,7 +15,6 @@
 
 export const disableInputAttributeSyncing = __VARIANT__;
 export const disableIEWorkarounds = __VARIANT__;
-export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;

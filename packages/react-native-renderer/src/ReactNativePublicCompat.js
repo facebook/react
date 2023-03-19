@@ -56,9 +56,12 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   }
 
   // For compatibility with Fabric instances
-  if (componentOrHandle.publicInstance) {
+  if (
+    componentOrHandle.canonical &&
+    componentOrHandle.canonical.publicInstance
+  ) {
     // $FlowExpectedError[incompatible-return] Can't refine componentOrHandle as a Fabric instance
-    return componentOrHandle.publicInstance;
+    return componentOrHandle.canonical.publicInstance;
   }
 
   // For compatibility with legacy renderer instances
@@ -117,8 +120,11 @@ export function findNodeHandle(componentOrHandle: any): ?number {
   }
 
   // For compatibility with Fabric instances
-  if (componentOrHandle.nativeTag != null) {
-    return componentOrHandle.nativeTag;
+  if (
+    componentOrHandle.canonical != null &&
+    componentOrHandle.canonical.nativeTag != null
+  ) {
+    return componentOrHandle.canonical.nativeTag;
   }
 
   // For compatibility with Fabric public instances

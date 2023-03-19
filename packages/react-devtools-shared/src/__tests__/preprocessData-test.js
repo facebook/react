@@ -1349,7 +1349,7 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
             function Yield({id, value}) {
               Scheduler.log(`${id}:${value}`);
@@ -1411,7 +1411,7 @@ describe('Timeline profiler', () => {
         });
 
         describe('nested updates', () => {
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
@@ -1442,7 +1442,7 @@ describe('Timeline profiler', () => {
             expect(event.warning).toBe(null);
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1595,7 +1595,7 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about transition updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);
@@ -1781,10 +1781,10 @@ describe('Timeline profiler', () => {
         });
 
         describe('suspend during an update', () => {
-          // This also tests an edge case where the a component suspends while profiling
+          // This also tests an edge case where a component suspends while profiling
           // before the first commit is logged (so the lane-to-labels map will not yet exist).
-          // @reactVersion >= 18.0
-          it('should warn about suspending during an udpate', async () => {
+          // @reactVersion >= 18.2
+          it('should warn about suspending during an update', async () => {
             let promise = null;
             let resolvedValue = null;
             function readValue(value) {
@@ -1841,7 +1841,7 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about suspending during an transition', async () => {
             let promise = null;
             let resolvedValue = null;

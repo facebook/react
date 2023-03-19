@@ -36,7 +36,6 @@ import {
   batchedUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
-  flushControlled,
   injectIntoDevTools,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -173,7 +172,6 @@ export {
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  flushControlled as unstable_flushControlled,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI

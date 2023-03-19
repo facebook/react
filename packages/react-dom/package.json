@@ -58,6 +58,7 @@
       "default": "./server.node.js"
     },
     "./server.browser": "./server.browser.js",
+    "./server.bun": "./server.bun.js",
     "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
     "./static": {

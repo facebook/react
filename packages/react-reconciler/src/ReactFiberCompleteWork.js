@@ -10,11 +10,7 @@
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {RootState} from './ReactFiberRoot';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {
-  ReactScopeInstance,
-  ReactContext,
-  Wakeable,
-} from 'shared/ReactTypes';
+import type {ReactScopeInstance, ReactContext} from 'shared/ReactTypes';
 import type {
   Instance,
   Type,
@@ -25,7 +21,9 @@ import type {
 import type {
   SuspenseState,
   SuspenseListRenderState,
+  RetryQueue,
 } from './ReactFiberSuspenseComponent';
+import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -90,6 +88,8 @@ import {
   Incomplete,
   ShouldCapture,
   ForceClientRender,
+  SuspenseyCommit,
+  ScheduleRetry,
 } from './ReactFiberFlags';
 
 import {
@@ -111,6 +111,7 @@ import {
   finalizeContainerChildren,
   preparePortalMount,
   prepareScopeUpdate,
+  shouldSuspendCommit,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -150,6 +151,7 @@ import {
   renderHasNotSuspendedYet,
   getRenderTargetTime,
   getWorkInProgressTransitions,
+  shouldRemainOnPreviousScreen,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -157,6 +159,8 @@ import {
   NoLanes,
   includesSomeLane,
   mergeLanes,
+  claimNextRetryLane,
+  includesOnlyNonUrgentLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -168,6 +172,7 @@ import {
   popMarkerInstance,
   popRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent';
+import {suspendCommit} from './ReactFiberThenable';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -411,6 +416,7 @@ function updateHostComponent(
   workInProgress: Fiber,
   type: Type,
   newProps: Props,
+  renderLanes: Lanes,
 ) {
   if (supportsMutation) {
     // If we have an alternate, that means this is an update and we need to
@@ -427,6 +433,9 @@ function updateHostComponent(
     // TODO: Split the update API as separate for the props vs. children.
     // Even better would be if children weren't special cased at all tho.
     const instance: Instance = workInProgress.stateNode;
+
+    suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
+
     const currentHostContext = getHostContext();
     // TODO: Experiencing an error where oldProps is null. Suggests a host
     // component is hitting the resume path. Figure out why. Possibly
@@ -485,6 +494,9 @@ function updateHostComponent(
       childrenUnchanged,
       recyclableInstance,
     );
+
+    suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
+
     if (
       finalizeInitialChildren(newInstance, type, newProps, currentHostContext)
     ) {
@@ -502,6 +514,89 @@ function updateHostComponent(
     }
   }
 }
+
+// TODO: This should ideally move to begin phase, but currently the instance is
+// not created until the complete phase. For our existing use cases, host nodes
+// that suspend don't have children, so it doesn't matter. But that might not
+// always be true in the future.
+function suspendHostCommitIfNeeded(
+  workInProgress: Fiber,
+  type: Type,
+  props: Props,
+  renderLanes: Lanes,
+) {
+  // Ask the renderer if this instance should suspend the commit.
+  if (!shouldSuspendCommit(type, props)) {
+    // If this flag was set previously, we can remove it. The flag represents
+    // whether this particular set of props might ever need to suspend. The
+    // safest thing to do is for shouldSuspendCommit to always return true, but
+    // if the renderer is reasonably confident that the underlying resource
+    // won't be evicted, it can return false as a performance optimization.
+    workInProgress.flags &= ~SuspenseyCommit;
+    return;
+  }
+
+  // Mark this fiber with a flag. We use this right before the commit phase to
+  // find all the fibers that might need to suspend the commit. In the future
+  // we'll also use it when revealing a hidden tree. It gets set even if we
+  // don't end up suspending this particular commit, because if this tree ever
+  // becomes hidden, we might want to suspend before revealing it again.
+  workInProgress.flags |= SuspenseyCommit;
+
+  // Check if we're rendering at a "non-urgent" priority. This is the same
+  // check that `useDeferredValue` does to determine whether it needs to
+  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
+  // suspending until you opt in with startTransition or Suspense) but it
+  // also happens to be the desired behavior for the concrete use cases we've
+  // thought of so far, like CSS loading, fonts, images, etc.
+  // TODO: We may decide to expose a way to force a fallback even during a
+  // sync update.
+  if (!includesOnlyNonUrgentLanes(renderLanes)) {
+    // This is an urgent render. Never suspend or trigger a fallback.
+  } else {
+    // Need to decide whether to activate the nearest fallback or to continue
+    // rendering and suspend right before the commit phase.
+    if (shouldRemainOnPreviousScreen()) {
+      // It's OK to block the commit. Don't show a fallback.
+    } else {
+      // We shouldn't block the commit. Activate a fallback at the nearest
+      // Suspense boundary.
+      suspendCommit();
+    }
+  }
+}
+
+function scheduleRetryEffect(
+  workInProgress: Fiber,
+  retryQueue: RetryQueue | null,
+) {
+  const wakeables = retryQueue;
+  if (wakeables !== null) {
+    // Schedule an effect to attach a retry listener to the promise.
+    // TODO: Move to passive phase
+    workInProgress.flags |= Update;
+  } else {
+    // This boundary suspended, but no wakeables were added to the retry
+    // queue. Check if the renderer suspended commit. If so, this means
+    // that once the fallback is committed, we can immediately retry
+    // rendering again, because rendering wasn't actually blocked. Only
+    // the commit phase.
+    // TODO: Consider a model where we always schedule an immediate retry, even
+    // for normal Suspense. That way the retry can partially render up to the
+    // first thing that suspends.
+    if (workInProgress.flags & ScheduleRetry) {
+      const retryLane =
+        // TODO: This check should probably be moved into claimNextRetryLane
+        // I also suspect that we need some further consolidation of offscreen
+        // and retry lanes.
+        workInProgress.tag !== OffscreenComponent
+          ? claimNextRetryLane()
+          : OffscreenLane;
+      workInProgress.lanes = mergeLanes(workInProgress.lanes, retryLane);
+    }
+  }
+}
+
 function updateHostText(
   current: Fiber,
   workInProgress: Fiber,
@@ -955,6 +1050,7 @@ function completeWork(
             workInProgress,
             workInProgress.type,
             workInProgress.pendingProps,
+            renderLanes,
           );
         }
         bubbleProperties(workInProgress);
@@ -968,7 +1064,13 @@ function completeWork(
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         if (current !== null && workInProgress.stateNode != null) {
-          updateHostComponent(current, workInProgress, type, newProps);
+          updateHostComponent(
+            current,
+            workInProgress,
+            type,
+            newProps,
+            renderLanes,
+          );
 
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
@@ -989,19 +1091,22 @@ function completeWork(
 
           const currentHostContext = getHostContext();
           const wasHydrated = popHydrationState(workInProgress);
+          let instance: Instance;
           if (wasHydrated) {
             // We ignore the boolean indicating there is an updateQueue because
             // it is used only to set text children and HostSingletons do not
             // use them.
             prepareToHydrateHostInstance(workInProgress, currentHostContext);
+            instance = workInProgress.stateNode;
           } else {
-            workInProgress.stateNode = resolveSingletonInstance(
+            instance = resolveSingletonInstance(
               type,
               newProps,
               rootContainerInstance,
               currentHostContext,
               true,
             );
+            workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
 
@@ -1019,7 +1124,13 @@ function completeWork(
       popHostContext(workInProgress);
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {
-        updateHostComponent(current, workInProgress, type, newProps);
+        updateHostComponent(
+          current,
+          workInProgress,
+          type,
+          newProps,
+          renderLanes,
+        );
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -1080,6 +1191,8 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
+
+        suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
 
         if (workInProgress.ref !== null) {
           // If there is a ref on a host node we need to schedule a callback
@@ -1227,12 +1340,8 @@ function completeWork(
         }
       }
 
-      const wakeables: Set<Wakeable> | null = (workInProgress.updateQueue: any);
-      if (wakeables !== null) {
-        // Schedule an effect to attach a retry listener to the promise.
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
-      }
+      const retryQueue: RetryQueue | null = (workInProgress.updateQueue: any);
+      scheduleRetryEffect(workInProgress, retryQueue);
 
       if (
         enableSuspenseCallback &&
@@ -1337,11 +1446,10 @@ function completeWork(
                 // We might bail out of the loop before finding any but that
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
-                const newThenables = suspended.updateQueue;
-                if (newThenables !== null) {
-                  workInProgress.updateQueue = newThenables;
-                  workInProgress.flags |= Update;
-                }
+                const retryQueue: RetryQueue | null =
+                  (suspended.updateQueue: any);
+                workInProgress.updateQueue = retryQueue;
+                scheduleRetryEffect(workInProgress, retryQueue);
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
@@ -1399,11 +1507,9 @@ function completeWork(
 
             // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
-            const newThenables = suspended.updateQueue;
-            if (newThenables !== null) {
-              workInProgress.updateQueue = newThenables;
-              workInProgress.flags |= Update;
-            }
+            const retryQueue: RetryQueue | null = (suspended.updateQueue: any);
+            workInProgress.updateQueue = retryQueue;
+            scheduleRetryEffect(workInProgress, retryQueue);
 
             cutOffTailIfNeeded(renderState, true);
             // This might have been modified.
@@ -1566,10 +1672,11 @@ function completeWork(
         }
       }
 
-      if (workInProgress.updateQueue !== null) {
-        // Schedule an effect to attach Suspense retry listeners
-        // TODO: Move to passive phase
-        workInProgress.flags |= Update;
+      const offscreenQueue: OffscreenQueue | null =
+        (workInProgress.updateQueue: any);
+      if (offscreenQueue !== null) {
+        const retryQueue = offscreenQueue.retryQueue;
+        scheduleRetryEffect(workInProgress, retryQueue);
       }
 
       if (enableCache) {

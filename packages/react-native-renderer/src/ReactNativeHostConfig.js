@@ -218,8 +218,8 @@ export function getChildHostContext(
 
 export function getPublicInstance(instance: Instance): * {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
-  if (instance.publicInstance != null) {
-    return instance.publicInstance;
+  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    return instance.canonical.publicInstance;
   }
 
   return instance;
@@ -520,6 +520,18 @@ export function detachDeletedInstance(node: Instance): void {
 
 export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
+}
+
+export function shouldSuspendCommit(type: Type, props: Props): boolean {
+  return false;
+}
+
+export function startSuspendingCommit(): void {}
+
+export function suspendInstance(type: Type, props: Props): void {}
+
+export function waitForCommitToBeReady(): null {
+  return null;
 }
 
 export function prepareRendererToRender(container: Container): void {

@@ -728,6 +728,11 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             isConcurrentMode,
             shouldWarnIfMismatchDev,
           );
+          if (isConcurrentMode) {
+            // In concurrent mode we never update the mismatched text,
+            // even if the error was ignored.
+            return false;
+          }
           break;
         }
         case HostSingleton:
@@ -747,6 +752,11 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             isConcurrentMode,
             shouldWarnIfMismatchDev,
           );
+          if (isConcurrentMode) {
+            // In concurrent mode we never update the mismatched text,
+            // even if the error was ignored.
+            return false;
+          }
           break;
         }
       }

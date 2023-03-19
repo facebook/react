@@ -35,7 +35,6 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
     expect(ReactDOM.unstable_batchedUpdates).toBe(undefined);
     expect(ReactDOM.unstable_createEventHandle).toBe(undefined);
-    expect(ReactDOM.unstable_flushControlled).toBe(undefined);
     expect(ReactDOM.unstable_renderSubtreeIntoContainer).toBe(undefined);
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });

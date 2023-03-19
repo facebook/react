@@ -22,8 +22,11 @@ import {getPublicInstance} from './ReactFabricHostConfig';
 function getInstanceFromNode(node: Instance | TextInstance): Fiber | null {
   const instance: Instance = (node: $FlowFixMe); // In React Native, node is never a text instance
 
-  if (instance.internalInstanceHandle != null) {
-    return instance.internalInstanceHandle;
+  if (
+    instance.canonical != null &&
+    instance.canonical.internalInstanceHandle != null
+  ) {
+    return instance.canonical.internalInstanceHandle;
   }
 
   // $FlowFixMe[incompatible-return] DevTools incorrectly passes a fiber in React Native.
@@ -41,7 +44,7 @@ function getNodeFromInstance(fiber: Fiber): PublicInstance {
 }
 
 function getFiberCurrentPropsFromNode(instance: Instance): Props {
-  return instance.currentProps;
+  return instance.canonical.currentProps;
 }
 
 export {
