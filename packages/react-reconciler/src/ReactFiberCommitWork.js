@@ -725,6 +725,7 @@ function commitUseEffectEventMount(finishedWork: Fiber) {
       const {ref, nextImpl} = eventPayloads[ii];
       ref.impl = nextImpl;
     }
+    updateQueue.events = null;
   }
 }
 
