@@ -20,6 +20,7 @@ const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const dynamicImports = require('./plugins/dynamic-imports');
+const disableTreeshake = require('./plugins/disable-treeshake');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
@@ -333,6 +334,7 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
+    disableTreeshake(),
     // Keep dynamic imports as externals
     dynamicImports(),
     {
