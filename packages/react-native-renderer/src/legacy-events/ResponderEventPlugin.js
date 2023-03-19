@@ -44,7 +44,7 @@ let responderInst = null;
  */
 let trackedTouchCount = 0;
 
-const changeResponder = function (nextResponderInst, blockHostResponder) {
+function changeResponder(nextResponderInst, blockHostResponder) {
   const oldResponderInst = responderInst;
   responderInst = nextResponderInst;
   if (ResponderEventPlugin.GlobalResponderHandler !== null) {
@@ -54,7 +54,7 @@ const changeResponder = function (nextResponderInst, blockHostResponder) {
       blockHostResponder,
     );
   }
-};
+}
 
 const eventTypes = {
   /**

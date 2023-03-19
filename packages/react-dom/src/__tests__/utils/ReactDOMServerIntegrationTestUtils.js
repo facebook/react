@@ -19,7 +19,7 @@ module.exports = function (initModules) {
 
   function resetModules() {
     ({ReactDOM, ReactDOMServer} = initModules());
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   }
 
   function shouldUseDocument(reactElement) {
@@ -48,21 +48,16 @@ module.exports = function (initModules) {
   // ====================================
 
   // promisified version of ReactDOM.render()
-  function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
-    return new Promise(resolve => {
-      if (forceHydrate) {
-        act(() => {
-          ReactDOM.hydrate(reactElement, domElement);
-        });
-      } else {
-        act(() => {
-          ReactDOM.render(reactElement, domElement);
-        });
-      }
-      // We can't use the callback for resolution because that will not catch
-      // errors. They're thrown.
-      resolve();
-    });
+  async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
+    if (forceHydrate) {
+      await act(() => {
+        ReactDOM.hydrate(reactElement, domElement);
+      });
+    } else {
+      await act(() => {
+        ReactDOM.render(reactElement, domElement);
+      });
+    }
   }
   // performs fn asynchronously and expects count errors logged to console.error.
   // will fail the test if the count of errors logged is not equal to count.

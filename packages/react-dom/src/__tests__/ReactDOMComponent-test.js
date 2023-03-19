@@ -533,29 +533,17 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('action')).toBe(false);
       });
 
-      it('should not add an empty formAction attribute', () => {
+      it('allows empty string of a formAction to override the default of a parent', () => {
         const container = document.createElement('div');
-        expect(() =>
-          ReactDOM.render(<button formAction="" />, container),
-        ).toErrorDev(
-          'An empty string ("") was passed to the formAction attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to formAction instead of an empty string.',
+        ReactDOM.render(
+          <form action="hello">
+            <button formAction="" />,
+          </form>,
+          container,
         );
-        const node = container.firstChild;
-        expect(node.hasAttribute('formAction')).toBe(false);
-
-        ReactDOM.render(<button formAction="abc" />, container);
-        expect(node.hasAttribute('formAction')).toBe(true);
-
-        expect(() =>
-          ReactDOM.render(<button formAction="" />, container),
-        ).toErrorDev(
-          'An empty string ("") was passed to the formAction attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to formAction instead of an empty string.',
-        );
-        expect(node.hasAttribute('formAction')).toBe(false);
+        const node = container.firstChild.firstChild;
+        expect(node.hasAttribute('formaction')).toBe(true);
+        expect(node.getAttribute('formaction')).toBe('');
       });
 
       it('should not filter attributes for custom elements', () => {

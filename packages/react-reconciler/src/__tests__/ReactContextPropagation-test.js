@@ -9,6 +9,7 @@ let SuspenseList;
 let getCacheForType;
 let caches;
 let seededCache;
+let assertLog;
 
 describe('ReactLazyContextPropagation', () => {
   beforeEach(() => {
@@ -17,13 +18,16 @@ describe('ReactLazyContextPropagation', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useState = React.useState;
     useContext = React.useContext;
     Suspense = React.Suspense;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     getCacheForType = React.unstable_getCacheForType;
 
@@ -92,16 +96,16 @@ describe('ReactLazyContextPropagation', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
-          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          Scheduler.log(`Error! [${text}]`);
           throw record.value;
         case 'resolved':
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
 
       const thenable = {
         pings: [],
@@ -125,14 +129,14 @@ describe('ReactLazyContextPropagation', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
   // function AsyncText({text, showVersion}) {
   //   const version = readText(text);
   //   const fullText = showVersion ? `${text} [v${version}]` : text;
-  //   Scheduler.unstable_yieldValue(fullText);
+  //   Scheduler.log(fullText);
   //   return text;
   // }
 
@@ -199,16 +203,16 @@ describe('ReactLazyContextPropagation', () => {
         return <Text text={value} />;
       }
 
-      await act(async () => {
+      await act(() => {
         root.render(<App />);
       });
-      expect(Scheduler).toHaveYielded([0]);
+      assertLog([0]);
       expect(root).toMatchRenderedOutput('0');
 
-      await act(async () => {
+      await act(() => {
         setValue(1);
       });
-      expect(Scheduler).toHaveYielded([1]);
+      assertLog([1]);
       expect(root).toMatchRenderedOutput('1');
     },
   );
@@ -241,16 +245,16 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([0]);
+    assertLog([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       setValue(1);
     });
-    expect(Scheduler).toHaveYielded([1]);
+    assertLog([1]);
     expect(root).toMatchRenderedOutput('1');
   });
 
@@ -284,16 +288,16 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([0]);
+    assertLog([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       setValue(1);
     });
-    expect(Scheduler).toHaveYielded([1]);
+    assertLog([1]);
     expect(root).toMatchRenderedOutput('1');
   });
 
@@ -317,18 +321,18 @@ describe('ReactLazyContextPropagation', () => {
       const [, _setOtherValue] = useState(0);
       setOtherValue = _setOtherValue;
 
-      Scheduler.unstable_yieldValue('Consumer');
+      Scheduler.log('Consumer');
 
       return <Text text={value} />;
     });
 
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Consumer', 0]);
+    assertLog(['Consumer', 0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally calling setState to some other arbitrary value before
       // setting it back to the current one. That way an update is scheduled,
       // but we'll bail out during render when nothing has changed.
@@ -340,7 +344,7 @@ describe('ReactLazyContextPropagation', () => {
     // bailout mechanism kicked in. Because we're testing the _lazy_ bailout
     // mechanism, update this test to foil the _eager_ bailout, somehow. Perhaps
     // by switching to useReducer.
-    expect(Scheduler).toHaveYielded(['Consumer']);
+    assertLog(['Consumer']);
     expect(root).toMatchRenderedOutput('0');
   });
 
@@ -384,24 +388,24 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
       await resolveText('B');
     });
-    expect(Scheduler).toHaveYielded(['B']);
+    assertLog(['B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -464,24 +468,24 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A', 'A']);
+    assertLog(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
       await resolveText('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BBB');
   });
 
@@ -525,24 +529,24 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
       await resolveText('B');
     });
-    expect(Scheduler).toHaveYielded(['B']);
+    assertLog(['B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -579,16 +583,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -640,16 +644,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A', 'A']);
+    assertLog(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B', 'B']);
+    assertLog(['B', 'B', 'B']);
     expect(root).toMatchRenderedOutput('BBB');
   });
 
@@ -682,16 +686,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -736,16 +740,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -799,22 +803,22 @@ describe('ReactLazyContextPropagation', () => {
 
     const root = ReactNoop.createRoot();
     await seedNextTextCache('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...']);
+    assertLog(['Suspend! [B]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
       await resolveText('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -860,16 +864,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 
@@ -909,16 +913,16 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
+    assertLog(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await act(async () => {
+    await act(() => {
       setContext('B');
     });
-    expect(Scheduler).toHaveYielded(['B', 'B']);
+    assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
   });
 });

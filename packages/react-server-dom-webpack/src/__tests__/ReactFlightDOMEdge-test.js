@@ -15,13 +15,17 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Don't wait before processing work on the server.
+// TODO: we can replace this with FlightServer.act().
+global.setTimeout = cb => cb();
+
 let clientExports;
 let webpackMap;
 let webpackModules;
 let React;
 let ReactDOMServer;
-let ReactServerDOMWriter;
-let ReactServerDOMReader;
+let ReactServerDOMServer;
+let ReactServerDOMClient;
 let use;
 
 describe('ReactFlightDOMEdge', () => {
@@ -33,8 +37,8 @@ describe('ReactFlightDOMEdge', () => {
     webpackModules = WebpackMock.webpackModules;
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.edge');
-    ReactServerDOMReader = require('react-server-dom-webpack/client.edge');
+    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     use = React.use;
   });
 
@@ -61,12 +65,12 @@ describe('ReactFlightDOMEdge', () => {
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.filepath]['*'].id;
+    const clientId = webpackMap[ClientComponentOnTheClient.$$id].id;
     delete webpackModules[clientId];
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetadata = webpackMap[ClientComponentOnTheServer.filepath]['*'];
+    const ssrMetadata = webpackMap[ClientComponentOnTheServer.$$id];
     const translationMap = {
       [clientId]: {
         '*': ssrMetadata,
@@ -77,11 +81,11 @@ describe('ReactFlightDOMEdge', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMWriter.renderToReadableStream(
+    const stream = ReactServerDOMServer.renderToReadableStream(
       <App />,
       webpackMap,
     );
-    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
       moduleMap: translationMap,
     });
 

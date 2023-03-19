@@ -113,7 +113,7 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = false;
+export const enableFizzExternalRuntime = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -134,9 +134,6 @@ export const disableModulePatternComponents = false;
 export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
-
-// Enables time slicing for updates that aren't wrapped in startTransition.
-export const enableSyncDefaultUpdates = true;
 
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 
@@ -172,10 +169,13 @@ export const enableTrustedTypesIntegration = false;
 // DOM properties
 export const disableInputAttributeSyncing = false;
 
+// Remove IE and MsApp specific workarounds for innerHTML
+export const disableIEWorkarounds = __EXPERIMENTAL__;
+
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = false;
+export const enableFilterEmptyStringAttributesDOM = __EXPERIMENTAL__;
 
 // Changes the behavior for rendering custom elements in both server rendering
 // and client rendering, mostly to allow JSX attributes to apply to the custom

@@ -220,9 +220,7 @@ export default class ReactFlightWebpackPlugin {
           }
 
           const clientManifest: {
-            [string]: {
-              [string]: {chunks: $FlowFixMe, id: string, name: string},
-            },
+            [string]: {chunks: $FlowFixMe, id: string, name: string},
           } = {};
           const ssrManifest: {
             [string]: {
@@ -248,38 +246,47 @@ export default class ReactFlightWebpackPlugin {
                 .getExportsInfo(module)
                 .getProvidedExports();
 
-              const clientExports: {
-                [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
-              } = {};
-
-              const ssrExports: {
-                [string]: {specifier: string, name: string},
-              } = {};
-
-              ssrManifest[id] = ssrExports;
-
-              ['', '*']
-                .concat(
-                  Array.isArray(moduleProvidedExports)
-                    ? moduleProvidedExports
-                    : [],
-                )
-                .forEach(function (name) {
-                  clientExports[name] = {
-                    id,
-                    chunks: chunkIds,
-                    name: name,
-                  };
-                  ssrExports[name] = {
-                    specifier: module.resource,
-                    name: name,
-                  };
-                });
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
-                clientManifest[href] = clientExports;
-                ssrManifest[href] = ssrExports;
+                const ssrExports: {
+                  [string]: {specifier: string, name: string},
+                } = {};
+
+                clientManifest[href] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '*',
+                };
+                ssrExports['*'] = {
+                  specifier: href,
+                  name: '*',
+                };
+                clientManifest[href + '#'] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '',
+                };
+                ssrExports[''] = {
+                  specifier: href,
+                  name: '',
+                };
+
+                if (Array.isArray(moduleProvidedExports)) {
+                  moduleProvidedExports.forEach(function (name) {
+                    clientManifest[href + '#' + name] = {
+                      id,
+                      chunks: chunkIds,
+                      name: name,
+                    };
+                    ssrExports[name] = {
+                      specifier: href,
+                      name: name,
+                    };
+                  });
+                }
+
+                ssrManifest[id] = ssrExports;
               }
             }
 

@@ -52,37 +52,67 @@ export function flushSyncCallbacks(): null {
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrance.
     isFlushingSyncQueue = true;
-    let i = 0;
+
+    // Set the event priority to discrete
+    // TODO: Is this necessary anymore? The only user code that runs in this
+    // queue is in the render or commit phases, which already set the
+    // event priority. Should be able to remove.
     const previousUpdatePriority = getCurrentUpdatePriority();
-    try {
-      const isSync = true;
-      const queue = syncQueue;
-      // TODO: Is this necessary anymore? The only user code that runs in this
-      // queue is in the render or commit phases.
-      setCurrentUpdatePriority(DiscreteEventPriority);
+    setCurrentUpdatePriority(DiscreteEventPriority);
+
+    let errors: Array<mixed> | null = null;
+
+    const queue = syncQueue;
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
+    for (let i = 0; i < queue.length; i++) {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      for (; i < queue.length; i++) {
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
-        let callback: SchedulerCallback = queue[i];
+      let callback: SchedulerCallback = queue[i];
+      try {
         do {
+          const isSync = true;
           // $FlowFixMe[incompatible-type] we bail out when we get a null
           callback = callback(isSync);
         } while (callback !== null);
+      } catch (error) {
+        // Collect errors so we can rethrow them at the end
+        if (errors === null) {
+          errors = [error];
+        } else {
+          errors.push(error);
+        }
       }
-      syncQueue = null;
-      includesLegacySyncCallbacks = false;
-    } catch (error) {
-      // If something throws, leave the remaining callbacks on the queue.
-      if (syncQueue !== null) {
-        syncQueue = syncQueue.slice(i + 1);
+    }
+
+    syncQueue = null;
+    includesLegacySyncCallbacks = false;
+    setCurrentUpdatePriority(previousUpdatePriority);
+    isFlushingSyncQueue = false;
+
+    if (errors !== null) {
+      if (errors.length > 1) {
+        if (typeof AggregateError === 'function') {
+          // eslint-disable-next-line no-undef
+          throw new AggregateError(errors);
+        } else {
+          for (let i = 1; i < errors.length; i++) {
+            scheduleCallback(
+              ImmediatePriority,
+              throwError.bind(null, errors[i]),
+            );
+          }
+          const firstError = errors[0];
+          throw firstError;
+        }
+      } else {
+        const error = errors[0];
+        throw error;
       }
-      // Resume flushing in the next tick
-      scheduleCallback(ImmediatePriority, flushSyncCallbacks);
-      throw error;
-    } finally {
-      setCurrentUpdatePriority(previousUpdatePriority);
-      isFlushingSyncQueue = false;
     }
   }
+
   return null;
+}
+
+function throwError(error: mixed) {
+  throw error;
 }

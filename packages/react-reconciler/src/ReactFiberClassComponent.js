@@ -85,11 +85,10 @@ let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
-let warnOnUndefinedDerivedState;
-let warnOnInvalidCallback;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
+let didWarnOnInvalidCallback;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = new Set<string>();
@@ -100,38 +99,7 @@ if (__DEV__) {
   didWarnAboutUndefinedDerivedState = new Set<string>();
   didWarnAboutContextTypeAndContextTypes = new Set<string>();
   didWarnAboutInvalidateContextType = new Set<string>();
-
-  const didWarnOnInvalidCallback = new Set<string>();
-
-  warnOnInvalidCallback = function (callback: mixed, callerName: string) {
-    if (callback === null || typeof callback === 'function') {
-      return;
-    }
-    const key = callerName + '_' + (callback: any);
-    if (!didWarnOnInvalidCallback.has(key)) {
-      didWarnOnInvalidCallback.add(key);
-      console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callerName,
-        callback,
-      );
-    }
-  };
-
-  warnOnUndefinedDerivedState = function (type: any, partialState: any) {
-    if (partialState === undefined) {
-      const componentName = getComponentNameFromType(type) || 'Component';
-      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
-        didWarnAboutUndefinedDerivedState.add(componentName);
-        console.error(
-          '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
-            'You have returned undefined.',
-          componentName,
-        );
-      }
-    }
-  };
+  didWarnOnInvalidCallback = new Set<string>();
 
   // This is so gross but it's at least non-critical and can be removed if
   // it causes problems. This is meant to give a nicer error message for
@@ -152,6 +120,40 @@ if (__DEV__) {
     },
   });
   Object.freeze(fakeInternalInstance);
+}
+
+function warnOnInvalidCallback(callback: mixed, callerName: string) {
+  if (__DEV__) {
+    if (callback === null || typeof callback === 'function') {
+      return;
+    }
+    const key = callerName + '_' + (callback: any);
+    if (!didWarnOnInvalidCallback.has(key)) {
+      didWarnOnInvalidCallback.add(key);
+      console.error(
+        '%s(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callerName,
+        callback,
+      );
+    }
+  }
+}
+
+function warnOnUndefinedDerivedState(type: any, partialState: any) {
+  if (__DEV__) {
+    if (partialState === undefined) {
+      const componentName = getComponentNameFromType(type) || 'Component';
+      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+        didWarnAboutUndefinedDerivedState.add(componentName);
+        console.error(
+          '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+            'You have returned undefined.',
+          componentName,
+        );
+      }
+    }
+  }
 }
 
 function applyDerivedStateFromProps(
@@ -198,10 +200,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -212,6 +213,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -231,10 +233,9 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -247,6 +248,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
@@ -267,10 +269,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -282,6 +283,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }

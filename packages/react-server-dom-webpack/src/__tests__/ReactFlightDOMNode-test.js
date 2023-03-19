@@ -18,8 +18,8 @@ let webpackMap;
 let webpackModules;
 let React;
 let ReactDOMServer;
-let ReactServerDOMWriter;
-let ReactServerDOMReader;
+let ReactServerDOMServer;
+let ReactServerDOMClient;
 let Stream;
 let use;
 
@@ -32,8 +32,8 @@ describe('ReactFlightDOMNode', () => {
     webpackModules = WebpackMock.webpackModules;
     React = require('react');
     ReactDOMServer = require('react-dom/server.node');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.node');
-    ReactServerDOMReader = require('react-server-dom-webpack/client.node');
+    ReactServerDOMServer = require('react-server-dom-webpack/server.node');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.node');
     Stream = require('stream');
     use = React.use;
   });
@@ -67,12 +67,12 @@ describe('ReactFlightDOMNode', () => {
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.filepath]['*'].id;
+    const clientId = webpackMap[ClientComponentOnTheClient.$$id].id;
     delete webpackModules[clientId];
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetadata = webpackMap[ClientComponentOnTheServer.filepath]['*'];
+    const ssrMetadata = webpackMap[ClientComponentOnTheServer.$$id];
     const translationMap = {
       [clientId]: {
         '*': ssrMetadata,
@@ -83,12 +83,12 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMWriter.renderToPipeableStream(
+    const stream = ReactServerDOMServer.renderToPipeableStream(
       <App />,
       webpackMap,
     );
     const readable = new Stream.PassThrough();
-    const response = ReactServerDOMReader.createFromNodeStream(
+    const response = ReactServerDOMClient.createFromNodeStream(
       readable,
       translationMap,
     );

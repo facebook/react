@@ -33,7 +33,6 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  enableSyncDefaultUpdates,
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
@@ -225,7 +224,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-const createFiber = function (
+function createFiber(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -233,7 +232,7 @@ const createFiber = function (
 ): Fiber {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
-};
+}
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
@@ -459,11 +458,9 @@ export function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
-      !enableSyncDefaultUpdates ||
       // Only for internal experiments.
-      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
+      allowConcurrentByDefault &&
+      concurrentUpdatesByDefaultOverride
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     }

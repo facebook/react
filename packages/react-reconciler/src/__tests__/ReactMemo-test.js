@@ -18,6 +18,8 @@ let ReactNoop;
 let Suspense;
 let Scheduler;
 let act;
+let waitForAll;
+let assertLog;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -27,12 +29,16 @@ describe('memo', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     ({Suspense} = React);
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    assertLog = InternalTestUtils.assertLog;
   });
 
   function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
+    Scheduler.log(props.text);
     return <span prop={props.text} />;
   }
 
@@ -52,7 +58,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -70,7 +76,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+    await expect(async () => await waitForAll([])).toErrorDev([
       'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
@@ -105,9 +111,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Loading...']);
-        await Promise.resolve();
-        expect(Scheduler).toFlushAndYield([0]);
+        await waitForAll(['Loading...', 0]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should bail out because props have not changed
@@ -116,7 +120,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should update because count prop changed
@@ -125,7 +129,7 @@ describe('memo', () => {
             <Counter count={1} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield([1]);
+        await waitForAll([1]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
       });
 
@@ -160,19 +164,17 @@ describe('memo', () => {
 
         const parent = React.createRef(null);
         ReactNoop.render(<Parent ref={parent} />);
-        expect(Scheduler).toFlushAndYield(['Loading...']);
-        await Promise.resolve();
-        expect(Scheduler).toFlushAndYield(['Count: 0']);
+        await waitForAll(['Loading...', 'Count: 0']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
         // Should bail out because props have not changed
         ReactNoop.render(<Parent ref={parent} />);
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
         // Should update because there was a context change
         parent.current.setState({count: 1});
-        expect(Scheduler).toFlushAndYield(['Count: 1']);
+        await waitForAll(['Count: 1']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
       });
 
@@ -207,7 +209,7 @@ describe('memo', () => {
           useEffect(() => {
             if (props !== prevProps.current) {
               prevProps.current = props;
-              Scheduler.unstable_yieldValue('Props changed [SimpleMemo]');
+              Scheduler.log('Props changed [SimpleMemo]');
             }
           }, [props]);
 
@@ -224,7 +226,7 @@ describe('memo', () => {
             useEffect(() => {
               if (props !== prevProps.current) {
                 prevProps.current = props;
-                Scheduler.unstable_yieldValue('Props changed [ComplexMemo]');
+                Scheduler.log('Props changed [ComplexMemo]');
               }
             }, [props]);
 
@@ -244,9 +246,7 @@ describe('memo', () => {
           useEffect(() => {
             if (props !== prevProps.current) {
               prevProps.current = props;
-              Scheduler.unstable_yieldValue(
-                'Props changed [MemoWithIndirection]',
-              );
+              Scheduler.log('Props changed [MemoWithIndirection]');
             }
           }, [props]);
 
@@ -270,20 +270,20 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="A" />);
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'SimpleMemo [A0]',
           'ComplexMemo [A0]',
           'MemoWithIndirection [A0]',
         ]);
 
         // Demonstrate what happens when the props change
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
         });
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'SimpleMemo [B0]',
           'ComplexMemo [B0]',
           'MemoWithIndirection [B0]',
@@ -294,35 +294,35 @@ describe('memo', () => {
 
         // Demonstrate what happens when the prop object changes but there's a
         // bailout because all the individual props are the same.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
         });
         // Nothing re-renders
-        expect(Scheduler).toHaveYielded([]);
+        assertLog([]);
 
         // Demonstrate what happens when the prop object changes, it bails out
         // because all the props are the same, but we still render the
         // children because there's a local update in the same batch.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
           setLocalUpdateOnChildren(1);
         });
         // The components should re-render with the new local state, but none
         // of the props objects should have changed
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'SimpleMemo [B1]',
           'ComplexMemo [B1]',
           'MemoWithIndirection [B1]',
         ]);
 
         // Do the same thing again. We should still reuse the props object.
-        await act(async () => {
+        await act(() => {
           root.render(<App prop="B" />);
           setLocalUpdateOnChildren(2);
         });
         // The components should re-render with the new local state, but none
         // of the props objects should have changed
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'SimpleMemo [B2]',
           'ComplexMemo [B2]',
           'MemoWithIndirection [B2]',
@@ -334,7 +334,7 @@ describe('memo', () => {
           return <Text text={count} />;
         }
         Counter = memo(Counter, (oldProps, newProps) => {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;
@@ -345,9 +345,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Loading...']);
-        await Promise.resolve();
-        expect(Scheduler).toFlushAndYield([0]);
+        await waitForAll(['Loading...', 0]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should bail out because props have not changed
@@ -356,7 +354,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Old count: 0, New count: 0']);
+        await waitForAll(['Old count: 0, New count: 0']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should update because count prop changed
@@ -365,7 +363,7 @@ describe('memo', () => {
             <Counter count={1} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Old count: 0, New count: 1', 1]);
+        await waitForAll(['Old count: 0, New count: 1', 1]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
       });
 
@@ -383,9 +381,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Loading...']);
-        await Promise.resolve();
-        expect(Scheduler).toFlushAndYield(['0!']);
+        await waitForAll(['Loading...', '0!']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="0!" />);
 
         // Should bail out because props have not changed
@@ -394,7 +390,7 @@ describe('memo', () => {
             <Counter count={0} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="0!" />);
 
         // Should update because count prop changed
@@ -403,7 +399,7 @@ describe('memo', () => {
             <Counter count={1} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['1!']);
+        await waitForAll(['1!']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="1!" />);
       });
 
@@ -436,10 +432,8 @@ describe('memo', () => {
             <Counter e={5} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield(['Loading...']);
-        await Promise.resolve();
-        expect(() => {
-          expect(Scheduler).toFlushAndYield([15]);
+        await expect(async () => {
+          await waitForAll(['Loading...', 15]);
         }).toErrorDev([
           'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
         ]);
@@ -451,7 +445,7 @@ describe('memo', () => {
             <Counter e={5} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
 
         // Should update because count prop changed
@@ -460,7 +454,7 @@ describe('memo', () => {
             <Counter e={10} />
           </Suspense>,
         );
-        expect(Scheduler).toFlushAndYield([20]);
+        await waitForAll([20]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={20} />);
       });
 
@@ -480,7 +474,7 @@ describe('memo', () => {
         );
       });
 
-      it('validates propTypes declared on the inner component', () => {
+      it('validates propTypes declared on the inner component', async () => {
         function FnInner(props) {
           return props.inner;
         }
@@ -488,23 +482,23 @@ describe('memo', () => {
         const Fn = React.memo(FnInner);
 
         // Mount
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(<Fn inner="2" />);
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev(
           'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
         );
 
         // Update
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(<Fn inner={false} />);
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev(
           'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
         );
       });
 
-      it('validates propTypes declared on the outer component', () => {
+      it('validates propTypes declared on the outer component', async () => {
         function FnInner(props) {
           return props.outer;
         }
@@ -512,25 +506,25 @@ describe('memo', () => {
         Fn.propTypes = {outer: PropTypes.number.isRequired};
 
         // Mount
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(<Fn outer="3" />);
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
         );
 
         // Update
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(<Fn outer={false} />);
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
         );
       });
 
-      it('validates nested propTypes declarations', () => {
+      it('validates nested propTypes declarations', async () => {
         function Inner(props) {
           return props.inner + props.middle + props.outer;
         }
@@ -549,20 +543,20 @@ describe('memo', () => {
             <Outer />
           </div>,
         );
-        expect(() => {
-          expect(Scheduler).toFlushWithoutYielding();
+        await expect(async () => {
+          await waitForAll([]);
         }).toErrorDev([
           'Inner: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
         ]);
 
         // Mount
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(
             <div>
               <Outer inner="2" middle="3" outer="4" />
             </div>,
           );
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev([
           'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
@@ -570,13 +564,13 @@ describe('memo', () => {
         ]);
 
         // Update
-        expect(() => {
+        await expect(async () => {
           ReactNoop.render(
             <div>
               <Outer inner={false} middle={false} outer={false} />
             </div>,
           );
-          expect(Scheduler).toFlushWithoutYielding();
+          await waitForAll([]);
         }).toErrorDev([
           'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
@@ -603,12 +597,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await act(async () => {
+        await act(() => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -639,12 +633,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await act(async () => {
+        await act(() => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await act(async () => {
+        await act(() => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);

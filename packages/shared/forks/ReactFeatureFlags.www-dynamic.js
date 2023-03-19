@@ -14,14 +14,13 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const disableInputAttributeSyncing = __VARIANT__;
-export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
+export const disableIEWorkarounds = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
-export const enableSyncDefaultUpdates = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
   __VARIANT__;

@@ -1,6 +1,5 @@
 'use server';
 
 export async function like() {
-  console.log('Like');
-  return 'Liked';
+  return new Promise((resolve, reject) => resolve('Liked'));
 }

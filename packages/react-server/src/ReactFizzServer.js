@@ -18,6 +18,7 @@ import type {
   ReactProviderType,
   OffscreenMode,
   Wakeable,
+  Thenable,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -70,7 +71,6 @@ import {
   writeHoistables,
   writePostamble,
   hoistResources,
-  hoistResourcesToRoot,
   prepareToRender,
   cleanupAfterRender,
   setCurrentlyRenderingBoundaryResourcesTarget,
@@ -103,6 +103,7 @@ import {
   currentResponseState,
   setCurrentResponseState,
   getThenableStateAfterSuspending,
+  unwrapThenable,
 } from './ReactFizzHooks';
 import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
@@ -124,6 +125,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
@@ -594,11 +596,6 @@ function renderSuspenseBoundary(
       contentRootSegment.textEmbedded,
     );
     contentRootSegment.status = COMPLETED;
-    if (enableFloat) {
-      if (newBoundary.pendingTasks === 0) {
-        hoistCompletedBoundaryResources(request, newBoundary);
-      }
-    }
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
       // This must have been the last segment we were waiting on. This boundary is now complete.
@@ -650,19 +647,6 @@ function renderSuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
-}
-
-function hoistCompletedBoundaryResources(
-  request: Request,
-  completedBoundary: SuspenseBoundary,
-): void {
-  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
-    // The Shell has not flushed yet. we can hoist Resources for this boundary
-    // all the way to the Root.
-    hoistResourcesToRoot(request.resources, completedBoundary.resources);
-  }
-  // We don't hoist if the root already flushed because late resources will be hoisted
-  // as boundaries flush
 }
 
 function renderBackupSuspenseBoundary(
@@ -1459,6 +1443,39 @@ function renderNodeDestructiveImpl(
       }
     }
 
+    // Usables are a valid React node type. When React encounters a Usable in
+    // a child position, it unwraps it using the same algorithm as `use`. For
+    // example, for promises, React will throw an exception to unwind the
+    // stack, then replay the component once the promise resolves.
+    //
+    // A difference from `use` is that React will keep unwrapping the value
+    // until it reaches a non-Usable type.
+    //
+    // e.g. Usable<Usable<Usable<T>>> should resolve to T
+    const maybeUsable: Object = node;
+    if (typeof maybeUsable.then === 'function') {
+      const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        unwrapThenable(thenable),
+      );
+    }
+
+    if (
+      maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
+      maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      const context: ReactContext<ReactNodeList> = (maybeUsable: any);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        readContext(context),
+      );
+    }
+
     // $FlowFixMe[method-unbinding]
     const childString = Object.prototype.toString.call(node);
 
@@ -1801,9 +1818,6 @@ function finishedTask(
         if (segment.status === COMPLETED) {
           queueCompletedSegment(boundary, segment);
         }
-      }
-      if (enableFloat) {
-        hoistCompletedBoundaryResources(request, boundary);
       }
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
@@ -2177,7 +2191,11 @@ function flushCompletedBoundary(
   completedSegments.length = 0;
 
   if (enableFloat) {
-    writeResourcesForBoundary(destination, boundary.resources);
+    writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState,
+    );
   }
 
   return writeCompletedBoundaryInstruction(
@@ -2221,7 +2239,11 @@ function flushPartialBoundary(
     // if there is no backpressure. Later before we complete the boundary we
     // will write resources regardless of backpressure before we emit the
     // completion instruction
-    return writeResourcesForBoundary(destination, boundary.resources);
+    return writeResourcesForBoundary(
+      destination,
+      boundary.resources,
+      request.responseState,
+    );
   } else {
     return true;
   }

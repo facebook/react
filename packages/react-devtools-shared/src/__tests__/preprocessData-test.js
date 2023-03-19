@@ -17,6 +17,8 @@ describe('Timeline profiler', () => {
   let ReactDOMClient;
   let Scheduler;
   let utils;
+  let assertLog;
+  let waitFor;
 
   describe('User Timing API', () => {
     let clearedMarks;
@@ -81,6 +83,10 @@ describe('Timeline profiler', () => {
       ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
+
+      const InternalTestUtils = require('internal-test-utils');
+      assertLog = InternalTestUtils.assertLog;
+      waitFor = InternalTestUtils.waitFor;
 
       setPerformanceMock =
         require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
@@ -1343,10 +1349,10 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
             function Yield({id, value}) {
-              Scheduler.unstable_yieldValue(`${id}:${value}`);
+              Scheduler.log(`${id}:${value}`);
               return null;
             }
 
@@ -1372,28 +1378,29 @@ describe('Timeline profiler', () => {
                   <Yield id="B" value={1} />
                 </>,
               );
-              expect(Scheduler).toFlushAndYieldThrough(['A:1']);
-
-              testMarks.push(...createUserTimingData(clearedMarks));
-              clearPendingMarks();
-
-              // Advance the clock some more to make the pending React update seem long.
-              startTime += 20000;
-
-              // Fake a long "click" event in the middle
-              // and schedule a sync update that will also flush the previous work.
-              testMarks.push(createNativeEventEntry('click', 25000));
-              ReactDOM.flushSync(() => {
-                root.render(
-                  <>
-                    <Yield id="A" value={2} />
-                    <Yield id="B" value={2} />
-                  </>,
-                );
-              });
             });
 
-            expect(Scheduler).toHaveYielded(['A:2', 'B:2']);
+            await waitFor(['A:1']);
+
+            testMarks.push(...createUserTimingData(clearedMarks));
+            clearPendingMarks();
+
+            // Advance the clock some more to make the pending React update seem long.
+            startTime += 20000;
+
+            // Fake a long "click" event in the middle
+            // and schedule a sync update that will also flush the previous work.
+            testMarks.push(createNativeEventEntry('click', 25000));
+            ReactDOM.flushSync(() => {
+              root.render(
+                <>
+                  <Yield id="A" value={2} />
+                  <Yield id="B" value={2} />
+                </>,
+              );
+            });
+
+            assertLog(['A:2', 'B:2']);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1404,13 +1411,11 @@ describe('Timeline profiler', () => {
         });
 
         describe('nested updates', () => {
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               React.useLayoutEffect(() => {
                 setDidMount(true);
               }, []);
@@ -1424,10 +1429,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1440,7 +1442,7 @@ describe('Timeline profiler', () => {
             expect(event.warning).toBe(null);
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1449,7 +1451,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1463,10 +1465,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1484,9 +1483,7 @@ describe('Timeline profiler', () => {
           it.skip('should warn about long nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               // Fake a long render
               startTime += 20000;
               React.useLayoutEffect(() => {
@@ -1504,10 +1501,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1551,7 +1545,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1567,10 +1561,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1604,20 +1595,18 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about transition updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);
               // eslint-disable-next-line no-unused-vars
               const [isPending, startTransition] = React.useTransition();
 
-              Scheduler.unstable_yieldValue(
-                `Component rendered with value ${value}`,
-              );
+              Scheduler.log(`Component rendered with value ${value}`);
 
               // Fake a long render
               if (value !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1639,7 +1628,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0',
               'Component rendered with value 0',
               'Component rendered with value 1',
@@ -1682,13 +1671,13 @@ describe('Timeline profiler', () => {
               const [value, setValue] = React.useState(0);
               const deferredValue = React.useDeferredValue(value);
 
-              Scheduler.unstable_yieldValue(
+              Scheduler.log(
                 `Component rendered with value ${value} and deferredValue ${deferredValue}`,
               );
 
               // Fake a long render
               if (deferredValue !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1708,7 +1697,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 1',
@@ -1792,10 +1781,10 @@ describe('Timeline profiler', () => {
         });
 
         describe('suspend during an update', () => {
-          // This also tests an edge case where the a component suspends while profiling
+          // This also tests an edge case where a component suspends while profiling
           // before the first commit is logged (so the lane-to-labels map will not yet exist).
-          // @reactVersion >= 18.0
-          it('should warn about suspending during an udpate', async () => {
+          // @reactVersion >= 18.2
+          it('should warn about suspending during an update', async () => {
             let promise = null;
             let resolvedValue = null;
             function readValue(value) {
@@ -1810,7 +1799,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }
@@ -1852,7 +1841,7 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about suspending during an transition', async () => {
             let promise = null;
             let resolvedValue = null;
@@ -1868,7 +1857,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }

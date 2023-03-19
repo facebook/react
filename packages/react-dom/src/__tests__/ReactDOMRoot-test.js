@@ -16,6 +16,9 @@ let ReactDOMServer = require('react-dom/server');
 let Scheduler = require('scheduler');
 let act;
 let useEffect;
+let assertLog;
+let waitFor;
+let waitForAll;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -28,14 +31,19 @@ describe('ReactDOMRoot', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useEffect = React.useEffect;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitFor = InternalTestUtils.waitFor;
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
-  it('renders children', () => {
+  it('renders children', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
   });
 
@@ -59,7 +67,7 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  it('warns if a callback parameter is provided to render', () => {
+  it('warns if a callback parameter is provided to render', async () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
     expect(() => root.render(<div>Hi</div>, callback)).toErrorDev(
@@ -67,7 +75,7 @@ describe('ReactDOMRoot', () => {
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(callback).not.toHaveBeenCalled();
   });
 
@@ -102,7 +110,7 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  it('warns if a callback parameter is provided to unmount', () => {
+  it('warns if a callback parameter is provided to unmount', async () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
@@ -111,17 +119,17 @@ describe('ReactDOMRoot', () => {
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('unmounts children', () => {
+  it('unmounts children', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('');
   });
 
@@ -145,7 +153,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     const container2 = document.createElement('div');
     container2.innerHTML = markup;
@@ -155,7 +163,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(() => Scheduler.unstable_flushAll()).toErrorDev('Extra attributes');
+    await expect(async () => await waitForAll([])).toErrorDev(
+      'Extra attributes',
+    );
   });
 
   it('clears existing children with legacy API', async () => {
@@ -175,7 +185,7 @@ describe('ReactDOMRoot', () => {
       </div>,
       container,
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('dc');
   });
 
@@ -188,7 +198,7 @@ describe('ReactDOMRoot', () => {
         <span>d</span>
       </div>,
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('cd');
     root.render(
       <div>
@@ -196,7 +206,7 @@ describe('ReactDOMRoot', () => {
         <span>c</span>
       </div>,
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('dc');
   });
 
@@ -206,10 +216,10 @@ describe('ReactDOMRoot', () => {
     }).toThrow('createRoot(...): Target container is not a DOM element.');
   });
 
-  it('warns when rendering with legacy API into createRoot() container', () => {
+  it('warns when rendering with legacy API into createRoot() container', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.render(<div>Bye</div>, container);
@@ -224,15 +234,15 @@ describe('ReactDOMRoot', () => {
       ],
       {withoutStack: true},
     );
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     // This works now but we could disallow it:
     expect(container.textContent).toEqual('Bye');
   });
 
-  it('warns when hydrating with legacy API into createRoot() container', () => {
+  it('warns when hydrating with legacy API into createRoot() container', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.hydrate(<div>Hi</div>, container);
@@ -252,16 +262,16 @@ describe('ReactDOMRoot', () => {
   it('callback passed to legacy hydrate() API', () => {
     container.innerHTML = '<div>Hi</div>';
     ReactDOM.hydrate(<div>Hi</div>, container, () => {
-      Scheduler.unstable_yieldValue('callback');
+      Scheduler.log('callback');
     });
     expect(container.textContent).toEqual('Hi');
-    expect(Scheduler).toHaveYielded(['callback']);
+    assertLog(['callback']);
   });
 
-  it('warns when unmounting with legacy API (no previous content)', () => {
+  it('warns when unmounting with legacy API (no previous content)', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     let unmounted = false;
     expect(() => {
@@ -277,20 +287,20 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
     expect(unmounted).toBe(false);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('');
   });
 
-  it('warns when unmounting with legacy API (has previous content)', () => {
+  it('warns when unmounting with legacy API (has previous content)', async () => {
     // Currently createRoot().render() doesn't clear this.
     container.appendChild(document.createElement('div'));
     // The rest is the same as test above.
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     let unmounted = false;
     expect(() => {
@@ -304,10 +314,10 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
     expect(unmounted).toBe(false);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toEqual('');
   });
 
@@ -334,10 +344,10 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  it('does not warn when creating second root after first one is unmounted', () => {
+  it('does not warn when creating second root after first one is unmounted', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.unmount();
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     ReactDOMClient.createRoot(container); // No warning
   });
 
@@ -362,7 +372,7 @@ describe('ReactDOMRoot', () => {
   it('warns if updating a root that has had its contents removed', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     container.innerHTML = '';
 
     if (gate(flags => flags.enableFloat || flags.enableHostSingletons)) {
@@ -388,11 +398,11 @@ describe('ReactDOMRoot', () => {
     });
 
     function Foo({value}) {
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
       return <div>{value}</div>;
     }
 
-    await act(async () => {
+    await act(() => {
       root.render(<Foo value="a" />);
     });
 
@@ -401,10 +411,10 @@ describe('ReactDOMRoot', () => {
     await act(async () => {
       root.render(<Foo value="b" />);
 
-      expect(Scheduler).toHaveYielded(['a']);
+      assertLog(['a']);
       expect(container.textContent).toEqual('a');
 
-      expect(Scheduler).toFlushAndYieldThrough(['b']);
+      await waitFor(['b']);
       if (gate(flags => flags.allowConcurrentByDefault)) {
         expect(container.textContent).toEqual('a');
       } else {
@@ -416,12 +426,12 @@ describe('ReactDOMRoot', () => {
 
   it('unmount is synchronous', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render('Hi');
     });
     expect(container.textContent).toEqual('Hi');
 
-    await act(async () => {
+    await act(() => {
       root.unmount();
       // Should have already unmounted
       expect(container.textContent).toEqual('');
@@ -430,7 +440,7 @@ describe('ReactDOMRoot', () => {
 
   it('throws if an unmounted root is updated', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render('Hi');
     });
     expect(container.textContent).toEqual('Hi');
@@ -457,7 +467,7 @@ describe('ReactDOMRoot', () => {
       return 'Hi';
     }
 
-    await act(async () => {
+    await act(() => {
       root1.render(<App step={1} />);
     });
     expect(container1.textContent).toEqual('Hi');

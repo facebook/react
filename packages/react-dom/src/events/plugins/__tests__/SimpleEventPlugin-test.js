@@ -18,6 +18,8 @@ describe('SimpleEventPlugin', function () {
 
   let onClick;
   let container;
+  let assertLog;
+  let waitForAll;
 
   function expectClickThru(element) {
     element.click();
@@ -42,6 +44,10 @@ describe('SimpleEventPlugin', function () {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitForAll = InternalTestUtils.waitForAll;
 
     onClick = jest.fn();
   });
@@ -194,7 +200,7 @@ describe('SimpleEventPlugin', function () {
           count: state.count + 1,
         }));
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(`didUpdate - Count: ${this.state.count}`);
+        Scheduler.log(`didUpdate - Count: ${this.state.count}`);
       }
       render() {
         return (
@@ -222,12 +228,12 @@ describe('SimpleEventPlugin', function () {
 
     ReactDOM.render(<Button />, container);
     expect(button.textContent).toEqual('Count: 0');
-    expect(Scheduler).toHaveYielded([]);
+    assertLog([]);
 
     click();
 
     // There should be exactly one update.
-    expect(Scheduler).toHaveYielded(['didUpdate - Count: 3']);
+    assertLog(['didUpdate - Count: 3']);
     expect(button.textContent).toEqual('Count: 3');
   });
 
@@ -240,7 +246,11 @@ describe('SimpleEventPlugin', function () {
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
-      act = require('jest-react').act;
+      const InternalTestUtils = require('internal-test-utils');
+      assertLog = InternalTestUtils.assertLog;
+      waitForAll = InternalTestUtils.waitForAll;
+
+      act = require('internal-test-utils').act;
     });
 
     it('flushes pending interactive work before exiting event handler', async () => {
@@ -253,12 +263,12 @@ describe('SimpleEventPlugin', function () {
         state = {disabled: false};
         onClick = () => {
           // Perform some side-effect
-          Scheduler.unstable_yieldValue('Side-effect');
+          Scheduler.log('Side-effect');
           // Disable the button
           this.setState({disabled: true});
         };
         render() {
-          Scheduler.unstable_yieldValue(
+          Scheduler.log(
             `render button: ${this.state.disabled ? 'disabled' : 'enabled'}`,
           );
           return (
@@ -274,10 +284,10 @@ describe('SimpleEventPlugin', function () {
       // Initial mount
       root.render(<Button />);
       // Should not have flushed yet because it's async
-      expect(Scheduler).toHaveYielded([]);
+      assertLog([]);
       expect(button).toBe(undefined);
       // Flush async work
-      expect(Scheduler).toFlushAndYield(['render button: enabled']);
+      await waitForAll(['render button: enabled']);
 
       function click() {
         const event = new MouseEvent('click', {
@@ -291,8 +301,8 @@ describe('SimpleEventPlugin', function () {
       }
 
       // Click the button to trigger the side-effect
-      await act(async () => click());
-      expect(Scheduler).toHaveYielded([
+      await act(() => click());
+      assertLog([
         // The handler fired
         'Side-effect',
         // The component re-rendered synchronously, even in concurrent mode.
@@ -301,7 +311,7 @@ describe('SimpleEventPlugin', function () {
 
       // Click the button again
       click();
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         // The event handler was removed from the button, so there's no effect.
       ]);
 
@@ -312,7 +322,7 @@ describe('SimpleEventPlugin', function () {
       click();
       click();
       click();
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
     });
 
     // NOTE: This test was written for the old behavior of discrete updates,
@@ -345,7 +355,7 @@ describe('SimpleEventPlugin', function () {
       // Should not have flushed yet because it's async
       expect(button).toBe(undefined);
       // Flush async work
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       expect(button.textContent).toEqual('Count: 0');
 
       function click() {
@@ -360,20 +370,20 @@ describe('SimpleEventPlugin', function () {
       }
 
       // Click the button a single time
-      await act(async () => click());
+      await act(() => click());
       // The counter should update synchronously, even in concurrent mode.
       expect(button.textContent).toEqual('Count: 1');
 
       // Click the button many more times
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
-      await act(async () => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
+      await act(() => click());
 
       // Flush the remaining work
-      Scheduler.unstable_flushAll();
+      await waitForAll([]);
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
     });

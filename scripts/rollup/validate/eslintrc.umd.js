@@ -37,6 +37,7 @@ module.exports = {
 
     TaskController: 'readonly',
     reportError: 'readonly',
+    AggregateError: 'readonly',
 
     // Flight
     Uint8Array: 'readonly',

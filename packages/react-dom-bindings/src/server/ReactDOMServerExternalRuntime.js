@@ -21,35 +21,37 @@ if (!window.$RC) {
   window.$RM = new Map();
 }
 
-if (document.readyState === 'loading') {
-  if (document.body != null) {
+if (document.body != null) {
+  if (document.readyState === 'loading') {
     installFizzInstrObserver(document.body);
-  } else {
-    // body may not exist yet if the fizz runtime is sent in <head>
-    // (e.g. as a preinit resource)
-    // $FlowFixMe[recursive-definition]
-    const domBodyObserver = new MutationObserver(() => {
-      // We expect the body node to be stable once parsed / created
-      if (document.body) {
-        if (document.readyState === 'loading') {
-          installFizzInstrObserver(document.body);
-        }
-        handleExistingNodes();
-        // We can call disconnect without takeRecord here,
-        // since we only expect a single document.body
-        domBodyObserver.disconnect();
-      }
-    });
-    // documentElement must already exist at this point
-    // $FlowFixMe[incompatible-call]
-    domBodyObserver.observe(document.documentElement, {childList: true});
   }
+  // $FlowFixMe[incompatible-cast]
+  handleExistingNodes((document.body /*: HTMLElement */));
+} else {
+  // Document must be loading -- body may not exist yet if the fizz external
+  // runtime is sent in <head> (e.g. as a preinit resource)
+  // $FlowFixMe[recursive-definition]
+  const domBodyObserver = new MutationObserver(() => {
+    // We expect the body node to be stable once parsed / created
+    if (document.body != null) {
+      if (document.readyState === 'loading') {
+        installFizzInstrObserver(document.body);
+      }
+      // $FlowFixMe[incompatible-cast]
+      handleExistingNodes((document.body /*: HTMLElement */));
+
+      // We can call disconnect without takeRecord here,
+      // since we only expect a single document.body
+      domBodyObserver.disconnect();
+    }
+  });
+  // documentElement must already exist at this point
+  // $FlowFixMe[incompatible-call]
+  domBodyObserver.observe(document.documentElement, {childList: true});
 }
 
-handleExistingNodes();
-
-function handleExistingNodes() {
-  const existingNodes = document.getElementsByTagName('template');
+function handleExistingNodes(target /*: HTMLElement */) {
+  const existingNodes = target.querySelectorAll('template');
   for (let i = 0; i < existingNodes.length; i++) {
     handleNode(existingNodes[i]);
   }
@@ -60,8 +62,8 @@ function installFizzInstrObserver(target /*: Node */) {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
-        if (addedNodes.item(j).parentNode) {
-          handleNode(addedNodes.item(j));
+        if (addedNodes[j].parentNode) {
+          handleNode(addedNodes[j]);
         }
       }
     }

@@ -20,7 +20,7 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
-import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
+import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
@@ -392,7 +392,7 @@ function executeDispatchesInOrder(event) {
  * @param {?object} event Synthetic event to be dispatched.
  * @private
  */
-const executeDispatchesAndRelease = function (event /* ReactSyntheticEvent */) {
+function executeDispatchesAndRelease(event /* ReactSyntheticEvent */) {
   if (event) {
     executeDispatchesInOrder(event);
 
@@ -400,7 +400,7 @@ const executeDispatchesAndRelease = function (event /* ReactSyntheticEvent */) {
       event.constructor.release(event);
     }
   }
-};
+}
 
 function isInteractive(tag) {
   return (

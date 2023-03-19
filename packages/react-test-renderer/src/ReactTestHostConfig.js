@@ -324,6 +324,18 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
 }
 
+export function shouldSuspendCommit(type: Type, props: Props): boolean {
+  return false;
+}
+
+export function startSuspendingCommit(): void {}
+
+export function suspendInstance(type: Type, props: Props): void {}
+
+export function waitForCommitToBeReady(): null {
+  return null;
+}
+
 export function prepareRendererToRender(container: Container): void {
   // noop
 }

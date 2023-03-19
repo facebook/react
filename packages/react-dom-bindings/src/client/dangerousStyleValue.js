@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {isUnitlessNumber} from './CSSProperty';
+import {isUnitlessNumber} from '../shared/CSSProperty';
 import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
 
 /**

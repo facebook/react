@@ -13,19 +13,20 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export type WebpackSSRMap = {
+export type SSRManifest = {
   [clientId: string]: {
     [clientExportName: string]: ClientReference<any>,
   },
 };
 
-export type BundlerConfig = WebpackSSRMap;
+export type ServerManifest = void;
+
+export type ServerReferenceId = string;
 
 export opaque type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
   name: string,
-  async: boolean,
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -35,11 +36,21 @@ export opaque type ClientReference<T> = {
 };
 
 export function resolveClientReference<T>(
-  bundlerConfig: BundlerConfig,
+  bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
   return resolvedModuleData;
+}
+
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  const idx = id.lastIndexOf('#');
+  const specifier = id.substr(0, idx);
+  const name = id.substr(idx + 1);
+  return {specifier, name};
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();

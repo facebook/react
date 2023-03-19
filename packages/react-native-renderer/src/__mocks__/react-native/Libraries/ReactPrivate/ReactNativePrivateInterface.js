@@ -44,7 +44,4 @@ module.exports = {
   get RawEventEmitter() {
     return require('./RawEventEmitter').default;
   },
-  get CustomEvent() {
-    return require('./CustomEvent').default;
-  },
 };

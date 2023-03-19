@@ -59,6 +59,7 @@ describe('ReactFunctionComponent', () => {
     expect(container.textContent).toBe('');
   });
 
+  // @gate !disableLegacyContext
   it('should pass context thru stateless component', () => {
     class Child extends React.Component {
       static contextTypes = {
@@ -305,6 +306,7 @@ describe('ReactFunctionComponent', () => {
 
   // This guards against a regression caused by clearing the current debug fiber.
   // https://github.com/facebook/react/issues/10831
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn when giving a function ref with context', () => {
     function Child() {
       return null;
@@ -375,6 +377,7 @@ describe('ReactFunctionComponent', () => {
     ]);
   });
 
+  // @gate !disableLegacyContext
   it('should receive context', () => {
     class Parent extends React.Component {
       static childContextTypes = {

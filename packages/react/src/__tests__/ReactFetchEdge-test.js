@@ -20,6 +20,10 @@ global.Response = require('node-fetch').Response;
 // Patch for Edge environments for global scope
 global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
+// Don't wait before processing work on the server.
+// TODO: we can replace this with FlightServer.act().
+global.setTimeout = cb => cb();
+
 let fetchCount = 0;
 async function fetchMock(resource, options) {
   fetchCount++;
