@@ -1,4 +1,4 @@
-name: Commit Artifacts for Facebook WWW
+name: Commit Artifacts for Facebook WWW and fbsource
 
 on:
   push:
@@ -108,7 +108,7 @@ jobs:
           sed -i -e 's/ @license React*//' \
             build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
-      - name: Move relevant files into compiled
+      - name: Move relevant files for React in www into compiled
         run: |
           mkdir -p ./compiled
           mkdir -p ./compiled/facebook-www
@@ -133,6 +133,26 @@ jobs:
             ./compiled/babel-plugin-react-refresh/index.js
 
           ls -R ./compiled
+      - name: Move relevant files for React in fbsource into compiled-rn
+        run: |
+          BASE_FOLDER='compiled-rn/facebook-fbsource/xplat/js'
+          mkdir -p ${BASE_FOLDER}/react-native-github/Libraries/Renderer/
+          mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/{scheduler,react,react-is,react-test-renderer}/
+
+          # Move React Native renderer 
+          mv build/react-native/implementations/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
+          mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
+          mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/scheduler/
+          mv build/facebook-react-native/react/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/
+          mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-is/
+          mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-test-renderer/
+
+          # Delete OSS renderer. OSS renderer is synced through internal script.
+          RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
+          rm $RENDERER_FOLDER/ReactFabric-{dev,prod,profiling}.js
+          rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
+
+          ls -R ./compiled
       - name: Add REVISION file
         run: |
           echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
@@ -140,8 +160,12 @@ jobs:
         with:
           name: compiled
           path: compiled/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
 
-  commit_artifacts:
+  commit_www_artifacts:
     needs: download_artifacts
     runs-on: ubuntu-latest
     steps:
@@ -175,3 +199,29 @@ jobs:
           commit_user_name: ${{ github.actor }}
           commit_user_email: ${{ github.actor }}@users.noreply.github.com
           create_branch: true
+
+  commit_fbsource_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          repository: facebook/react-fbsource-import
+          token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
+      - name: Ensure clean directory
+        run: rm -rf compiled-rn
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
+      - run: git status -u
+      - name: Commit changes to branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.head_commit.message }}
+
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com
