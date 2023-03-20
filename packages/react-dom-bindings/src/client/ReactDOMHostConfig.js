@@ -70,7 +70,6 @@ import {
   DOCUMENT_TYPE_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from './HTMLNodeType';
-import dangerousStyleValue from './dangerousStyleValue';
 
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -750,7 +749,12 @@ export function unhideInstance(instance: Instance, props: Props): void {
     styleProp.hasOwnProperty('display')
       ? styleProp.display
       : null;
-  instance.style.display = dangerousStyleValue('display', display);
+  instance.style.display =
+    display == null || typeof display === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + display).trim();
 }
 
 export function unhideTextInstance(
