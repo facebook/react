@@ -479,7 +479,7 @@ export type InstructionValue =
   | {
       kind: "NewExpression";
       callee: Place;
-      args: Array<Place>;
+      args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
   | {

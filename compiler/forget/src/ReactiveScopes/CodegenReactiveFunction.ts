@@ -594,7 +594,7 @@ function codegenInstructionValue(
     }
     case "NewExpression": {
       const callee = codegenPlace(cx, instrValue.callee);
-      const args = instrValue.args.map((arg) => codegenPlace(cx, arg));
+      const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = t.newExpression(callee, args);
       break;
     }

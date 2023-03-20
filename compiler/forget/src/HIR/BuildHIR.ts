@@ -905,18 +905,7 @@ function lowerExpression(
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
       const callee = lowerExpressionToTemporary(builder, calleePath);
-      let args: Place[] = [];
-      for (const argPath of expr.get("arguments")) {
-        if (!argPath.isExpression()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in NewExpression`,
-            severity: ErrorSeverity.Todo,
-            nodePath: argPath,
-          });
-          continue;
-        }
-        args.push(lowerExpressionToTemporary(builder, argPath));
-      }
+      const args = lowerArguments(builder, expr.get("arguments"));
 
       return {
         kind: "NewExpression",
@@ -938,26 +927,7 @@ function lowerExpression(
       }
       if (calleePath.isMemberExpression()) {
         const { object, property } = lowerMemberExpression(builder, calleePath);
-        let args: Array<Place | SpreadPattern> = [];
-        for (const argPath of expr.get("arguments")) {
-          if (argPath.isSpreadElement()) {
-            args.push({
-              kind: "Spread",
-              place: lowerExpressionToTemporary(
-                builder,
-                argPath.get("argument")
-              ),
-            });
-          } else if (argPath.isExpression()) {
-            args.push(lowerExpressionToTemporary(builder, argPath));
-          } else {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
-              severity: ErrorSeverity.Todo,
-              nodePath: argPath,
-            });
-          }
-        }
+        const args = lowerArguments(builder, expr.get("arguments"));
         if (typeof property === "string") {
           return {
             kind: "PropertyCall",
@@ -977,27 +947,7 @@ function lowerExpression(
         }
       } else {
         const callee = lowerExpressionToTemporary(builder, calleePath);
-        let args: Array<Place | SpreadPattern> = [];
-        for (const argPath of expr.get("arguments")) {
-          if (argPath.isSpreadElement()) {
-            args.push({
-              kind: "Spread",
-              place: lowerExpressionToTemporary(
-                builder,
-                argPath.get("argument")
-              ),
-            });
-          } else if (argPath.isExpression()) {
-            args.push(lowerExpressionToTemporary(builder, argPath));
-          } else {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
-              severity: ErrorSeverity.Todo,
-              nodePath: argPath,
-            });
-            continue;
-          }
-        }
+        const args = lowerArguments(builder, expr.get("arguments"));
         return {
           kind: "CallExpression",
           callee,
@@ -1693,6 +1643,37 @@ function lowerExpression(
       return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
     }
   }
+}
+
+function lowerArguments(
+  builder: HIRBuilder,
+  expr: Array<
+    NodePath<
+      | t.Expression
+      | t.SpreadElement
+      | t.JSXNamespacedName
+      | t.ArgumentPlaceholder
+    >
+  >
+): Array<Place | SpreadPattern> {
+  let args: Array<Place | SpreadPattern> = [];
+  for (const argPath of expr) {
+    if (argPath.isSpreadElement()) {
+      args.push({
+        kind: "Spread",
+        place: lowerExpressionToTemporary(builder, argPath.get("argument")),
+      });
+    } else if (argPath.isExpression()) {
+      args.push(lowerExpressionToTemporary(builder, argPath));
+    } else {
+      builder.errors.push({
+        reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
+        severity: ErrorSeverity.Todo,
+        nodePath: argPath,
+      });
+    }
+  }
+  return args;
 }
 
 function lowerMemberExpression(

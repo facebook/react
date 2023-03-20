@@ -256,6 +256,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       } ${printPlace(instrValue.right)}`;
       break;
     }
+    case "NewExpression": {
+      value = `New ${printPlace(instrValue.callee)}(${instrValue.args
+        .map((arg) => printPattern(arg))
+        .join(", ")})`;
+      break;
+    }
     case "CallExpression": {
       value = `Call ${printPlace(instrValue.callee)}(${instrValue.args
         .map((arg) => printPattern(arg))
@@ -287,7 +293,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const propItems = [];
       for (const attribute of instrValue.props) {
         if (attribute.kind === "JsxAttribute") {
-          propItems.push(`${attribute.name}={${printPlace(attribute.place)}}`);
+          propItems.push(
+            `${attribute.name}={${
+              attribute.place !== null ? printPlace(attribute.place) : "<empty>"
+            }}`
+          );
         } else {
           propItems.push(`...${printPlace(attribute.argument)}`);
         }
@@ -311,12 +321,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `JsxFragment [${instrValue.children
         .map((child) => printPlace(child))
         .join(", ")}]`;
-      break;
-    }
-    case "NewExpression": {
-      value = `New ${printPlace(instrValue.callee)}(${instrValue.args
-        .map((arg) => printPlace(arg))
-        .join(", ")})`;
       break;
     }
     case "UnsupportedNode": {
