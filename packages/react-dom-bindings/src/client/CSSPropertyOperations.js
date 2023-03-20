@@ -30,20 +30,26 @@ export function createDangerousStringForStyles(styles) {
         continue;
       }
       const styleValue = styles[styleName];
-      if (styleValue != null) {
-        const isCustomProperty = styleName.indexOf('--') === 0;
-        serialized +=
-          delimiter +
-          (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
-          ':';
-        serialized += dangerousStyleValue(
-          styleName,
-          styleValue,
-          isCustomProperty,
-        );
-
-        delimiter = ';';
+      if (
+        styleValue == null ||
+        typeof styleValue === 'boolean' ||
+        styleValue === ''
+      ) {
+        // TODO: We used to set empty string as a style with an empty value. Does that ever make sense?
+        continue;
       }
+      const isCustomProperty = styleName.indexOf('--') === 0;
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
+        ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
     }
     return serialized || null;
   }
