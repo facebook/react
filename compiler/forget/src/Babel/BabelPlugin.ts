@@ -43,16 +43,6 @@ export default function ReactForgetBabelPlugin(
     fn: BabelCore.NodePath<t.FunctionDeclaration>,
     pass: BabelPluginPass
   ): void {
-    if (pass.opts.enableOnlyOnUseForgetDirective) {
-      if (!hasUseForgetDirective(fn.node.body.directives)) {
-        return;
-      }
-    }
-
-    if (fn.scope.getProgramParent() !== fn.scope.parent) {
-      return;
-    }
-
     hasForgetCompiledCode = true;
     const compiled = compile(fn, pass.opts.environment);
 
@@ -84,6 +74,10 @@ export default function ReactForgetBabelPlugin(
       fn: BabelCore.NodePath<t.FunctionDeclaration>,
       pass: BabelPluginPass
     ): void {
+      if (!shouldCompile(fn, pass)) {
+        return;
+      }
+
       visitFn(fn, pass);
     },
   };
@@ -118,6 +112,27 @@ export default function ReactForgetBabelPlugin(
       },
     },
   };
+}
+
+function shouldCompile(
+  fn: BabelCore.NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
+  pass: BabelPluginPass
+): boolean {
+  if (pass.opts.enableOnlyOnUseForgetDirective) {
+    const body = fn.get("body");
+    if (!body.isBlockStatement()) {
+      return false;
+    }
+    if (!hasUseForgetDirective(body.node.directives)) {
+      return false;
+    }
+  }
+
+  if (fn.scope.getProgramParent() !== fn.scope.parent) {
+    return false;
+  }
+
+  return true;
 }
 
 function buildGatingTest(
