@@ -19,6 +19,7 @@ let ReactFeatureFlags;
 let Suspense;
 let SuspenseList;
 let Offscreen;
+let useSyncExternalStore;
 let act;
 let IdleEventPriority;
 let waitForAll;
@@ -113,6 +114,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
     Offscreen = React.unstable_Offscreen;
+    useSyncExternalStore = React.useSyncExternalStore;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
@@ -480,6 +482,26 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   it('recovers with client render when server rendered additional nodes at suspense root', async () => {
+    function CheckIfHydrating({children}) {
+      // This is a trick to check whether we're hydrating or not, since React
+      // doesn't expose that information currently except
+      // via useSyncExternalStore.
+      let serverOrClient = '(unknown)';
+      useSyncExternalStore(
+        () => {},
+        () => {
+          serverOrClient = 'Client rendered';
+          return null;
+        },
+        () => {
+          serverOrClient = 'Server rendered';
+          return null;
+        },
+      );
+      Scheduler.log(serverOrClient);
+      return null;
+    }
+
     const ref = React.createRef();
     function App({hasB}) {
       return (
@@ -487,6 +509,7 @@ describe('ReactDOMServerPartialHydration', () => {
           <Suspense fallback="Loading...">
             <span ref={ref}>A</span>
             {hasB ? <span>B</span> : null}
+            <CheckIfHydrating />
           </Suspense>
           <div>Sibling</div>
         </div>
@@ -494,6 +517,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
+    assertLog(['Server rendered']);
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
@@ -514,12 +538,12 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
 
-    jest.runAllTimers();
-
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
 
     assertLog([
+      'Server rendered',
+      'Client rendered',
       'There was an error while hydrating this Suspense boundary. ' +
         'Switched to client rendering.',
     ]);
