@@ -71,8 +71,11 @@ describe('ReactFiberHostContext', () => {
         return DefaultEventPriority;
       },
       requestPostPaintCallback: function () {},
-      shouldSuspendCommit(type, props) {
+      maySuspendCommit(type, props) {
         return false;
+      },
+      preloadInstance(type, props) {
+        return true;
       },
       startSuspendingCommit() {},
       suspendInstance(type, props) {},
