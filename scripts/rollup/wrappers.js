@@ -354,7 +354,10 @@ if (process.env.NODE_ENV !== "production") {
 ${source}
     return exports;
   };
-}`;
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+}
+`;
   },
 
   /***************** NODE_PROD (reconciler only) *****************/
@@ -366,10 +369,14 @@ ${source}
 ${license}
  */
 module.exports = function $$$reconciler($$$hostConfig) {
+    
     var exports = {};
 ${source}
     return exports;
-};`;
+};
+module.exports.default = module.exports;
+Object.defineProperty(module.exports, "__esModule", { value: true });
+`;
   },
 
   /***************** NODE_PROFILING (reconciler only) *****************/
@@ -384,7 +391,10 @@ module.exports = function $$$reconciler($$$hostConfig) {
     var exports = {};
 ${source}
     return exports;
-};`;
+};
+module.exports.default = module.exports;
+Object.defineProperty(module.exports, "__esModule", { value: true });
+`;
   },
 };
 
