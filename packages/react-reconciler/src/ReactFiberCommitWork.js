@@ -719,13 +719,16 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 function commitUseEffectEventMount(finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null =
     (finishedWork.updateQueue: any);
-  const eventPayloads = updateQueue !== null ? updateQueue.events : null;
-  if (eventPayloads !== null) {
-    for (let ii = 0; ii < eventPayloads.length; ii++) {
-      const {ref, nextImpl} = eventPayloads[ii];
-      ref.impl = nextImpl;
-    }
+  if (updateQueue !== null) {
+    const eventPayloads = updateQueue.events;
     updateQueue.events = null;
+
+    if (eventPayloads !== null) {
+      for (let ii = 0; ii < eventPayloads.length; ii++) {
+        const {ref, nextImpl} = eventPayloads[ii];
+        ref.impl = nextImpl;
+      }
+    }
   }
 }
 
