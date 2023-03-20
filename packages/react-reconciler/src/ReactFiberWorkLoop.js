@@ -209,7 +209,7 @@ import {
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
-  recursivelyAccumulateSuspenseyCommit,
+  accumulateSuspenseyCommit,
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
@@ -1444,7 +1444,7 @@ function commitRootWhenReady(
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
-    recursivelyAccumulateSuspenseyCommit(finishedWork);
+    accumulateSuspenseyCommit(finishedWork);
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.

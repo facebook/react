@@ -2676,6 +2676,65 @@ body {
     );
   });
 
+  it('can delay commit until css resources load', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link
+            rel="stylesheet"
+            href="foo"
+            precedence="default"
+            data-suspensey={true}
+          />
+          <div>hello</div>
+        </>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual(
+      <link rel="preload" as="style" href="foo" />,
+    );
+
+    const preload = document.querySelector('link[rel="preload"][as="style"]');
+    const loadEvent = document.createEvent('Events');
+    loadEvent.initEvent('load', true, true);
+    preload.dispatchEvent(loadEvent);
+
+    // We expect that the stylesheet is inserted now but the commit has not happened yet.
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link
+        rel="stylesheet"
+        href="foo"
+        data-precedence="default"
+        data-suspensey="true"
+      />,
+      <link rel="preload" as="style" href="foo" />,
+    ]);
+
+    const stylesheet = document.querySelector(
+      'link[rel="stylesheet"][data-precedence]',
+    );
+    const loadEvent2 = document.createEvent('Events');
+    loadEvent2.initEvent('load', true, true);
+    stylesheet.dispatchEvent(loadEvent2);
+
+    // We expect that the commit finishes synchronously after the stylesheet loads.
+    expect(getMeaningfulChildren(container)).toEqual(<div>hello</div>);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link
+        rel="stylesheet"
+        href="foo"
+        data-precedence="default"
+        data-suspensey="true"
+      />,
+      <link rel="preload" as="style" href="foo" />,
+    ]);
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {

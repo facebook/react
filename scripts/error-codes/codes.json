@@ -459,5 +459,6 @@
   "471": "BigInt (%s) is not yet supported as an argument to a Server Function.",
   "472": "Type %s is not supported as an argument to a Server Function.",
   "473": "React doesn't accept base64 encoded file uploads because we don't except form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it.",
-  "474": "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
+  "474": "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React.",
+  "475": "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug."
 }

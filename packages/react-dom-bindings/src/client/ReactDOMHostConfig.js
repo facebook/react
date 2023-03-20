@@ -1620,23 +1620,6 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
   });
 }
 
-export function maySuspendCommit(type: Type, props: Props): boolean {
-  return false;
-}
-
-export function preloadInstance(type: Type, props: Props): boolean {
-  // Return true to indicate it's already loaded
-  return true;
-}
-
-export function startSuspendingCommit(): void {}
-
-export function suspendInstance(type: Type, props: Props): void {}
-
-export function waitForCommitToBeReady(): null {
-  return null;
-}
-
 // -------------------
 //     Singletons
 // -------------------
@@ -1791,17 +1774,33 @@ export const supportsResources = true;
 type ResourceType = 'style' | 'font' | 'script';
 
 type HoistableTagType = 'link' | 'meta' | 'title';
-type TResource<T: 'stylesheet' | 'style' | 'script' | 'void'> = {
+type TResource<
+  T: 'stylesheet' | 'style' | 'script' | 'void',
+  S: null | {...},
+> = {
   type: T,
   instance: null | Instance,
   count: number,
+  state: S,
 };
-type StylesheetResource = TResource<'stylesheet'>;
-type StyleTagResource = TResource<'style'>;
+type StylesheetResource = TResource<'stylesheet', StylesheetState>;
+type StyleTagResource = TResource<'style', null>;
 type StyleResource = StyleTagResource | StylesheetResource;
-type ScriptResource = TResource<'script'>;
-type VoidResource = TResource<'void'>;
+type ScriptResource = TResource<'script', null>;
+type VoidResource = TResource<'void', null>;
 type Resource = StyleResource | ScriptResource | VoidResource;
+
+type LoadingState = number;
+const NotLoaded = /*       */ 0b00;
+const Loaded = /*          */ 0b01;
+const Errored = /*         */ 0b10;
+const Settled = /*         */ 0b11;
+
+type StylesheetState = {
+  loading: LoadingState,
+  preload: null | HTMLLinkElement,
+  temp_suspensey: boolean,
+};
 
 type StyleTagProps = {
   'data-href': string,
@@ -2133,11 +2132,19 @@ function preinit(href: string, options: PreinitOptions) {
           return;
         }
 
+        const state = {
+          loading: NotLoaded,
+          preload: null,
+          temp_suspensey: false,
+        };
+
         // Attempt to hydrate instance from DOM
         let instance: null | Instance = resourceRoot.querySelector(
           getStylesheetSelectorFromKey(key),
         );
-        if (!instance) {
+        if (instance) {
+          state.loading = Loaded;
+        } else {
           // Construct a new instance and insert it
           const stylesheetProps = stylesheetPropsFromPreinitOptions(
             href,
@@ -2149,9 +2156,21 @@ function preinit(href: string, options: PreinitOptions) {
             adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
           }
           const ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = ownerDocument.createElement('link');
-          markNodeAsHoistable(instance);
-          setInitialProperties(instance, 'link', stylesheetProps);
+          const link = (instance = ownerDocument.createElement('link'));
+          markNodeAsHoistable(link);
+          setInitialProperties(link, 'link', stylesheetProps);
+
+          (link: any)._p = new Promise((resolve, reject) => {
+            link.onload = resolve;
+            link.onerror = reject;
+          });
+          link.addEventListener('load', () => {
+            state.loading |= Loaded;
+          });
+          link.addEventListener('error', () => {
+            state.loading |= Errored;
+          });
+
           insertStylesheet(instance, precedence, resourceRoot);
         }
 
@@ -2160,6 +2179,7 @@ function preinit(href: string, options: PreinitOptions) {
           type: 'stylesheet',
           instance,
           count: 1,
+          state,
         };
         styles.set(key, resource);
         return;
@@ -2202,6 +2222,7 @@ function preinit(href: string, options: PreinitOptions) {
           type: 'script',
           instance,
           count: 1,
+          state: null,
         };
         scripts.set(key, resource);
         return;
@@ -2292,6 +2313,7 @@ export function getResource(
             type: 'style',
             instance: null,
             count: 0,
+            state: null,
           };
           styles.set(key, resource);
         }
@@ -2301,6 +2323,7 @@ export function getResource(
         type: 'void',
         instance: null,
         count: 0,
+        state: null,
       };
     }
     case 'link': {
@@ -2322,6 +2345,11 @@ export function getResource(
             type: 'stylesheet',
             instance: null,
             count: 0,
+            state: {
+              loading: NotLoaded,
+              preload: null,
+              temp_suspensey: pendingProps['data-suspensey'] === true,
+            },
           };
           styles.set(key, resource);
           if (!preloadPropsMap.has(key)) {
@@ -2329,6 +2357,7 @@ export function getResource(
               ownerDocument,
               key,
               preloadPropsFromStylesheet(qualifiedProps),
+              resource.state,
             );
           }
         }
@@ -2348,6 +2377,7 @@ export function getResource(
             type: 'script',
             instance: null,
             count: 0,
+            state: null,
           };
           scripts.set(key, resource);
         }
@@ -2357,6 +2387,7 @@ export function getResource(
         type: 'void',
         instance: null,
         count: 0,
+        state: null,
       };
     }
     default: {
@@ -2406,11 +2437,11 @@ function stylesheetPropsFromRawProps(
     precedence: null,
   };
 }
-
 function preloadStylesheet(
   ownerDocument: Document,
   key: string,
   preloadProps: PreloadProps,
+  state: StylesheetState,
 ) {
   preloadPropsMap.set(key, preloadProps);
 
@@ -2418,11 +2449,18 @@ function preloadStylesheet(
     // There is no matching stylesheet instance in the Document.
     // We will insert a preload now to kick off loading because
     // we expect this stylesheet to commit
-    if (
-      null ===
-      ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
-    ) {
+    const preloadEl = ownerDocument.querySelector(
+      getPreloadStylesheetSelectorFromKey(key),
+    );
+    if (preloadEl) {
+      // If we find a preload already it was SSR'd and we won't have an actual
+      // loading state to track. For now we will just assume it is loaded
+      state.loading = Loaded;
+    } else {
       const instance = ownerDocument.createElement('link');
+      state.preload = instance;
+      instance.addEventListener('load', () => (state.loading |= Loaded));
+      instance.addEventListener('error', () => (state.loading |= Errored));
       setInitialProperties(instance, 'link', preloadProps);
       markNodeAsHoistable(instance);
       (ownerDocument.head: any).appendChild(instance);
@@ -2518,10 +2556,7 @@ export function acquireResource(
         (linkInstance: any)._p = new Promise((resolve, reject) => {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
-        }).then(
-          () => ((linkInstance: any)._p.s = 'l'),
-          () => ((linkInstance: any)._p.s = 'e'),
-        );
+        });
         setInitialProperties(instance, 'link', stylesheetProps);
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
@@ -2580,7 +2615,7 @@ export function releaseResource(resource: Resource): void {
 }
 
 function insertStylesheet(
-  instance: Instance,
+  instance: HTMLElement,
   precedence: string,
   root: HoistableRoot,
 ): void {
@@ -2598,6 +2633,7 @@ function insertStylesheet(
       break;
     }
   }
+
   if (prior) {
     // We get the prior from the document so we know it is in the tree.
     // We also know that links can't be the topmost Node so the parentNode
@@ -3009,4 +3045,258 @@ export function isHostHoistableType(
     }
   }
   return false;
+}
+
+export function maySuspendCommit(type: Type, props: Props): boolean {
+  return false;
+}
+
+export function mayResourceSuspendCommit(resource: Resource): boolean {
+  return (
+    resource.type === 'stylesheet' && resource.state.temp_suspensey === true
+  );
+}
+
+export function preloadInstance(type: Type, props: Props): boolean {
+  // Return true to indicate it's already loaded
+  return true;
+}
+
+export function preloadResource(resource: Resource): boolean {
+  if (
+    resource.type === 'stylesheet' &&
+    (resource.state.loading & Settled) === NotLoaded
+  ) {
+    // we have not finished loading the underlying stylesheet yet.
+    return false;
+  }
+  // Return true to indicate it's already loaded
+  return true;
+}
+
+type SuspendedState = {
+  stylesheets: Map<StylesheetResource, HoistableRoot>,
+  preloadCount: number,
+  count: number,
+  unsuspend: null | (() => void),
+};
+let suspendedState: null | SuspendedState = null;
+
+export function startSuspendingCommit(): void {
+  suspendedState = {
+    stylesheets: new Map(),
+    preloadCount: 0,
+    count: 0,
+    unsuspend: null,
+  };
+}
+
+export function suspendInstance(type: Type, props: Props): void {
+  return;
+}
+
+function onPreloadComplete(this: SuspendedState) {
+  this.count--;
+  this.preloadCount--;
+  if (this.preloadCount === 0) {
+    insertSuspendedStylesheets(this, this.stylesheets);
+  }
+  unsuspendIfUnblocked(this);
+}
+
+export function suspendResource(
+  hoistableRoot: HoistableRoot,
+  resource: Resource,
+  props: any,
+): void {
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  if (resource.type === 'stylesheet' && resource.instance === null) {
+    const qualifiedProps: StylesheetQualifyingProps = props;
+    const key = getStyleKey(qualifiedProps.href);
+
+    // Attempt to hydrate instance from DOM
+    let instance: null | Instance = hoistableRoot.querySelector(
+      getStylesheetSelectorFromKey(key),
+    );
+    if (instance) {
+      // If this instance has a loading state it came from the Fizz runtime.
+      // If there is not loading state it is assumed to have been server rendered
+      // as part of the preamble and therefore synchronously loaded. It could have
+      // errored however which we still do not yet have a means to detect. For now
+      // we assume it is loaded.
+      const maybeLoadingState: ?Promise<mixed> = (instance: any)._p;
+      if (
+        maybeLoadingState !== null &&
+        typeof maybeLoadingState === 'object' &&
+        // $FlowFixMe[method-unbinding]
+        typeof maybeLoadingState.then === 'function'
+      ) {
+        const loadingState = maybeLoadingState;
+        state.count++;
+        const ping = onUnsuspend.bind(state);
+        loadingState.then(ping, ping);
+      }
+      resource.instance = instance;
+      markNodeAsHoistable(instance);
+      return;
+    }
+
+    const ownerDocument = getDocumentFromRoot(hoistableRoot);
+
+    const stylesheetProps = stylesheetPropsFromRawProps(props);
+    const preloadProps = preloadPropsMap.get(key);
+    if (preloadProps) {
+      adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+    }
+
+    // Construct and insert a new instance
+    instance = ownerDocument.createElement('link');
+    markNodeAsHoistable(instance);
+    const linkInstance: HTMLLinkElement = (instance: any);
+    (linkInstance: any)._p = new Promise((resolve, reject) => {
+      linkInstance.onload = resolve;
+      linkInstance.onerror = reject;
+    });
+    setInitialProperties(instance, 'link', stylesheetProps);
+    resource.instance = instance;
+    state.stylesheets.set(resource, hoistableRoot);
+
+    const preloadEl = resource.state.preload;
+    if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
+      state.count++;
+      state.preloadCount++;
+      const ping = onPreloadComplete.bind(state);
+      preloadEl.addEventListener('load', ping);
+      preloadEl.addEventListener('error', ping);
+    }
+  }
+}
+
+export function waitForCommitToBeReady(): null | (Function => Function) {
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+
+  const state = suspendedState;
+
+  if (state.stylesheets.size > 0 && state.count === 0) {
+    // We are not currently blocked but we have not inserted all stylesheets.
+    insertSuspendedStylesheets(state, state.stylesheets);
+  }
+
+  // We need to check the count again because the inserted stylesheets may have led to new
+  // tasks to wait on.
+  if (state.count > 0) {
+    return commit => {
+      state.unsuspend = commit;
+      // In theory we don't need to bind this because we should always cancel
+      // before starting a new suspendedState
+      return cancelSuspend;
+    };
+  }
+  return null;
+}
+
+function cancelSuspend() {
+  // We expect cancelSuspend to be called before calling `startSuspendingCommit` againt.
+  // If this constraint is violated this will not work right and will need to be bound instead
+  const state: SuspendedState = (suspendedState: any);
+  state.unsuspend = null;
+}
+
+function onUnsuspend(this: SuspendedState) {
+  this.count--;
+  unsuspendIfUnblocked(this);
+}
+
+function unsuspendIfUnblocked(state: SuspendedState) {
+  if (state.count === 0 && state.unsuspend !== null) {
+    const unsuspend = state.unsuspend;
+    state.unsuspend = null;
+    unsuspend();
+  }
+}
+
+// This is typecast to non-null because it will always be set before read.
+// it is important that this not be used except when the stack guarantees it exists.
+// Currentlyt his is only during insertSuspendedStylesheet.
+let precedencesByRoot: Map<HoistableRoot, Map<string, Instance>> = (null: any);
+
+function insertSuspendedStylesheets(
+  state: SuspendedState,
+  resources: Map<StylesheetResource, HoistableRoot>,
+): void {
+  precedencesByRoot = new Map();
+  resources.forEach(insertStyleIntoRoot, state);
+  precedencesByRoot = (null: any);
+}
+
+function insertStyleIntoRoot(
+  this: SuspendedState,
+  root: HoistableRoot,
+  resource: StylesheetResource,
+  map: Map<StylesheetResource, HoistableRoot>,
+) {
+  let last;
+  let precedences = precedencesByRoot.get(root);
+  if (!precedences) {
+    precedences = new Map();
+    precedencesByRoot.set(root, precedences);
+    const nodes = root.querySelectorAll(
+      'link[data-precedence],style[data-precedence]',
+    );
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (
+        node.nodeName === 'link' ||
+        // We omit style tags with media="not all" because they are not in the right position
+        // and will be hoisted by the Fizz runtime imminently.
+        node.getAttribute('media') !== 'not all'
+      ) {
+        precedences.set('p' + node.dataset.precedence, node);
+        last = node;
+      }
+    }
+    if (last) {
+      precedences.set('last', last);
+    }
+  } else {
+    last = precedences.get('last');
+  }
+
+  // We only call this after we have constructed an instance so we assume it here
+  const instance: HTMLLinkElement = (resource.instance: any);
+  // We will always have a precedence for stylesheet instances
+  const precedence: string = (instance.getAttribute('data-precedence'): any);
+
+  const prior = precedences.get('p' + precedence) || last;
+  if (prior === last) {
+    precedences.set('last', instance);
+  }
+  precedences.set(precedence, instance);
+
+  if (prior) {
+    (prior.parentNode: any).insertBefore(instance, prior.nextSibling);
+  } else {
+    const parent =
+      root.nodeType === DOCUMENT_NODE
+        ? ((((root: any): Document).head: any): Element)
+        : ((root: any): ShadowRoot);
+    parent.insertBefore(instance, parent.firstChild);
+  }
+
+  const media = instance.getAttribute('media');
+  if (!media || matchMedia(media).matches) {
+    this.count++;
+    const onComplete = onUnsuspend.bind(this);
+    instance.addEventListener('load', onComplete);
+    instance.addEventListener('error', onComplete);
+  }
 }
