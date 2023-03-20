@@ -82,14 +82,6 @@ import {
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
 
-const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
-const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
-const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-const AUTOFOCUS = 'autoFocus';
-const CHILDREN = 'children';
-const STYLE = 'style';
-const HTML = '__html';
-
 let warnedUnknownTags: {
   [key: string]: boolean,
 };
@@ -296,7 +288,7 @@ function setInitialDOMProperties(
     }
     const nextProp = nextProps[propKey];
     switch (propKey) {
-      case STYLE: {
+      case 'style': {
         if (__DEV__) {
           if (nextProp) {
             // Freeze the next style object so that we can assume it won't be
@@ -308,8 +300,8 @@ function setInitialDOMProperties(
         setValueForStyles(domElement, nextProp);
         break;
       }
-      case DANGEROUSLY_SET_INNER_HTML: {
-        const nextHtml = nextProp ? nextProp[HTML] : undefined;
+      case 'dangerouslySetInnerHTML': {
+        const nextHtml = nextProp ? nextProp.__html : undefined;
         if (nextHtml != null) {
           if (disableIEWorkarounds) {
             domElement.innerHTML = nextHtml;
@@ -319,7 +311,7 @@ function setInitialDOMProperties(
         }
         break;
       }
-      case CHILDREN: {
+      case 'children': {
         if (typeof nextProp === 'string') {
           // Avoid setting initial textContent when the text is empty. In IE11 setting
           // textContent on a <textarea> will cause the placeholder to not
@@ -348,15 +340,15 @@ function setInitialDOMProperties(
         }
         break;
       }
-      case SUPPRESS_CONTENT_EDITABLE_WARNING:
-      case SUPPRESS_HYDRATION_WARNING:
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
       case 'innerHTML': {
         // Noop
         break;
       }
-      case AUTOFOCUS: {
+      case 'autoFocus': {
         // We polyfill it separately on the client during commit.
         // We could have excluded it in the property list instead of
         // adding a special case here, but then it wouldn't be emitted
@@ -728,7 +720,7 @@ export function diffProperties(
       continue;
     }
     switch (propKey) {
-      case STYLE: {
+      case 'style': {
         const lastStyle = lastProps[propKey];
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
@@ -740,20 +732,20 @@ export function diffProperties(
         }
         break;
       }
-      case DANGEROUSLY_SET_INNER_HTML:
-      case CHILDREN: {
+      case 'dangerouslySetInnerHTML':
+      case 'children': {
         // Noop. This is handled by the clear text mechanism.
         break;
       }
-      case SUPPRESS_CONTENT_EDITABLE_WARNING:
-      case SUPPRESS_HYDRATION_WARNING:
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
       case 'innerHTML': {
         // Noop
         break;
       }
-      case AUTOFOCUS: {
+      case 'autoFocus': {
         // Noop. It doesn't work on updates anyway.
         break;
       }
@@ -790,7 +782,7 @@ export function diffProperties(
       continue;
     }
     switch (propKey) {
-      case STYLE: {
+      case 'style': {
         if (__DEV__) {
           if (nextProp) {
             // Freeze the next style object so that we can assume it won't be
@@ -835,9 +827,9 @@ export function diffProperties(
         }
         break;
       }
-      case DANGEROUSLY_SET_INNER_HTML: {
-        const nextHtml = nextProp ? nextProp[HTML] : undefined;
-        const lastHtml = lastProp ? lastProp[HTML] : undefined;
+      case 'dangerouslySetInnerHTML': {
+        const nextHtml = nextProp ? nextProp.__html : undefined;
+        const lastHtml = lastProp ? lastProp.__html : undefined;
         if (nextHtml != null) {
           if (lastHtml !== nextHtml) {
             (updatePayload = updatePayload || []).push(propKey, nextHtml);
@@ -848,7 +840,7 @@ export function diffProperties(
         }
         break;
       }
-      case CHILDREN: {
+      case 'children': {
         if (typeof nextProp === 'string' || typeof nextProp === 'number') {
           (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
         }
@@ -870,15 +862,15 @@ export function diffProperties(
         }
         break;
       }
-      case SUPPRESS_CONTENT_EDITABLE_WARNING:
-      case SUPPRESS_HYDRATION_WARNING:
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
       case 'innerHTML': {
         // Noop
         break;
       }
-      case AUTOFOCUS: {
+      case 'autoFocus': {
         // Noop on updates
         break;
       }
@@ -912,9 +904,9 @@ export function diffProperties(
   }
   if (styleUpdates) {
     if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
+      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
     }
-    (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
+    (updatePayload = updatePayload || []).push('style', styleUpdates);
   }
   return updatePayload;
 }
@@ -1000,24 +992,24 @@ function diffHydratedCustomComponent(
       }
       continue;
     }
-    if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
+    if (rawProps.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     }
     // Validate that the properties correspond to their expected values.
     let serverValue;
     switch (propKey) {
-      case CHILDREN: // Checked above already
-      case SUPPRESS_CONTENT_EDITABLE_WARNING:
-      case SUPPRESS_HYDRATION_WARNING:
+      case 'children': // Checked above already
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
         // Noop
         continue;
-      case DANGEROUSLY_SET_INNER_HTML:
+      case 'dangerouslySetInnerHTML':
         const serverHTML = domElement.innerHTML;
-        const nextHtml = nextProp ? nextProp[HTML] : undefined;
+        const nextHtml = nextProp ? nextProp.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
@@ -1025,7 +1017,7 @@ function diffHydratedCustomComponent(
           }
         }
         continue;
-      case STYLE:
+      case 'style':
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
 
@@ -1103,16 +1095,16 @@ function diffHydratedGenericElement(
       }
       continue;
     }
-    if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
+    if (rawProps.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     }
     // Validate that the properties correspond to their expected values.
     let serverValue;
     switch (propKey) {
-      case CHILDREN: // Checked above already
-      case SUPPRESS_CONTENT_EDITABLE_WARNING:
-      case SUPPRESS_HYDRATION_WARNING:
+      case 'children': // Checked above already
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
       case 'value': // Controlled attributes are not validated
       case 'checked': // TODO: Only ignore them on controlled tags.
       case 'selected':
@@ -1121,9 +1113,9 @@ function diffHydratedGenericElement(
       case 'innerHTML':
         // Noop
         continue;
-      case DANGEROUSLY_SET_INNER_HTML:
+      case 'dangerouslySetInnerHTML':
         const serverHTML = domElement.innerHTML;
-        const nextHtml = nextProp ? nextProp[HTML] : undefined;
+        const nextHtml = nextProp ? nextProp.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
@@ -1131,7 +1123,7 @@ function diffHydratedGenericElement(
           }
         }
         continue;
-      case STYLE:
+      case 'style':
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
 
@@ -1292,7 +1284,7 @@ export function diffHydratedProperties(
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
   if (typeof children === 'string' || typeof children === 'number') {
     if (domElement.textContent !== '' + children) {
-      if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      if (rawProps.suppressHydrationWarning !== true) {
         checkForUnmatchedText(
           domElement.textContent,
           children,
@@ -1301,7 +1293,7 @@ export function diffHydratedProperties(
         );
       }
       if (!isConcurrentMode) {
-        updatePayload = [CHILDREN, children];
+        updatePayload = ['children', children];
       }
     }
   }
@@ -1346,7 +1338,7 @@ export function diffHydratedProperties(
     if (
       // $FlowFixMe - Should be inferred as not undefined.
       extraAttributeNames.size > 0 &&
-      rawProps[SUPPRESS_HYDRATION_WARNING] !== true
+      rawProps.suppressHydrationWarning !== true
     ) {
       // $FlowFixMe - Should be inferred as not undefined.
       warnForExtraAttributes(extraAttributeNames);
