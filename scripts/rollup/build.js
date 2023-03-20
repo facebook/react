@@ -11,6 +11,7 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
+const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -148,6 +149,7 @@ function getBabelConfig(
     presets: [],
     plugins: [...babelPlugins],
     babelHelpers: 'bundled',
+    sourcemap: false,
   };
   if (isDevelopment) {
     options.plugins.push(
@@ -387,6 +389,27 @@ function getPlugins(
 
     const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
 
+    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+
+    // Any other packages that should specifically _not_ have sourcemaps
+    const sourcemapPackageExcludes = [
+      // Having `//#sourceMappingUrl` for the `react-debug-tools` prod bundle breaks
+      // `ReactDevToolsHooksIntegration-test.js`, because it changes Node's generated
+      // stack traces and thus alters the hook name parsing behavior.
+      // Also, this is an internal-only package that doesn't need sourcemaps anyway
+      'react-debug-tools',
+    ];
+
+    // Only generate sourcemaps for true "production" build artifacts
+    // that will be used by bundlers, such as `react-dom.production.min.js`.
+    // UMD and "profiling" builds are rarely used and not worth having sourcemaps.
+    const needsSourcemaps =
+      needsMinifiedByClosure &&
+      !isProfiling &&
+      !isUMDBundle &&
+      !sourcemapPackageExcludes.includes(entry) &&
+      !shouldStayReadable;
+
     return [
       // Keep dynamic imports as externals
       dynamicImports(),
@@ -396,7 +419,7 @@ function getPlugins(
           const transformed = flowRemoveTypes(code);
           return {
             code: transformed.toString(),
-            map: transformed.generateMap(),
+            map: null,
           };
         },
       },
@@ -425,6 +448,7 @@ function getPlugins(
       ),
       // Remove 'use strict' from individual source files.
       {
+        name: "remove 'use strict'",
         transform(source) {
           return source.replace(/['"]use strict["']/g, '');
         },
@@ -446,47 +470,9 @@ function getPlugins(
       // I'm going to port "art" to ES modules to avoid this problem.
       // Please don't enable this for anything else!
       isUMDBundle && entry === 'react-art' && commonjs(),
-      // Apply dead code elimination and/or minification.
-      // closure doesn't yet support leaving ESM imports intact
-      isProduction &&
-        bundleType !== ESM_PROD &&
-        closure({
-          compilation_level: 'SIMPLE',
-          language_in: 'ECMASCRIPT_2020',
-          language_out:
-            bundleType === NODE_ES2015
-              ? 'ECMASCRIPT_2020'
-              : bundleType === BROWSER_SCRIPT
-              ? 'ECMASCRIPT5'
-              : 'ECMASCRIPT5_STRICT',
-          emit_use_strict:
-            bundleType !== BROWSER_SCRIPT &&
-            bundleType !== ESM_PROD &&
-            bundleType !== ESM_DEV,
-          env: 'CUSTOM',
-          warning_level: 'QUIET',
-          apply_input_source_maps: false,
-          use_types_for_optimization: false,
-          process_common_js_modules: false,
-          rewrite_polyfills: false,
-          inject_libraries: false,
-          allow_dynamic_import: true,
-
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        }),
-      // Add the whitespace back if necessary.
-      shouldStayReadable &&
-        prettier({
-          parser: 'flow',
-          singleQuote: false,
-          trailingComma: 'none',
-          bracketSpacing: true,
-        }),
       // License and haste headers, top-level `if` blocks.
       {
+        name: 'license-and-headers',
         renderChunk(source) {
           return Wrappers.wrapBundle(
             source,
@@ -496,6 +482,89 @@ function getPlugins(
             moduleType,
             bundle.wrapWithModuleBoundaries
           );
+        },
+      },
+      // Apply dead code elimination and/or minification.
+      // closure doesn't yet support leaving ESM imports intact
+      needsMinifiedByClosure &&
+        closure(
+          {
+            compilation_level: 'SIMPLE',
+            language_in: 'ECMASCRIPT_2020',
+            language_out:
+              bundleType === NODE_ES2015
+                ? 'ECMASCRIPT_2020'
+                : bundleType === BROWSER_SCRIPT
+                ? 'ECMASCRIPT5'
+                : 'ECMASCRIPT5_STRICT',
+            emit_use_strict:
+              bundleType !== BROWSER_SCRIPT &&
+              bundleType !== ESM_PROD &&
+              bundleType !== ESM_DEV,
+            env: 'CUSTOM',
+            warning_level: 'QUIET',
+            source_map_include_content: true,
+            use_types_for_optimization: false,
+            process_common_js_modules: false,
+            rewrite_polyfills: false,
+            inject_libraries: false,
+            allow_dynamic_import: true,
+
+            // Don't let it create global variables in the browser.
+            // https://github.com/facebook/react/issues/10909
+            assume_function_wrapper: !isUMDBundle,
+            renaming: !shouldStayReadable,
+          },
+          {needsSourcemaps}
+        ),
+      // Add the whitespace back if necessary.
+      shouldStayReadable &&
+        prettier({
+          parser: 'flow',
+          singleQuote: false,
+          trailingComma: 'none',
+          bracketSpacing: true,
+        }),
+      needsSourcemaps && {
+        name: 'generate-prod-bundle-sourcemaps',
+        async renderChunk(codeAfterLicense, chunk, options, meta) {
+          // We want to generate a sourcemap that shows the production bundle source
+          // as it existed before Closure Compiler minified that chunk, rather than
+          // showing the "original" individual source files. This better shows
+          // what is actually running in the app.
+
+          // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
+          const finalSourcemapPath = options.file.replace('.js', '.js.map');
+          const finalSourcemapFilename = path.basename(finalSourcemapPath);
+
+          // Read the sourcemap that Closure wrote to disk
+          const sourcemapAfterClosure = JSON.parse(
+            fs.readFileSync(finalSourcemapPath, 'utf8')
+          );
+
+          const filenameWithoutMin = filename.replace('.min', '');
+
+          // CC generated a file list that only contains the tempfile name.
+          // Replace that with a more meaningful "source" name for this bundle
+          // that represents "the bundled source before minification".
+          sourcemapAfterClosure.sources = [filenameWithoutMin];
+          sourcemapAfterClosure.file = filename;
+
+          // Overwrite the Closure-generated file with the final combined sourcemap
+          fs.writeFileSync(
+            finalSourcemapPath,
+            JSON.stringify(sourcemapAfterClosure)
+          );
+
+          // Add the sourcemap URL to the actual bundle, so that tools pick it up
+          const sourceWithMappingUrl =
+            codeAfterLicense +
+            `\n//# sourceMappingURL=${finalSourcemapFilename}`;
+
+          return {
+            code: sourceWithMappingUrl,
+            map: null,
+          };
         },
       },
       // Record bundle size.
