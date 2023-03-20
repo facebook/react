@@ -8,8 +8,8 @@ let use;
 let useDebugValue;
 let useState;
 let useMemo;
-let useEffect;
 let Suspense;
+let cache;
 let startTransition;
 let pendingTextRequests;
 let waitFor;
@@ -29,9 +29,9 @@ describe('ReactUse', () => {
     useDebugValue = React.useDebugValue;
     useState = React.useState;
     useMemo = React.useMemo;
-    useEffect = React.useEffect;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+    cache = React.cache;
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
