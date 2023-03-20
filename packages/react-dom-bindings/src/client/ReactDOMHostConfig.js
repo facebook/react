@@ -1609,13 +1609,8 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
   });
 }
 
-export function maySuspendCommit(type: Type, props: Props): boolean {
+export function shouldSuspendCommit(type: Type, props: Props): boolean {
   return false;
-}
-
-export function preloadInstance(type: Type, props: Props): boolean {
-  // Return true to indicate it's already loaded
-  return true;
 }
 
 export function startSuspendingCommit(): void {}

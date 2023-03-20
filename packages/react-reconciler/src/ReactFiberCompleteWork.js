@@ -111,8 +111,7 @@ import {
   finalizeContainerChildren,
   preparePortalMount,
   prepareScopeUpdate,
-  maySuspendCommit,
-  preloadInstance,
+  shouldSuspendCommit,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -435,6 +434,8 @@ function updateHostComponent(
     // Even better would be if children weren't special cased at all tho.
     const instance: Instance = workInProgress.stateNode;
 
+    suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
+
     const currentHostContext = getHostContext();
     // TODO: Experiencing an error where oldProps is null. Suggests a host
     // component is hitting the resume path. Figure out why. Possibly
@@ -494,6 +495,8 @@ function updateHostComponent(
       recyclableInstance,
     );
 
+    suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
+
     if (
       finalizeInitialChildren(newInstance, type, newProps, currentHostContext)
     ) {
@@ -516,17 +519,17 @@ function updateHostComponent(
 // not created until the complete phase. For our existing use cases, host nodes
 // that suspend don't have children, so it doesn't matter. But that might not
 // always be true in the future.
-function preloadInstanceAndSuspendIfNeeded(
+function suspendHostCommitIfNeeded(
   workInProgress: Fiber,
   type: Type,
   props: Props,
   renderLanes: Lanes,
 ) {
   // Ask the renderer if this instance should suspend the commit.
-  if (!maySuspendCommit(type, props)) {
+  if (!shouldSuspendCommit(type, props)) {
     // If this flag was set previously, we can remove it. The flag represents
     // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for maySuspendCommit to always return true, but
+    // safest thing to do is for shouldSuspendCommit to always return true, but
     // if the renderer is reasonably confident that the underlying resource
     // won't be evicted, it can return false as a performance optimization.
     workInProgress.flags &= ~SuspenseyCommit;
@@ -549,24 +552,16 @@ function preloadInstanceAndSuspendIfNeeded(
   // TODO: We may decide to expose a way to force a fallback even during a
   // sync update.
   if (!includesOnlyNonUrgentLanes(renderLanes)) {
-    // This is an urgent render. Don't suspend or show a fallback. Also,
-    // there's no need to preload, because we're going to commit this
-    // synchronously anyway.
-    // TODO: Could there be benefit to preloading even during a synchronous
-    // render? The main thread will be blocked until the commit phase, but
-    // maybe the browser would be able to start loading off thread anyway?
-    // Likely a micro-optimization either way because typically new content
-    // is loaded during a transition, not an urgent render.
+    // This is an urgent render. Never suspend or trigger a fallback.
   } else {
-    // Preload the instance
-    const isReady = preloadInstance(type, props);
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Continue rendering.
-      } else {
-        // Trigger a fallback rather than block the render.
-        suspendCommit();
-      }
+    // Need to decide whether to activate the nearest fallback or to continue
+    // rendering and suspend right before the commit phase.
+    if (shouldRemainOnPreviousScreen()) {
+      // It's OK to block the commit. Don't show a fallback.
+    } else {
+      // We shouldn't block the commit. Activate a fallback at the nearest
+      // Suspense boundary.
+      suspendCommit();
     }
   }
 }
@@ -1059,17 +1054,6 @@ function completeWork(
           );
         }
         bubbleProperties(workInProgress);
-
-        // This must come at the very end of the complete phase, because it might
-        // throw to suspend, and if the resource immediately loads, the work loop
-        // will resume rendering as if the work-in-progress completed. So it must
-        // fully complete.
-        preloadInstanceAndSuspendIfNeeded(
-          workInProgress,
-          workInProgress.type,
-          workInProgress.pendingProps,
-          renderLanes,
-        );
         return null;
       }
     }
@@ -1208,23 +1192,14 @@ function completeWork(
           }
         }
 
+        suspendHostCommitIfNeeded(workInProgress, type, newProps, renderLanes);
+
         if (workInProgress.ref !== null) {
           // If there is a ref on a host node we need to schedule a callback
           markRef(workInProgress);
         }
       }
       bubbleProperties(workInProgress);
-
-      // This must come at the very end of the complete phase, because it might
-      // throw to suspend, and if the resource immediately loads, the work loop
-      // will resume rendering as if the work-in-progress completed. So it must
-      // fully complete.
-      preloadInstanceAndSuspendIfNeeded(
-        workInProgress,
-        type,
-        newProps,
-        renderLanes,
-      );
       return null;
     }
     case HostText: {
