@@ -7,14 +7,9 @@
  * @flow
  */
 
-import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-// A reserved attribute.
-// It is handled by React separately and shouldn't be written to the DOM.
-export const RESERVED = 0;
 
 // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
@@ -119,37 +114,6 @@ function PropertyInfoRecord(
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
 const properties: {[string]: $FlowFixMe} = {};
-
-// These props are reserved by React. They shouldn't be written to the DOM.
-const reservedProps = [
-  'children',
-  'dangerouslySetInnerHTML',
-  // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  'defaultValue',
-  'defaultChecked',
-  'innerHTML',
-  'suppressContentEditableWarning',
-  'suppressHydrationWarning',
-  'style',
-];
-if (enableCustomElementPropertySupport) {
-  reservedProps.push('innerText', 'textContent');
-}
-
-reservedProps.forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    RESERVED,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
 
 // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
