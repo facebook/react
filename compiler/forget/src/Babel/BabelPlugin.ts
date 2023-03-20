@@ -55,7 +55,7 @@ export default function ReactForgetBabelPlugin(
       }
 
       hasForgetCompiledCode = true;
-      const ast = compile(fn, pass.opts.environment);
+      const compiled = compile(fn, pass.opts.environment);
 
       if (pass.opts.gatingModule) {
         // Rename existing function
@@ -64,38 +64,15 @@ export default function ReactForgetBabelPlugin(
         fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
         // Rename and append compiled function
-        invariant(ast.id, "FunctionDeclaration must produce a name");
-        ast.id = addSuffix(ast.id, "_forget");
-        const compiledFn = fn.insertAfter(ast)[0];
+        invariant(compiled.id, "FunctionDeclaration must produce a name");
+        compiled.id = addSuffix(compiled.id, "_forget");
+        const compiledFn = fn.insertAfter(compiled)[0];
         compiledFn.skip();
 
-        // Build gating test
-        const test = buildTest({
-          compiled: ast.id,
-          uncompiled: fn.node.id,
-          original,
-        });
-
-        // Re-export new declaration
-        const parent = fn.parentPath;
-        if (t.isExportDefaultDeclaration(parent)) {
-          // Re-add uncompiled function
-          parent.replaceWith(fn)[0].skip();
-
-          // Add test and synthesize new export
-          compiledFn.insertAfter([test, t.exportDefaultDeclaration(original)]);
-        } else if (t.isExportNamedDeclaration(parent)) {
-          // Re-add uncompiled function
-          parent.replaceWith(fn)[0].skip();
-
-          // Add and export test
-          compiledFn.insertAfter(t.exportNamedDeclaration(test));
-        } else {
-          // Just add the test, no need for re-export
-          compiledFn.insertAfter(test);
-        }
+        // Build and append gating test
+        compiledFn.insertAfter(buildGatingTest(fn, compiled.id, original));
       } else {
-        fn.replaceWith(ast);
+        fn.replaceWith(compiled);
       }
 
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
@@ -134,6 +111,37 @@ export default function ReactForgetBabelPlugin(
       },
     },
   };
+}
+
+function buildGatingTest(
+  uncompiled: BabelCore.NodePath<t.FunctionDeclaration>,
+  compiled: t.Identifier,
+  original: t.Identifier
+): t.Node | t.Node[] {
+  const test = buildTest({
+    uncompiled: uncompiled.node.id!,
+    compiled,
+    original,
+  });
+
+  // Re-export new declaration
+  const parent = uncompiled.parentPath;
+  if (t.isExportDefaultDeclaration(parent)) {
+    // Re-add uncompiled function
+    parent.replaceWith(uncompiled)[0].skip();
+
+    // Add test and synthesize new export
+    return [test, t.exportDefaultDeclaration(original)];
+  } else if (t.isExportNamedDeclaration(parent)) {
+    // Re-add uncompiled function
+    parent.replaceWith(uncompiled)[0].skip();
+
+    // Add and export test
+    return t.exportNamedDeclaration(test);
+  }
+
+  // Just add the test, no need for re-export
+  return test;
 }
 
 function addSuffix(id: t.Identifier, suffix: string): t.Identifier {
