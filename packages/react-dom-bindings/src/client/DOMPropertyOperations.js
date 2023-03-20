@@ -296,14 +296,10 @@ export function setValueForProperty(node: Element, name: string, value: mixed) {
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo !== null) {
     if (propertyInfo.mustUseProperty) {
-      if (value === null) {
-        (node: any)[propertyInfo.propertyName] =
-          propertyInfo.type === BOOLEAN ? false : '';
-      } else {
-        // Contrary to `setAttribute`, object properties are properly
-        // `toString`ed by IE8/9.
-        (node: any)[propertyInfo.propertyName] = value;
-      }
+      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
+      // right now.
+      (node: any)[propertyInfo.propertyName] =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
       return;
     }
 
