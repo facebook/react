@@ -29,7 +29,7 @@ The documentation is divided into several sections:
 * [Tutorial](https://react.dev/learn/tutorial-tic-tac-toe)
 * [Main Concepts](https://reactjs.org/docs/hello-world.html)
 * [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
-* [API Reference](https://reactjs.org/docs/react-api.html)
+* [API Reference](https://react.dev/reference/react)
 * [Where to Get Support](https://react.dev/community)
 * [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
 
