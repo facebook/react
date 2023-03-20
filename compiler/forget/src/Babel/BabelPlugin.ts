@@ -80,6 +80,17 @@ export default function ReactForgetBabelPlugin(
 
       visitFn(fn, pass);
     },
+
+    ArrowFunctionExpression(
+      fn: BabelCore.NodePath<t.ArrowFunctionExpression>,
+      pass: BabelPluginPass
+    ): void {
+      if (!shouldCompile(fn, pass)) {
+        return;
+      }
+
+      visitFn(buildFunctionDeclaration(fn), pass);
+    },
   };
 
   return {
@@ -133,6 +144,54 @@ function shouldCompile(
   }
 
   return true;
+}
+
+function buildFunctionDeclaration(
+  fn: BabelCore.NodePath<t.ArrowFunctionExpression>
+): BabelCore.NodePath<t.FunctionDeclaration> {
+  invariant(
+    fn.parentPath.isVariableDeclarator(),
+    "ArrowFunctionExpression must be declared in variable declaration"
+  );
+  const variableDeclarator = fn.parentPath;
+
+  invariant(
+    variableDeclarator.parentPath.isVariableDeclaration(),
+    "ArrowFunctionExpression must be a single declaration"
+  );
+  const variableDeclaration = variableDeclarator.parentPath;
+
+  const id = variableDeclarator.get("id");
+  invariant(id.isIdentifier(), "ArrowFunctionExpression must have an id");
+
+  const rewrittenFn = variableDeclaration.replaceWith(
+    t.functionDeclaration(
+      id.node,
+      fn.node.params,
+      buildBlockStatement(fn),
+      fn.node.generator,
+      fn.node.async
+    )
+  )[0];
+  fn.skip();
+  return rewrittenFn;
+}
+
+function buildBlockStatement(
+  fn: BabelCore.NodePath<t.ArrowFunctionExpression>
+): t.BlockStatement {
+  const body = fn.get("body");
+  if (body.isExpression()) {
+    const wrappedBody = body.replaceWith(
+      t.blockStatement([t.returnStatement(body.node)])
+    )[0];
+    body.skip();
+
+    return wrappedBody.node;
+  }
+
+  invariant(body.isBlockStatement(), "Body must be a BlockStatement");
+  return body.node;
 }
 
 function buildGatingTest(
