@@ -1258,6 +1258,36 @@ if (__EXPERIMENTAL__) {
     },
     {
       code: normalizeIndent`
+        // Should error because it's being passed into something
+        // besides useEffect.
+        function MyComponent({ store }) {
+          const subscribe = useEffectEvent(() => store.subscribe());
+          const susbcribe2 = useCallback(() => subscribe(), []);
+        }
+      `,
+      errors: [
+        'TODO: Idk what the error message should say but there should ' +
+          'definitely be one',
+      ],
+    },
+    {
+      code: normalizeIndent`
+        // Should error because it's being passed into something
+        // besides useEffect.
+        function MyComponent({ store }) {
+          const subscribe = useEffectEvent(() => store.subscribe());
+          const susbcribe2 = useMemo(() => {
+            () => subscribe();
+          }, []);
+        }
+      `,
+      errors: [
+        'TODO: Idk what the error message should say but there should ' +
+          'definitely be one',
+      ],
+    },
+    {
+      code: normalizeIndent`
         Hook.use();
         Hook._use();
         Hook.useState();
