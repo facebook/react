@@ -2295,6 +2295,9 @@ function describeFiber(fiber) {
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
   ),
+  SuspenseyCommitException = Error(
+    "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
+  ),
   noopSuspenseyCommitThenable = { then: function () {} };
 function isThenableResolved(thenable) {
   thenable = thenable.status;
@@ -2342,8 +2345,17 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw SuspenseException;
   }
 }
-var suspendedThenable = null,
-  thenableState$1 = null,
+var suspendedThenable = null;
+function getSuspendedThenable() {
+  if (null === suspendedThenable)
+    throw Error(
+      "Expected a suspended thenable. This is a bug in React. Please file an issue."
+    );
+  var thenable = suspendedThenable;
+  suspendedThenable = null;
+  return thenable;
+}
+var thenableState$1 = null,
   thenableIndexCounter$1 = 0;
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter$1;
@@ -5719,7 +5731,6 @@ function completeWork(current, workInProgress, renderLanes) {
                   : cloneNodeWithNewChildren(recyclableInstance),
                 canonical: currentInstance.canonical
               }),
-              (workInProgress.flags &= -16777217),
               (workInProgress.stateNode = newProps),
               renderLanes
                 ? (workInProgress.flags |= 4)
@@ -5769,10 +5780,10 @@ function completeWork(current, workInProgress, renderLanes) {
         };
         appendAllChildren(current, workInProgress, !1, !1);
         workInProgress.stateNode = current;
-        workInProgress.flags &= -16777217;
         null !== workInProgress.ref && (workInProgress.flags |= 2097664);
       }
       bubbleProperties(workInProgress);
+      workInProgress.flags &= -16777217;
       return null;
     case 6:
       if (current && null != workInProgress.stateNode)
@@ -7597,37 +7608,35 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
   ReactCurrentOwner.current = null;
-  if (thrownValue === SuspenseException) {
-    if (null === suspendedThenable)
-      throw Error(
-        "Expected a suspended thenable. This is a bug in React. Please file an issue."
-      );
-    thrownValue = suspendedThenable;
-    suspendedThenable = null;
-    (workInProgressRootRenderLanes & 8388480) === workInProgressRootRenderLanes
-      ? (root = null === shellBoundary ? !0 : !1)
-      : ((root = suspenseHandlerStackCursor.current),
-        (root =
-          null !== root &&
-          (workInProgressRootRenderLanes & 125829120) ===
-            workInProgressRootRenderLanes
-            ? root === shellBoundary
-            : !1));
-    workInProgressSuspendedReason =
-      root &&
-      0 === (workInProgressRootSkippedLanes & 268435455) &&
-      0 === (workInProgressRootInterleavedUpdatedLanes & 268435455)
-        ? 2
-        : 3;
-  } else
-    workInProgressSuspendedReason =
-      thrownValue === SelectiveHydrationException
-        ? 6
-        : null !== thrownValue &&
-          "object" === typeof thrownValue &&
-          "function" === typeof thrownValue.then
-        ? 4
-        : 1;
+  thrownValue === SuspenseException
+    ? ((thrownValue = getSuspendedThenable()),
+      (workInProgressRootRenderLanes & 8388480) ===
+      workInProgressRootRenderLanes
+        ? (root = null === shellBoundary ? !0 : !1)
+        : ((root = suspenseHandlerStackCursor.current),
+          (root =
+            null !== root &&
+            (workInProgressRootRenderLanes & 125829120) ===
+              workInProgressRootRenderLanes
+              ? root === shellBoundary
+              : !1)),
+      (workInProgressSuspendedReason =
+        root &&
+        0 === (workInProgressRootSkippedLanes & 268435455) &&
+        0 === (workInProgressRootInterleavedUpdatedLanes & 268435455)
+          ? 2
+          : 3))
+    : thrownValue === SuspenseyCommitException
+    ? ((thrownValue = getSuspendedThenable()),
+      (workInProgressSuspendedReason = 4))
+    : (workInProgressSuspendedReason =
+        thrownValue === SelectiveHydrationException
+          ? 8
+          : null !== thrownValue &&
+            "object" === typeof thrownValue &&
+            "function" === typeof thrownValue.then
+          ? 6
+          : 1);
   workInProgressThrownValue = thrownValue;
   null === workInProgress &&
     ((workInProgressRootExitStatus = 1),
@@ -7657,7 +7666,7 @@ function renderRootSync(root, lanes) {
         lanes = workInProgress;
         var thrownValue = workInProgressThrownValue;
         switch (workInProgressSuspendedReason) {
-          case 6:
+          case 8:
             resetWorkInProgressStack();
             workInProgressRootExitStatus = 6;
             break a;
@@ -7701,7 +7710,7 @@ function renderRootConcurrent(root, lanes) {
       if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
         lanes = workInProgress;
         var thrownValue = workInProgressThrownValue;
-        switch (workInProgressSuspendedReason) {
+        b: switch (workInProgressSuspendedReason) {
           case 1:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
@@ -7717,15 +7726,18 @@ function renderRootConcurrent(root, lanes) {
             lanes = function () {
               2 === workInProgressSuspendedReason &&
                 workInProgressRoot === root &&
-                (workInProgressSuspendedReason = 5);
+                (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root, now());
             };
             thrownValue.then(lanes, lanes);
             break a;
           case 3:
+            workInProgressSuspendedReason = 7;
+            break a;
+          case 4:
             workInProgressSuspendedReason = 5;
             break a;
-          case 5:
+          case 7:
             isThenableResolved(thrownValue)
               ? ((workInProgressSuspendedReason = 0),
                 (workInProgressThrownValue = null),
@@ -7734,12 +7746,35 @@ function renderRootConcurrent(root, lanes) {
                 (workInProgressThrownValue = null),
                 unwindSuspendedUnitOfWork(lanes, thrownValue));
             break;
-          case 4:
+          case 5:
+            switch (workInProgress.tag) {
+              case 5:
+              case 26:
+              case 27:
+                lanes = workInProgress;
+                workInProgressSuspendedReason = 0;
+                workInProgressThrownValue = null;
+                var sibling = lanes.sibling;
+                if (null !== sibling) workInProgress = sibling;
+                else {
+                  var returnFiber = lanes.return;
+                  null !== returnFiber
+                    ? ((workInProgress = returnFiber),
+                      completeUnitOfWork(returnFiber))
+                    : (workInProgress = null);
+                }
+                break b;
+            }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(lanes, thrownValue);
             break;
           case 6:
+            workInProgressSuspendedReason = 0;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            break;
+          case 8:
             resetWorkInProgressStack();
             workInProgressRootExitStatus = 6;
             break a;
@@ -9458,10 +9493,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1030 = {
+  devToolsConfig$jscomp$inline_1033 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-3554c8852-20230320",
+    version: "18.3.0-next-0131d0cff-20230320",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9476,11 +9511,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1277 = {
-  bundleType: devToolsConfig$jscomp$inline_1030.bundleType,
-  version: devToolsConfig$jscomp$inline_1030.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1030.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1030.rendererConfig,
+var internals$jscomp$inline_1276 = {
+  bundleType: devToolsConfig$jscomp$inline_1033.bundleType,
+  version: devToolsConfig$jscomp$inline_1033.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1033.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1033.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9496,26 +9531,26 @@ var internals$jscomp$inline_1277 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1030.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1033.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-3554c8852-20230320"
+  reconcilerVersion: "18.3.0-next-0131d0cff-20230320"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1278 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1278.isDisabled &&
-    hook$jscomp$inline_1278.supportsFiber
+    !hook$jscomp$inline_1277.isDisabled &&
+    hook$jscomp$inline_1277.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1278.inject(
-        internals$jscomp$inline_1277
+      (rendererID = hook$jscomp$inline_1277.inject(
+        internals$jscomp$inline_1276
       )),
-        (injectedHook = hook$jscomp$inline_1278);
+        (injectedHook = hook$jscomp$inline_1277);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
