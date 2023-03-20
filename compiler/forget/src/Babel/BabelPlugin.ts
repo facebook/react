@@ -39,45 +39,52 @@ export default function ReactForgetBabelPlugin(
 ): BabelCore.PluginObj {
   let hasForgetCompiledCode: boolean = false;
 
+  function visitFn(
+    fn: BabelCore.NodePath<t.FunctionDeclaration>,
+    pass: BabelPluginPass
+  ): void {
+    if (pass.opts.enableOnlyOnUseForgetDirective) {
+      if (!hasUseForgetDirective(fn.node.body.directives)) {
+        return;
+      }
+    }
+
+    if (fn.scope.getProgramParent() !== fn.scope.parent) {
+      return;
+    }
+
+    hasForgetCompiledCode = true;
+    const compiled = compile(fn, pass.opts.environment);
+
+    if (pass.opts.gatingModule) {
+      // Rename existing function
+      invariant(fn.node.id, "FunctionDeclaration must have a name");
+      const original = fn.node.id;
+      fn.node.id = addSuffix(fn.node.id, "_uncompiled");
+
+      // Rename and append compiled function
+      invariant(compiled.id, "FunctionDeclaration must produce a name");
+      compiled.id = addSuffix(compiled.id, "_forget");
+      const compiledFn = fn.insertAfter(compiled)[0];
+      compiledFn.skip();
+
+      // Build and append gating test
+      compiledFn.insertAfter(buildGatingTest(fn, compiled.id, original));
+    } else {
+      fn.replaceWith(compiled);
+    }
+
+    // We are generating a new FunctionDeclaration node, so we must skip over it or this
+    // traversal will loop infinitely.
+    fn.skip();
+  }
+
   const visitor = {
     FunctionDeclaration(
       fn: BabelCore.NodePath<t.FunctionDeclaration>,
       pass: BabelPluginPass
     ): void {
-      if (pass.opts.enableOnlyOnUseForgetDirective) {
-        if (!hasUseForgetDirective(fn.node.body.directives)) {
-          return;
-        }
-      }
-
-      if (fn.scope.getProgramParent() !== fn.scope.parent) {
-        return;
-      }
-
-      hasForgetCompiledCode = true;
-      const compiled = compile(fn, pass.opts.environment);
-
-      if (pass.opts.gatingModule) {
-        // Rename existing function
-        invariant(fn.node.id, "FunctionDeclaration must have a name");
-        const original = fn.node.id;
-        fn.node.id = addSuffix(fn.node.id, "_uncompiled");
-
-        // Rename and append compiled function
-        invariant(compiled.id, "FunctionDeclaration must produce a name");
-        compiled.id = addSuffix(compiled.id, "_forget");
-        const compiledFn = fn.insertAfter(compiled)[0];
-        compiledFn.skip();
-
-        // Build and append gating test
-        compiledFn.insertAfter(buildGatingTest(fn, compiled.id, original));
-      } else {
-        fn.replaceWith(compiled);
-      }
-
-      // We are generating a new FunctionDeclaration node, so we must skip over it or this
-      // traversal will loop infinitely.
-      fn.skip();
+      visitFn(fn, pass);
     },
   };
 
