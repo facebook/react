@@ -241,6 +241,13 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
   return null;
 }
 
+export function getPublicInstanceFromInternalInstanceHandle(
+  internalInstanceHandle: Object,
+): null | PublicInstance {
+  const instance: Instance = internalInstanceHandle.stateNode;
+  return getPublicInstance(instance);
+}
+
 export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
   return null;

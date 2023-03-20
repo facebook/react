@@ -24,7 +24,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 import {
-  getInternalInstanceHandleFromPublicInstance,
+  getNodeFromPublicInstance,
   getNativeTagFromPublicInstance,
 } from './ReactFabricPublicInstanceUtils';
 
@@ -176,14 +176,10 @@ export function dispatchCommand(
     return;
   }
 
-  const internalInstanceHandle =
-    getInternalInstanceHandleFromPublicInstance(handle);
+  const node = getNodeFromPublicInstance(handle);
 
-  if (internalInstanceHandle != null) {
-    const node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
-    if (node != null) {
-      nativeFabricUIManager.dispatchCommand(node, command, args);
-    }
+  if (node != null) {
+    nativeFabricUIManager.dispatchCommand(node, command, args);
   } else {
     UIManager.dispatchViewManagerCommand(nativeTag, command, args);
   }
@@ -204,13 +200,9 @@ export function sendAccessibilityEvent(handle: any, eventType: string) {
     return;
   }
 
-  const internalInstanceHandle =
-    getInternalInstanceHandleFromPublicInstance(handle);
-  if (internalInstanceHandle != null) {
-    const node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
-    if (node != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
-    }
+  const node = getNodeFromPublicInstance(handle);
+  if (node != null) {
+    nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
   } else {
     legacySendAccessibilityEvent(nativeTag, eventType);
   }

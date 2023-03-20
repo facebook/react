@@ -20,7 +20,7 @@ import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {getInternalInstanceHandleFromPublicInstance} from './ReactFabricPublicInstanceUtils';
+import {getNodeFromPublicInstance} from './ReactFabricPublicInstanceUtils';
 import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
 
 const emptyObject = {};
@@ -196,12 +196,7 @@ function getInspectorDataForViewAtPoint(
   if (__DEV__) {
     let closestInstance = null;
 
-    const fabricInstanceHandle =
-      getInternalInstanceHandleFromPublicInstance(inspectedView);
-    const fabricNode =
-      fabricInstanceHandle != null
-        ? getNodeFromInternalInstanceHandle(fabricInstanceHandle)
-        : null;
+    const fabricNode = getNodeFromPublicInstance(inspectedView);
     if (fabricNode) {
       // For Fabric we can look up the instance handle directly and measure it.
       nativeFabricUIManager.findNodeAtPoint(

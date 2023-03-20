@@ -8,6 +8,7 @@
  */
 
 import type {ReactFabricHostComponent} from './ReactFabricPublicInstance';
+import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
 
 /**
  * IMPORTANT: This module is used in Paper and Fabric. It needs to be defined
@@ -22,8 +23,14 @@ export function getNativeTagFromPublicInstance(
   return publicInstance.__nativeTag;
 }
 
-export function getInternalInstanceHandleFromPublicInstance(
+export function getNodeFromPublicInstance(
   publicInstance: ReactFabricHostComponent,
 ): mixed {
-  return publicInstance.__internalInstanceHandle;
+  if (publicInstance.__internalInstanceHandle == null) {
+    return null;
+  }
+
+  return getNodeFromInternalInstanceHandle(
+    publicInstance.__internalInstanceHandle,
+  );
 }
