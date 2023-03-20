@@ -36,10 +36,11 @@ export const Passive = /*                      */ 0b0000000000000000100000000000
 export const Visibility = /*                   */ 0b0000000000000010000000000000;
 export const StoreConsistency = /*             */ 0b0000000000000100000000000000;
 
-// It's OK to reuse this bit because these flags are mutually exclusive for
+// It's OK to reuse these bits because these flags are mutually exclusive for
 // different fiber types. We should really be doing this for as many flags as
 // possible, because we're about to run out of bits.
 export const ScheduleRetry = StoreConsistency;
+export const ShouldSuspendCommit = Visibility;
 
 export const LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency;
@@ -63,7 +64,7 @@ export const Forked = /*                       */ 0b0000000100000000000000000000
 export const RefStatic = /*                    */ 0b0000001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b0000010000000000000000000000;
 export const PassiveStatic = /*                */ 0b0000100000000000000000000000;
-export const SuspenseyCommit = /*              */ 0b0001000000000000000000000000;
+export const MaySuspendCommit = /*             */ 0b0001000000000000000000000000;
 
 // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 export const PlacementDEV = /*                 */ 0b0010000000000000000000000000;
@@ -103,4 +104,4 @@ export const PassiveMask = Passive | Visibility | ChildDeletion;
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 export const StaticMask =
-  LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
+  LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;

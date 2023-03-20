@@ -87,8 +87,9 @@ import {
   MutationMask,
   Passive,
   ForceClientRender,
-  SuspenseyCommit,
+  MaySuspendCommit,
   ScheduleRetry,
+  ShouldSuspendCommit,
 } from './ReactFiberFlags';
 
 import {
@@ -154,6 +155,7 @@ import {
   getRenderTargetTime,
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
+  getWorkInProgressRootRenderLanes,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -534,7 +536,7 @@ function preloadInstanceAndSuspendIfNeeded(
     // return true, but if the renderer is reasonably confident that the
     // underlying resource won't be evicted, it can return false as a
     // performance optimization.
-    workInProgress.flags &= ~SuspenseyCommit;
+    workInProgress.flags &= ~MaySuspendCommit;
     return;
   }
 
@@ -543,7 +545,7 @@ function preloadInstanceAndSuspendIfNeeded(
   // currently. We use this when revealing a prerendered tree, because
   // even though the tree has "mounted", its resources might not have
   // loaded yet.
-  workInProgress.flags |= SuspenseyCommit;
+  workInProgress.flags |= MaySuspendCommit;
 
   // Check if we're rendering at a "non-urgent" priority. This is the same
   // check that `useDeferredValue` does to determine whether it needs to
@@ -558,7 +560,8 @@ function preloadInstanceAndSuspendIfNeeded(
   // a previous render.
   // TODO: We may decide to expose a way to force a fallback even during a
   // sync update.
-  if (!includesOnlyNonUrgentLanes(renderLanes)) {
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
     // This is an urgent render. Don't suspend or show a fallback. Also,
     // there's no need to preload, because we're going to commit this
     // synchronously anyway.
@@ -572,7 +575,9 @@ function preloadInstanceAndSuspendIfNeeded(
     const isReady = preloadInstance(type, props);
     if (!isReady) {
       if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Continue rendering.
+        // It's OK to suspend. Mark the fiber so we know to suspend before the
+        // commit phase. Then continue rendering.
+        workInProgress.flags |= ShouldSuspendCommit;
       } else {
         // Trigger a fallback rather than block the render.
         suspendCommit();
@@ -590,19 +595,20 @@ function preloadResourceAndSuspendIfNeeded(
 ) {
   // This is a fork of preloadInstanceAndSuspendIfNeeded, but for resources.
   if (!mayResourceSuspendCommit(resource)) {
-    workInProgress.flags &= ~SuspenseyCommit;
+    workInProgress.flags &= ~MaySuspendCommit;
     return;
   }
 
-  workInProgress.flags |= SuspenseyCommit;
+  workInProgress.flags |= MaySuspendCommit;
 
-  if (!includesOnlyNonUrgentLanes(renderLanes)) {
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
     // This is an urgent render. Don't suspend or show a fallback.
   } else {
     const isReady = preloadResource(resource);
     if (!isReady) {
       if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Continue rendering.
+        workInProgress.flags |= ShouldSuspendCommit;
       } else {
         suspendCommit();
       }
@@ -1129,7 +1135,7 @@ function completeWork(
 
             bubbleProperties(workInProgress);
             if (nextResource === currentResource) {
-              workInProgress.flags &= ~SuspenseyCommit;
+              workInProgress.flags &= ~MaySuspendCommit;
             } else {
               preloadResourceAndSuspendIfNeeded(
                 workInProgress,
