@@ -18,7 +18,6 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
-const stripUnusedImports = require('./plugins/strip-unused-imports');
 const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
@@ -420,9 +419,6 @@ function getPlugins(
         assume_function_wrapper: !isUMDBundle,
         renaming: !shouldStayReadable,
       }),
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
       prettier({
