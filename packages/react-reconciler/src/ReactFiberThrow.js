@@ -13,7 +13,6 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
-import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -34,7 +33,6 @@ import {
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
   ForceClientRender,
-  ScheduleRetry,
 } from './ReactFiberFlags';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -81,7 +79,6 @@ import {
   queueHydrationError,
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
-import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -415,52 +412,33 @@ function throwException(
           //
           // When the wakeable resolves, we'll attempt to render the boundary
           // again ("retry").
-
-          // Check if this is a Suspensey resource. We do not attach retry
-          // listeners to these, because we don't actually need them for
-          // rendering. Only for committing. Instead, if a fallback commits
-          // and the only thing that suspended was a Suspensey resource, we
-          // retry immediately.
-          // TODO: Refactor throwException so that we don't have to do this type
-          // check. The caller already knows what the cause was.
-          const isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
-          if (isSuspenseyResource) {
-            suspenseBoundary.flags |= ScheduleRetry;
+          const wakeables: Set<Wakeable> | null =
+            (suspenseBoundary.updateQueue: any);
+          if (wakeables === null) {
+            suspenseBoundary.updateQueue = new Set([wakeable]);
           } else {
-            const retryQueue: RetryQueue | null =
-              (suspenseBoundary.updateQueue: any);
-            if (retryQueue === null) {
-              suspenseBoundary.updateQueue = new Set([wakeable]);
-            } else {
-              retryQueue.add(wakeable);
-            }
+            wakeables.add(wakeable);
           }
           break;
         }
         case OffscreenComponent: {
           if (suspenseBoundary.mode & ConcurrentMode) {
             suspenseBoundary.flags |= ShouldCapture;
-            const isSuspenseyResource =
-              wakeable === noopSuspenseyCommitThenable;
-            if (isSuspenseyResource) {
-              suspenseBoundary.flags |= ScheduleRetry;
+            const offscreenQueue: OffscreenQueue | null =
+              (suspenseBoundary.updateQueue: any);
+            if (offscreenQueue === null) {
+              const newOffscreenQueue: OffscreenQueue = {
+                transitions: null,
+                markerInstances: null,
+                wakeables: new Set([wakeable]),
+              };
+              suspenseBoundary.updateQueue = newOffscreenQueue;
             } else {
-              const offscreenQueue: OffscreenQueue | null =
-                (suspenseBoundary.updateQueue: any);
-              if (offscreenQueue === null) {
-                const newOffscreenQueue: OffscreenQueue = {
-                  transitions: null,
-                  markerInstances: null,
-                  retryQueue: new Set([wakeable]),
-                };
-                suspenseBoundary.updateQueue = newOffscreenQueue;
+              const wakeables = offscreenQueue.wakeables;
+              if (wakeables === null) {
+                offscreenQueue.wakeables = new Set([wakeable]);
               } else {
-                const retryQueue = offscreenQueue.retryQueue;
-                if (retryQueue === null) {
-                  offscreenQueue.retryQueue = new Set([wakeable]);
-                } else {
-                  retryQueue.add(wakeable);
-                }
+                wakeables.add(wakeable);
               }
             }
             break;

@@ -67,8 +67,6 @@ export type SuspenseListRenderState = {
   tailMode: SuspenseListTailMode,
 };
 
-export type RetryQueue = Set<Wakeable>;
-
 export function findFirstSuspended(row: Fiber): null | Fiber {
   let node = row;
   while (node !== null) {

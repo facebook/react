@@ -15,7 +15,6 @@ import type {
   Transition,
   TracingMarkerInstance,
 } from './ReactFiberTracingMarkerComponent';
-import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 export type OffscreenProps = {
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -41,7 +40,7 @@ export type OffscreenState = {
 export type OffscreenQueue = {
   transitions: Array<Transition> | null,
   markerInstances: Array<TracingMarkerInstance> | null,
-  retryQueue: RetryQueue | null,
+  wakeables: Set<Wakeable> | null,
 };
 
 type OffscreenVisibility = number;

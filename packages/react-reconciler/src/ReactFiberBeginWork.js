@@ -2298,7 +2298,7 @@ function updateSuspenseComponent(
             const newOffscreenQueue: OffscreenQueue = {
               transitions: currentTransitions,
               markerInstances: parentMarkerInstances,
-              retryQueue: null,
+              wakeables: null,
             };
             primaryChildFragment.updateQueue = newOffscreenQueue;
           } else {
@@ -2399,7 +2399,7 @@ function updateSuspenseComponent(
             const newOffscreenQueue: OffscreenQueue = {
               transitions: currentTransitions,
               markerInstances: parentMarkerInstances,
-              retryQueue: null,
+              wakeables: null,
             };
             primaryChildFragment.updateQueue = newOffscreenQueue;
           } else if (offscreenQueue === currentOffscreenQueue) {
@@ -2408,9 +2408,9 @@ function updateSuspenseComponent(
             const newOffscreenQueue: OffscreenQueue = {
               transitions: currentTransitions,
               markerInstances: parentMarkerInstances,
-              retryQueue:
+              wakeables:
                 currentOffscreenQueue !== null
-                  ? currentOffscreenQueue.retryQueue
+                  ? currentOffscreenQueue.wakeables
                   : null,
             };
             primaryChildFragment.updateQueue = newOffscreenQueue;

@@ -1608,19 +1608,6 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
     localRequestAnimationFrame(time => callback(time));
   });
 }
-
-export function shouldSuspendCommit(type: Type, props: Props): boolean {
-  return false;
-}
-
-export function startSuspendingCommit(): void {}
-
-export function suspendInstance(type: Type, props: Props): void {}
-
-export function waitForCommitToBeReady(): null {
-  return null;
-}
-
 // -------------------
 //     Resources
 // -------------------
