@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-d2f1450d";
+var ReactVersion = "18.3.0-www-modern-3f875f9f";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2918,6 +2918,10 @@ function unhideTextInstance(textInstance, text) {
 function getInstanceFromNode(node) {
   throw new Error("Not implemented.");
 }
+function preloadInstance(type, props) {
+  // Return true to indicate it's already loaded
+  return true;
+}
 function waitForCommitToBeReady() {
   return null;
 } // eslint-disable-next-line no-undef
@@ -5209,6 +5213,10 @@ var SuspenseException = new Error(
     "unexpected behavior.\n\n" +
     "To handle async errors, wrap your component in an error boundary, or " +
     "call the promise's `.catch` method and pass the result to `use`"
+);
+var SuspenseyCommitException = new Error(
+  "Suspense Exception: This is not a real error, and should not leak into " +
+    "userspace. If you're seeing this, it's likely a bug in React."
 ); // This is a noop thenable that we use to trigger a fallback in throwException.
 // TODO: It would be better to refactor throwException into multiple functions
 // so we can trigger a fallback directly without having to check the type. But
@@ -17325,7 +17333,6 @@ function updateHostComponent(
       // we won't touch this node even if children changed.
       return;
     } // If we get updated because one of our children updated, we don't
-    suspendHostCommitIfNeeded(workInProgress);
     getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
     // component is hitting the resume path. Figure out why. Possibly
     // related to `hidden`.
@@ -17344,12 +17351,17 @@ function updateHostComponent(
 // that suspend don't have children, so it doesn't matter. But that might not
 // always be true in the future.
 
-function suspendHostCommitIfNeeded(workInProgress, type, props, renderLanes) {
+function preloadInstanceAndSuspendIfNeeded(
+  workInProgress,
+  type,
+  props,
+  renderLanes
+) {
   // Ask the renderer if this instance should suspend the commit.
   {
     // If this flag was set previously, we can remove it. The flag represents
     // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for shouldSuspendCommit to always return true, but
+    // safest thing to do is for maySuspendCommit to always return true, but
     // if the renderer is reasonably confident that the underlying resource
     // won't be evicted, it can return false as a performance optimization.
     workInProgress.flags &= ~SuspenseyCommit;
@@ -17823,15 +17835,18 @@ function completeWork(current, workInProgress, renderLanes) {
           workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
         }
 
-        suspendHostCommitIfNeeded(workInProgress);
-
         if (workInProgress.ref !== null) {
           // If there is a ref on a host node we need to schedule a callback
           markRef(workInProgress);
         }
       }
 
-      bubbleProperties(workInProgress);
+      bubbleProperties(workInProgress); // This must come at the very end of the complete phase, because it might
+      // throw to suspend, and if the resource immediately loads, the work loop
+      // will resume rendering as if the work-in-progress completed. So it must
+      // fully complete.
+
+      preloadInstanceAndSuspendIfNeeded(workInProgress);
       return null;
     }
 
@@ -22779,9 +22794,11 @@ var NotSuspended = 0;
 var SuspendedOnError = 1;
 var SuspendedOnData = 2;
 var SuspendedOnImmediate = 3;
-var SuspendedOnDeprecatedThrowPromise = 4;
-var SuspendedAndReadyToContinue = 5;
-var SuspendedOnHydration = 6; // When this is true, the work-in-progress fiber just suspended (or errored) and
+var SuspendedOnInstance = 4;
+var SuspendedOnInstanceAndReadyToContinue = 5;
+var SuspendedOnDeprecatedThrowPromise = 6;
+var SuspendedAndReadyToContinue = 7;
+var SuspendedOnHydration = 8; // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
 // after this happens. If the fiber is pinged before we resume, we can retry
 // immediately instead of unwinding the stack.
@@ -24137,6 +24154,9 @@ function handleThrow(root, thrownValue) {
         : // immediately resolved (i.e. in a microtask). Otherwise, trigger the
           // nearest Suspense fallback.
           SuspendedOnImmediate;
+  } else if (thrownValue === SuspenseyCommitException) {
+    thrownValue = getSuspendedThenable();
+    workInProgressSuspendedReason = SuspendedOnInstance;
   } else if (thrownValue === SelectiveHydrationException) {
     // An update flowed into a dehydrated boundary. Before we can apply the
     // update, we need to finish hydrating. Interrupt the work-in-progress
@@ -24507,7 +24527,7 @@ function renderRootConcurrent(root, lanes) {
         var unitOfWork = workInProgress;
         var thrownValue = workInProgressThrownValue;
 
-        switch (workInProgressSuspendedReason) {
+        resumeOrUnwind: switch (workInProgressSuspendedReason) {
           case SuspendedOnError: {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
@@ -24559,6 +24579,12 @@ function renderRootConcurrent(root, lanes) {
             break outer;
           }
 
+          case SuspendedOnInstance: {
+            workInProgressSuspendedReason =
+              SuspendedOnInstanceAndReadyToContinue;
+            break outer;
+          }
+
           case SuspendedAndReadyToContinue: {
             var _thenable = thrownValue;
 
@@ -24574,6 +24600,69 @@ function renderRootConcurrent(root, lanes) {
               unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             }
 
+            break;
+          }
+
+          case SuspendedOnInstanceAndReadyToContinue: {
+            switch (workInProgress.tag) {
+              case HostComponent:
+              case HostHoistable:
+              case HostSingleton: {
+                // Before unwinding the stack, check one more time if the
+                // instance is ready. It may have loaded when React yielded to
+                // the main thread.
+                // Assigning this to a constant so Flow knows the binding won't
+                // be mutated by `preloadInstance`.
+                var hostFiber = workInProgress;
+                var type = hostFiber.type;
+                var props = hostFiber.pendingProps;
+                var isReady = preloadInstance(type, props);
+
+                if (isReady) {
+                  // The data resolved. Resume the work loop as if nothing
+                  // suspended. Unlike when a user component suspends, we don't
+                  // have to replay anything because the host fiber
+                  // already completed.
+                  workInProgressSuspendedReason = NotSuspended;
+                  workInProgressThrownValue = null;
+                  var sibling = hostFiber.sibling;
+
+                  if (sibling !== null) {
+                    workInProgress = sibling;
+                  } else {
+                    var returnFiber = hostFiber.return;
+
+                    if (returnFiber !== null) {
+                      workInProgress = returnFiber;
+                      completeUnitOfWork(returnFiber);
+                    } else {
+                      workInProgress = null;
+                    }
+                  }
+
+                  break resumeOrUnwind;
+                }
+
+                break;
+              }
+
+              default: {
+                // This will fail gracefully but it's not correct, so log a
+                // warning in dev.
+                if (true) {
+                  error(
+                    "Unexpected type of fiber triggered a suspensey commit. " +
+                      "This is a bug in React."
+                  );
+                }
+
+                break;
+              }
+            } // Otherwise, unwind then continue with the normal work loop.
+
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
           }
 
