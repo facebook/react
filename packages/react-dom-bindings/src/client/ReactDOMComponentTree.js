@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {HoistableRoot, RootResources} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -20,6 +19,8 @@ import type {
   Instance,
   SuspenseInstance,
   Props,
+  HoistableRoot,
+  RootResources,
 } from './ReactDOMHostConfig';
 
 import {
