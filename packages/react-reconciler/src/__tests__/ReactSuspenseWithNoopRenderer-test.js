@@ -1021,10 +1021,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await waitFor(['Suspend! [Async]', 'Sibling']);
 
     await resolveText('Async');
-
-    // Because we're already showing a fallback, interrupt the current render
-    // and restart immediately.
-    await waitForAll(['Async', 'Sibling']);
+    await waitForAll([
+      // We've now pinged the boundary but we don't know if we should restart yet,
+      // because we haven't completed the suspense boundary.
+      'Loading...',
+      // Once we've completed the boundary we restarted.
+      'Async',
+      'Sibling',
+    ]);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Async" />
