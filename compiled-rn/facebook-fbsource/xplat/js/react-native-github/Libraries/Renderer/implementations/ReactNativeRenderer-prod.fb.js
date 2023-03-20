@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_248 = {
+var injectedNamesToPlugins$jscomp$inline_249 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_248 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_249 = !1,
-  pluginName$jscomp$inline_250;
-for (pluginName$jscomp$inline_250 in injectedNamesToPlugins$jscomp$inline_248)
+  isOrderingDirty$jscomp$inline_250 = !1,
+  pluginName$jscomp$inline_251;
+for (pluginName$jscomp$inline_251 in injectedNamesToPlugins$jscomp$inline_249)
   if (
-    injectedNamesToPlugins$jscomp$inline_248.hasOwnProperty(
-      pluginName$jscomp$inline_250
+    injectedNamesToPlugins$jscomp$inline_249.hasOwnProperty(
+      pluginName$jscomp$inline_251
     )
   ) {
-    var pluginModule$jscomp$inline_251 =
-      injectedNamesToPlugins$jscomp$inline_248[pluginName$jscomp$inline_250];
+    var pluginModule$jscomp$inline_252 =
+      injectedNamesToPlugins$jscomp$inline_249[pluginName$jscomp$inline_251];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_250) ||
-      namesToPlugins[pluginName$jscomp$inline_250] !==
-        pluginModule$jscomp$inline_251
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_251) ||
+      namesToPlugins[pluginName$jscomp$inline_251] !==
+        pluginModule$jscomp$inline_252
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_250])
+      if (namesToPlugins[pluginName$jscomp$inline_251])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_250 + "`.")
+            (pluginName$jscomp$inline_251 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_250] =
-        pluginModule$jscomp$inline_251;
-      isOrderingDirty$jscomp$inline_249 = !0;
+      namesToPlugins[pluginName$jscomp$inline_251] =
+        pluginModule$jscomp$inline_252;
+      isOrderingDirty$jscomp$inline_250 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_249 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_250 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -9561,6 +9561,13 @@ function findNodeHandle(componentOrHandle) {
     ? componentOrHandle._nativeTag
     : componentOrHandle.__nativeTag;
 }
+function getNodeFromPublicInstance(publicInstance) {
+  return null == publicInstance.__internalInstanceHandle
+    ? null
+    : (publicInstance = publicInstance.__internalInstanceHandle) &&
+        publicInstance.stateNode &&
+        publicInstance.stateNode.node;
+}
 var emptyObject = {};
 function createHierarchy(fiberHierarchy) {
   return fiberHierarchy.map(function (fiber$jscomp$0) {
@@ -9640,10 +9647,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1089 = {
+  devToolsConfig$jscomp$inline_1092 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-c57b90f50-20230320",
+    version: "18.3.0-next-3554c8852-20230320",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9658,11 +9665,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1343 = {
-  bundleType: devToolsConfig$jscomp$inline_1089.bundleType,
-  version: devToolsConfig$jscomp$inline_1089.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1089.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1089.rendererConfig,
+var internals$jscomp$inline_1346 = {
+  bundleType: devToolsConfig$jscomp$inline_1092.bundleType,
+  version: devToolsConfig$jscomp$inline_1092.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1092.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1092.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9678,26 +9685,26 @@ var internals$jscomp$inline_1343 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1089.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1092.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-c57b90f50-20230320"
+  reconcilerVersion: "18.3.0-next-3554c8852-20230320"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1344 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1347 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1344.isDisabled &&
-    hook$jscomp$inline_1344.supportsFiber
+    !hook$jscomp$inline_1347.isDisabled &&
+    hook$jscomp$inline_1347.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1344.inject(
-        internals$jscomp$inline_1343
+      (rendererID = hook$jscomp$inline_1347.inject(
+        internals$jscomp$inline_1346
       )),
-        (injectedHook = hook$jscomp$inline_1344);
+        (injectedHook = hook$jscomp$inline_1347);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
@@ -9719,11 +9726,9 @@ exports.dispatchCommand = function (handle, command, args) {
   var nativeTag =
     null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
   null != nativeTag &&
-    ((handle = handle.__internalInstanceHandle),
+    ((handle = getNodeFromPublicInstance(handle)),
     null != handle
-      ? ((nativeTag = handle && handle.stateNode && handle.stateNode.node),
-        null != nativeTag &&
-          nativeFabricUIManager.dispatchCommand(nativeTag, command, args))
+      ? nativeFabricUIManager.dispatchCommand(handle, command, args)
       : ReactNativePrivateInterface.UIManager.dispatchViewManagerCommand(
           nativeTag,
           command,
@@ -9805,11 +9810,9 @@ exports.sendAccessibilityEvent = function (handle, eventType) {
   var nativeTag =
     null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
   null != nativeTag &&
-    ((handle = handle.__internalInstanceHandle),
+    ((handle = getNodeFromPublicInstance(handle)),
     null != handle
-      ? ((nativeTag = handle && handle.stateNode && handle.stateNode.node),
-        null != nativeTag &&
-          nativeFabricUIManager.sendAccessibilityEvent(nativeTag, eventType))
+      ? nativeFabricUIManager.sendAccessibilityEvent(handle, eventType)
       : ReactNativePrivateInterface.legacySendAccessibilityEvent(
           nativeTag,
           eventType

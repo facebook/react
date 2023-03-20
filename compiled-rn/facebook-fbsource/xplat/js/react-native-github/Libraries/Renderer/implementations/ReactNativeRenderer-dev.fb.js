@@ -27304,7 +27304,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-c57b90f50-20230320";
+var ReactVersion = "18.3.0-next-3554c8852-20230320";
 
 function createPortal$1(
   children,
@@ -27833,19 +27833,6 @@ function injectIntoDevTools(devToolsConfig) {
   });
 }
 
-/**
- * IMPORTANT: This module is used in Paper and Fabric. It needs to be defined
- * outside of `ReactFabricPublicInstance` because that module requires
- * `nativeFabricUIManager` to be defined in the global scope (which does not
- * happen in Paper).
- */
-function getNativeTagFromPublicInstance(publicInstance) {
-  return publicInstance.__nativeTag;
-}
-function getInternalInstanceHandleFromPublicInstance(publicInstance) {
-  return publicInstance.__internalInstanceHandle;
-}
-
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function findHostInstance_DEPRECATED(componentOrHandle) {
   {
@@ -27980,15 +27967,10 @@ function dispatchCommand(handle, command, args) {
     return;
   }
 
-  var internalInstanceHandle =
-    getInternalInstanceHandleFromPublicInstance(handle);
+  var node = getNodeFromPublicInstance(handle);
 
-  if (internalInstanceHandle != null) {
-    var node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
-
-    if (node != null) {
-      nativeFabricUIManager.dispatchCommand(node, command, args);
-    }
+  if (node != null) {
+    nativeFabricUIManager.dispatchCommand(node, command, args);
   } else {
     ReactNativePrivateInterface.UIManager.dispatchViewManagerCommand(
       nativeTag,
@@ -28014,15 +27996,10 @@ function sendAccessibilityEvent(handle, eventType) {
     return;
   }
 
-  var internalInstanceHandle =
-    getInternalInstanceHandleFromPublicInstance(handle);
+  var node = getNodeFromPublicInstance(handle);
 
-  if (internalInstanceHandle != null) {
-    var node = getNodeFromInternalInstanceHandle(internalInstanceHandle);
-
-    if (node != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
-    }
+  if (node != null) {
+    nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
   } else {
     ReactNativePrivateInterface.legacySendAccessibilityEvent(
       nativeTag,
@@ -28036,6 +28013,26 @@ function getNodeFromInternalInstanceHandle(internalInstanceHandle) {
     internalInstanceHandle && // $FlowExpectedError[incompatible-return]
     internalInstanceHandle.stateNode && // $FlowExpectedError[incompatible-use]
     internalInstanceHandle.stateNode.node
+  );
+}
+
+/**
+ * IMPORTANT: This module is used in Paper and Fabric. It needs to be defined
+ * outside of `ReactFabricPublicInstance` because that module requires
+ * `nativeFabricUIManager` to be defined in the global scope (which does not
+ * happen in Paper).
+ */
+
+function getNativeTagFromPublicInstance(publicInstance) {
+  return publicInstance.__nativeTag;
+}
+function getNodeFromPublicInstance(publicInstance) {
+  if (publicInstance.__internalInstanceHandle == null) {
+    return null;
+  }
+
+  return getNodeFromInternalInstanceHandle(
+    publicInstance.__internalInstanceHandle
   );
 }
 
@@ -28201,12 +28198,7 @@ function getInspectorDataForViewAtPoint(
 ) {
   {
     var closestInstance = null;
-    var fabricInstanceHandle =
-      getInternalInstanceHandleFromPublicInstance(inspectedView);
-    var fabricNode =
-      fabricInstanceHandle != null
-        ? getNodeFromInternalInstanceHandle(fabricInstanceHandle)
-        : null;
+    var fabricNode = getNodeFromPublicInstance(inspectedView);
 
     if (fabricNode) {
       // For Fabric we can look up the instance handle directly and measure it.

@@ -10171,7 +10171,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1107 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-c57b90f50-20230320",
+    version: "18.3.0-next-3554c8852-20230320",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10226,7 +10226,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-c57b90f50-20230320"
+  reconcilerVersion: "18.3.0-next-3554c8852-20230320"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10240,11 +10240,12 @@ exports.dispatchCommand = function (handle, command, args) {
   var nativeTag =
     null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
   null != nativeTag &&
-    ((handle = handle.__internalInstanceHandle),
+    ((handle =
+      null == handle.__internalInstanceHandle
+        ? null
+        : getNodeFromInternalInstanceHandle(handle.__internalInstanceHandle)),
     null != handle
-      ? ((nativeTag = getNodeFromInternalInstanceHandle(handle)),
-        null != nativeTag &&
-          nativeFabricUIManager.dispatchCommand(nativeTag, command, args))
+      ? nativeFabricUIManager.dispatchCommand(handle, command, args)
       : ReactNativePrivateInterface.UIManager.dispatchViewManagerCommand(
           nativeTag,
           command,
@@ -10295,6 +10296,11 @@ exports.getInspectorDataForInstance = function (closestInstance) {
   };
 };
 exports.getNodeFromInternalInstanceHandle = getNodeFromInternalInstanceHandle;
+exports.getPublicInstanceFromInternalInstanceHandle = function (
+  internalInstanceHandle
+) {
+  return getPublicInstance(internalInstanceHandle.stateNode);
+};
 exports.render = function (element, containerTag, callback, concurrentRoot) {
   var root = roots.get(containerTag);
   root ||
@@ -10332,11 +10338,12 @@ exports.sendAccessibilityEvent = function (handle, eventType) {
   var nativeTag =
     null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
   null != nativeTag &&
-    ((handle = handle.__internalInstanceHandle),
+    ((handle =
+      null == handle.__internalInstanceHandle
+        ? null
+        : getNodeFromInternalInstanceHandle(handle.__internalInstanceHandle)),
     null != handle
-      ? ((nativeTag = getNodeFromInternalInstanceHandle(handle)),
-        null != nativeTag &&
-          nativeFabricUIManager.sendAccessibilityEvent(nativeTag, eventType))
+      ? nativeFabricUIManager.sendAccessibilityEvent(handle, eventType)
       : ReactNativePrivateInterface.legacySendAccessibilityEvent(
           nativeTag,
           eventType
