@@ -312,7 +312,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (record === undefined) {
         throw new Error('Could not find record for key.');
       }
-      if (record.status === 'pending') {
+      if (record.status === 'fulfilled') {
+        // Already loaded.
+      } else if (record.status === 'pending') {
         if (suspenseyCommitSubscription === null) {
           suspenseyCommitSubscription = {
             pendingCount: 1,
@@ -321,20 +323,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         } else {
           suspenseyCommitSubscription.pendingCount++;
         }
+        // Stash the subscription on the record. In `resolveSuspenseyThing`,
+        // we'll use this fire the commit once all the things have loaded.
+        if (record.subscriptions === null) {
+          record.subscriptions = [];
+        }
+        record.subscriptions.push(suspenseyCommitSubscription);
       }
-      // Stash the subscription on the record. In `resolveSuspenseyThing`,
-      // we'll use this fire the commit once all the things have loaded.
-      if (record.subscriptions === null) {
-        record.subscriptions = [];
-      }
-      record.subscriptions.push(suspenseyCommitSubscription);
     } else {
       throw new Error(
         'Did not expect this host component to be visited when suspending ' +
           'the commit. Did you check the SuspendCommit flag?',
       );
     }
-    return suspenseyCommitSubscription;
   }
 
   function waitForCommitToBeReady():
@@ -569,38 +570,42 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       callback(endTime);
     },
 
-    shouldSuspendCommit(type: string, props: Props): boolean {
-      if (type === 'suspensey-thing' && typeof props.src === 'string') {
-        if (suspenseyThingCache === null) {
-          suspenseyThingCache = new Map();
-        }
-        const record = suspenseyThingCache.get(props.src);
-        if (record === undefined) {
-          const newRecord: SuspenseyThingRecord = {
-            status: 'pending',
-            subscriptions: null,
-          };
-          suspenseyThingCache.set(props.src, newRecord);
-          const onLoadStart = props.onLoadStart;
-          if (typeof onLoadStart === 'function') {
-            onLoadStart();
-          }
-          return props.src;
-        } else {
-          if (record.status === 'pending') {
-            // The resource was already requested, but it hasn't finished
-            // loading yet.
-            return true;
-          } else {
-            // The resource has already loaded. If the renderer is confident that
-            // the resource will still be cached by the time the render commits,
-            // then it can return false, like we do here.
-            return false;
-          }
-        }
+    maySuspendCommit(type: string, props: Props): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return type === 'suspensey-thing' && typeof props.src === 'string';
+    },
+
+    preloadInstance(type: string, props: Props): boolean {
+      if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
+        throw new Error('Attempted to preload unexpected instance: ' + type);
       }
-      // Don't need to suspend.
-      return false;
+
+      // In addition to preloading an instance, this method asks whether the
+      // instance is ready to be committed. If it's not, React may yield to the
+      // main thread and ask again. It's possible a load event will fire in
+      // between, in which case we can avoid showing a fallback.
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(props.src);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'pending',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(props.src, newRecord);
+        const onLoadStart = props.onLoadStart;
+        if (typeof onLoadStart === 'function') {
+          onLoadStart();
+        }
+        return false;
+      } else {
+        // If this is false, React will trigger a fallback, if needed.
+        return record.status === 'fulfilled';
+      }
     },
 
     startSuspendingCommit,

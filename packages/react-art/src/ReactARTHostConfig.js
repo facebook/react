@@ -459,8 +459,13 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
 }
 
-export function shouldSuspendCommit(type, props) {
+export function maySuspendCommit(type, props) {
   return false;
+}
+
+export function preloadInstance(type, props) {
+  // Return true to indicate it's already loaded
+  return true;
 }
 
 export function startSuspendingCommit() {}

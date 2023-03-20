@@ -8,6 +8,7 @@ let SuspenseList;
 let Scheduler;
 let act;
 let assertLog;
+let waitForPaint;
 
 describe('ReactSuspenseyCommitPhase', () => {
   beforeEach(() => {
@@ -28,6 +29,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     const InternalTestUtils = require('internal-test-utils');
     act = InternalTestUtils.act;
     assertLog = InternalTestUtils.assertLog;
+    waitForPaint = InternalTestUtils.waitForPaint;
   });
 
   function Text({text}) {
@@ -108,12 +110,13 @@ describe('ReactSuspenseyCommitPhase', () => {
         </Suspense>,
       );
     });
-    // NOTE: `shouldSuspendCommit` is called even during synchronous renders
-    // because if this node is ever hidden, then revealed again, we want to know
-    // whether it's capable of suspending the commit. We track this using a
-    // fiber flag.
-    assertLog(['Image requested [A]']);
-    expect(getSuspenseyThingStatus('A')).toBe('pending');
+    // We intentionally don't preload during an urgent update because the
+    // resource will be inserted synchronously, anyway.
+    // TODO: Maybe we should, though? Could be that the browser is able to start
+    // the preload in background even though the main thread is blocked. Likely
+    // a micro-optimization either way because typically new content is loaded
+    // during a transition, not an urgent render.
+    expect(getSuspenseyThingStatus('A')).toBe(null);
     expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
   });
 
@@ -224,6 +227,54 @@ describe('ReactSuspenseyCommitPhase', () => {
       <>
         <suspensey-thing src="A" />
         <suspensey-thing src="B" />
+        <suspensey-thing src="C" />
+      </>,
+    );
+  });
+
+  test('avoid triggering a fallback if resource loads immediately', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        // Intentionally rendering <suspensey-thing>s in a variety of tree
+        // positions to test that the work loop resumes correctly in each case.
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <suspensey-thing
+              src="A"
+              onLoadStart={() => Scheduler.log('Request [A]')}>
+              <suspensey-thing
+                src="B"
+                onLoadStart={() => Scheduler.log('Request [B]')}
+              />
+            </suspensey-thing>
+            <suspensey-thing
+              src="C"
+              onLoadStart={() => Scheduler.log('Request [C]')}
+            />
+          </Suspense>,
+        );
+      });
+      // React will yield right after the resource suspends.
+      // TODO: The child is preloaded first because we preload in the complete
+      // phase. Ideally it should be in the begin phase, but we currently don't
+      // create the instance until complete. However, it's unclear if we even
+      // need the instance for preloading. So we should probably move this to
+      // the begin phase.
+      await waitForPaint(['Request [B]']);
+      // Resolve in an immediate task. This could happen if the resource is
+      // already loaded into the cache.
+      resolveSuspenseyThing('B');
+      await waitForPaint(['Request [A]']);
+      resolveSuspenseyThing('A');
+      await waitForPaint(['Request [C]']);
+      resolveSuspenseyThing('C');
+    });
+    expect(root).toMatchRenderedOutput(
+      <>
+        <suspensey-thing src="A">
+          <suspensey-thing src="B" />
+        </suspensey-thing>
         <suspensey-thing src="C" />
       </>,
     );
