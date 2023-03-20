@@ -212,6 +212,8 @@ export type ReactNativeType = {
   ...
 };
 
+export opaque type Node = mixed;
+
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
@@ -235,6 +237,7 @@ export type ReactFabricType = {
     concurrentRoot: ?boolean,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
+  getNodeFromInternalInstanceHandle(internalInstanceHandle: mixed): ?Node,
   ...
 };
 

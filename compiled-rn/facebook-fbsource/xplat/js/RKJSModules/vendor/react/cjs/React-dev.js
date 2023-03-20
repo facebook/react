@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-next-ef8bdbecb-20230310";
+var ReactVersion = "18.3.0-next-c57b90f50-20230320";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -830,7 +830,7 @@ function warnIfStringRefCannotBeAutoConverted$1(config) {
  * @internal
  */
 
-var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
+function ReactElement$1(type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -882,7 +882,7 @@ var ReactElement$1 = function (type, key, ref, self, source, owner, props) {
   }
 
   return element;
-};
+}
 /**
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
@@ -3327,7 +3327,7 @@ function defineRefPropWarningGetter(props, displayName) {
  * @internal
  */
 
-var ReactElement = function (type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -3379,7 +3379,7 @@ var ReactElement = function (type, key, ref, self, source, owner, props) {
   }
 
   return element;
-};
+}
 /**
  * https://github.com/reactjs/rfcs/pull/107
  * @param {*} type
