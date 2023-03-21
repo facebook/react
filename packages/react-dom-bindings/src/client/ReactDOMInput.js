@@ -10,7 +10,6 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
-import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
@@ -130,7 +129,7 @@ export function updateChecked(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
   if (checked != null) {
-    setValueForProperty(node, 'checked', checked, false);
+    node.checked = checked;
   }
 }
 
