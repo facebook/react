@@ -13,8 +13,8 @@ function f(y) {
 
 ```javascript
 function f(y) {
-  const x = y;
-  return x + 2 + 2;
+  let x = y;
+  return x + (x = 2) + 2;
 }
 
 ```

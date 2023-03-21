@@ -21,8 +21,7 @@ function Component() {
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = foo();
-    x = bar();
-    t0 = x(x, 5);
+    t0 = x((x = bar()), 5);
     $[0] = t0;
     $[1] = x;
   } else {

@@ -16,7 +16,7 @@ function ternary(props) {
 function ternary(props) {
   let x = undefined;
 
-  const y = props.a ? ((x = 1), 1) : ((x = 2), 2);
+  const y = props.a ? (x = 1) : (x = 2);
   return x + y;
 }
 

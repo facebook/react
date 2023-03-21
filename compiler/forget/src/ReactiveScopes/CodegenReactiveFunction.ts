@@ -404,10 +404,13 @@ function codegenInstructionNullable(
       }
       case InstructionKind.Reassign: {
         invariant(value !== null, "Expected a value for reassignment");
-        return createExpressionStatement(
-          instr.loc,
-          t.assignmentExpression("=", codegenLValue(lvalue), value)
-        );
+        const expr = t.assignmentExpression("=", codegenLValue(lvalue), value);
+        if (instr.lvalue !== null) {
+          cx.temp.set(instr.lvalue.identifier.id, expr);
+          return null;
+        } else {
+          return createExpressionStatement(instr.loc, expr);
+        }
       }
       default: {
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);

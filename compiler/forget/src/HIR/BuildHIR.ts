@@ -2009,7 +2009,7 @@ function lowerAssignment(
         },
         loc,
       });
-      return { kind: "LoadLocal", place, loc: temporary.loc };
+      return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
     }
     case "MemberExpression": {
       // This can only occur because of a coding error, parsers enforce this condition

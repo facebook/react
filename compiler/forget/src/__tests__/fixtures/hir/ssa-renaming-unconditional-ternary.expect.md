@@ -18,47 +18,47 @@ function foo(props) {
 
 ```javascript
 bb0 (block):
-  [1] store $41[1:7] = Array []
-  [2] store $43[2:7] = StoreLocal Let mutate x$42[2:7] = capture $41[1:7]
-  [3] mutate $44[3:7] = LoadLocal capture x$42[2:7]
-  [4] mutate $45 = LoadLocal read props$40
-  [5] mutate $46 = PropertyLoad read $45.bar
-  [6] mutate $47 = PropertyCall mutate $44[3:7].push(read $46)
+  [1] store $37[1:7] = Array []
+  [2] store $39[2:7] = StoreLocal Let mutate x$38[2:7] = capture $37[1:7]
+  [3] mutate $40[3:7] = LoadLocal capture x$38[2:7]
+  [4] mutate $41 = LoadLocal read props$36
+  [5] mutate $42 = PropertyLoad read $41.bar
+  [6] mutate $43 = PropertyCall mutate $40[3:7].push(read $42)
   [7] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
-  [8] mutate $48 = LoadLocal read props$40
-  [9] mutate $49 = PropertyLoad read $48.cond
-  [10] Branch (read $49) then:bb3 else:bb4
+  [8] mutate $44 = LoadLocal read props$36
+  [9] mutate $45 = PropertyLoad read $44.cond
+  [10] Branch (read $45) then:bb3 else:bb4
 bb3 (value):
   predecessor blocks: bb2
-  [14] store $54[14:21] = Array []
-  [15] store $56[15:21] = StoreLocal Reassign mutate x$42[15:21] = capture $54[14:21]
-  [17] mutate $58[17:21] = LoadLocal capture x$42[15:21]
-  [18] mutate $59 = LoadLocal read props$40
-  [19] mutate $60 = PropertyLoad read $59.foo
-  [20] mutate $61[20:39] = PropertyCall mutate $58[17:21].push(read $60)
-  [21] store $63[21:39] = StoreLocal Const mutate $62[7:39] = capture $61[20:39]
-  [22] Goto bb1
+  [13] store $49[13:19] = Array []
+  [14] store $51[14:19] = StoreLocal Reassign mutate x$38[14:19] = capture $49[13:19]
+  [15] mutate $52[15:19] = LoadLocal capture x$38[14:19]
+  [16] mutate $53 = LoadLocal read props$36
+  [17] mutate $54 = PropertyLoad read $53.foo
+  [18] mutate $55[18:35] = PropertyCall mutate $52[15:19].push(read $54)
+  [19] store $57[19:35] = StoreLocal Const mutate $56[7:35] = capture $55[18:35]
+  [20] Goto bb1
 bb4 (value):
   predecessor blocks: bb2
-  [26] store $68[26:33] = Array []
-  [27] store $70[27:33] = StoreLocal Reassign mutate x$42[27:33] = capture $68[26:33]
-  [29] mutate $72[29:33] = LoadLocal capture x$42[27:33]
-  [30] mutate $73 = LoadLocal read props$40
-  [31] mutate $74 = PropertyLoad read $73.bar
-  [32] mutate $75[32:39] = PropertyCall mutate $72[29:33].push(read $74)
-  [33] store $77[33:39] = StoreLocal Const mutate $62[7:39] = capture $75[32:39]
-  [34] Goto bb1
+  [23] store $61[23:29] = Array []
+  [24] store $63[24:29] = StoreLocal Reassign mutate x$38[24:29] = capture $61[23:29]
+  [25] mutate $64[25:29] = LoadLocal capture x$38[24:29]
+  [26] mutate $65 = LoadLocal read props$36
+  [27] mutate $66 = PropertyLoad read $65.bar
+  [28] mutate $67[28:35] = PropertyCall mutate $64[25:29].push(read $66)
+  [29] store $69[29:35] = StoreLocal Const mutate $56[7:35] = capture $67[28:35]
+  [30] Goto bb1
 bb1 (block):
   predecessor blocks: bb3 bb4
-  $80[7:39]:TPhi: phi(bb3: $62, bb4: $76)
-  x$42:TPhi: phi(bb3: x$42, bb4: x$42)
-  [35] store $79[35:39] = StoreLocal Const mutate _$78[35:39] = capture $62[7:39]
-  [36] mutate $81 = Global console
-  [37] mutate $82[37:39] = LoadLocal capture _$78[35:39]
-  [38] mutate $83 = PropertyCall read $81.log(mutate $82[37:39])
-  [39] mutate $84 = LoadLocal capture x$42
-  [40] Return freeze $84
+  $72[7:35]:TPhi: phi(bb3: $56, bb4: $68)
+  x$38:TPhi: phi(bb3: x$38, bb4: x$38)
+  [31] store $71[31:35] = StoreLocal Const mutate _$70[31:35] = capture $56[7:35]
+  [32] mutate $73 = Global console
+  [33] mutate $74[33:35] = LoadLocal capture _$70[31:35]
+  [34] mutate $75 = PropertyCall read $73.log(mutate $74[33:35])
+  [35] mutate $76 = LoadLocal capture x$38
+  [36] Return freeze $76
 ```
       
