@@ -21,11 +21,8 @@ function Component(props) {
   let x;
   if (c_0) {
     x = [props.x];
-
-    const t0 = 0;
-    x[t0] = x[t0] * 2;
-    const t1 = "0";
-    x[t1] = x[t1] + 3;
+    x[0] = x[0] * 2;
+    x["0"] = x["0"] + 3;
     $[0] = props.x;
     $[1] = x;
   } else {

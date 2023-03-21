@@ -6,9 +6,6 @@
  */
 
 import {
-  Identifier,
-  InstructionId,
-  Place,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
@@ -16,7 +13,6 @@ import {
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 type VisitorState = {
-  temporaries: Map<Identifier, number>;
   nextId: number;
 };
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
@@ -39,39 +35,16 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
     }
   }
-  override visitPlace(
-    id: InstructionId,
-    place: Place,
-    state: VisitorState
-  ): void {
-    let count = state.temporaries.get(place.identifier);
-    if (count !== undefined) {
-      state.temporaries.set(place.identifier, count + 1);
-    }
-  }
   override visitInstruction(
     instruction: ReactiveInstruction,
     state: VisitorState
   ): void {
     this.traverseInstruction(instruction, state);
-    if (
-      instruction.lvalue !== null &&
-      instruction.lvalue.identifier.name === null &&
-      instruction.value.kind !== "LoadLocal"
-    ) {
-      state.temporaries.set(instruction.lvalue.identifier, 0);
-    }
   }
 }
 export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const state: VisitorState = {
     nextId: 0,
-    temporaries: new Map(),
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  for (const [identifier, count] of state.temporaries) {
-    if (count > 1) {
-      identifier.name = `t${state.nextId++}`;
-    }
-  }
 }

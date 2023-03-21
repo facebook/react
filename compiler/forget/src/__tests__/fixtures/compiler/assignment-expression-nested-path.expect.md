@@ -21,8 +21,7 @@ function g(props) {
   if (c_0) {
     a = { b: { c: props.c } };
     a.b.c = a.b.c + 1;
-    const t0 = a.b;
-    t0.c = t0.c * 2;
+    a.b.c = a.b.c * 2;
     $[0] = props.c;
     $[1] = a;
   } else {
