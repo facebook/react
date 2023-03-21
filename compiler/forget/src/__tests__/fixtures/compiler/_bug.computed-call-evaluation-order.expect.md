@@ -38,7 +38,7 @@ function Component() {
     console.log("B");
     changeF(x);
     console.log("arg");
-    x.f(1);
+    x["f"](1);
     $[0] = x;
   } else {
     x = $[0];

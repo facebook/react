@@ -22,7 +22,7 @@ function Component(props) {
   if (c_0) {
     x = {};
     x.foo = x.foo + x.bar;
-    x.foo(props.foo);
+    x["foo"](props.foo);
     $[0] = props.foo;
     $[1] = x;
   } else {

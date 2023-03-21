@@ -192,32 +192,6 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "ComputedCall": {
-      const property = read(constants, value.property);
-      if (
-        property !== null &&
-        typeof property.value === "string" &&
-        isValidIdentifier(property.value)
-      ) {
-        const nextValue: InstructionValue = {
-          kind: "PropertyCall",
-          args: value.args,
-          loc: value.loc,
-          property: property.value,
-          receiver: value.receiver,
-        };
-        // Future-proofing: when we add support for optional computed calls,
-        // we'll need to copy the value here
-        if ((value as any).optional) {
-          invariant(
-            false,
-            "TODO: translate optional computed load to optional property load"
-          );
-        }
-        instr.value = nextValue;
-      }
-      return null;
-    }
     case "BinaryExpression": {
       const lhsValue = read(constants, value.left);
       const rhsValue = read(constants, value.right);
