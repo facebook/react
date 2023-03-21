@@ -156,6 +156,7 @@ jobs:
       - name: Add REVISION file
         run: |
           echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - uses: actions/upload-artifact@v3
         with:
           name: compiled
