@@ -1000,10 +1000,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      // Render third child, even though an earlier sibling threw.
-      'Normal constructor',
-      'Normal componentWillMount',
-      'Normal render',
+      // Skip the remaining siblings
       // Handle the error
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',

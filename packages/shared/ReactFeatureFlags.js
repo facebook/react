@@ -17,6 +17,18 @@ export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // -----------------------------------------------------------------------------
+// Killswitch
+//
+// Flags that exist solely to turn off a change in case it causes a regression
+// when it rolls out to prod. We should remove these as soon as possible.
+// -----------------------------------------------------------------------------
+
+// This is phrased as a negative so that if someone forgets to add a GK, the
+// default is to enable the feature. It should only be overridden if there's
+// a regression in prod.
+export const revertRemovalOfSiblingPrerendering = false;
+
+// -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
 // Flags that can be probably deleted or landed, but might require extra effort

@@ -19,6 +19,7 @@ export const {
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,

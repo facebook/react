@@ -752,10 +752,6 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Page Two]',
-        'Suspend [Show Text One]',
-        'Show Text One Loading...',
-        'Suspend [Show Text Two]',
-        'Show Text Two Loading...',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
@@ -882,10 +878,6 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Page Two]',
-        'Suspend [Show Text One]',
-        'Show Text One Loading...',
-        'Suspend [Show Text]',
-        'Show Text Loading...',
         'Loading...',
         'onTransitionStart(navigate, 1000)',
         'onTransitionStart(show text one, 1000)',
@@ -1121,8 +1113,6 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Page Two]',
-        'Suspend [Marker Text]',
-        'Loading...',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
       ]);
@@ -1239,10 +1229,6 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Outer Text]',
-        'Suspend [Inner Text One]',
-        'Inner One...',
-        'Suspend [Inner Text Two]',
-        'Inner Two...',
         'Outer...',
         'onTransitionStart(page transition, 1000)',
         'onMarkerProgress(page transition, outer marker, 1000, 2000, [outer])',
@@ -1782,8 +1768,6 @@ describe('ReactInteractionTracing', () => {
       await advanceTimers(1000);
       await waitForAll([
         'Suspend [Page One]',
-        'Suspend [Child]',
-        'Loading Child...',
         'Loading One...',
         'Suspend [Page Two]',
         'Loading Two...',

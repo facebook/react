@@ -312,13 +312,7 @@ describe('ReactDOMServerPartialHydration', () => {
           Scheduler.log(error.message);
         },
       });
-      await waitForAll([
-        'Suspend',
-        'Component',
-        'Component',
-        'Component',
-        'Component',
-      ]);
+      await waitForAll(['Suspend']);
       jest.runAllTimers();
 
       // Unchanged
@@ -1415,7 +1409,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       // This will throw it away and rerender.
-      await waitForAll(['Child', 'Sibling']);
+      await waitForAll(['Child']);
 
       expect(container.textContent).toBe('Hello');
 

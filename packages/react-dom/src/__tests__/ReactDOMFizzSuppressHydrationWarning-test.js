@@ -480,7 +480,6 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     await expect(async () => {
       await waitForAll([
         'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
         'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
     }).toErrorDev(
