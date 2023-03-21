@@ -18687,7 +18687,7 @@ function completeWork(current, workInProgress, renderLanes) {
           );
 
         if (!fallthroughToNormalSuspensePath) {
-          if (workInProgress.flags & ShouldCapture) {
+          if (workInProgress.flags & ForceClientRender) {
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
@@ -26342,7 +26342,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-520f7f3ed-20230320";
+var ReactVersion = "18.3.0-next-77ba1618a-20230320";
 
 function createPortal$1(
   children,

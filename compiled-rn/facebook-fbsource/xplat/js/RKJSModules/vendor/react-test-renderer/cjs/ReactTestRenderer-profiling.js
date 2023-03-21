@@ -4650,7 +4650,7 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (index = !0);
-        if (!index) return workInProgress.flags & 65536 ? workInProgress : null;
+        if (!index) return workInProgress.flags & 256 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
         return (
@@ -8988,7 +8988,7 @@ var devToolsConfig$jscomp$inline_1054 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-520f7f3ed-20230320",
+  version: "18.3.0-next-77ba1618a-20230320",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1240 = {
@@ -9019,7 +9019,7 @@ var internals$jscomp$inline_1240 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-520f7f3ed-20230320"
+  reconcilerVersion: "18.3.0-next-77ba1618a-20230320"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1241 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
