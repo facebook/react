@@ -2549,7 +2549,7 @@ body {
       </html>,
     );
 
-    // We inject some styles, divs, scripts into the begginning, middle, and end
+    // We inject some styles, divs, scripts into the beginning, middle, and end
     // of the head / body.
     const injectedStyle = document.createElement('style');
     injectedStyle.textContent = 'body { background-color: blue; }';
@@ -2562,7 +2562,7 @@ body {
     document.head.prepend(injectedDiv);
     document.head.appendChild(injectedDiv.cloneNode(true));
     // We do not prepend a <div> in body because this will conflict with hyration
-    // We still mostly hydrate by matchign tag and <div> does not have any attributes to
+    // We still mostly hydrate by matching tag and <div> does not have any attributes to
     // differentiate between likely-inject and likely-rendered cases. If a <div> is prepended
     // in the <body> and you render a <div> as the first child of <body> there will be a conflict.
     // We consider this a rare edge case and even if it does happen the fallback to client rendering
@@ -4822,7 +4822,7 @@ background-color: green;
           ).pipe(writable);
         });
       }).toErrorDev(
-        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "foo bar".',
+        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this occurred is "foo bar".',
       );
     });
   });

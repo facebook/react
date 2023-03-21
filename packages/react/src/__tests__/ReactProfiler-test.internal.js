@@ -2677,23 +2677,23 @@ describe(`onNestedUpdateScheduled`, () => {
   it('is called when a class component schedules an update from the componentDidUpdate lifecycles', async () => {
     class Component extends React.Component {
       state = {
-        nestedUpdateSheduled: false,
+        nestedUpdateScheduled: false,
       };
       componentDidUpdate(prevProps, prevState) {
         if (
           this.props.scheduleNestedUpdate &&
-          !this.state.nestedUpdateSheduled
+          !this.state.nestedUpdateScheduled
         ) {
-          this.setState({nestedUpdateSheduled: true});
+          this.setState({nestedUpdateScheduled: true});
         }
       }
       render() {
         const {scheduleNestedUpdate} = this.props;
-        const {nestedUpdateSheduled} = this.state;
+        const {nestedUpdateScheduled: nestedUpdateScheduled} = this.state;
         Scheduler.log(
-          `Component:${scheduleNestedUpdate}:${nestedUpdateSheduled}`,
+          `Component:${scheduleNestedUpdate}:${nestedUpdateScheduled}`,
         );
-        return nestedUpdateSheduled;
+        return nestedUpdateScheduled;
       }
     }
 

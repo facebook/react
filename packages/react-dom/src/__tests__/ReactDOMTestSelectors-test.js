@@ -350,7 +350,7 @@ describe('ReactDOMTestSelectors', () => {
     });
 
     // @gate www || experimental
-    it('should support filtering by explicit accessibiliy role', () => {
+    it('should support filtering by explicit accessibility role', () => {
       function Example() {
         return (
           <div>
@@ -375,7 +375,7 @@ describe('ReactDOMTestSelectors', () => {
     });
 
     // @gate www || experimental
-    it('should support filtering by explicit secondary accessibiliy role', () => {
+    it('should support filtering by explicit secondary accessibility role', () => {
       const ref = React.createRef();
 
       function Example() {
@@ -400,7 +400,7 @@ describe('ReactDOMTestSelectors', () => {
     });
 
     // @gate www || experimental
-    it('should support filtering by implicit accessibiliy role', () => {
+    it('should support filtering by implicit accessibility role', () => {
       function Example() {
         return (
           <div>
@@ -423,7 +423,7 @@ describe('ReactDOMTestSelectors', () => {
     });
 
     // @gate www || experimental
-    it('should support filtering by implicit accessibiliy role with attributes qualifications', () => {
+    it('should support filtering by implicit accessibility role with attributes qualifications', () => {
       function Example() {
         return (
           <div>

@@ -170,7 +170,7 @@ const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
-const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
+const scriptIntegrity = stringToPrecomputedChunk('" integrity="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
@@ -260,7 +260,7 @@ export function createResponseState(
       );
       if (integrity) {
         bootstrapChunks.push(
-          scriptIntegirty,
+          scriptIntegrity,
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
@@ -280,7 +280,7 @@ export function createResponseState(
       );
       if (integrity) {
         bootstrapChunks.push(
-          scriptIntegirty,
+          scriptIntegrity,
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
@@ -1590,7 +1590,7 @@ function pushStyle(
     if (__DEV__) {
       if (href.includes(' ')) {
         console.error(
-          'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "%s".',
+          'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this occurred is "%s".',
           href,
         );
       }
@@ -2766,7 +2766,7 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
   errorDigest: ?string,
-  errorMesssage: ?string,
+  errorMessage: ?string,
   errorComponentStack: ?string,
 ): boolean {
   let result;
@@ -2784,11 +2784,11 @@ export function writeStartClientRenderedSuspenseBoundary(
     );
   }
   if (__DEV__) {
-    if (errorMesssage) {
+    if (errorMessage) {
       writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
       writeChunk(
         destination,
-        stringToChunk(escapeTextForBrowser(errorMesssage)),
+        stringToChunk(escapeTextForBrowser(errorMessage)),
       );
       writeChunk(
         destination,
@@ -3276,7 +3276,7 @@ function escapeJSStringsForInstructionScripts(input: string): string {
   const escaped = JSON.stringify(input);
   return escaped.replace(regexForJSStringsInInstructionScripts, match => {
     switch (match) {
-      // santizing breaking out of strings and script tags
+      // sanitizing breaking out of strings and script tags
       case '<':
         return '\\u003c';
       case '\u2028':
@@ -3298,7 +3298,7 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
   const escaped = JSON.stringify(input);
   return escaped.replace(regexForJSStringsInScripts, match => {
     switch (match) {
-      // santizing breaking out of strings and script tags
+      // sanitizing breaking out of strings and script tags
       case '&':
         return '\\u0026';
       case '>':
@@ -3933,7 +3933,7 @@ function writeStyleResourceAttributeInJS(
       attributeValue = '';
       break;
 
-    // Santized URLs
+    // Sanitized URLs
     case 'src':
     case 'href': {
       if (__DEV__) {
@@ -4130,7 +4130,7 @@ function writeStyleResourceAttributeInAttr(
       attributeValue = '';
       break;
 
-    // Santized URLs
+    // Sanitized URLs
     case 'src':
     case 'href': {
       if (__DEV__) {

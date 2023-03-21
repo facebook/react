@@ -169,7 +169,7 @@ module.exports = [
       'react-dom',
       'react-dom-bindings',
       'react-server-dom-webpack',
-      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
+      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',

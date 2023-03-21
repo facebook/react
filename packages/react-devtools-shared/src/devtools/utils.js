@@ -191,7 +191,7 @@ export function smartStringify(value: any): string {
 // [url, row, column]
 export type Stack = [string, number, number];
 
-const STACK_DELIMETER = /\n\s+at /;
+const STACK_DELIMITER = /\n\s+at /;
 const STACK_SOURCE_LOCATION = /([^\s]+) \((.+):(.+):(.+)\)/;
 
 export function stackToComponentSources(
@@ -199,7 +199,7 @@ export function stackToComponentSources(
 ): Array<[string, ?Stack]> {
   const out: Array<[string, ?Stack]> = [];
   stack
-    .split(STACK_DELIMETER)
+    .split(STACK_DELIMITER)
     .slice(1)
     .forEach(entry => {
       const match = STACK_SOURCE_LOCATION.exec(entry);

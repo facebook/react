@@ -45,9 +45,9 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
-import {readContextDuringReconcilation} from './ReactFiberNewContext';
+import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
-// This tracks the thenables that are unwrapped during reconcilation.
+// This tracks the thenables that are unwrapped during reconciliation.
 let thenableState: ThenableState | null = null;
 let thenableIndexCounter: number = 0;
 
@@ -584,7 +584,7 @@ function createChildReconciler(
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
           returnFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
         );
       }
@@ -675,7 +675,7 @@ function createChildReconciler(
         return updateSlot(
           returnFiber,
           oldFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
         );
       }
@@ -765,7 +765,7 @@ function createChildReconciler(
           existingChildren,
           returnFiber,
           newIdx,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
         );
       }
@@ -1429,7 +1429,7 @@ function createChildReconciler(
       // The structure is a bit unfortunate. Ideally, we shouldn't need to
       // replay the entire begin phase of the parent fiber in order to reconcile
       // the children again. This would require a somewhat significant refactor,
-      // because reconcilation happens deep within the begin phase, and
+      // because reconciliation happens deep within the begin phase, and
       // depending on the type of work, not always at the end. We should
       // consider as an future improvement.
       if (typeof newChild.then === 'function') {
@@ -1450,7 +1450,7 @@ function createChildReconciler(
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
         );
       }

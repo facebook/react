@@ -641,7 +641,7 @@ export function attach(
     // For example, ASTs cached for the component (for named hooks) may no longer be valid.
     // Send a signal to the frontend to purge this cached information.
     // The "fastRefreshScheduled" dispatched is global (not Fiber or even Renderer specific).
-    // This is less effecient since it means the front-end will need to purge the entire cache,
+    // This is less efficient since it means the front-end will need to purge the entire cache,
     // but this is probably an okay trade off in order to reduce coupling between the DevTools and Fast Refresh.
     renderer.scheduleRefresh = (...args) => {
       try {

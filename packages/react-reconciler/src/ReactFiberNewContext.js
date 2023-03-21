@@ -691,7 +691,19 @@ export function readContext<T>(context: ReactContext<T>): T {
   return readContextForConsumer(currentlyRenderingFiber, context);
 }
 
+/**
+ * @deprecated This is function is deprecated and will be removed in a future release.
+ * Please use `readContextDuringReconciliation(...)` instead.
+ */
 export function readContextDuringReconcilation<T>(
+  consumer: Fiber,
+  context: ReactContext<T>,
+  renderLanes: Lanes,
+): T {
+  return readContextDuringReconciliation(consumer, context, renderLanes);
+}
+
+export function readContextDuringReconciliation<T>(
   consumer: Fiber,
   context: ReactContext<T>,
   renderLanes: Lanes,
