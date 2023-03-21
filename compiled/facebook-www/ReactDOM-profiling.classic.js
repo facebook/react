@@ -8452,7 +8452,7 @@ function completeWork(current, workInProgress, renderLanes) {
         )
           warnIfUnhydratedTailNodes(),
             resetHydrationState(),
-            (workInProgress.flags |= 98560),
+            (workInProgress.flags |= 384),
             (type = !1);
         else if (
           ((type = popHydrationState(workInProgress)),
@@ -8486,7 +8486,7 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (type = !0);
-        if (!type) return workInProgress.flags & 65536 ? workInProgress : null;
+        if (!type) return workInProgress.flags & 256 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
         return (
@@ -16587,7 +16587,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1856 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a14531a3",
+  version: "18.3.0-www-classic-9681b897",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16631,7 +16631,7 @@ var devToolsConfig$jscomp$inline_1856 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a14531a3"
+  reconcilerVersion: "18.3.0-www-classic-9681b897"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16858,7 +16858,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-a14531a3";
+exports.version = "18.3.0-www-classic-9681b897";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

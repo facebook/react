@@ -5507,7 +5507,7 @@ function completeWork(current, workInProgress, renderLanes) {
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (instance = !0);
         if (!instance)
-          return workInProgress.flags & 65536 ? workInProgress : null;
+          return workInProgress.flags & 256 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
         return (workInProgress.lanes = renderLanes), workInProgress;
@@ -9945,7 +9945,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-dc41ab8a",
+    version: "18.3.0-www-classic-12f727b0",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1333 = {
@@ -9976,7 +9976,7 @@ var internals$jscomp$inline_1333 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-dc41ab8a"
+  reconcilerVersion: "18.3.0-www-classic-12f727b0"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1334 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

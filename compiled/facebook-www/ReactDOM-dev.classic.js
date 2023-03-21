@@ -28399,7 +28399,7 @@ function completeDehydratedSuspenseBoundary(
   ) {
     warnIfUnhydratedTailNodes(workInProgress);
     resetHydrationState();
-    workInProgress.flags |= ForceClientRender | Incomplete | ShouldCapture;
+    workInProgress.flags |= ForceClientRender | DidCapture;
     return false;
   }
 
@@ -28846,7 +28846,7 @@ function completeWork(current, workInProgress, renderLanes) {
           );
 
         if (!fallthroughToNormalSuspensePath) {
-          if (workInProgress.flags & ShouldCapture) {
+          if (workInProgress.flags & ForceClientRender) {
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
@@ -39067,7 +39067,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-2169d48f";
+var ReactVersion = "18.3.0-www-classic-1e6d53e8";
 
 function createPortal$1(
   children,

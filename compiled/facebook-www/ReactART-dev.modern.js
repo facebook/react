@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-3f875f9f";
+var ReactVersion = "18.3.0-www-modern-faee710c";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -17908,7 +17908,7 @@ function completeWork(current, workInProgress, renderLanes) {
           );
 
         if (!fallthroughToNormalSuspensePath) {
-          if (workInProgress.flags & ShouldCapture) {
+          if (workInProgress.flags & ForceClientRender) {
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
