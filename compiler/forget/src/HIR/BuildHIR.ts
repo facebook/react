@@ -926,21 +926,28 @@ function lowerExpression(
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
       if (calleePath.isMemberExpression()) {
-        const { object, property } = lowerMemberExpression(builder, calleePath);
+        const memberExpr = lowerMemberExpression(builder, calleePath);
         const args = lowerArguments(builder, expr.get("arguments"));
-        if (typeof property === "string") {
+        if (typeof memberExpr.property === "string") {
+          const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: { ...propertyPlace },
+            value: memberExpr.value,
+            loc: GeneratedSource,
+          });
           return {
             kind: "PropertyCall",
-            receiver: object,
-            property,
+            receiver: memberExpr.object,
+            property: { ...propertyPlace },
             args,
             loc: exprLoc,
           };
         } else {
           return {
             kind: "ComputedCall",
-            receiver: object,
-            property,
+            receiver: memberExpr.object,
+            property: memberExpr.property,
             args,
             loc: exprLoc,
           };

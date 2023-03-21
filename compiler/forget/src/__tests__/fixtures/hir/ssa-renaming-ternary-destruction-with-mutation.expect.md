@@ -19,46 +19,49 @@ function foo(props) {
 
 ```javascript
 bb0 (block):
-  [1] store $35[1:33]:TObject<Array> = Array []
-  [2] store $37[2:33]:TObject<Array> = StoreLocal Let store x$36[2:33]:TObject<Array> = capture $35[1:33]:TObject<Array>
-  [3] mutate $38[3:33]:TObject<Array> = LoadLocal capture x$36[2:33]:TObject<Array>
-  [4] mutate $39 = LoadLocal read props$34
-  [5] mutate $40 = PropertyLoad read $39.bar
-  [6] mutate $41 = PropertyCall mutate $38[3:33]:TObject<Array>.push(read $40)
-  [7] Ternary test:bb2 fallthrough=bb1
+  [1] store $38[1:36]:TObject<Array> = Array []
+  [2] store $40[2:36]:TObject<Array> = StoreLocal Let store x$39[2:36]:TObject<Array> = capture $38[1:36]:TObject<Array>
+  [3] mutate $41[3:36]:TObject<Array> = LoadLocal capture x$39[2:36]:TObject<Array>
+  [4] mutate $42 = LoadLocal read props$37
+  [5] mutate $43 = PropertyLoad read $42.bar
+  [6] mutate $44[6:36] = PropertyLoad read $41[3:36]:TObject<Array>.push
+  [7] mutate $45 = PropertyCall mutate $41[3:36]:TObject<Array>.[object Object](read $43)
+  [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
-  [8] mutate $42 = LoadLocal read props$34
-  [9] mutate $43 = PropertyLoad read $42.cond
-  [10] Branch (read $43) then:bb3 else:bb4
+  [9] mutate $46 = LoadLocal read props$37
+  [10] mutate $47 = PropertyLoad read $46.cond
+  [11] Branch (read $47) then:bb3 else:bb4
 bb3 (value):
   predecessor blocks: bb2
-  [14] store $48[14:33]:TObject<Array> = Array []
-  [15] store $49[15:33]:TObject<Array> = Array [capture $48[14:33]:TObject<Array>]
-  [16] store $51[16:33] = Destructure Reassign [ mutate x$36[16:33] ] = capture $49[15:33]:TObject<Array>
-  [17] mutate $52[17:33] = LoadLocal capture x$36[16:33]
-  [18] mutate $53 = LoadLocal read props$34
-  [19] mutate $54 = PropertyLoad read $53.foo
-  [20] mutate $55[20:30] = PropertyCall mutate $52[17:33].push(read $54)
-  [21] store $57[21:30] = StoreLocal Const mutate $56[7:30] = capture $55[20:30]
-  [22] Goto bb1
+  [15] store $52[15:36]:TObject<Array> = Array []
+  [16] store $53[16:36]:TObject<Array> = Array [capture $52[15:36]:TObject<Array>]
+  [17] store $55[17:36] = Destructure Reassign [ mutate x$39[17:36] ] = capture $53[16:36]:TObject<Array>
+  [18] mutate $56[18:36] = LoadLocal capture x$39[17:36]
+  [19] mutate $57 = LoadLocal read props$37
+  [20] mutate $58 = PropertyLoad read $57.foo
+  [21] mutate $59[21:36] = PropertyLoad read $56[18:36].push
+  [22] mutate $60[22:33] = PropertyCall mutate $56[18:36].[object Object](read $58)
+  [23] store $62[23:33] = StoreLocal Const mutate $61[8:33] = capture $60[22:33]
+  [24] Goto bb1
 bb4 (value):
   predecessor blocks: bb2
-  [23] mutate $58[23:30]:TPrimitive = null
-  [24] store $60[24:30]:TPrimitive = StoreLocal Const mutate $56[7:30] = read $58[23:30]:TPrimitive
-  [25] Goto bb1
+  [25] mutate $63[25:33]:TPrimitive = null
+  [26] store $65[26:33]:TPrimitive = StoreLocal Const mutate $61[8:33] = read $63[25:33]:TPrimitive
+  [27] Goto bb1
 bb1 (block):
   predecessor blocks: bb3 bb4
-  $63[7:30]:TPhi: phi(bb3: $56, bb4: $59)
-  x$36[2:33]:TPhi: phi(bb3: x$36, bb4: x$36)
-  [26] store $62[26:30] = StoreLocal Const mutate _$61[26:30] = capture $56[7:30]
-  [27] mutate $64 = Global console
-  [28] mutate $65[28:30] = LoadLocal capture _$61[26:30]
-  [29] mutate $66 = PropertyCall read $64.log(mutate $65[28:30])
-  [30] mutate $67:TFunction = Global mut
-  [31] mutate $68[31:33] = LoadLocal capture x$36[2:33]
-  [32] mutate $70 = Call read $67:TFunction(mutate $68[31:33])
-  [33] mutate $71 = LoadLocal capture x$36[2:33]
-  [34] Return freeze $71
+  $68[8:33]:TPhi: phi(bb3: $61, bb4: $64)
+  x$39[2:36]:TPhi: phi(bb3: x$39, bb4: x$39)
+  [28] store $67[28:33] = StoreLocal Const mutate _$66[28:33] = capture $61[8:33]
+  [29] mutate $69 = Global console
+  [30] mutate $70[30:33] = LoadLocal capture _$66[28:33]
+  [31] mutate $71 = PropertyLoad read $69.log
+  [32] mutate $72 = PropertyCall read $69.[object Object](mutate $70[30:33])
+  [33] mutate $73:TFunction = Global mut
+  [34] mutate $74[34:36] = LoadLocal capture x$39[2:36]
+  [35] mutate $76 = Call read $73:TFunction(mutate $74[34:36])
+  [36] mutate $77 = LoadLocal capture x$39[2:36]
+  [37] Return freeze $77
 ```
       

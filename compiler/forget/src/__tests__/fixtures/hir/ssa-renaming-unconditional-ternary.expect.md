@@ -18,47 +18,51 @@ function foo(props) {
 
 ```javascript
 bb0 (block):
-  [1] store $37[1:7]:TObject<Array> = Array []
-  [2] store $39[2:7]:TObject<Array> = StoreLocal Let store x$38[2:7]:TObject<Array> = capture $37[1:7]:TObject<Array>
-  [3] mutate $40[3:7]:TObject<Array> = LoadLocal capture x$38[2:7]:TObject<Array>
-  [4] mutate $41 = LoadLocal read props$36
-  [5] mutate $42 = PropertyLoad read $41.bar
-  [6] mutate $43 = PropertyCall mutate $40[3:7]:TObject<Array>.push(read $42)
-  [7] Ternary test:bb2 fallthrough=bb1
+  [1] store $41[1:8]:TObject<Array> = Array []
+  [2] store $43[2:8]:TObject<Array> = StoreLocal Let store x$42[2:8]:TObject<Array> = capture $41[1:8]:TObject<Array>
+  [3] mutate $44[3:8]:TObject<Array> = LoadLocal capture x$42[2:8]:TObject<Array>
+  [4] mutate $45 = LoadLocal read props$40
+  [5] mutate $46 = PropertyLoad read $45.bar
+  [6] mutate $47[6:8] = PropertyLoad read $44[3:8]:TObject<Array>.push
+  [7] mutate $48 = PropertyCall mutate $44[3:8]:TObject<Array>.[object Object](read $46)
+  [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
-  [8] mutate $44 = LoadLocal read props$36
-  [9] mutate $45 = PropertyLoad read $44.cond
-  [10] Branch (read $45) then:bb3 else:bb4
+  [9] mutate $49 = LoadLocal read props$40
+  [10] mutate $50 = PropertyLoad read $49.cond
+  [11] Branch (read $50) then:bb3 else:bb4
 bb3 (value):
   predecessor blocks: bb2
-  [13] store $49[13:19]:TObject<Array> = Array []
-  [14] store $51[14:19]:TObject<Array> = StoreLocal Reassign store x$38[14:19]:TObject<Array> = capture $49[13:19]:TObject<Array>
-  [15] mutate $52[15:19]:TObject<Array> = LoadLocal capture x$38[14:19]:TObject<Array>
-  [16] mutate $53 = LoadLocal read props$36
-  [17] mutate $54 = PropertyLoad read $53.foo
-  [18] mutate $55[18:35] = PropertyCall mutate $52[15:19]:TObject<Array>.push(read $54)
-  [19] store $57[19:35] = StoreLocal Const mutate $56[7:35] = capture $55[18:35]
-  [20] Goto bb1
+  [14] store $54[14:21]:TObject<Array> = Array []
+  [15] store $56[15:21]:TObject<Array> = StoreLocal Reassign store x$42[15:21]:TObject<Array> = capture $54[14:21]:TObject<Array>
+  [16] mutate $57[16:21]:TObject<Array> = LoadLocal capture x$42[15:21]:TObject<Array>
+  [17] mutate $58 = LoadLocal read props$40
+  [18] mutate $59 = PropertyLoad read $58.foo
+  [19] mutate $60[19:21] = PropertyLoad read $57[16:21]:TObject<Array>.push
+  [20] mutate $61[20:39] = PropertyCall mutate $57[16:21]:TObject<Array>.[object Object](read $59)
+  [21] store $63[21:39] = StoreLocal Const mutate $62[8:39] = capture $61[20:39]
+  [22] Goto bb1
 bb4 (value):
   predecessor blocks: bb2
-  [23] store $61[23:29]:TObject<Array> = Array []
-  [24] store $63[24:29]:TObject<Array> = StoreLocal Reassign store x$38[24:29]:TObject<Array> = capture $61[23:29]:TObject<Array>
-  [25] mutate $64[25:29]:TObject<Array> = LoadLocal capture x$38[24:29]:TObject<Array>
-  [26] mutate $65 = LoadLocal read props$36
-  [27] mutate $66 = PropertyLoad read $65.bar
-  [28] mutate $67[28:35] = PropertyCall mutate $64[25:29]:TObject<Array>.push(read $66)
-  [29] store $69[29:35] = StoreLocal Const mutate $56[7:35] = capture $67[28:35]
-  [30] Goto bb1
+  [25] store $67[25:32]:TObject<Array> = Array []
+  [26] store $69[26:32]:TObject<Array> = StoreLocal Reassign store x$42[26:32]:TObject<Array> = capture $67[25:32]:TObject<Array>
+  [27] mutate $70[27:32]:TObject<Array> = LoadLocal capture x$42[26:32]:TObject<Array>
+  [28] mutate $71 = LoadLocal read props$40
+  [29] mutate $72 = PropertyLoad read $71.bar
+  [30] mutate $73[30:32] = PropertyLoad read $70[27:32]:TObject<Array>.push
+  [31] mutate $74[31:39] = PropertyCall mutate $70[27:32]:TObject<Array>.[object Object](read $72)
+  [32] store $76[32:39] = StoreLocal Const mutate $62[8:39] = capture $74[31:39]
+  [33] Goto bb1
 bb1 (block):
   predecessor blocks: bb3 bb4
-  $72[7:35]:TPhi: phi(bb3: $56, bb4: $68)
-  x$38:TObject<Array>: phi(bb3: x$38, bb4: x$38)
-  [31] store $71[31:35] = StoreLocal Const mutate _$70[31:35] = capture $56[7:35]
-  [32] mutate $73 = Global console
-  [33] mutate $74[33:35] = LoadLocal capture _$70[31:35]
-  [34] mutate $75 = PropertyCall read $73.log(mutate $74[33:35])
-  [35] mutate $76 = LoadLocal capture x$38
-  [36] Return freeze $76
+  $79[8:39]:TPhi: phi(bb3: $62, bb4: $75)
+  x$42:TObject<Array>: phi(bb3: x$42, bb4: x$42)
+  [34] store $78[34:39] = StoreLocal Const mutate _$77[34:39] = capture $62[8:39]
+  [35] mutate $80 = Global console
+  [36] mutate $81[36:39] = LoadLocal capture _$77[34:39]
+  [37] mutate $82 = PropertyLoad read $80.log
+  [38] mutate $83 = PropertyCall read $80.[object Object](mutate $81[36:39])
+  [39] mutate $84 = LoadLocal capture x$42
+  [40] Return freeze $84
 ```
       

@@ -672,6 +672,7 @@ function inferBlock(
         }
 
         state.reference(instrValue.receiver, Effect.Mutate);
+        state.reference(instrValue.property, Effect.Read);
         for (const arg of instrValue.args) {
           if (arg.kind === "Identifier") {
             state.reference(arg, Effect.Mutate);

@@ -57,6 +57,7 @@ export function* eachInstructionValueOperand(
     }
     case "PropertyCall": {
       yield instrValue.receiver;
+      yield instrValue.property;
       yield* eachCallArgument(instrValue.args);
       break;
     }
@@ -357,6 +358,7 @@ export function mapInstructionOperands(
     }
     case "PropertyCall": {
       instrValue.receiver = fn(instrValue.receiver);
+      instrValue.property = fn(instrValue.property);
       instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }

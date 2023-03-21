@@ -433,6 +433,28 @@ export type Phi = {
 };
 
 /**
+ * Forget currently does not handle PropertyCall / ComputedCall correctly in
+ * all cases. Specifically, we do not bind the receiver and method property
+ * before calling to args. Until we add a SequenceExpression to inline all
+ * instructions generated when lowering args, we have a limited representation
+ * with some constraints.
+ *
+ * Forget currently makes these assumptions (checked in codegen):
+ *  - {@link PropertyCall.property} is a temporary produced by a PropertyLoad on {@link PropertyCall.receiver}
+ *    - this is always true for PropertyCall, but property.object and receiver
+ *      may be different for ComputedCalls
+ *  - {@link PropertyCall.property} remains an rval (i.e. never promoted to a
+ *    named identifier). We currently rely on this for codegen.
+ */
+type PropertyCall = {
+  kind: "PropertyCall";
+  receiver: Place;
+  property: Place;
+  args: Array<Place | SpreadPattern>;
+  loc: SourceLocation;
+};
+
+/**
  * The value of a given instruction. Note that values are not recursive: complex
  * values such as objects or arrays are always defined by instructions to define
  * their operands (saving to a temporary), then passing those temporaries as
@@ -488,13 +510,7 @@ export type InstructionValue =
       args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
-  | {
-      kind: "PropertyCall";
-      receiver: Place;
-      property: string;
-      args: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | PropertyCall
   | {
       kind: "ComputedCall";
       receiver: Place;

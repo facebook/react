@@ -590,13 +590,26 @@ function codegenInstructionValue(
       break;
     }
     case "PropertyCall": {
-      const receiver = codegenPlace(cx, instrValue.receiver);
-      const callee = t.memberExpression(
-        receiver,
-        t.identifier(instrValue.property)
+      const memberExpr = codegenPlace(cx, instrValue.property);
+      invariant(
+        t.isMemberExpression(memberExpr) ||
+          t.isOptionalMemberExpression(memberExpr),
+        "[Codegen] Internal error: PropertyCall::property must be an unpromoted + unmemoized MemberExpression."
+      );
+      invariant(
+        memberExpr.computed === false,
+        "[Codegen] Internal error: PropertyCall::property must be a non-computed MemberExpression."
+      );
+      invariant(
+        t.isNodesEquivalent(
+          memberExpr.object,
+          codegenPlace(cx, instrValue.receiver)
+        ),
+        "[Codegen] Internal error: Forget should always generate PropertyCall::property " +
+          "as a MemberExpression of PropertyCall::receiver"
       );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
-      value = createCallExpression(instrValue.loc, callee, args);
+      value = createCallExpression(instrValue.loc, memberExpr, args);
       break;
     }
     case "ComputedCall": {
