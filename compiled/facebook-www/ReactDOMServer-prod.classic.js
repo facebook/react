@@ -70,16 +70,7 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var properties = {},
-  reservedProps =
-    "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
-      " "
-    );
-enableCustomElementPropertySupport &&
-  reservedProps.push("innerText", "textContent");
-reservedProps.forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
-});
+var properties = {};
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
@@ -3800,4 +3791,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-b4fad789";
+exports.version = "18.3.0-www-classic-589bfcce";

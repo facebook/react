@@ -239,9 +239,6 @@ var enableFloat = true;
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// It is handled by React separately and shouldn't be written to the DOM.
-
-var RESERVED = 0; // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
 
 var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
@@ -300,39 +297,6 @@ function isAttributeNameSafe(attributeName) {
 
   return false;
 }
-function shouldRemoveAttributeWithWarning(
-  name,
-  value,
-  propertyInfo,
-  isCustomComponentTag
-) {
-  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
-    return false;
-  }
-
-  switch (typeof value) {
-    case "function":
-    case "symbol":
-      // eslint-disable-line
-      return true;
-
-    case "boolean": {
-      if (isCustomComponentTag) {
-        return false;
-      }
-
-      if (propertyInfo !== null) {
-        return !propertyInfo.acceptsBooleans;
-      } else {
-        var prefix = name.toLowerCase().slice(0, 5);
-        return prefix !== "data-" && prefix !== "aria-";
-      }
-    }
-
-    default:
-      return false;
-  }
-}
 function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 } // $FlowFixMe[missing-this-annot]
@@ -361,37 +325,7 @@ function PropertyInfoRecord(
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
 
-var properties = {}; // These props are reserved by React. They shouldn't be written to the DOM.
-
-var reservedProps = [
-  "children",
-  "dangerouslySetInnerHTML", // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  "defaultValue",
-  "defaultChecked",
-  "innerHTML",
-  "suppressContentEditableWarning",
-  "suppressHydrationWarning",
-  "style"
-];
-
-if (enableCustomElementPropertySupport) {
-  reservedProps.push("innerText", "textContent");
-}
-
-reservedProps.forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    RESERVED,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // A few React string attributes have a different name.
+var properties = {}; // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
 
 [
@@ -1727,8 +1661,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
       return true;
     }
 
-    var propertyInfo = getPropertyInfo(name);
-    var isReserved = propertyInfo !== null && propertyInfo.type === RESERVED; // Known attributes should match the casing specified in the property config.
+    var propertyInfo = getPropertyInfo(name); // Known attributes should match the casing specified in the property config.
 
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];
@@ -1743,7 +1676,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
         warnedProperties[name] = true;
         return true;
       }
-    } else if (!isReserved && name !== lowerCasedName) {
+    } else if (name !== lowerCasedName) {
       // Unknown attributes should have lowercase casing since that's how they
       // will be cased anyway with server rendering.
       error(
@@ -1758,52 +1691,77 @@ function validateProperty(tagName, name, value, eventRegistry) {
 
       warnedProperties[name] = true;
       return true;
+    } // Now that we've validated casing, do not validate
+    // data types for reserved props
+
+    switch (name) {
+      case "dangerouslySetInnerHTML":
+      case "children":
+      case "style":
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue": // Reserved
+
+      case "defaultChecked":
+      case "innerHTML": {
+        return true;
+      }
+
+      case "innerText": // Properties
+
+      case "textContent":
+        if (enableCustomElementPropertySupport) {
+          return true;
+        }
     }
 
-    if (
-      typeof value === "boolean" &&
-      shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
-    ) {
-      if (value) {
-        error(
-          "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-            "If you want to write it to the DOM, pass a string instead: " +
-            '%s="%s" or %s={value.toString()}.',
-          value,
-          name,
-          name,
-          value,
-          name
-        );
-      } else {
-        error(
-          "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-            "If you want to write it to the DOM, pass a string instead: " +
-            '%s="%s" or %s={value.toString()}.\n\n' +
-            "If you used to conditionally omit it with %s={condition && value}, " +
-            "pass %s={condition ? value : undefined} instead.",
-          value,
-          name,
-          name,
-          value,
-          name,
-          name,
-          name
-        );
+    if (typeof value === "boolean") {
+      var prefix = name.toLowerCase().slice(0, 5);
+      var acceptsBooleans =
+        propertyInfo !== null
+          ? propertyInfo.acceptsBooleans
+          : prefix === "data-" || prefix === "aria-";
+
+      if (!acceptsBooleans) {
+        if (value) {
+          error(
+            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+              "If you want to write it to the DOM, pass a string instead: " +
+              '%s="%s" or %s={value.toString()}.',
+            value,
+            name,
+            name,
+            value,
+            name
+          );
+        } else {
+          error(
+            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+              "If you want to write it to the DOM, pass a string instead: " +
+              '%s="%s" or %s={value.toString()}.\n\n' +
+              "If you used to conditionally omit it with %s={condition && value}, " +
+              "pass %s={condition ? value : undefined} instead.",
+            value,
+            name,
+            name,
+            value,
+            name,
+            name,
+            name
+          );
+        }
       }
 
       warnedProperties[name] = true;
       return true;
-    } // Now that we've validated casing, do not validate
-    // data types for reserved props
-
-    if (isReserved) {
-      return true;
     } // Warn when a known attribute is a bad type
 
-    if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
-      warnedProperties[name] = true;
-      return false;
+    switch (typeof value) {
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        warnedProperties[name] = true;
+        return false;
     } // Warn when passing the strings 'false' or 'true' into a boolean prop
 
     if (

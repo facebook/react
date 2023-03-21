@@ -56,16 +56,7 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var properties = {},
-  reservedProps =
-    "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
-      " "
-    );
-enableCustomElementPropertySupport &&
-  reservedProps.push("innerText", "textContent");
-reservedProps.forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
-});
+var properties = {};
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],

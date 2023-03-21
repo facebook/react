@@ -193,14 +193,8 @@ function getIteratorFn(maybeIterable) {
 }
 
 // Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require("ReactFeatureFlags");
+require("ReactFeatureFlags");
 
-var enableCustomElementPropertySupport =
-  dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
-
-// It is handled by React separately and shouldn't be written to the DOM.
-
-var RESERVED = 0; // A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
 
 var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
@@ -246,36 +240,6 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 } // When adding attributes to this list, be sure to also add them to
-
-var reservedProps = [
-  "children",
-  "dangerouslySetInnerHTML", // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  "defaultValue",
-  "defaultChecked",
-  "innerHTML",
-  "suppressContentEditableWarning",
-  "suppressHydrationWarning",
-  "style"
-];
-
-if (enableCustomElementPropertySupport) {
-  reservedProps.push("innerText", "textContent");
-}
-
-reservedProps.forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    RESERVED,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
 
 [

@@ -61,6 +61,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+require("ReactFeatureFlags");
 function PropertyInfoRecord(
   name,
   type,
@@ -79,15 +80,6 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-var reservedProps =
-  "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(
-    " "
-  );
-require("ReactFeatureFlags").enableCustomElementPropertySupport &&
-  reservedProps.push("innerText", "textContent");
-reservedProps.forEach(function (name) {
-  new PropertyInfoRecord(name, 0, !1, name, null, !1, !1);
-});
 [
   ["acceptCharset", "accept-charset"],
   ["className", "class"],
