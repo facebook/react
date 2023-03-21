@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_241 = {
+var injectedNamesToPlugins$jscomp$inline_240 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_241 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_242 = !1,
-  pluginName$jscomp$inline_243;
-for (pluginName$jscomp$inline_243 in injectedNamesToPlugins$jscomp$inline_241)
+  isOrderingDirty$jscomp$inline_241 = !1,
+  pluginName$jscomp$inline_242;
+for (pluginName$jscomp$inline_242 in injectedNamesToPlugins$jscomp$inline_240)
   if (
-    injectedNamesToPlugins$jscomp$inline_241.hasOwnProperty(
-      pluginName$jscomp$inline_243
+    injectedNamesToPlugins$jscomp$inline_240.hasOwnProperty(
+      pluginName$jscomp$inline_242
     )
   ) {
-    var pluginModule$jscomp$inline_244 =
-      injectedNamesToPlugins$jscomp$inline_241[pluginName$jscomp$inline_243];
+    var pluginModule$jscomp$inline_243 =
+      injectedNamesToPlugins$jscomp$inline_240[pluginName$jscomp$inline_242];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_243) ||
-      namesToPlugins[pluginName$jscomp$inline_243] !==
-        pluginModule$jscomp$inline_244
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_242) ||
+      namesToPlugins[pluginName$jscomp$inline_242] !==
+        pluginModule$jscomp$inline_243
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_243])
+      if (namesToPlugins[pluginName$jscomp$inline_242])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_243 + "`.")
+            (pluginName$jscomp$inline_242 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_243] =
-        pluginModule$jscomp$inline_244;
-      isOrderingDirty$jscomp$inline_242 = !0;
+      namesToPlugins[pluginName$jscomp$inline_242] =
+        pluginModule$jscomp$inline_243;
+      isOrderingDirty$jscomp$inline_241 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_242 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_241 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -7673,7 +7673,7 @@ function renderRootSync(root, lanes) {
           default:
             (workInProgressSuspendedReason = 0),
               (workInProgressThrownValue = null),
-              unwindSuspendedUnitOfWork(lanes, thrownValue);
+              throwAndUnwindWorkLoop(lanes, thrownValue);
         }
       }
       workLoopSync();
@@ -7714,7 +7714,7 @@ function renderRootConcurrent(root, lanes) {
           case 1:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 2:
             if (isThenableResolved(thrownValue)) {
@@ -7744,7 +7744,7 @@ function renderRootConcurrent(root, lanes) {
                 replaySuspendedUnitOfWork(lanes))
               : ((workInProgressSuspendedReason = 0),
                 (workInProgressThrownValue = null),
-                unwindSuspendedUnitOfWork(lanes, thrownValue));
+                throwAndUnwindWorkLoop(lanes, thrownValue));
             break;
           case 5:
             switch (workInProgress.tag) {
@@ -7767,12 +7767,12 @@ function renderRootConcurrent(root, lanes) {
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 6:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 8:
             resetWorkInProgressStack();
@@ -7849,7 +7849,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     : (workInProgress = current);
   ReactCurrentOwner.current = null;
 }
-function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
   resetHooksOnUnwind();
   thenableState$1 = null;
@@ -8013,38 +8013,40 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768)
+      a: {
+        do {
+          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== returnFiber) {
+            returnFiber.flags &= 32767;
+            workInProgress = returnFiber;
+            break a;
+          }
+          unitOfWork = unitOfWork.return;
+          null !== unitOfWork &&
+            ((unitOfWork.flags |= 32768),
+            (unitOfWork.subtreeFlags = 0),
+            (unitOfWork.deletions = null));
+          workInProgress = unitOfWork;
+        } while (null !== unitOfWork);
+        workInProgressRootExitStatus = 6;
+        workInProgress = null;
+      }
+    else completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
   do {
-    var current = completedWork.alternate;
     unitOfWork = completedWork.return;
-    if (0 === (completedWork.flags & 32768)) {
-      if (
-        ((current = completeWork(current, completedWork, renderLanes)),
-        null !== current)
-      ) {
-        workInProgress = current;
-        return;
-      }
-    } else {
-      current = unwindWork(current, completedWork);
-      if (null !== current) {
-        current.flags &= 32767;
-        workInProgress = current;
-        return;
-      }
-      if (null !== unitOfWork)
-        (unitOfWork.flags |= 32768),
-          (unitOfWork.subtreeFlags = 0),
-          (unitOfWork.deletions = null);
-      else {
-        workInProgressRootExitStatus = 6;
-        workInProgress = null;
-        return;
-      }
+    var next = completeWork(
+      completedWork.alternate,
+      completedWork,
+      renderLanes
+    );
+    if (null !== next) {
+      workInProgress = next;
+      return;
     }
     completedWork = completedWork.sibling;
     if (null !== completedWork) {
@@ -9493,10 +9495,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1033 = {
+  devToolsConfig$jscomp$inline_1038 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-77ba1618a-20230320",
+    version: "18.3.0-next-0018cf224-20230321",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9511,11 +9513,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1276 = {
-  bundleType: devToolsConfig$jscomp$inline_1033.bundleType,
-  version: devToolsConfig$jscomp$inline_1033.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1033.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1033.rendererConfig,
+var internals$jscomp$inline_1281 = {
+  bundleType: devToolsConfig$jscomp$inline_1038.bundleType,
+  version: devToolsConfig$jscomp$inline_1038.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1038.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1038.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9531,26 +9533,26 @@ var internals$jscomp$inline_1276 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1033.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1038.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-77ba1618a-20230320"
+  reconcilerVersion: "18.3.0-next-0018cf224-20230321"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1282 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1277.isDisabled &&
-    hook$jscomp$inline_1277.supportsFiber
+    !hook$jscomp$inline_1282.isDisabled &&
+    hook$jscomp$inline_1282.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1277.inject(
-        internals$jscomp$inline_1276
+      (rendererID = hook$jscomp$inline_1282.inject(
+        internals$jscomp$inline_1281
       )),
-        (injectedHook = hook$jscomp$inline_1277);
+        (injectedHook = hook$jscomp$inline_1282);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -20823,10 +20823,10 @@ function renderRootSync(root, lanes) {
           }
 
           default: {
-            // Continue with the normal work loop.
+            // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
         }
@@ -20897,7 +20897,7 @@ function renderRootConcurrent(root, lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
 
@@ -20962,7 +20962,7 @@ function renderRootConcurrent(root, lanes) {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+              throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             }
 
             break;
@@ -21027,7 +21027,7 @@ function renderRootConcurrent(root, lanes) {
 
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
 
@@ -21038,7 +21038,7 @@ function renderRootConcurrent(root, lanes) {
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
 
@@ -21225,7 +21225,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   ReactCurrentOwner.current = null;
 }
 
-function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   // This is a fork of performUnitOfWork specifcally for unwinding a fiber
   // that threw an exception.
   //
@@ -21268,9 +21268,23 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
     // To prevent an infinite loop, bubble the error up to the next parent.
     workInProgress = returnFiber;
     throw error;
-  } // Return to the normal work loop.
+  }
 
-  completeUnitOfWork(unitOfWork);
+  if (unitOfWork.flags & Incomplete) {
+    // Unwind the stack until we reach the nearest boundary.
+    unwindUnitOfWork(unitOfWork);
+  } else {
+    // Although the fiber suspended, we're intentionally going to commit it in
+    // an inconsistent state. We can do this safely in cases where we know the
+    // inconsistent tree will be hidden.
+    //
+    // This currently only applies to Legacy Suspense implementation, but we may
+    // port a version of this to concurrent roots, too, when performing a
+    // synchronous render. Because that will allow us to mutate the tree as we
+    // go instead of buffering mutations until the end. Though it's unclear if
+    // this particular path is how that would be implemented.
+    completeUnitOfWork(unitOfWork);
+  }
 }
 
 function completeUnitOfWork(unitOfWork) {
@@ -21279,75 +21293,41 @@ function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
 
   do {
-    // The current, flushed, state of this fiber is the alternate. Ideally
+    {
+      {
+        if ((completedWork.flags & Incomplete) !== NoFlags$1) {
+          // NOTE: If we re-enable sibling prerendering in some cases, this branch
+          // is where we would switch to the unwinding path.
+          error(
+            "Internal React error: Expected this fiber to be complete, but " +
+              "it isn't. It should have been unwound. This is a bug in React."
+          );
+        }
+      }
+    } // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
     // need an additional field on the work in progress.
+
     var current = completedWork.alternate;
-    var returnFiber = completedWork.return; // Check if the work completed or if something threw.
+    var returnFiber = completedWork.return;
+    setCurrentFiber(completedWork);
+    var next = void 0;
 
-    if ((completedWork.flags & Incomplete) === NoFlags$1) {
-      setCurrentFiber(completedWork);
-      var next = void 0;
-
-      if ((completedWork.mode & ProfileMode) === NoMode) {
-        next = completeWork(current, completedWork, renderLanes);
-      } else {
-        startProfilerTimer(completedWork);
-        next = completeWork(current, completedWork, renderLanes); // Update render duration assuming we didn't error.
-
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
-      }
-
-      resetCurrentFiber();
-
-      if (next !== null) {
-        // Completing this fiber spawned new work. Work on that next.
-        workInProgress = next;
-        return;
-      }
+    if ((completedWork.mode & ProfileMode) === NoMode) {
+      next = completeWork(current, completedWork, renderLanes);
     } else {
-      // This fiber did not complete because something threw. Pop values off
-      // the stack without entering the complete phase. If this is a boundary,
-      // capture values if possible.
-      var _next = unwindWork(current, completedWork); // Because this fiber did not complete, don't reset its lanes.
+      startProfilerTimer(completedWork);
+      next = completeWork(current, completedWork, renderLanes); // Update render duration assuming we didn't error.
 
-      if (_next !== null) {
-        // If completing this work spawned new work, do that next. We'll come
-        // back here again.
-        // Since we're restarting, remove anything that is not a host effect
-        // from the effect tag.
-        _next.flags &= HostEffectMask;
-        workInProgress = _next;
-        return;
-      }
+      stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
+    }
 
-      if ((completedWork.mode & ProfileMode) !== NoMode) {
-        // Record the render duration for the fiber that errored.
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false); // Include the time spent working on failed children before continuing.
+    resetCurrentFiber();
 
-        var actualDuration = completedWork.actualDuration;
-        var child = completedWork.child;
-
-        while (child !== null) {
-          // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-          actualDuration += child.actualDuration;
-          child = child.sibling;
-        }
-
-        completedWork.actualDuration = actualDuration;
-      }
-
-      if (returnFiber !== null) {
-        // Mark the parent fiber as incomplete and clear its subtree flags.
-        returnFiber.flags |= Incomplete;
-        returnFiber.subtreeFlags = NoFlags$1;
-        returnFiber.deletions = null;
-      } else {
-        // We've unwound all the way to the root.
-        workInProgressRootExitStatus = RootDidNotComplete;
-        workInProgress = null;
-        return;
-      }
+    if (next !== null) {
+      // Completing this fiber spawned new work. Work on that next.
+      workInProgress = next;
+      return;
     }
 
     var siblingFiber = completedWork.sibling;
@@ -21367,6 +21347,70 @@ function completeUnitOfWork(unitOfWork) {
   if (workInProgressRootExitStatus === RootInProgress) {
     workInProgressRootExitStatus = RootCompleted;
   }
+}
+
+function unwindUnitOfWork(unitOfWork) {
+  var incompleteWork = unitOfWork;
+
+  do {
+    // The current, flushed, state of this fiber is the alternate. Ideally
+    // nothing should rely on this, but relying on it here means that we don't
+    // need an additional field on the work in progress.
+    var current = incompleteWork.alternate; // This fiber did not complete because something threw. Pop values off
+    // the stack without entering the complete phase. If this is a boundary,
+    // capture values if possible.
+
+    var next = unwindWork(current, incompleteWork); // Because this fiber did not complete, don't reset its lanes.
+
+    if (next !== null) {
+      // Found a boundary that can handle this exception. Re-renter the
+      // begin phase. This branch will return us to the normal work loop.
+      //
+      // Since we're restarting, remove anything that is not a host effect
+      // from the effect tag.
+      next.flags &= HostEffectMask;
+      workInProgress = next;
+      return;
+    } // Keep unwinding until we reach either a boundary or the root.
+
+    if ((incompleteWork.mode & ProfileMode) !== NoMode) {
+      // Record the render duration for the fiber that errored.
+      stopProfilerTimerIfRunningAndRecordDelta(incompleteWork, false); // Include the time spent working on failed children before continuing.
+
+      var actualDuration = incompleteWork.actualDuration;
+      var child = incompleteWork.child;
+
+      while (child !== null) {
+        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
+        actualDuration += child.actualDuration;
+        child = child.sibling;
+      }
+
+      incompleteWork.actualDuration = actualDuration;
+    } // TODO: Once we stop prerendering siblings, instead of resetting the parent
+    // of the node being unwound, we should be able to reset node itself as we
+    // unwind the stack. Saves an additional null check.
+
+    var returnFiber = incompleteWork.return;
+
+    if (returnFiber !== null) {
+      // Mark the parent fiber as incomplete and clear its subtree flags.
+      // TODO: Once we stop prerendering siblings, we may be able to get rid of
+      // the Incomplete flag because unwinding to the nearest boundary will
+      // happen synchronously.
+      returnFiber.flags |= Incomplete;
+      returnFiber.subtreeFlags = NoFlags$1;
+      returnFiber.deletions = null;
+    }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
+
+    incompleteWork = returnFiber; // Update the next thing we're working on in case something throws.
+
+    workInProgress = incompleteWork;
+  } while (incompleteWork !== null); // We've unwound all the way to the root.
+
+  workInProgressRootExitStatus = RootDidNotComplete;
+  workInProgress = null;
 }
 
 function commitRoot(root, recoverableErrors, transitions) {
@@ -23588,7 +23632,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-77ba1618a-20230320";
+var ReactVersion = "18.3.0-next-0018cf224-20230321";
 
 // Might add PROFILE later.
 

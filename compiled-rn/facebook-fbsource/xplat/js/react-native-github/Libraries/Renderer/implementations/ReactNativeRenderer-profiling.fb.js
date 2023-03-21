@@ -951,7 +951,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_265 = {
+var injectedNamesToPlugins$jscomp$inline_264 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -997,32 +997,32 @@ var injectedNamesToPlugins$jscomp$inline_265 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_266 = !1,
-  pluginName$jscomp$inline_267;
-for (pluginName$jscomp$inline_267 in injectedNamesToPlugins$jscomp$inline_265)
+  isOrderingDirty$jscomp$inline_265 = !1,
+  pluginName$jscomp$inline_266;
+for (pluginName$jscomp$inline_266 in injectedNamesToPlugins$jscomp$inline_264)
   if (
-    injectedNamesToPlugins$jscomp$inline_265.hasOwnProperty(
-      pluginName$jscomp$inline_267
+    injectedNamesToPlugins$jscomp$inline_264.hasOwnProperty(
+      pluginName$jscomp$inline_266
     )
   ) {
-    var pluginModule$jscomp$inline_268 =
-      injectedNamesToPlugins$jscomp$inline_265[pluginName$jscomp$inline_267];
+    var pluginModule$jscomp$inline_267 =
+      injectedNamesToPlugins$jscomp$inline_264[pluginName$jscomp$inline_266];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_267) ||
-      namesToPlugins[pluginName$jscomp$inline_267] !==
-        pluginModule$jscomp$inline_268
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_266) ||
+      namesToPlugins[pluginName$jscomp$inline_266] !==
+        pluginModule$jscomp$inline_267
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_267])
+      if (namesToPlugins[pluginName$jscomp$inline_266])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_267 + "`.")
+            (pluginName$jscomp$inline_266 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_267] =
-        pluginModule$jscomp$inline_268;
-      isOrderingDirty$jscomp$inline_266 = !0;
+      namesToPlugins[pluginName$jscomp$inline_266] =
+        pluginModule$jscomp$inline_267;
+      isOrderingDirty$jscomp$inline_265 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_266 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_265 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -8667,7 +8667,7 @@ function renderRootSync(root, lanes) {
           default:
             (workInProgressSuspendedReason = 0),
               (workInProgressThrownValue = null),
-              unwindSuspendedUnitOfWork(lanes, memoizedUpdaters);
+              throwAndUnwindWorkLoop(lanes, memoizedUpdaters);
         }
       workLoopSync();
       break;
@@ -8719,7 +8719,7 @@ function renderRootConcurrent(root, lanes) {
           case 1:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, memoizedUpdaters);
+            throwAndUnwindWorkLoop(lanes, memoizedUpdaters);
             break;
           case 2:
             if (isThenableResolved(memoizedUpdaters)) {
@@ -8749,7 +8749,7 @@ function renderRootConcurrent(root, lanes) {
                 replaySuspendedUnitOfWork(lanes))
               : ((workInProgressSuspendedReason = 0),
                 (workInProgressThrownValue = null),
-                unwindSuspendedUnitOfWork(lanes, memoizedUpdaters));
+                throwAndUnwindWorkLoop(lanes, memoizedUpdaters));
             break;
           case 5:
             switch (workInProgress.tag) {
@@ -8772,12 +8772,12 @@ function renderRootConcurrent(root, lanes) {
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, memoizedUpdaters);
+            throwAndUnwindWorkLoop(lanes, memoizedUpdaters);
             break;
           case 6:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, memoizedUpdaters);
+            throwAndUnwindWorkLoop(lanes, memoizedUpdaters);
             break;
           case 8:
             resetWorkInProgressStack();
@@ -8870,7 +8870,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     : (workInProgress = current);
   ReactCurrentOwner.current = null;
 }
-function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
   resetHooksOnUnwind();
   thenableState$1 = null;
@@ -9035,7 +9035,34 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768)
+      a: {
+        do {
+          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== returnFiber) {
+            returnFiber.flags &= 32767;
+            workInProgress = returnFiber;
+            break a;
+          }
+          if (0 !== (unitOfWork.mode & 2)) {
+            stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+            returnFiber = unitOfWork.actualDuration;
+            for (update$jscomp$0 = unitOfWork.child; null !== update$jscomp$0; )
+              (returnFiber += update$jscomp$0.actualDuration),
+                (update$jscomp$0 = update$jscomp$0.sibling);
+            unitOfWork.actualDuration = returnFiber;
+          }
+          unitOfWork = unitOfWork.return;
+          null !== unitOfWork &&
+            ((unitOfWork.flags |= 32768),
+            (unitOfWork.subtreeFlags = 0),
+            (unitOfWork.deletions = null));
+          workInProgress = unitOfWork;
+        } while (null !== unitOfWork);
+        workInProgressRootExitStatus = 6;
+        workInProgress = null;
+      }
+    else completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
@@ -9043,41 +9070,14 @@ function completeUnitOfWork(unitOfWork) {
   do {
     var current = completedWork.alternate;
     unitOfWork = completedWork.return;
-    if (0 === (completedWork.flags & 32768)) {
-      if (
-        (0 === (completedWork.mode & 2)
-          ? (current = completeWork(current, completedWork, renderLanes))
-          : (startProfilerTimer(completedWork),
-            (current = completeWork(current, completedWork, renderLanes)),
-            stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1)),
-        null !== current)
-      ) {
-        workInProgress = current;
-        return;
-      }
-    } else {
-      current = unwindWork(current, completedWork);
-      if (null !== current) {
-        current.flags &= 32767;
-        workInProgress = current;
-        return;
-      }
-      if (0 !== (completedWork.mode & 2)) {
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1);
-        current = completedWork.actualDuration;
-        for (var child = completedWork.child; null !== child; )
-          (current += child.actualDuration), (child = child.sibling);
-        completedWork.actualDuration = current;
-      }
-      if (null !== unitOfWork)
-        (unitOfWork.flags |= 32768),
-          (unitOfWork.subtreeFlags = 0),
-          (unitOfWork.deletions = null);
-      else {
-        workInProgressRootExitStatus = 6;
-        workInProgress = null;
-        return;
-      }
+    0 === (completedWork.mode & 2)
+      ? (current = completeWork(current, completedWork, renderLanes))
+      : (startProfilerTimer(completedWork),
+        (current = completeWork(current, completedWork, renderLanes)),
+        stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+    if (null !== current) {
+      workInProgress = current;
+      return;
     }
     completedWork = completedWork.sibling;
     if (null !== completedWork) {
@@ -10392,10 +10392,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1172 = {
+  devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-77ba1618a-20230320",
+    version: "18.3.0-next-0018cf224-20230321",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10424,10 +10424,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1172.bundleType,
-  version: devToolsConfig$jscomp$inline_1172.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1172.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1172.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1179.bundleType,
+  version: devToolsConfig$jscomp$inline_1179.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1179.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1179.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10443,14 +10443,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1172.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1179.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-77ba1618a-20230320"
+  reconcilerVersion: "18.3.0-next-0018cf224-20230321"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
