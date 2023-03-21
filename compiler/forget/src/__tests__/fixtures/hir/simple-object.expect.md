@@ -25,7 +25,7 @@ bb0 (block):
   [9] store $27 = StoreLocal Const mutate y$26 = capture $25
   [10] mutate $28:TPrimitive = LoadLocal read x$21:TPrimitive
   [11] mutate $29 = LoadLocal capture y$26
-  [12] store $30:TObject = Object { x: read $28:TPrimitive, y: capture $29 }
-  [13] Return freeze $30:TObject
+  [12] store $30:TObject<Object> = Object { x: read $28:TPrimitive, y: capture $29 }
+  [13] Return freeze $30:TObject<Object>
 ```
       

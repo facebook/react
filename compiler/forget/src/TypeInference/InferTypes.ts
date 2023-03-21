@@ -9,6 +9,7 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
+import { ArrayShapeId, ObjectShapeId } from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
@@ -150,7 +151,7 @@ function* generateInstructionTypes(
       if (hook !== null) {
         type = { kind: "Hook", definition: hook };
       } else {
-        type = { kind: "Function" };
+        type = { kind: "Function", shapeId: null };
       }
       yield equation(value.callee.identifier.type, type);
       break;
@@ -158,7 +159,14 @@ function* generateInstructionTypes(
 
     case "ObjectExpression": {
       invariant(left !== null, "invald object expression");
-      yield equation(left, { kind: "Object" });
+      yield equation(left, { kind: "Object", shapeId: ObjectShapeId });
+      break;
+    }
+
+    case "ArrayExpression": {
+      if (left) {
+        yield equation(left, { kind: "Object", shapeId: ArrayShapeId });
+      }
       break;
     }
   }

@@ -7,23 +7,36 @@
 import invariant from "invariant";
 import { Hook } from "./Hooks";
 
-export type Type =
-  | PrimitiveType
-  | HookType
-  | FunctionType
-  | ObjectType
-  | PhiType
-  | PolyType
-  | TypeVar;
+export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
+
+export type Type = BuiltInType | HookType | PhiType | PolyType | TypeVar;
 export type PrimitiveType = { kind: "Primitive" };
-export type FunctionType = {
-  kind: "Function";
-};
 export type HookType = {
   kind: "Hook";
   definition: Hook;
 };
-export type ObjectType = { kind: "Object" };
+
+/**
+ * An {@link FunctionType} or {@link ObjectType} (also a JS object) may be associated with an
+ * inferred "object shape", i.e. a known property (key -> Type) map. This is
+ * subtly different from JS language semantics - `shape` represents both
+ * OwnPropertyDescriptors and properties present in the prototype chain.
+ *
+ * In addition, a {@link FunctionType} may be associated with an inferred signature,
+ *
+ * If `shapeId` is present, it is a key into the global ShapeRegistry.
+ */
+
+export type FunctionType = {
+  kind: "Function";
+  shapeId: string | null;
+};
+
+export type ObjectType = {
+  kind: "Object";
+  shapeId: string | null;
+};
+
 export type TypeVar = {
   kind: "Type";
   id: TypeId;

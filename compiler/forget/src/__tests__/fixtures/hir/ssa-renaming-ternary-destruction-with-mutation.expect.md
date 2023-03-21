@@ -19,12 +19,12 @@ function foo(props) {
 
 ```javascript
 bb0 (block):
-  [1] store $35[1:33] = Array []
-  [2] store $37[2:33] = StoreLocal Let mutate x$36[2:33] = capture $35[1:33]
-  [3] mutate $38[3:33] = LoadLocal capture x$36[2:33]
+  [1] store $35[1:33]:TObject<Array> = Array []
+  [2] store $37[2:33]:TObject<Array> = StoreLocal Let store x$36[2:33]:TObject<Array> = capture $35[1:33]:TObject<Array>
+  [3] mutate $38[3:33]:TObject<Array> = LoadLocal capture x$36[2:33]:TObject<Array>
   [4] mutate $39 = LoadLocal read props$34
   [5] mutate $40 = PropertyLoad read $39.bar
-  [6] mutate $41 = PropertyCall mutate $38[3:33].push(read $40)
+  [6] mutate $41 = PropertyCall mutate $38[3:33]:TObject<Array>.push(read $40)
   [7] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
@@ -33,9 +33,9 @@ bb2 (value):
   [10] Branch (read $43) then:bb3 else:bb4
 bb3 (value):
   predecessor blocks: bb2
-  [14] store $48[14:33] = Array []
-  [15] store $49[15:33] = Array [capture $48[14:33]]
-  [16] store $51[16:33] = Destructure Reassign [ mutate x$36[16:33] ] = capture $49[15:33]
+  [14] store $48[14:33]:TObject<Array> = Array []
+  [15] store $49[15:33]:TObject<Array> = Array [capture $48[14:33]:TObject<Array>]
+  [16] store $51[16:33] = Destructure Reassign [ mutate x$36[16:33] ] = capture $49[15:33]:TObject<Array>
   [17] mutate $52[17:33] = LoadLocal capture x$36[16:33]
   [18] mutate $53 = LoadLocal read props$34
   [19] mutate $54 = PropertyLoad read $53.foo

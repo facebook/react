@@ -566,7 +566,14 @@ function printScope(scope: ReactiveScope | null): string {
 
 function printType(type: Type): string {
   if (type.kind === "Type") return "";
-  return `:T${type.kind}`;
+  // TODO(mofeiZ): add debugName for generated ids
+  if (type.kind === "Object" && type.shapeId != null) {
+    return `:T${type.kind}<${type.shapeId}>`;
+  } else if (type.kind === "Function" && type.shapeId != null) {
+    return `:T${type.kind}<${type.shapeId}>`;
+  } else {
+    return `:T${type.kind}`;
+  }
 }
 
 export function printSourceLocation(loc: SourceLocation): string {
