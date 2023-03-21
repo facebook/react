@@ -63,6 +63,8 @@ function formatProdErrorMessage(code) {
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  revertRemovalOfSiblingPrerendering =
+    dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   deferRenderPhaseUpdateToNextBatch =
     dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -8038,7 +8040,7 @@ function renderRootSync(root, lanes) {
           default:
             (workInProgressSuspendedReason = 0),
               (workInProgressThrownValue = null),
-              unwindSuspendedUnitOfWork(lanes, thrownValue);
+              throwAndUnwindWorkLoop(lanes, thrownValue);
         }
       }
       workLoopSync();
@@ -8078,7 +8080,7 @@ function renderRootConcurrent(root, lanes) {
           case 1:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 2:
             if (isThenableResolved(thrownValue)) {
@@ -8108,7 +8110,7 @@ function renderRootConcurrent(root, lanes) {
                 replaySuspendedUnitOfWork(lanes))
               : ((workInProgressSuspendedReason = 0),
                 (workInProgressThrownValue = null),
-                unwindSuspendedUnitOfWork(lanes, thrownValue));
+                throwAndUnwindWorkLoop(lanes, thrownValue));
             break;
           case 5:
             switch (workInProgress.tag) {
@@ -8131,12 +8133,12 @@ function renderRootConcurrent(root, lanes) {
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 6:
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(lanes, thrownValue);
+            throwAndUnwindWorkLoop(lanes, thrownValue);
             break;
           case 8:
             resetWorkInProgressStack();
@@ -8214,7 +8216,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     : (workInProgress = current);
   ReactCurrentOwner.current = null;
 }
-function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
   resetHooksOnUnwind();
   thenableState$1 = null;
@@ -8385,38 +8387,30 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    completeUnitOfWork(unitOfWork);
+    unitOfWork.flags & 32768
+      ? unwindUnitOfWork(unitOfWork)
+      : completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
   do {
-    var current = completedWork.alternate;
+    if (
+      revertRemovalOfSiblingPrerendering &&
+      0 !== (completedWork.flags & 32768)
+    ) {
+      unwindUnitOfWork(completedWork);
+      return;
+    }
     unitOfWork = completedWork.return;
-    if (0 === (completedWork.flags & 32768)) {
-      if (
-        ((current = completeWork(current, completedWork, renderLanes)),
-        null !== current)
-      ) {
-        workInProgress = current;
-        return;
-      }
-    } else {
-      current = unwindWork(current, completedWork);
-      if (null !== current) {
-        current.flags &= 32767;
-        workInProgress = current;
-        return;
-      }
-      if (null !== unitOfWork)
-        (unitOfWork.flags |= 32768),
-          (unitOfWork.subtreeFlags = 0),
-          (unitOfWork.deletions = null);
-      else {
-        workInProgressRootExitStatus = 6;
-        workInProgress = null;
-        return;
-      }
+    var next = completeWork(
+      completedWork.alternate,
+      completedWork,
+      renderLanes
+    );
+    if (null !== next) {
+      workInProgress = next;
+      return;
     }
     completedWork = completedWork.sibling;
     if (null !== completedWork) {
@@ -8426,6 +8420,29 @@ function completeUnitOfWork(unitOfWork) {
     workInProgress = completedWork = unitOfWork;
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
+}
+function unwindUnitOfWork(unitOfWork) {
+  do {
+    var next = unwindWork(unitOfWork.alternate, unitOfWork);
+    if (null !== next) {
+      next.flags &= 32767;
+      workInProgress = next;
+      return;
+    }
+    next = unitOfWork.return;
+    null !== next &&
+      ((next.flags |= 32768), (next.subtreeFlags = 0), (next.deletions = null));
+    if (
+      revertRemovalOfSiblingPrerendering &&
+      ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
+    ) {
+      workInProgress = unitOfWork;
+      return;
+    }
+    workInProgress = unitOfWork = next;
+  } while (null !== unitOfWork);
+  workInProgressRootExitStatus = 6;
+  workInProgress = null;
 }
 function commitRoot(root, recoverableErrors, transitions) {
   var previousUpdateLanePriority = currentUpdatePriority,
@@ -9605,19 +9622,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1138 = {
+  devToolsConfig$jscomp$inline_1137 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-86a50993",
+    version: "18.3.0-www-modern-05e288bd",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1313 = {
-  bundleType: devToolsConfig$jscomp$inline_1138.bundleType,
-  version: devToolsConfig$jscomp$inline_1138.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1138.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1138.rendererConfig,
+var internals$jscomp$inline_1312 = {
+  bundleType: devToolsConfig$jscomp$inline_1137.bundleType,
+  version: devToolsConfig$jscomp$inline_1137.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1137.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1137.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9634,26 +9651,26 @@ var internals$jscomp$inline_1313 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1138.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1137.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-86a50993"
+  reconcilerVersion: "18.3.0-www-modern-05e288bd"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1314 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1313 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1314.isDisabled &&
-    hook$jscomp$inline_1314.supportsFiber
+    !hook$jscomp$inline_1313.isDisabled &&
+    hook$jscomp$inline_1313.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1314.inject(
-        internals$jscomp$inline_1313
+      (rendererID = hook$jscomp$inline_1313.inject(
+        internals$jscomp$inline_1312
       )),
-        (injectedHook = hook$jscomp$inline_1314);
+        (injectedHook = hook$jscomp$inline_1313);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
