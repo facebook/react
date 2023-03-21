@@ -393,11 +393,23 @@ function codegenInstructionNullable(
     }
     switch (kind) {
       case InstructionKind.Const: {
+        if (instr.lvalue !== null) {
+          CompilerError.invariant(
+            `Const declaration cannot be referenced as an expression`,
+            instr.value.loc
+          );
+        }
         return createVariableDeclaration(instr.loc, "const", [
           t.variableDeclarator(codegenLValue(lvalue), value),
         ]);
       }
       case InstructionKind.Let: {
+        if (instr.lvalue !== null) {
+          CompilerError.invariant(
+            `Const declaration cannot be referenced as an expression`,
+            instr.value.loc
+          );
+        }
         return createVariableDeclaration(instr.loc, "let", [
           t.variableDeclarator(codegenLValue(lvalue), value),
         ]);

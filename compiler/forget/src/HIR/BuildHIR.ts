@@ -2029,13 +2029,20 @@ function lowerAssignment(
           });
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
-        return {
-          kind: "PropertyStore",
-          object,
-          property: property.node.name,
-          value,
+        const temporary = buildTemporaryPlace(builder, loc);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...temporary },
+          value: {
+            kind: "PropertyStore",
+            object,
+            property: property.node.name,
+            value,
+            loc,
+          },
           loc,
-        };
+        });
+        return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
       } else {
         if (!property.isExpression()) {
           builder.errors.push({
@@ -2047,13 +2054,20 @@ function lowerAssignment(
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
         const propertyPlace = lowerExpressionToTemporary(builder, property);
-        return {
-          kind: "ComputedStore",
-          object,
-          property: propertyPlace,
-          value,
+        const temporary = buildTemporaryPlace(builder, loc);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...temporary },
+          value: {
+            kind: "ComputedStore",
+            object,
+            property: propertyPlace,
+            value,
+            loc,
+          },
           loc,
-        };
+        });
+        return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
       }
     }
     case "ArrayPattern": {
@@ -2093,10 +2107,10 @@ function lowerAssignment(
           followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
         }
       }
-      const temp = buildTemporaryPlace(builder, loc);
+      const temporary = buildTemporaryPlace(builder, loc);
       builder.push({
         id: makeInstructionId(0),
-        lvalue: { ...temp },
+        lvalue: { ...temporary },
         value: {
           kind: "Destructure",
           lvalue: {
@@ -2114,7 +2128,7 @@ function lowerAssignment(
       for (const { place, path } of followups) {
         lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
       }
-      return { kind: "LoadLocal", place: value, loc: value.loc };
+      return { kind: "LoadLocal", place: temporary, loc: value.loc };
     }
     case "ObjectPattern": {
       const lvalue = lvaluePath as NodePath<t.ObjectPattern>;
@@ -2187,10 +2201,10 @@ function lowerAssignment(
           }
         }
       }
-      const temp = buildTemporaryPlace(builder, loc);
+      const temporary = buildTemporaryPlace(builder, loc);
       builder.push({
         id: makeInstructionId(0),
-        lvalue: { ...temp },
+        lvalue: { ...temporary },
         value: {
           kind: "Destructure",
           lvalue: {
@@ -2208,7 +2222,7 @@ function lowerAssignment(
       for (const { place, path } of followups) {
         lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
       }
-      return { kind: "LoadLocal", place: value, loc: value.loc };
+      return { kind: "LoadLocal", place: temporary, loc: value.loc };
     }
     default: {
       builder.errors.push({
