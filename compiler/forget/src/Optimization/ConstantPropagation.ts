@@ -104,7 +104,6 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
     for (const instr of block.instructions) {
       const value = evaluateInstruction(constants, instr);
       if (value !== null) {
-        instr.value = value;
         constants.set(instr.lvalue.identifier.id, value);
       }
     }
@@ -225,71 +224,79 @@ function evaluateInstruction(
       if (lhsValue !== null && rhsValue !== null) {
         const lhs = lhsValue.value;
         const rhs = rhsValue.value;
+        let result: Primitive | null = null;
         switch (value.operator) {
           case "+": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs + rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "-": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs - rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs - rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "*": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs * rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs * rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "/": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs / rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs / rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "<": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs < rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs < rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "<=": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs <= rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs <= rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case ">": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs > rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs > rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case ">=": {
             if (typeof lhs === "number" && typeof rhs === "number") {
-              return { kind: "Primitive", value: lhs >= rhs, loc: value.loc };
+              result = { kind: "Primitive", value: lhs >= rhs, loc: value.loc };
             }
-            return null;
+            break;
           }
           case "==": {
-            return { kind: "Primitive", value: lhs == rhs, loc: value.loc };
+            result = { kind: "Primitive", value: lhs == rhs, loc: value.loc };
+            break;
           }
           case "===": {
-            return { kind: "Primitive", value: lhs === rhs, loc: value.loc };
+            result = { kind: "Primitive", value: lhs === rhs, loc: value.loc };
+            break;
           }
           case "!=": {
-            return { kind: "Primitive", value: lhs != rhs, loc: value.loc };
+            result = { kind: "Primitive", value: lhs != rhs, loc: value.loc };
+            break;
           }
           case "!==": {
-            return { kind: "Primitive", value: lhs !== rhs, loc: value.loc };
+            result = { kind: "Primitive", value: lhs !== rhs, loc: value.loc };
+            break;
           }
           default: {
-            // TODO: handle more cases
-            return null;
+            break;
           }
+        }
+        if (result !== null) {
+          instr.value = result;
+          return result;
         }
       }
       return null;
@@ -301,25 +308,30 @@ function evaluateInstruction(
           typeof objectValue.value === "string" &&
           value.property === "length"
         ) {
-          return {
+          const result: InstructionValue = {
             kind: "Primitive",
             value: objectValue.value.length,
             loc: value.loc,
           };
+          instr.value = result;
+          return result;
         }
       }
       return null;
     }
     case "LoadLocal": {
-      return read(constants, value.place);
+      const placeValue = read(constants, value.place);
+      if (placeValue !== null) {
+        instr.value = placeValue;
+      }
+      return placeValue;
     }
     case "StoreLocal": {
       const placeValue = read(constants, value.value);
       if (placeValue !== null) {
         constants.set(value.lvalue.place.identifier.id, placeValue);
       }
-      // NOTE: always return null to avoid replacing the StoreLocal with its value
-      return null;
+      return placeValue;
     }
     default: {
       // TODO: handle more cases
