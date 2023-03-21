@@ -28,7 +28,7 @@ function ErrorView_forget(error, _retry) {
   const c_0 = $[0] !== error;
   let t0;
   if (c_0) {
-    t0 = <MessageBox error={error}></MessageBox>;
+    t0 = <MessageBox error={error} />;
     $[0] = error;
     $[1] = t0;
   } else {
@@ -49,14 +49,14 @@ function Renderer_forget(props) {
   const $ = React.unstable_useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Bar></Bar>;
+    t0 = <Bar />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <ErrorView></ErrorView>;
+    t1 = <ErrorView />;
     $[1] = t1;
   } else {
     t1 = $[1];

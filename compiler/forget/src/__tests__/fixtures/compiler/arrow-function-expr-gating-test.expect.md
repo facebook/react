@@ -21,7 +21,7 @@ function ErrorView_forget(error, _retry) {
   const c_0 = $[0] !== error;
   let t0;
   if (c_0) {
-    t0 = <MessageBox error={error}></MessageBox>;
+    t0 = <MessageBox error={error} />;
     $[0] = error;
     $[1] = t0;
   } else {
