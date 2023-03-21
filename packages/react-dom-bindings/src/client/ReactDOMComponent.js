@@ -18,8 +18,10 @@ import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   getValueForAttribute,
+  getValueForAttributeOnCustomComponent,
   getValueForProperty,
   setValueForProperty,
+  setValueForPropertyOnCustomComponent,
 } from './DOMPropertyOperations';
 import {
   initWrapperState as ReactDOMInputInitWrapperState,
@@ -56,12 +58,7 @@ import {
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
 import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
-import {
-  getPropertyInfo,
-  shouldIgnoreAttribute,
-  shouldRemoveAttribute,
-} from '../shared/DOMProperty';
-import assertValidProps from './assertValidProps';
+import {getPropertyInfo} from '../shared/DOMProperty';
 import {DOCUMENT_NODE} from './HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
@@ -83,14 +80,6 @@ import {
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
-
-const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
-const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
-const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-const AUTOFOCUS = 'autoFocus';
-const CHILDREN = 'children';
-const STYLE = 'style';
-const HTML = '__html';
 
 let warnedUnknownTags: {
   [key: string]: boolean,
@@ -129,6 +118,18 @@ function validatePropertiesInDevelopment(type: string, props: any) {
       registrationNameDependencies,
       possibleRegistrationNames,
     });
+    if (
+      props.contentEditable &&
+      !props.suppressContentEditableWarning &&
+      props.children != null
+    ) {
+      console.error(
+        'A component is `contentEditable` and contains `children` managed by ' +
+          'React. It is now your responsibility to guarantee that none of ' +
+          'those nodes are unexpectedly modified or duplicated. This is ' +
+          'probably not intentional.',
+      );
+    }
   }
 }
 
@@ -297,64 +298,116 @@ function setInitialDOMProperties(
       continue;
     }
     const nextProp = nextProps[propKey];
-    if (propKey === STYLE) {
-      if (__DEV__) {
-        if (nextProp) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(nextProp);
+    switch (propKey) {
+      case 'style': {
+        if (nextProp != null && typeof nextProp !== 'object') {
+          throw new Error(
+            'The `style` prop expects a mapping from style properties to values, ' +
+              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+              'using JSX.',
+          );
         }
+        if (__DEV__) {
+          if (nextProp) {
+            // Freeze the next style object so that we can assume it won't be
+            // mutated. We have already warned for this in the past.
+            Object.freeze(nextProp);
+          }
+        }
+        // Relies on `updateStylesByID` not mutating `styleUpdates`.
+        setValueForStyles(domElement, nextProp);
+        break;
       }
-      // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      setValueForStyles(domElement, nextProp);
-    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      const nextHtml = nextProp ? nextProp[HTML] : undefined;
-      if (nextHtml != null) {
-        if (disableIEWorkarounds) {
-          domElement.innerHTML = nextHtml;
-        } else {
-          setInnerHTML(domElement, nextHtml);
+      case 'dangerouslySetInnerHTML': {
+        if (nextProp != null) {
+          if (typeof nextProp !== 'object' || !('__html' in nextProp)) {
+            throw new Error(
+              '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+                'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+                'for more information.',
+            );
+          }
+          const nextHtml = nextProp.__html;
+          if (nextHtml != null) {
+            if (nextProps.children != null) {
+              throw new Error(
+                'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+              );
+            }
+            if (disableIEWorkarounds) {
+              domElement.innerHTML = nextHtml;
+            } else {
+              setInnerHTML(domElement, nextHtml);
+            }
+          }
         }
+        break;
       }
-    } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string') {
-        // Avoid setting initial textContent when the text is empty. In IE11 setting
-        // textContent on a <textarea> will cause the placeholder to not
-        // show within the <textarea> until it has been focused and blurred again.
-        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        const canSetTextContent =
-          (!enableHostSingletons || tag !== 'body') &&
-          (tag !== 'textarea' || nextProp !== '');
-        if (canSetTextContent) {
-          setTextContent(domElement, nextProp);
+      case 'children': {
+        if (typeof nextProp === 'string') {
+          // Avoid setting initial textContent when the text is empty. In IE11 setting
+          // textContent on a <textarea> will cause the placeholder to not
+          // show within the <textarea> until it has been focused and blurred again.
+          // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+          const canSetTextContent =
+            (!enableHostSingletons || tag !== 'body') &&
+            (tag !== 'textarea' || nextProp !== '');
+          if (canSetTextContent) {
+            setTextContent(domElement, nextProp);
+          }
+        } else if (typeof nextProp === 'number') {
+          const canSetTextContent = !enableHostSingletons || tag !== 'body';
+          if (canSetTextContent) {
+            setTextContent(domElement, '' + nextProp);
+          }
         }
-      } else if (typeof nextProp === 'number') {
-        const canSetTextContent = !enableHostSingletons || tag !== 'body';
-        if (canSetTextContent) {
-          setTextContent(domElement, '' + nextProp);
-        }
+        break;
       }
-    } else if (
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
-      // Noop
-    } else if (propKey === AUTOFOCUS) {
-      // We polyfill it separately on the client during commit.
-      // We could have excluded it in the property list instead of
-      // adding a special case here, but then it wouldn't be emitted
-      // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (nextProp != null) {
-        if (__DEV__ && typeof nextProp !== 'function') {
-          warnForInvalidEventListener(propKey, nextProp);
-        }
-        if (propKey === 'onScroll') {
+      case 'onScroll': {
+        if (nextProp != null) {
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           listenToNonDelegatedEvent('scroll', domElement);
         }
+        break;
       }
-    } else if (nextProp != null) {
-      setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'defaultValue': // Reserved
+      case 'defaultChecked':
+      case 'innerHTML': {
+        // Noop
+        break;
+      }
+      case 'autoFocus': {
+        // We polyfill it separately on the client during commit.
+        // We could have excluded it in the property list instead of
+        // adding a special case here, but then it wouldn't be emitted
+        // on server rendering (but we *do* want to emit it in SSR).
+        break;
+      }
+      case 'innerText': // Properties
+      case 'textContent':
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+      // eslint-disable-next-line no-fallthrough
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          if (nextProp != null) {
+            if (__DEV__ && typeof nextProp !== 'function') {
+              warnForInvalidEventListener(propKey, nextProp);
+            }
+          }
+        } else if (nextProp != null) {
+          if (isCustomComponentTag) {
+            setValueForPropertyOnCustomComponent(domElement, propKey, nextProp);
+          } else {
+            setValueForProperty(domElement, propKey, nextProp);
+          }
+        }
+      }
     }
   }
 }
@@ -369,18 +422,27 @@ function updateDOMProperties(
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    if (propKey === STYLE) {
-      setValueForStyles(domElement, propValue);
-    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      if (disableIEWorkarounds) {
-        domElement.innerHTML = propValue;
-      } else {
-        setInnerHTML(domElement, propValue);
-      }
-    } else if (propKey === CHILDREN) {
-      setTextContent(domElement, propValue);
-    } else {
-      setValueForProperty(domElement, propKey, propValue, isCustomComponentTag);
+    switch (propKey) {
+      case 'style':
+        setValueForStyles(domElement, propValue);
+        break;
+      case 'dangerouslySetInnerHTML':
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = propValue;
+        } else {
+          setInnerHTML(domElement, propValue);
+        }
+        break;
+      case 'children':
+        setTextContent(domElement, propValue);
+        break;
+      default:
+        if (isCustomComponentTag) {
+          setValueForPropertyOnCustomComponent(domElement, propKey, propValue);
+        } else {
+          setValueForProperty(domElement, propKey, propValue);
+        }
+        break;
     }
   }
 }
@@ -536,6 +598,16 @@ export function setInitialProperties(
     case 'iframe':
     case 'object':
     case 'embed':
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
       listenToNonDelegatedEvent('load', domElement);
@@ -551,14 +623,34 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'source':
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the error event.
       listenToNonDelegatedEvent('error', domElement);
       props = rawProps;
       break;
     case 'img':
-    case 'image':
     case 'link':
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
+    // eslint-disable-next-line no-fallthrough
+    case 'image':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for error and load events.
       listenToNonDelegatedEvent('error', domElement);
@@ -572,6 +664,15 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'input':
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
@@ -596,11 +697,32 @@ export function setInitialProperties(
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       break;
+    case 'area':
+    case 'base':
+    case 'br':
+    case 'col':
+    case 'hr':
+    case 'keygen':
+    case 'meta':
+    case 'param':
+    case 'track':
+    case 'wbr':
+    case 'menuitem': {
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     default:
       props = rawProps;
   }
-
-  assertValidProps(tag, props);
 
   setInitialDOMProperties(tag, domElement, props, isCustomComponentTag);
 
@@ -649,6 +771,15 @@ export function diffProperties(
   let nextProps: Object;
   switch (tag) {
     case 'input':
+      if (
+        nextRawProps.children != null ||
+        nextRawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
       updatePayload = [];
@@ -663,6 +794,33 @@ export function diffProperties(
       nextProps = ReactDOMTextareaGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
+    case 'img':
+    case 'link':
+    case 'area':
+    case 'base':
+    case 'br':
+    case 'col':
+    case 'embed':
+    case 'hr':
+    case 'keygen':
+    case 'meta':
+    case 'param':
+    case 'source':
+    case 'track':
+    case 'wbr':
+    case 'menuitem': {
+      if (
+        nextRawProps.children != null ||
+        nextRawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          `${tag} is a void element tag and must neither have \`children\` nor ` +
+            'use `dangerouslySetInnerHTML`.',
+        );
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     default:
       lastProps = lastRawProps;
       nextProps = nextRawProps;
@@ -676,8 +834,6 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps);
-
   let propKey;
   let styleName;
   let styleUpdates = null;
@@ -689,36 +845,56 @@ export function diffProperties(
     ) {
       continue;
     }
-    if (propKey === STYLE) {
-      const lastStyle = lastProps[propKey];
-      for (styleName in lastStyle) {
-        if (lastStyle.hasOwnProperty(styleName)) {
-          if (!styleUpdates) {
-            styleUpdates = ({}: {[string]: $FlowFixMe});
+    switch (propKey) {
+      case 'style': {
+        const lastStyle = lastProps[propKey];
+        for (styleName in lastStyle) {
+          if (lastStyle.hasOwnProperty(styleName)) {
+            if (!styleUpdates) {
+              styleUpdates = ({}: {[string]: $FlowFixMe});
+            }
+            styleUpdates[styleName] = '';
           }
-          styleUpdates[styleName] = '';
+        }
+        break;
+      }
+      case 'dangerouslySetInnerHTML':
+      case 'children': {
+        // Noop. This is handled by the clear text mechanism.
+        break;
+      }
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'defaultValue': // Reserved
+      case 'defaultChecked':
+      case 'innerHTML': {
+        // Noop
+        break;
+      }
+      case 'autoFocus': {
+        // Noop. It doesn't work on updates anyway.
+        break;
+      }
+      case 'innerText': // Properties
+      case 'textContent':
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+      // eslint-disable-next-line no-fallthrough
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          // This is a special case. If any listener updates we need to ensure
+          // that the "current" fiber pointer gets updated so we need a commit
+          // to update this element.
+          if (!updatePayload) {
+            updatePayload = [];
+          }
+        } else {
+          // For all other deleted properties we add it to the queue. We use
+          // the allowed property list in the commit phase instead.
+          (updatePayload = updatePayload || []).push(propKey, null);
         }
       }
-    } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
-      // Noop. This is handled by the clear text mechanism.
-    } else if (
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
-      // Noop
-    } else if (propKey === AUTOFOCUS) {
-      // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      // This is a special case. If any listener updates we need to ensure
-      // that the "current" fiber pointer gets updated so we need a commit
-      // to update this element.
-      if (!updatePayload) {
-        updatePayload = [];
-      }
-    } else {
-      // For all other deleted properties we add it to the queue. We use
-      // the allowed property list in the commit phase instead.
-      (updatePayload = updatePayload || []).push(propKey, null);
     }
   }
   for (propKey in nextProps) {
@@ -731,96 +907,153 @@ export function diffProperties(
     ) {
       continue;
     }
-    if (propKey === STYLE) {
-      if (__DEV__) {
-        if (nextProp) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(nextProp);
+    switch (propKey) {
+      case 'style': {
+        if (nextProp != null && typeof nextProp !== 'object') {
+          throw new Error(
+            'The `style` prop expects a mapping from style properties to values, ' +
+              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+              'using JSX.',
+          );
         }
-      }
-      if (lastProp) {
-        // Unset styles on `lastProp` but not on `nextProp`.
-        for (styleName in lastProp) {
-          if (
-            lastProp.hasOwnProperty(styleName) &&
-            (!nextProp || !nextProp.hasOwnProperty(styleName))
-          ) {
-            if (!styleUpdates) {
-              styleUpdates = ({}: {[string]: string});
+        if (__DEV__) {
+          if (nextProp) {
+            // Freeze the next style object so that we can assume it won't be
+            // mutated. We have already warned for this in the past.
+            Object.freeze(nextProp);
+          }
+        }
+        if (lastProp) {
+          // Unset styles on `lastProp` but not on `nextProp`.
+          for (styleName in lastProp) {
+            if (
+              lastProp.hasOwnProperty(styleName) &&
+              (!nextProp || !nextProp.hasOwnProperty(styleName))
+            ) {
+              if (!styleUpdates) {
+                styleUpdates = ({}: {[string]: string});
+              }
+              styleUpdates[styleName] = '';
             }
-            styleUpdates[styleName] = '';
           }
-        }
-        // Update styles that changed since `lastProp`.
-        for (styleName in nextProp) {
-          if (
-            nextProp.hasOwnProperty(styleName) &&
-            lastProp[styleName] !== nextProp[styleName]
-          ) {
-            if (!styleUpdates) {
-              styleUpdates = ({}: {[string]: $FlowFixMe});
+          // Update styles that changed since `lastProp`.
+          for (styleName in nextProp) {
+            if (
+              nextProp.hasOwnProperty(styleName) &&
+              lastProp[styleName] !== nextProp[styleName]
+            ) {
+              if (!styleUpdates) {
+                styleUpdates = ({}: {[string]: $FlowFixMe});
+              }
+              styleUpdates[styleName] = nextProp[styleName];
             }
-            styleUpdates[styleName] = nextProp[styleName];
           }
-        }
-      } else {
-        // Relies on `updateStylesByID` not mutating `styleUpdates`.
-        if (!styleUpdates) {
-          if (!updatePayload) {
-            updatePayload = [];
+        } else {
+          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          if (!styleUpdates) {
+            if (!updatePayload) {
+              updatePayload = [];
+            }
+            updatePayload.push(propKey, styleUpdates);
           }
-          updatePayload.push(propKey, styleUpdates);
+          styleUpdates = nextProp;
         }
-        styleUpdates = nextProp;
+        break;
       }
-    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      const nextHtml = nextProp ? nextProp[HTML] : undefined;
-      const lastHtml = lastProp ? lastProp[HTML] : undefined;
-      if (nextHtml != null) {
-        if (lastHtml !== nextHtml) {
-          (updatePayload = updatePayload || []).push(propKey, nextHtml);
+      case 'dangerouslySetInnerHTML': {
+        if (nextProp != null) {
+          if (typeof nextProp !== 'object' || !('__html' in nextProp)) {
+            throw new Error(
+              '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+                'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+                'for more information.',
+            );
+          }
+          const nextHtml = nextProp.__html;
+          if (nextHtml != null) {
+            if (nextProps.children != null) {
+              throw new Error(
+                'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+              );
+            }
+            const lastHtml = lastProp ? lastProp.__html : undefined;
+            if (lastHtml !== nextHtml) {
+              (updatePayload = updatePayload || []).push(propKey, nextHtml);
+            }
+          }
+        } else {
+          // TODO: It might be too late to clear this if we have children
+          // inserted already.
         }
-      } else {
-        // TODO: It might be too late to clear this if we have children
-        // inserted already.
+        break;
       }
-    } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string' || typeof nextProp === 'number') {
-        (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
-      }
-    } else if (
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
-      // Noop
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (nextProp != null) {
-        // We eagerly listen to this even though we haven't committed yet.
-        if (__DEV__ && typeof nextProp !== 'function') {
-          warnForInvalidEventListener(propKey, nextProp);
+      case 'children': {
+        if (typeof nextProp === 'string' || typeof nextProp === 'number') {
+          (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
         }
-        if (propKey === 'onScroll') {
+        break;
+      }
+      case 'onScroll': {
+        if (nextProp != null) {
+          // We eagerly listen to this even though we haven't committed yet.
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           listenToNonDelegatedEvent('scroll', domElement);
         }
+        if (!updatePayload && lastProp !== nextProp) {
+          // This is a special case. If any listener updates we need to ensure
+          // that the "current" props pointer gets updated so we need a commit
+          // to update this element.
+          updatePayload = [];
+        }
+        break;
       }
-      if (!updatePayload && lastProp !== nextProp) {
-        // This is a special case. If any listener updates we need to ensure
-        // that the "current" props pointer gets updated so we need a commit
-        // to update this element.
-        updatePayload = [];
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'defaultValue': // Reserved
+      case 'defaultChecked':
+      case 'innerHTML': {
+        // Noop
+        break;
       }
-    } else {
-      // For any other property we always add it to the queue and then we
-      // filter it out using the allowed property list during the commit.
-      (updatePayload = updatePayload || []).push(propKey, nextProp);
+      case 'autoFocus': {
+        // Noop on updates
+        break;
+      }
+      case 'innerText': // Properties
+      case 'textContent':
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+      // eslint-disable-next-line no-fallthrough
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          if (nextProp != null) {
+            // We eagerly listen to this even though we haven't committed yet.
+            if (__DEV__ && typeof nextProp !== 'function') {
+              warnForInvalidEventListener(propKey, nextProp);
+            }
+          }
+          if (!updatePayload && lastProp !== nextProp) {
+            // This is a special case. If any listener updates we need to ensure
+            // that the "current" props pointer gets updated so we need a commit
+            // to update this element.
+            updatePayload = [];
+          }
+        } else {
+          // For any other property we always add it to the queue and then we
+          // filter it out using the allowed property list during the commit.
+          (updatePayload = updatePayload || []).push(propKey, nextProp);
+        }
+      }
     }
   }
   if (styleUpdates) {
     if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
+      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
     }
-    (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
+    (updatePayload = updatePayload || []).push('style', styleUpdates);
   }
   return updatePayload;
 }
@@ -885,6 +1118,227 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
+function diffHydratedStyles(domElement: Element, value: mixed) {
+  if (value != null && typeof value !== 'object') {
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
+  }
+  if (canDiffStyleForHydrationWarning) {
+    const expectedStyle = createDangerousStringForStyles(value);
+    const serverValue = domElement.getAttribute('style');
+    if (expectedStyle !== serverValue) {
+      warnForPropDifference('style', serverValue, expectedStyle);
+    }
+  }
+}
+
+function diffHydratedCustomComponent(
+  domElement: Element,
+  tag: string,
+  rawProps: Object,
+  parentNamespaceDev: string,
+  extraAttributeNames: Set<string>,
+) {
+  for (const propKey in rawProps) {
+    if (!rawProps.hasOwnProperty(propKey)) {
+      continue;
+    }
+    const nextProp = rawProps[propKey];
+    if (nextProp == null) {
+      continue;
+    }
+    if (registrationNameDependencies.hasOwnProperty(propKey)) {
+      if (typeof nextProp !== 'function') {
+        warnForInvalidEventListener(propKey, nextProp);
+      }
+      continue;
+    }
+    if (rawProps.suppressHydrationWarning === true) {
+      // Don't bother comparing. We're ignoring all these warnings.
+      continue;
+    }
+    // Validate that the properties correspond to their expected values.
+    switch (propKey) {
+      case 'children': // Checked above already
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'defaultValue':
+      case 'defaultChecked':
+      case 'innerHTML':
+        // Noop
+        continue;
+      case 'dangerouslySetInnerHTML':
+        const serverHTML = domElement.innerHTML;
+        const nextHtml = nextProp ? nextProp.__html : undefined;
+        if (nextHtml != null) {
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
+        }
+        continue;
+      case 'style':
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey);
+        diffHydratedStyles(domElement, nextProp);
+        continue;
+      case 'offsetParent':
+      case 'offsetTop':
+      case 'offsetLeft':
+      case 'offsetWidth':
+      case 'offsetHeight':
+      case 'isContentEditable':
+      case 'outerText':
+      case 'outerHTML':
+        if (enableCustomElementPropertySupport) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
+          if (__DEV__) {
+            console.error(
+              'Assignment to read-only property will result in a no-op: `%s`',
+              propKey,
+            );
+          }
+          continue;
+        }
+      // eslint-disable-next-line no-fallthrough
+      default: {
+        let ownNamespaceDev = parentNamespaceDev;
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          ownNamespaceDev = getIntrinsicNamespace(tag);
+        }
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
+        } else {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey);
+        }
+        const serverValue = getValueForAttributeOnCustomComponent(
+          domElement,
+          propKey,
+          nextProp,
+        );
+        if (nextProp !== serverValue) {
+          warnForPropDifference(propKey, serverValue, nextProp);
+        }
+      }
+    }
+  }
+}
+
+function diffHydratedGenericElement(
+  domElement: Element,
+  tag: string,
+  rawProps: Object,
+  parentNamespaceDev: string,
+  extraAttributeNames: Set<string>,
+) {
+  for (const propKey in rawProps) {
+    if (!rawProps.hasOwnProperty(propKey)) {
+      continue;
+    }
+    const nextProp = rawProps[propKey];
+    if (nextProp == null) {
+      continue;
+    }
+    if (registrationNameDependencies.hasOwnProperty(propKey)) {
+      if (typeof nextProp !== 'function') {
+        warnForInvalidEventListener(propKey, nextProp);
+      }
+      continue;
+    }
+    if (rawProps.suppressHydrationWarning === true) {
+      // Don't bother comparing. We're ignoring all these warnings.
+      continue;
+    }
+    // Validate that the properties correspond to their expected values.
+    switch (propKey) {
+      case 'children': // Checked above already
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
+      case 'value': // Controlled attributes are not validated
+      case 'checked': // TODO: Only ignore them on controlled tags.
+      case 'selected':
+      case 'defaultValue':
+      case 'defaultChecked':
+      case 'innerHTML':
+        // Noop
+        continue;
+      case 'dangerouslySetInnerHTML':
+        const serverHTML = domElement.innerHTML;
+        const nextHtml = nextProp ? nextProp.__html : undefined;
+        if (nextHtml != null) {
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
+        }
+        continue;
+      case 'style':
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey);
+        diffHydratedStyles(domElement, nextProp);
+        continue;
+      // eslint-disable-next-line no-fallthrough
+      default:
+        if (
+          // shouldIgnoreAttribute
+          // We have already filtered out null/undefined and reserved words.
+          propKey.length > 2 &&
+          (propKey[0] === 'o' || propKey[0] === 'O') &&
+          (propKey[1] === 'n' || propKey[1] === 'N')
+        ) {
+          continue;
+        }
+        const propertyInfo = getPropertyInfo(propKey);
+        let isMismatchDueToBadCasing = false;
+        let serverValue;
+        if (propertyInfo !== null) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propertyInfo.attributeName);
+          serverValue = getValueForProperty(
+            domElement,
+            propKey,
+            nextProp,
+            propertyInfo,
+          );
+        } else {
+          let ownNamespaceDev = parentNamespaceDev;
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            ownNamespaceDev = getIntrinsicNamespace(tag);
+          }
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey.toLowerCase());
+          } else {
+            const standardName = getPossibleStandardName(propKey);
+            if (standardName !== null && standardName !== propKey) {
+              // If an SVG prop is supplied with bad casing, it will
+              // be successfully parsed from HTML, but will produce a mismatch
+              // (and would be incorrectly rendered on the client).
+              // However, we already warn about bad casing elsewhere.
+              // So we'll skip the misleading extra mismatch warning in this case.
+              isMismatchDueToBadCasing = true;
+              // $FlowFixMe - Should be inferred as not undefined.
+              extraAttributeNames.delete(standardName);
+            }
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey);
+          }
+          serverValue = getValueForAttribute(domElement, propKey, nextProp);
+        }
+
+        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
+          warnForPropDifference(propKey, serverValue, nextProp);
+        }
+    }
+  }
+}
+
 export function diffHydratedProperties(
   domElement: Element,
   tag: string,
@@ -893,8 +1347,6 @@ export function diffHydratedProperties(
   shouldWarnDev: boolean,
   parentNamespaceDev: string,
 ): null | Array<mixed> {
-  let extraAttributeNames: Set<string>;
-
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
   }
@@ -965,10 +1417,36 @@ export function diffHydratedProperties(
     listenToNonDelegatedEvent('scroll', domElement);
   }
 
-  assertValidProps(tag, rawProps);
+  let updatePayload = null;
 
-  if (__DEV__) {
-    extraAttributeNames = new Set();
+  const children = rawProps.children;
+  // For text content children we compare against textContent. This
+  // might match additional HTML that is hidden when we read it using
+  // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
+  // satisfies our requirement. Our requirement is not to produce perfect
+  // HTML and attributes. Ideally we should preserve structure but it's
+  // ok not to if the visible content is still enough to indicate what
+  // even listeners these nodes might be wired up to.
+  // TODO: Warn if there is more than a single textNode as a child.
+  // TODO: Should we use domElement.firstChild.nodeValue to compare?
+  if (typeof children === 'string' || typeof children === 'number') {
+    if (domElement.textContent !== '' + children) {
+      if (rawProps.suppressHydrationWarning !== true) {
+        checkForUnmatchedText(
+          domElement.textContent,
+          children,
+          isConcurrentMode,
+          shouldWarnDev,
+        );
+      }
+      if (!isConcurrentMode) {
+        updatePayload = ['children', children];
+      }
+    }
+  }
+
+  if (__DEV__ && shouldWarnDev) {
+    const extraAttributeNames: Set<string> = new Set();
     const attributes = domElement.attributes;
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
@@ -987,196 +1465,27 @@ export function diffHydratedProperties(
           extraAttributeNames.add(attributes[i].name);
       }
     }
-  }
-
-  let updatePayload = null;
-
-  const children = rawProps.children;
-  // For text content children we compare against textContent. This
-  // might match additional HTML that is hidden when we read it using
-  // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
-  // satisfies our requirement. Our requirement is not to produce perfect
-  // HTML and attributes. Ideally we should preserve structure but it's
-  // ok not to if the visible content is still enough to indicate what
-  // even listeners these nodes might be wired up to.
-  // TODO: Warn if there is more than a single textNode as a child.
-  // TODO: Should we use domElement.firstChild.nodeValue to compare?
-  if (typeof children === 'string' || typeof children === 'number') {
-    if (domElement.textContent !== '' + children) {
-      if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        checkForUnmatchedText(
-          domElement.textContent,
-          children,
-          isConcurrentMode,
-          shouldWarnDev,
-        );
-      }
-      if (!isConcurrentMode) {
-        updatePayload = [CHILDREN, children];
-      }
+    if (isCustomComponent(tag, rawProps)) {
+      diffHydratedCustomComponent(
+        domElement,
+        tag,
+        rawProps,
+        parentNamespaceDev,
+        extraAttributeNames,
+      );
+    } else {
+      diffHydratedGenericElement(
+        domElement,
+        tag,
+        rawProps,
+        parentNamespaceDev,
+        extraAttributeNames,
+      );
     }
-  }
-
-  if (__DEV__ && shouldWarnDev) {
-    const isCustomComponentTag = isCustomComponent(tag, rawProps);
-
-    for (const propKey in rawProps) {
-      if (!rawProps.hasOwnProperty(propKey)) {
-        continue;
-      }
-      const nextProp = rawProps[propKey];
-      if (propKey === CHILDREN) {
-        // Checked above already
-      } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
-        if (nextProp != null) {
-          if (typeof nextProp !== 'function') {
-            warnForInvalidEventListener(propKey, nextProp);
-          }
-        }
-      } else {
-        // Validate that the properties correspond to their expected values.
-        let serverValue;
-        const propertyInfo =
-          isCustomComponentTag && enableCustomElementPropertySupport
-            ? null
-            : getPropertyInfo(propKey);
-        if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
-          // Don't bother comparing. We're ignoring all these warnings.
-        } else if (
-          propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-          propKey === SUPPRESS_HYDRATION_WARNING ||
-          // Controlled attributes are not validated
-          // TODO: Only ignore them on controlled tags.
-          propKey === 'value' ||
-          propKey === 'checked' ||
-          propKey === 'selected'
-        ) {
-          // Noop
-        } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-          const serverHTML = domElement.innerHTML;
-          const nextHtml = nextProp ? nextProp[HTML] : undefined;
-          if (nextHtml != null) {
-            const expectedHTML = normalizeHTML(domElement, nextHtml);
-            if (expectedHTML !== serverHTML) {
-              warnForPropDifference(propKey, serverHTML, expectedHTML);
-            }
-          }
-        } else if (propKey === STYLE) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
-
-          if (canDiffStyleForHydrationWarning) {
-            const expectedStyle = createDangerousStringForStyles(nextProp);
-            serverValue = domElement.getAttribute('style');
-            if (expectedStyle !== serverValue) {
-              warnForPropDifference(propKey, serverValue, expectedStyle);
-            }
-          }
-        } else if (
-          enableCustomElementPropertySupport &&
-          isCustomComponentTag &&
-          (propKey === 'offsetParent' ||
-            propKey === 'offsetTop' ||
-            propKey === 'offsetLeft' ||
-            propKey === 'offsetWidth' ||
-            propKey === 'offsetHeight' ||
-            propKey === 'isContentEditable' ||
-            propKey === 'outerText' ||
-            propKey === 'outerHTML')
-        ) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey.toLowerCase());
-          if (__DEV__) {
-            console.error(
-              'Assignment to read-only property will result in a no-op: `%s`',
-              propKey,
-            );
-          }
-        } else if (
-          isCustomComponentTag &&
-          !enableCustomElementPropertySupport
-        ) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey.toLowerCase());
-          serverValue = getValueForAttribute(
-            domElement,
-            propKey,
-            nextProp,
-            isCustomComponentTag,
-          );
-
-          if (nextProp !== serverValue) {
-            warnForPropDifference(propKey, serverValue, nextProp);
-          }
-        } else if (
-          !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
-          !shouldRemoveAttribute(
-            propKey,
-            nextProp,
-            propertyInfo,
-            isCustomComponentTag,
-          )
-        ) {
-          let isMismatchDueToBadCasing = false;
-          if (propertyInfo !== null) {
-            // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propertyInfo.attributeName);
-            serverValue = getValueForProperty(
-              domElement,
-              propKey,
-              nextProp,
-              propertyInfo,
-            );
-          } else {
-            let ownNamespaceDev = parentNamespaceDev;
-            if (ownNamespaceDev === HTML_NAMESPACE) {
-              ownNamespaceDev = getIntrinsicNamespace(tag);
-            }
-            if (ownNamespaceDev === HTML_NAMESPACE) {
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey.toLowerCase());
-            } else {
-              const standardName = getPossibleStandardName(propKey);
-              if (standardName !== null && standardName !== propKey) {
-                // If an SVG prop is supplied with bad casing, it will
-                // be successfully parsed from HTML, but will produce a mismatch
-                // (and would be incorrectly rendered on the client).
-                // However, we already warn about bad casing elsewhere.
-                // So we'll skip the misleading extra mismatch warning in this case.
-                isMismatchDueToBadCasing = true;
-                // $FlowFixMe - Should be inferred as not undefined.
-                extraAttributeNames.delete(standardName);
-              }
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey);
-            }
-            serverValue = getValueForAttribute(
-              domElement,
-              propKey,
-              nextProp,
-              isCustomComponentTag,
-            );
-          }
-
-          const dontWarnCustomElement =
-            enableCustomElementPropertySupport &&
-            isCustomComponentTag &&
-            (typeof nextProp === 'function' || typeof nextProp === 'object');
-          if (
-            !dontWarnCustomElement &&
-            nextProp !== serverValue &&
-            !isMismatchDueToBadCasing
-          ) {
-            warnForPropDifference(propKey, serverValue, nextProp);
-          }
-        }
-      }
-    }
-
     if (
       // $FlowFixMe - Should be inferred as not undefined.
       extraAttributeNames.size > 0 &&
-      rawProps[SUPPRESS_HYDRATION_WARNING] !== true
+      rawProps.suppressHydrationWarning !== true
     ) {
       // $FlowFixMe - Should be inferred as not undefined.
       warnForExtraAttributes(extraAttributeNames);

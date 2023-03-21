@@ -111,7 +111,7 @@ describe('ReactBlockingMode', () => {
       </Suspense>,
     );
 
-    await waitForAll(['A', 'Suspend! [B]', 'C', 'Loading...']);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
     // In Legacy Mode, A and B would mount in a hidden primary tree. In
     // Concurrent Mode, nothing in the primary tree should mount. But the
     // fallback should mount immediately.

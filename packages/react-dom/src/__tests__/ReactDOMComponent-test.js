@@ -1369,7 +1369,8 @@ describe('ReactDOMComponent', () => {
       expect(function () {
         mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrowError(
-        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 

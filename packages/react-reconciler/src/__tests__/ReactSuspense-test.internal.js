@@ -134,8 +134,6 @@ describe('ReactSuspense', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
-      // But we keep rendering the siblings
-      'B',
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput(null);
@@ -272,13 +270,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll([
-      'Foo',
-      'Suspend! [A]',
-      'Suspend! [B]',
-      'Loading more...',
-      'Loading...',
-    ]);
+    await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await resolveText('A');
@@ -316,13 +308,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll([
-      'Foo',
-      'Suspend! [A]',
-      'Suspend! [B]',
-      'Loading more...',
-      'Loading...',
-    ]);
+    await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await resolveText('A');
@@ -937,11 +923,7 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       });
 
-      await waitForAll([
-        'Suspend! [Child 1]',
-        'Suspend! [Child 2]',
-        'Loading...',
-      ]);
+      await waitForAll(['Suspend! [Child 1]', 'Loading...']);
       await resolveText('Child 1');
       await waitForAll(['Child 1', 'Suspend! [Child 2]']);
 
