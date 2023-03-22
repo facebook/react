@@ -8591,7 +8591,7 @@ function prepareToHydrateHostTextInstance(fiber) {
             shouldWarnIfMismatchDev
           );
 
-          if (isConcurrentMode) {
+          if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
             // In concurrent mode we never update the mismatched text,
             // even if the error was ignored.
             return false;
@@ -8619,7 +8619,7 @@ function prepareToHydrateHostTextInstance(fiber) {
             shouldWarnIfMismatchDev
           );
 
-          if (_isConcurrentMode2) {
+          if (_isConcurrentMode2 && enableClientRenderFallbackOnTextMismatch) {
             // In concurrent mode we never update the mismatched text,
             // even if the error was ignored.
             return false;
@@ -33507,7 +33507,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-7b2876d5";
+var ReactVersion = "18.3.0-www-modern-22ca78ee";
 
 function createPortal$1(
   children,
@@ -40247,7 +40247,7 @@ function diffHydratedProperties(
         );
       }
 
-      if (!isConcurrentMode) {
+      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
         updatePayload = ["children", children];
       }
     }

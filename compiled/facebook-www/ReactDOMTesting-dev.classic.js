@@ -7082,7 +7082,7 @@ function diffHydratedProperties(
         );
       }
 
-      if (!isConcurrentMode) {
+      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
         updatePayload = ["children", children];
       }
     }
@@ -11353,7 +11353,7 @@ function prepareToHydrateHostTextInstance(fiber) {
             shouldWarnIfMismatchDev
           );
 
-          if (isConcurrentMode) {
+          if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
             // In concurrent mode we never update the mismatched text,
             // even if the error was ignored.
             return false;
@@ -11381,7 +11381,7 @@ function prepareToHydrateHostTextInstance(fiber) {
             shouldWarnIfMismatchDev
           );
 
-          if (_isConcurrentMode2) {
+          if (_isConcurrentMode2 && enableClientRenderFallbackOnTextMismatch) {
             // In concurrent mode we never update the mismatched text,
             // even if the error was ignored.
             return false;
@@ -36848,7 +36848,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-2ee8f43b";
+var ReactVersion = "18.3.0-www-classic-85dd84cf";
 
 function createPortal$1(
   children,

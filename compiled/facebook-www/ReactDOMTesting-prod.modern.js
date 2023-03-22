@@ -1970,7 +1970,6 @@ function prepareToHydrateHostInstance(fiber) {
     props = fiber.memoizedProps;
   instance[internalInstanceKey] = fiber;
   instance[internalPropsKey] = props;
-  var isConcurrentMode = 0 !== (fiber.mode & 1);
   switch (type) {
     case "dialog":
       listenToNonDelegatedEvent("cancel", instance);
@@ -2012,19 +2011,15 @@ function prepareToHydrateHostInstance(fiber) {
   }
   props.hasOwnProperty("onScroll") &&
     listenToNonDelegatedEvent("scroll", instance);
-  i = null;
-  var children = props.children;
-  if (
-    ("string" === typeof children || "number" === typeof children) &&
-    instance.textContent !== "" + children
-  ) {
-    if (!0 !== props.suppressHydrationWarning) {
-      var serverText = instance.textContent;
-      normalizeMarkupForTextOrAttribute(children);
-      normalizeMarkupForTextOrAttribute(serverText);
-    }
-    isConcurrentMode || (i = ["children", children]);
-  }
+  var updatePayload = null;
+  i = props.children;
+  ("string" !== typeof i && "number" !== typeof i) ||
+    instance.textContent === "" + i ||
+    (!0 !== props.suppressHydrationWarning &&
+      ((updatePayload = instance.textContent),
+      normalizeMarkupForTextOrAttribute(i),
+      normalizeMarkupForTextOrAttribute(updatePayload)),
+    (updatePayload = ["children", i]));
   switch (type) {
     case "input":
       track(instance);
@@ -2040,7 +2035,7 @@ function prepareToHydrateHostInstance(fiber) {
     default:
       "function" === typeof props.onClick && (instance.onclick = noop);
   }
-  instance = i;
+  instance = updatePayload;
   fiber.updateQueue = instance;
   return null !== instance ? !0 : !1;
 }
@@ -6872,43 +6867,25 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          a: {
-            newProps = workInProgress.stateNode;
-            current = workInProgress.memoizedProps;
-            newProps[internalInstanceKey] = workInProgress;
-            if ((renderLanes = newProps.nodeValue !== current)) {
-              var returnFiber = hydrationParentFiber;
-              if (null !== returnFiber)
-                switch (returnFiber.tag) {
-                  case 3:
-                    type = 0 !== (returnFiber.mode & 1);
-                    newProps = newProps.nodeValue;
-                    normalizeMarkupForTextOrAttribute(current);
-                    normalizeMarkupForTextOrAttribute(newProps);
-                    if (type) {
-                      current = !1;
-                      break a;
-                    }
-                    break;
-                  case 27:
-                  case 5:
-                    if (
-                      ((type = 0 !== (returnFiber.mode & 1)),
-                      !0 !==
-                        returnFiber.memoizedProps.suppressHydrationWarning &&
-                        ((newProps = newProps.nodeValue),
-                        normalizeMarkupForTextOrAttribute(current),
-                        normalizeMarkupForTextOrAttribute(newProps)),
-                      type)
-                    ) {
-                      current = !1;
-                      break a;
-                    }
-                }
-            }
-            current = renderLanes;
-          }
-          current && markUpdate(workInProgress);
+          newProps = workInProgress.stateNode;
+          current = workInProgress.memoizedProps;
+          newProps[internalInstanceKey] = workInProgress;
+          if ((renderLanes = newProps.nodeValue !== current))
+            if (((type = hydrationParentFiber), null !== type))
+              switch (type.tag) {
+                case 3:
+                  newProps = newProps.nodeValue;
+                  normalizeMarkupForTextOrAttribute(current);
+                  normalizeMarkupForTextOrAttribute(newProps);
+                  break;
+                case 27:
+                case 5:
+                  !0 !== type.memoizedProps.suppressHydrationWarning &&
+                    ((newProps = newProps.nodeValue),
+                    normalizeMarkupForTextOrAttribute(current),
+                    normalizeMarkupForTextOrAttribute(newProps));
+              }
+          renderLanes && markUpdate(workInProgress);
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -6964,18 +6941,19 @@ function completeWork(current, workInProgress, renderLanes) {
         return (workInProgress.lanes = renderLanes), workInProgress;
       renderLanes = null !== newProps;
       current = null !== current && null !== current.memoizedState;
-      renderLanes &&
-        ((newProps = workInProgress.child),
-        (type = null),
+      if (renderLanes) {
+        newProps = workInProgress.child;
+        type = null;
         null !== newProps.alternate &&
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
-          (type = newProps.alternate.memoizedState.cachePool.pool),
-        (returnFiber = null),
+          (type = newProps.alternate.memoizedState.cachePool.pool);
+        var cache$110 = null;
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
-          (returnFiber = newProps.memoizedState.cachePool.pool),
-        returnFiber !== type && (newProps.flags |= 2048));
+          (cache$110 = newProps.memoizedState.cachePool.pool);
+        cache$110 !== type && (newProps.flags |= 2048);
+      }
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
         renderLanes && (workInProgress.child.flags |= 8192));
@@ -7006,8 +6984,8 @@ function completeWork(current, workInProgress, renderLanes) {
       type = workInProgress.memoizedState;
       if (null === type) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      returnFiber = type.rendering;
-      if (null === returnFiber)
+      cache$110 = type.rendering;
+      if (null === cache$110)
         if (newProps) cutOffTailIfNeeded(type, !1);
         else {
           if (
@@ -7015,11 +6993,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              returnFiber = findFirstSuspended(current);
-              if (null !== returnFiber) {
+              cache$110 = findFirstSuspended(current);
+              if (null !== cache$110) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(type, !1);
-                current = returnFiber.updateQueue;
+                current = cache$110.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -7044,7 +7022,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(returnFiber)), null !== current)) {
+          if (((current = findFirstSuspended(cache$110)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -7054,7 +7032,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !0),
               null === type.tail &&
                 "hidden" === type.tailMode &&
-                !returnFiber.alternate &&
+                !cache$110.alternate &&
                 !isHydrating)
             )
               return bubbleProperties(workInProgress), null;
@@ -7067,13 +7045,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !1),
               (workInProgress.lanes = 8388608));
         type.isBackwards
-          ? ((returnFiber.sibling = workInProgress.child),
-            (workInProgress.child = returnFiber))
+          ? ((cache$110.sibling = workInProgress.child),
+            (workInProgress.child = cache$110))
           : ((current = type.last),
             null !== current
-              ? (current.sibling = returnFiber)
-              : (workInProgress.child = returnFiber),
-            (type.last = returnFiber));
+              ? (current.sibling = cache$110)
+              : (workInProgress.child = cache$110),
+            (type.last = cache$110));
       }
       if (null !== type.tail)
         return (
@@ -15737,7 +15715,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1774 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-36a2211a",
+  version: "18.3.0-www-modern-b3a4de20",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2177 = {
@@ -15768,7 +15746,7 @@ var internals$jscomp$inline_2177 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-36a2211a"
+  reconcilerVersion: "18.3.0-www-modern-b3a4de20"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2178 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16088,4 +16066,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-36a2211a";
+exports.version = "18.3.0-www-modern-b3a4de20";
