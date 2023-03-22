@@ -595,8 +595,6 @@ export function setInitialProperties(
       listenToNonDelegatedEvent('close', domElement);
       props = rawProps;
       break;
-    case 'iframe':
-    case 'object':
     case 'embed':
       if (
         rawProps.children != null ||
@@ -608,6 +606,9 @@ export function setInitialProperties(
             'use `dangerouslySetInnerHTML`.',
         );
       }
+    // eslint-disable-next-line no-fallthrough
+    case 'iframe':
+    case 'object':
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
       listenToNonDelegatedEvent('load', domElement);
