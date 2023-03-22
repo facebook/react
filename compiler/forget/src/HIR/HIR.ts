@@ -445,6 +445,9 @@ export type Phi = {
  *      may be different for ComputedCalls
  *  - {@link PropertyCall.property} remains an rval (i.e. never promoted to a
  *    named identifier). We currently rely on this for codegen.
+ *
+ * Type inference does not currently guarantee that {@link PropertyCall.property}
+ * is a FunctionType.
  */
 type PropertyCall = {
   kind: "PropertyCall";

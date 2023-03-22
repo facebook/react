@@ -4,6 +4,7 @@ import { Environment } from "../HIR";
 import {
   HIRFunction,
   Instruction,
+  makeType,
   Type,
   typeEquals,
   TypeId,
@@ -37,7 +38,7 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
 }
 
 export default function (func: HIRFunction): void {
-  const unifier = new Unifier();
+  const unifier = new Unifier(func.env);
   for (const e of generate(func)) {
     unifier.unify(e.left, e.right);
   }
@@ -62,12 +63,25 @@ function apply(func: HIRFunction, unifier: Unifier): void {
   }
 }
 
-type TypeEquation = {
-  left: Type;
-  right: Type;
+type FunctionCallType = {
+  kind: "FunctionCall";
+  returnType: TypeVar;
 };
 
-function equation(left: Type, right: Type): TypeEquation {
+type PolyType =
+  | {
+      kind: "Property";
+      object: Type;
+      propertyName: string;
+    }
+  | FunctionCallType;
+
+type TypeEquation = {
+  left: Type;
+  right: Type | PolyType;
+};
+
+function equation(left: Type, right: Type | PolyType): TypeEquation {
   return {
     left,
     right,
@@ -169,14 +183,67 @@ function* generateInstructionTypes(
       }
       break;
     }
+
+    case "PropertyLoad": {
+      if (left) {
+        yield equation(left, {
+          kind: "Property",
+          object: value.object.identifier.type,
+          propertyName: value.property,
+        });
+      }
+      break;
+    }
+
+    case "PropertyCall": {
+      const returnType = makeType();
+      yield equation(value.property.identifier.type, {
+        kind: "FunctionCall",
+        returnType,
+      });
+      if (left) {
+        yield equation(left, returnType);
+      }
+    }
   }
 }
 
 type Substitution = Map<TypeId, Type>;
 class Unifier {
   substitutions: Substitution = new Map();
+  env: Environment;
 
-  unify(tA: Type, tB: Type): void {
+  constructor(env: Environment) {
+    this.env = env;
+  }
+
+  unifyFunctionCall(tA: Type, tB: FunctionCallType): void {
+    const propertyType = this.get(tA);
+    if (propertyType.kind === "Function") {
+      const fn = this.env.getFunctionSignature(propertyType);
+      const returnType = fn?.returnType ?? null;
+      if (returnType !== null) {
+        this.unify(tB.returnType, returnType);
+      }
+    }
+  }
+
+  unify(tA: Type, tB: Type | PolyType): void {
+    if (tB.kind === "Property") {
+      const objectType = this.get(tB.object);
+      const propertyType = this.env.getPropertyType(
+        objectType,
+        tB.propertyName
+      );
+      if (propertyType !== null) {
+        this.unify(tA, propertyType);
+      }
+      return;
+    } else if (tB.kind === "FunctionCall") {
+      this.unifyFunctionCall(tA, tB);
+      return;
+    }
+
     if (typeEquals(tA, tB)) {
       return;
     }

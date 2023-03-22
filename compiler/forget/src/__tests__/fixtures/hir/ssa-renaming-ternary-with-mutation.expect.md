@@ -22,8 +22,8 @@ bb0 (block):
   [3] mutate $39[3:34]:TObject<Array> = LoadLocal capture x$37[2:34]:TObject<Array>
   [4] mutate $40 = LoadLocal read props$35
   [5] mutate $41 = PropertyLoad read $40.bar
-  [6] mutate $42[6:34] = PropertyLoad read $39[3:34]:TObject<Array>.push
-  [7] mutate $43 = PropertyCall mutate $39[3:34]:TObject<Array>.[object Object](read $41)
+  [6] mutate $42[6:34]:TFunction<<generated_2>> = PropertyLoad read $39[3:34]:TObject<Array>.push
+  [7] mutate $43:TPrimitive = PropertyCall mutate $39[3:34]:TObject<Array>.read $42[6:34]:TFunction<<generated_2>>(read $41)
   [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
@@ -37,24 +37,24 @@ bb3 (value):
   [16] mutate $52[16:34]:TObject<Array> = LoadLocal capture x$37[15:34]:TObject<Array>
   [17] mutate $53 = LoadLocal read props$35
   [18] mutate $54 = PropertyLoad read $53.foo
-  [19] mutate $55[19:34] = PropertyLoad read $52[16:34]:TObject<Array>.push
-  [20] mutate $56[20:31] = PropertyCall mutate $52[16:34]:TObject<Array>.[object Object](read $54)
-  [21] store $58[21:31] = StoreLocal Const mutate $57[8:31] = capture $56[20:31]
+  [19] mutate $55[19:34]:TFunction<<generated_2>> = PropertyLoad read $52[16:34]:TObject<Array>.push
+  [20] mutate $56[20:31]:TPrimitive = PropertyCall mutate $52[16:34]:TObject<Array>.read $55[19:34]:TFunction<<generated_2>>(read $54)
+  [21] store $58[21:31]:TPrimitive = StoreLocal Const mutate $57[8:31]:TPrimitive = capture $56[20:31]:TPrimitive
   [22] Goto bb1
 bb4 (value):
   predecessor blocks: bb2
   [23] mutate $59[23:31]:TPrimitive = null
-  [24] store $61[24:31]:TPrimitive = StoreLocal Const mutate $57[8:31] = read $59[23:31]:TPrimitive
+  [24] store $61[24:31]:TPrimitive = StoreLocal Const mutate $57[8:31]:TPrimitive = read $59[23:31]:TPrimitive
   [25] Goto bb1
 bb1 (block):
   predecessor blocks: bb3 bb4
-  $64[8:31]:TPhi: phi(bb3: $57, bb4: $60)
+  $64[8:31]:TPrimitive: phi(bb3: $57, bb4: $60)
   x$37[2:34]:TObject<Array>: phi(bb3: x$37, bb4: x$37)
-  [26] store $63[26:31] = StoreLocal Const mutate _$62[26:31] = capture $57[8:31]
+  [26] store $63[26:31] = StoreLocal Const mutate _$62[26:31] = capture $57[8:31]:TPrimitive
   [27] mutate $65 = Global console
   [28] mutate $66[28:31] = LoadLocal capture _$62[26:31]
   [29] mutate $67 = PropertyLoad read $65.log
-  [30] mutate $68 = PropertyCall read $65.[object Object](mutate $66[28:31])
+  [30] mutate $68 = PropertyCall read $65.read $67(mutate $66[28:31])
   [31] mutate $69:TFunction = Global mut
   [32] mutate $70[32:34] = LoadLocal capture x$37[2:34]
   [33] mutate $72 = Call read $69:TFunction(mutate $70[32:34])

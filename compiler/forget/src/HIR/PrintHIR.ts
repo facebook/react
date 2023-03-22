@@ -269,9 +269,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "PropertyCall": {
-      value = `PropertyCall ${printPlace(instrValue.receiver)}.${
+      value = `PropertyCall ${printPlace(instrValue.receiver)}.${printPlace(
         instrValue.property
-      }(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
+      )}(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
       break;
     }
     case "ComputedCall": {

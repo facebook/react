@@ -24,8 +24,8 @@ bb0 (block):
   [3] mutate $41[3:36]:TObject<Array> = LoadLocal capture x$39[2:36]:TObject<Array>
   [4] mutate $42 = LoadLocal read props$37
   [5] mutate $43 = PropertyLoad read $42.bar
-  [6] mutate $44[6:36] = PropertyLoad read $41[3:36]:TObject<Array>.push
-  [7] mutate $45 = PropertyCall mutate $41[3:36]:TObject<Array>.[object Object](read $43)
+  [6] mutate $44[6:36]:TFunction<<generated_2>> = PropertyLoad read $41[3:36]:TObject<Array>.push
+  [7] mutate $45:TPrimitive = PropertyCall mutate $41[3:36]:TObject<Array>.read $44[6:36]:TFunction<<generated_2>>(read $43)
   [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
@@ -41,7 +41,7 @@ bb3 (value):
   [19] mutate $57 = LoadLocal read props$37
   [20] mutate $58 = PropertyLoad read $57.foo
   [21] mutate $59[21:36] = PropertyLoad read $56[18:36].push
-  [22] mutate $60[22:33] = PropertyCall mutate $56[18:36].[object Object](read $58)
+  [22] mutate $60[22:33] = PropertyCall mutate $56[18:36].read $59[21:36](read $58)
   [23] store $62[23:33] = StoreLocal Const mutate $61[8:33] = capture $60[22:33]
   [24] Goto bb1
 bb4 (value):
@@ -57,7 +57,7 @@ bb1 (block):
   [29] mutate $69 = Global console
   [30] mutate $70[30:33] = LoadLocal capture _$66[28:33]
   [31] mutate $71 = PropertyLoad read $69.log
-  [32] mutate $72 = PropertyCall read $69.[object Object](mutate $70[30:33])
+  [32] mutate $72 = PropertyCall read $69.read $71(mutate $70[30:33])
   [33] mutate $73:TFunction = Global mut
   [34] mutate $74[34:36] = LoadLocal capture x$39[2:36]
   [35] mutate $76 = Call read $73:TFunction(mutate $74[34:36])

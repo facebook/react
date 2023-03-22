@@ -1,7 +1,17 @@
+import invariant from "invariant";
 import { log } from "../Utils/logger";
 import { DEFAULT_GLOBALS, Global } from "./Globals";
-import { Effect, IdentifierId, makeIdentifierId, ValueKind } from "./HIR";
+import {
+  BuiltInType,
+  Effect,
+  FunctionType,
+  IdentifierId,
+  makeIdentifierId,
+  Type,
+  ValueKind,
+} from "./HIR";
 import { BUILTIN_HOOKS, Hook } from "./Hooks";
+import { BUILTIN_SHAPES, FunctionSignature } from "./ObjectShape";
 
 const HOOK_PATTERN = /^_?use/;
 
@@ -63,5 +73,33 @@ export class Environment {
       effectKind: Effect.Mutate,
       valueKind: ValueKind.Mutable,
     };
+  }
+
+  getPropertyType(receiver: Type, property: string): BuiltInType | null {
+    if (receiver.kind === "Object" || receiver.kind === "Function") {
+      const { shapeId } = receiver;
+      if (shapeId !== null) {
+        const shape = BUILTIN_SHAPES.get(shapeId);
+        invariant(
+          shape !== undefined,
+          `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
+        );
+        return shape.properties.get(property) ?? null;
+      }
+    }
+    return null;
+  }
+
+  getFunctionSignature(type: FunctionType): FunctionSignature | null {
+    const { shapeId } = type;
+    if (shapeId !== null) {
+      const shape = BUILTIN_SHAPES.get(shapeId);
+      invariant(
+        shape !== undefined,
+        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
+      );
+      return shape.functionType;
+    }
+    return null;
   }
 }

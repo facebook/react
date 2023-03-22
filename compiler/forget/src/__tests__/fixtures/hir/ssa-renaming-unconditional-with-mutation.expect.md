@@ -29,8 +29,8 @@ bb0 (block):
   [3] mutate $38[3:8]:TObject<Array> = LoadLocal capture x$36[2:34]:TObject<Array>
   [4] mutate $39 = LoadLocal read props$34
   [5] mutate $40 = PropertyLoad read $39.bar
-  [6] mutate $41[6:8] = PropertyLoad read $38[3:8]:TObject<Array>.push
-  [7] mutate $42 = PropertyCall mutate $38[3:8]:TObject<Array>.[object Object](read $40)
+  [6] mutate $41[6:8]:TFunction<<generated_2>> = PropertyLoad read $38[3:8]:TObject<Array>.push
+  [7] mutate $42:TPrimitive = PropertyCall mutate $38[3:8]:TObject<Array>.read $41[6:8]:TFunction<<generated_2>>(read $40)
   [8] mutate $43 = LoadLocal read props$34
   [9] mutate $44 = PropertyLoad read $43.cond
   [10] If (read $44) then:bb2 else:bb3 fallthrough=bb1
@@ -41,8 +41,8 @@ bb2 (block):
   [15] mutate $51[15:34]:TObject<Array> = LoadLocal capture x$36[14:34]:TObject<Array>
   [16] mutate $52 = LoadLocal read props$34
   [17] mutate $53 = PropertyLoad read $52.foo
-  [18] mutate $54[18:34] = PropertyLoad read $51[15:34]:TObject<Array>.push
-  [19] mutate $55 = PropertyCall mutate $51[15:34]:TObject<Array>.[object Object](read $53)
+  [18] mutate $54[18:34]:TFunction<<generated_2>> = PropertyLoad read $51[15:34]:TObject<Array>.push
+  [19] mutate $55:TPrimitive = PropertyCall mutate $51[15:34]:TObject<Array>.read $54[18:34]:TFunction<<generated_2>>(read $53)
   [20] Goto bb1
 bb3 (block):
   predecessor blocks: bb0
@@ -51,8 +51,8 @@ bb3 (block):
   [25] mutate $62[25:34]:TObject<Array> = LoadLocal capture x$36[24:34]:TObject<Array>
   [26] mutate $63 = LoadLocal read props$34
   [27] mutate $64 = PropertyLoad read $63.bar
-  [28] mutate $65[28:34] = PropertyLoad read $62[25:34]:TObject<Array>.push
-  [29] mutate $66 = PropertyCall mutate $62[25:34]:TObject<Array>.[object Object](read $64)
+  [28] mutate $65[28:34]:TFunction<<generated_2>> = PropertyLoad read $62[25:34]:TObject<Array>.push
+  [29] mutate $66:TPrimitive = PropertyCall mutate $62[25:34]:TObject<Array>.read $65[28:34]:TFunction<<generated_2>>(read $64)
   [30] Goto bb1
 bb1 (block):
   predecessor blocks: bb2 bb3
