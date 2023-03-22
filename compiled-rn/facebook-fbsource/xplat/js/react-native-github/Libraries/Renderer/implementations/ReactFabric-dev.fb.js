@@ -26386,7 +26386,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-bd5e32309-20230322";
+var ReactVersion = "18.3.0-next-56f7a90e6-20230322";
 
 function createPortal$1(
   children,
