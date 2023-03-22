@@ -756,7 +756,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             isConcurrentMode,
             shouldWarnIfMismatchDev,
           );
-          if (isConcurrentMode) {
+          if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
             // In concurrent mode we never update the mismatched text,
             // even if the error was ignored.
             return false;
