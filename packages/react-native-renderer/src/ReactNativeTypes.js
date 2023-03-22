@@ -213,7 +213,7 @@ export type ReactNativeType = {
 };
 
 export opaque type Node = mixed;
-type InternalInstanceHandle = mixed;
+export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 
 export type ReactFabricType = {
