@@ -1439,7 +1439,7 @@ export function diffHydratedProperties(
           shouldWarnDev,
         );
       }
-      if (!isConcurrentMode) {
+      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
         updatePayload = ['children', children];
       }
     }
