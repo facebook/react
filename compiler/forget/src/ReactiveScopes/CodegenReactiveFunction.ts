@@ -589,44 +589,20 @@ function codegenInstructionValue(
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
-    case "PropertyCall": {
+    case "MethodCall": {
       const memberExpr = codegenPlace(cx, instrValue.property);
       invariant(
         t.isMemberExpression(memberExpr) ||
           t.isOptionalMemberExpression(memberExpr),
-        "[Codegen] Internal error: PropertyCall::property must be an unpromoted + unmemoized MemberExpression."
-      );
-      invariant(
-        memberExpr.computed === false,
-        "[Codegen] Internal error: PropertyCall::property must be a non-computed MemberExpression."
+        "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression."
       );
       invariant(
         t.isNodesEquivalent(
           memberExpr.object,
           codegenPlace(cx, instrValue.receiver)
         ),
-        "[Codegen] Internal error: Forget should always generate PropertyCall::property " +
-          "as a MemberExpression of PropertyCall::receiver"
-      );
-      const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
-      value = createCallExpression(instrValue.loc, memberExpr, args);
-      break;
-    }
-    case "ComputedCall": {
-      const memberExpr = codegenPlace(cx, instrValue.property);
-      invariant(
-        t.isMemberExpression(memberExpr) ||
-          t.isOptionalMemberExpression(memberExpr),
-        "[Codegen] Internal error: ComputedCall::property must be an unpromoted + unmemoized MemberExpression, was %s.",
-        memberExpr.type
-      );
-      invariant(
-        t.isNodesEquivalent(
-          memberExpr.object,
-          codegenPlace(cx, instrValue.receiver)
-        ),
-        "[Codegen] Internal error: Forget should always generate ComputedCall::property " +
-          "as a MemberExpression of ComputedCall::receiver"
+        "[Codegen] Internal error: Forget should always generate MethodCall::property " +
+          "as a MemberExpression of MethodCall::receiver"
       );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, memberExpr, args);

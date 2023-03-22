@@ -195,7 +195,7 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "PropertyCall": {
+    case "MethodCall": {
       const returnType = makeType();
       yield equation(value.property.identifier.type, {
         kind: "FunctionCall",

@@ -514,8 +514,7 @@ function computeMemoizationInputs(
     case "ArrayExpression":
     case "NewExpression":
     case "ObjectExpression":
-    case "ComputedCall":
-    case "PropertyCall":
+    case "MethodCall":
     case "PropertyStore": {
       // All of these instructions may produce new values which must be memoized if
       // reachable from a return value. Any mutable rvalue may alias any other rvalue

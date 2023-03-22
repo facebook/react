@@ -935,23 +935,13 @@ function lowerExpression(
           loc: GeneratedSource,
         });
         const args = lowerArguments(builder, expr.get("arguments"));
-        if (typeof memberExpr.property === "string") {
-          return {
-            kind: "PropertyCall",
-            receiver: memberExpr.object,
-            property: { ...propertyPlace },
-            args,
-            loc: exprLoc,
-          };
-        } else {
-          return {
-            kind: "ComputedCall",
-            receiver: memberExpr.object,
-            property: { ...propertyPlace },
-            args,
-            loc: exprLoc,
-          };
-        }
+        return {
+          kind: "MethodCall",
+          receiver: memberExpr.object,
+          property: { ...propertyPlace },
+          args,
+          loc: exprLoc,
+        };
       } else {
         const callee = lowerExpressionToTemporary(builder, calleePath);
         const args = lowerArguments(builder, expr.get("arguments"));

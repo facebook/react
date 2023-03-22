@@ -24,7 +24,7 @@ bb0 (block):
   [4] mutate $39[4:8]:TFunction<<generated_2>> = PropertyLoad read $38[3:8]:TObject<Array>.push
   [5] mutate $40 = LoadLocal read props$34
   [6] mutate $41 = PropertyLoad read $40.bar
-  [7] mutate $42:TPrimitive = PropertyCall mutate $38[3:8]:TObject<Array>.read $39[4:8]:TFunction<<generated_2>>(read $41)
+  [7] mutate $42:TPrimitive = MethodCall mutate $38[3:8]:TObject<Array>.read $39[4:8]:TFunction<<generated_2>>(read $41)
   [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
@@ -40,7 +40,7 @@ bb3 (value):
   [19] mutate $54[19:23] = PropertyLoad read $53[18:23].push
   [20] mutate $55 = LoadLocal read props$34
   [21] mutate $56 = PropertyLoad read $55.foo
-  [22] mutate $57[22:33] = PropertyCall mutate $53[18:23].read $54[19:23](read $56)
+  [22] mutate $57[22:33] = MethodCall mutate $53[18:23].read $54[19:23](read $56)
   [23] store $59[23:33] = StoreLocal Const mutate $58[8:33] = capture $57[22:33]
   [24] Goto bb1
 bb4 (value):
@@ -56,7 +56,7 @@ bb1 (block):
   [29] mutate $66 = Global console
   [30] mutate $67 = PropertyLoad read $66.log
   [31] mutate $68[31:33] = LoadLocal capture _$63[28:33]
-  [32] mutate $69 = PropertyCall read $66.read $67(mutate $68[31:33])
+  [32] mutate $69 = MethodCall read $66.read $67(mutate $68[31:33])
   [33] mutate $70 = LoadLocal capture x$36
   [34] Return freeze $70
 ```

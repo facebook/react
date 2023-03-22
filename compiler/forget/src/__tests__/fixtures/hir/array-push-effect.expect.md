@@ -34,12 +34,12 @@ bb0 (block):
   [12] mutate $41[12:21]:TObject<Array> = LoadLocal capture arr$39[11:21]:TObject<Array>
   [13] mutate $42[13:21]:TFunction<<generated_2>> = PropertyLoad read $41[12:21]:TObject<Array>.push
   [14] store $43:TObject<Object> = Object {  }
-  [15] mutate $44:TPrimitive = PropertyCall mutate $41[12:21]:TObject<Array>.read $42[13:21]:TFunction<<generated_2>>(capture $43:TObject<Object>)
+  [15] mutate $44:TPrimitive = MethodCall mutate $41[12:21]:TObject<Array>.read $42[13:21]:TFunction<<generated_2>>(capture $43:TObject<Object>)
   [16] mutate $45[16:21]:TObject<Array> = LoadLocal capture arr$39[11:21]:TObject<Array>
   [17] mutate $46[17:21]:TFunction<<generated_2>> = PropertyLoad read $45[16:21]:TObject<Array>.push
   [18] mutate $47 = LoadLocal capture x$31
   [19] mutate $48:TObject<Object> = LoadLocal capture y$36:TObject<Object>
-  [20] mutate $49:TPrimitive = PropertyCall mutate $45[16:21]:TObject<Array>.read $46[17:21]:TFunction<<generated_2>>(capture $47, capture $48:TObject<Object>)
+  [20] mutate $49:TPrimitive = MethodCall mutate $45[16:21]:TObject<Array>.read $46[17:21]:TFunction<<generated_2>>(capture $47, capture $48:TObject<Object>)
   [21] mutate $50:TObject<Array> = LoadLocal capture arr$39[11:21]:TObject<Array>
   [22] Return freeze $50:TObject<Array>
 ```

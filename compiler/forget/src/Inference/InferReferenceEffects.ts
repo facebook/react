@@ -16,9 +16,9 @@ import {
   IdentifierId,
   InstructionValue,
   isObjectType,
+  MethodCall,
   Phi,
   Place,
-  PropertyCall,
   Type,
   ValueKind,
 } from "../HIR/HIR";
@@ -684,7 +684,7 @@ function inferBlock(
         instr.lvalue.effect = Effect.Store;
         continue;
       }
-      case "PropertyCall": {
+      case "MethodCall": {
         invariant(
           state.isDefined(instrValue.receiver),
           "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad"
@@ -718,32 +718,6 @@ function inferBlock(
             }
           }
           state.reference(instrValue.receiver, Effect.Mutate);
-        }
-        state.initialize(instrValue, ValueKind.Mutable);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.Mutate;
-        continue;
-      }
-      case "ComputedCall": {
-        if (!state.isDefined(instrValue.receiver)) {
-          // TODO @josephsavona: improve handling of globals
-          const value: InstructionValue = {
-            kind: "Primitive",
-            loc: instrValue.loc,
-            value: undefined,
-          };
-          state.initialize(value, ValueKind.Frozen);
-          state.define(instrValue.receiver, value);
-        }
-
-        state.reference(instrValue.receiver, Effect.Mutate);
-        state.reference(instrValue.property, Effect.Read);
-        for (const arg of instrValue.args) {
-          if (arg.kind === "Identifier") {
-            state.reference(arg, Effect.Mutate);
-          } else {
-            state.reference(arg.place, Effect.Mutate);
-          }
         }
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);
@@ -965,7 +939,7 @@ function getFunctionCallSignature(
  * @returns Inferred effects of function arguments
  */
 function getFunctionCallEffects(
-  fn: PropertyCall,
+  fn: MethodCall,
   sig: FunctionSignature,
   defaultEffect: Effect
 ): Array<[Place, Effect]> {

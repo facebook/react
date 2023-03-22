@@ -30,7 +30,7 @@ bb0 (block):
   [4] mutate $39[4:8]:TFunction<<generated_2>> = PropertyLoad read $38[3:8]:TObject<Array>.push
   [5] mutate $40 = LoadLocal read props$34
   [6] mutate $41 = PropertyLoad read $40.bar
-  [7] mutate $42:TPrimitive = PropertyCall mutate $38[3:8]:TObject<Array>.read $39[4:8]:TFunction<<generated_2>>(read $41)
+  [7] mutate $42:TPrimitive = MethodCall mutate $38[3:8]:TObject<Array>.read $39[4:8]:TFunction<<generated_2>>(read $41)
   [8] mutate $43 = LoadLocal read props$34
   [9] mutate $44 = PropertyLoad read $43.cond
   [10] If (read $44) then:bb2 else:bb3 fallthrough=bb1
@@ -42,7 +42,7 @@ bb2 (block):
   [16] mutate $52[16:34]:TFunction<<generated_2>> = PropertyLoad read $51[15:34]:TObject<Array>.push
   [17] mutate $53 = LoadLocal read props$34
   [18] mutate $54 = PropertyLoad read $53.foo
-  [19] mutate $55:TPrimitive = PropertyCall mutate $51[15:34]:TObject<Array>.read $52[16:34]:TFunction<<generated_2>>(read $54)
+  [19] mutate $55:TPrimitive = MethodCall mutate $51[15:34]:TObject<Array>.read $52[16:34]:TFunction<<generated_2>>(read $54)
   [20] Goto bb1
 bb3 (block):
   predecessor blocks: bb0
@@ -52,7 +52,7 @@ bb3 (block):
   [26] mutate $63[26:34]:TFunction<<generated_2>> = PropertyLoad read $62[25:34]:TObject<Array>.push
   [27] mutate $64 = LoadLocal read props$34
   [28] mutate $65 = PropertyLoad read $64.bar
-  [29] mutate $66:TPrimitive = PropertyCall mutate $62[25:34]:TObject<Array>.read $63[26:34]:TFunction<<generated_2>>(read $65)
+  [29] mutate $66:TPrimitive = MethodCall mutate $62[25:34]:TObject<Array>.read $63[26:34]:TFunction<<generated_2>>(read $65)
   [30] Goto bb1
 bb1 (block):
   predecessor blocks: bb2 bb3

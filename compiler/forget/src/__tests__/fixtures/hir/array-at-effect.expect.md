@@ -30,7 +30,7 @@ bb0 (block):
   [10] mutate $30 = LoadLocal read props$19
   [11] mutate $31 = PropertyLoad read $30.y
   [12] mutate $32 = Call read $29:TFunction(read $31)
-  [13] mutate $33 = PropertyCall read $27:TObject<Array>.read $28:TFunction<<generated_0>>(read $32)
+  [13] mutate $33 = MethodCall read $27:TObject<Array>.read $28:TFunction<<generated_0>>(read $32)
   [14] store $35 = StoreLocal Const mutate result$34 = capture $33
   [15] mutate $36 = LoadLocal capture result$34
   [16] Return freeze $36

@@ -134,7 +134,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         ) {
           operands.push(instr.value.value.identifier);
         }
-      } else if (instr.value.kind === "ComputedCall") {
+      } else if (instr.value.kind === "MethodCall") {
         for (const operand of eachInstructionOperand(instr)) {
           if (
             isMutable(instr, operand) &&
@@ -235,8 +235,7 @@ function mayAllocate(value: InstructionValue): boolean {
     case "Primitive": {
       return false;
     }
-    case "PropertyCall":
-    case "ComputedCall":
+    case "MethodCall":
     case "PropertyStore":
     case "ComputedStore":
     case "ArrayExpression":

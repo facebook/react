@@ -24,7 +24,7 @@ bb0 (block):
   [4] mutate $45[4:8]:TFunction<<generated_2>> = PropertyLoad read $44[3:8]:TObject<Array>.push
   [5] mutate $46 = LoadLocal read props$40
   [6] mutate $47 = PropertyLoad read $46.bar
-  [7] mutate $48:TPrimitive = PropertyCall mutate $44[3:8]:TObject<Array>.read $45[4:8]:TFunction<<generated_2>>(read $47)
+  [7] mutate $48:TPrimitive = MethodCall mutate $44[3:8]:TObject<Array>.read $45[4:8]:TFunction<<generated_2>>(read $47)
   [8] Ternary test:bb2 fallthrough=bb1
 bb2 (value):
   predecessor blocks: bb0
@@ -39,7 +39,7 @@ bb3 (value):
   [17] mutate $58[17:21]:TFunction<<generated_2>> = PropertyLoad read $57[16:21]:TObject<Array>.push
   [18] mutate $59 = LoadLocal read props$40
   [19] mutate $60 = PropertyLoad read $59.foo
-  [20] mutate $61[20:39]:TPrimitive = PropertyCall mutate $57[16:21]:TObject<Array>.read $58[17:21]:TFunction<<generated_2>>(read $60)
+  [20] mutate $61[20:39]:TPrimitive = MethodCall mutate $57[16:21]:TObject<Array>.read $58[17:21]:TFunction<<generated_2>>(read $60)
   [21] store $63[21:39]:TPrimitive = StoreLocal Const mutate $62[8:39]:TPrimitive = capture $61[20:39]:TPrimitive
   [22] Goto bb1
 bb4 (value):
@@ -50,7 +50,7 @@ bb4 (value):
   [28] mutate $71[28:32]:TFunction<<generated_2>> = PropertyLoad read $70[27:32]:TObject<Array>.push
   [29] mutate $72 = LoadLocal read props$40
   [30] mutate $73 = PropertyLoad read $72.bar
-  [31] mutate $74[31:39]:TPrimitive = PropertyCall mutate $70[27:32]:TObject<Array>.read $71[28:32]:TFunction<<generated_2>>(read $73)
+  [31] mutate $74[31:39]:TPrimitive = MethodCall mutate $70[27:32]:TObject<Array>.read $71[28:32]:TFunction<<generated_2>>(read $73)
   [32] store $76[32:39]:TPrimitive = StoreLocal Const mutate $62[8:39]:TPrimitive = capture $74[31:39]:TPrimitive
   [33] Goto bb1
 bb1 (block):
@@ -61,7 +61,7 @@ bb1 (block):
   [35] mutate $80 = Global console
   [36] mutate $81 = PropertyLoad read $80.log
   [37] mutate $82[37:39] = LoadLocal capture _$77[34:39]
-  [38] mutate $83 = PropertyCall read $80.read $81(mutate $82[37:39])
+  [38] mutate $83 = MethodCall read $80.read $81(mutate $82[37:39])
   [39] mutate $84 = LoadLocal capture x$42
   [40] Return freeze $84
 ```

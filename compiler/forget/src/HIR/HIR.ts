@@ -433,24 +433,23 @@ export type Phi = {
 };
 
 /**
- * Forget currently does not handle PropertyCall / ComputedCall correctly in
+ * Forget currently does not handle MethodCall correctly in
  * all cases. Specifically, we do not bind the receiver and method property
  * before calling to args. Until we add a SequenceExpression to inline all
  * instructions generated when lowering args, we have a limited representation
  * with some constraints.
  *
  * Forget currently makes these assumptions (checked in codegen):
- *  - {@link PropertyCall.property} is a temporary produced by a PropertyLoad on {@link PropertyCall.receiver}
- *    - this is always true for PropertyCall, but property.object and receiver
- *      may be different for ComputedCalls
- *  - {@link PropertyCall.property} remains an rval (i.e. never promoted to a
+ *  - {@link MethodCall.property} is a temporary produced by a PropertyLoad or ComputedLoad
+ *    on {@link MethodCall.receiver}
+ *  - {@link MethodCall.property} remains an rval (i.e. never promoted to a
  *    named identifier). We currently rely on this for codegen.
  *
- * Type inference does not currently guarantee that {@link PropertyCall.property}
+ * Type inference does not currently guarantee that {@link MethodCall.property}
  * is a FunctionType.
  */
-export type PropertyCall = {
-  kind: "PropertyCall";
+export type MethodCall = {
+  kind: "MethodCall";
   receiver: Place;
   property: Place;
   args: Array<Place | SpreadPattern>;
@@ -513,14 +512,7 @@ export type InstructionValue =
       args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
-  | PropertyCall
-  | {
-      kind: "ComputedCall";
-      receiver: Place;
-      property: Place;
-      args: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | MethodCall
   | {
       kind: "UnaryExpression";
       operator: string;
