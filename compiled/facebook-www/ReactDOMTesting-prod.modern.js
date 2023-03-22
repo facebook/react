@@ -14691,11 +14691,11 @@ function setInitialProperties(domElement, tag, rawProps) {
       listenToNonDelegatedEvent("close", domElement);
       var props = rawProps;
       break;
-    case "iframe":
-    case "object":
     case "embed":
       if (null != rawProps.children || null != rawProps.dangerouslySetInnerHTML)
         throw Error(formatProdErrorMessage(137, tag));
+    case "iframe":
+    case "object":
       listenToNonDelegatedEvent("load", domElement);
       props = rawProps;
       break;
@@ -15737,7 +15737,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1774 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0d5680f8",
+  version: "18.3.0-www-modern-36a2211a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2177 = {
@@ -15768,7 +15768,7 @@ var internals$jscomp$inline_2177 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-0d5680f8"
+  reconcilerVersion: "18.3.0-www-modern-36a2211a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2178 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16088,4 +16088,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-0d5680f8";
+exports.version = "18.3.0-www-modern-36a2211a";

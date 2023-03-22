@@ -5979,8 +5979,6 @@ function setInitialProperties(domElement, tag, rawProps) {
       props = rawProps;
       break;
 
-    case "iframe":
-    case "object":
     case "embed":
       if (
         rawProps.children != null ||
@@ -5992,9 +5990,14 @@ function setInitialProperties(domElement, tag, rawProps) {
             " is a void element tag and must neither have `children` nor " +
             "use `dangerouslySetInnerHTML`."
         );
-      } // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the load event.
+      }
 
+    // eslint-disable-next-line no-fallthrough
+
+    case "iframe":
+    case "object":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
       listenToNonDelegatedEvent("load", domElement);
       props = rawProps;
       break;
@@ -39141,7 +39144,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-877581fc";
+var ReactVersion = "18.3.0-www-classic-01e3cef5";
 
 function createPortal$1(
   children,

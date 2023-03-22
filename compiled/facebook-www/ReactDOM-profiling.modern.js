@@ -15133,11 +15133,11 @@ function setInitialProperties(domElement, tag, rawProps) {
       listenToNonDelegatedEvent("close", domElement);
       var props = rawProps;
       break;
-    case "iframe":
-    case "object":
     case "embed":
       if (null != rawProps.children || null != rawProps.dangerouslySetInnerHTML)
         throw Error(formatProdErrorMessage(137, tag));
+    case "iframe":
+    case "object":
       listenToNonDelegatedEvent("load", domElement);
       props = rawProps;
       break;
@@ -16122,7 +16122,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1825 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-05e5b2d4",
+  version: "18.3.0-www-modern-bb061536",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16167,7 +16167,7 @@ var devToolsConfig$jscomp$inline_1825 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-05e5b2d4"
+  reconcilerVersion: "18.3.0-www-modern-bb061536"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16323,7 +16323,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-05e5b2d4";
+exports.version = "18.3.0-www-modern-bb061536";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

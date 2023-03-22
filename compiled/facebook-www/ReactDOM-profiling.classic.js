@@ -1253,11 +1253,11 @@ function setInitialProperties(domElement, tag, rawProps) {
       listenToNonDelegatedEvent("close", domElement);
       var props = rawProps;
       break;
-    case "iframe":
-    case "object":
     case "embed":
       if (null != rawProps.children || null != rawProps.dangerouslySetInnerHTML)
         throw Error(formatProdErrorMessage(137, tag));
+    case "iframe":
+    case "object":
       listenToNonDelegatedEvent("load", domElement);
       props = rawProps;
       break;
@@ -16601,7 +16601,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1855 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-5ece29ae",
+  version: "18.3.0-www-classic-6e176d80",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16645,7 +16645,7 @@ var devToolsConfig$jscomp$inline_1855 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-5ece29ae"
+  reconcilerVersion: "18.3.0-www-classic-6e176d80"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16872,7 +16872,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-5ece29ae";
+exports.version = "18.3.0-www-classic-6e176d80";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
