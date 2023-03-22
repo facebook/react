@@ -3003,4 +3003,108 @@ describe('ReactSuspenseList', () => {
       </>,
     );
   });
+
+  // @gate enableSuspenseList
+  it(
+    'regression test: SuspenseList should never force boundaries deeper than ' +
+      'a single level into fallback mode',
+    async () => {
+      const A = createAsyncText('A');
+
+      function UnreachableFallback() {
+        throw new Error('Should never be thrown!');
+      }
+
+      function Repro({update}) {
+        return (
+          <SuspenseList revealOrder="forwards">
+            {update && (
+              <Suspense fallback={<Text text="Loading A..." />}>
+                <A />
+              </Suspense>
+            )}
+            <Suspense fallback={<Text text="Loading B..." />}>
+              {update ? (
+                <Suspense fallback={<UnreachableFallback />}>
+                  <Text text="B2" />
+                </Suspense>
+              ) : (
+                <Text text="B1" />
+              )}
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C..." />}>
+              <Text text="C" />
+            </Suspense>
+            {update && (
+              <Suspense fallback={<Text text="Loading D..." />}>
+                <Text text="D" />
+              </Suspense>
+            )}
+          </SuspenseList>
+        );
+      }
+
+      // Initial mount. Only two rows are mounted, B and C.
+      const root = ReactNoop.createRoot();
+      await act(() => root.render(<Repro update={false} />));
+      assertLog(['B1', 'C']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span>B1</span>
+          <span>C</span>
+        </>,
+      );
+
+      // During the update, a few things happen simultaneously:
+      // - A new row, A, is inserted into the head. This row suspends.
+      // - The context in row B is replaced. The new content contains a nested
+      //   Suspense boundary.
+      // - A new row, D, is inserted into the tail.
+      await act(() => root.render(<Repro update={true} />));
+      assertLog([
+        // During the first pass, the new row, A, suspends. This means any new
+        // rows in the tail should be forced into fallback mode.
+        'Suspend! [A]',
+        'Loading A...',
+        'B2',
+        'C',
+
+        // A second pass is used to render the fallbacks in the tail.
+        //
+        // Rows B and C were already mounted, so they should not be forced into
+        // fallback mode.
+        //
+        // In the regression that this test was written for, the inner
+        // Suspense boundary around B2 was incorrectly activated. Only the
+        // nearest fallbacks per row should be activated, and only if they
+        // haven't already mounted.
+        'Loading A...',
+        'B2',
+        'C',
+
+        // D is part of the tail, so it should show a fallback.
+        'Loading D...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span>Loading A...</span>
+          <span>B2</span>
+          <span>C</span>
+          <span>Loading D...</span>
+        </>,
+      );
+
+      // Now finish loading A.
+      await act(() => A.resolve());
+      assertLog(['A', 'D']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span>A</span>
+          <span>B2</span>
+          <span>C</span>
+          <span>D</span>
+        </>,
+      );
+    },
+  );
 });
