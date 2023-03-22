@@ -524,6 +524,31 @@ function lowerStatement(
               // ok
               break;
             }
+            case "MemberExpression": {
+              // A common pattern is switch statements where the case test values are properties of a global,
+              // eg `case ProductOptions.Option: { ... }`
+              // We therefore allow expressions where the innermost object is a global identifier, and reject
+              // all other member expressions (for now).
+              const test = testExpr as NodePath<t.MemberExpression>;
+              let innerObject: NodePath<t.Expression> = test;
+              while (innerObject.isMemberExpression()) {
+                innerObject = innerObject.get("object");
+              }
+              if (
+                innerObject.isIdentifier() &&
+                builder.resolveIdentifier(innerObject) === null // null means global
+              ) {
+                // This is a property/computed load from a global, that's safe to evaluate as a test expression
+                break;
+              }
+              builder.errors.push({
+                reason:
+                  "(BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported",
+                severity: ErrorSeverity.Todo,
+                nodePath: testExpr,
+              });
+              break;
+            }
             default: {
               builder.errors.push({
                 reason:
