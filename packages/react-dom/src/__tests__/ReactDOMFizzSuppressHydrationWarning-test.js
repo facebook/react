@@ -130,6 +130,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
       : children;
   }
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('suppresses but does not fix text mismatches with suppressHydrationWarning', async () => {
     function App({isClient}) {
       return (
@@ -169,6 +170,47 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
   });
 
+  // @gate !enableClientRenderFallbackOnTextMismatch
+  it('suppresses and fixes text mismatches with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div>
+          <span suppressHydrationWarning={true}>
+            {isClient ? 'Client Text' : 'Server Text'}
+          </span>
+          <span suppressHydrationWarning={true}>{isClient ? 2 : 1}</span>
+        </div>
+      );
+    }
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Server Text</span>
+        <span>1</span>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        // Don't miss a hydration error. There should be none.
+        Scheduler.log(error.message);
+      },
+    });
+    await waitForAll([]);
+    // The text mismatch should be *silently* fixed. Even in production.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Client Text</span>
+        <span>2</span>
+      </div>,
+    );
+  });
+
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('suppresses but does not fix multiple text node mismatches with suppressHydrationWarning', async () => {
     function App({isClient}) {
       return (
@@ -205,6 +247,48 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         <span>
           {'Server1'}
           {'Server2'}
+        </span>
+      </div>,
+    );
+  });
+
+  // @gate !enableClientRenderFallbackOnTextMismatch
+  it('suppresses and fixes multiple text node mismatches with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div>
+          <span suppressHydrationWarning={true}>
+            {isClient ? 'Client1' : 'Server1'}
+            {isClient ? 'Client2' : 'Server2'}
+          </span>
+        </div>
+      );
+    }
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>
+          {'Server1'}
+          {'Server2'}
+        </span>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.log(error.message);
+      },
+    });
+    await waitForAll([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>
+          {'Client1'}
+          {'Client2'}
         </span>
       </div>,
     );
@@ -261,6 +345,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('suppresses but does not fix client-only single text node mismatches with suppressHydrationWarning', async () => {
     function App({text}) {
       return (
@@ -297,6 +382,41 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>Client 2</span>
+      </div>,
+    );
+  });
+
+  // @gate !enableClientRenderFallbackOnTextMismatch
+  it('suppresses and fixes client-only single text node mismatches with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div>
+          <span suppressHydrationWarning={true}>
+            {isClient ? 'Client' : null}
+          </span>
+        </div>
+      );
+    }
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span />
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.log(error.message);
+      },
+    });
+    await waitForAll([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>{'Client'}</span>
       </div>,
     );
   });
