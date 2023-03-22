@@ -33,9 +33,9 @@ bb0 (block):
         [4] store $52:TObject<Array> = Array [...capture $51]
         [5] store $54:TObject<Array> = StoreLocal Const store arr$53:TObject<Array> = capture $52:TObject<Array>
         [6] mutate $55:TObject<Array> = LoadLocal capture arr$53:TObject<Array>
-        [7] mutate $56 = LoadLocal capture x$48
-        [8] mutate $57:TFunction<<generated_0>> = PropertyLoad read $55:TObject<Array>.at
-        [9] mutate $58 = PropertyCall read $55:TObject<Array>.read $57:TFunction<<generated_0>>(read $56)
+        [7] mutate $56:TFunction<<generated_0>> = PropertyLoad read $55:TObject<Array>.at
+        [8] mutate $57 = LoadLocal capture x$48
+        [9] mutate $58 = PropertyCall read $55:TObject<Array>.read $56:TFunction<<generated_0>>(read $57)
         [10] Return freeze $58
   [9] store $41[9:12]:TFunction = StoreLocal Const mutate fn$40[9:12]:TFunction = capture $39[8:12]:TFunction
   [10] mutate $42[10:12]:TFunction = LoadLocal capture fn$40[9:12]:TFunction

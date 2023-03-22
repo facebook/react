@@ -25,12 +25,12 @@ bb0 (block):
   [5] store $24:TObject<Array> = Array [capture $23]
   [6] store $26:TObject<Array> = StoreLocal Const store arr$25:TObject<Array> = capture $24:TObject<Array>
   [7] mutate $27:TObject<Array> = LoadLocal capture arr$25:TObject<Array>
-  [8] mutate $28:TFunction = Global bar
-  [9] mutate $29 = LoadLocal read props$19
-  [10] mutate $30 = PropertyLoad read $29.y
-  [11] mutate $31 = Call read $28:TFunction(read $30)
-  [12] mutate $32:TFunction<<generated_0>> = PropertyLoad read $27:TObject<Array>.at
-  [13] mutate $33 = PropertyCall read $27:TObject<Array>.read $32:TFunction<<generated_0>>(read $31)
+  [8] mutate $28:TFunction<<generated_0>> = PropertyLoad read $27:TObject<Array>.at
+  [9] mutate $29:TFunction = Global bar
+  [10] mutate $30 = LoadLocal read props$19
+  [11] mutate $31 = PropertyLoad read $30.y
+  [12] mutate $32 = Call read $29:TFunction(read $31)
+  [13] mutate $33 = PropertyCall read $27:TObject<Array>.read $28:TFunction<<generated_0>>(read $32)
   [14] store $35 = StoreLocal Const mutate result$34 = capture $33
   [15] mutate $36 = LoadLocal capture result$34
   [16] Return freeze $36

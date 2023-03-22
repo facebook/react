@@ -613,11 +613,23 @@ function codegenInstructionValue(
       break;
     }
     case "ComputedCall": {
-      const receiver = codegenPlace(cx, instrValue.receiver);
-      const property = codegenPlace(cx, instrValue.property);
-      const callee = t.memberExpression(receiver, property, true);
+      const memberExpr = codegenPlace(cx, instrValue.property);
+      invariant(
+        t.isMemberExpression(memberExpr) ||
+          t.isOptionalMemberExpression(memberExpr),
+        "[Codegen] Internal error: ComputedCall::property must be an unpromoted + unmemoized MemberExpression, was %s.",
+        memberExpr.type
+      );
+      invariant(
+        t.isNodesEquivalent(
+          memberExpr.object,
+          codegenPlace(cx, instrValue.receiver)
+        ),
+        "[Codegen] Internal error: Forget should always generate ComputedCall::property " +
+          "as a MemberExpression of ComputedCall::receiver"
+      );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
-      value = createCallExpression(instrValue.loc, callee, args);
+      value = createCallExpression(instrValue.loc, memberExpr, args);
       break;
     }
     case "NewExpression": {

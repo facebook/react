@@ -927,15 +927,15 @@ function lowerExpression(
       }
       if (calleePath.isMemberExpression()) {
         const memberExpr = lowerMemberExpression(builder, calleePath);
+        const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...propertyPlace },
+          value: memberExpr.value,
+          loc: GeneratedSource,
+        });
         const args = lowerArguments(builder, expr.get("arguments"));
         if (typeof memberExpr.property === "string") {
-          const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: { ...propertyPlace },
-            value: memberExpr.value,
-            loc: GeneratedSource,
-          });
           return {
             kind: "PropertyCall",
             receiver: memberExpr.object,
@@ -947,7 +947,7 @@ function lowerExpression(
           return {
             kind: "ComputedCall",
             receiver: memberExpr.object,
-            property: memberExpr.property,
+            property: { ...propertyPlace },
             args,
             loc: exprLoc,
           };

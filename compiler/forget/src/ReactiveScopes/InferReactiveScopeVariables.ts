@@ -134,6 +134,20 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         ) {
           operands.push(instr.value.value.identifier);
         }
+      } else if (instr.value.kind === "ComputedCall") {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            isMutable(instr, operand) &&
+            // exclude global variables from being added to scopes, we can't recreate them!
+            // TODO: improve handling of module-scoped variables and globals
+            operand.identifier.mutableRange.start > 0
+          ) {
+            operands.push(operand.identifier);
+          }
+        }
+        // Ensure that the ComputedLoad to resolve the method is in the same scope as the
+        // call itself
+        operands.push(instr.value.property.identifier);
       } else {
         for (const operand of eachInstructionOperand(instr)) {
           if (
