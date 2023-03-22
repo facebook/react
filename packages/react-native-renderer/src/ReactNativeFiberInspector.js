@@ -17,10 +17,12 @@ import {
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 // Module provided by RN:
-import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {
+  UIManager,
+  getNodeFromPublicInstance,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {getNodeFromPublicInstance} from './ReactFabricPublicInstanceUtils';
 import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
 
 const emptyObject = {};

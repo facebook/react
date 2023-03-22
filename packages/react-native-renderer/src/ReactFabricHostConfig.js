@@ -8,10 +8,6 @@
  */
 
 import type {TouchedViewDataAtPoint, ViewConfig} from './ReactNativeTypes';
-import {
-  createPublicInstance,
-  type ReactFabricHostComponent,
-} from './ReactFabricPublicInstance';
 import {create, diff} from './ReactNativeAttributePayload';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
@@ -23,6 +19,8 @@ import {
 import {
   ReactNativeViewConfigRegistry,
   deepFreezeAndThrowOnMutationInDev,
+  createPublicInstance,
+  type PublicInstance as ReactNativePublicInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -62,12 +60,12 @@ export type Instance = {
     // Reference to the React handle (the fiber)
     internalInstanceHandle: Object,
     // Exposed through refs.
-    publicInstance: ReactFabricHostComponent,
+    publicInstance: PublicInstance,
   },
 };
 export type TextInstance = {node: Node, ...};
 export type HydratableInstance = Instance | TextInstance;
-export type PublicInstance = ReactFabricHostComponent;
+export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
 export type ChildSet = Object;
 export type HostContext = $ReadOnly<{

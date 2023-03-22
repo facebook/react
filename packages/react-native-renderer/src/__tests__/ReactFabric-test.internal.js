@@ -43,9 +43,9 @@ describe('ReactFabric', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
     getNativeTagFromPublicInstance =
-      require('../ReactFabricPublicInstanceUtils').getNativeTagFromPublicInstance;
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNativeTagFromPublicInstance;
     getNodeFromPublicInstance =
-      require('../ReactFabricPublicInstanceUtils').getNodeFromPublicInstance;
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNodeFromPublicInstance;
 
     act = require('internal-test-utils').act;
   });
