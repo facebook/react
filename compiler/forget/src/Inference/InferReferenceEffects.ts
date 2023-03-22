@@ -689,7 +689,6 @@ function inferBlock(
           state.isDefined(instrValue.receiver),
           "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad"
         );
-
         state.reference(instrValue.property, Effect.Read);
 
         const signature = getFunctionCallSignature(
@@ -744,17 +743,6 @@ function inferBlock(
         break;
       }
       case "PropertyLoad": {
-        if (!state.isDefined(instrValue.object)) {
-          // TODO @josephsavona: improve handling of globals
-          const value: InstructionValue = {
-            kind: "Primitive",
-            loc: instrValue.loc,
-            value: undefined,
-          };
-          state.initialize(value, ValueKind.Frozen);
-          state.define(instrValue.object, value);
-        }
-
         state.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.Mutate;
@@ -784,17 +772,6 @@ function inferBlock(
         continue;
       }
       case "ComputedLoad": {
-        if (!state.isDefined(instrValue.object)) {
-          // TODO @josephsavona: improve handling of globals
-          const value: InstructionValue = {
-            kind: "Primitive",
-            loc: instrValue.loc,
-            value: undefined,
-          };
-          state.initialize(value, ValueKind.Frozen);
-          state.define(instrValue.object, value);
-        }
-
         state.reference(instrValue.object, Effect.Read);
         state.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
