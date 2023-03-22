@@ -2360,7 +2360,7 @@ var HooksDispatcher = {
       return useReducer(basicStateReducer, initialState);
     },
     useInsertionEffect: noop$1,
-    useLayoutEffect: function () {},
+    useLayoutEffect: noop$1,
     useCallback: function (callback, deps) {
       return useMemo(function () {
         return callback;

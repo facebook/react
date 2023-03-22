@@ -2328,7 +2328,7 @@ var HooksDispatcher = {
       return useReducer(basicStateReducer, initialState);
     },
     useInsertionEffect: noop$1,
-    useLayoutEffect: function () {},
+    useLayoutEffect: noop$1,
     useCallback: function (callback, deps) {
       return useMemo(function () {
         return callback;
@@ -3688,4 +3688,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-5ac25261";
+exports.version = "18.3.0-www-modern-ee5be7f3";
