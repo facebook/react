@@ -86,7 +86,7 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
       positionalParams: [Effect.Read],
       restParam: null,
       returnType: null,
-      calleeEffect: Effect.Capture,
+      calleeEffect: Effect.Read,
     }),
   ],
   [
@@ -98,7 +98,7 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
         kind: "Object",
         shapeId: ArrayShapeId,
       },
-      calleeEffect: Effect.Capture,
+      calleeEffect: Effect.Read,
     }),
   ],
   ["length", PRIMITIVE_TYPE],
@@ -107,10 +107,8 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Capture,
-      returnType: {
-        kind: "Primitive",
-      },
-      calleeEffect: Effect.Store,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Mutate,
     }),
   ],
   // TODO: rest of Array properties
@@ -123,9 +121,7 @@ addShape(BUILTIN_SHAPES, ObjectShapeId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: null,
-      returnType: {
-        kind: "Primitive",
-      },
+      returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
     }),
   ],
