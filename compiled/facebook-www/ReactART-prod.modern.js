@@ -2054,8 +2054,10 @@ function popHiddenContext() {
 var suspenseHandlerStackCursor = createCursor(null),
   shellBoundary = null;
 function pushPrimaryTreeSuspenseHandler(handler) {
-  var current = handler.alternate;
-  !0 !== handler.pendingProps.unstable_avoidThisFallback ||
+  var current = handler.alternate,
+    props = handler.pendingProps;
+  push(suspenseStackCursor, suspenseStackCursor.current & 1);
+  !0 !== props.unstable_avoidThisFallback ||
   (null !== current && null === currentTreeHiddenStackCursor.current)
     ? (push(suspenseHandlerStackCursor, handler),
       null === shellBoundary &&
@@ -2068,20 +2070,26 @@ function pushPrimaryTreeSuspenseHandler(handler) {
 }
 function pushOffscreenSuspenseHandler(fiber) {
   if (22 === fiber.tag) {
-    if ((push(suspenseHandlerStackCursor, fiber), null === shellBoundary)) {
+    if (
+      (push(suspenseStackCursor, suspenseStackCursor.current),
+      push(suspenseHandlerStackCursor, fiber),
+      null === shellBoundary)
+    ) {
       var current = fiber.alternate;
       null !== current &&
         null !== current.memoizedState &&
         (shellBoundary = fiber);
     }
-  } else reuseSuspenseHandlerOnStack();
+  } else reuseSuspenseHandlerOnStack(fiber);
 }
 function reuseSuspenseHandlerOnStack() {
+  push(suspenseStackCursor, suspenseStackCursor.current);
   push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function popSuspenseHandler(fiber) {
   pop(suspenseHandlerStackCursor);
   shellBoundary === fiber && (shellBoundary = null);
+  pop(suspenseStackCursor);
 }
 var suspenseStackCursor = createCursor(0);
 function findFirstSuspended(row) {
@@ -3648,12 +3656,12 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     }
     pushTransition(workInProgress, nextProps, nextIsDetached);
     pushHiddenContext(workInProgress, prevState);
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     workInProgress.memoizedState = null;
   } else
     null !== current && pushTransition(workInProgress, null, null),
       reuseHiddenContextOnStack(),
-      reuseSuspenseHandlerOnStack();
+      reuseSuspenseHandlerOnStack(workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -3987,7 +3995,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     didSuspend = nextProps.fallback;
     if (showFallback)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (current = mountSuspenseFallbackChildren(
           workInProgress,
           current,
@@ -4018,7 +4026,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     if ("number" === typeof nextProps.unstable_expectedLoadTime)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (current = mountSuspenseFallbackChildren(
           workInProgress,
           current,
@@ -4049,7 +4057,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
   }
   if (showFallback) {
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     showFallback = nextProps.fallback;
     didSuspend = workInProgress.mode;
     JSCompiler_temp = current.child;
@@ -4224,12 +4232,12 @@ function updateDehydratedSuspenseComponent(
       );
     if (null !== workInProgress.memoizedState)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (workInProgress.child = current.child),
         (workInProgress.flags |= 128),
         null
       );
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     suspenseState = nextProps.fallback;
     didSuspend = workInProgress.mode;
     nextProps = createFiberFromOffscreen(
@@ -9622,19 +9630,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1137 = {
+  devToolsConfig$jscomp$inline_1148 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-22ca78ee",
+    version: "18.3.0-www-modern-1925ba21",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1312 = {
-  bundleType: devToolsConfig$jscomp$inline_1137.bundleType,
-  version: devToolsConfig$jscomp$inline_1137.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1137.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1137.rendererConfig,
+var internals$jscomp$inline_1323 = {
+  bundleType: devToolsConfig$jscomp$inline_1148.bundleType,
+  version: devToolsConfig$jscomp$inline_1148.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1148.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1148.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9651,26 +9659,26 @@ var internals$jscomp$inline_1312 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1137.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1148.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-22ca78ee"
+  reconcilerVersion: "18.3.0-www-modern-1925ba21"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1313 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1313.isDisabled &&
-    hook$jscomp$inline_1313.supportsFiber
+    !hook$jscomp$inline_1324.isDisabled &&
+    hook$jscomp$inline_1324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1313.inject(
-        internals$jscomp$inline_1312
+      (rendererID = hook$jscomp$inline_1324.inject(
+        internals$jscomp$inline_1323
       )),
-        (injectedHook = hook$jscomp$inline_1313);
+        (injectedHook = hook$jscomp$inline_1324);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
