@@ -449,7 +449,7 @@ export type Phi = {
  * Type inference does not currently guarantee that {@link PropertyCall.property}
  * is a FunctionType.
  */
-type PropertyCall = {
+export type PropertyCall = {
   kind: "PropertyCall";
   receiver: Place;
   property: Place;

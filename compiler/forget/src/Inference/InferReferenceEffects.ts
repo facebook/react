@@ -18,12 +18,17 @@ import {
   isObjectType,
   Phi,
   Place,
+  PropertyCall,
+  Type,
   ValueKind,
 } from "../HIR/HIR";
+import { FunctionSignature } from "../HIR/ObjectShape";
 import {
+  printIdentifier,
   printMixedHIR,
   printPlace,
   printSourceLocation,
+  printType,
 } from "../HIR/PrintHIR";
 import {
   eachInstructionOperand,
@@ -263,6 +268,18 @@ class InferenceState {
    * value is already frozen or is immutable.
    */
   reference(place: Place, effectKind: Effect): void {
+    this.#referenceImpl(place, effectKind, false);
+  }
+
+  /**
+   * Throwing version of {@link reference}, which throws with an error
+   * if we record a mutate effect on an immutable value.
+   */
+  referenceAndCheckError(place: Place, effectKind: Effect): void {
+    this.#referenceImpl(place, effectKind, true);
+  }
+
+  #referenceImpl(place: Place, effectKind: Effect, shouldError: boolean): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
       place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
@@ -292,6 +309,14 @@ class InferenceState {
         ) {
           effect = Effect.Mutate;
         } else {
+          if (shouldError) {
+            CompilerError.invalidInput(
+              `InferReferenceEffects: inferred mutation of known immutable value ${printIdentifier(
+                place.identifier
+              )}${printType(place.identifier.type)} (${valueKind})`,
+              place.loc
+            );
+          }
           effect = Effect.Read;
         }
         break;
@@ -554,7 +579,7 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
  * recording references on the @param state according to JS semantics.
  */
 function inferBlock(
-  _env: Environment,
+  env: Environment,
   state: InferenceState,
   block: BasicBlock
 ): void {
@@ -660,25 +685,39 @@ function inferBlock(
         continue;
       }
       case "PropertyCall": {
-        if (!state.isDefined(instrValue.receiver)) {
-          // TODO @josephsavona: improve handling of globals
-          const value: InstructionValue = {
-            kind: "Primitive",
-            loc: instrValue.loc,
-            value: undefined,
-          };
-          state.initialize(value, ValueKind.Frozen);
-          state.define(instrValue.receiver, value);
-        }
+        invariant(
+          state.isDefined(instrValue.receiver),
+          "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad"
+        );
 
-        state.reference(instrValue.receiver, Effect.Mutate);
         state.reference(instrValue.property, Effect.Read);
-        for (const arg of instrValue.args) {
-          if (arg.kind === "Identifier") {
-            state.reference(arg, Effect.Mutate);
-          } else {
-            state.reference(arg.place, Effect.Mutate);
+
+        const signature = getFunctionCallSignature(
+          env,
+          instrValue.property.identifier.type
+        );
+        if (signature !== null) {
+          const effects = getFunctionCallEffects(
+            instrValue,
+            signature,
+            Effect.Mutate
+          );
+          for (const [place, effect] of effects) {
+            state.referenceAndCheckError(place, effect);
           }
+          state.referenceAndCheckError(
+            instrValue.receiver,
+            signature.calleeEffect
+          );
+        } else {
+          for (const arg of instrValue.args) {
+            if (arg.kind === "Identifier") {
+              state.reference(arg, Effect.Mutate);
+            } else {
+              state.reference(arg.place, Effect.Mutate);
+            }
+          }
+          state.reference(instrValue.receiver, Effect.Mutate);
         }
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);
@@ -903,4 +942,62 @@ function hasContextRefOperand(
     }
   }
   return false;
+}
+
+function getFunctionCallSignature(
+  env: Environment,
+  type: Type
+): FunctionSignature | null {
+  if (type.kind !== "Function") {
+    return null;
+  }
+  return env.getFunctionSignature(type);
+}
+
+/**
+ * Make a best attempt at matching arguments of a PropertyCall to its FunctionSignature,
+ * calling back to `defaultEffect` when we are unable to.
+ *
+ * @param fn
+ * @param sig
+ * @param defaultEffect In the case that inference fails, all arguments will be inferred
+ *                      as defaultEffect
+ * @returns Inferred effects of function arguments
+ */
+function getFunctionCallEffects(
+  fn: PropertyCall,
+  sig: FunctionSignature,
+  defaultEffect: Effect
+): Array<[Place, Effect]> {
+  const inferredEffects: Array<[Place, Effect | null]> = fn.args.map(
+    (arg, idx) => {
+      const argPlace = arg.kind === "Identifier" ? arg : arg.place;
+      if (idx < sig.positionalParams.length) {
+        // Only infer effects when there is a direct mapping positional arg --> positional param
+        // Otherwise, return null to indicate inference failed
+        if (arg.kind === "Identifier") {
+          return [argPlace, sig.positionalParams[idx]];
+        } else {
+          return [argPlace, null];
+        }
+      } else if (sig.restParam !== null) {
+        return [argPlace, sig.restParam];
+      } else {
+        // If there are more arguments than positional arguments, we'll also assume
+        // that inference failed
+        return [argPlace, null];
+      }
+    }
+  );
+
+  let results: Array<[Place, Effect]>;
+  if (inferredEffects.some(([_, effect]) => effect === null)) {
+    // If inference failed for any argument, give up on inference for all arguments
+    results = inferredEffects.map(([arg, _]) => {
+      return [arg, defaultEffect];
+    });
+  } else {
+    results = inferredEffects as Array<[Place, Effect]>;
+  }
+  return results;
 }

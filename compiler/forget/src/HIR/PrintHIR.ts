@@ -564,7 +564,7 @@ function printScope(scope: ReactiveScope | null): string {
   return `${scope !== null ? `_@${scope.id}` : ""}`;
 }
 
-function printType(type: Type): string {
+export function printType(type: Type): string {
   if (type.kind === "Type") return "";
   // TODO(mofeiZ): add debugName for generated ids
   if (type.kind === "Object" && type.shapeId != null) {
