@@ -172,26 +172,21 @@ function* generateInstructionTypes(
     }
 
     case "ObjectExpression": {
-      invariant(left !== null, "invald object expression");
       yield equation(left, { kind: "Object", shapeId: ObjectShapeId });
       break;
     }
 
     case "ArrayExpression": {
-      if (left) {
-        yield equation(left, { kind: "Object", shapeId: ArrayShapeId });
-      }
+      yield equation(left, { kind: "Object", shapeId: ArrayShapeId });
       break;
     }
 
     case "PropertyLoad": {
-      if (left) {
-        yield equation(left, {
-          kind: "Property",
-          object: value.object.identifier.type,
-          propertyName: value.property,
-        });
-      }
+      yield equation(left, {
+        kind: "Property",
+        object: value.object.identifier.type,
+        propertyName: value.property,
+      });
       break;
     }
 
@@ -201,9 +196,7 @@ function* generateInstructionTypes(
         kind: "FunctionCall",
         returnType,
       });
-      if (left) {
-        yield equation(left, returnType);
-      }
+      yield equation(left, returnType);
     }
   }
 }
