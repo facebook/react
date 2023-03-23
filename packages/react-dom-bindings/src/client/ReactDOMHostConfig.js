@@ -1799,7 +1799,6 @@ const Settled = /*         */ 0b11;
 type StylesheetState = {
   loading: LoadingState,
   preload: null | HTMLLinkElement,
-  temp_suspensey: boolean,
 };
 
 type StyleTagProps = {
@@ -2135,7 +2134,6 @@ function preinit(href: string, options: PreinitOptions) {
         const state = {
           loading: NotLoaded,
           preload: null,
-          temp_suspensey: false,
         };
 
         // Attempt to hydrate instance from DOM
@@ -2348,7 +2346,6 @@ export function getResource(
             state: {
               loading: NotLoaded,
               preload: null,
-              temp_suspensey: pendingProps['data-suspensey'] === true,
             },
           };
           styles.set(key, resource);
@@ -3052,9 +3049,7 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
 }
 
 export function mayResourceSuspendCommit(resource: Resource): boolean {
-  return (
-    resource.type === 'stylesheet' && resource.state.temp_suspensey === true
-  );
+  return resource.type === 'stylesheet';
 }
 
 export function preloadInstance(type: Type, props: Props): boolean {
@@ -3075,8 +3070,7 @@ export function preloadResource(resource: Resource): boolean {
 }
 
 type SuspendedState = {
-  stylesheets: Map<StylesheetResource, HoistableRoot>,
-  preloadCount: number,
+  stylesheets: null | Map<StylesheetResource, HoistableRoot>,
   count: number,
   unsuspend: null | (() => void),
 };
@@ -3084,8 +3078,7 @@ let suspendedState: null | SuspendedState = null;
 
 export function startSuspendingCommit(): void {
   suspendedState = {
-    stylesheets: new Map(),
-    preloadCount: 0,
+    stylesheets: null,
     count: 0,
     unsuspend: null,
   };
@@ -3093,15 +3086,6 @@ export function startSuspendingCommit(): void {
 
 export function suspendInstance(type: Type, props: Props): void {
   return;
-}
-
-function onPreloadComplete(this: SuspendedState) {
-  this.count--;
-  this.preloadCount--;
-  if (this.preloadCount === 0) {
-    insertSuspendedStylesheets(this, this.stylesheets);
-  }
-  unsuspendIfUnblocked(this);
 }
 
 export function suspendResource(
@@ -3116,6 +3100,13 @@ export function suspendResource(
   }
   const state = suspendedState;
   if (resource.type === 'stylesheet' && resource.instance === null) {
+    if (typeof props.media === 'string') {
+      // If we don't currently match media we avoid suspending on this resource and let it insert on the mutation
+      // path
+      if (matchMedia(props.media).matches === false) {
+        return;
+      }
+    }
     const qualifiedProps: StylesheetQualifyingProps = props;
     const key = getStyleKey(qualifiedProps.href);
 
@@ -3164,13 +3155,16 @@ export function suspendResource(
     });
     setInitialProperties(instance, 'link', stylesheetProps);
     resource.instance = instance;
+
+    if (state.stylesheets === null) {
+      state.stylesheets = new Map();
+    }
     state.stylesheets.set(resource, hoistableRoot);
 
     const preloadEl = resource.state.preload;
     if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
       state.count++;
-      state.preloadCount++;
-      const ping = onPreloadComplete.bind(state);
+      const ping = onUnsuspend.bind(state);
       preloadEl.addEventListener('load', ping);
       preloadEl.addEventListener('error', ping);
     }
@@ -3186,7 +3180,7 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
 
   const state = suspendedState;
 
-  if (state.stylesheets.size > 0 && state.count === 0) {
+  if (state.stylesheets && state.count === 0) {
     // We are not currently blocked but we have not inserted all stylesheets.
     insertSuspendedStylesheets(state, state.stylesheets);
   }
@@ -3198,29 +3192,22 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
       state.unsuspend = commit;
       // In theory we don't need to bind this because we should always cancel
       // before starting a new suspendedState
-      return cancelSuspend;
+      return () => (state.unsuspend = null);
     };
   }
   return null;
 }
 
-function cancelSuspend() {
-  // We expect cancelSuspend to be called before calling `startSuspendingCommit` againt.
-  // If this constraint is violated this will not work right and will need to be bound instead
-  const state: SuspendedState = (suspendedState: any);
-  state.unsuspend = null;
-}
-
 function onUnsuspend(this: SuspendedState) {
   this.count--;
-  unsuspendIfUnblocked(this);
-}
-
-function unsuspendIfUnblocked(state: SuspendedState) {
-  if (state.count === 0 && state.unsuspend !== null) {
-    const unsuspend = state.unsuspend;
-    state.unsuspend = null;
-    unsuspend();
+  if (this.count === 0) {
+    if (this.stylesheets) {
+      insertSuspendedStylesheets(this, this.stylesheets);
+    } else if (this.unsuspend) {
+      const unsuspend = this.unsuspend;
+      this.unsuspend = null;
+      unsuspend();
+    }
   }
 }
 
@@ -3233,12 +3220,14 @@ function insertSuspendedStylesheets(
   state: SuspendedState,
   resources: Map<StylesheetResource, HoistableRoot>,
 ): void {
+  // We need to clear this out so we don't try to reinsert after the stylesheets have loaded
+  state.stylesheets = null;
   precedencesByRoot = new Map();
-  resources.forEach(insertStyleIntoRoot, state);
+  resources.forEach(insertStylesheetIntoRoot, state);
   precedencesByRoot = (null: any);
 }
 
-function insertStyleIntoRoot(
+function insertStylesheetIntoRoot(
   this: SuspendedState,
   root: HoistableRoot,
   resource: StylesheetResource,
@@ -3292,11 +3281,8 @@ function insertStyleIntoRoot(
     parent.insertBefore(instance, parent.firstChild);
   }
 
-  const media = instance.getAttribute('media');
-  if (!media || matchMedia(media).matches) {
-    this.count++;
-    const onComplete = onUnsuspend.bind(this);
-    instance.addEventListener('load', onComplete);
-    instance.addEventListener('error', onComplete);
-  }
+  this.count++;
+  const onComplete = onUnsuspend.bind(this);
+  instance.addEventListener('load', onComplete);
+  instance.addEventListener('error', onComplete);
 }
