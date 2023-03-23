@@ -9,17 +9,18 @@
 
 import {
   getPropertyInfo,
-  shouldIgnoreAttribute,
-  shouldRemoveAttribute,
   isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
+  NUMERIC,
+  POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import {
   disableJavaScriptURLs,
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
+  enableFilterEmptyStringAttributesDOM,
 } from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -41,68 +42,143 @@ export function getValueForProperty(
     if (propertyInfo.mustUseProperty) {
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
-    } else {
-      // This check protects multiple uses of `expected`, which is why the
-      // react-internal/safe-string-coercion rule is disabled in several spots
-      // below.
+    }
+    if (!disableJavaScriptURLs && propertyInfo.sanitizeURL) {
+      // If we haven't fully disabled javascript: URLs, and if
+      // the hydration is successful of a javascript: URL, we
+      // still want to warn on the client.
       if (__DEV__) {
         checkAttributeStringCoercion(expected, name);
       }
+      sanitizeURL('' + (expected: any));
+    }
 
-      if (!disableJavaScriptURLs && propertyInfo.sanitizeURL) {
-        // If we haven't fully disabled javascript: URLs, and if
-        // the hydration is successful of a javascript: URL, we
-        // still want to warn on the client.
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        sanitizeURL('' + (expected: any));
-      }
+    const attributeName = propertyInfo.attributeName;
 
-      const attributeName = propertyInfo.attributeName;
-
-      let stringValue = null;
-
-      if (propertyInfo.type === OVERLOADED_BOOLEAN) {
-        if (node.hasAttribute(attributeName)) {
-          const value = node.getAttribute(attributeName);
-          if (value === '') {
-            return true;
-          }
-          if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
-            return value;
-          }
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          if (value === '' + (expected: any)) {
+    if (!node.hasAttribute(attributeName)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case 'function':
+        case 'symbol': // eslint-disable-line
+          return expected;
+        case 'boolean': {
+          if (!propertyInfo.acceptsBooleans) {
             return expected;
           }
-          return value;
         }
-      } else if (node.hasAttribute(attributeName)) {
-        if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return node.getAttribute(attributeName);
+      }
+      switch (propertyInfo.type) {
+        case BOOLEAN: {
+          if (!expected) {
+            return expected;
+          }
+          break;
         }
-        if (propertyInfo.type === BOOLEAN) {
-          // If this was a boolean, it doesn't matter what the value is
-          // the fact that we have it is the same as the expected.
+        case OVERLOADED_BOOLEAN: {
+          if (expected === false) {
+            return expected;
+          }
+          break;
+        }
+        case NUMERIC: {
+          if (isNaN(expected)) {
+            return expected;
+          }
+          break;
+        }
+        case POSITIVE_NUMERIC: {
+          if (isNaN(expected) || (expected: any) < 1) {
+            return expected;
+          }
+          break;
+        }
+      }
+      if (enableFilterEmptyStringAttributesDOM) {
+        if (propertyInfo.removeEmptyString && expected === '') {
+          if (__DEV__) {
+            if (name === 'src') {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'This may cause the browser to download the whole page again over the network. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                name,
+                name,
+              );
+            } else {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                name,
+                name,
+              );
+            }
+          }
           return expected;
         }
-        // Even if this property uses a namespace we use getAttribute
-        // because we assume its namespaced name is the same as our config.
-        // To use getAttributeNS we need the local name which we don't have
-        // in our config atm.
-        stringValue = node.getAttribute(attributeName);
       }
+      return expected === undefined ? undefined : null;
+    }
 
-      if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
-        return stringValue === null ? expected : stringValue;
-        // eslint-disable-next-line react-internal/safe-string-coercion
-      } else if (stringValue === '' + (expected: any)) {
-        return expected;
-      } else {
-        return stringValue;
+    // Even if this property uses a namespace we use getAttribute
+    // because we assume its namespaced name is the same as our config.
+    // To use getAttributeNS we need the local name which we don't have
+    // in our config atm.
+    const value = node.getAttribute(attributeName);
+
+    if (expected == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+      return value;
+    }
+
+    // shouldRemoveAttribute
+    switch (propertyInfo.type) {
+      case BOOLEAN: {
+        if (expected) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          // As long as it's positive.
+          return expected;
+        }
+        return value;
+      }
+      case OVERLOADED_BOOLEAN: {
+        if (value === '') {
+          return true;
+        }
+        if (expected === false) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+        break;
+      }
+      case NUMERIC: {
+        if (isNaN(expected)) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+        break;
+      }
+      case POSITIVE_NUMERIC: {
+        if (isNaN(expected) || (expected: any) < 1) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+        break;
       }
     }
+    if (__DEV__) {
+      checkAttributeStringCoercion(expected, name);
+    }
+    if (value === '' + (expected: any)) {
+      return expected;
+    }
+    return value;
   }
 }
 
@@ -115,19 +191,76 @@ export function getValueForAttribute(
   node: Element,
   name: string,
   expected: mixed,
-  isCustomComponentTag: boolean,
 ): mixed {
   if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
       return;
     }
     if (!node.hasAttribute(name)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case 'function':
+        case 'symbol': // eslint-disable-line
+          return expected;
+        case 'boolean': {
+          const prefix = name.toLowerCase().slice(0, 5);
+          if (prefix !== 'data-' && prefix !== 'aria-') {
+            return expected;
+          }
+        }
+      }
       return expected === undefined ? undefined : null;
+    }
+    const value = node.getAttribute(name);
+    if (__DEV__) {
+      checkAttributeStringCoercion(expected, name);
+    }
+    if (value === '' + (expected: any)) {
+      return expected;
+    }
+    return value;
+  }
+}
+
+export function getValueForAttributeOnCustomComponent(
+  node: Element,
+  name: string,
+  expected: mixed,
+): mixed {
+  if (__DEV__) {
+    if (!isAttributeNameSafe(name)) {
+      return;
+    }
+    if (!node.hasAttribute(name)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case 'symbol':
+        case 'object':
+          // Symbols and objects are ignored when they're emitted so
+          // it would be expected that they end up not having an attribute.
+          return expected;
+        case 'function':
+          if (enableCustomElementPropertySupport) {
+            return expected;
+          }
+          break;
+        case 'boolean':
+          if (enableCustomElementPropertySupport) {
+            if (expected === false) {
+              return expected;
+            }
+          }
+      }
+      return expected === undefined ? undefined : null;
+    }
+    if (enableCustomElementPropertySupport && name === 'className') {
+      // className is a special cased property on the server to render as an attribute.
+      name = 'class';
     }
     const value = node.getAttribute(name);
 
     if (enableCustomElementPropertySupport) {
-      if (isCustomComponentTag && value === '') {
+      if (value === '' && expected === true) {
         return true;
       }
     }
@@ -149,26 +282,188 @@ export function getValueForAttribute(
  * @param {string} name
  * @param {*} value
  */
-export function setValueForProperty(
-  node: Element,
-  name: string,
-  value: mixed,
-  isCustomComponentTag: boolean,
-) {
-  const propertyInfo = getPropertyInfo(name);
-  if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
+export function setValueForProperty(node: Element, name: string, value: mixed) {
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
     return;
   }
 
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    if (propertyInfo.mustUseProperty) {
+      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
+      // right now.
+      (node: any)[propertyInfo.propertyName] =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
+      return;
+    }
+
+    // The rest are treated as attributes with special cases.
+
+    const attributeName = propertyInfo.attributeName;
+
+    if (value === null) {
+      node.removeAttribute(attributeName);
+      return;
+    }
+
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        node.removeAttribute(attributeName);
+        return;
+      case 'boolean': {
+        if (!propertyInfo.acceptsBooleans) {
+          node.removeAttribute(attributeName);
+          return;
+        }
+      }
+    }
+    if (enableFilterEmptyStringAttributesDOM) {
+      if (propertyInfo.removeEmptyString && value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          }
+        }
+        node.removeAttribute(attributeName);
+        return;
+      }
+    }
+
+    switch (propertyInfo.type) {
+      case BOOLEAN:
+        if (value) {
+          node.setAttribute(attributeName, '');
+        } else {
+          node.removeAttribute(attributeName);
+          return;
+        }
+        break;
+      case OVERLOADED_BOOLEAN:
+        if (value === true) {
+          node.setAttribute(attributeName, '');
+        } else if (value === false) {
+          node.removeAttribute(attributeName);
+        } else {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          node.setAttribute(attributeName, (value: any));
+        }
+        return;
+      case NUMERIC:
+        if (!isNaN(value)) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          node.setAttribute(attributeName, (value: any));
+        } else {
+          node.removeAttribute(attributeName);
+        }
+        break;
+      case POSITIVE_NUMERIC:
+        if (!isNaN(value) && (value: any) >= 1) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          node.setAttribute(attributeName, (value: any));
+        } else {
+          node.removeAttribute(attributeName);
+        }
+        break;
+      default: {
+        let attributeValue;
+        // `setAttribute` with objects becomes only `[object]` in IE8/9,
+        // ('' + value) makes it output the correct toString()-value.
+        if (enableTrustedTypesIntegration) {
+          attributeValue = (value: any);
+        } else {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          attributeValue = '' + (value: any);
+        }
+        if (propertyInfo.sanitizeURL) {
+          sanitizeURL(attributeValue.toString());
+        }
+        const attributeNamespace = propertyInfo.attributeNamespace;
+        if (attributeNamespace) {
+          node.setAttributeNS(
+            attributeNamespace,
+            attributeName,
+            attributeValue,
+          );
+        } else {
+          node.setAttribute(attributeName, attributeValue);
+        }
+      }
+    }
+  } else if (isAttributeNameSafe(name)) {
+    // If the prop isn't in the special list, treat it as a simple attribute.
+    // shouldRemoveAttribute
+    if (value === null) {
+      node.removeAttribute(name);
+      return;
+    }
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        node.removeAttribute(name);
+        return;
+      case 'boolean': {
+        const prefix = name.toLowerCase().slice(0, 5);
+        if (prefix !== 'data-' && prefix !== 'aria-') {
+          node.removeAttribute(name);
+          return;
+        }
+      }
+    }
+    if (__DEV__) {
+      checkAttributeStringCoercion(value, name);
+    }
+    node.setAttribute(
+      name,
+      enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+    );
+  }
+}
+
+export function setValueForPropertyOnCustomComponent(
+  node: Element,
+  name: string,
+  value: mixed,
+) {
   if (
     enableCustomElementPropertySupport &&
-    isCustomComponentTag &&
     name[0] === 'o' &&
     name[1] === 'n'
   ) {
-    let eventName = name.replace(/Capture$/, '');
-    const useCapture = name !== eventName;
-    eventName = eventName.slice(2);
+    const useCapture = name.endsWith('Capture');
+    const eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
 
     const prevProps = getFiberCurrentPropsFromNode(node);
     const prevValue = prevProps != null ? prevProps[name] : null;
@@ -185,92 +480,46 @@ export function setValueForProperty(
           node.removeAttribute(name);
         }
       }
-
       // $FlowFixMe value can't be casted to EventListener.
       node.addEventListener(eventName, (value: EventListener), useCapture);
       return;
     }
   }
 
-  if (
-    enableCustomElementPropertySupport &&
-    isCustomComponentTag &&
-    name in (node: any)
-  ) {
+  if (enableCustomElementPropertySupport && name in (node: any)) {
     (node: any)[name] = value;
     return;
   }
 
-  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
-    value = null;
-  }
-  if (enableCustomElementPropertySupport) {
-    if (isCustomComponentTag && value === true) {
-      value = '';
-    }
-  }
-
-  // If the prop isn't in the special list, treat it as a simple attribute.
-  if (isCustomComponentTag || propertyInfo === null) {
-    if (isAttributeNameSafe(name)) {
-      const attributeName = name;
-      if (value === null) {
-        node.removeAttribute(attributeName);
-      } else {
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, name);
-        }
-        node.setAttribute(
-          attributeName,
-          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-        );
-      }
-    }
-    return;
-  }
-  const {mustUseProperty} = propertyInfo;
-  if (mustUseProperty) {
-    const {propertyName} = propertyInfo;
+  if (isAttributeNameSafe(name)) {
+    // shouldRemoveAttribute
     if (value === null) {
-      const {type} = propertyInfo;
-      (node: any)[propertyName] = type === BOOLEAN ? false : '';
-    } else {
-      // Contrary to `setAttribute`, object properties are properly
-      // `toString`ed by IE8/9.
-      (node: any)[propertyName] = value;
+      node.removeAttribute(name);
+      return;
     }
-    return;
-  }
-  // The rest are treated as attributes with special cases.
-  const {attributeName, attributeNamespace} = propertyInfo;
-  if (value === null) {
-    node.removeAttribute(attributeName);
-  } else {
-    const {type} = propertyInfo;
-    let attributeValue;
-    if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
-      // If attribute type is boolean, we know for sure it won't be an execution sink
-      // and we won't require Trusted Type here.
-      attributeValue = '';
-    } else {
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
-        attributeValue = (value: any);
-      } else {
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, attributeName);
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        node.removeAttribute(name);
+        return;
+      case 'boolean': {
+        if (enableCustomElementPropertySupport) {
+          if (value === true) {
+            node.setAttribute(name, '');
+            return;
+          }
+          node.removeAttribute(name);
+          return;
         }
-        attributeValue = '' + (value: any);
-      }
-      if (propertyInfo.sanitizeURL) {
-        sanitizeURL(attributeValue.toString());
       }
     }
-    if (attributeNamespace) {
-      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
-    } else {
-      node.setAttribute(attributeName, attributeValue);
+    if (__DEV__) {
+      checkAttributeStringCoercion(value, name);
     }
+    node.setAttribute(
+      name,
+      enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+    );
   }
 }

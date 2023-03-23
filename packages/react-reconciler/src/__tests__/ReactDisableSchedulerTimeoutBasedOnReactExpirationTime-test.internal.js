@@ -72,7 +72,7 @@ describe('ReactSuspenseList', () => {
     React.startTransition(() => {
       root.render(<App show={true} />);
     });
-    await waitForAll(['Suspend! [A]', 'Suspend! [B]', 'Loading...']);
+    await waitForAll(['Suspend! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     Scheduler.unstable_advanceTime(2000);

@@ -4,6 +4,21 @@
 
 ---
 
+### 4.27.3
+March 22, 2023
+
+#### Bugfixes
+* prevent StyleX plugin from throwing when inspecting CSS ([mondaychen](https://github.com/mondaychen) in [#26364](https://github.com/facebook/react/pull/26364))
+* remove script tag immediately ([mondaychen](https://github.com/mondaychen) in [#26233](https://github.com/facebook/react/pull/26233))
+
+#### Others
+* upgrade electron to latest version & security improvements ([mondaychen](https://github.com/mondaychen) in [#26337](https://github.com/facebook/react/pull/26337))
+* improve troubleshooting in README ([mondaychen](https://github.com/mondaychen) in [#26235](https://github.com/facebook/react/pull/26235))
+* Remove renderer.js from extension build ([mondaychen](https://github.com/mondaychen) in [#26234](https://github.com/facebook/react/pull/26234))
+* permanently polyfill for rAF in devtools_page ([mondaychen](https://github.com/mondaychen) in [#26193](https://github.com/facebook/react/pull/26193))
+
+---
+
 ### 4.27.2
 February 16, 2023
 

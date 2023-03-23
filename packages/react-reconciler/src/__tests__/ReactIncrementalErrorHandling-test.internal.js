@@ -99,17 +99,19 @@ describe('ReactIncrementalErrorHandling', () => {
 
     React.startTransition(() => {
       ReactNoop.render(
-        <ErrorBoundary>
-          <Indirection>
+        <>
+          <ErrorBoundary>
             <Indirection>
               <Indirection>
-                <BadRender />
-                <Indirection />
-                <Indirection />
+                <Indirection>
+                  <BadRender />
+                </Indirection>
               </Indirection>
             </Indirection>
-          </Indirection>
-        </ErrorBoundary>,
+          </ErrorBoundary>
+          <Indirection />
+          <Indirection />
+        </>,
       );
     });
 
@@ -121,13 +123,6 @@ describe('ReactIncrementalErrorHandling', () => {
       'Indirection',
       // An error is thrown. React keeps rendering asynchronously.
       'throw',
-    ]);
-
-    // Still rendering async...
-    await waitFor(['Indirection']);
-
-    await waitFor([
-      'Indirection',
 
       // Call getDerivedStateFromError and re-render the error boundary, this
       // time rendering an error message.
@@ -135,14 +130,20 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (catch)',
       'ErrorMessage',
     ]);
-
-    // Since the error was thrown during an async render, React won't commit
-    // the result yet.
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    // Instead, it will try rendering one more time, synchronously, in case that
-    // happens to fix the error.
+    // The work loop unwound to the nearest error boundary. Continue rendering
+    // asynchronously.
+    await waitFor(['Indirection']);
+
+    // Since the error was thrown during an async render, React won't commit the
+    // result yet. After render we render the last child, React will attempt to
+    // render again, synchronously, just in case that happens to fix the error
+    // (i.e. as in the case of a data race). Flush just one more unit of work to
+    // demonstrate that this render is synchronous.
     expect(ReactNoop.flushNextYield()).toEqual([
+      'Indirection',
+
       'ErrorBoundary (try)',
       'Indirection',
       'Indirection',
@@ -151,11 +152,11 @@ describe('ReactIncrementalErrorHandling', () => {
       // The error was thrown again. This time, React will actually commit
       // the result.
       'throw',
-      'Indirection',
-      'Indirection',
       'getDerivedStateFromError',
       'ErrorBoundary (catch)',
       'ErrorMessage',
+      'Indirection',
+      'Indirection',
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -197,17 +198,19 @@ describe('ReactIncrementalErrorHandling', () => {
 
     React.startTransition(() => {
       ReactNoop.render(
-        <ErrorBoundary>
-          <Indirection>
+        <>
+          <ErrorBoundary>
             <Indirection>
               <Indirection>
-                <BadRender />
-                <Indirection />
-                <Indirection />
+                <Indirection>
+                  <BadRender />
+                </Indirection>
               </Indirection>
             </Indirection>
-          </Indirection>
-        </ErrorBoundary>,
+          </ErrorBoundary>
+          <Indirection />
+          <Indirection />
+        </>,
       );
     });
 
@@ -384,12 +387,11 @@ describe('ReactIncrementalErrorHandling', () => {
     // Render the bad component asynchronously
     await waitFor(['Parent', 'BadRender']);
 
-    // Finish the rest of the async work
-    await waitFor(['Sibling']);
-
-    // Old scheduler renders, commits, and throws synchronously
+    // The work loop unwound to the nearest error boundary. React will try
+    // to render one more time, synchronously. Flush just one unit of work to
+    // demonstrate that this render is synchronous.
     expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
-    assertLog(['Parent', 'BadRender', 'Sibling', 'commit']);
+    assertLog(['Parent', 'BadRender', 'commit']);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
@@ -435,16 +437,12 @@ describe('ReactIncrementalErrorHandling', () => {
       // The render expired, but we shouldn't throw out the partial work.
       // Finish the current level.
       'Oops',
-      'C',
-      'D',
 
       // Since the error occurred during a partially concurrent render, we should
       // retry one more time, synchronously.
       'A',
       'B',
       'Oops',
-      'C',
-      'D',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -1571,14 +1569,10 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (try)',
       'throw',
       // Continue rendering siblings after BadRender throws
-      'BadRenderSibling',
-      'BadRenderSibling',
 
       // React retries one more time
       'ErrorBoundary (try)',
       'throw',
-      'BadRenderSibling',
-      'BadRenderSibling',
 
       // Errored again on retry. Now handle it.
       'componentDidCatch',

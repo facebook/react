@@ -208,19 +208,19 @@ describe('ReactCache', () => {
         unstable_isConcurrent: true,
       },
     );
-    await waitForAll([
-      'Suspend! [1]',
-      'Suspend! [2]',
-      'Suspend! [3]',
-      'Loading...',
-    ]);
+    await waitForAll(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
-    assertLog([
-      'Promise resolved [1]',
-      'Promise resolved [2]',
-      'Promise resolved [3]',
-    ]);
+    assertLog(['Promise resolved [1]']);
+    await waitForAll([1, 'Suspend! [2]']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [2]']);
+    await waitForAll([1, 2, 'Suspend! [3]']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [3]']);
     await waitForAll([1, 2, 3]);
+
     expect(root).toMatchRenderedOutput('123');
 
     // Render 1, 4, 5
@@ -232,10 +232,16 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    await waitForAll([1, 'Suspend! [4]', 'Suspend! [5]', 'Loading...']);
+    await waitForAll([1, 'Suspend! [4]', 'Loading...']);
+
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [4]', 'Promise resolved [5]']);
+    assertLog(['Promise resolved [4]']);
+    await waitForAll([1, 4, 'Suspend! [5]', 'Loading...']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [5]']);
     await waitForAll([1, 4, 5]);
+
     expect(root).toMatchRenderedOutput('145');
 
     // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
@@ -254,11 +260,14 @@ describe('ReactCache', () => {
       1,
       // 2 and 3 suspend because they were evicted from the cache
       'Suspend! [2]',
-      'Suspend! [3]',
       'Loading...',
     ]);
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]', 'Promise resolved [3]']);
+    assertLog(['Promise resolved [2]']);
+    await waitForAll([1, 2, 'Suspend! [3]', 'Loading...']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [3]']);
     await waitForAll([1, 2, 3]);
     expect(root).toMatchRenderedOutput('123');
   });

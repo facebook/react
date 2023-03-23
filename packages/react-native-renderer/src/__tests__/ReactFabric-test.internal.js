@@ -16,7 +16,7 @@ let createReactNativeComponentClass;
 let StrictMode;
 let act;
 let getNativeTagFromPublicInstance;
-let getInternalInstanceHandleFromPublicInstance;
+let getNodeFromPublicInstance;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -43,9 +43,9 @@ describe('ReactFabric', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
     getNativeTagFromPublicInstance =
-      require('../ReactFabricPublicInstanceUtils').getNativeTagFromPublicInstance;
-    getInternalInstanceHandleFromPublicInstance =
-      require('../ReactFabricPublicInstanceUtils').getInternalInstanceHandleFromPublicInstance;
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNativeTagFromPublicInstance;
+    getNodeFromPublicInstance =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNodeFromPublicInstance;
 
     act = require('internal-test-utils').act;
   });
@@ -1032,10 +1032,7 @@ describe('ReactFabric', () => {
       nativeFabricUIManager.createNode.mock.results[0].value;
     expect(expectedShadowNode).toEqual(expect.any(Object));
 
-    const internalInstanceHandle =
-      getInternalInstanceHandleFromPublicInstance(viewRef);
-    expect(
-      ReactFabric.getNodeFromInternalInstanceHandle(internalInstanceHandle),
-    ).toBe(expectedShadowNode);
+    const node = getNodeFromPublicInstance(viewRef);
+    expect(node).toBe(expectedShadowNode);
   });
 });

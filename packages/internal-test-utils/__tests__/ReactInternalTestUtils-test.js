@@ -99,13 +99,9 @@ describe('ReactInternalTestUtils', () => {
     assertLog([
       'A',
       'B',
-      'C',
-      'D',
       // React will try one more time before giving up.
       'A',
       'B',
-      'C',
-      'D',
     ]);
   });
 

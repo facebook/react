@@ -37,7 +37,7 @@ describe('created with ReactFabric called with ReactNative', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
     getNativeTagFromPublicInstance =
-      require('../ReactFabricPublicInstanceUtils').getNativeTagFromPublicInstance;
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNativeTagFromPublicInstance;
   });
 
   it('find Fabric instances with the RN renderer', () => {

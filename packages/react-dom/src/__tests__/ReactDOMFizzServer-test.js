@@ -2949,9 +2949,6 @@ describe('ReactDOMFizzServer', () => {
     // blocking the main thread.
     shouldThrow = false;
     await waitForAll([
-      // Finish initial render attempt
-      'B',
-
       // Render again, synchronously
       'A',
       'B',
@@ -3866,8 +3863,6 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([
         'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
 
@@ -3902,32 +3897,32 @@ describe('ReactDOMFizzServer', () => {
 
   it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
-    let shouldThrow = true;
 
-    function ThrowUntilOnClient({children}) {
-      if (isClient && shouldThrow) {
-        throw new Error('uh oh');
-      }
+    function ThrowWhenHydrating({children}) {
+      // This is a trick to only throw if we're hydrating, because
+      // useSyncExternalStore calls getServerSnapshot instead of the regular
+      // getSnapshot in that case.
+      useSyncExternalStore(
+        () => {},
+        t => t,
+        () => {
+          if (isClient) {
+            throw new Error('uh oh');
+          }
+        },
+      );
       return children;
-    }
-
-    function StopThrowingOnClient() {
-      if (isClient) {
-        shouldThrow = false;
-      }
-      return null;
     }
 
     const App = () => {
       return (
         <div>
           <Suspense fallback={<h1>Loading...</h1>}>
-            <ThrowUntilOnClient>
+            <ThrowWhenHydrating>
               <h1>one</h1>
-            </ThrowUntilOnClient>
+            </ThrowWhenHydrating>
             <h2>two</h2>
             <h3>{isClient ? 'five' : 'three'}</h3>
-            <StopThrowingOnClient />
           </Suspense>
         </div>
       );
@@ -3955,8 +3950,6 @@ describe('ReactDOMFizzServer', () => {
     });
     await waitForAll([
       'Logged recoverable error: uh oh',
-      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
     ]);
 
@@ -3986,37 +3979,37 @@ describe('ReactDOMFizzServer', () => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
     let isClient = false;
-    let shouldThrow = true;
 
-    function ThrowUntilOnClient({children, message}) {
-      if (isClient && shouldThrow) {
-        Scheduler.log('throwing: ' + message);
-        throw new Error(message);
-      }
+    function ThrowWhenHydrating({children, message}) {
+      // This is a trick to only throw if we're hydrating, because
+      // useSyncExternalStore calls getServerSnapshot instead of the regular
+      // getSnapshot in that case.
+      useSyncExternalStore(
+        () => {},
+        t => t,
+        () => {
+          if (isClient) {
+            Scheduler.log('throwing: ' + message);
+            throw new Error(message);
+          }
+        },
+      );
       return children;
-    }
-
-    function StopThrowingOnClient() {
-      if (isClient) {
-        shouldThrow = false;
-      }
-      return null;
     }
 
     const App = () => {
       return (
         <div>
           <Suspense fallback={<h1>Loading...</h1>}>
-            <ThrowUntilOnClient message="first error">
+            <ThrowWhenHydrating message="first error">
               <h1>one</h1>
-            </ThrowUntilOnClient>
-            <ThrowUntilOnClient message="second error">
+            </ThrowWhenHydrating>
+            <ThrowWhenHydrating message="second error">
               <h2>two</h2>
-            </ThrowUntilOnClient>
-            <ThrowUntilOnClient message="third error">
+            </ThrowWhenHydrating>
+            <ThrowWhenHydrating message="third error">
               <h3>three</h3>
-            </ThrowUntilOnClient>
-            <StopThrowingOnClient />
+            </ThrowWhenHydrating>
           </Suspense>
         </div>
       );
@@ -4047,14 +4040,10 @@ describe('ReactDOMFizzServer', () => {
         'throwing: first error',
         // this repeated first error is the invokeGuardedCallback throw
         'throwing: first error',
-        // these are actually thrown during render but no iGC repeat and no queueing as hydration errors
-        'throwing: second error',
-        'throwing: third error',
-        // all hydration errors are still queued
+
+        // onRecoverableError because the UI recovered without surfacing the
+        // error to the user.
         'Logged recoverable error: first error',
-        'Logged recoverable error: second error',
-        'Logged recoverable error: third error',
-        // other recoverable errors are queued as hydration errors
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
       // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
@@ -4081,6 +4070,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
+  // @gate __DEV__
   it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
@@ -4095,7 +4085,6 @@ describe('ReactDOMFizzServer', () => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
     let isClient = false;
-    let shouldThrow = true;
     let promise = null;
     let unsuspend = null;
     let isResolved = false;
@@ -4116,19 +4105,21 @@ describe('ReactDOMFizzServer', () => {
       return null;
     }
 
-    function ThrowUntilOnClient({children, message}) {
-      if (isClient && shouldThrow) {
-        Scheduler.log('throwing: ' + message);
-        throw new Error(message);
-      }
+    function ThrowWhenHydrating({children, message}) {
+      // This is a trick to only throw if we're hydrating, because
+      // useSyncExternalStore calls getServerSnapshot instead of the regular
+      // getSnapshot in that case.
+      useSyncExternalStore(
+        () => {},
+        t => t,
+        () => {
+          if (isClient) {
+            Scheduler.log('throwing: ' + message);
+            throw new Error(message);
+          }
+        },
+      );
       return children;
-    }
-
-    function StopThrowingOnClient() {
-      if (isClient) {
-        shouldThrow = false;
-      }
-      return null;
     }
 
     const App = () => {
@@ -4136,16 +4127,15 @@ describe('ReactDOMFizzServer', () => {
         <div>
           <Suspense fallback={<h1>Loading...</h1>}>
             <ComponentThatSuspendsOnClient />
-            <ThrowUntilOnClient message="first error">
+            <ThrowWhenHydrating message="first error">
               <h1>one</h1>
-            </ThrowUntilOnClient>
-            <ThrowUntilOnClient message="second error">
+            </ThrowWhenHydrating>
+            <ThrowWhenHydrating message="second error">
               <h2>two</h2>
-            </ThrowUntilOnClient>
-            <ThrowUntilOnClient message="third error">
+            </ThrowWhenHydrating>
+            <ThrowWhenHydrating message="third error">
               <h3>three</h3>
-            </ThrowUntilOnClient>
-            <StopThrowingOnClient />
+            </ThrowWhenHydrating>
           </Suspense>
         </div>
       );
@@ -4172,15 +4162,7 @@ describe('ReactDOMFizzServer', () => {
           Scheduler.log('Logged recoverable error: ' + error.message);
         },
       });
-      await waitForAll([
-        'suspending',
-        'throwing: first error',
-        // There is no repeated first error because we already suspended and no
-        // invokeGuardedCallback is used if we are in dev
-        // or in prod there is just never an invokeGuardedCallback
-        'throwing: second error',
-        'throwing: third error',
-      ]);
+      await waitForAll(['suspending']);
       expect(mockError.mock.calls).toEqual([]);
 
       expect(getVisibleChildren(container)).toEqual(
@@ -4191,18 +4173,31 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
       await unsuspend();
-      // Since our client components only throw on the very first render there are no
-      // new throws in this pass
-      await waitForAll([]);
-
-      expect(mockError.mock.calls).toEqual([]);
+      await waitForAll([
+        'throwing: first error',
+        'throwing: first error',
+        'Logged recoverable error: first error',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
     } finally {
       console.error = originalConsoleError;
     }
   });
 
   // @gate __DEV__
-  it('suspending after erroring will cause errors previously queued to be silenced until the boundary resolves', async () => {
+  it('(outdated behavior) suspending after erroring will cause errors previously queued to be silenced until the boundary resolves', async () => {
+    // NOTE: This test was originally written to test a scenario that doesn't happen
+    // anymore. If something errors during hydration, we immediately unwind the
+    // stack and revert to client rendering. I've kept the test around just to
+    // demonstrate what actually happens in this sequence of events.
+
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4216,7 +4211,6 @@ describe('ReactDOMFizzServer', () => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
     let isClient = false;
-    let shouldThrow = true;
     let promise = null;
     let unsuspend = null;
     let isResolved = false;
@@ -4237,36 +4231,37 @@ describe('ReactDOMFizzServer', () => {
       return null;
     }
 
-    function ThrowUntilOnClient({children, message}) {
-      if (isClient && shouldThrow) {
-        Scheduler.log('throwing: ' + message);
-        throw new Error(message);
-      }
+    function ThrowWhenHydrating({children, message}) {
+      // This is a trick to only throw if we're hydrating, because
+      // useSyncExternalStore calls getServerSnapshot instead of the regular
+      // getSnapshot in that case.
+      useSyncExternalStore(
+        () => {},
+        t => t,
+        () => {
+          if (isClient) {
+            Scheduler.log('throwing: ' + message);
+            throw new Error(message);
+          }
+        },
+      );
       return children;
-    }
-
-    function StopThrowingOnClient() {
-      if (isClient) {
-        shouldThrow = false;
-      }
-      return null;
     }
 
     const App = () => {
       return (
         <div>
           <Suspense fallback={<h1>Loading...</h1>}>
-            <ThrowUntilOnClient message="first error">
+            <ThrowWhenHydrating message="first error">
               <h1>one</h1>
-            </ThrowUntilOnClient>
-            <ThrowUntilOnClient message="second error">
+            </ThrowWhenHydrating>
+            <ThrowWhenHydrating message="second error">
               <h2>two</h2>
-            </ThrowUntilOnClient>
+            </ThrowWhenHydrating>
             <ComponentThatSuspendsOnClient />
-            <ThrowUntilOnClient message="third error">
+            <ThrowWhenHydrating message="third error">
               <h3>three</h3>
-            </ThrowUntilOnClient>
-            <StopThrowingOnClient />
+            </ThrowWhenHydrating>
           </Suspense>
         </div>
       );
@@ -4297,9 +4292,9 @@ describe('ReactDOMFizzServer', () => {
         'throwing: first error',
         // duplicate because first error is re-done in invokeGuardedCallback
         'throwing: first error',
-        'throwing: second error',
         'suspending',
-        'throwing: third error',
+        'Logged recoverable error: first error',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
       // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
       // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
@@ -4312,9 +4307,7 @@ describe('ReactDOMFizzServer', () => {
 
       expect(getVisibleChildren(container)).toEqual(
         <div>
-          <h1>one</h1>
-          <h2>two</h2>
-          <h3>three</h3>
+          <h1>Loading...</h1>
         </div>,
       );
       await unsuspend();
@@ -4322,6 +4315,14 @@ describe('ReactDOMFizzServer', () => {
       // new throws in this pass
       await waitForAll([]);
       expect(mockError.mock.calls).toEqual([]);
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
     } finally {
       console.error = originalConsoleError;
     }

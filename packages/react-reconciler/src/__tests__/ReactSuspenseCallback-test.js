@@ -126,7 +126,7 @@ describe('ReactSuspense', () => {
     ReactNoop.render(element);
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
-    expect(ops).toEqual([new Set([promise1, promise2])]);
+    expect(ops).toEqual([new Set([promise1])]);
     ops = [];
 
     await resolve1();

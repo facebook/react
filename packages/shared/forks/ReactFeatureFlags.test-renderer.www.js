@@ -33,6 +33,7 @@ export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = true;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const revertRemovalOfSiblingPrerendering = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = true;
