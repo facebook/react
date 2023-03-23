@@ -16,6 +16,7 @@ type __MeasureInWindowOnSuccessCallback = any;
 type __MeasureLayoutOnSuccessCallback = any;
 type __ReactNativeBaseComponentViewConfig = any;
 type __ViewConfigGetter = any;
+type __ViewConfig = any;
 
 // libdefs cannot actually import. This is supposed to be the type imported
 // from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
@@ -143,6 +144,18 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
+  declare export opaque type PublicInstance;
+  declare export function getNodeFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): Object;
+  declare export function getNativeTagFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): number;
+  declare export function createPublicInstance(
+    tag: number,
+    viewConfig: __ViewConfig,
+    internalInstanceHandle: mixed,
+  ): PublicInstance;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {

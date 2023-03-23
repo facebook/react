@@ -1607,13 +1607,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML;
-    expect(() => {
-      finalHTML = ReactDOMServer.renderToString(<App />);
-    }).toErrorDev([
-      'useLayoutEffect does nothing on the server',
-      'useLayoutEffect does nothing on the server',
-    ]);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     assertLog(['App', 'A', 'B']);
 

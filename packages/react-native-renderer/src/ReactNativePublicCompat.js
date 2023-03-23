@@ -14,6 +14,8 @@ import type {ElementRef, ElementType} from 'react';
 import {
   UIManager,
   legacySendAccessibilityEvent,
+  getNodeFromPublicInstance,
+  getNativeTagFromPublicInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {
@@ -22,11 +24,6 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-
-import {
-  getNodeFromPublicInstance,
-  getNativeTagFromPublicInstance,
-} from './ReactFabricPublicInstanceUtils';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -83,6 +80,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
 
   // findHostInstance handles legacy vs. Fabric differences correctly
   // $FlowFixMe[incompatible-exact] we need to fix the definition of `HostComponent` to use NativeMethods as an interface, not as a type.
+  // $FlowFixMe[incompatible-return]
   return hostInstance;
 }
 
@@ -147,9 +145,8 @@ export function findNodeHandle(componentOrHandle: any): ?number {
     return hostInstance;
   }
 
-  // $FlowFixMe[prop-missing] For compatibility with legacy renderer instances
+  // $FlowFixMe[incompatible-type] For compatibility with legacy renderer instances
   if (hostInstance._nativeTag != null) {
-    // $FlowFixMe[incompatible-return]
     return hostInstance._nativeTag;
   }
 

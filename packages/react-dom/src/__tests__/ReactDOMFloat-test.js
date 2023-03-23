@@ -5617,7 +5617,7 @@ background-color: green;
       ]);
     });
 
-    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
+    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = renderToPipeableStream(
