@@ -3189,6 +3189,7 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
   // tasks to wait on.
   if (state.count > 0) {
     return commit => {
+      unsuspendAfterTimeout(state);
       state.unsuspend = commit;
       // In theory we don't need to bind this because we should always cancel
       // before starting a new suspendedState
@@ -3196,6 +3197,19 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
     };
   }
   return null;
+}
+
+function unsuspendAfterTimeout(state: SuspendedState) {
+  setTimeout(() => {
+    if (state.stylesheets) {
+      insertSuspendedStylesheets(state, state.stylesheets);
+    }
+    if (state.unsuspend) {
+      const unsuspend = state.unsuspend;
+      state.unsuspend = null;
+      unsuspend();
+    }
+  }, 500);
 }
 
 function onUnsuspend(this: SuspendedState) {

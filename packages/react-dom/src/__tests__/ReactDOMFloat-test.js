@@ -3016,6 +3016,59 @@ body {
     );
   });
 
+  it('can unsuspend after a timeout even if some assets never load', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+    root.render(<App />);
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello
+          <link rel="stylesheet" href="foo" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    jest.advanceTimersByTime(1000);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    // We will load these after the commit finishes to ensure nothing errors and nothing new inserts
+    loadPreloads(['foo']);
+    loadStylesheets(['foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
