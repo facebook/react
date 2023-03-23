@@ -1968,6 +1968,7 @@ var suspenseHandlerStackCursor = createCursor(null),
   shellBoundary = null;
 function pushPrimaryTreeSuspenseHandler(handler) {
   var current = handler.alternate;
+  push(suspenseStackCursor, suspenseStackCursor.current & 1);
   push(suspenseHandlerStackCursor, handler);
   null === shellBoundary &&
     (null === current || null !== currentTreeHiddenStackCursor.current
@@ -1976,20 +1977,26 @@ function pushPrimaryTreeSuspenseHandler(handler) {
 }
 function pushOffscreenSuspenseHandler(fiber) {
   if (22 === fiber.tag) {
-    if ((push(suspenseHandlerStackCursor, fiber), null === shellBoundary)) {
+    if (
+      (push(suspenseStackCursor, suspenseStackCursor.current),
+      push(suspenseHandlerStackCursor, fiber),
+      null === shellBoundary)
+    ) {
       var current = fiber.alternate;
       null !== current &&
         null !== current.memoizedState &&
         (shellBoundary = fiber);
     }
-  } else reuseSuspenseHandlerOnStack();
+  } else reuseSuspenseHandlerOnStack(fiber);
 }
 function reuseSuspenseHandlerOnStack() {
+  push(suspenseStackCursor, suspenseStackCursor.current);
   push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function popSuspenseHandler(fiber) {
   pop(suspenseHandlerStackCursor);
   shellBoundary === fiber && (shellBoundary = null);
+  pop(suspenseStackCursor);
 }
 var suspenseStackCursor = createCursor(0);
 function findFirstSuspended(row) {
@@ -3300,11 +3307,11 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     null !== prevState
       ? (pushTransition(workInProgress, prevState.cachePool),
         pushHiddenContext(workInProgress, prevState),
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (workInProgress.memoizedState = null))
       : (null !== current && pushTransition(workInProgress, null),
         reuseHiddenContextOnStack(),
-        reuseSuspenseHandlerOnStack());
+        reuseSuspenseHandlerOnStack(workInProgress));
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -3663,7 +3670,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     current = nextProps.fallback;
     if (showFallback)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (nextProps = workInProgress.mode),
         (showFallback = workInProgress.child),
         (didSuspend = { mode: "hidden", children: didSuspend }),
@@ -3714,7 +3721,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
   }
   if (showFallback) {
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     showFallback = nextProps.fallback;
     didSuspend = workInProgress.mode;
     JSCompiler_temp = current.child;
@@ -3845,12 +3852,12 @@ function updateDehydratedSuspenseComponent(
       );
     if (null !== workInProgress.memoizedState)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (workInProgress.child = current.child),
         (workInProgress.flags |= 128),
         null
       );
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     suspenseState = nextProps.fallback;
     didSuspend = workInProgress.mode;
     nextProps = createFiberFromOffscreen(
@@ -8983,19 +8990,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1061 = {
+var devToolsConfig$jscomp$inline_1072 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-afb3d51dc-20230322",
+  version: "18.3.0-next-51a7c45f8-20230322",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1247 = {
-  bundleType: devToolsConfig$jscomp$inline_1061.bundleType,
-  version: devToolsConfig$jscomp$inline_1061.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1061.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1061.rendererConfig,
+var internals$jscomp$inline_1258 = {
+  bundleType: devToolsConfig$jscomp$inline_1072.bundleType,
+  version: devToolsConfig$jscomp$inline_1072.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1072.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1072.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9012,26 +9019,26 @@ var internals$jscomp$inline_1247 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1061.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1072.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-afb3d51dc-20230322"
+  reconcilerVersion: "18.3.0-next-51a7c45f8-20230322"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1248 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1259 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1248.isDisabled &&
-    hook$jscomp$inline_1248.supportsFiber
+    !hook$jscomp$inline_1259.isDisabled &&
+    hook$jscomp$inline_1259.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1248.inject(
-        internals$jscomp$inline_1247
+      (rendererID = hook$jscomp$inline_1259.inject(
+        internals$jscomp$inline_1258
       )),
-        (injectedHook = hook$jscomp$inline_1248);
+        (injectedHook = hook$jscomp$inline_1259);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

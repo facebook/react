@@ -5886,6 +5886,13 @@ function getShellBoundary() {
 function pushPrimaryTreeSuspenseHandler(handler) {
   // TODO: Pass as argument
   var current = handler.alternate;
+  // propagated a single level. For example, when ForceSuspenseFallback is set,
+  // it should only force the nearest Suspense boundary into fallback mode.
+
+  pushSuspenseListContext(
+    handler,
+    setDefaultShallowSuspenseListContext(suspenseStackCursor.current)
+  ); // Experimental feature: Some Suspense boundaries are marked as having an
   // to push a nested Suspense handler, because it will get replaced by the
   // outer fallback, anyway. Consider this as a future optimization.
 
@@ -5913,6 +5920,11 @@ function pushFallbackTreeSuspenseHandler(fiber) {
 }
 function pushOffscreenSuspenseHandler(fiber) {
   if (fiber.tag === OffscreenComponent) {
+    // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
+    // Reuse the current value on the stack.
+    // TODO: We can avoid needing to push here by by forking popSuspenseHandler
+    // into separate functions for Suspense and Offscreen.
+    pushSuspenseListContext(fiber, suspenseStackCursor.current);
     push(suspenseHandlerStackCursor, fiber, fiber);
 
     if (shellBoundary !== null);
@@ -5935,6 +5947,7 @@ function pushOffscreenSuspenseHandler(fiber) {
   }
 }
 function reuseSuspenseHandlerOnStack(fiber) {
+  pushSuspenseListContext(fiber, suspenseStackCursor.current);
   push(suspenseHandlerStackCursor, getSuspenseHandler(), fiber);
 }
 function getSuspenseHandler() {
@@ -5947,6 +5960,8 @@ function popSuspenseHandler(fiber) {
     // Popping back into the shell.
     shellBoundary = null;
   }
+
+  popSuspenseListContext(fiber);
 } // SuspenseList context
 // TODO: Move to a separate module? We may change the SuspenseList
 // implementation to hide/show in the commit phase, anyway.
@@ -12176,6 +12191,8 @@ function shouldRemainOnFallback(current, workInProgress, renderLanes) {
   // If we're already showing a fallback, there are cases where we need to
   // remain on that fallback regardless of whether the content has resolved.
   // For example, SuspenseList coordinates when nested content appears.
+  // TODO: For compatibility with offscreen prerendering, this should also check
+  // whether the current fiber (if it exists) was visible in the previous tree.
   if (current !== null) {
     var suspenseState = current.memoizedState;
 
@@ -23632,7 +23649,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-afb3d51dc-20230322";
+var ReactVersion = "18.3.0-next-51a7c45f8-20230322";
 
 // Might add PROFILE later.
 

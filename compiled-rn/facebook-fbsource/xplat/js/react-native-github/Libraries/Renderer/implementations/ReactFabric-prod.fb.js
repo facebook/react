@@ -3140,6 +3140,7 @@ var suspenseHandlerStackCursor = createCursor(null),
   shellBoundary = null;
 function pushPrimaryTreeSuspenseHandler(handler) {
   var current = handler.alternate;
+  push(suspenseStackCursor, suspenseStackCursor.current & 1);
   push(suspenseHandlerStackCursor, handler);
   null === shellBoundary &&
     (null === current || null !== currentTreeHiddenStackCursor.current
@@ -3148,20 +3149,26 @@ function pushPrimaryTreeSuspenseHandler(handler) {
 }
 function pushOffscreenSuspenseHandler(fiber) {
   if (22 === fiber.tag) {
-    if ((push(suspenseHandlerStackCursor, fiber), null === shellBoundary)) {
+    if (
+      (push(suspenseStackCursor, suspenseStackCursor.current),
+      push(suspenseHandlerStackCursor, fiber),
+      null === shellBoundary)
+    ) {
       var current = fiber.alternate;
       null !== current &&
         null !== current.memoizedState &&
         (shellBoundary = fiber);
     }
-  } else reuseSuspenseHandlerOnStack();
+  } else reuseSuspenseHandlerOnStack(fiber);
 }
 function reuseSuspenseHandlerOnStack() {
+  push(suspenseStackCursor, suspenseStackCursor.current);
   push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function popSuspenseHandler(fiber) {
   pop(suspenseHandlerStackCursor);
   shellBoundary === fiber && (shellBoundary = null);
+  pop(suspenseStackCursor);
 }
 var suspenseStackCursor = createCursor(0);
 function findFirstSuspended(row) {
@@ -4533,9 +4540,10 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
   } else
     null !== prevState
       ? (pushHiddenContext(workInProgress, prevState),
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (workInProgress.memoizedState = null))
-      : (reuseHiddenContextOnStack(), reuseSuspenseHandlerOnStack());
+      : (reuseHiddenContextOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress));
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -4881,7 +4889,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     didSuspend = nextProps.fallback;
     if (showFallback)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (current = mountSuspenseFallbackChildren(
           workInProgress,
           current,
@@ -4895,7 +4903,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     if ("number" === typeof nextProps.unstable_expectedLoadTime)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (current = mountSuspenseFallbackChildren(
           workInProgress,
           current,
@@ -4926,7 +4934,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
   }
   if (showFallback) {
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     showFallback = nextProps.fallback;
     didSuspend = workInProgress.mode;
     JSCompiler_temp = current.child;
@@ -5072,12 +5080,12 @@ function updateDehydratedSuspenseComponent(
       );
     if (null !== workInProgress.memoizedState)
       return (
-        reuseSuspenseHandlerOnStack(),
+        reuseSuspenseHandlerOnStack(workInProgress),
         (workInProgress.child = current.child),
         (workInProgress.flags |= 128),
         null
       );
-    reuseSuspenseHandlerOnStack();
+    reuseSuspenseHandlerOnStack(workInProgress);
     suspenseState = nextProps.fallback;
     didSuspend = workInProgress.mode;
     nextProps = createFiberFromOffscreen(
@@ -9495,10 +9503,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1038 = {
+  devToolsConfig$jscomp$inline_1049 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-afb3d51dc-20230322",
+    version: "18.3.0-next-51a7c45f8-20230322",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9513,11 +9521,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1281 = {
-  bundleType: devToolsConfig$jscomp$inline_1038.bundleType,
-  version: devToolsConfig$jscomp$inline_1038.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1038.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1038.rendererConfig,
+var internals$jscomp$inline_1292 = {
+  bundleType: devToolsConfig$jscomp$inline_1049.bundleType,
+  version: devToolsConfig$jscomp$inline_1049.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1049.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1049.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9533,26 +9541,26 @@ var internals$jscomp$inline_1281 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1038.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1049.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-afb3d51dc-20230322"
+  reconcilerVersion: "18.3.0-next-51a7c45f8-20230322"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1282 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1293 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1282.isDisabled &&
-    hook$jscomp$inline_1282.supportsFiber
+    !hook$jscomp$inline_1293.isDisabled &&
+    hook$jscomp$inline_1293.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1282.inject(
-        internals$jscomp$inline_1281
+      (rendererID = hook$jscomp$inline_1293.inject(
+        internals$jscomp$inline_1292
       )),
-        (injectedHook = hook$jscomp$inline_1282);
+        (injectedHook = hook$jscomp$inline_1293);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
