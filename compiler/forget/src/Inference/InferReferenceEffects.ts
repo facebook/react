@@ -695,29 +695,31 @@ function inferBlock(
           env,
           instrValue.property.identifier.type
         );
-        if (signature !== null) {
-          const effects = getFunctionCallEffects(
-            instrValue,
-            signature,
-            Effect.Mutate
-          );
-          for (const [place, effect] of effects) {
-            state.referenceAndCheckError(place, effect);
+
+        const effects =
+          signature !== null
+            ? getMethodCallEffects(instrValue, signature)
+            : null;
+        for (let i = 0; i < instrValue.args.length; i++) {
+          const arg = instrValue.args[i];
+          const place = arg.kind === "Identifier" ? arg : arg.place;
+          if (effects !== null) {
+            // If effects are inferred for an argument, we should fail invalid
+            // mutating effects
+            state.referenceAndCheckError(place, effects[i]);
+          } else {
+            state.reference(place, Effect.Mutate);
           }
+        }
+        if (signature !== null) {
           state.referenceAndCheckError(
             instrValue.receiver,
             signature.calleeEffect
           );
         } else {
-          for (const arg of instrValue.args) {
-            if (arg.kind === "Identifier") {
-              state.reference(arg, Effect.Mutate);
-            } else {
-              state.reference(arg.place, Effect.Mutate);
-            }
-          }
           state.reference(instrValue.receiver, Effect.Mutate);
         }
+
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Mutate;
@@ -906,49 +908,35 @@ function getFunctionCallSignature(
 }
 
 /**
- * Make a best attempt at matching arguments of a PropertyCall to its FunctionSignature,
- * calling back to `defaultEffect` when we are unable to.
+ * Make a best attempt at matching arguments of a {@link MethodCall} to parameter effects.
+ * defined in its {@link FunctionSignature}.
  *
  * @param fn
  * @param sig
- * @param defaultEffect In the case that inference fails, all arguments will be inferred
- *                      as defaultEffect
- * @returns Inferred effects of function arguments
+ * @returns Inferred effects of function arguments, or null if inference fails.
  */
-function getFunctionCallEffects(
+function getMethodCallEffects(
   fn: MethodCall,
-  sig: FunctionSignature,
-  defaultEffect: Effect
-): Array<[Place, Effect]> {
-  const inferredEffects: Array<[Place, Effect | null]> = fn.args.map(
-    (arg, idx) => {
-      const argPlace = arg.kind === "Identifier" ? arg : arg.place;
-      if (idx < sig.positionalParams.length) {
-        // Only infer effects when there is a direct mapping positional arg --> positional param
-        // Otherwise, return null to indicate inference failed
-        if (arg.kind === "Identifier") {
-          return [argPlace, sig.positionalParams[idx]];
-        } else {
-          return [argPlace, null];
-        }
-      } else if (sig.restParam !== null) {
-        return [argPlace, sig.restParam];
+  sig: FunctionSignature
+): Array<Effect> | null {
+  const results = [];
+  for (let i = 0; i < fn.args.length; i++) {
+    const arg = fn.args[i];
+    if (i < sig.positionalParams.length) {
+      // Only infer effects when there is a direct mapping positional arg --> positional param
+      // Otherwise, return null to indicate inference failed
+      if (arg.kind === "Identifier") {
+        results.push(sig.positionalParams[i]);
       } else {
-        // If there are more arguments than positional arguments, we'll also assume
-        // that inference failed
-        return [argPlace, null];
+        return null;
       }
+    } else if (sig.restParam !== null) {
+      results.push(sig.restParam);
+    } else {
+      // If there are more arguments than positional arguments and a rest parameter is not
+      // defined, we'll also assume that inference failed
+      return null;
     }
-  );
-
-  let results: Array<[Place, Effect]>;
-  if (inferredEffects.some(([_, effect]) => effect === null)) {
-    // If inference failed for any argument, give up on inference for all arguments
-    results = inferredEffects.map(([arg, _]) => {
-      return [arg, defaultEffect];
-    });
-  } else {
-    results = inferredEffects as Array<[Place, Effect]>;
   }
   return results;
 }
