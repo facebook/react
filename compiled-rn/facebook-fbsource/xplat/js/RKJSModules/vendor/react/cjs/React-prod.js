@@ -639,4 +639,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-next-8e17bfd14-20230322";
+exports.version = "18.3.0-next-afb3d51dc-20230322";
