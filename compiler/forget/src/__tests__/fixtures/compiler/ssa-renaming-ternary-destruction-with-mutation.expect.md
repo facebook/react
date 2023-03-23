@@ -1,0 +1,41 @@
+
+## Input
+
+```javascript
+function foo(props) {
+  let x = [];
+  x.push(props.bar);
+  const _ = props.cond
+    ? (({ x } = { x: {} }), ([x] = [[]]), x.push(props.foo))
+    : null;
+  console.log(_);
+  mut(x);
+  return x;
+}
+
+```
+
+## Code
+
+```javascript
+function foo(props) {
+  const $ = React.unstable_useMemoCache(2);
+  const c_0 = $[0] !== props;
+  let x;
+  if (c_0) {
+    x = [];
+    x.push(props.bar);
+    const _ = props.cond ? (([x] = [[]]), x.push(props.foo)) : null;
+
+    console.log(_);
+    mut(x);
+    $[0] = props;
+    $[1] = x;
+  } else {
+    x = $[1];
+  }
+  return x;
+}
+
+```
+      

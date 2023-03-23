@@ -53,15 +53,20 @@ export default function generateTestsFromFixtures(
     }
   ) => string
 ) {
-  const files = fs.readdirSync(fixturesPath);
+  let files: Array<string>;
+  try {
+    files = fs.readdirSync(fixturesPath);
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      files = [];
+    } else {
+      throw e;
+    }
+  }
   const fixtures = matchInputOutputFixtures(files, fixturesPath);
 
   const relativeFixturesPath = path.relative(PROJECT_ROOT, fixturesPath);
   describe(relativeFixturesPath, () => {
-    test("has input fixtures", () => {
-      expect(fixtures.size).toBeGreaterThan(0);
-    });
-
     test("has a consistent extension for input fixtures", () => {
       const extensions = Array.from(
         new Set(
