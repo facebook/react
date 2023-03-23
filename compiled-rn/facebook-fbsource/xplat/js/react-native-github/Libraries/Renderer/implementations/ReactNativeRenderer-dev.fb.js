@@ -27454,7 +27454,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-f77099b6f-20230322";
+var ReactVersion = "18.3.0-next-9c54b29b4-20230322";
 
 function createPortal$1(
   children,
@@ -28031,6 +28031,7 @@ function findHostInstance_DEPRECATED(componentOrHandle) {
     );
   } // findHostInstance handles legacy vs. Fabric differences correctly
   // $FlowFixMe[incompatible-exact] we need to fix the definition of `HostComponent` to use NativeMethods as an interface, not as a type.
+  // $FlowFixMe[incompatible-return]
 
   return hostInstance;
 }
@@ -28074,7 +28075,10 @@ function findNodeHandle(componentOrHandle) {
     return componentOrHandle.canonical.nativeTag;
   } // For compatibility with Fabric public instances
 
-  var nativeTag = getNativeTagFromPublicInstance(componentOrHandle);
+  var nativeTag =
+    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+      componentOrHandle
+    );
 
   if (nativeTag) {
     return nativeTag;
@@ -28091,20 +28095,21 @@ function findNodeHandle(componentOrHandle) {
 
   if (hostInstance == null) {
     return hostInstance;
-  } // $FlowFixMe[prop-missing] For compatibility with legacy renderer instances
+  } // $FlowFixMe[incompatible-type] For compatibility with legacy renderer instances
 
   if (hostInstance._nativeTag != null) {
-    // $FlowFixMe[incompatible-return]
     return hostInstance._nativeTag;
   } // $FlowFixMe[incompatible-call] Necessary when running Flow on the legacy renderer
 
-  return getNativeTagFromPublicInstance(hostInstance);
+  return ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+    hostInstance
+  );
 }
 function dispatchCommand(handle, command, args) {
   var nativeTag =
     handle._nativeTag != null
       ? handle._nativeTag
-      : getNativeTagFromPublicInstance(handle);
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
 
   if (nativeTag == null) {
     {
@@ -28117,7 +28122,7 @@ function dispatchCommand(handle, command, args) {
     return;
   }
 
-  var node = getNodeFromPublicInstance(handle);
+  var node = ReactNativePrivateInterface.getNodeFromPublicInstance(handle);
 
   if (node != null) {
     nativeFabricUIManager.dispatchCommand(node, command, args);
@@ -28133,7 +28138,7 @@ function sendAccessibilityEvent(handle, eventType) {
   var nativeTag =
     handle._nativeTag != null
       ? handle._nativeTag
-      : getNativeTagFromPublicInstance(handle);
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
 
   if (nativeTag == null) {
     {
@@ -28146,7 +28151,7 @@ function sendAccessibilityEvent(handle, eventType) {
     return;
   }
 
-  var node = getNodeFromPublicInstance(handle);
+  var node = ReactNativePrivateInterface.getNodeFromPublicInstance(handle);
 
   if (node != null) {
     nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
@@ -28163,26 +28168,6 @@ function getNodeFromInternalInstanceHandle(internalInstanceHandle) {
     internalInstanceHandle && // $FlowExpectedError[incompatible-return]
     internalInstanceHandle.stateNode && // $FlowExpectedError[incompatible-use]
     internalInstanceHandle.stateNode.node
-  );
-}
-
-/**
- * IMPORTANT: This module is used in Paper and Fabric. It needs to be defined
- * outside of `ReactFabricPublicInstance` because that module requires
- * `nativeFabricUIManager` to be defined in the global scope (which does not
- * happen in Paper).
- */
-
-function getNativeTagFromPublicInstance(publicInstance) {
-  return publicInstance.__nativeTag;
-}
-function getNodeFromPublicInstance(publicInstance) {
-  if (publicInstance.__internalInstanceHandle == null) {
-    return null;
-  }
-
-  return getNodeFromInternalInstanceHandle(
-    publicInstance.__internalInstanceHandle
   );
 }
 
@@ -28348,7 +28333,8 @@ function getInspectorDataForViewAtPoint(
 ) {
   {
     var closestInstance = null;
-    var fabricNode = getNodeFromPublicInstance(inspectedView);
+    var fabricNode =
+      ReactNativePrivateInterface.getNodeFromPublicInstance(inspectedView);
 
     if (fabricNode) {
       // For Fabric we can look up the instance handle directly and measure it.

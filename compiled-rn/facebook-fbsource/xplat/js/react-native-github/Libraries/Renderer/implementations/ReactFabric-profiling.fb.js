@@ -24,9 +24,9 @@ if (
           "use strict";
 require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
 var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
-  React = require("react"),
   dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-  Scheduler = require("scheduler");
+  Scheduler = require("scheduler"),
+  React = require("react");
 function invokeGuardedCallbackImpl(name, func, context) {
   var funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
@@ -1246,367 +1246,181 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               )))));
   return updatePayload;
 }
-var ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_PORTAL_TYPE = Symbol.for("react.portal"),
-  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
-  REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
-  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
-  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
-  REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
-  REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
-  REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
-  REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy");
-Symbol.for("react.scope");
-Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-Symbol.for("react.cache");
-Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
-  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-function getIteratorFn(maybeIterable) {
-  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-  maybeIterable =
-    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-    maybeIterable["@@iterator"];
-  return "function" === typeof maybeIterable ? maybeIterable : null;
+function batchedUpdatesImpl(fn, bookkeeping) {
+  return fn(bookkeeping);
 }
-function getComponentNameFromType(type) {
-  if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
-  if ("string" === typeof type) return type;
-  switch (type) {
-    case REACT_FRAGMENT_TYPE:
-      return "Fragment";
-    case REACT_PORTAL_TYPE:
-      return "Portal";
-    case REACT_PROFILER_TYPE:
-      return "Profiler";
-    case REACT_STRICT_MODE_TYPE:
-      return "StrictMode";
-    case REACT_SUSPENSE_TYPE:
-      return "Suspense";
-    case REACT_SUSPENSE_LIST_TYPE:
-      return "SuspenseList";
+var isInsideEventHandler = !1;
+function batchedUpdates$1(fn, bookkeeping) {
+  if (isInsideEventHandler) return fn(bookkeeping);
+  isInsideEventHandler = !0;
+  try {
+    return batchedUpdatesImpl(fn, bookkeeping);
+  } finally {
+    isInsideEventHandler = !1;
   }
-  if ("object" === typeof type)
-    switch (type.$$typeof) {
-      case REACT_CONTEXT_TYPE:
-        return (type.displayName || "Context") + ".Consumer";
-      case REACT_PROVIDER_TYPE:
-        return (type._context.displayName || "Context") + ".Provider";
-      case REACT_FORWARD_REF_TYPE:
-        var innerType = type.render;
-        type = type.displayName;
-        type ||
-          ((type = innerType.displayName || innerType.name || ""),
-          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
-        return type;
-      case REACT_MEMO_TYPE:
-        return (
-          (innerType = type.displayName || null),
-          null !== innerType
-            ? innerType
-            : getComponentNameFromType(type.type) || "Memo"
+}
+var eventQueue = null;
+function executeDispatchesAndReleaseTopLevel(e) {
+  if (e) {
+    var dispatchListeners = e._dispatchListeners,
+      dispatchInstances = e._dispatchInstances;
+    if (isArrayImpl(dispatchListeners))
+      for (
+        var i = 0;
+        i < dispatchListeners.length && !e.isPropagationStopped();
+        i++
+      )
+        executeDispatch(e, dispatchListeners[i], dispatchInstances[i]);
+    else
+      dispatchListeners &&
+        executeDispatch(e, dispatchListeners, dispatchInstances);
+    e._dispatchListeners = null;
+    e._dispatchInstances = null;
+    e.isPersistent() || e.constructor.release(e);
+  }
+}
+function dispatchEvent(target, topLevelType, nativeEvent) {
+  var eventTarget = null;
+  if (null != target) {
+    var stateNode = target.stateNode;
+    null != stateNode && (eventTarget = getPublicInstance(stateNode));
+  }
+  batchedUpdates$1(function () {
+    var event = { eventName: topLevelType, nativeEvent: nativeEvent };
+    ReactNativePrivateInterface.RawEventEmitter.emit(topLevelType, event);
+    ReactNativePrivateInterface.RawEventEmitter.emit("*", event);
+    event = eventTarget;
+    for (
+      var events = null, legacyPlugins = plugins, i = 0;
+      i < legacyPlugins.length;
+      i++
+    ) {
+      var possiblePlugin = legacyPlugins[i];
+      possiblePlugin &&
+        (possiblePlugin = possiblePlugin.extractEvents(
+          topLevelType,
+          target,
+          nativeEvent,
+          event
+        )) &&
+        (events = accumulateInto(events, possiblePlugin));
+    }
+    event = events;
+    null !== event && (eventQueue = accumulateInto(eventQueue, event));
+    event = eventQueue;
+    eventQueue = null;
+    if (event) {
+      forEachAccumulated(event, executeDispatchesAndReleaseTopLevel);
+      if (eventQueue)
+        throw Error(
+          "processEventQueue(): Additional events were enqueued while processing an event queue. Support for this has not yet been implemented."
         );
-      case REACT_LAZY_TYPE:
-        innerType = type._payload;
-        type = type._init;
-        try {
-          return getComponentNameFromType(type(innerType));
-        } catch (x) {
+      if (hasRethrowError)
+        throw (
+          ((event = rethrowError),
+          (hasRethrowError = !1),
+          (rethrowError = null),
+          event)
+        );
+    }
+  });
+}
+var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+  scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
+  cancelCallback$1 = Scheduler.unstable_cancelCallback,
+  shouldYield = Scheduler.unstable_shouldYield,
+  requestPaint = Scheduler.unstable_requestPaint,
+  now$1 = Scheduler.unstable_now,
+  ImmediatePriority = Scheduler.unstable_ImmediatePriority,
+  UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
+  NormalPriority = Scheduler.unstable_NormalPriority,
+  IdlePriority = Scheduler.unstable_IdlePriority,
+  ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  rendererID = null,
+  injectedHook = null,
+  injectedProfilingHooks = null,
+  isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__;
+function onCommitRoot(root, eventPriority) {
+  if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
+    try {
+      var didError = 128 === (root.current.flags & 128);
+      switch (eventPriority) {
+        case 2:
+          var schedulerPriority = ImmediatePriority;
           break;
-        }
-      case REACT_SERVER_CONTEXT_TYPE:
-        return (type.displayName || type._globalName) + ".Provider";
-    }
-  return null;
-}
-function getComponentNameFromFiber(fiber) {
-  var type = fiber.type;
-  switch (fiber.tag) {
-    case 24:
-      return "Cache";
-    case 9:
-      return (type.displayName || "Context") + ".Consumer";
-    case 10:
-      return (type._context.displayName || "Context") + ".Provider";
-    case 18:
-      return "DehydratedFragment";
-    case 11:
-      return (
-        (fiber = type.render),
-        (fiber = fiber.displayName || fiber.name || ""),
-        type.displayName ||
-          ("" !== fiber ? "ForwardRef(" + fiber + ")" : "ForwardRef")
-      );
-    case 7:
-      return "Fragment";
-    case 26:
-    case 27:
-    case 5:
-      return type;
-    case 4:
-      return "Portal";
-    case 3:
-      return "Root";
-    case 6:
-      return "Text";
-    case 16:
-      return getComponentNameFromType(type);
-    case 8:
-      return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
-    case 22:
-      return "Offscreen";
-    case 12:
-      return "Profiler";
-    case 21:
-      return "Scope";
-    case 13:
-      return "Suspense";
-    case 19:
-      return "SuspenseList";
-    case 25:
-      return "TracingMarker";
-    case 1:
-    case 0:
-    case 17:
-    case 2:
-    case 14:
-    case 15:
-      if ("function" === typeof type)
-        return type.displayName || type.name || null;
-      if ("string" === typeof type) return type;
-      break;
-    case 23:
-      return "LegacyHidden";
-  }
-  return null;
-}
-function getNearestMountedFiber(fiber) {
-  var node = fiber,
-    nearestMounted = fiber;
-  if (fiber.alternate) for (; node.return; ) node = node.return;
-  else {
-    fiber = node;
-    do
-      (node = fiber),
-        0 !== (node.flags & 4098) && (nearestMounted = node.return),
-        (fiber = node.return);
-    while (fiber);
-  }
-  return 3 === node.tag ? nearestMounted : null;
-}
-function assertIsMounted(fiber) {
-  if (getNearestMountedFiber(fiber) !== fiber)
-    throw Error("Unable to find node on an unmounted component.");
-}
-function findCurrentFiberUsingSlowPath(fiber) {
-  var alternate = fiber.alternate;
-  if (!alternate) {
-    alternate = getNearestMountedFiber(fiber);
-    if (null === alternate)
-      throw Error("Unable to find node on an unmounted component.");
-    return alternate !== fiber ? null : fiber;
-  }
-  for (var a = fiber, b = alternate; ; ) {
-    var parentA = a.return;
-    if (null === parentA) break;
-    var parentB = parentA.alternate;
-    if (null === parentB) {
-      b = parentA.return;
-      if (null !== b) {
-        a = b;
-        continue;
-      }
-      break;
-    }
-    if (parentA.child === parentB.child) {
-      for (parentB = parentA.child; parentB; ) {
-        if (parentB === a) return assertIsMounted(parentA), fiber;
-        if (parentB === b) return assertIsMounted(parentA), alternate;
-        parentB = parentB.sibling;
-      }
-      throw Error("Unable to find node on an unmounted component.");
-    }
-    if (a.return !== b.return) (a = parentA), (b = parentB);
-    else {
-      for (var didFindChild = !1, child$2 = parentA.child; child$2; ) {
-        if (child$2 === a) {
-          didFindChild = !0;
-          a = parentA;
-          b = parentB;
+        case 8:
+          schedulerPriority = UserBlockingPriority;
           break;
-        }
-        if (child$2 === b) {
-          didFindChild = !0;
-          b = parentA;
-          a = parentB;
+        case 32:
+          schedulerPriority = NormalPriority;
           break;
-        }
-        child$2 = child$2.sibling;
+        case 536870912:
+          schedulerPriority = IdlePriority;
+          break;
+        default:
+          schedulerPriority = NormalPriority;
       }
-      if (!didFindChild) {
-        for (child$2 = parentB.child; child$2; ) {
-          if (child$2 === a) {
-            didFindChild = !0;
-            a = parentB;
-            b = parentA;
-            break;
-          }
-          if (child$2 === b) {
-            didFindChild = !0;
-            b = parentB;
-            a = parentA;
-            break;
-          }
-          child$2 = child$2.sibling;
-        }
-        if (!didFindChild)
-          throw Error(
-            "Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue."
-          );
-      }
-    }
-    if (a.alternate !== b)
-      throw Error(
-        "Return fibers should always be each others' alternates. This error is likely caused by a bug in React. Please file an issue."
+      injectedHook.onCommitFiberRoot(
+        rendererID,
+        root,
+        schedulerPriority,
+        didError
       );
+    } catch (err) {}
+}
+function injectProfilingHooks(profilingHooks) {
+  injectedProfilingHooks = profilingHooks;
+}
+function getLaneLabelMap() {
+  for (var map = new Map(), lane = 1, index$2 = 0; 31 > index$2; index$2++) {
+    var label = getLabelForLane(lane);
+    map.set(lane, label);
+    lane *= 2;
   }
-  if (3 !== a.tag)
-    throw Error("Unable to find node on an unmounted component.");
-  return a.stateNode.current === a ? fiber : alternate;
+  return map;
 }
-function findCurrentHostFiber(parent) {
-  parent = findCurrentFiberUsingSlowPath(parent);
-  return null !== parent ? findCurrentHostFiberImpl(parent) : null;
+function markCommitStopped() {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markCommitStopped &&
+    injectedProfilingHooks.markCommitStopped();
 }
-function findCurrentHostFiberImpl(node) {
-  var tag = node.tag;
-  if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
-  for (node = node.child; null !== node; ) {
-    tag = findCurrentHostFiberImpl(node);
-    if (null !== tag) return tag;
-    node = node.sibling;
-  }
-  return null;
+function markComponentRenderStarted(fiber) {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markComponentRenderStarted &&
+    injectedProfilingHooks.markComponentRenderStarted(fiber);
 }
-function describeComponentFrame(name, source, ownerName) {
-  source = "";
-  ownerName && (source = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + source;
+function markComponentRenderStopped() {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markComponentRenderStopped &&
+    injectedProfilingHooks.markComponentRenderStopped();
 }
-function describeFunctionComponentFrame(fn, source) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, source, null)
-    : "";
+function markComponentLayoutEffectUnmountStarted(fiber) {
+  null !== injectedProfilingHooks &&
+    "function" ===
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
+    injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty,
-  valueStack = [],
-  index = -1;
-function createCursor(defaultValue) {
-  return { current: defaultValue };
+function markComponentLayoutEffectUnmountStopped() {
+  null !== injectedProfilingHooks &&
+    "function" ===
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
+    injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
 }
-function pop(cursor) {
-  0 > index ||
-    ((cursor.current = valueStack[index]), (valueStack[index] = null), index--);
+function markRenderStarted(lanes) {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markRenderStarted &&
+    injectedProfilingHooks.markRenderStarted(lanes);
 }
-function push(cursor, value) {
-  index++;
-  valueStack[index] = cursor.current;
-  cursor.current = value;
+function markRenderStopped() {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markRenderStopped &&
+    injectedProfilingHooks.markRenderStopped();
 }
-var emptyContextObject = {},
-  contextStackCursor$1 = createCursor(emptyContextObject),
-  didPerformWorkStackCursor = createCursor(!1),
-  previousContext = emptyContextObject;
-function getMaskedContext(workInProgress, unmaskedContext) {
-  var contextTypes = workInProgress.type.contextTypes;
-  if (!contextTypes) return emptyContextObject;
-  var instance = workInProgress.stateNode;
-  if (
-    instance &&
-    instance.__reactInternalMemoizedUnmaskedChildContext === unmaskedContext
-  )
-    return instance.__reactInternalMemoizedMaskedChildContext;
-  var context = {},
-    key;
-  for (key in contextTypes) context[key] = unmaskedContext[key];
-  instance &&
-    ((workInProgress = workInProgress.stateNode),
-    (workInProgress.__reactInternalMemoizedUnmaskedChildContext =
-      unmaskedContext),
-    (workInProgress.__reactInternalMemoizedMaskedChildContext = context));
-  return context;
-}
-function isContextProvider(type) {
-  type = type.childContextTypes;
-  return null !== type && void 0 !== type;
-}
-function popContext() {
-  pop(didPerformWorkStackCursor);
-  pop(contextStackCursor$1);
-}
-function pushTopLevelContextObject(fiber, context, didChange) {
-  if (contextStackCursor$1.current !== emptyContextObject)
-    throw Error(
-      "Unexpected context found on stack. This error is likely caused by a bug in React. Please file an issue."
-    );
-  push(contextStackCursor$1, context);
-  push(didPerformWorkStackCursor, didChange);
-}
-function processChildContext(fiber, type, parentContext) {
-  var instance = fiber.stateNode;
-  type = type.childContextTypes;
-  if ("function" !== typeof instance.getChildContext) return parentContext;
-  instance = instance.getChildContext();
-  for (var contextKey in instance)
-    if (!(contextKey in type))
-      throw Error(
-        (getComponentNameFromFiber(fiber) || "Unknown") +
-          '.getChildContext(): key "' +
-          contextKey +
-          '" is not defined in childContextTypes.'
-      );
-  return assign({}, parentContext, instance);
-}
-function pushContextProvider(workInProgress) {
-  workInProgress =
-    ((workInProgress = workInProgress.stateNode) &&
-      workInProgress.__reactInternalMemoizedMergedChildContext) ||
-    emptyContextObject;
-  previousContext = contextStackCursor$1.current;
-  push(contextStackCursor$1, workInProgress);
-  push(didPerformWorkStackCursor, didPerformWorkStackCursor.current);
-  return !0;
-}
-function invalidateContextProvider(workInProgress, type, didChange) {
-  var instance = workInProgress.stateNode;
-  if (!instance)
-    throw Error(
-      "Expected to have an instance by this point. This error is likely caused by a bug in React. Please file an issue."
-    );
-  didChange
-    ? ((workInProgress = processChildContext(
-        workInProgress,
-        type,
-        previousContext
-      )),
-      (instance.__reactInternalMemoizedMergedChildContext = workInProgress),
-      pop(didPerformWorkStackCursor),
-      pop(contextStackCursor$1),
-      push(contextStackCursor$1, workInProgress))
-    : pop(didPerformWorkStackCursor);
-  push(didPerformWorkStackCursor, didChange);
+function markStateUpdateScheduled(fiber, lane) {
+  null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
+    injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
 }
 var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
   log = Math.log,
@@ -1880,99 +1694,460 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-var scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
-  cancelCallback$1 = Scheduler.unstable_cancelCallback,
-  shouldYield = Scheduler.unstable_shouldYield,
-  requestPaint = Scheduler.unstable_requestPaint,
-  now$1 = Scheduler.unstable_now,
-  ImmediatePriority = Scheduler.unstable_ImmediatePriority,
-  UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
-  NormalPriority = Scheduler.unstable_NormalPriority,
-  IdlePriority = Scheduler.unstable_IdlePriority,
-  rendererID = null,
-  injectedHook = null,
-  injectedProfilingHooks = null,
-  isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__;
-function onCommitRoot(root, eventPriority) {
-  if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
-    try {
-      var didError = 128 === (root.current.flags & 128);
-      switch (eventPriority) {
-        case 2:
-          var schedulerPriority = ImmediatePriority;
-          break;
-        case 8:
-          schedulerPriority = UserBlockingPriority;
-          break;
-        case 32:
-          schedulerPriority = NormalPriority;
-          break;
-        case 536870912:
-          schedulerPriority = IdlePriority;
-          break;
-        default:
-          schedulerPriority = NormalPriority;
-      }
-      injectedHook.onCommitFiberRoot(
-        rendererID,
-        root,
-        schedulerPriority,
-        didError
+function shim() {
+  throw Error(
+    "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
+  );
+}
+var _nativeFabricUIManage = nativeFabricUIManager,
+  createNode = _nativeFabricUIManage.createNode,
+  cloneNode = _nativeFabricUIManage.cloneNode,
+  cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
+  cloneNodeWithNewChildrenAndProps =
+    _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
+  cloneNodeWithNewProps = _nativeFabricUIManage.cloneNodeWithNewProps,
+  createChildNodeSet = _nativeFabricUIManage.createChildSet,
+  appendChildNode = _nativeFabricUIManage.appendChild,
+  appendChildNodeToSet = _nativeFabricUIManage.appendChildToSet,
+  completeRoot = _nativeFabricUIManage.completeRoot,
+  registerEventHandler = _nativeFabricUIManage.registerEventHandler,
+  FabricDiscretePriority = _nativeFabricUIManage.unstable_DiscreteEventPriority,
+  fabricGetCurrentEventPriority =
+    _nativeFabricUIManage.unstable_getCurrentEventPriority,
+  getViewConfigForType =
+    ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
+  nextReactTag = 2;
+registerEventHandler && registerEventHandler(dispatchEvent);
+function createTextInstance(
+  text,
+  rootContainerInstance,
+  hostContext,
+  internalInstanceHandle
+) {
+  hostContext = nextReactTag;
+  nextReactTag += 2;
+  return {
+    node: createNode(
+      hostContext,
+      "RCTRawText",
+      rootContainerInstance,
+      { text: text },
+      internalInstanceHandle
+    )
+  };
+}
+function getPublicInstance(instance) {
+  return null != instance.canonical && null != instance.canonical.publicInstance
+    ? instance.canonical.publicInstance
+    : null != instance._nativeTag
+    ? instance
+    : null;
+}
+var scheduleTimeout = setTimeout,
+  cancelTimeout = clearTimeout;
+function cloneHiddenInstance(instance) {
+  var node = instance.node;
+  var JSCompiler_inline_result = diffProperties(
+    null,
+    emptyObject$1,
+    { style: { display: "none" } },
+    instance.canonical.viewConfig.validAttributes
+  );
+  return {
+    node: cloneNodeWithNewProps(node, JSCompiler_inline_result),
+    canonical: instance.canonical
+  };
+}
+function getInstanceFromNode(node) {
+  return null != node.canonical && null != node.canonical.internalInstanceHandle
+    ? node.canonical.internalInstanceHandle
+    : node;
+}
+getFiberCurrentPropsFromNode$1 = function (instance) {
+  return instance.canonical.currentProps;
+};
+getInstanceFromNode$1 = getInstanceFromNode;
+getNodeFromInstance$1 = function (fiber) {
+  fiber = getPublicInstance(fiber.stateNode);
+  if (null == fiber) throw Error("Could not find host instance from fiber");
+  return fiber;
+};
+ResponderEventPlugin.injection.injectGlobalResponderHandler({
+  onChange: function (from, to, blockNativeResponder) {
+    from &&
+      from.stateNode &&
+      nativeFabricUIManager.setIsJSResponder(
+        from.stateNode.node,
+        !1,
+        blockNativeResponder || !1
       );
-    } catch (err) {}
-}
-function injectProfilingHooks(profilingHooks) {
-  injectedProfilingHooks = profilingHooks;
-}
-function getLaneLabelMap() {
-  for (var map = new Map(), lane = 1, index$11 = 0; 31 > index$11; index$11++) {
-    var label = getLabelForLane(lane);
-    map.set(lane, label);
-    lane *= 2;
+    to &&
+      to.stateNode &&
+      nativeFabricUIManager.setIsJSResponder(
+        to.stateNode.node,
+        !0,
+        blockNativeResponder || !1
+      );
   }
-  return map;
+});
+var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_PORTAL_TYPE = Symbol.for("react.portal"),
+  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
+  REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
+  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
+  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
+  REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
+  REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
+  REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
+  REACT_MEMO_TYPE = Symbol.for("react.memo"),
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
+Symbol.for("react.debug_trace_mode");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+Symbol.for("react.cache");
+Symbol.for("react.tracing_marker");
+var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
+    "react.default_value"
+  ),
+  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+function getIteratorFn(maybeIterable) {
+  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
+  maybeIterable =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable["@@iterator"];
+  return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-function markCommitStopped() {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markCommitStopped &&
-    injectedProfilingHooks.markCommitStopped();
+function getComponentNameFromType(type) {
+  if (null == type) return null;
+  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return "Fragment";
+    case REACT_PORTAL_TYPE:
+      return "Portal";
+    case REACT_PROFILER_TYPE:
+      return "Profiler";
+    case REACT_STRICT_MODE_TYPE:
+      return "StrictMode";
+    case REACT_SUSPENSE_TYPE:
+      return "Suspense";
+    case REACT_SUSPENSE_LIST_TYPE:
+      return "SuspenseList";
+  }
+  if ("object" === typeof type)
+    switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return (type.displayName || "Context") + ".Consumer";
+      case REACT_PROVIDER_TYPE:
+        return (type._context.displayName || "Context") + ".Provider";
+      case REACT_FORWARD_REF_TYPE:
+        var innerType = type.render;
+        type = type.displayName;
+        type ||
+          ((type = innerType.displayName || innerType.name || ""),
+          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
+        return type;
+      case REACT_MEMO_TYPE:
+        return (
+          (innerType = type.displayName || null),
+          null !== innerType
+            ? innerType
+            : getComponentNameFromType(type.type) || "Memo"
+        );
+      case REACT_LAZY_TYPE:
+        innerType = type._payload;
+        type = type._init;
+        try {
+          return getComponentNameFromType(type(innerType));
+        } catch (x) {
+          break;
+        }
+      case REACT_SERVER_CONTEXT_TYPE:
+        return (type.displayName || type._globalName) + ".Provider";
+    }
+  return null;
 }
-function markComponentRenderStarted(fiber) {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markComponentRenderStarted &&
-    injectedProfilingHooks.markComponentRenderStarted(fiber);
+function getComponentNameFromFiber(fiber) {
+  var type = fiber.type;
+  switch (fiber.tag) {
+    case 24:
+      return "Cache";
+    case 9:
+      return (type.displayName || "Context") + ".Consumer";
+    case 10:
+      return (type._context.displayName || "Context") + ".Provider";
+    case 18:
+      return "DehydratedFragment";
+    case 11:
+      return (
+        (fiber = type.render),
+        (fiber = fiber.displayName || fiber.name || ""),
+        type.displayName ||
+          ("" !== fiber ? "ForwardRef(" + fiber + ")" : "ForwardRef")
+      );
+    case 7:
+      return "Fragment";
+    case 26:
+    case 27:
+    case 5:
+      return type;
+    case 4:
+      return "Portal";
+    case 3:
+      return "Root";
+    case 6:
+      return "Text";
+    case 16:
+      return getComponentNameFromType(type);
+    case 8:
+      return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
+    case 22:
+      return "Offscreen";
+    case 12:
+      return "Profiler";
+    case 21:
+      return "Scope";
+    case 13:
+      return "Suspense";
+    case 19:
+      return "SuspenseList";
+    case 25:
+      return "TracingMarker";
+    case 1:
+    case 0:
+    case 17:
+    case 2:
+    case 14:
+    case 15:
+      if ("function" === typeof type)
+        return type.displayName || type.name || null;
+      if ("string" === typeof type) return type;
+      break;
+    case 23:
+      return "LegacyHidden";
+  }
+  return null;
 }
-function markComponentRenderStopped() {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markComponentRenderStopped &&
-    injectedProfilingHooks.markComponentRenderStopped();
+function getNearestMountedFiber(fiber) {
+  var node = fiber,
+    nearestMounted = fiber;
+  if (fiber.alternate) for (; node.return; ) node = node.return;
+  else {
+    fiber = node;
+    do
+      (node = fiber),
+        0 !== (node.flags & 4098) && (nearestMounted = node.return),
+        (fiber = node.return);
+    while (fiber);
+  }
+  return 3 === node.tag ? nearestMounted : null;
 }
-function markComponentLayoutEffectUnmountStarted(fiber) {
-  null !== injectedProfilingHooks &&
-    "function" ===
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
-    injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
+function assertIsMounted(fiber) {
+  if (getNearestMountedFiber(fiber) !== fiber)
+    throw Error("Unable to find node on an unmounted component.");
 }
-function markComponentLayoutEffectUnmountStopped() {
-  null !== injectedProfilingHooks &&
-    "function" ===
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
-    injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
+function findCurrentFiberUsingSlowPath(fiber) {
+  var alternate = fiber.alternate;
+  if (!alternate) {
+    alternate = getNearestMountedFiber(fiber);
+    if (null === alternate)
+      throw Error("Unable to find node on an unmounted component.");
+    return alternate !== fiber ? null : fiber;
+  }
+  for (var a = fiber, b = alternate; ; ) {
+    var parentA = a.return;
+    if (null === parentA) break;
+    var parentB = parentA.alternate;
+    if (null === parentB) {
+      b = parentA.return;
+      if (null !== b) {
+        a = b;
+        continue;
+      }
+      break;
+    }
+    if (parentA.child === parentB.child) {
+      for (parentB = parentA.child; parentB; ) {
+        if (parentB === a) return assertIsMounted(parentA), fiber;
+        if (parentB === b) return assertIsMounted(parentA), alternate;
+        parentB = parentB.sibling;
+      }
+      throw Error("Unable to find node on an unmounted component.");
+    }
+    if (a.return !== b.return) (a = parentA), (b = parentB);
+    else {
+      for (var didFindChild = !1, child$11 = parentA.child; child$11; ) {
+        if (child$11 === a) {
+          didFindChild = !0;
+          a = parentA;
+          b = parentB;
+          break;
+        }
+        if (child$11 === b) {
+          didFindChild = !0;
+          b = parentA;
+          a = parentB;
+          break;
+        }
+        child$11 = child$11.sibling;
+      }
+      if (!didFindChild) {
+        for (child$11 = parentB.child; child$11; ) {
+          if (child$11 === a) {
+            didFindChild = !0;
+            a = parentB;
+            b = parentA;
+            break;
+          }
+          if (child$11 === b) {
+            didFindChild = !0;
+            b = parentB;
+            a = parentA;
+            break;
+          }
+          child$11 = child$11.sibling;
+        }
+        if (!didFindChild)
+          throw Error(
+            "Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue."
+          );
+      }
+    }
+    if (a.alternate !== b)
+      throw Error(
+        "Return fibers should always be each others' alternates. This error is likely caused by a bug in React. Please file an issue."
+      );
+  }
+  if (3 !== a.tag)
+    throw Error("Unable to find node on an unmounted component.");
+  return a.stateNode.current === a ? fiber : alternate;
 }
-function markRenderStarted(lanes) {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markRenderStarted &&
-    injectedProfilingHooks.markRenderStarted(lanes);
+function findCurrentHostFiber(parent) {
+  parent = findCurrentFiberUsingSlowPath(parent);
+  return null !== parent ? findCurrentHostFiberImpl(parent) : null;
 }
-function markRenderStopped() {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markRenderStopped &&
-    injectedProfilingHooks.markRenderStopped();
+function findCurrentHostFiberImpl(node) {
+  var tag = node.tag;
+  if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
+  for (node = node.child; null !== node; ) {
+    tag = findCurrentHostFiberImpl(node);
+    if (null !== tag) return tag;
+    node = node.sibling;
+  }
+  return null;
 }
-function markStateUpdateScheduled(fiber, lane) {
-  null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
-    injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
+function describeComponentFrame(name, source, ownerName) {
+  source = "";
+  ownerName && (source = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + source;
+}
+function describeFunctionComponentFrame(fn, source) {
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, source, null)
+    : "";
+}
+var hasOwnProperty = Object.prototype.hasOwnProperty,
+  valueStack = [],
+  index = -1;
+function createCursor(defaultValue) {
+  return { current: defaultValue };
+}
+function pop(cursor) {
+  0 > index ||
+    ((cursor.current = valueStack[index]), (valueStack[index] = null), index--);
+}
+function push(cursor, value) {
+  index++;
+  valueStack[index] = cursor.current;
+  cursor.current = value;
+}
+var emptyContextObject = {},
+  contextStackCursor$1 = createCursor(emptyContextObject),
+  didPerformWorkStackCursor = createCursor(!1),
+  previousContext = emptyContextObject;
+function getMaskedContext(workInProgress, unmaskedContext) {
+  var contextTypes = workInProgress.type.contextTypes;
+  if (!contextTypes) return emptyContextObject;
+  var instance = workInProgress.stateNode;
+  if (
+    instance &&
+    instance.__reactInternalMemoizedUnmaskedChildContext === unmaskedContext
+  )
+    return instance.__reactInternalMemoizedMaskedChildContext;
+  var context = {},
+    key;
+  for (key in contextTypes) context[key] = unmaskedContext[key];
+  instance &&
+    ((workInProgress = workInProgress.stateNode),
+    (workInProgress.__reactInternalMemoizedUnmaskedChildContext =
+      unmaskedContext),
+    (workInProgress.__reactInternalMemoizedMaskedChildContext = context));
+  return context;
+}
+function isContextProvider(type) {
+  type = type.childContextTypes;
+  return null !== type && void 0 !== type;
+}
+function popContext() {
+  pop(didPerformWorkStackCursor);
+  pop(contextStackCursor$1);
+}
+function pushTopLevelContextObject(fiber, context, didChange) {
+  if (contextStackCursor$1.current !== emptyContextObject)
+    throw Error(
+      "Unexpected context found on stack. This error is likely caused by a bug in React. Please file an issue."
+    );
+  push(contextStackCursor$1, context);
+  push(didPerformWorkStackCursor, didChange);
+}
+function processChildContext(fiber, type, parentContext) {
+  var instance = fiber.stateNode;
+  type = type.childContextTypes;
+  if ("function" !== typeof instance.getChildContext) return parentContext;
+  instance = instance.getChildContext();
+  for (var contextKey in instance)
+    if (!(contextKey in type))
+      throw Error(
+        (getComponentNameFromFiber(fiber) || "Unknown") +
+          '.getChildContext(): key "' +
+          contextKey +
+          '" is not defined in childContextTypes.'
+      );
+  return assign({}, parentContext, instance);
+}
+function pushContextProvider(workInProgress) {
+  workInProgress =
+    ((workInProgress = workInProgress.stateNode) &&
+      workInProgress.__reactInternalMemoizedMergedChildContext) ||
+    emptyContextObject;
+  previousContext = contextStackCursor$1.current;
+  push(contextStackCursor$1, workInProgress);
+  push(didPerformWorkStackCursor, didPerformWorkStackCursor.current);
+  return !0;
+}
+function invalidateContextProvider(workInProgress, type, didChange) {
+  var instance = workInProgress.stateNode;
+  if (!instance)
+    throw Error(
+      "Expected to have an instance by this point. This error is likely caused by a bug in React. Please file an issue."
+    );
+  didChange
+    ? ((workInProgress = processChildContext(
+        workInProgress,
+        type,
+        previousContext
+      )),
+      (instance.__reactInternalMemoizedMergedChildContext = workInProgress),
+      pop(didPerformWorkStackCursor),
+      pop(contextStackCursor$1),
+      push(contextStackCursor$1, workInProgress))
+    : pop(didPerformWorkStackCursor);
+  push(didPerformWorkStackCursor, didChange);
 }
 function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -2431,12 +2606,12 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$1() {}
+function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$1, noop$1), (thenable = index));
+    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2444,7 +2619,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw thenable.reason;
     default:
       "string" === typeof thenable.status
-        ? thenable.then(noop$1, noop$1)
+        ? thenable.then(noop, noop)
         : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
@@ -6035,7 +6210,7 @@ function completeWork(current, workInProgress, renderLanes) {
           recyclableInstance,
           workInProgress
         );
-        recyclableInstance = new ReactFabricHostComponent(
+        recyclableInstance = ReactNativePrivateInterface.createPublicInstance(
           current,
           renderLanes,
           workInProgress
@@ -9881,264 +10056,20 @@ function findNodeHandle(componentOrHandle) {
     null != componentOrHandle.canonical.nativeTag
   )
     return componentOrHandle.canonical.nativeTag;
-  var nativeTag = componentOrHandle.__nativeTag;
+  var nativeTag =
+    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+      componentOrHandle
+    );
   if (nativeTag) return nativeTag;
   componentOrHandle = findHostInstance(componentOrHandle);
   return null == componentOrHandle
     ? componentOrHandle
     : null != componentOrHandle._nativeTag
     ? componentOrHandle._nativeTag
-    : componentOrHandle.__nativeTag;
-}
-function getNodeFromInternalInstanceHandle(internalInstanceHandle) {
-  return (
-    internalInstanceHandle &&
-    internalInstanceHandle.stateNode &&
-    internalInstanceHandle.stateNode.node
-  );
-}
-var _nativeFabricUIManage$1 = nativeFabricUIManager,
-  fabricMeasure = _nativeFabricUIManage$1.measure,
-  fabricMeasureInWindow = _nativeFabricUIManage$1.measureInWindow,
-  fabricMeasureLayout = _nativeFabricUIManage$1.measureLayout,
-  _setNativeProps = _nativeFabricUIManage$1.setNativeProps,
-  fabricGetBoundingClientRect = _nativeFabricUIManage$1.getBoundingClientRect;
-function noop() {}
-var ReactFabricHostComponent = (function () {
-  function ReactFabricHostComponent(tag, viewConfig, internalInstanceHandle) {
-    this.__nativeTag = tag;
-    this._viewConfig = viewConfig;
-    this.__internalInstanceHandle = internalInstanceHandle;
-  }
-  var _proto = ReactFabricHostComponent.prototype;
-  _proto.blur = function () {
-    ReactNativePrivateInterface.TextInputState.blurTextInput(this);
-  };
-  _proto.focus = function () {
-    ReactNativePrivateInterface.TextInputState.focusTextInput(this);
-  };
-  _proto.measure = function (callback) {
-    var node = getNodeFromInternalInstanceHandle(this.__internalInstanceHandle);
-    null != node && fabricMeasure(node, callback);
-  };
-  _proto.measureInWindow = function (callback) {
-    var node = getNodeFromInternalInstanceHandle(this.__internalInstanceHandle);
-    null != node && fabricMeasureInWindow(node, callback);
-  };
-  _proto.measureLayout = function (relativeToNativeNode, onSuccess, onFail) {
-    if (
-      "number" !== typeof relativeToNativeNode &&
-      relativeToNativeNode instanceof ReactFabricHostComponent
-    ) {
-      var toStateNode = getNodeFromInternalInstanceHandle(
-        this.__internalInstanceHandle
+    : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+        componentOrHandle
       );
-      relativeToNativeNode = getNodeFromInternalInstanceHandle(
-        relativeToNativeNode.__internalInstanceHandle
-      );
-      null != toStateNode &&
-        null != relativeToNativeNode &&
-        fabricMeasureLayout(
-          toStateNode,
-          relativeToNativeNode,
-          null != onFail ? onFail : noop,
-          null != onSuccess ? onSuccess : noop
-        );
-    }
-  };
-  _proto.unstable_getBoundingClientRect = function () {
-    var node = getNodeFromInternalInstanceHandle(this.__internalInstanceHandle);
-    return null != node && (node = fabricGetBoundingClientRect(node))
-      ? new DOMRect(node[0], node[1], node[2], node[3])
-      : new DOMRect(0, 0, 0, 0);
-  };
-  _proto.setNativeProps = function (nativeProps) {
-    nativeProps = diffProperties(
-      null,
-      emptyObject$1,
-      nativeProps,
-      this._viewConfig.validAttributes
-    );
-    var node = getNodeFromInternalInstanceHandle(this.__internalInstanceHandle);
-    null != node && null != nativeProps && _setNativeProps(node, nativeProps);
-  };
-  return ReactFabricHostComponent;
-})();
-function batchedUpdatesImpl(fn, bookkeeping) {
-  return fn(bookkeeping);
 }
-var isInsideEventHandler = !1;
-function batchedUpdates(fn, bookkeeping) {
-  if (isInsideEventHandler) return fn(bookkeeping);
-  isInsideEventHandler = !0;
-  try {
-    return batchedUpdatesImpl(fn, bookkeeping);
-  } finally {
-    isInsideEventHandler = !1;
-  }
-}
-var eventQueue = null;
-function executeDispatchesAndReleaseTopLevel(e) {
-  if (e) {
-    var dispatchListeners = e._dispatchListeners,
-      dispatchInstances = e._dispatchInstances;
-    if (isArrayImpl(dispatchListeners))
-      for (
-        var i = 0;
-        i < dispatchListeners.length && !e.isPropagationStopped();
-        i++
-      )
-        executeDispatch(e, dispatchListeners[i], dispatchInstances[i]);
-    else
-      dispatchListeners &&
-        executeDispatch(e, dispatchListeners, dispatchInstances);
-    e._dispatchListeners = null;
-    e._dispatchInstances = null;
-    e.isPersistent() || e.constructor.release(e);
-  }
-}
-function dispatchEvent(target, topLevelType, nativeEvent) {
-  var eventTarget = null;
-  if (null != target) {
-    var stateNode = target.stateNode;
-    null != stateNode && (eventTarget = getPublicInstance(stateNode));
-  }
-  batchedUpdates(function () {
-    var event = { eventName: topLevelType, nativeEvent: nativeEvent };
-    ReactNativePrivateInterface.RawEventEmitter.emit(topLevelType, event);
-    ReactNativePrivateInterface.RawEventEmitter.emit("*", event);
-    event = eventTarget;
-    for (
-      var events = null, legacyPlugins = plugins, i = 0;
-      i < legacyPlugins.length;
-      i++
-    ) {
-      var possiblePlugin = legacyPlugins[i];
-      possiblePlugin &&
-        (possiblePlugin = possiblePlugin.extractEvents(
-          topLevelType,
-          target,
-          nativeEvent,
-          event
-        )) &&
-        (events = accumulateInto(events, possiblePlugin));
-    }
-    event = events;
-    null !== event && (eventQueue = accumulateInto(eventQueue, event));
-    event = eventQueue;
-    eventQueue = null;
-    if (event) {
-      forEachAccumulated(event, executeDispatchesAndReleaseTopLevel);
-      if (eventQueue)
-        throw Error(
-          "processEventQueue(): Additional events were enqueued while processing an event queue. Support for this has not yet been implemented."
-        );
-      if (hasRethrowError)
-        throw (
-          ((event = rethrowError),
-          (hasRethrowError = !1),
-          (rethrowError = null),
-          event)
-        );
-    }
-  });
-}
-function shim() {
-  throw Error(
-    "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
-  );
-}
-var _nativeFabricUIManage = nativeFabricUIManager,
-  createNode = _nativeFabricUIManage.createNode,
-  cloneNode = _nativeFabricUIManage.cloneNode,
-  cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
-  cloneNodeWithNewChildrenAndProps =
-    _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
-  cloneNodeWithNewProps = _nativeFabricUIManage.cloneNodeWithNewProps,
-  createChildNodeSet = _nativeFabricUIManage.createChildSet,
-  appendChildNode = _nativeFabricUIManage.appendChild,
-  appendChildNodeToSet = _nativeFabricUIManage.appendChildToSet,
-  completeRoot = _nativeFabricUIManage.completeRoot,
-  registerEventHandler = _nativeFabricUIManage.registerEventHandler,
-  FabricDiscretePriority = _nativeFabricUIManage.unstable_DiscreteEventPriority,
-  fabricGetCurrentEventPriority =
-    _nativeFabricUIManage.unstable_getCurrentEventPriority,
-  getViewConfigForType =
-    ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
-  nextReactTag = 2;
-registerEventHandler && registerEventHandler(dispatchEvent);
-function createTextInstance(
-  text,
-  rootContainerInstance,
-  hostContext,
-  internalInstanceHandle
-) {
-  hostContext = nextReactTag;
-  nextReactTag += 2;
-  return {
-    node: createNode(
-      hostContext,
-      "RCTRawText",
-      rootContainerInstance,
-      { text: text },
-      internalInstanceHandle
-    )
-  };
-}
-function getPublicInstance(instance) {
-  return null != instance.canonical && null != instance.canonical.publicInstance
-    ? instance.canonical.publicInstance
-    : null != instance._nativeTag
-    ? instance
-    : null;
-}
-var scheduleTimeout = setTimeout,
-  cancelTimeout = clearTimeout;
-function cloneHiddenInstance(instance) {
-  var node = instance.node;
-  var JSCompiler_inline_result = diffProperties(
-    null,
-    emptyObject$1,
-    { style: { display: "none" } },
-    instance.canonical.viewConfig.validAttributes
-  );
-  return {
-    node: cloneNodeWithNewProps(node, JSCompiler_inline_result),
-    canonical: instance.canonical
-  };
-}
-function getInstanceFromNode(node) {
-  return null != node.canonical && null != node.canonical.internalInstanceHandle
-    ? node.canonical.internalInstanceHandle
-    : node;
-}
-getFiberCurrentPropsFromNode$1 = function (instance) {
-  return instance.canonical.currentProps;
-};
-getInstanceFromNode$1 = getInstanceFromNode;
-getNodeFromInstance$1 = function (fiber) {
-  fiber = getPublicInstance(fiber.stateNode);
-  if (null == fiber) throw Error("Could not find host instance from fiber");
-  return fiber;
-};
-ResponderEventPlugin.injection.injectGlobalResponderHandler({
-  onChange: function (from, to, blockNativeResponder) {
-    from &&
-      from.stateNode &&
-      nativeFabricUIManager.setIsJSResponder(
-        from.stateNode.node,
-        !1,
-        blockNativeResponder || !1
-      );
-    to &&
-      to.stateNode &&
-      nativeFabricUIManager.setIsJSResponder(
-        to.stateNode.node,
-        !0,
-        blockNativeResponder || !1
-      );
-  }
-});
 var emptyObject = {};
 function createHierarchy(fiberHierarchy) {
   return fiberHierarchy.map(function (fiber$jscomp$0) {
@@ -10214,7 +10145,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1128 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-f77099b6f-20230322",
+    version: "18.3.0-next-9c54b29b4-20230322",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10269,7 +10200,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-f77099b6f-20230322"
+  reconcilerVersion: "18.3.0-next-9c54b29b4-20230322"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10281,12 +10212,11 @@ exports.createPortal = function (children, containerTag) {
 };
 exports.dispatchCommand = function (handle, command, args) {
   var nativeTag =
-    null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
+    null != handle._nativeTag
+      ? handle._nativeTag
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
   null != nativeTag &&
-    ((handle =
-      null == handle.__internalInstanceHandle
-        ? null
-        : getNodeFromInternalInstanceHandle(handle.__internalInstanceHandle)),
+    ((handle = ReactNativePrivateInterface.getNodeFromPublicInstance(handle)),
     null != handle
       ? nativeFabricUIManager.dispatchCommand(handle, command, args)
       : ReactNativePrivateInterface.UIManager.dispatchViewManagerCommand(
@@ -10338,7 +10268,13 @@ exports.getInspectorDataForInstance = function (closestInstance) {
     source: source
   };
 };
-exports.getNodeFromInternalInstanceHandle = getNodeFromInternalInstanceHandle;
+exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
+  return (
+    internalInstanceHandle &&
+    internalInstanceHandle.stateNode &&
+    internalInstanceHandle.stateNode.node
+  );
+};
 exports.getPublicInstanceFromInternalInstanceHandle = function (
   internalInstanceHandle
 ) {
@@ -10379,12 +10315,11 @@ exports.render = function (element, containerTag, callback, concurrentRoot) {
 };
 exports.sendAccessibilityEvent = function (handle, eventType) {
   var nativeTag =
-    null != handle._nativeTag ? handle._nativeTag : handle.__nativeTag;
+    null != handle._nativeTag
+      ? handle._nativeTag
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
   null != nativeTag &&
-    ((handle =
-      null == handle.__internalInstanceHandle
-        ? null
-        : getNodeFromInternalInstanceHandle(handle.__internalInstanceHandle)),
+    ((handle = ReactNativePrivateInterface.getNodeFromPublicInstance(handle)),
     null != handle
       ? nativeFabricUIManager.sendAccessibilityEvent(handle, eventType)
       : ReactNativePrivateInterface.legacySendAccessibilityEvent(
