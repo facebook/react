@@ -7,7 +7,7 @@ import {
   FunctionType,
   IdentifierId,
   makeIdentifierId,
-  Type,
+  ObjectType,
   ValueKind,
 } from "./HIR";
 import { BUILTIN_HOOKS, Hook } from "./Hooks";
@@ -75,19 +75,23 @@ export class Environment {
     };
   }
 
-  getPropertyType(receiver: Type, property: string): BuiltInType | null {
-    if (receiver.kind === "Object" || receiver.kind === "Function") {
-      const { shapeId } = receiver;
-      if (shapeId !== null) {
-        const shape = BUILTIN_SHAPES.get(shapeId);
-        invariant(
-          shape !== undefined,
-          `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
-        );
-        return shape.properties.get(property) ?? null;
-      }
+  getPropertyType(
+    receiver: ObjectType | FunctionType,
+    property: string
+  ): BuiltInType | null {
+    const { shapeId } = receiver;
+    if (shapeId !== null) {
+      // If an object or function has a shapeId, it must have been assigned
+      // by Forget (and be present in a builtin or user-defined registry)
+      const shape = BUILTIN_SHAPES.get(shapeId);
+      invariant(
+        shape !== undefined,
+        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
+      );
+      return shape.properties.get(property) ?? null;
+    } else {
+      return null;
     }
-    return null;
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {
