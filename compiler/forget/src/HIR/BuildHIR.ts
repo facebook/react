@@ -1744,6 +1744,13 @@ function lowerMemberExpression(
         },
       };
     }
+    if (t.isOptionalMemberExpression(expr)) {
+      builder.errors.push({
+        reason: `(BuildHIR::lowerMemberExpression) Handle computed OptionalMemberExpression`,
+        severity: ErrorSeverity.Todo,
+        nodePath: expr,
+      });
+    }
     const propertyPlace = lowerExpressionToTemporary(builder, property);
     const value: InstructionValue = {
       kind: "ComputedLoad",
