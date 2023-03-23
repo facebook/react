@@ -9,7 +9,8 @@ const __EXPERIMENTAL__ =
 
 const bundleTypes = {
   NODE_ES2015: 'NODE_ES2015',
-  NODE_ESM: 'NODE_ESM',
+  ESM_DEV: 'ESM_DEV',
+  ESM_PROD: 'ESM_PROD',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -32,7 +33,8 @@ const bundleTypes = {
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -258,6 +260,19 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
+  /******* React DOM Fizz Server Edge *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMFizzServerEdge.js',
+    name: 'react-dom-server.edge', // 'node_modules/react/*.js',
+
+    global: 'ReactDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+
   /******* React DOM Fizz Server Bun *******/
   {
     bundleTypes: [BUN_DEV, BUN_PROD],
@@ -290,6 +305,15 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'util', 'async_hooks', 'stream', 'react-dom'],
+  },
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/static.edge',
+    global: 'ReactDOMStatic',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
   },
 
   /******* React DOM Fizz Server External Runtime *******/
@@ -335,12 +359,57 @@ const bundles = [
     wrapWithModuleBoundaries: false,
     externals: ['react', 'util', 'async_hooks', 'react-dom'],
   },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/server.node.unbundled',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/server.edge',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
 
   /******* React Server DOM Webpack Client *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-webpack/client',
+    entry: 'react-server-dom-webpack/client.browser',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.node',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.node.unbundled',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-webpack/client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -360,7 +429,7 @@ const bundles = [
 
   /******* React Server DOM Webpack Node.js Loader *******/
   {
-    bundleTypes: [NODE_ESM],
+    bundleTypes: [ESM_PROD],
     moduleType: RENDERER_UTILS,
     entry: 'react-server-dom-webpack/node-loader',
     global: 'ReactServerWebpackNodeLoader',
@@ -386,7 +455,7 @@ const bundles = [
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/server',
-    global: 'ReactFlightDOMRelayServer', // TODO: Rename to Writer
+    global: 'ReactFlightDOMRelayServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [
@@ -434,7 +503,7 @@ const bundles = [
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
     entry: 'react-server-native-relay',
-    global: 'ReactFlightNativeRelayClient', // TODO: Rename to Reader
+    global: 'ReactFlightNativeRelayClient',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: [
@@ -933,7 +1002,7 @@ const bundles = [
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
   Object.freeze(o);
-  Object.getOwnPropertyNames(o).forEach(function(prop) {
+  Object.getOwnPropertyNames(o).forEach(function (prop) {
     if (
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
@@ -950,7 +1019,7 @@ deepFreeze(bundles);
 deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
-function getOriginalFilename(bundle, bundleType) {
+function getFilename(bundle, bundleType) {
   let name = bundle.name || bundle.entry;
   const globalName = bundle.global;
   // we do this to replace / to -, for react-dom/server
@@ -958,11 +1027,13 @@ function getOriginalFilename(bundle, bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
       return `${name}.js`;
-    case NODE_ESM:
-      return `${name}.js`;
     case BUN_DEV:
       return `${name}.development.js`;
     case BUN_PROD:
+      return `${name}.production.min.js`;
+    case ESM_DEV:
+      return `${name}.development.js`;
+    case ESM_PROD:
       return `${name}.production.min.js`;
     case UMD_DEV:
       return `${name}.development.js`;
@@ -991,23 +1062,6 @@ function getOriginalFilename(bundle, bundleType) {
     case BROWSER_SCRIPT:
       return `${name}.js`;
   }
-}
-
-function getFilename(bundle, bundleType) {
-  const originalFilename = getOriginalFilename(bundle, bundleType);
-  // Ensure .server.js or .client.js is the final suffix.
-  // This is important for the Server tooling convention.
-  if (originalFilename.indexOf('.server.') !== -1) {
-    return originalFilename
-      .replace('.server.', '.')
-      .replace('.js', '.server.js');
-  }
-  if (originalFilename.indexOf('.client.') !== -1) {
-    return originalFilename
-      .replace('.client.', '.')
-      .replace('.js', '.client.js');
-  }
-  return originalFilename;
 }
 
 module.exports = {

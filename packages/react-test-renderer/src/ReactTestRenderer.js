@@ -30,7 +30,7 @@ import {
   FunctionComponent,
   ClassComponent,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   HostText,
@@ -84,7 +84,7 @@ type FindOptions = $Shape<{
 export type Predicate = (node: ReactTestInstance) => ?boolean;
 
 const defaultTestOptions = {
-  createNodeMock: function() {
+  createNodeMock: function () {
     return null;
   },
 };
@@ -133,8 +133,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
-// $FlowFixMe[missing-local-annot]
-function childrenToTree(node) {
+function childrenToTree(node: null | Fiber) {
   if (!node) {
     return null;
   }
@@ -178,7 +177,7 @@ function flatten(arr) {
   return result;
 }
 
-function toTree(node: ?Fiber) {
+function toTree(node: null | Fiber): $FlowFixMe {
   if (node == null) {
     return null;
   }
@@ -204,7 +203,7 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       return {
@@ -315,7 +314,7 @@ class ReactTestInstance {
     const tag = this._fiber.tag;
     if (
       tag === HostComponent ||
-      tag === HostResource ||
+      tag === HostHoistable ||
       tag === HostSingleton
     ) {
       return getPublicInstance(this._fiber.stateNode);
@@ -495,7 +494,7 @@ function create(
     }
   }
   let container = {
-    children: [],
+    children: ([]: Array<Instance | TextInstance>),
     createNodeMock,
     tag: 'CONTAINER',
   };
@@ -592,7 +591,7 @@ function create(
     ({
       configurable: true,
       enumerable: true,
-      get: function() {
+      get: function () {
         if (root === null) {
           throw new Error("Can't access .root on unmounted test renderer");
         }
@@ -615,7 +614,7 @@ function create(
   return entry;
 }
 
-const fiberToWrapper = new WeakMap();
+const fiberToWrapper = new WeakMap<Fiber, ReactTestInstance>();
 function wrapFiber(fiber: Fiber): ReactTestInstance {
   let wrapper = fiberToWrapper.get(fiber);
   if (wrapper === undefined && fiber.alternate !== null) {

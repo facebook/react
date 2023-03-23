@@ -64,7 +64,7 @@ describe('findDOMNode', () => {
   });
 
   it('findDOMNode should reject random objects', () => {
-    expect(function() {
+    expect(function () {
       ReactDOM.findDOMNode({foo: 'bar'});
     }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });

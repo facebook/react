@@ -68,6 +68,11 @@ export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
 export const requestPostPaintCallback = $$$hostConfig.requestPostPaintCallback;
+export const maySuspendCommit = $$$hostConfig.maySuspendCommit;
+export const preloadInstance = $$$hostConfig.preloadInstance;
+export const startSuspendingCommit = $$$hostConfig.startSuspendingCommit;
+export const suspendInstance = $$$hostConfig.suspendInstance;
+export const waitForCommitToBeReady = $$$hostConfig.waitForCommitToBeReady;
 export const prepareRendererToRender = $$$hostConfig.prepareRendererToRender;
 export const resetRendererAfterRender = $$$hostConfig.resetRendererAfterRender;
 
@@ -130,11 +135,8 @@ export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 //     Hydration
 //     (optional)
 // -------------------
-export const isHydratable = $$$hostConfig.isHydratable;
-export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
-export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
-export const canHydrateSuspenseInstance =
-  $$$hostConfig.canHydrateSuspenseInstance;
+export const isHydratableType = $$$hostConfig.isHydratableType;
+export const isHydratableText = $$$hostConfig.isHydratableText;
 export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
@@ -149,6 +151,16 @@ export const getFirstHydratableChildWithinContainer =
   $$$hostConfig.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
+export const shouldSkipHydratableForInstance =
+  $$$hostConfig.shouldSkipHydratableForInstance;
+export const shouldSkipHydratableForTextInstance =
+  $$$hostConfig.shouldSkipHydratableForTextInstance;
+export const shouldSkipHydratableForSuspenseInstance =
+  $$$hostConfig.shouldSkipHydratableForSuspenseInstance;
+export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
+export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
+export const canHydrateSuspenseInstance =
+  $$$hostConfig.canHydrateSuspenseInstance;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
@@ -195,11 +207,19 @@ export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
 //     Resources
 //     (optional)
 // -------------------
+export type HoistableRoot = mixed;
 export const supportsResources = $$$hostConfig.supportsResources;
-export const isHostResourceType = $$$hostConfig.isHostResourceType;
+export const isHostHoistableType = $$$hostConfig.isHostHoistableType;
+export const getHoistableRoot = $$$hostConfig.getHoistableRoot;
 export const getResource = $$$hostConfig.getResource;
 export const acquireResource = $$$hostConfig.acquireResource;
 export const releaseResource = $$$hostConfig.releaseResource;
+export const hydrateHoistable = $$$hostConfig.hydrateHoistable;
+export const mountHoistable = $$$hostConfig.mountHoistable;
+export const unmountHoistable = $$$hostConfig.unmountHoistable;
+export const createHoistableInstance = $$$hostConfig.createHoistableInstance;
+export const prepareToCommitHoistables =
+  $$$hostConfig.prepareToCommitHoistables;
 
 // -------------------
 //     Singletons

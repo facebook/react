@@ -354,8 +354,10 @@ export function patchForStrictMode() {
           }
         };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
+        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+          originalMethod;
+        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+          overrideMethod;
 
         targetConsole[method] = overrideMethod;
       } catch (error) {}

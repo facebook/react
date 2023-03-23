@@ -16,10 +16,11 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   disableInputAttributeSyncing,
+  disableIEWorkarounds,
+  enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
+  revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
@@ -28,10 +29,10 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
-  enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
+  enableCustomElementPropertySupport,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -55,7 +56,7 @@ export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
-export const enableTrustedTypesIntegration = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -95,15 +96,11 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
 
-export const deletedTreeCleanUpLevel = 3;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
-
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;

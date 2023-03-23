@@ -66,7 +66,7 @@ export function toggleEnabled(value: boolean): void {
       redrawTimeoutID = null;
     }
 
-    destroyCanvas();
+    destroyCanvas(agent);
   }
 }
 
@@ -126,7 +126,7 @@ function prepareToDraw(): void {
     }
   });
 
-  draw(nodeToData);
+  draw(nodeToData, agent);
 
   if (earliestExpiration !== Number.MAX_VALUE) {
     redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);

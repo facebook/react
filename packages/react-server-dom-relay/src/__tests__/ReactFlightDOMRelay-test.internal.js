@@ -19,7 +19,7 @@ describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
@@ -85,7 +85,7 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it('can render a Client Component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', async () => {
     function UserClient(props) {
       return (
         <span>
@@ -110,7 +110,7 @@ describe('ReactFlightDOMRelay', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    act(() => {
+    await act(() => {
       root.render(modelClient.greeting);
     });
 
@@ -226,7 +226,7 @@ describe('ReactFlightDOMRelay', () => {
     Foo.prototype = Object.create(Bar.prototype);
     // This is enumerable which some polyfills do.
     Foo.prototype.constructor = Foo;
-    Foo.prototype.method = function() {};
+    Foo.prototype.method = function () {};
 
     expect(() => {
       const transport = [];

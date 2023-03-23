@@ -325,6 +325,7 @@ module.exports = {
         'packages/react-native-renderer/**/*.js',
         'packages/eslint-plugin-react-hooks/**/*.js',
         'packages/jest-react/**/*.js',
+        'packages/internal-test-utils/**/*.js',
         'packages/**/__tests__/*.js',
         'packages/**/npm/*.js',
       ],
@@ -434,7 +435,6 @@ module.exports = {
     es6: true,
     node: true,
     jest: true,
-    jasmine: true,
   },
 
   globals: {

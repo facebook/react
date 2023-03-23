@@ -168,7 +168,7 @@ function onDisconnected() {
 }
 
 // $FlowFixMe[missing-local-annot]
-function onError({code, message}) {
+function onError({code, message}: $FlowFixMe) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
@@ -262,6 +262,7 @@ function initialize(socket: WebSocket) {
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsNativeInspection: true,
+    supportsTraceUpdates: true,
   });
 
   log('Connected');
@@ -283,7 +284,7 @@ function connectToSocket(socket: WebSocket): {close(): void} {
   initialize(socket);
 
   return {
-    close: function() {
+    close: function () {
       onDisconnected();
     },
   };
@@ -334,13 +335,13 @@ function startServer(
     initialize(socket);
   });
 
-  server.on('error', event => {
+  server.on('error', (event: $FlowFixMe) => {
     onError(event);
     log.error('Failed to start the DevTools server', event);
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
   });
 
-  httpServer.on('request', (request, response) => {
+  httpServer.on('request', (request: $FlowFixMe, response: $FlowFixMe) => {
     // Serve a file that immediately sets up the connection.
     const backendFile = readFileSync(join(__dirname, 'backend.js'));
 
@@ -376,7 +377,7 @@ function startServer(
     );
   });
 
-  httpServer.on('error', event => {
+  httpServer.on('error', (event: $FlowFixMe) => {
     onError(event);
     statusListener('Failed to start the server.', 'error');
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
@@ -390,7 +391,7 @@ function startServer(
   });
 
   return {
-    close: function() {
+    close: function () {
       connected = null;
       onDisconnected();
       if (startServerTimeoutID !== null) {

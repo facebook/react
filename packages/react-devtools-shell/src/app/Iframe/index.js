@@ -25,7 +25,7 @@ function Frame(props) {
 
   const ref = React.useRef();
 
-  React.useLayoutEffect(function() {
+  React.useLayoutEffect(function () {
     const iframe = ref.current;
 
     if (iframe) {

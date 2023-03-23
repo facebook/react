@@ -51,7 +51,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
-const nodeToInstanceMap = new WeakMap();
+const nodeToInstanceMap = new WeakMap<any, Instance>();
 
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -322,6 +322,23 @@ export function logRecoverableError(error: mixed): void {
 
 export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
+}
+
+export function maySuspendCommit(type: Type, props: Props): boolean {
+  return false;
+}
+
+export function preloadInstance(type: Type, props: Props): boolean {
+  // Return true to indicate it's already loaded
+  return true;
+}
+
+export function startSuspendingCommit(): void {}
+
+export function suspendInstance(type: Type, props: Props): void {}
+
+export function waitForCommitToBeReady(): null {
+  return null;
 }
 
 export function prepareRendererToRender(container: Container): void {

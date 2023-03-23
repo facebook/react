@@ -40,8 +40,9 @@ export function printElement(
     suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
   }
 
-  return `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
-    'null'}${key}>${hocs}${suffix}`;
+  return `${'  '.repeat(element.depth + 1)}${prefix} <${
+    element.displayName || 'null'
+  }${key}>${hocs}${suffix}`;
 }
 
 export function printOwnersList(
@@ -70,10 +71,8 @@ export function printStore(
   }
 
   function printErrorsAndWarnings(element: Element): string {
-    const {
-      errorCount,
-      warningCount,
-    } = store.getErrorAndWarningCountForElementID(element.id);
+    const {errorCount, warningCount} =
+      store.getErrorAndWarningCountForElementID(element.id);
     if (errorCount === 0 && warningCount === 0) {
       return '';
     }

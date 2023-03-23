@@ -18,7 +18,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -44,7 +44,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('refs', function() {
+  describe('refs', function () {
     it('should not run ref code on server', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {

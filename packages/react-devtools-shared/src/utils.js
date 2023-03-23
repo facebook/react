@@ -84,7 +84,7 @@ export function alphaSortKeys(
 export function getAllEnumerableKeys(
   obj: Object,
 ): Set<string | number | symbol> {
-  const keys = new Set();
+  const keys = new Set<string | number | symbol>();
   let current = obj;
   while (current != null) {
     const currentKeys = [
@@ -203,7 +203,7 @@ export function printOperationsArray(operations: Array<number>) {
   let i = 2;
 
   // Reassemble the string table.
-  const stringTable = [
+  const stringTable: Array<null | string> = [
     null, // ID = 0 corresponds to the null string.
   ];
   const stringTableSize = operations[i++];

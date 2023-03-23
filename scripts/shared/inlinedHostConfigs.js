@@ -8,7 +8,7 @@
 
 module.exports = [
   {
-    shortName: 'dom',
+    shortName: 'dom-node',
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
@@ -16,8 +16,8 @@ module.exports = [
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/server.node',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server.node.unbundled',
+      'react-server-dom-webpack/client.node.unbundled',
     ],
     paths: [
       'react-dom',
@@ -30,9 +30,9 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
-      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/server.node.unbundled',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
@@ -46,19 +46,13 @@ module.exports = [
     isServerSupported: true,
   },
   {
-    shortName: 'bun',
+    shortName: 'dom-bun',
     entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
     paths: [
       'react-dom',
-      'react-dom/server',
       'react-dom/server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom-bindings',
-      'react-dom/server.node',
-      'react-server-dom-webpack',
-      'react-server-dom-webpack/client',
-      'react-server-dom-webpack/server',
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
@@ -74,7 +68,7 @@ module.exports = [
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
       'react-server-dom-webpack/server.browser',
-      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.browser',
     ],
     paths: [
       'react-dom',
@@ -87,13 +81,79 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
+      'react-server-dom-webpack/client.browser',
       'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/src/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
       'react-devtools-shared',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-edge-webpack',
+    entryPoints: [
+      'react-dom/src/server/ReactDOMFizzServerEdge.js',
+      'react-dom/static.edge',
+      'react-server-dom-webpack/server.edge',
+      'react-server-dom-webpack/client.edge',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server.edge',
+      'react-dom/static.edge',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
+      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/client.edge',
+      'react-server-dom-webpack/server.edge',
+      'react-server-dom-webpack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
+      'react-server-dom-webpack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-node-webpack',
+    entryPoints: [
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/client.node',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/client.node',
+      'react-server-dom-webpack/server',
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,

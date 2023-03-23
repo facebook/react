@@ -24,10 +24,10 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     // In reality, the sync flush happens when an iframe is added to the page.
     // https://github.com/facebook/react/issues/22459
     let queue = [];
-    window.queueMicrotask = function(cb) {
+    window.queueMicrotask = function (cb) {
       queue.push(cb);
     };
-    flushMicrotasksPrematurely = function() {
+    flushMicrotasksPrematurely = function () {
       while (queue.length > 0) {
         const prevQueue = queue;
         queue = [];
@@ -39,7 +39,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
 
     document.body.appendChild(container);
   });
@@ -66,7 +66,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
       );
     }
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toBe('1');
@@ -86,11 +86,11 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
       );
     }
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(<Foo />);
     });
     expect(container.textContent).toBe('0');
-    await act(async () => {
+    await act(() => {
       container.firstChild.dispatchEvent(
         new MouseEvent('click', {bubbles: true}),
       );

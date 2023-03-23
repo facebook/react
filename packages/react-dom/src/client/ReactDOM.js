@@ -34,20 +34,11 @@ import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHand
 
 import {
   batchedUpdates,
-  discreteUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
-  flushControlled,
   injectIntoDevTools,
-  attemptSynchronousHydration,
-  attemptDiscreteHydration,
-  attemptContinuousHydration,
-  attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {
-  runWithPriority,
-  getCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities';
+import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
@@ -58,31 +49,18 @@ import {
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
 import {
-  setAttemptSynchronousHydration,
-  setAttemptDiscreteHydration,
-  setAttemptContinuousHydration,
-  setAttemptHydrationAtCurrentPriority,
-  setGetCurrentUpdatePriority,
-  setAttemptHydrationAtPriority,
-} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
-import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
-import {
-  setRestoreImplementation,
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
-export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';
-
-setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptDiscreteHydration(attemptDiscreteHydration);
-setAttemptContinuousHydration(attemptContinuousHydration);
-setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
-setGetCurrentUpdatePriority(getCurrentUpdatePriority);
-setAttemptHydrationAtPriority(runWithPriority);
+export {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preinit,
+} from 'react-dom-bindings/src/shared/ReactDOMFloat';
 
 if (__DEV__) {
   if (
@@ -102,13 +80,6 @@ if (__DEV__) {
     );
   }
 }
-
-setRestoreImplementation(restoreControlledState);
-setBatchingImplementation(
-  batchedUpdates,
-  discreteUpdates,
-  flushSyncWithoutWarningIfAlreadyRendering,
-);
 
 function createPortal(
   children: ReactNodeList,
@@ -201,7 +172,6 @@ export {
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  flushControlled as unstable_flushControlled,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI

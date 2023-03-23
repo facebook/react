@@ -64,7 +64,6 @@ import {
   batchedUpdates,
   flushSync,
   isAlreadyRendering,
-  flushControlled,
   deferredUpdates,
   discreteUpdates,
   flushPassiveEffects,
@@ -175,7 +174,7 @@ function findHostInstance(component: Object): PublicInstance | null {
   if (hostFiber === null) {
     return null;
   }
-  return hostFiber.stateNode;
+  return getPublicInstance(hostFiber.stateNode);
 }
 
 function findHostInstanceWithWarning(
@@ -240,7 +239,7 @@ function findHostInstanceWithWarning(
         }
       }
     }
-    return hostFiber.stateNode;
+    return getPublicInstance(hostFiber.stateNode);
   }
   return findHostInstance(component);
 }
@@ -308,11 +307,11 @@ export function createHydrationContainer(
   // the update to schedule work on the root fiber (and, for legacy roots, to
   // enqueue the callback if one is provided).
   const current = root.current;
-  const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
-  const update = createUpdate(eventTime, lane);
+  const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
+  const eventTime = requestEventTime();
   enqueueUpdate(current, update, lane);
   scheduleInitialHydrationOnRoot(root, lane, eventTime);
 
@@ -329,7 +328,6 @@ export function updateContainer(
     onScheduleRoot(container, element);
   }
   const current = container.current;
-  const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
@@ -360,7 +358,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(eventTime, lane);
+  const update = createUpdate(lane);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -381,6 +379,7 @@ export function updateContainer(
 
   const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
+    const eventTime = requestEventTime();
     scheduleUpdateOnFiber(root, current, lane, eventTime);
     entangleTransitions(root, current, lane);
   }
@@ -392,7 +391,6 @@ export {
   batchedUpdates,
   deferredUpdates,
   discreteUpdates,
-  flushControlled,
   flushSync,
   isAlreadyRendering,
   flushPassiveEffects,
@@ -524,7 +522,7 @@ export function findHostInstanceWithNoPortals(
   if (hostFiber === null) {
     return null;
   }
-  return hostFiber.stateNode;
+  return getPublicInstance(hostFiber.stateNode);
 }
 
 let shouldErrorImpl: Fiber => ?boolean = fiber => null;
@@ -554,7 +552,7 @@ if (__DEV__) {
     obj: Object | Array<any>,
     path: Array<string | number>,
     index: number,
-  ) => {
+  ): $FlowFixMe => {
     const key = path[index];
     const updated = isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === path.length) {
@@ -582,7 +580,7 @@ if (__DEV__) {
     oldPath: Array<string | number>,
     newPath: Array<string | number>,
     index: number,
-  ) => {
+  ): $FlowFixMe => {
     const oldKey = oldPath[index];
     const updated = isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === oldPath.length) {
@@ -633,7 +631,7 @@ if (__DEV__) {
     path: Array<string | number>,
     index: number,
     value: any,
-  ) => {
+  ): $FlowFixMe => {
     if (index >= path.length) {
       return value;
     }

@@ -45,6 +45,8 @@ async function main() {
           instructionDir + '/ReactDOMFizzInstructionSetShared.js',
         ],
         compilation_level: 'ADVANCED',
+        language_in: 'ECMASCRIPT_2020',
+        language_out: 'ECMASCRIPT5_STRICT',
         module_resolution: 'NODE',
         // This is necessary to prevent Closure from inlining a Promise polyfill
         rewrite_polyfills: false,
@@ -77,7 +79,7 @@ async function main() {
   // Fizz runtime, and should break immediately if there were a mistake, so I'm
   // not too worried about it.
   outputCode = outputCode.replace(
-    /window\.(\$[A-z0-9_]*)/g,
+    /window\.(\$[A-z0-9_]*|matchMedia)/g,
     (_, variableName) => variableName
   );
 

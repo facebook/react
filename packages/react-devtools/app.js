@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
 const {app, BrowserWindow} = require('electron'); // Module to create native browser window.
@@ -16,11 +14,11 @@ const projectRoots = argv._;
 
 let mainWindow = null;
 
-app.on('window-all-closed', function() {
+app.on('window-all-closed', function () {
   app.quit();
 });
 
-app.on('ready', function() {
+app.on('ready', function () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
@@ -29,8 +27,10 @@ app.on('ready', function() {
     frame: false,
     //titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      contextIsolation: true, // protect against prototype pollution
+      enableRemoteModule: false, // turn off remote
+      sandbox: false, // allow preload script to access file system
+      preload: join(__dirname, 'preload.js'), // use a preload script to expose node globals
     },
   });
 
@@ -40,14 +40,12 @@ app.on('ready', function() {
   }
 
   // https://stackoverflow.com/questions/32402327/
-  // $FlowFixMe[incompatible-use] found when upgrading Flow
-  mainWindow.webContents.on('new-window', function(event, url) {
+  mainWindow.webContents.on('new-window', function (event, url) {
     event.preventDefault();
     require('electron').shell.openExternal(url);
   });
 
   // and load the index.html of the app.
-  // $FlowFixMe[incompatible-use] found when upgrading Flow
   mainWindow.loadURL('file://' + __dirname + '/app.html'); // eslint-disable-line no-path-concat
   // $FlowFixMe[incompatible-use] found when upgrading Flow
   mainWindow.webContents.executeJavaScript(
@@ -58,8 +56,7 @@ app.on('ready', function() {
   );
 
   // Emitted when the window is closed.
-  // $FlowFixMe[incompatible-use] found when upgrading Flow
-  mainWindow.on('closed', function() {
+  mainWindow.on('closed', function () {
     mainWindow = null;
   });
 });

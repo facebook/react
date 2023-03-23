@@ -9,7 +9,7 @@
 let welcomeHasInitialized = false;
 
 // $FlowFixMe[missing-local-annot]
-function welcome(event) {
+function welcome(event: $FlowFixMe) {
   if (
     event.source !== window ||
     event.data.source !== 'react-devtools-content-script'
@@ -51,13 +51,12 @@ function setup(hook: any) {
   const Agent = require('react-devtools-shared/src/backend/agent').default;
   const Bridge = require('react-devtools-shared/src/bridge').default;
   const {initBackend} = require('react-devtools-shared/src/backend');
-  const setupNativeStyleEditor = require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor')
-    .default;
+  const setupNativeStyleEditor =
+    require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor').default;
 
-  const bridge = new Bridge({
+  const bridge = new Bridge<$FlowFixMe, $FlowFixMe>({
     listen(fn) {
-      // $FlowFixMe[missing-local-annot]
-      const listener = event => {
+      const listener = (event: $FlowFixMe) => {
         if (
           event.source !== window ||
           !event.data ||

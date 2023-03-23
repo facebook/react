@@ -53,7 +53,7 @@ function hasValidKey(config) {
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
-  const warnAboutAccessingKey = function() {
+  const warnAboutAccessingKey = function () {
     if (__DEV__) {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
@@ -75,7 +75,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 }
 
 function defineRefPropWarningGetter(props, displayName) {
-  const warnAboutAccessingRef = function() {
+  const warnAboutAccessingRef = function () {
     if (__DEV__) {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
@@ -145,7 +145,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
  * indicating filename, line number, and/or other information.
  * @internal
  */
-const ReactElement = function(type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, ref, self, source, owner, props) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -199,7 +199,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
   }
 
   return element;
-};
+}
 
 /**
  * https://github.com/reactjs/rfcs/pull/107

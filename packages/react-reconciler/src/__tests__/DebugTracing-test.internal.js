@@ -12,7 +12,8 @@
 describe('DebugTracing', () => {
   let React;
   let ReactTestRenderer;
-  let Scheduler;
+  let waitForPaint;
+  let waitForAll;
 
   let logs;
 
@@ -27,20 +28,22 @@ describe('DebugTracing', () => {
 
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
+    waitForAll = InternalTestUtils.waitForAll;
 
     logs = [];
 
     const groups = [];
 
-    spyOnDevAndProd(console, 'log').and.callFake(message => {
+    spyOnDevAndProd(console, 'log').mockImplementation(message => {
       logs.push(`log: ${message.replace(/%c/g, '')}`);
     });
-    spyOnDevAndProd(console, 'group').and.callFake(message => {
+    spyOnDevAndProd(console, 'group').mockImplementation(message => {
       logs.push(`group: ${message.replace(/%c/g, '')}`);
       groups.push(message);
     });
-    spyOnDevAndProd(console, 'groupEnd').and.callFake(() => {
+    spyOnDevAndProd(console, 'groupEnd').mockImplementation(() => {
       const message = groups.pop();
       logs.push(`groupEnd: ${message.replace(/%c/g, '')}`);
     });
@@ -72,9 +75,20 @@ describe('DebugTracing', () => {
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log sync render with suspense', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
+    let resolveFakeSuspensePromise;
+    let didResolve = false;
+    const fakeSuspensePromise = new Promise(resolve => {
+      resolveFakeSuspensePromise = () => {
+        didResolve = true;
+        resolve();
+      };
+    });
+
     function Example() {
-      throw fakeSuspensePromise;
+      if (!didResolve) {
+        throw fakeSuspensePromise;
+      }
+      return null;
     }
 
     ReactTestRenderer.act(() =>
@@ -95,12 +109,14 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    await fakeSuspensePromise;
+    resolveFakeSuspensePromise();
+    await waitForAll([]);
+
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
-  it('should log sync render with CPU suspense', () => {
+  it('should log sync render with CPU suspense', async () => {
     function Example() {
       console.log('<Example/>');
       return null;
@@ -129,7 +145,7 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+    await waitForPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ render (${RETRY_LANE_STRING})`,
@@ -386,7 +402,8 @@ describe('DebugTracing', () => {
       return didMount;
     }
 
-    const fakeSuspensePromise = new Promise(() => {});
+    const fakeSuspensePromise = {then() {}};
+
     function ExampleThatSuspends() {
       throw fakeSuspensePromise;
     }

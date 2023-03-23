@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {FloatRoot, RootResources} from './ReactDOMFloatClient';
+import type {HoistableRoot, RootResources} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
-} from '../shared/ReactDOMTypes';
+} from './ReactDOMEventHandleTypes';
 import type {
   Container,
   TextInstance,
@@ -24,7 +24,7 @@ import type {
 
 import {
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   HostRoot,
@@ -39,9 +39,7 @@ import {
   enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 
-const randomKey = Math.random()
-  .toString(36)
-  .slice(2);
+const randomKey = Math.random().toString(36).slice(2);
 const internalInstanceKey = '__reactFiber$' + randomKey;
 const internalPropsKey = '__reactProps$' + randomKey;
 const internalContainerInstanceKey = '__reactContainer$' + randomKey;
@@ -49,7 +47,7 @@ const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
-const internalResourceMarker = '__reactMarker$' + randomKey;
+const internalHoistableMarker = '__reactMarker$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -180,7 +178,7 @@ export function getInstanceFromNode(node: Node): Fiber | null {
       tag === HostComponent ||
       tag === HostText ||
       tag === SuspenseComponent ||
-      (enableFloat ? tag === HostResource : false) ||
+      (enableFloat ? tag === HostHoistable : false) ||
       (enableHostSingletons ? tag === HostSingleton : false) ||
       tag === HostRoot
     ) {
@@ -200,7 +198,7 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
   const tag = inst.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
+    (enableFloat ? tag === HostHoistable : false) ||
     (enableHostSingletons ? tag === HostSingleton : false) ||
     tag === HostText
   ) {
@@ -279,23 +277,27 @@ export function doesTargetHaveEventHandle(
   return eventHandles.has(eventHandle);
 }
 
-export function getResourcesFromRoot(root: FloatRoot): RootResources {
+export function getResourcesFromRoot(root: HoistableRoot): RootResources {
   let resources = (root: any)[internalRootNodeResourcesKey];
   if (!resources) {
     resources = (root: any)[internalRootNodeResourcesKey] = {
-      styles: new Map(),
-      scripts: new Map(),
-      head: new Map(),
-      lastStructuredMeta: new Map(),
+      hoistableStyles: new Map(),
+      hoistableScripts: new Map(),
     };
   }
   return resources;
 }
 
-export function isMarkedResource(node: Node): boolean {
-  return !!(node: any)[internalResourceMarker];
+export function isMarkedHoistable(node: Node): boolean {
+  return !!(node: any)[internalHoistableMarker];
 }
 
-export function markNodeAsResource(node: Node) {
-  (node: any)[internalResourceMarker] = true;
+export function markNodeAsHoistable(node: Node) {
+  (node: any)[internalHoistableMarker] = true;
+}
+
+export function isOwnedInstance(node: Node): boolean {
+  return !!(
+    (node: any)[internalHoistableMarker] || (node: any)[internalInstanceKey]
+  );
 }

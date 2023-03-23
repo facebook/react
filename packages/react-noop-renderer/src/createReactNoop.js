@@ -47,6 +47,7 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  src?: string,
   ...
 };
 type Instance = {
@@ -70,6 +71,11 @@ type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   ...
+};
+
+type SuspenseyCommitSubscription = {
+  pendingCount: number,
+  commit: null | (() => void),
 };
 
 const NO_CONTEXT = {};
@@ -238,6 +244,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hidden: !!newProps.hidden,
       context: instance.context,
     };
+
+    if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+      clone.src = newProps.src;
+    }
+
     Object.defineProperty(clone, 'id', {
       value: clone.id,
       enumerable: false,
@@ -269,6 +280,79 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function computeText(rawText, hostContext) {
     return hostContext === UPPERCASE_CONTEXT ? rawText.toUpperCase() : rawText;
+  }
+
+  type SuspenseyThingRecord = {
+    status: 'pending' | 'fulfilled',
+    subscriptions: Array<SuspenseyCommitSubscription> | null,
+  };
+
+  let suspenseyThingCache: Map<
+    SuspenseyThingRecord,
+    'pending' | 'fulfilled',
+  > | null = null;
+
+  // Represents a subscription for all the suspensey things that block a
+  // particular commit. Once they've all loaded, the commit phase can proceed.
+  let suspenseyCommitSubscription: SuspenseyCommitSubscription | null = null;
+
+  function startSuspendingCommit(): void {
+    // This is where we might suspend on things that aren't associated with a
+    // particular node, like document.fonts.ready.
+    suspenseyCommitSubscription = null;
+  }
+
+  function suspendInstance(type: string, props: Props): void {
+    const src = props.src;
+    if (type === 'suspensey-thing' && typeof src === 'string') {
+      // Attach a listener to the suspensey thing and create a subscription
+      // object that uses reference counting to track when all the suspensey
+      // things have loaded.
+      const record = suspenseyThingCache.get(src);
+      if (record === undefined) {
+        throw new Error('Could not find record for key.');
+      }
+      if (record.status === 'fulfilled') {
+        // Already loaded.
+      } else if (record.status === 'pending') {
+        if (suspenseyCommitSubscription === null) {
+          suspenseyCommitSubscription = {
+            pendingCount: 1,
+            commit: null,
+          };
+        } else {
+          suspenseyCommitSubscription.pendingCount++;
+        }
+        // Stash the subscription on the record. In `resolveSuspenseyThing`,
+        // we'll use this fire the commit once all the things have loaded.
+        if (record.subscriptions === null) {
+          record.subscriptions = [];
+        }
+        record.subscriptions.push(suspenseyCommitSubscription);
+      }
+    } else {
+      throw new Error(
+        'Did not expect this host component to be visited when suspending ' +
+          'the commit. Did you check the SuspendCommit flag?',
+      );
+    }
+  }
+
+  function waitForCommitToBeReady():
+    | ((commit: () => mixed) => () => void)
+    | null {
+    const subscription = suspenseyCommitSubscription;
+    if (subscription !== null) {
+      suspenseyCommitSubscription = null;
+      return (commit: () => void) => {
+        subscription.commit = commit;
+        const cancelCommit = () => {
+          subscription.commit = null;
+        };
+        return cancelCommit;
+      };
+    }
+    return null;
   }
 
   const sharedHostConfig = {
@@ -322,6 +406,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         hidden: !!props.hidden,
         context: hostContext,
       };
+
+      if (type === 'suspensey-thing' && typeof props.src === 'string') {
+        inst.src = props.src;
+      }
+
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
       Object.defineProperty(inst, 'parent', {
@@ -480,6 +569,49 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const endTime = Scheduler.unstable_now();
       callback(endTime);
     },
+
+    maySuspendCommit(type: string, props: Props): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return type === 'suspensey-thing' && typeof props.src === 'string';
+    },
+
+    preloadInstance(type: string, props: Props): boolean {
+      if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
+        throw new Error('Attempted to preload unexpected instance: ' + type);
+      }
+
+      // In addition to preloading an instance, this method asks whether the
+      // instance is ready to be committed. If it's not, React may yield to the
+      // main thread and ask again. It's possible a load event will fire in
+      // between, in which case we can avoid showing a fallback.
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(props.src);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'pending',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(props.src, newRecord);
+        const onLoadStart = props.onLoadStart;
+        if (typeof onLoadStart === 'function') {
+          onLoadStart();
+        }
+        return false;
+      } else {
+        // If this is false, React will trigger a fallback, if needed.
+        return record.status === 'fulfilled';
+      }
+    },
+
+    startSuspendingCommit,
+    suspendInstance,
+    waitForCommitToBeReady,
+
     prepareRendererToRender() {},
     resetRendererAfterRender() {},
   };
@@ -508,6 +640,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hostUpdateCounter++;
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
+
+          if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+            instance.src = newProps.src;
+          }
+
           if (shouldSetTextContent(type, newProps)) {
             if (__DEV__) {
               checkPropStringCoercion(newProps.children, 'children');
@@ -689,6 +826,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (instance.hidden) {
         props.hidden = true;
       }
+      if (instance.src) {
+        props.src = instance.src;
+      }
       if (children !== null) {
         props.children = children;
       }
@@ -786,11 +926,35 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     _Scheduler: Scheduler,
 
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getPendingChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetPendingChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    /**
+     * Prefer using `getChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getChildren(container);
     },
 
-    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+    /**
+     * Prefer using `getPendingChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getPendingChildren(container);
     },
@@ -888,6 +1052,50 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return getPendingChildrenAsJSX(container);
     },
 
+    getSuspenseyThingStatus(src): string | null {
+      if (suspenseyThingCache === null) {
+        return null;
+      } else {
+        const record = suspenseyThingCache.get(src);
+        return record === undefined ? null : record.status;
+      }
+    },
+
+    resolveSuspenseyThing(key: string): void {
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(key);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'fulfilled',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(key, newRecord);
+      } else {
+        if (record.status === 'pending') {
+          record.status = 'fulfilled';
+          const subscriptions = record.subscriptions;
+          if (subscriptions !== null) {
+            record.subscriptions = null;
+            for (let i = 0; i < subscriptions.length; i++) {
+              const subscription = subscriptions[i];
+              subscription.pendingCount--;
+              if (subscription.pendingCount === 0) {
+                const commit = subscription.commit;
+                subscription.commit = null;
+                commit();
+              }
+            }
+          }
+        }
+      }
+    },
+
+    resetSuspenseyThingCache() {
+      suspenseyThingCache = null;
+    },
+
     createPortal(
       children: ReactNodeList,
       container: Container,
@@ -953,12 +1161,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushNextYield(): Array<mixed> {
       Scheduler.unstable_flushNumberOfYields(1);
-      return Scheduler.unstable_clearYields();
+      return Scheduler.unstable_clearLog();
     },
 
-    flushWithHostCounters(
-      fn: () => void,
-    ):
+    startTrackingHostCounters(): void {
+      hostDiffCounter = 0;
+      hostUpdateCounter = 0;
+      hostCloneCounter = 0;
+    },
+
+    stopTrackingHostCounters():
       | {
           hostDiffCounter: number,
           hostUpdateCounter: number,
@@ -967,25 +1179,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hostDiffCounter: number,
           hostCloneCounter: number,
         } {
+      const result = useMutation
+        ? {
+            hostDiffCounter,
+            hostUpdateCounter,
+          }
+        : {
+            hostDiffCounter,
+            hostCloneCounter,
+          };
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
-      try {
-        Scheduler.unstable_flushAll();
-        return useMutation
-          ? {
-              hostDiffCounter,
-              hostUpdateCounter,
-            }
-          : {
-              hostDiffCounter,
-              hostCloneCounter,
-            };
-      } finally {
-        hostDiffCounter = 0;
-        hostUpdateCounter = 0;
-        hostCloneCounter = 0;
-      }
+
+      return result;
     },
 
     expire: Scheduler.unstable_advanceTime,

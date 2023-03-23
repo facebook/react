@@ -203,13 +203,8 @@ export class ReactMeasuresView extends View {
   }
 
   draw(context: CanvasRenderingContext2D): void {
-    const {
-      frame,
-      _hoveredMeasure,
-      _lanesToRender,
-      _profilerData,
-      visibleArea,
-    } = this;
+    const {frame, _hoveredMeasure, _lanesToRender, _profilerData, visibleArea} =
+      this;
 
     context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(

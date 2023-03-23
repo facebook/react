@@ -11,9 +11,9 @@ import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
 import type {JSResourceReference} from 'JSResourceReference';
 
-import type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
+import type {ClientReferenceMetadata} from 'ReactFlightDOMRelayClientIntegration';
 
-export type ModuleReference<T> = JSResourceReference<T>;
+export type ClientReference<T> = JSResourceReference<T>;
 
 import {
   parseModelString,
@@ -25,33 +25,46 @@ export {
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
 
-import {resolveModuleReference as resolveModuleReferenceImpl} from 'ReactFlightDOMRelayClientIntegration';
+import {resolveClientReference as resolveClientReferenceImpl} from 'ReactFlightDOMRelayClientIntegration';
 
 import isArray from 'shared/isArray';
 
-export type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
+export type {ClientReferenceMetadata} from 'ReactFlightDOMRelayClientIntegration';
 
-export type BundlerConfig = null;
+export type SSRManifest = null;
+export type ServerManifest = null;
+export type ServerReferenceId = string;
 
 export type UninitializedModel = JSONValue;
 
 export type Response = ResponseBase;
 
-export function resolveModuleReference<T>(
-  bundlerConfig: BundlerConfig,
-  moduleData: ModuleMetaData,
-): ModuleReference<T> {
-  return resolveModuleReferenceImpl(moduleData);
+export function resolveClientReference<T>(
+  bundlerConfig: SSRManifest,
+  metadata: ClientReferenceMetadata,
+): ClientReference<T> {
+  return resolveClientReferenceImpl(metadata);
 }
 
-// $FlowFixMe[missing-local-annot]
-function parseModelRecursively(response: Response, parentObj, key, value) {
+export function resolveServerReference<T>(
+  bundlerConfig: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  throw new Error('Not implemented.');
+}
+
+function parseModelRecursively(
+  response: Response,
+  parentObj: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
+  key: string,
+  value: JSONValue,
+): $FlowFixMe {
   if (typeof value === 'string') {
     return parseModelString(response, parentObj, key, value);
   }
   if (typeof value === 'object' && value !== null) {
     if (isArray(value)) {
-      const parsedValue = [];
+      const parsedValue: Array<$FlowFixMe> = [];
       for (let i = 0; i < value.length; i++) {
         (parsedValue: any)[i] = parseModelRecursively(
           response,

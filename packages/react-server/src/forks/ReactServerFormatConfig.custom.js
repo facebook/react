@@ -74,11 +74,13 @@ export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
 // -------------------------
 //     Resources
 // -------------------------
-export const writeInitialResources = $$$hostConfig.writeInitialResources;
-export const writeImmediateResources = $$$hostConfig.writeImmediateResources;
+export const writePreamble = $$$hostConfig.writePreamble;
+export const writeHoistables = $$$hostConfig.writeHoistables;
+export const writePostamble = $$$hostConfig.writePostamble;
 export const hoistResources = $$$hostConfig.hoistResources;
-export const hoistResourcesToRoot = $$$hostConfig.hoistResourcesToRoot;
 export const createResources = $$$hostConfig.createResources;
 export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
   $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
+export const writeResourcesForBoundary =
+  $$$hostConfig.writeResourcesForBoundary;

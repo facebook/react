@@ -8,9 +8,8 @@
  */
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
-export type StatelessFunctionalComponent<
-  P,
-> = React$StatelessFunctionalComponent<P>;
+export type StatelessFunctionalComponent<P> =
+  React$StatelessFunctionalComponent<P>;
 export type ComponentType<-P> = React$ComponentType<P>;
 export type AbstractComponent<
   -Config,

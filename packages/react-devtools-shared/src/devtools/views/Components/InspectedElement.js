@@ -48,12 +48,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   } = useContext(OptionsContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {
-    hookNames,
-    inspectedElement,
-    parseHookNames,
-    toggleParseHookNames,
-  } = useContext(InspectedElementContext);
+  const {hookNames, inspectedElement, parseHookNames, toggleParseHookNames} =
+    useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null

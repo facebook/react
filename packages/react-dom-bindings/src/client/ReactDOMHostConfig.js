@@ -26,12 +26,15 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
   detachDeletedInstance,
-  isMarkedResource,
+  isMarkedHoistable,
+  markNodeAsHoistable,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
-  createElement,
+  createHTMLElement,
+  createPotentiallyInlineScriptElement,
+  createSelectElement,
   createTextNode,
   setInitialProperties,
   diffProperties,
@@ -54,7 +57,11 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
   getEventPriority,
 } from '../events/ReactDOMEventListener';
-import {getChildNamespace, SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {
+  getChildNamespace,
+  SVG_NAMESPACE,
+  MATH_NAMESPACE,
+} from './DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -62,8 +69,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_TYPE_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
-import dangerousStyleValue from '../shared/dangerousStyleValue';
+} from './HTMLNodeType';
 
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -75,7 +81,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostText,
   HostSingleton,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -89,7 +95,6 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
-  clearRootResources,
 } from './ReactDOMFloatClient';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 
@@ -133,13 +138,14 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
+export type {HoistableRoot} from './ReactDOMFloatClient';
 export interface SuspenseInstance extends Comment {
   _reactRetry?: () => void;
 }
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
-  namespace: string,
+  namespace: HostContextProd,
   ancestorInfo: AncestorInfoDev,
 };
 type HostContextProd = string;
@@ -173,7 +179,7 @@ export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
   let type;
-  let namespace;
+  let namespace: HostContextProd;
   const nodeType = rootContainerInstance.nodeType;
   switch (nodeType) {
     case DOCUMENT_NODE:
@@ -263,6 +269,23 @@ export function resetAfterCommit(containerInfo: Container): void {
   selectionInformation = null;
 }
 
+export function createHoistableInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): Instance {
+  const ownerDocument = getOwnerDocumentFromRootContainer(
+    rootContainerInstance,
+  );
+  const domElement: Instance = createHTMLElement(type, props, ownerDocument);
+  precacheFiberNode(internalInstanceHandle, domElement);
+  updateFiberProps(domElement, props);
+  setInitialProperties(domElement, type, props);
+  markNodeAsHoistable(domElement);
+  return domElement;
+}
+
 export function createInstance(
   type: string,
   props: Props,
@@ -270,10 +293,10 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  let parentNamespace: string;
+  let namespace;
   if (__DEV__) {
     // TODO: take namespace into account when validating.
-    const hostContextDev = ((hostContext: any): HostContextDev);
+    const hostContextDev: HostContextDev = (hostContext: any);
     validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     if (
       typeof props.children === 'string' ||
@@ -286,16 +309,40 @@ export function createInstance(
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
-    parentNamespace = hostContextDev.namespace;
+    namespace = hostContextDev.namespace;
   } else {
-    parentNamespace = ((hostContext: any): HostContextProd);
+    const hostContextProd: HostContextProd = (hostContext: any);
+    namespace = hostContextProd;
   }
-  const domElement: Instance = createElement(
-    type,
-    props,
+
+  const ownerDocument = getOwnerDocumentFromRootContainer(
     rootContainerInstance,
-    parentNamespace,
   );
+
+  let domElement: Instance;
+  switch (namespace) {
+    case SVG_NAMESPACE:
+    case MATH_NAMESPACE:
+      domElement = ownerDocument.createElementNS(namespace, type);
+      break;
+    default:
+      switch (type) {
+        case 'svg':
+          domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
+          break;
+        case 'math':
+          domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
+          break;
+        case 'script':
+          domElement = createPotentiallyInlineScriptElement(ownerDocument);
+          break;
+        case 'select':
+          domElement = createSelectElement(props, ownerDocument);
+          break;
+        default:
+          domElement = createHTMLElement(type, props, ownerDocument);
+      }
+  }
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   return domElement;
@@ -439,10 +486,7 @@ export const scheduleMicrotask: any =
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
     ? callback =>
-        localPromise
-          .resolve(null)
-          .then(callback)
-          .catch(handleErrorInNextTick)
+        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
@@ -705,7 +749,12 @@ export function unhideInstance(instance: Instance, props: Props): void {
     styleProp.hasOwnProperty('display')
       ? styleProp.display
       : null;
-  instance.style.display = dangerousStyleValue('display', display);
+  instance.style.display =
+    display == null || typeof display === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + display).trim();
 }
 
 export function unhideTextInstance(
@@ -719,17 +768,10 @@ export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
     const nodeType = container.nodeType;
     if (nodeType === DOCUMENT_NODE) {
-      clearRootResources(container);
       clearContainerSparingly(container);
     } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
-        case 'HEAD': {
-          // If we are clearing document.head as a container we are essentially clearing everything
-          // that was hoisted to the head and should forget the instances that will no longer be in the DOM
-          clearRootResources(container);
-          // fall through to clear child contents
-        }
-        // eslint-disable-next-line-no-fallthrough
+        case 'HEAD':
         case 'HTML':
         case 'BODY':
           clearContainerSparingly(container);
@@ -811,17 +853,9 @@ export const supportsHydration = true;
 
 // With Resources, some HostComponent types will never be server rendered and need to be
 // inserted without breaking hydration
-export function isHydratable(type: string, props: Props): boolean {
+export function isHydratableType(type: string, props: Props): boolean {
   if (enableFloat) {
-    if (type === 'link') {
-      if (
-        (props: any).rel === 'stylesheet' &&
-        typeof (props: any).precedence !== 'string'
-      ) {
-        return true;
-      }
-      return false;
-    } else if (type === 'script') {
+    if (type === 'script') {
       const {async, onLoad, onError} = (props: any);
       return !(async && (onLoad || onError));
     }
@@ -829,6 +863,129 @@ export function isHydratable(type: string, props: Props): boolean {
   } else {
     return true;
   }
+}
+export function isHydratableText(text: string): boolean {
+  return text !== '';
+}
+
+export function shouldSkipHydratableForInstance(
+  instance: HydratableInstance,
+  type: string,
+  props: Props,
+): boolean {
+  if (instance.nodeType !== ELEMENT_NODE) {
+    // This is a suspense boundary or Text node.
+    // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
+    // and this is a hydration error.
+    // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
+    // but it seems reasonable and conservative to reject this as a hydration error as well
+    return false;
+  } else if (
+    instance.nodeName.toLowerCase() !== type.toLowerCase() ||
+    isMarkedHoistable(instance)
+  ) {
+    // We are either about to
+    return true;
+  } else {
+    // We have an Element with the right type.
+    const element: Element = (instance: any);
+    const anyProps = (props: any);
+
+    // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
+    // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
+    // using high entropy attributes for certain types. This technique will fail for strange insertions like
+    // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
+    switch (type) {
+      // case 'title':
+      //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
+      // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
+      case 'meta': {
+        // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
+        // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
+        // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
+        // implications are minimal
+        if (!element.hasAttribute('itemprop')) {
+          // This is a Hoistable
+          return true;
+        }
+        break;
+      }
+      case 'link': {
+        // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
+        // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
+        // matches.
+        const rel = element.getAttribute('rel');
+        if (rel === 'stylesheet' && element.hasAttribute('data-precedence')) {
+          // This is a stylesheet resource
+          return true;
+        } else if (
+          rel !== anyProps.rel ||
+          element.getAttribute('href') !==
+            (anyProps.href == null ? null : anyProps.href) ||
+          element.getAttribute('crossorigin') !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
+          element.getAttribute('title') !==
+            (anyProps.title == null ? null : anyProps.title)
+        ) {
+          // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
+          // and title could vary for rel alternate
+          return true;
+        }
+        break;
+      }
+      case 'style': {
+        // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
+        // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
+        if (element.hasAttribute('data-precedence')) {
+          // This is a style resource
+          return true;
+        }
+        break;
+      }
+      case 'script': {
+        // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
+        // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
+        // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
+        // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+        // if we learn it is problematic
+        const srcAttr = element.getAttribute('src');
+        if (
+          srcAttr &&
+          element.hasAttribute('async') &&
+          !element.hasAttribute('itemprop')
+        ) {
+          // This is an async script resource
+          return true;
+        } else if (
+          srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
+          element.getAttribute('type') !==
+            (anyProps.type == null ? null : anyProps.type) ||
+          element.getAttribute('crossorigin') !==
+            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
+        ) {
+          // This script is for a different src
+          return true;
+        }
+        break;
+      }
+    }
+    // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
+    // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+    // that should work in the vast majority of cases.
+    return false;
+  }
+}
+
+export function shouldSkipHydratableForTextInstance(
+  instance: HydratableInstance,
+): boolean {
+  return instance.nodeType === ELEMENT_NODE;
+}
+
+export function shouldSkipHydratableForSuspenseInstance(
+  instance: HydratableInstance,
+): boolean {
+  return instance.nodeType === ELEMENT_NODE;
 }
 
 export function canHydrateInstance(
@@ -838,19 +995,21 @@ export function canHydrateInstance(
 ): null | Instance {
   if (
     instance.nodeType !== ELEMENT_NODE ||
-    type.toLowerCase() !== instance.nodeName.toLowerCase()
+    instance.nodeName.toLowerCase() !== type.toLowerCase()
   ) {
     return null;
+  } else {
+    return ((instance: any): Instance);
   }
-  // This has now been refined to an element node.
-  return ((instance: any): Instance);
 }
 
 export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
 ): null | TextInstance {
-  if (text === '' || instance.nodeType !== TEXT_NODE) {
+  if (text === '') return null;
+
+  if (instance.nodeType !== TEXT_NODE) {
     // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   }
@@ -862,7 +1021,6 @@ export function canHydrateSuspenseInstance(
   instance: HydratableInstance,
 ): null | SuspenseInstance {
   if (instance.nodeType !== COMMENT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   }
   // This has now been refined to a suspense node.
@@ -917,116 +1075,8 @@ function getNextHydratable(node: ?Node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
-    if (enableFloat && enableHostSingletons) {
-      if (nodeType === ELEMENT_NODE) {
-        const element: Element = (node: any);
-        switch (element.tagName) {
-          // This is subtle. in SVG scope the title tag is case sensitive. we don't want to skip
-          // titles in svg but we do want to skip them outside of svg. there is an edge case where
-          // you could do `React.createElement('TITLE', ...)` inside an svg scope but the SSR serializer
-          // will still emit lowercase. Practically speaking the only time the DOM will have a non-uppercased
-          // title tagName is if it is inside an svg.
-          // Other Resource types like META, BASE, LINK, and SCRIPT should be treated as resources even inside
-          // svg scope because they are invalid otherwise. We still don't need to handle the lowercase variant
-          // because if they are present in the DOM already they would have been hoisted outside the SVG scope
-          // as Resources. So while it would be correct to skip a <link> inside <svg> and this algorithm won't
-          // skip that link because the tagName will not be uppercased it functionally is irrelevant. If one
-          // tries to render incompatible types such as a non-resource stylesheet inside an svg the server will
-          // emit that invalid html and hydration will fail. In Dev this will present warnings guiding the
-          // developer on how to fix.
-          case 'TITLE':
-          case 'META':
-          case 'BASE':
-          case 'HTML':
-          case 'HEAD':
-          case 'BODY': {
-            continue;
-          }
-          case 'LINK': {
-            const linkEl: HTMLLinkElement = (element: any);
-            // All links that are server rendered are resources except
-            // stylesheets that do not have a precedence
-            if (
-              linkEl.rel === 'stylesheet' &&
-              !linkEl.hasAttribute('data-precedence')
-            ) {
-              break;
-            }
-            continue;
-          }
-          case 'STYLE': {
-            const styleEl: HTMLStyleElement = (element: any);
-            if (styleEl.hasAttribute('data-precedence')) {
-              continue;
-            }
-            break;
-          }
-          case 'SCRIPT': {
-            const scriptEl: HTMLScriptElement = (element: any);
-            if (scriptEl.hasAttribute('async')) {
-              continue;
-            }
-            break;
-          }
-        }
-        break;
-      } else if (nodeType === TEXT_NODE) {
-        break;
-      }
-    } else if (enableFloat) {
-      if (nodeType === ELEMENT_NODE) {
-        const element: Element = (node: any);
-        switch (element.tagName) {
-          case 'TITLE':
-          case 'META':
-          case 'BASE': {
-            continue;
-          }
-          case 'LINK': {
-            const linkEl: HTMLLinkElement = (element: any);
-            // All links that are server rendered are resources except
-            // stylesheets that do not have a precedence
-            if (
-              linkEl.rel === 'stylesheet' &&
-              !linkEl.hasAttribute('data-precedence')
-            ) {
-              break;
-            }
-            continue;
-          }
-          case 'STYLE': {
-            const styleEl: HTMLStyleElement = (element: any);
-            if (styleEl.hasAttribute('data-precedence')) {
-              continue;
-            }
-            break;
-          }
-          case 'SCRIPT': {
-            const scriptEl: HTMLScriptElement = (element: any);
-            if (scriptEl.hasAttribute('async')) {
-              continue;
-            }
-            break;
-          }
-        }
-        break;
-      } else if (nodeType === TEXT_NODE) {
-        break;
-      }
-    } else if (enableHostSingletons) {
-      if (nodeType === ELEMENT_NODE) {
-        const tag: string = (node: any).tagName;
-        if (tag === 'HTML' || tag === 'HEAD' || tag === 'BODY') {
-          continue;
-        }
-        break;
-      } else if (nodeType === TEXT_NODE) {
-        break;
-      }
-    } else {
-      if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
-        break;
-      }
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+      break;
     }
     if (nodeType === COMMENT_NODE) {
       const nodeData = (node: any).data;
@@ -1081,26 +1131,28 @@ export function hydrateInstance(
   // TODO: Possibly defer this until the commit phase where all the events
   // get attached.
   updateFiberProps(instance, props);
-  let parentNamespace: string;
-  if (__DEV__) {
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    parentNamespace = hostContextDev.namespace;
-  } else {
-    parentNamespace = ((hostContext: any): HostContextProd);
-  }
 
   // TODO: Temporary hack to check if we're in a concurrent root. We can delete
   // when the legacy root API is removed.
   const isConcurrentMode =
     ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
 
+  let parentNamespace;
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    parentNamespace = hostContextDev.namespace;
+  } else {
+    const hostContextProd = ((hostContext: any): HostContextProd);
+    parentNamespace = hostContextProd;
+  }
+
   return diffHydratedProperties(
     instance,
     type,
     props,
-    parentNamespace,
     isConcurrentMode,
     shouldWarnDev,
+    parentNamespace,
   );
 }
 
@@ -1448,7 +1500,7 @@ export function matchAccessibilityRole(node: Instance, role: string): boolean {
 
 export function getTextContent(fiber: Fiber): string | null {
   switch (fiber.tag) {
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent:
       let textContent = '';
@@ -1560,124 +1612,191 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
     localRequestAnimationFrame(time => callback(time));
   });
 }
+
+export function maySuspendCommit(type: Type, props: Props): boolean {
+  return false;
+}
+
+export function preloadInstance(type: Type, props: Props): boolean {
+  // Return true to indicate it's already loaded
+  return true;
+}
+
+export function startSuspendingCommit(): void {}
+
+export function suspendInstance(type: Type, props: Props): void {}
+
+export function waitForCommitToBeReady(): null {
+  return null;
+}
+
 // -------------------
 //     Resources
 // -------------------
 
 export const supportsResources = true;
 
-export function isHostResourceType(
+export function isHostHoistableType(
   type: string,
   props: RawProps,
   hostContext: HostContext,
 ): boolean {
   let outsideHostContainerContext: boolean;
-  let namespace: string;
+  let namespace: HostContextProd;
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
-    outsideHostContainerContext = !hostContextDev.ancestorInfo
-      .containerTagInScope;
+    outsideHostContainerContext =
+      !hostContextDev.ancestorInfo.containerTagInScope;
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
     namespace = hostContextProd;
   }
+
+  // Global opt out of hoisting for anything in SVG Namespace or anything with an itemProp inside an itemScope
+  if (namespace === SVG_NAMESPACE || props.itemProp != null) {
+    if (__DEV__) {
+      if (
+        outsideHostContainerContext &&
+        props.itemProp != null &&
+        (type === 'meta' ||
+          type === 'title' ||
+          type === 'style' ||
+          type === 'link' ||
+          type === 'script')
+      ) {
+        console.error(
+          'Cannot render a <%s> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an' +
+            ' `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <%s> remove the `itemProp` prop.' +
+            ' Otherwise, try moving this tag into the <head> or <body> of the Document.',
+          type,
+          type,
+        );
+      }
+    }
+    return false;
+  }
+
   switch (type) {
-    case 'base':
-    case 'meta': {
+    case 'meta':
+    case 'title': {
       return true;
     }
-    case 'title': {
-      return namespace !== SVG_NAMESPACE;
-    }
-    case 'link': {
-      const {onLoad, onError} = props;
-      if (onLoad || onError) {
+    case 'style': {
+      if (
+        typeof props.precedence !== 'string' ||
+        typeof props.href !== 'string' ||
+        props.href === ''
+      ) {
         if (__DEV__) {
           if (outsideHostContainerContext) {
             console.error(
-              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
+              'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
+                ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
+                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
+                ' to the <style> tag.',
             );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
-            );
+          }
+        }
+        return false;
+      }
+      return true;
+    }
+    case 'link': {
+      if (
+        typeof props.rel !== 'string' ||
+        typeof props.href !== 'string' ||
+        props.href === '' ||
+        props.onLoad ||
+        props.onError
+      ) {
+        if (__DEV__) {
+          if (
+            props.rel === 'stylesheet' &&
+            typeof props.precedence === 'string'
+          ) {
+            validateLinkPropsForStyleResource(props);
+          }
+          if (outsideHostContainerContext) {
+            if (
+              typeof props.rel !== 'string' ||
+              typeof props.href !== 'string' ||
+              props.href === ''
+            ) {
+              console.error(
+                'Cannot render a <link> outside the main document without a `rel` and `href` prop.' +
+                  ' Try adding a `rel` and/or `href` prop to this <link> or moving the link into the <head> tag',
+              );
+            } else if (props.onError || props.onLoad) {
+              console.error(
+                'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
+                  ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            }
           }
         }
         return false;
       }
       switch (props.rel) {
         case 'stylesheet': {
-          const {href, precedence, disabled} = props;
+          const {precedence, disabled} = props;
           if (__DEV__) {
-            validateLinkPropsForStyleResource(props);
             if (typeof precedence !== 'string') {
               if (outsideHostContainerContext) {
                 console.error(
                   'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
                     ' Consider adding precedence="default" or moving it into the root <head> tag.',
                 );
-              } else if (namespace === SVG_NAMESPACE) {
-                console.error(
-                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
-                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
-                );
               }
             }
           }
-          return (
-            typeof href === 'string' &&
-            typeof precedence === 'string' &&
-            disabled == null
-          );
+          return typeof precedence === 'string' && disabled == null;
         }
         default: {
-          const {rel, href} = props;
-          return typeof href === 'string' && typeof rel === 'string';
+          return true;
         }
       }
     }
     case 'script': {
-      // We don't validate because it is valid to use async with onLoad/onError unlike combining
-      // precedence with these for style resources
-      const {src, async, onLoad, onError} = props;
-      if (__DEV__) {
-        if (async !== true) {
+      if (
+        props.async !== true ||
+        props.onLoad ||
+        props.onError ||
+        typeof props.src !== 'string' ||
+        !props.src
+      ) {
+        if (__DEV__) {
           if (outsideHostContainerContext) {
-            console.error(
-              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
-                ' Try adding async="" or moving it into the root <head> tag.',
-            );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
-                ' Try adding async="" or moving it above the ancestor <svg> element.',
-            );
-          }
-        } else if (onLoad || onError) {
-          if (outsideHostContainerContext) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
-            );
+            if (props.async !== true) {
+              console.error(
+                'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+                  ' Try adding async="" or moving it into the root <head> tag.',
+              );
+            } else if (props.onLoad || props.onError) {
+              console.error(
+                'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+                  ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            } else {
+              console.error(
+                'Cannot render a <script> outside the main document without `async={true}` and a non-empty `src` prop.' +
+                  ' Ensure there is a valid `src` and either make the script async or move it into the root <head> tag or' +
+                  ' somewhere in the <body>.',
+              );
+            }
           }
         }
+        return false;
       }
-      return (async: any) && typeof src === 'string' && !onLoad && !onError;
+      return true;
     }
     case 'noscript':
-    case 'template':
-    case 'style': {
+    case 'template': {
       if (__DEV__) {
         if (outsideHostContainerContext) {
           console.error(
@@ -1705,9 +1824,14 @@ export function resetRendererAfterRender() {
 }
 
 export {
+  getHoistableRoot,
   getResource,
   acquireResource,
   releaseResource,
+  hydrateHoistable,
+  mountHoistable,
+  unmountHoistable,
+  prepareToCommitHoistables,
 } from './ReactDOMFloatClient';
 
 // -------------------
@@ -1728,8 +1852,8 @@ export function resolveSingletonInstance(
   validateDOMNestingDev: boolean,
 ): Instance {
   if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
     if (validateDOMNestingDev) {
-      const hostContextDev = ((hostContext: any): HostContextDev);
       validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     }
   }
@@ -1837,7 +1961,7 @@ export function clearSingleton(instance: Instance): void {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
     if (
-      isMarkedResource(node) ||
+      isMarkedHoistable(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||

@@ -54,9 +54,8 @@ type Props = {
 };
 
 export default function ContextMenu({children, id}: Props): React.Node {
-  const {hideMenu, registerMenu} = useContext<RegistryContextType>(
-    RegistryContext,
-  );
+  const {hideMenu, registerMenu} =
+    useContext<RegistryContextType>(RegistryContext);
 
   const [state, setState] = useState(HIDDEN_STATE);
 

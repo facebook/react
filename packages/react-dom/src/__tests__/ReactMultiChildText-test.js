@@ -14,7 +14,7 @@ const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
-const testAllPermutations = function(testCases) {
+const testAllPermutations = function (testCases) {
   for (let i = 0; i < testCases.length; i += 2) {
     const renderWithChildren = testCases[i];
     const expectedResultAfterRender = testCases[i + 1];
@@ -33,7 +33,7 @@ const testAllPermutations = function(testCases) {
   }
 };
 
-const expectChildren = function(container, children) {
+const expectChildren = function (container, children) {
   const outerNode = container.firstChild;
   let textNode;
   if (typeof children === 'string') {
@@ -171,7 +171,7 @@ describe('ReactMultiChildText', () => {
   });
 
   it('should throw if rendering both HTML and children', () => {
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
@@ -188,7 +188,7 @@ describe('ReactMultiChildText', () => {
       </div>,
     );
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(
         <div>
           <h1>A</h1>
@@ -196,7 +196,7 @@ describe('ReactMultiChildText', () => {
       );
     }).not.toThrow();
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(
         <div>
           <h1>{['A']}</h1>
@@ -204,7 +204,7 @@ describe('ReactMultiChildText', () => {
       );
     }).not.toThrow();
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(
         <div>
           <h1>{['A', 'B']}</h1>

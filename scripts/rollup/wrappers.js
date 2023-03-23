@@ -6,7 +6,8 @@ const {bundleTypes, moduleTypes} = require('./bundles');
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -43,9 +44,7 @@ function registerInternalModuleStop(globalName) {
 
   // Remove the 'use strict' directive from the footer.
   // This directive is only meaningful when it is the first statement in a file or function.
-  return String(file)
-    .replace(USE_STRICT_HEADER_REGEX, '')
-    .trim();
+  return String(file).replace(USE_STRICT_HEADER_REGEX, '').trim();
 }
 
 const license = ` * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -68,8 +67,20 @@ ${license}
 ${source}`;
   },
 
-  /***************** NODE_ESM *****************/
-  [NODE_ESM](source, globalName, filename, moduleType) {
+  /***************** ESM_DEV *****************/
+  [ESM_DEV](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** ESM_PROD *****************/
+  [ESM_PROD](source, globalName, filename, moduleType) {
     return `/**
 * @license React
  * ${filename}

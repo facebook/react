@@ -15,6 +15,8 @@ import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils'
 import {
   format,
   formatWithStyles,
+  gt,
+  gte,
 } from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
@@ -190,9 +192,9 @@ describe('utils', () => {
 
       // The last letter isn't gray here but I think it's not a big
       // deal, since there is a string substituion but it's incorrect
-      expect(
-        formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray'),
-      ).toEqual(['%c%s %s', 'color: gray', 'a', 'b', 'c']);
+      expect(formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray')).toEqual(
+        ['%c%s %s', 'color: gray', 'a', 'b', 'c'],
+      );
     });
 
     // @reactVersion >= 16.0
@@ -250,6 +252,22 @@ describe('utils', () => {
         {foo: 'bar'},
         'hi',
       ]);
+    });
+  });
+
+  describe('semver comparisons', () => {
+    it('gte should compare versions correctly', () => {
+      expect(gte('1.2.3', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
+    });
+
+    it('gt should compare versions correctly', () => {
+      expect(gt('1.2.3', '1.2.1')).toBe(true);
+      expect(gt('1.2.1', '1.2.1')).toBe(false);
+      expect(gt('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
     });
   });
 });

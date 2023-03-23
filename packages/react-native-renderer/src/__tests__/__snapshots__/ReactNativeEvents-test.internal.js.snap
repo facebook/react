@@ -7,6 +7,6 @@ exports[`fails if unknown/unsupported event types are dispatched 1`] = `
 
 exports[`handles events 1`] = `
 "<native root> {}
-  View {\\"foo\\":\\"outer\\"}
-    View {\\"foo\\":\\"inner\\"}"
+  View {"foo":"outer"}
+    View {"foo":"inner"}"
 `;

@@ -14,6 +14,7 @@ import type {
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {clearContainer} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import {
   getInstanceFromNode,
   isContainerMarkedAsRoot,
@@ -26,7 +27,7 @@ import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
-} from 'react-dom-bindings/src/shared/HTMLNodeType';
+} from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
   createContainer,
@@ -42,6 +43,7 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
+import {enableHostSingletons} from '../../../shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -79,6 +81,7 @@ if (__DEV__) {
     }
 
     if (
+      !enableHostSingletons &&
       container.nodeType === ELEMENT_NODE &&
       ((container: any): Element).tagName &&
       ((container: any): Element).tagName.toUpperCase() === 'BODY'
@@ -121,13 +124,13 @@ function legacyCreateRootFromDOMContainer(
   if (isHydrationContainer) {
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };
     }
 
-    const root = createHydrationContainer(
+    const root: FiberRoot = createHydrationContainer(
       initialChildren,
       callback,
       container,
@@ -152,14 +155,11 @@ function legacyCreateRootFromDOMContainer(
     return root;
   } else {
     // First clear any existing content.
-    let rootSibling;
-    while ((rootSibling = container.lastChild)) {
-      container.removeChild(rootSibling);
-    }
+    clearContainer(container);
 
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };
@@ -232,7 +232,7 @@ function legacyRenderSubtreeIntoContainer(
     root = maybeRoot;
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };

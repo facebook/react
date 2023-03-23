@@ -11,23 +11,27 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
-  ModuleReference,
-  ModuleMetaData,
+  ClientReference,
+  ClientReferenceMetadata,
   UninitializedModel,
   Response,
-  BundlerConfig,
+  SSRManifest,
 } from './ReactFlightClientHostConfig';
 
 import {
-  resolveModuleReference,
+  resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
 } from './ReactFlightClientHostConfig';
 
+import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
+
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
 
 export type JSONValue =
   | number
@@ -67,7 +71,7 @@ type ResolvedModelChunk<T> = {
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
   reason: null,
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
@@ -104,7 +108,7 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
 // We subclass Promise.prototype so that we get other methods like .catch
 Chunk.prototype = (Object.create(Promise.prototype): any);
 // TODO: This doesn't return a new Promise chain unlike the real .then
-Chunk.prototype.then = function<T>(
+Chunk.prototype.then = function <T>(
   this: SomeChunk<T>,
   resolve: (value: T) => mixed,
   reject: (reason: mixed) => mixed,
@@ -129,13 +133,13 @@ Chunk.prototype.then = function<T>(
     case BLOCKED:
       if (resolve) {
         if (chunk.value === null) {
-          chunk.value = [];
+          chunk.value = ([]: Array<(T) => mixed>);
         }
         chunk.value.push(resolve);
       }
       if (reject) {
         if (chunk.reason === null) {
-          chunk.reason = [];
+          chunk.reason = ([]: Array<(mixed) => mixed>);
         }
         chunk.reason.push(reject);
       }
@@ -147,7 +151,8 @@ Chunk.prototype.then = function<T>(
 };
 
 export type ResponseBase = {
-  _bundlerConfig: BundlerConfig,
+  _bundlerConfig: SSRManifest,
+  _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   ...
 };
@@ -199,14 +204,6 @@ function createErrorChunk<T>(
 ): ErroredChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
-}
-
-function createInitializedChunk<T>(
-  response: Response,
-  value: T,
-): InitializedChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
 }
 
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
@@ -262,7 +259,7 @@ function createResolvedModelChunk<T>(
 
 function createResolvedModuleChunk<T>(
   response: Response,
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
@@ -293,7 +290,7 @@ function resolveModelChunk<T>(
 
 function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
-  value: ModuleReference<T>,
+  value: ClientReference<T>,
 ): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // We already resolved. We didn't expect to see this.
@@ -443,7 +440,7 @@ function createModelResolver<T>(
   chunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
-) {
+): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
     blocked = initializingChunkBlockedModel;
@@ -454,7 +451,6 @@ function createModelResolver<T>(
       value: null,
     };
   }
-  // $FlowFixMe[missing-local-annot]
   return value => {
     parentObject[key] = value;
     blocked.deps--;
@@ -473,8 +469,36 @@ function createModelResolver<T>(
   };
 }
 
-function createModelReject<T>(chunk: SomeChunk<T>) {
+function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
+}
+
+function createServerReferenceProxy<A: Iterable<any>, T>(
+  response: Response,
+  metaData: {id: any, bound: null | Thenable<Array<any>>},
+): (...A) => Promise<T> {
+  const callServer = response._callServer;
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    const p = metaData.bound;
+    if (!p) {
+      return callServer(metaData.id, args);
+    }
+    if (p.status === INITIALIZED) {
+      const bound = p.value;
+      return callServer(metaData.id, bound.concat(args));
+    }
+    // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
+    // TODO: Remove the wrapper once that's fixed.
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(function (
+      bound,
+    ) {
+      return callServer(metaData.id, bound.concat(args));
+    });
+  };
+  knownServerReferences.set(proxy, metaData);
+  return proxy;
 }
 
 export function parseModelString(
@@ -483,14 +507,65 @@ export function parseModelString(
   key: string,
   value: string,
 ): any {
-  switch (value[0]) {
-    case '$': {
-      if (value === '$') {
-        return REACT_ELEMENT_TYPE;
-      } else if (value[1] === '$' || value[1] === '@') {
+  if (value[0] === '$') {
+    if (value === '$') {
+      // A very common symbol.
+      return REACT_ELEMENT_TYPE;
+    }
+    switch (value[1]) {
+      case '$': {
         // This was an escaped string value.
         return value.substring(1);
-      } else {
+      }
+      case 'L': {
+        // Lazy node
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        // We create a React.lazy wrapper around any lazy values.
+        // When passed into React, we'll know how to suspend on this.
+        return createLazyChunkWrapper(chunk);
+      }
+      case '@': {
+        // Promise
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        return chunk;
+      }
+      case 'S': {
+        // Symbol
+        return Symbol.for(value.substring(2));
+      }
+      case 'P': {
+        // Server Context Provider
+        return getOrCreateServerContext(value.substring(2)).Provider;
+      }
+      case 'F': {
+        // Server Reference
+        const id = parseInt(value.substring(2), 16);
+        const chunk = getChunk(response, id);
+        switch (chunk.status) {
+          case RESOLVED_MODEL:
+            initializeModelChunk(chunk);
+            break;
+        }
+        // The status might have changed after initialization.
+        switch (chunk.status) {
+          case INITIALIZED: {
+            const metadata = chunk.value;
+            return createServerReferenceProxy(response, metadata);
+          }
+          // We always encode it first in the stream so it won't be pending.
+          default:
+            throw chunk.reason;
+        }
+      }
+      case 'u': {
+        // matches "$undefined"
+        // Special encoding for `undefined` which can't be serialized as JSON otherwise.
+        return undefined;
+      }
+      default: {
+        // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
@@ -518,13 +593,6 @@ export function parseModelString(
         }
       }
     }
-    case '@': {
-      const id = parseInt(value.substring(1), 16);
-      const chunk = getChunk(response, id);
-      // We create a React.lazy wrapper around any lazy values.
-      // When passed into React, we'll know how to suspend on this.
-      return createLazyChunkWrapper(chunk);
-    }
   }
   return value;
 }
@@ -543,10 +611,21 @@ export function parseModelTuple(
   return value;
 }
 
-export function createResponse(bundlerConfig: BundlerConfig): ResponseBase {
+function missingCall() {
+  throw new Error(
+    'Trying to call a function from "use server" but the callServer option ' +
+      'was not implemented in your router runtime.',
+  );
+}
+
+export function createResponse(
+  bundlerConfig: SSRManifest,
+  callServer: void | CallServerCallback,
+): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response = {
     _bundlerConfig: bundlerConfig,
+    _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
   };
   return response;
@@ -566,21 +645,6 @@ export function resolveModel(
   }
 }
 
-export function resolveProvider(
-  response: Response,
-  id: number,
-  contextName: string,
-): void {
-  const chunks = response._chunks;
-  chunks.set(
-    id,
-    createInitializedChunk(
-      response,
-      getOrCreateServerContext(contextName).Provider,
-    ),
-  );
-}
-
 export function resolveModule(
   response: Response,
   id: number,
@@ -588,16 +652,19 @@ export function resolveModule(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveModuleReference(
+  const clientReferenceMetadata: ClientReferenceMetadata = parseModel(
+    response,
+    model,
+  );
+  const clientReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
-    moduleMetaData,
+    clientReferenceMetadata,
   );
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
-  const promise = preloadModule(moduleReference);
+  const promise = preloadModule(clientReference);
   if (promise) {
     let blockedChunk: BlockedChunk<any>;
     if (!chunk) {
@@ -612,29 +679,18 @@ export function resolveModule(
       blockedChunk.status = BLOCKED;
     }
     promise.then(
-      () => resolveModuleChunk(blockedChunk, moduleReference),
+      () => resolveModuleChunk(blockedChunk, clientReference),
       error => triggerErrorOnChunk(blockedChunk, error),
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+      chunks.set(id, createResolvedModuleChunk(response, clientReference));
     } else {
       // This can't actually happen because we don't have any forward
       // references to modules.
-      resolveModuleChunk(chunk, moduleReference);
+      resolveModuleChunk(chunk, clientReference);
     }
   }
-}
-
-export function resolveSymbol(
-  response: Response,
-  id: number,
-  name: string,
-): void {
-  const chunks = response._chunks;
-  // We assume that we'll always emit the symbol before anything references it
-  // to save a few bytes.
-  chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
 type ErrorWithDigest = Error & {digest?: string};

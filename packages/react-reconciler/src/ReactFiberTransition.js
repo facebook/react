@@ -44,9 +44,8 @@ const resumedCache: StackCursor<Cache | null> = createCursor(null);
 // comparing the arrays of transitions when we combine them and storing them
 // and filtering out the duplicates, we will instead store the unprocessed transitions
 // in an array and actually filter them in the passive phase.
-const transitionStack: StackCursor<Array<Transition> | null> = createCursor(
-  null,
-);
+const transitionStack: StackCursor<Array<Transition> | null> =
+  createCursor(null);
 
 function peekCacheFromPool(): Cache | null {
   if (!enableCache) {

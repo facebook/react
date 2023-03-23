@@ -42,7 +42,8 @@ installHook(window);
 
 const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
+let savedComponentFilters: Array<ComponentFilter> =
+  getDefaultComponentFilters();
 
 function debug(methodName: string, ...args: Array<mixed>) {
   if (__DEBUG__) {
@@ -66,7 +67,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     useHttps = false,
     port = 8097,
     websocket,
-    resolveRNStyle = null,
+    resolveRNStyle = (null: $FlowFixMe),
     retryConnectionDelay = 2000,
     isAppActive = () => true,
     devToolsSettingsManager,
@@ -114,7 +115,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   ws.onclose = handleClose;
   ws.onerror = handleFailed;
   ws.onmessage = handleMessage;
-  ws.onopen = function() {
+  ws.onopen = function () {
     bridge = new Bridge({
       listen(fn) {
         messageListeners.push(fn);
@@ -229,7 +230,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             get() {
               return lazyResolveRNStyle;
             },
-            set(value) {
+            set(value: $FlowFixMe) {
               lazyResolveRNStyle = value;
               initAfterTick();
             },
@@ -245,7 +246,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             get() {
               return lazyNativeStyleEditorValidAttributes;
             },
-            set(value) {
+            set(value: $FlowFixMe) {
               lazyNativeStyleEditorValidAttributes = value;
               initAfterTick();
             },

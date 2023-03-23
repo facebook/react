@@ -30,29 +30,20 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 const isChrome = getBrowserName() === 'Chrome';
 const isEdge = getBrowserName() === 'Edge';
 
-// since Chromium v102, requestAnimationFrame no longer fires in devtools_page (i.e. this file)
-// mock requestAnimationFrame with setTimeout as a temporary workaround
-// https://github.com/facebook/react/issues/24626
-if (isChrome || isEdge) {
-  const timeoutID = setTimeout(() => {
-    // if requestAnimationFrame is not working, polyfill it
-    // The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
-    const FRAME_TIME = 16;
-    let lastTime = 0;
-    window.requestAnimationFrame = function(callback, element) {
-      const now = window.performance.now();
-      const nextTime = Math.max(lastTime + FRAME_TIME, now);
-      return setTimeout(function() {
-        callback((lastTime = nextTime));
-      }, nextTime - now);
-    };
-    window.cancelAnimationFrame = clearTimeout;
-  }, 400);
-
-  requestAnimationFrame(() => {
-    clearTimeout(timeoutID);
-  });
-}
+// rAF never fires on devtools_page (because it's in the background)
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1241986#c31
+// Since we render React elements here, we need to polyfill it with setTimeout
+// The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
+const FRAME_TIME = 16;
+let lastTime = 0;
+window.requestAnimationFrame = function (callback, element) {
+  const now = window.performance.now();
+  const nextTime = Math.max(lastTime + FRAME_TIME, now);
+  return setTimeout(function () {
+    callback((lastTime = nextTime));
+  }, nextTime - now);
+};
+window.cancelAnimationFrame = clearTimeout;
 
 let panelCreated = false;
 
@@ -91,7 +82,7 @@ function createPanelIfReactLoaded() {
 
   chrome.devtools.inspectedWindow.eval(
     'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-    function(pageHasReact, error) {
+    function (pageHasReact, error) {
       if (!pageHasReact || panelCreated) {
         return;
       }
@@ -199,7 +190,7 @@ function createPanelIfReactLoaded() {
         // Otherwise the Store may miss important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
           `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
-          function(response, evalError) {
+          function (response, evalError) {
             if (evalError) {
               console.error(evalError);
             }
@@ -553,7 +544,7 @@ chrome.devtools.network.onNavigated.addListener(checkPageForReact);
 
 // Check to see if React has loaded once per second in case React is added
 // after page load
-const loadCheckInterval = setInterval(function() {
+const loadCheckInterval = setInterval(function () {
   createPanelIfReactLoaded();
 }, 1000);
 

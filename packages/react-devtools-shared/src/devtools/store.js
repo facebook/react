@@ -117,10 +117,8 @@ export default class Store extends EventEmitter<{
   _componentFilters: Array<ComponentFilter>;
 
   // Map of ID to number of recorded error and warning message IDs.
-  _errorsAndWarnings: Map<
-    number,
-    {errorCount: number, warningCount: number},
-  > = new Map();
+  _errorsAndWarnings: Map<number, {errorCount: number, warningCount: number}> =
+    new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -584,9 +582,10 @@ export default class Store extends EventEmitter<{
     }
   }
 
-  getErrorAndWarningCountForElementID(
-    id: number,
-  ): {errorCount: number, warningCount: number} {
+  getErrorAndWarningCountForElementID(id: number): {
+    errorCount: number,
+    warningCount: number,
+  } {
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -643,7 +642,7 @@ export default class Store extends EventEmitter<{
   }
 
   getOwnersListForElement(ownerID: number): Array<Element> {
-    const list = [];
+    const list: Array<Element> = [];
     const element = this._idToElement.get(ownerID);
     if (element != null) {
       list.push({
@@ -901,7 +900,7 @@ export default class Store extends EventEmitter<{
     let i = 2;
 
     // Reassemble the string table.
-    const stringTable = [
+    const stringTable: Array<string | null> = [
       null, // ID = 0 corresponds to the null string.
     ];
     const stringTableSize = operations[i++];
@@ -1029,10 +1028,8 @@ export default class Store extends EventEmitter<{
             ): any): Element);
             parentElement.children.push(id);
 
-            const [
-              displayNameWithoutHOCs,
-              hocDisplayNames,
-            ] = separateDisplayNameAndHOCs(displayName, type);
+            const [displayNameWithoutHOCs, hocDisplayNames] =
+              separateDisplayNameAndHOCs(displayName, type);
 
             const element: Element = {
               children: [],
@@ -1280,8 +1277,8 @@ export default class Store extends EventEmitter<{
 
     if (haveRootsChanged) {
       const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
-      const prevRootSupportsTimelineProfiling = this
-        ._rootSupportsTimelineProfiling;
+      const prevRootSupportsTimelineProfiling =
+        this._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
       this._rootSupportsBasicProfiling = false;
@@ -1399,22 +1396,21 @@ export default class Store extends EventEmitter<{
     this.emit('backendVersion');
   };
 
-  onBridgeProtocol: (
-    bridgeProtocol: BridgeProtocol,
-  ) => void = bridgeProtocol => {
-    if (this._onBridgeProtocolTimeoutID !== null) {
-      clearTimeout(this._onBridgeProtocolTimeoutID);
-      this._onBridgeProtocolTimeoutID = null;
-    }
+  onBridgeProtocol: (bridgeProtocol: BridgeProtocol) => void =
+    bridgeProtocol => {
+      if (this._onBridgeProtocolTimeoutID !== null) {
+        clearTimeout(this._onBridgeProtocolTimeoutID);
+        this._onBridgeProtocolTimeoutID = null;
+      }
 
-    this._bridgeProtocol = bridgeProtocol;
+      this._bridgeProtocol = bridgeProtocol;
 
-    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
-      // Technically newer versions of the frontend can, at least for now,
-      // gracefully handle older versions of the backend protocol.
-      // So for now we don't need to display the unsupported dialog.
-    }
-  };
+      if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+        // Technically newer versions of the frontend can, at least for now,
+        // gracefully handle older versions of the backend protocol.
+        // So for now we don't need to display the unsupported dialog.
+      }
+    };
 
   onBridgeProtocolTimeout: () => void = () => {
     this._onBridgeProtocolTimeoutID = null;

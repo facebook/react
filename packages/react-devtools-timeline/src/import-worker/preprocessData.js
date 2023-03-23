@@ -391,7 +391,7 @@ function processResourceSendRequest(
   const data = event.args.data;
   const requestId = data.requestId;
 
-  const availableDepths = new Array(
+  const availableDepths = new Array<boolean>(
     state.requestIdToNetworkMeasureMap.size + 1,
   ).fill(true);
   state.requestIdToNetworkMeasureMap.forEach(({depth}) => {
@@ -552,16 +552,12 @@ function processTimelineEvent(
           type: 'thrown-error',
         });
       } else if (name.startsWith('--suspense-suspend-')) {
-        const [
-          id,
-          componentName,
-          phase,
-          laneBitmaskString,
-          promiseName,
-        ] = name.substr(19).split('-');
+        const [id, componentName, phase, laneBitmaskString, promiseName] = name
+          .substr(19)
+          .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        const availableDepths = new Array(
+        const availableDepths = new Array<boolean>(
           state.unresolvedSuspenseEvents.size + 1,
         ).fill(true);
         state.unresolvedSuspenseEvents.forEach(({depth}) => {
@@ -978,14 +974,22 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   });
 
   const flamechart: Flamechart = speedscopeFlamechart.getLayers().map(layer =>
-    layer.map(({start, end, node: {frame: {name, file, line, col}}}) => ({
-      name,
-      timestamp: start / 1000,
-      duration: (end - start) / 1000,
-      scriptUrl: file,
-      locationLine: line,
-      locationColumn: col,
-    })),
+    layer.map(
+      ({
+        start,
+        end,
+        node: {
+          frame: {name, file, line, col},
+        },
+      }) => ({
+        name,
+        timestamp: start / 1000,
+        duration: (end - start) / 1000,
+        scriptUrl: file,
+        locationLine: line,
+        locationColumn: col,
+      }),
+    ),
   );
 
   return flamechart;
@@ -1005,7 +1009,7 @@ export default async function preprocessData(
 ): Promise<TimelineData> {
   const flamechart = preprocessFlamechart(timeline);
 
-  const laneToReactMeasureMap = new Map();
+  const laneToReactMeasureMap: Map<ReactLane, Array<ReactMeasure>> = new Map();
   for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
     laneToReactMeasureMap.set(lane, []);
   }

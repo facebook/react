@@ -27,10 +27,7 @@ const main = async buildId => {
   const json = JSON.parse(file);
   const alias = json.alias[0];
 
-  const commit = execSync('git rev-parse HEAD')
-    .toString()
-    .trim()
-    .substr(0, 7);
+  const commit = execSync('git rev-parse HEAD').toString().trim().substr(0, 7);
 
   let date = new Date();
   date = `${date.toLocaleDateString()} – ${date.toLocaleTimeString()}`;

@@ -38,7 +38,7 @@ let isTestAppMounted = true;
 const mountButton = ((document.getElementById(
   'mountButton',
 ): any): HTMLButtonElement);
-mountButton.addEventListener('click', function() {
+mountButton.addEventListener('click', function () {
   if (isTestAppMounted) {
     if (typeof window.unmountTestApp === 'function') {
       window.unmountTestApp();

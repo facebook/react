@@ -60,6 +60,7 @@ function FiberRootNode(
   this.pingCache = null;
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
+  this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
   this.callbackNode = null;

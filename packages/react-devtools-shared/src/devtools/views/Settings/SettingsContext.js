@@ -107,56 +107,44 @@ function SettingsContextController({
 }: Props): React.Node {
   const bridge = useContext(BridgeContext);
 
-  const [
-    displayDensity,
-    setDisplayDensity,
-  ] = useLocalStorageWithLog<DisplayDensity>(
-    'React::DevTools::displayDensity',
-    'compact',
-  );
+  const [displayDensity, setDisplayDensity] =
+    useLocalStorageWithLog<DisplayDensity>(
+      'React::DevTools::displayDensity',
+      'compact',
+    );
   const [theme, setTheme] = useLocalStorageWithLog<Theme>(
     LOCAL_STORAGE_BROWSER_THEME,
     'auto',
   );
-  const [
-    appendComponentStack,
-    setAppendComponentStack,
-  ] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-    true,
-  );
-  const [
-    breakOnConsoleErrors,
-    setBreakOnConsoleErrors,
-  ] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-    false,
-  );
+  const [appendComponentStack, setAppendComponentStack] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+      true,
+    );
+  const [breakOnConsoleErrors, setBreakOnConsoleErrors] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+      false,
+    );
   const [parseHookNames, setParseHookNames] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
     false,
   );
-  const [
-    hideConsoleLogsInStrictMode,
-    setHideConsoleLogsInStrictMode,
-  ] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-    false,
-  );
-  const [
-    showInlineWarningsAndErrors,
-    setShowInlineWarningsAndErrors,
-  ] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-    true,
-  );
-  const [
-    traceUpdatesEnabled,
-    setTraceUpdatesEnabled,
-  ] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
-    false,
-  );
+  const [hideConsoleLogsInStrictMode, setHideConsoleLogsInStrictMode] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+      false,
+    );
+  const [showInlineWarningsAndErrors, setShowInlineWarningsAndErrors] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+      true,
+    );
+  const [traceUpdatesEnabled, setTraceUpdatesEnabled] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+      false,
+    );
 
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [

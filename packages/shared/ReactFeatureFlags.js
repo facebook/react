@@ -17,6 +17,18 @@ export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // -----------------------------------------------------------------------------
+// Killswitch
+//
+// Flags that exist solely to turn off a change in case it causes a regression
+// when it rolls out to prod. We should remove these as soon as possible.
+// -----------------------------------------------------------------------------
+
+// This is phrased as a negative so that if someone forgets to add a GK, the
+// default is to enable the feature. It should only be overridden if there's
+// a regression in prod.
+export const revertRemovalOfSiblingPrerendering = false;
+
+// -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
 // Flags that can be probably deleted or landed, but might require extra effort
@@ -31,7 +43,8 @@ export const skipUnmountedBoundaries = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
+  true;
 
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
@@ -101,19 +114,6 @@ export const enableHostSingletons = true;
 
 export const enableFloat = true;
 
-// When a node is unmounted, recurse into the Fiber subtree and clean out
-// references. Each level cleans up more fiber fields than the previous level.
-// As far as we know, React itself doesn't leak, but because the Fiber contains
-// cycles, even a single leak in product code can cause us to retain large
-// amounts of memory.
-//
-// The long term plan is to remove the cycles, but in the meantime, we clear
-// additional fields to mitigate.
-//
-// It's an enum so that we can experiment with different levels of
-// aggressiveness.
-export const deletedTreeCleanUpLevel = 3;
-
 export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
@@ -125,7 +125,7 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = false;
+export const enableFizzExternalRuntime = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -146,9 +146,6 @@ export const disableModulePatternComponents = false;
 export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
-
-// Enables time slicing for updates that aren't wrapped in startTransition.
-export const enableSyncDefaultUpdates = true;
 
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 
@@ -184,10 +181,13 @@ export const enableTrustedTypesIntegration = false;
 // DOM properties
 export const disableInputAttributeSyncing = false;
 
+// Remove IE and MsApp specific workarounds for innerHTML
+export const disableIEWorkarounds = __EXPERIMENTAL__;
+
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = false;
+export const enableFilterEmptyStringAttributesDOM = __EXPERIMENTAL__;
 
 // Changes the behavior for rendering custom elements in both server rendering
 // and client rendering, mostly to allow JSX attributes to apply to the custom
@@ -197,19 +197,6 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
-
-// -----------------------------------------------------------------------------
-// JSX Chopping Block
-//
-// Similar to main Chopping Block but only flags related to JSX. These are
-// grouped because we will likely batch all of them into a single major release.
-// -----------------------------------------------------------------------------
-
-// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-// Enables a warning when trying to spread a 'key' to an element;
-// a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools

@@ -64,29 +64,28 @@ type CachedRuntimeCodeMetadata = {
   sourceMapConsumer: SourceMapConsumerType | null,
 };
 
-const runtimeURLToMetadataCache: LRUCache<
-  string,
-  CachedRuntimeCodeMetadata,
-> = new LRU({max: 50});
+const runtimeURLToMetadataCache: LRUCache<string, CachedRuntimeCodeMetadata> =
+  new LRU({max: 50});
 
 type CachedSourceCodeMetadata = {
   originalSourceAST: AST,
   originalSourceCode: string,
 };
 
-const originalURLToMetadataCache: LRUCache<
-  string,
-  CachedSourceCodeMetadata,
-> = new LRU({
-  max: 50,
-  dispose: (originalSourceURL: string, metadata: CachedSourceCodeMetadata) => {
-    if (__DEBUG__) {
-      console.log(
-        `originalURLToMetadataCache.dispose() Evicting cached metadata for "${originalSourceURL}"`,
-      );
-    }
-  },
-});
+const originalURLToMetadataCache: LRUCache<string, CachedSourceCodeMetadata> =
+  new LRU({
+    max: 50,
+    dispose: (
+      originalSourceURL: string,
+      metadata: CachedSourceCodeMetadata,
+    ) => {
+      if (__DEBUG__) {
+        console.log(
+          `originalURLToMetadataCache.dispose() Evicting cached metadata for "${originalSourceURL}"`,
+        );
+      }
+    },
+  });
 
 export async function parseSourceAndMetadata(
   hooksList: HooksList,
@@ -196,7 +195,8 @@ function initializeHookParsedMetadata(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
 ) {
   // Create map of unique source locations (file names plus line and column numbers) to metadata about hooks.
-  const locationKeyToHookParsedMetadata: LocationKeyToHookParsedMetadata = new Map();
+  const locationKeyToHookParsedMetadata: LocationKeyToHookParsedMetadata =
+    new Map();
   locationKeyToHookSourceAndMetadata.forEach(
     (hookSourceAndMetadata, locationKey) => {
       const hookParsedMetadata: HookParsedMetadata = {
@@ -222,9 +222,8 @@ function parseSourceAST(
 ): void {
   locationKeyToHookSourceAndMetadata.forEach(
     (hookSourceAndMetadata, locationKey) => {
-      const hookParsedMetadata = locationKeyToHookParsedMetadata.get(
-        locationKey,
-      );
+      const hookParsedMetadata =
+        locationKeyToHookParsedMetadata.get(locationKey);
       if (hookParsedMetadata == null) {
         throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
       }
@@ -250,7 +249,8 @@ function parseSourceAST(
       }
 
       const {metadataConsumer, sourceMapConsumer} = hookParsedMetadata;
-      const runtimeSourceCode = ((hookSourceAndMetadata.runtimeSourceCode: any): string);
+      const runtimeSourceCode =
+        ((hookSourceAndMetadata.runtimeSourceCode: any): string);
       let hasHookMap = false;
       let originalSourceURL;
       let originalSourceCode;
@@ -268,15 +268,11 @@ function parseSourceAST(
         // Namespace them?
         originalSourceURL = hookSourceAndMetadata.runtimeSourceURL;
       } else {
-        const {
-          column,
-          line,
-          sourceContent,
-          sourceURL,
-        } = sourceMapConsumer.originalPositionFor({
-          columnNumber,
-          lineNumber,
-        });
+        const {column, line, sourceContent, sourceURL} =
+          sourceMapConsumer.originalPositionFor({
+            columnNumber,
+            lineNumber,
+          });
 
         originalSourceColumnNumber = column;
         originalSourceLineNumber = line;
@@ -287,7 +283,8 @@ function parseSourceAST(
       hookParsedMetadata.originalSourceCode = originalSourceCode;
       hookParsedMetadata.originalSourceURL = originalSourceURL;
       hookParsedMetadata.originalSourceLineNumber = originalSourceLineNumber;
-      hookParsedMetadata.originalSourceColumnNumber = originalSourceColumnNumber;
+      hookParsedMetadata.originalSourceColumnNumber =
+        originalSourceColumnNumber;
 
       if (
         metadataConsumer != null &&
@@ -381,9 +378,8 @@ function parseSourceMaps(
 ) {
   locationKeyToHookSourceAndMetadata.forEach(
     (hookSourceAndMetadata, locationKey) => {
-      const hookParsedMetadata = locationKeyToHookParsedMetadata.get(
-        locationKey,
-      );
+      const hookParsedMetadata =
+        locationKeyToHookParsedMetadata.get(locationKey);
       if (hookParsedMetadata == null) {
         throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
       }

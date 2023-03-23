@@ -140,9 +140,9 @@ export function pushTextInstance(
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  resources: Resources,
   responseState: ResponseState,
   formatContext: FormatContext,
   textEmbedded: boolean,
@@ -158,9 +158,10 @@ export function pushStartInstance(
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  responseState: ResponseState,
+  formatContext: FormatContext,
 ): void {
   target.push(END);
 }
@@ -315,29 +316,25 @@ export function writeClientRenderBoundaryInstruction(
   return writeChunkAndReturn(destination, formatID(boundaryID));
 }
 
-export function writeInitialResources(
+export function writePreamble(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
   willFlushAllSegments: boolean,
-): boolean {
-  return true;
-}
+) {}
 
-export function writeImmediateResources(
+export function writeHoistables(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
-): boolean {
-  return true;
-}
-
-export function hoistResources(
-  resources: Resources,
-  boundaryResources: BoundaryResources,
 ) {}
 
-export function hoistResourcesToRoot(
+export function writePostamble(
+  destination: Destination,
+  responseState: ResponseState,
+) {}
+
+export function hoistResources(
   resources: Resources,
   boundaryResources: BoundaryResources,
 ) {}
@@ -350,3 +347,11 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources: Resources,
   boundaryResources: ?BoundaryResources,
 ) {}
+
+export function writeResourcesForBoundary(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
