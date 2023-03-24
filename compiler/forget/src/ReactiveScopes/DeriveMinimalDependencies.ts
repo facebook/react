@@ -43,7 +43,7 @@ export class ReactiveScopeDependencyTree {
   }
 
   add(dep: ReactiveScopeDependency, inConditional: boolean): void {
-    const path = dep.path ?? [];
+    const { path } = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
     const accessType = inConditional

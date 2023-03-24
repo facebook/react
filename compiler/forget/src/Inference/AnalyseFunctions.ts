@@ -26,7 +26,7 @@ class State {
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
-        path: [...(objectDependency.path ?? []), property],
+        path: [...objectDependency.path, property],
       };
     }
     this.properties.set(lvalue.identifier, nextDependency);
@@ -37,7 +37,7 @@ class State {
       value.identifier
     ) ?? {
       identifier: value.identifier,
-      path: null,
+      path: [],
     };
     this.properties.set(lvalue.identifier, resolved);
   }

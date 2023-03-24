@@ -56,11 +56,7 @@ export function printReactiveBlock(
 
 function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier = printIdentifier(dependency.identifier);
-  if (dependency.path === null) {
-    return identifier;
-  } else {
-    return `${identifier}${dependency.path.map((prop) => `.${prop}`).join("")}`;
-  }
+  return `${identifier}${dependency.path.map((prop) => `.${prop}`).join("")}`;
 }
 
 export function printReactiveInstructions(

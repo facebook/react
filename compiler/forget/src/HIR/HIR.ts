@@ -738,7 +738,7 @@ export type ReactiveScope = {
 
 export type ReactiveScopeDependency = {
   identifier: Identifier;
-  path: Array<string> | null;
+  path: Array<string>;
 };
 
 /**

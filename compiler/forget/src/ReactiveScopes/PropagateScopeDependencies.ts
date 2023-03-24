@@ -198,7 +198,7 @@ class Context {
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
-        path: [...(objectDependency.path ?? []), property],
+        path: [...objectDependency.path, property],
       };
     }
     this.#properties.set(lvalue.identifier, nextDependency);
@@ -231,10 +231,20 @@ class Context {
 
   visitOperand(place: Place): void {
     const resolved = this.#temporaries.get(place.identifier) ?? place;
-    this.visitDependency({
+    // if this operand is a temporary created for a property load, try to resolve it to
+    // the expanded Place. Fall back to using the operand as-is.
+
+    let dependency: ReactiveScopeDependency = {
       identifier: resolved.identifier,
-      path: null,
-    });
+      path: [],
+    };
+    if (resolved.identifier.name === null) {
+      const propertyDependency = this.#properties.get(resolved.identifier);
+      if (propertyDependency !== undefined) {
+        dependency = { ...propertyDependency };
+      }
+    }
+    this.visitDependency(dependency);
   }
 
   visitProperty(object: Place, property: string): void {
@@ -249,28 +259,13 @@ class Context {
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
-        path: [...(objectDependency.path ?? []), property],
+        path: [...objectDependency.path, property],
       };
     }
     this.visitDependency(nextDependency);
   }
 
-  visitDependency(dependency: ReactiveScopeDependency): void {
-    let maybeDependency: ReactiveScopeDependency;
-    if (dependency.path !== null) {
-      // Operands may have memberPaths when propagating depenencies of an inner scope upward
-      // In this case we use the dependency as-is
-      maybeDependency = dependency;
-    } else {
-      // Otherwise if this operand is a temporary created for a property load, resolve it to
-      // the expanded Place. Fall back to using the operand as-is.
-      let propDep = this.#properties.get(dependency.identifier);
-      if (dependency.identifier.name === null && propDep !== undefined) {
-        maybeDependency = { ...propDep };
-      } else {
-        maybeDependency = dependency;
-      }
-    }
+  visitDependency(maybeDependency: ReactiveScopeDependency): void {
     // Any value used after its originally defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
     // some later code needs access to the value. If the current
