@@ -11,6 +11,7 @@ import { Expression } from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
+import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment, EnvironmentOptions } from "./Environment";
 import {
@@ -938,6 +939,12 @@ function lowerExpression(
         args,
         loc: exprLoc,
       };
+    }
+    case "OptionalCallExpression": {
+      const expr = exprPath as NodePath<t.OptionalCallExpression>;
+      const _optional = expr.get("optional");
+
+      return todo("OptionalCallExpression");
     }
     case "CallExpression": {
       const expr = exprPath as NodePath<t.CallExpression>;

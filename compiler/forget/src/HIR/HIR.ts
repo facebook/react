@@ -251,7 +251,8 @@ export type Terminal =
   | DoWhileTerminal
   | WhileTerminal
   | LogicalTerminal
-  | TernaryTerminal;
+  | TernaryTerminal
+  | OptionalCallTerminal;
 
 /**
  * Terminal nodes allowed for a value block
@@ -346,6 +347,14 @@ export type LogicalTerminal = {
 
 export type TernaryTerminal = {
   kind: "ternary";
+  test: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type OptionalCallTerminal = {
+  kind: "optional-call";
   test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;

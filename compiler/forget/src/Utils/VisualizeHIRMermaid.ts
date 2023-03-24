@@ -107,6 +107,10 @@ function printTerminalLabel(terminal: Terminal): string {
       buffer.push("Ternary");
       break;
     }
+    case "optional-call": {
+      buffer.push("OptionalCall");
+      break;
+    }
     case "do-while": {
       buffer.push("DoWhile");
       break;
@@ -153,6 +157,11 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
       break;
     }
     case "ternary": {
+      buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
+      break;
+    }
+    case "optional-call": {
       buffer.push(printJumpArrow(blockId, terminal.test, "test"));
       buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;

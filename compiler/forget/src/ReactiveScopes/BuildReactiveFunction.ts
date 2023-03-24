@@ -29,6 +29,7 @@ import {
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
+import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -480,6 +481,9 @@ class Driver {
         this.cx.unschedule(scheduleId);
         this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         break;
+      }
+      case "optional-call": {
+        todo("BuildReactiveFunction: support optional-call terminal");
       }
       case "goto": {
         switch (terminal.variant) {
