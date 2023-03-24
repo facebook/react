@@ -1871,7 +1871,7 @@ function lowerMemberExpression(
       object: { ...object },
       property: property.node.name,
       loc: exprLoc,
-      optional: t.isOptionalMemberExpression(expr),
+      optional: expr.node.optional ?? false,
     };
     return { object, property: property.node.name, value };
   } else {

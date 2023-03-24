@@ -349,9 +349,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "PropertyLoad": {
-      value = `PropertyLoad ${printPlace(instrValue.object)}.${
-        instrValue.property
-      }`;
+      value = `PropertyLoad ${printPlace(instrValue.object)}${
+        instrValue.optional ? "?" : ""
+      }.${instrValue.property}`;
       break;
     }
     case "PropertyStore": {
