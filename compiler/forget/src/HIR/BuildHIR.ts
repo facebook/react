@@ -11,7 +11,6 @@ import { Expression } from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
-import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment, EnvironmentOptions } from "./Environment";
 import {
@@ -942,9 +941,114 @@ function lowerExpression(
     }
     case "OptionalCallExpression": {
       const expr = exprPath as NodePath<t.OptionalCallExpression>;
-      const _optional = expr.get("optional");
+      const optional = expr.get("optional");
+      const calleePath = expr.get("callee");
+      if (
+        calleePath.isMemberExpression() ||
+        calleePath.isOptionalMemberExpression()
+      ) {
+        // collect any errors from the arguments
+        lowerArguments(builder, expr.get("arguments"));
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Support OptionalCallExpression with ${calleePath.type} callee`,
+          severity: ErrorSeverity.Todo,
+          nodePath: calleePath,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
+      const loc = expr.node.loc ?? GeneratedSource;
+      const place = buildTemporaryPlace(builder, loc);
+      const continuationBlock = builder.reserve(builder.currentBlockKind());
 
-      return todo("OptionalCallExpression");
+      const callee = lowerExpressionToTemporary(builder, calleePath);
+
+      const consequent = builder.enter("value", () => {
+        const args = lowerArguments(builder, expr.get("arguments"));
+        const temp = buildTemporaryPlace(builder, loc);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...temp },
+          value: {
+            kind: "CallExpression",
+            callee: { ...callee },
+            args,
+            loc,
+          },
+          loc,
+        });
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: buildTemporaryPlace(builder, loc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: { ...temp },
+            loc,
+          },
+          loc,
+        });
+        return {
+          kind: "goto",
+          variant: GotoVariant.Break,
+          block: continuationBlock.id,
+          id: makeInstructionId(0),
+        };
+      });
+      const alternate = builder.enter("value", () => {
+        const temp = buildTemporaryPlace(builder, loc);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...temp },
+          value: {
+            kind: "Primitive",
+            value: undefined,
+            loc,
+          },
+          loc,
+        });
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: buildTemporaryPlace(builder, loc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: { ...temp },
+            loc,
+          },
+          loc,
+        });
+        return {
+          kind: "goto",
+          variant: GotoVariant.Break,
+          block: continuationBlock.id,
+          id: makeInstructionId(0),
+        };
+      });
+
+      const testBlock = builder.enter("value", () => {
+        return {
+          kind: "branch",
+          test: { ...callee },
+          consequent,
+          alternate,
+          id: makeInstructionId(0),
+          loc,
+        };
+      });
+
+      builder.terminateWithContinuation(
+        {
+          kind: "optional-call",
+          optional,
+          test: testBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc,
+        },
+        continuationBlock
+      );
+
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "CallExpression": {
       const expr = exprPath as NodePath<t.CallExpression>;

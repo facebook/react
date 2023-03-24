@@ -567,6 +567,7 @@ export function mapTerminalSuccessors(
       const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "optional-call",
+        optional: terminal.optional,
         test,
         fallthrough,
         id: makeInstructionId(0),

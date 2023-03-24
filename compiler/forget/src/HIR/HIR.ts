@@ -355,6 +355,10 @@ export type TernaryTerminal = {
 
 export type OptionalCallTerminal = {
   kind: "optional-call";
+  // Whether the call itself is optional. If false, this means that the callee itself
+  // is optionally evaluated (has some OptionalMemberExpresion) but the final call is
+  // required (if the callee is not null/undefined).
+  optional: boolean;
   test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
