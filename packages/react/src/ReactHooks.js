@@ -234,8 +234,10 @@ export function useMemoCache(size: number): Array<any> {
   return dispatcher.useMemoCache(size);
 }
 
-export function useEffectEvent<T>(callback: T): void {
+export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): F {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function]
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useEffectEvent(callback);
 }
