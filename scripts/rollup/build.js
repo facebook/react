@@ -18,7 +18,6 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
-const stripUnusedImports = require('./plugins/strip-unused-imports');
 const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
@@ -174,6 +173,31 @@ function getBabelConfig(
   return options;
 }
 
+let getRollupInteropValue = id => {
+  // We're setting Rollup to assume that imports are ES modules unless otherwise specified.
+  // However, we also compile ES import syntax to `require()` using Babel.
+  // This causes Rollup to turn uses of `import SomeDefaultImport from 'some-module' into
+  // references to `SomeDefaultImport.default` due to CJS/ESM interop.
+  // Some CJS modules don't have a `.default` export, and the rewritten import is incorrect.
+  // Specifying `interop: 'default'` instead will have Rollup use the imported variable as-is,
+  // without adding a `.default` to the reference.
+  const modulesWithCommonJsExports = [
+    'JSResourceReferenceImpl',
+    'error-stack-parser',
+    'art/core/transform',
+    'art/modes/current',
+    'art/modes/fast-noSideEffects',
+    'art/modes/svg',
+  ];
+
+  if (modulesWithCommonJsExports.includes(id)) {
+    return 'default';
+  }
+
+  // For all other modules, handle imports without any import helper utils
+  return 'esModule';
+};
+
 function getRollupOutputOptions(
   outputPath,
   format,
@@ -188,7 +212,7 @@ function getRollupOutputOptions(
     format,
     globals,
     freeze: !isProduction,
-    interop: false,
+    interop: getRollupInteropValue,
     name: globalName,
     sourcemap: false,
     esModule: false,
@@ -420,9 +444,6 @@ function getPlugins(
         assume_function_wrapper: !isUMDBundle,
         renaming: !shouldStayReadable,
       }),
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
       prettier({
@@ -616,7 +637,7 @@ async function createBundle(bundle, bundleType) {
     output: {
       externalLiveBindings: false,
       freeze: false,
-      interop: false,
+      interop: getRollupInteropValue,
       esModule: false,
     },
   };
