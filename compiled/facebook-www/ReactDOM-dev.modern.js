@@ -21994,9 +21994,7 @@ function readContextDuringReconcilation(consumer, context, renderLanes) {
 }
 
 function readContextForConsumer(consumer, context) {
-  var value = isPrimaryRenderer
-    ? context._currentValue
-    : context._currentValue2;
+  var value = context._currentValue;
 
   if (lastFullyObservedContext === context);
   else {
@@ -33524,7 +33522,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1925ba21";
+var ReactVersion = "18.3.0-www-modern-b7692384";
 
 function createPortal$1(
   children,
@@ -42373,7 +42371,6 @@ function getCurrentEventPriority() {
 
   return getEventPriority(currentEvent.type);
 }
-var isPrimaryRenderer = true;
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.
 

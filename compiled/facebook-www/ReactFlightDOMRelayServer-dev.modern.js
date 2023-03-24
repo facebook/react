@@ -215,9 +215,6 @@ var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a n
 // When falsy, it should be removed.
 
 var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
-// When falsy, it should be removed.
-
-var POSITIVE_NUMERIC = 6;
 
 function PropertyInfoRecord(
   name,
@@ -240,27 +237,6 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 } // When adding attributes to this list, be sure to also add them to
-// This is a mapping from React prop names to the attribute names.
-
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  var name = _ref[0],
-    attributeName = _ref[1];
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" HTML attributes that accept "true" and "false".
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 
@@ -278,27 +254,6 @@ function PropertyInfoRecord(
     false
   );
 }); // These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML boolean attributes.
 
 [
   "allowFullScreen",
@@ -337,67 +292,6 @@ function PropertyInfoRecord(
     false
   );
 }); // These are the few React props that we set as DOM properties
-// rather than attributes. These are all booleans.
-
-[
-  "checked", // Note: `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`. We have special logic for handling this.
-  "multiple",
-  "muted",
-  "selected" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    true, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that are "overloaded booleans": they behave like
-// booleans, but can also accept a string value.
-
-[
-  "capture",
-  "download" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    OVERLOADED_BOOLEAN,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be positive numbers.
-
-[
-  "cols",
-  "rows",
-  "size",
-  "span" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  new PropertyInfoRecord(
-    name,
-    POSITIVE_NUMERIC,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be numbers.
 
 ["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -499,17 +393,7 @@ var capitalize = function (token) {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
+  attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 }); // String SVG attributes with the xlink namespace.
 
 [
@@ -522,17 +406,7 @@ var capitalize = function (token) {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    "http://www.w3.org/1999/xlink",
-    false, // sanitizeURL
-    false
-  );
+  attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 }); // String SVG attributes with the xml namespace.
 
 [
@@ -542,17 +416,7 @@ var capitalize = function (token) {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    false, // sanitizeURL
-    false
-  );
+  attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 }); // These attribute exists both in HTML and SVG.
 // The attribute name is case-sensitive in SVG so we can't just use
 // the React name like we do for attributes that exist only in HTML.
@@ -569,26 +433,6 @@ var capitalize = function (token) {
     false
   );
 }); // These attributes accept URLs. These must not allow javascript: URLS.
-
-new PropertyInfoRecord(
-  "xlinkHref",
-  STRING,
-  false, // mustUseProperty
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  true, // sanitizeURL
-  false
-);
-
-new PropertyInfoRecord(
-  "formAction",
-  STRING,
-  false, // mustUseProperty
-  "formaction", // attributeName
-  null, // attributeNamespace
-  true, // sanitizeURL
-  false
-);
 ["src", "href", "action"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(

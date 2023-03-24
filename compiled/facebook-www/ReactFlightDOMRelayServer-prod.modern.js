@@ -80,41 +80,16 @@ function PropertyInfoRecord(
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
 }
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  new PropertyInfoRecord(_ref[0], 1, !1, _ref[1], null, !1, !1);
-});
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
   name
 ) {
   new PropertyInfoRecord(name, 2, !1, name.toLowerCase(), null, !1, !1);
-});
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  new PropertyInfoRecord(name, 2, !1, name, null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
   .forEach(function (name) {
     new PropertyInfoRecord(name, 3, !1, name.toLowerCase(), null, !1, !1);
   });
-["checked", "multiple", "muted", "selected"].forEach(function (name) {
-  new PropertyInfoRecord(name, 3, !0, name, null, !1, !1);
-});
-["capture", "download"].forEach(function (name) {
-  new PropertyInfoRecord(name, 4, !1, name, null, !1, !1);
-});
-["cols", "rows", "size", "span"].forEach(function (name) {
-  new PropertyInfoRecord(name, 6, !1, name, null, !1, !1);
-});
 ["rowSpan", "start"].forEach(function (name) {
   new PropertyInfoRecord(name, 5, !1, name.toLowerCase(), null, !1, !1);
 });
@@ -125,34 +100,15 @@ function capitalize(token) {
 "accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering transform-origin underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
   .split(" ")
   .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    new PropertyInfoRecord(name, 1, !1, attributeName, null, !1, !1);
+    attributeName.replace(CAMELIZE, capitalize);
   });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
   .split(" ")
   .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    new PropertyInfoRecord(
-      name,
-      1,
-      !1,
-      attributeName,
-      "http://www.w3.org/1999/xlink",
-      !1,
-      !1
-    );
+    attributeName.replace(CAMELIZE, capitalize);
   });
 ["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize);
-  new PropertyInfoRecord(
-    name,
-    1,
-    !1,
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    !1,
-    !1
-  );
+  attributeName.replace(CAMELIZE, capitalize);
 });
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   new PropertyInfoRecord(
@@ -165,16 +121,6 @@ function capitalize(token) {
     !1
   );
 });
-new PropertyInfoRecord(
-  "xlinkHref",
-  1,
-  !1,
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  !0,
-  !1
-);
-new PropertyInfoRecord("formAction", 1, !1, "formaction", null, !0, !1);
 ["src", "href", "action"].forEach(function (attributeName) {
   new PropertyInfoRecord(
     attributeName,
