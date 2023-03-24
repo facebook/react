@@ -16,7 +16,8 @@
     "app.html",
     "app.js",
     "index.js",
-    "icons"
+    "icons",
+    "preload.js"
   ],
   "scripts": {
     "start": "node bin.js"
