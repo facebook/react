@@ -444,6 +444,12 @@ function visitReactiveValue(
   value: ReactiveValue
 ): void {
   switch (value.kind) {
+    case "OptionalCall": {
+      context.enterConditional(() => {
+        visitReactiveValue(context, id, value.call);
+      });
+      break;
+    }
     case "LogicalExpression": {
       visitReactiveValue(context, id, value.left);
       context.enterConditional(() => {

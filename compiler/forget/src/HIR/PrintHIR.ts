@@ -440,6 +440,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `Global ${instrValue.name}`;
       break;
     }
+    case "OptionalCall": {
+      value = `OptionalCall ${printInstructionValue(instrValue.call)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

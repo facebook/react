@@ -508,6 +508,7 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
+    case "OptionalCall":
     case "FunctionExpression":
     case "TaggedTemplateExpression":
     case "CallExpression":

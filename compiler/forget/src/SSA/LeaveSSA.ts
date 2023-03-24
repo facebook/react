@@ -336,7 +336,11 @@ export function leaveSSA(fn: HIRFunction): void {
       const update = fn.body.blocks.get(terminal.update)!;
       pushPhis(update);
     }
-    if (terminal.kind === "logical" || terminal.kind === "ternary") {
+    if (
+      terminal.kind === "logical" ||
+      terminal.kind === "ternary" ||
+      terminal.kind === "optional-call"
+    ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
       pushPhis(fallthrough);
     }

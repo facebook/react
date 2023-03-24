@@ -589,6 +589,20 @@ function codegenInstructionValue(
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
+    case "OptionalCall": {
+      const call = codegenInstructionValue(cx, instrValue.call);
+      invariant(call.type === "CallExpression", "Expected a call expression");
+      invariant(
+        t.isExpression(call.callee),
+        "v8 intrinsics are validated during lowering"
+      );
+      value = t.optionalCallExpression(
+        call.callee,
+        call.arguments,
+        instrValue.optional
+      );
+      break;
+    }
     case "MethodCall": {
       const memberExpr = codegenPlace(cx, instrValue.property);
       invariant(

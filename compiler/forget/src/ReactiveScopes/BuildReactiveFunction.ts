@@ -29,7 +29,6 @@ import {
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
-import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -457,6 +456,7 @@ class Driver {
 
         break;
       }
+      case "optional-call":
       case "ternary":
       case "logical": {
         const fallthroughId = terminal.fallthrough;
@@ -481,9 +481,6 @@ class Driver {
         this.cx.unschedule(scheduleId);
         this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         break;
-      }
-      case "optional-call": {
-        todo("BuildReactiveFunction: support optional-call terminal");
       }
       case "goto": {
         switch (terminal.variant) {
@@ -655,6 +652,31 @@ class Driver {
     id: InstructionId;
   } {
     switch (terminal.kind) {
+      case "optional-call": {
+        const test = this.visitValueBlock(terminal.test, terminal.loc);
+        const testBlock = this.cx.ir.blocks.get(test.block)!;
+        invariant(
+          testBlock.terminal.kind === "branch",
+          "Unexpected terminal kind '%s' for optional call test block",
+          testBlock.terminal.kind
+        );
+        const consequent = this.visitValueBlock(
+          testBlock.terminal.consequent,
+          terminal.loc
+        );
+        return {
+          place: { ...consequent.place },
+          value: {
+            kind: "OptionalCall",
+            optional: terminal.optional,
+            call: consequent.value,
+            id: terminal.id,
+            loc: terminal.loc,
+          },
+          fallthrough: terminal.fallthrough,
+          id: terminal.id,
+        };
+      }
       case "logical": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;

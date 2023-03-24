@@ -941,7 +941,7 @@ function lowerExpression(
     }
     case "OptionalCallExpression": {
       const expr = exprPath as NodePath<t.OptionalCallExpression>;
-      const optional = expr.get("optional");
+      const optional = expr.node.optional;
       const calleePath = expr.get("callee");
       if (
         calleePath.isMemberExpression() ||

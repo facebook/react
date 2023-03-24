@@ -90,7 +90,8 @@ export type ReactiveValue =
   | InstructionValue
   | ReactiveLogicalValue
   | ReactiveSequenceValue
-  | ReactiveTernaryValue;
+  | ReactiveTernaryValue
+  | ReactiveOptionalCallValue;
 
 export type ReactiveLogicalValue = {
   kind: "LogicalExpression";
@@ -113,6 +114,14 @@ export type ReactiveSequenceValue = {
   instructions: Array<ReactiveInstruction>;
   id: InstructionId;
   value: ReactiveValue;
+  loc: SourceLocation;
+};
+
+export type ReactiveOptionalCallValue = {
+  kind: "OptionalCall";
+  id: InstructionId;
+  call: ReactiveValue;
+  optional: boolean;
   loc: SourceLocation;
 };
 
