@@ -943,19 +943,6 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.OptionalCallExpression>;
       const optional = expr.node.optional;
       const calleePath = expr.get("callee");
-      if (
-        calleePath.isMemberExpression() ||
-        calleePath.isOptionalMemberExpression()
-      ) {
-        // collect any errors from the arguments
-        lowerArguments(builder, expr.get("arguments"));
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Support OptionalCallExpression with ${calleePath.type} callee`,
-          severity: ErrorSeverity.Todo,
-          nodePath: calleePath,
-        });
-        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
-      }
       const loc = expr.node.loc ?? GeneratedSource;
       const place = buildTemporaryPlace(builder, loc);
       const continuationBlock = builder.reserve(builder.currentBlockKind());
@@ -963,24 +950,64 @@ function lowerExpression(
       // Lower the callee in the current block: the callee is always unconditionally evaluated
       // The test block's branch will test on this value to determine whether to evaluate the call (consequent)
       // or evaluate to undefined (alternate)
-      const callee = lowerExpressionToTemporary(builder, calleePath);
+      let callee:
+        | { kind: "CallExpression"; callee: Place }
+        | { kind: "MethodCall"; receiver: Place; property: Place };
+      if (
+        calleePath.isMemberExpression() ||
+        calleePath.isOptionalMemberExpression()
+      ) {
+        const memberExpr = lowerMemberExpression(builder, calleePath);
+        const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: { ...propertyPlace },
+          value: memberExpr.value,
+          loc: GeneratedSource,
+        });
+        callee = {
+          kind: "MethodCall",
+          receiver: memberExpr.object,
+          property: propertyPlace,
+        };
+      } else {
+        callee = {
+          kind: "CallExpression",
+          callee: lowerExpressionToTemporary(builder, calleePath),
+        };
+      }
 
       // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
       // the semantic of conditional evaluation depending on the callee
       const consequent = builder.enter("value", () => {
         const args = lowerArguments(builder, expr.get("arguments"));
         const temp = buildTemporaryPlace(builder, loc);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...temp },
-          value: {
-            kind: "CallExpression",
-            callee: { ...callee },
-            args,
+        if (callee.kind === "CallExpression") {
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: { ...temp },
+            value: {
+              kind: "CallExpression",
+              callee: { ...callee.callee },
+              args,
+              loc,
+            },
             loc,
-          },
-          loc,
-        });
+          });
+        } else {
+          builder.push({
+            id: makeInstructionId(0),
+            lvalue: { ...temp },
+            value: {
+              kind: "MethodCall",
+              receiver: { ...callee.receiver },
+              property: { ...callee.property },
+              args,
+              loc: exprLoc,
+            },
+            loc,
+          });
+        }
         builder.push({
           id: makeInstructionId(0),
           lvalue: buildTemporaryPlace(builder, loc),
@@ -1033,9 +1060,11 @@ function lowerExpression(
       });
 
       const testBlock = builder.enter("value", () => {
+        const testPlace =
+          callee.kind === "CallExpression" ? callee.callee : callee.property;
         return {
           kind: "branch",
-          test: { ...callee },
+          test: { ...testPlace },
           consequent,
           alternate,
           id: makeInstructionId(0),
