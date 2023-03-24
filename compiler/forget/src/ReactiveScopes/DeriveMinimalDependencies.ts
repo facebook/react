@@ -3,10 +3,6 @@ import { Identifier, ReactiveScopeDependency } from "../HIR";
 import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
-export type ReactiveScopeDependencyInfo = ReactiveScopeDependency & {
-  cond: boolean;
-};
-
 /**
  * Finalizes a set of ReactiveScopeDependencies to produce a set of minimal unconditional
  * dependencies, preserving granular accesses when possible.
@@ -46,14 +42,14 @@ export class ReactiveScopeDependencyTree {
     return rootNode;
   }
 
-  add(dep: ReactiveScopeDependencyInfo): void {
+  add(dep: ReactiveScopeDependency, inConditional: boolean): void {
     const path = dep.path ?? [];
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
-    const accessType = dep.cond
+    const accessType = inConditional
       ? PropertyAccessType.ConditionalAccess
       : PropertyAccessType.UnconditionalAccess;
-    const depType = dep.cond
+    const depType = inConditional
       ? PropertyAccessType.ConditionalDependency
       : PropertyAccessType.UnconditionalDependency;
 

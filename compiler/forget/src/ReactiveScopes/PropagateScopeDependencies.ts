@@ -24,10 +24,7 @@ import {
   eachPatternOperand,
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import {
-  ReactiveScopeDependencyInfo,
-  ReactiveScopeDependencyTree,
-} from "./DeriveMinimalDependencies";
+import { ReactiveScopeDependencyTree } from "./DeriveMinimalDependencies";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -66,7 +63,12 @@ class Context {
   // Reactive dependencies used in the current reactive scope.
   #dependencies: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
-  #properties: Map<Identifier, ReactiveScopeDependencyInfo> = new Map();
+  // We keep a sidemap for temporaries created by PropertyLoads, and do
+  // not store any control flow (i.e. #inConditionalWithinScope) here.
+  //  - a ReactiveScope (A) containing a PropertyLoad may differ from the
+  //    ReactiveScope (B) that uses the produced temporary.
+  //  - codegen will inline these PropertyLoads back into scope (B)
+  #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
   // Reactive dependencies used unconditionally in the current conditional.
@@ -187,18 +189,16 @@ class Context {
   declareProperty(lvalue: Place, object: Place, property: string): void {
     const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
     const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependencyInfo;
+    let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
       nextDependency = {
         identifier: resolvedObject.identifier,
         path: [property],
-        cond: this.#inConditionalWithinScope,
       };
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
-        cond: this.#inConditionalWithinScope,
       };
     }
     this.#properties.set(lvalue.identifier, nextDependency);
@@ -234,32 +234,29 @@ class Context {
     this.visitDependency({
       identifier: resolved.identifier,
       path: null,
-      cond: this.#inConditionalWithinScope,
     });
   }
 
   visitProperty(object: Place, property: string): void {
     const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
     const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependencyInfo;
+    let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
       nextDependency = {
         identifier: resolvedObject.identifier,
         path: [property],
-        cond: this.#inConditionalWithinScope,
       };
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
         path: [...(objectDependency.path ?? []), property],
-        cond: this.#inConditionalWithinScope,
       };
     }
     this.visitDependency(nextDependency);
   }
 
-  visitDependency(dependency: ReactiveScopeDependencyInfo): void {
-    let maybeDependency: ReactiveScopeDependencyInfo;
+  visitDependency(dependency: ReactiveScopeDependency): void {
+    let maybeDependency: ReactiveScopeDependency;
     if (dependency.path !== null) {
       // Operands may have memberPaths when propagating depenencies of an inner scope upward
       // In this case we use the dependency as-is
@@ -269,7 +266,7 @@ class Context {
       // the expanded Place. Fall back to using the operand as-is.
       let propDep = this.#properties.get(dependency.identifier);
       if (dependency.identifier.name === null && propDep !== undefined) {
-        maybeDependency = { ...propDep, cond: dependency.cond };
+        maybeDependency = { ...propDep };
       } else {
         maybeDependency = dependency;
       }
@@ -297,13 +294,10 @@ class Context {
     }
 
     if (this.#checkValidDependencyId(maybeDependency.identifier)) {
-      this.#depsInCurrentConditional.add({
-        ...maybeDependency,
-        cond: true,
-      });
+      this.#depsInCurrentConditional.add(maybeDependency, true);
       // Add info about this dependency to the existing tree
       // We do not try to join/reduce dependencies here due to missing info
-      this.#dependencies.add(maybeDependency);
+      this.#dependencies.add(maybeDependency, this.#inConditionalWithinScope);
     }
   }
 
