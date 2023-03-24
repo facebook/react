@@ -3957,6 +3957,11 @@ function beginWork(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ): Fiber | null {
+  console.log(
+    'beginWork',
+    workInProgress.type || workInProgress.tag,
+    workInProgress.pendingProps,
+  );
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.

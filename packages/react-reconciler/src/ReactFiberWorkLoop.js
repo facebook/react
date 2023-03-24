@@ -883,6 +883,7 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
 // root has work on. This function is called on every update, and right before
 // exiting a task.
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
+  console.log('ensureRootIsScheduled');
   const existingCallbackNode = root.callbackNode;
 
   // Check if any lanes are being starved by other work. If so, mark them as
@@ -919,6 +920,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   const cancelPendingCommit = root.cancelPendingCommit;
   if (cancelPendingCommit !== null) {
+    console.log('here', cancelPendingCommit);
     // We should only interrupt a pending commit if the new update
     // is urgent.
     if (includesOnlyNonUrgentLanes(nextLanes)) {
@@ -1457,6 +1459,7 @@ function commitRootWhenReady(
       // Not yet ready to commit. Delay the commit until the renderer notifies
       // us that it's ready. This will be canceled if we start work on the
       // root again.
+      console.log('setting cancelPendingCommit', root.cancelPendingCommit);
       root.cancelPendingCommit = schedulePendingCommit(
         commitRoot.bind(
           null,
@@ -1799,9 +1802,13 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     cancelTimeout(timeoutHandle);
   }
   const cancelPendingCommit = root.cancelPendingCommit;
+  console.log('prepareFreshStack');
   if (cancelPendingCommit !== null) {
+    console.log('marking pending commit null');
     root.cancelPendingCommit = null;
+    console.log('cancelling pending commit');
     cancelPendingCommit();
+    console.log('after cancelling pending commit');
   }
 
   resetWorkInProgressStack();

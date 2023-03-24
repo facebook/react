@@ -1011,6 +1011,11 @@ function completeWork(
           workInProgress.flags |= Passive;
         }
       }
+      console.log(
+        'HostRoot flags',
+        workInProgress.flags & SuspenseyCommit,
+        workInProgress.subtreeFlags & SuspenseyCommit,
+      );
       return null;
     }
     case HostHoistable: {

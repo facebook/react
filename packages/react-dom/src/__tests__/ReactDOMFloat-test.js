@@ -2804,24 +2804,24 @@ body {
       <link rel="preload" as="style" href="bar" />,
     ]);
 
-    // // Try just this and crash all of Jest
-    // errorStylesheets(['bar']);
+    // Try just this and crash all of Jest
+    errorStylesheets(['bar']);
 
     // // Try this and it fails the test when it shouldn't
     // await act(() => {
     //   errorStylesheets(['bar']);
     // });
 
-    // Try this there is nothing throwing here which is not really surprising since
-    // the error is bubbling up through some kind of unhandled promise rejection thingy but
-    // still I thought it was worth confirming
-    try {
-      await act(() => {
-        errorStylesheets(['bar']);
-      });
-    } catch (e) {
-      console.log(e);
-    }
+    // // Try this there is nothing throwing here which is not really surprising since
+    // // the error is bubbling up through some kind of unhandled promise rejection thingy but
+    // // still I thought it was worth confirming
+    // try {
+    //   await act(() => {
+    //     errorStylesheets(['bar']);
+    //   });
+    // } catch (e) {
+    //   console.log(e);
+    // }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo', 'error stylesheet: bar']);
@@ -2939,7 +2939,8 @@ body {
     );
   });
 
-  it('can interrupt a suspended commit with a new update', async () => {
+  // @gate TODO
+  fit('can interrupt a suspended commit with a new update', async () => {
     function App({children}) {
       return (
         <html>
@@ -2967,6 +2968,7 @@ body {
       </html>,
     );
 
+    console.log('++++++++++++++++++');
     root.render(
       <App>
         hello2
@@ -2975,6 +2977,7 @@ body {
       </App>,
     );
     await waitForAll([]);
+    console.log('++++++++++++++++++');
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2986,12 +2989,15 @@ body {
       </html>,
     );
 
+    // Even though foo was preloaded we don't see the stylesheet insert because the commit was cancelled.
+    // If we do a followup render that tries to recommit that resource it will insert right away because
+    // the preload is already loaded
     loadPreloads(['foo']);
+    assertLog(['load preload: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
           <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="stylesheet" href="foo" data-precedence="default" />
           <link rel="preload" href="foo" as="style" />
           <link rel="preload" href="bar" as="style" />
         </head>
@@ -2999,10 +3005,18 @@ body {
       </html>,
     );
 
-    loadStylesheets(['foo']);
-    // Even though the foo stylesheet was still inserted as part of the suspense sequence of the first
-    // commit it does not actually perform the commit because it was cancelled when the higher priority
-    // update was processed.
+    console.log('----------------------------');
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello3
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="bar" precedence="default" />
+        </App>,
+      );
+    });
+    console.log('----------------------------');
+    await waitForAll([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
