@@ -4,6 +4,14 @@
 
 ---
 
+### 4.27.4
+March 24, 2023
+
+#### Bugfixes
+* missing file name in react-devtools package.json for electron ([mondaychen](https://github.com/mondaychen) in [#26469](https://github.com/facebook/react/pull/26469))
+
+---
+
 ### 4.27.3
 March 22, 2023
 
