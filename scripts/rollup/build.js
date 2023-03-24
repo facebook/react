@@ -182,12 +182,16 @@ let getRollupInteropValue = id => {
   // Specifying `interop: 'default'` instead will have Rollup use the imported variable as-is,
   // without adding a `.default` to the reference.
   const modulesWithCommonJsExports = [
-    'JSResourceReferenceImpl',
-    'error-stack-parser',
     'art/core/transform',
     'art/modes/current',
     'art/modes/fast-noSideEffects',
     'art/modes/svg',
+    'JSResourceReferenceImpl',
+    'error-stack-parser',
+    'neo-async',
+    'webpack/lib/dependencies/ModuleDependency',
+    'webpack/lib/dependencies/NullDependency',
+    'webpack/lib/Template',
   ];
 
   if (modulesWithCommonJsExports.includes(id)) {
