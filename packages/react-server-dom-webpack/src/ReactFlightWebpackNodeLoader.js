@@ -7,7 +7,7 @@
  * @flow
  */
 
-import * as acorn from 'acorn';
+import * as acorn from 'acorn-loose';
 
 type ResolveContext = {
   conditions: Array<string>,
