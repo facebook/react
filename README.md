@@ -68,7 +68,7 @@ Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) t
 
 ### Good First Issues
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of issues for beginners [good first issues(Starter)](https://github.com/facebook/react/issues?q=is%3Aopen+label%3A%22Difficulty%3A+starter%22++%26+%22good+first+issue%22+) for intermediate [good first issues(Medium)](https://github.com/facebook/react/issues?q=is%3Aopen+label%3A%22Difficulty%3A+medium%22++%26+%22good+first+issue%22+)that contain bugs that have a relatively limited scope. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of issues for beginners [good first issues(Starter)](https://github.com/facebook/react/issues?q=is%3Aopen+label%3A%22Difficulty%3A+starter%22++%26+%22good+first+issue%22+), for intermediate [good first issues(Medium)](https://github.com/facebook/react/issues?q=is%3Aopen+label%3A%22Difficulty%3A+medium%22++%26+%22good+first+issue%22+) that contain bugs that have a relatively limited scope. This is a great place to get started.
 
 ### License
 
