@@ -1791,10 +1791,11 @@ type VoidResource = TResource<'void', null>;
 type Resource = StyleResource | ScriptResource | VoidResource;
 
 type LoadingState = number;
-const NotLoaded = /*       */ 0b00;
-const Loaded = /*          */ 0b01;
-const Errored = /*         */ 0b10;
-const Settled = /*         */ 0b11;
+const NotLoaded = /*       */ 0b000;
+const Loaded = /*          */ 0b001;
+const Errored = /*         */ 0b010;
+const Settled = /*         */ 0b011;
+const Inserted = /*        */ 0b100;
 
 type StylesheetState = {
   loading: LoadingState,
@@ -3049,7 +3050,10 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
 }
 
 export function mayResourceSuspendCommit(resource: Resource): boolean {
-  return resource.type === 'stylesheet';
+  return (
+    resource.type === 'stylesheet' &&
+    (resource.state.loading & Inserted) === NotLoaded
+  );
 }
 
 export function preloadInstance(type: Type, props: Props): boolean {
@@ -3076,11 +3080,17 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
+// We use a noop function when we begin suspending because if possible we want the
+// waitfor step to finish synchronously. If it doesn't we'll return a function to
+// provide the actual unsuspend function and that will get completed when the count
+// hits zero or it will get cancelled if the root starts new work.
+function noop() {}
+
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
-    unsuspend: null,
+    unsuspend: noop,
   };
 }
 
@@ -3099,62 +3109,67 @@ export function suspendResource(
     );
   }
   const state = suspendedState;
-  if (resource.type === 'stylesheet' && resource.instance === null) {
+  if (resource.type === 'stylesheet') {
     if (typeof props.media === 'string') {
-      // If we don't currently match media we avoid suspending on this resource and let it insert on the mutation
-      // path
+      // If we don't currently match media we avoid suspending on this resource
+      // and let it insert on the mutation path
       if (matchMedia(props.media).matches === false) {
         return;
       }
     }
-    const qualifiedProps: StylesheetQualifyingProps = props;
-    const key = getStyleKey(qualifiedProps.href);
+    if (resource.instance === null) {
+      const qualifiedProps: StylesheetQualifyingProps = props;
+      const key = getStyleKey(qualifiedProps.href);
 
-    // Attempt to hydrate instance from DOM
-    let instance: null | Instance = hoistableRoot.querySelector(
-      getStylesheetSelectorFromKey(key),
-    );
-    if (instance) {
-      // If this instance has a loading state it came from the Fizz runtime.
-      // If there is not loading state it is assumed to have been server rendered
-      // as part of the preamble and therefore synchronously loaded. It could have
-      // errored however which we still do not yet have a means to detect. For now
-      // we assume it is loaded.
-      const maybeLoadingState: ?Promise<mixed> = (instance: any)._p;
-      if (
-        maybeLoadingState !== null &&
-        typeof maybeLoadingState === 'object' &&
-        // $FlowFixMe[method-unbinding]
-        typeof maybeLoadingState.then === 'function'
-      ) {
-        const loadingState = maybeLoadingState;
-        state.count++;
-        const ping = onUnsuspend.bind(state);
-        loadingState.then(ping, ping);
+      // Attempt to hydrate instance from DOM
+      let instance: null | Instance = hoistableRoot.querySelector(
+        getStylesheetSelectorFromKey(key),
+      );
+      if (instance) {
+        // If this instance has a loading state it came from the Fizz runtime.
+        // If there is not loading state it is assumed to have been server rendered
+        // as part of the preamble and therefore synchronously loaded. It could have
+        // errored however which we still do not yet have a means to detect. For now
+        // we assume it is loaded.
+        const maybeLoadingState: ?Promise<mixed> = (instance: any)._p;
+        if (
+          maybeLoadingState !== null &&
+          typeof maybeLoadingState === 'object' &&
+          // $FlowFixMe[method-unbinding]
+          typeof maybeLoadingState.then === 'function'
+        ) {
+          const loadingState = maybeLoadingState;
+          state.count++;
+          const ping = onUnsuspend.bind(state);
+          loadingState.then(ping, ping);
+        }
+        resource.state.loading |= Inserted;
+        resource.instance = instance;
+        markNodeAsHoistable(instance);
+        return;
       }
-      resource.instance = instance;
+
+      const ownerDocument = getDocumentFromRoot(hoistableRoot);
+
+      const stylesheetProps = stylesheetPropsFromRawProps(props);
+      const preloadProps = preloadPropsMap.get(key);
+      if (preloadProps) {
+        adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+      }
+
+      // Construct and insert a new instance
+      instance = ownerDocument.createElement('link');
       markNodeAsHoistable(instance);
-      return;
+      const linkInstance: HTMLLinkElement = (instance: any);
+      // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+      // between this resource being rendered on the client and being rendered with a late completed boundary.
+      (linkInstance: any)._p = new Promise((resolve, reject) => {
+        linkInstance.onload = resolve;
+        linkInstance.onerror = reject;
+      });
+      setInitialProperties(instance, 'link', stylesheetProps);
+      resource.instance = instance;
     }
-
-    const ownerDocument = getDocumentFromRoot(hoistableRoot);
-
-    const stylesheetProps = stylesheetPropsFromRawProps(props);
-    const preloadProps = preloadPropsMap.get(key);
-    if (preloadProps) {
-      adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
-    }
-
-    // Construct and insert a new instance
-    instance = ownerDocument.createElement('link');
-    markNodeAsHoistable(instance);
-    const linkInstance: HTMLLinkElement = (instance: any);
-    (linkInstance: any)._p = new Promise((resolve, reject) => {
-      linkInstance.onload = resolve;
-      linkInstance.onerror = reject;
-    });
-    setInitialProperties(instance, 'link', stylesheetProps);
-    resource.instance = instance;
 
     if (state.stylesheets === null) {
       state.stylesheets = new Map();
@@ -3182,6 +3197,8 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
 
   if (state.stylesheets && state.count === 0) {
     // We are not currently blocked but we have not inserted all stylesheets.
+    // If this insertion happens and loads or errors synchronously then we can
+    // avoid suspending the commit. To do this we check the count again immediately after
     insertSuspendedStylesheets(state, state.stylesheets);
   }
 
@@ -3191,8 +3208,7 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
     return commit => {
       unsuspendAfterTimeout(state);
       state.unsuspend = commit;
-      // In theory we don't need to bind this because we should always cancel
-      // before starting a new suspendedState
+
       return () => (state.unsuspend = null);
     };
   }
@@ -3216,6 +3232,11 @@ function onUnsuspend(this: SuspendedState) {
   this.count--;
   if (this.count === 0) {
     if (this.stylesheets) {
+      // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
+      // The reason we do this after everything else has finished is because we want to have all the stylesheets
+      // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
+      // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
+      // wait for them to load before actually continuing. We expect this to increase the count above zero
       insertSuspendedStylesheets(this, this.stylesheets);
     } else if (this.unsuspend) {
       const unsuspend = this.unsuspend;
@@ -3236,9 +3257,24 @@ function insertSuspendedStylesheets(
 ): void {
   // We need to clear this out so we don't try to reinsert after the stylesheets have loaded
   state.stylesheets = null;
+
+  if (state.unsuspend === null) {
+    // The suspended commit was cancelled. We don't need to insert any stylesheets.
+    return;
+  }
+
+  // Temporarily increment count. we don't want any synchronously loaded stylesheets to try to unsuspend
+  // before we finish inserting all stylesheets.
+  state.count++;
+
   precedencesByRoot = new Map();
   resources.forEach(insertStylesheetIntoRoot, state);
   precedencesByRoot = (null: any);
+
+  // We can remove our temporary count and if we're still at zero we can unsuspend.
+  // If we are in the synchronous phase before deciding if the commit should suspend and this
+  // ends up hitting the unsuspend path it will just invoke the noop unsuspend.
+  onUnsuspend.call(state);
 }
 
 function insertStylesheetIntoRoot(
@@ -3247,6 +3283,11 @@ function insertStylesheetIntoRoot(
   resource: StylesheetResource,
   map: Map<StylesheetResource, HoistableRoot>,
 ) {
+  if (resource.state.loading & Inserted) {
+    // This resource was inserted by another root committing. we don't need to insert it again
+    return;
+  }
+
   let last;
   let precedences = precedencesByRoot.get(root);
   if (!precedences) {
@@ -3285,6 +3326,11 @@ function insertStylesheetIntoRoot(
   }
   precedences.set(precedence, instance);
 
+  this.count++;
+  const onComplete = onUnsuspend.bind(this);
+  instance.addEventListener('load', onComplete);
+  instance.addEventListener('error', onComplete);
+
   if (prior) {
     (prior.parentNode: any).insertBefore(instance, prior.nextSibling);
   } else {
@@ -3294,9 +3340,5 @@ function insertStylesheetIntoRoot(
         : ((root: any): ShadowRoot);
     parent.insertBefore(instance, parent.firstChild);
   }
-
-  this.count++;
-  const onComplete = onUnsuspend.bind(this);
-  instance.addEventListener('load', onComplete);
-  instance.addEventListener('error', onComplete);
+  resource.state.loading |= Inserted;
 }
