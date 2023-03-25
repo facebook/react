@@ -3042,6 +3042,114 @@ body {
     );
   });
 
+  it('can suspend commits on more than one root for the same resource at the same time', async () => {
+    document.body.innerHTML = '';
+    const container1 = document.createElement('div');
+    const container2 = document.createElement('div');
+    document.body.appendChild(container1);
+    document.body.appendChild(container2);
+
+    const root1 = ReactDOMClient.createRoot(container1);
+    const root2 = ReactDOMClient.createRoot(container2);
+
+    React.startTransition(() => {
+      root1.render(
+        <div>
+          one
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="one" precedence="default" />
+        </div>,
+      );
+    });
+    await waitForAll([]);
+    React.startTransition(() => {
+      root2.render(
+        <div>
+          two
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="two" precedence="default" />
+        </div>,
+      );
+    });
+    await waitForAll([]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div />
+        </body>
+      </html>,
+    );
+
+    loadPreloads(['foo', 'two']);
+    assertLog(['load preload: foo', 'load preload: two']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div />
+        </body>
+      </html>,
+    );
+
+    loadStylesheets(['foo', 'two']);
+    assertLog(['load stylesheet: foo', 'load stylesheet: two']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div>
+            <div>two</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    loadPreloads();
+    loadStylesheets();
+    assertLog(['load preload: one', 'load stylesheet: one']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="stylesheet" href="one" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div>
+            <div>one</div>
+          </div>
+          <div>
+            <div>two</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
   it('can unsuspend after a timeout even if some assets never load', async () => {
     function App({children}) {
       return (
