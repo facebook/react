@@ -1566,7 +1566,7 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-function shim() {
+function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
   );
@@ -3350,7 +3350,7 @@ function findFirstSuspended(row) {
   for (var node = row; null !== node; ) {
     if (13 === node.tag) {
       var state = node.memoizedState;
-      if (null !== state && (null === state.dehydrated || shim() || shim()))
+      if (null !== state && (null === state.dehydrated || shim$1() || shim$1()))
         return node;
     } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
       if (0 !== (node.flags & 128)) return node;
@@ -5295,9 +5295,9 @@ function updateDehydratedSuspenseComponent(
       renderLanes,
       null
     );
-  if (shim())
+  if (shim$1())
     return (
-      (suspenseState = shim().digest),
+      (suspenseState = shim$1().digest),
       (nextProps = Error(
         "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
       )),
@@ -5376,12 +5376,12 @@ function updateDehydratedSuspenseComponent(
       null
     );
   }
-  if (shim())
+  if (shim$1())
     return (
       (workInProgress.flags |= 128),
       (workInProgress.child = current.child),
       retryDehydratedSuspenseBoundary.bind(null, current),
-      shim(),
+      shim$1(),
       null
     );
   current = mountSuspensePrimaryChildren(workInProgress, nextProps.children);
@@ -7172,6 +7172,28 @@ function recursivelyTraverseReconnectPassiveEffects(
     parentFiber = parentFiber.sibling;
   }
 }
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & 16777216)
+    for (parentFiber = parentFiber.child; null !== parentFiber; )
+      accumulateSuspenseyCommitOnFiber(parentFiber),
+        (parentFiber = parentFiber.sibling);
+}
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case 26:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      if (fiber.flags & 16777216 && null !== fiber.memoizedState)
+        throw Error(
+          "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
+        );
+      break;
+    case 5:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    default:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+  }
+}
 function detachAlternateSiblings(parentFiber) {
   var previousFiber = parentFiber.alternate;
   if (
@@ -7536,7 +7558,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         case 1:
           throw Error("Root did not complete. This is a bug in React.");
         case 2:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 3:
           markRootSuspended(root, lanes);
@@ -7559,7 +7587,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 4:
           markRootSuspended(root, lanes);
@@ -7603,10 +7637,22 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 5:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         default:
           throw Error("Unknown root exit status.");
@@ -7649,7 +7695,14 @@ function queueRecoverableErrors(errors) {
         errors
       );
 }
-function commitRootWhenReady(root) {
+function commitRootWhenReady(
+  root,
+  finishedWork,
+  recoverableErrors,
+  transitions,
+  lanes
+) {
+  0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
@@ -9434,10 +9487,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1049 = {
+  devToolsConfig$jscomp$inline_1022 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-175962c10-20230325",
+    version: "18.3.0-next-73b6435ca-20230324",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9452,11 +9505,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1292 = {
-  bundleType: devToolsConfig$jscomp$inline_1049.bundleType,
-  version: devToolsConfig$jscomp$inline_1049.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1049.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1049.rendererConfig,
+var internals$jscomp$inline_1268 = {
+  bundleType: devToolsConfig$jscomp$inline_1022.bundleType,
+  version: devToolsConfig$jscomp$inline_1022.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1022.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1022.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9472,26 +9525,26 @@ var internals$jscomp$inline_1292 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1049.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1022.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-175962c10-20230325"
+  reconcilerVersion: "18.3.0-next-73b6435ca-20230324"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1293 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1269 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1293.isDisabled &&
-    hook$jscomp$inline_1293.supportsFiber
+    !hook$jscomp$inline_1269.isDisabled &&
+    hook$jscomp$inline_1269.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1293.inject(
-        internals$jscomp$inline_1292
+      (rendererID = hook$jscomp$inline_1269.inject(
+        internals$jscomp$inline_1268
       )),
-        (injectedHook = hook$jscomp$inline_1293);
+        (injectedHook = hook$jscomp$inline_1269);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
