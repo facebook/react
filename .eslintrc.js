@@ -449,6 +449,8 @@ module.exports = {
     $ReadOnlyArray: 'readonly',
     $Shape: 'readonly',
     AnimationFrameID: 'readonly',
+    bigint: 'readonly',
+    BigInt: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',
