@@ -4108,21 +4108,13 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
       }
       break;
     }
-    case HostRoot: {
-      if (enableFloat && supportsResources) {
-        const previousHoistableRoot = currentHoistableRoot;
-        currentHoistableRoot = getHoistableRoot(fiber.stateNode.containerInfo);
-
-        recursivelyAccumulateSuspenseyCommit(fiber);
-        currentHoistableRoot = previousHoistableRoot;
-        break;
-      }
-    }
-    // eslint-disable-next-line-no-fallthrough
+    case HostRoot:
     case HostPortal: {
       if (enableFloat && supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
-        currentHoistableRoot = getHoistableRoot(fiber.stateNode.containerInfo);
+        const container: Container = fiber.stateNode.containerInfo;
+        currentHoistableRoot = getHoistableRoot(container);
+
         recursivelyAccumulateSuspenseyCommit(fiber);
         currentHoistableRoot = previousHoistableRoot;
         break;
