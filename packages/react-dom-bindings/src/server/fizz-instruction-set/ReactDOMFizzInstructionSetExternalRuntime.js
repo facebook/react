@@ -6,8 +6,6 @@ import {
   clientRenderBoundary,
   completeBoundary,
   completeSegment,
-  LOADED,
-  ERRORED,
 } from './ReactDOMFizzInstructionSetShared';
 
 export {clientRenderBoundary, completeBoundary, completeSegment};
@@ -46,10 +44,6 @@ export function completeBoundaryWithStyles(
   const dependencies = [];
   let href, precedence, attr, loadingState, resourceEl, media;
 
-  function setStatus(s) {
-    this['s'] = s;
-  }
-
   // Sheets Mode
   let sheetMode = true;
   while (true) {
@@ -84,14 +78,10 @@ export function completeBoundaryWithStyles(
         while ((attr = stylesheetDescriptor[j++])) {
           resourceEl.setAttribute(attr, stylesheetDescriptor[j++]);
         }
-        loadingState = resourceEl['_p'] = new Promise((re, rj) => {
-          resourceEl.onload = re;
-          resourceEl.onerror = rj;
+        loadingState = resourceEl['_p'] = new Promise((resolve, reject) => {
+          resourceEl.onload = resolve;
+          resourceEl.onerror = reject;
         });
-        loadingState.then(
-          setStatus.bind(loadingState, LOADED),
-          setStatus.bind(loadingState, ERRORED),
-        );
         // Save this resource element so we can bailout if it is used again
         resourceMap.set(href, resourceEl);
       }

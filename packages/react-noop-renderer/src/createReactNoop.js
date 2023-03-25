@@ -578,6 +578,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return type === 'suspensey-thing' && typeof props.src === 'string';
     },
 
+    mayResourceSuspendCommit(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
     preloadInstance(type: string, props: Props): boolean {
       if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
         throw new Error('Attempted to preload unexpected instance: ' + type);
@@ -608,8 +614,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
+    preloadResource(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
     startSuspendingCommit,
     suspendInstance,
+
+    suspendResource(resource: mixed): void {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
     waitForCommitToBeReady,
 
     prepareRendererToRender() {},

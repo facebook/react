@@ -220,6 +220,9 @@ export const unmountHoistable = $$$hostConfig.unmountHoistable;
 export const createHoistableInstance = $$$hostConfig.createHoistableInstance;
 export const prepareToCommitHoistables =
   $$$hostConfig.prepareToCommitHoistables;
+export const mayResourceSuspendCommit = $$$hostConfig.mayResourceSuspendCommit;
+export const preloadResource = $$$hostConfig.preloadResource;
+export const suspendResource = $$$hostConfig.suspendResource;
 
 // -------------------
 //     Singletons

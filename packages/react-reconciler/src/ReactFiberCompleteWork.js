@@ -110,6 +110,7 @@ import {
   preparePortalMount,
   prepareScopeUpdate,
   maySuspendCommit,
+  mayResourceSuspendCommit,
   preloadInstance,
 } from './ReactFiberHostConfig';
 import {
@@ -520,24 +521,7 @@ function preloadInstanceAndSuspendIfNeeded(
   props: Props,
   renderLanes: Lanes,
 ) {
-  // Ask the renderer if this instance should suspend the commit.
-  if (!maySuspendCommit(type, props)) {
-    // If this flag was set previously, we can remove it. The flag represents
-    // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for maySuspendCommit to always return true, but
-    // if the renderer is reasonably confident that the underlying resource
-    // won't be evicted, it can return false as a performance optimization.
-    workInProgress.flags &= ~SuspenseyCommit;
-    return;
-  }
-
-  // Mark this fiber with a flag. We use this right before the commit phase to
-  // find all the fibers that might need to suspend the commit. In the future
-  // we'll also use it when revealing a hidden tree. It gets set even if we
-  // don't end up suspending this particular commit, because if this tree ever
-  // becomes hidden, we might want to suspend before revealing it again.
   workInProgress.flags |= SuspenseyCommit;
-
   // Check if we're rendering at a "non-urgent" priority. This is the same
   // check that `useDeferredValue` does to determine whether it needs to
   // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
@@ -1036,6 +1020,10 @@ function completeWork(
           markRef(workInProgress);
         }
 
+        let maySuspend = false;
+
+        // @TODO refactor this block to create the instance here in complete phase if we
+        // are not hydrating.
         if (
           // We are mounting and must Update this Hoistable in this commit
           current === null ||
@@ -1043,8 +1031,20 @@ function completeWork(
           // and require an update
           current.memoizedState !== workInProgress.memoizedState
         ) {
+          if (workInProgress.memoizedState !== null) {
+            maySuspend = mayResourceSuspendCommit(workInProgress.memoizedState);
+          } else {
+            maySuspend = maySuspendCommit(
+              workInProgress.type,
+              workInProgress.pendingProps,
+            );
+          }
           markUpdate(workInProgress);
         } else if (workInProgress.memoizedState === null) {
+          maySuspend = maySuspendCommit(
+            workInProgress.type,
+            workInProgress.pendingProps,
+          );
           // We may have props to update on the Hoistable instance. We use the
           // updateHostComponent path becuase it produces the update queue
           // we need for Hoistables
@@ -1062,12 +1062,16 @@ function completeWork(
         // throw to suspend, and if the resource immediately loads, the work loop
         // will resume rendering as if the work-in-progress completed. So it must
         // fully complete.
-        preloadInstanceAndSuspendIfNeeded(
-          workInProgress,
-          workInProgress.type,
-          workInProgress.pendingProps,
-          renderLanes,
-        );
+        if (maySuspend) {
+          preloadInstanceAndSuspendIfNeeded(
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes,
+          );
+        } else {
+          workInProgress.flags &= ~SuspenseyCommit;
+        }
         return null;
       }
     }
@@ -1137,6 +1141,7 @@ function completeWork(
     case HostComponent: {
       popHostContext(workInProgress);
       const type = workInProgress.type;
+      const maySuspend = maySuspendCommit(type, newProps);
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
           current,
@@ -1217,12 +1222,16 @@ function completeWork(
       // throw to suspend, and if the resource immediately loads, the work loop
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
-      preloadInstanceAndSuspendIfNeeded(
-        workInProgress,
-        type,
-        newProps,
-        renderLanes,
-      );
+      if (maySuspend) {
+        preloadInstanceAndSuspendIfNeeded(
+          workInProgress,
+          type,
+          newProps,
+          renderLanes,
+        );
+      } else {
+        workInProgress.flags &= ~SuspenseyCommit;
+      }
       return null;
     }
     case HostText: {
